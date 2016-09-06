@@ -45,6 +45,7 @@
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquickslider_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -68,6 +69,9 @@ private slots:
 
     void hover_data();
     void hover();
+
+    void wheel_data();
+    void wheel();
 
     void multiple();
 };
@@ -404,6 +408,90 @@ void tst_Drawer::hover()
     // hover the background button after closing the drawer
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
     QVERIFY(backgroundButton->isHovered());
+}
+
+void tst_Drawer::wheel_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<bool>("modal");
+
+    QTest::newRow("Window:modal") << "window-wheel.qml" << true;
+    QTest::newRow("Window:modeless") << "window-wheel.qml" << false;
+    QTest::newRow("ApplicationWindow:modal") << "applicationwindow-wheel.qml" << true;
+    QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-wheel.qml" << false;
+}
+
+static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees)
+{
+    QQuickWindow *window = item->window();
+    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0), QPoint(0, 8 * degrees), 0, Qt::Vertical, Qt::NoButton, 0);
+    QSpontaneKeyEvent::setSpontaneous(&wheelEvent);
+    return qGuiApp->notify(window, &wheelEvent);
+}
+
+void tst_Drawer::wheel()
+{
+    QFETCH(QString, source);
+    QFETCH(bool, modal);
+
+    QQuickApplicationHelper helper(this, source);
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickSlider *contentSlider = window->property("contentSlider").value<QQuickSlider*>();
+    QVERIFY(contentSlider);
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer && drawer->contentItem());
+    drawer->setModal(modal);
+
+    QQuickSlider *drawerSlider = window->property("drawerSlider").value<QQuickSlider*>();
+    QVERIFY(drawerSlider);
+
+    {
+        // wheel over the content
+        qreal oldContentValue = contentSlider->value();
+        qreal oldDrawerValue = drawerSlider->value();
+
+        QVERIFY(sendWheelEvent(contentSlider, QPoint(contentSlider->width() / 2, contentSlider->height() / 2), 15));
+
+        QVERIFY(!qFuzzyCompare(contentSlider->value(), oldContentValue)); // must have moved
+        QVERIFY(qFuzzyCompare(drawerSlider->value(), oldDrawerValue)); // must not have moved
+    }
+
+    QSignalSpy openedSpy(drawer, SIGNAL(opened()));
+    QVERIFY(openedSpy.isValid());
+    drawer->open();
+    QVERIFY(openedSpy.count() == 1 || openedSpy.wait());
+
+    {
+        // wheel over the drawer content
+        qreal oldContentValue = contentSlider->value();
+        qreal oldDrawerValue = drawerSlider->value();
+
+        QVERIFY(sendWheelEvent(drawerSlider, QPoint(drawerSlider->width() / 2, drawerSlider->height() / 2), 15));
+
+        QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue)); // must not have moved
+        QVERIFY(!qFuzzyCompare(drawerSlider->value(), oldDrawerValue)); // must have moved
+    }
+
+    {
+        // wheel over the overlay
+        qreal oldContentValue = contentSlider->value();
+        qreal oldDrawerValue = drawerSlider->value();
+
+        QVERIFY(sendWheelEvent(QQuickOverlay::overlay(window), QPoint(0, 0), 15));
+
+        if (modal) {
+            // the content below a modal overlay must not move
+            QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue));
+        } else {
+            // the content below a modeless overlay must move
+            QVERIFY(!qFuzzyCompare(contentSlider->value(), oldContentValue));
+        }
+        QVERIFY(qFuzzyCompare(drawerSlider->value(), oldDrawerValue)); // must not have moved
+    }
 }
 
 void tst_Drawer::multiple()

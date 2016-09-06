@@ -87,6 +87,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
 
 private:
