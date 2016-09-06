@@ -21,6 +21,7 @@ HEADERS += \
     $$PWD/qquickdialogbuttonbox_p.h \
     $$PWD/qquickdialogbuttonbox_p_p.h \
     $$PWD/qquickdrawer_p.h \
+    $$PWD/qquickdrawer_p_p.h \
     $$PWD/qquickframe_p.h \
     $$PWD/qquickframe_p_p.h \
     $$PWD/qquickgroupbox_p.h \
@@ -33,6 +34,7 @@ HEADERS += \
     $$PWD/qquickmenuitem_p.h \
     $$PWD/qquickmenuseparator_p.h \
     $$PWD/qquickoverlay_p.h \
+    $$PWD/qquickoverlay_p_p.h \
     $$PWD/qquickpage_p.h \
     $$PWD/qquickpageindicator_p.h \
     $$PWD/qquickpagelayout_p_p.h \

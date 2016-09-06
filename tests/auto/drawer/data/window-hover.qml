@@ -39,17 +39,35 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Window 2.2
+import QtQuick.Controls 2.0
 
-ApplicationWindow {
+Window {
     width: 400
     height: 400
 
     property alias drawer: drawer
+    property alias backgroundButton: backgroundButton
+    property alias drawerButton: drawerButton
+
+    Button {
+        id: backgroundButton
+        text: "Background"
+        anchors.fill: parent
+    }
 
     Drawer {
         id: drawer
-        width: 200
-        height: 200
+        width: 100
+        height: 400
+        topPadding: 2
+        leftPadding: 2
+        rightPadding: 2
+        bottomPadding: 2
+
+        contentItem: Button {
+            id: drawerButton
+            text: "Drawer"
+        }
     }
 }

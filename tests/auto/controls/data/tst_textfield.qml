@@ -72,12 +72,31 @@ TestCase {
 
         var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
         var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
+
         control.background.implicitWidth = 400
         control.background.implicitHeight = 200
         compare(control.implicitWidth, 400)
         compare(control.implicitHeight, 200)
         compare(implicitWidthSpy.count, 1)
         compare(implicitHeightSpy.count, 1)
+
+        control.background = null
+        compare(control.implicitWidth, control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(implicitWidthSpy.count, 2)
+        compare(implicitHeightSpy.count, 2)
+
+        control.text = "TextField"
+        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(implicitWidthSpy.count, 3)
+        compare(implicitHeightSpy.count, 2)
+
+        control.placeholderText = "..."
+        verify(control.implicitWidth < control.contentWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(implicitWidthSpy.count, 4)
+        compare(implicitHeightSpy.count, 2)
 
         control.destroy()
     }

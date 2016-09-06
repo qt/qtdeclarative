@@ -39,17 +39,32 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Window 2.2
+import QtQuick.Controls 2.0
 
-ApplicationWindow {
+Window {
     width: 400
     height: 400
 
-    property alias drawer: drawer
+    property alias popup: popup
+    property alias parentButton: parentButton
+    property alias childButton: childButton
 
-    Drawer {
-        id: drawer
-        width: 200
-        height: 200
+    Button {
+        id: parentButton
+        text: "Parent"
+        anchors.fill: parent
+
+        Popup {
+            id: popup
+            x: 1
+            y: 1
+            padding: 1
+
+            Button {
+                id: childButton
+                text: "Child"
+            }
+        }
     }
 }

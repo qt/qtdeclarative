@@ -35,8 +35,7 @@
 ****************************************************************************/
 
 #include "qquickdrawer_p.h"
-#include "qquickpopup_p_p.h"
-#include "qquickvelocitycalculator_p_p.h"
+#include "qquickdrawer_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -114,33 +113,11 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
 
-class QQuickDrawerPrivate : public QQuickPopupPrivate
+QQuickDrawerPrivate::QQuickDrawerPrivate()
+    : edge(Qt::LeftEdge), offset(0), position(0),
+      dragMargin(QGuiApplication::styleHints()->startDragDistance())
 {
-    Q_DECLARE_PUBLIC(QQuickDrawer)
-
-public:
-    QQuickDrawerPrivate() : edge(Qt::LeftEdge), offset(0), position(0),
-        dragMargin(QGuiApplication::styleHints()->startDragDistance()) { }
-
-    qreal positionAt(const QPointF &point) const;
-    void reposition() override;
-
-    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
-
-    void prepareEnterTransition(bool notify = true) override;
-    void prepareExitTransition() override;
-    void finalizeEnterTransition() override;
-    void finalizeExitTransition(bool hide = true) override;
-
-    Qt::Edge edge;
-    qreal offset;
-    qreal position;
-    qreal dragMargin;
-    QPointF pressPoint;
-    QQuickVelocityCalculator velocityCalculator;
-};
+}
 
 qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
 {
@@ -191,96 +168,73 @@ static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int th
     return QQuickWindowPrivate::dragOverThreshold(d, axis, event, threshold);
 }
 
-bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
+bool QQuickDrawerPrivate::startDrag(QQuickWindow *window, QMouseEvent *event)
 {
-    pressPoint = event->windowPos();
-    offset = 0;
-
-    QQuickWindow *window = item->window();
-    if (!window)
+    if (!window || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
         return false;
 
-    if (qFuzzyIsNull(position)) {
-        // only accept pressing at drag margins when fully closed
-        switch (edge) {
-        case Qt::LeftEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(event->windowPos().x(), Qt::XAxis, event, dragMargin));
-            break;
-        case Qt::RightEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event, dragMargin));
-            break;
-        case Qt::TopEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(event->windowPos().y(), Qt::YAxis, event, dragMargin));
-            break;
-        case Qt::BottomEdge:
-            event->setAccepted(dragMargin > 0 && !dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event, dragMargin));
-            break;
-        }
-    } else {
-        if (modal)
-            event->setAccepted(item->isAncestorOf(popupItem));
-        else
-            event->setAccepted(false);
+    bool drag = false;
+    switch (edge) {
+    case Qt::LeftEdge:
+        drag = !dragOverThreshold(event->windowPos().x(), Qt::XAxis, event, dragMargin);
+        break;
+    case Qt::RightEdge:
+        drag = !dragOverThreshold(window->width() - event->windowPos().x(), Qt::XAxis, event, dragMargin);
+        break;
+    case Qt::TopEdge:
+        drag = !dragOverThreshold(event->windowPos().y(), Qt::YAxis, event, dragMargin);
+        break;
+    case Qt::BottomEdge:
+        drag = !dragOverThreshold(window->height() - event->windowPos().y(), Qt::YAxis, event, dragMargin);
+        break;
+    default:
+        break;
     }
 
-    velocityCalculator.startMeasuring(pressPoint, event->timestamp());
+    if (drag) {
+        prepareEnterTransition();
+        reposition();
+        handleMousePressEvent(window->contentItem(), event);
+    }
 
-    return event->isAccepted();
+    return drag;
 }
 
-bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
+bool QQuickDrawerPrivate::grabMouse(QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    QQuickWindow *window = item->window();
-    if (!window)
+    if (!window || popupItem->keepMouseGrab())
         return false;
 
-    QPointF movePoint = event->windowPos();
+    const QPointF movePoint = event->windowPos();
 
-    if (!popupItem->keepMouseGrab()) {
-        // Flickable uses a hard-coded threshold of 15 for flicking, and
-        // QStyleHints::startDragDistance for dragging. Drawer uses a bit
-        // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
-        int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
-        bool overThreshold = false;
-        if (position > 0 || dragMargin > 0) {
-            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-                overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
-            else
-                overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
-        }
-
-        // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
-        if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
-            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-                overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
-            else
-                overThreshold = qAbs(movePoint.y() - q->height()) < dragMargin;
-        }
-
-        if (overThreshold) {
-            QQuickItem *grabber = window->mouseGrabberItem();
-            if (!grabber || !grabber->keepMouseGrab()) {
-                popupItem->grabMouse();
-                popupItem->setKeepMouseGrab(overThreshold);
-                offset = qMin<qreal>(0.0, positionAt(movePoint) - position);
-            }
-        }
+    // Flickable uses a hard-coded threshold of 15 for flicking, and
+    // QStyleHints::startDragDistance for dragging. Drawer uses a bit
+    // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
+    const int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
+    bool overThreshold = false;
+    if (position > 0 || dragMargin > 0) {
+        if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+            overThreshold = dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
+        else
+            overThreshold = dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
     }
 
-    if (popupItem->keepMouseGrab())
-        q->setPosition(positionAt(movePoint) - offset);
-    event->accept();
+    // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
+    if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
+        if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+            overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
+        else
+            overThreshold = qAbs(movePoint.y() - q->height()) < dragMargin;
+    }
 
-    return popupItem->keepMouseGrab();
+    return overThreshold;
 }
 
 static const qreal openCloseVelocityThreshold = 300;
 
-bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
+bool QQuickDrawerPrivate::ungrabMouse(QMouseEvent *event)
 {
-    Q_UNUSED(item);
-
     bool wasGrabbed = popupItem->keepMouseGrab();
     if (wasGrabbed) {
         const QPointF releasePoint = event->windowPos();
@@ -335,10 +289,54 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
                 break;
             }
         }
-        popupItem->setKeepMouseGrab(false);
     }
+    return wasGrabbed;
+}
+
+bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
+{
+    offset = 0;
+    pressPoint = event->windowPos();
+    velocityCalculator.startMeasuring(pressPoint, event->timestamp());
+
+    // don't block press events a) outside a non-modal drawer, or b) to drawer children
+    event->setAccepted(modal && !popupItem->isAncestorOf(item));
+    return event->isAccepted();
+}
+
+bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
+{
+    Q_Q(QQuickDrawer);
+    Q_UNUSED(item);
+
+    const QPointF movePoint = event->windowPos();
+
+    if (grabMouse(event)) {
+        QQuickItem *grabber = window->mouseGrabberItem();
+        if (!grabber || !grabber->keepMouseGrab()) {
+            popupItem->grabMouse();
+            popupItem->setKeepMouseGrab(true);
+            offset = qMin<qreal>(0.0, positionAt(movePoint) - position);
+        }
+    }
+
+    if (popupItem->keepMouseGrab())
+        q->setPosition(positionAt(movePoint) - offset);
+    event->accept();
+
+    return popupItem->keepMouseGrab();
+}
+
+bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
+{
+    Q_UNUSED(item);
+
+    const bool wasGrabbed = ungrabMouse(event);
+
+    popupItem->setKeepMouseGrab(false);
     pressPoint = QPoint();
     event->accept();
+
     return wasGrabbed;
 }
 
@@ -362,28 +360,18 @@ static QList<QQuickStateAction> prepareTransition(QQuickDrawer *drawer, QQuickTr
     return actions;
 }
 
-void QQuickDrawerPrivate::prepareEnterTransition(bool notify)
+bool QQuickDrawerPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickDrawer);
     enterActions = prepareTransition(q, enter, 1.0);
-    QQuickPopupPrivate::prepareEnterTransition(notify);
+    return QQuickPopupPrivate::prepareEnterTransition();
 }
 
-void QQuickDrawerPrivate::prepareExitTransition()
+bool QQuickDrawerPrivate::prepareExitTransition()
 {
     Q_Q(QQuickDrawer);
     exitActions = prepareTransition(q, exit, 0.0);
-    QQuickPopupPrivate::prepareExitTransition();
-}
-
-void QQuickDrawerPrivate::finalizeEnterTransition()
-{
-    QQuickPopupPrivate::finalizeEnterTransition();
-}
-
-void QQuickDrawerPrivate::finalizeExitTransition(bool hide)
-{
-    QQuickPopupPrivate::finalizeExitTransition(hide = false);
+    return QQuickPopupPrivate::prepareExitTransition();
 }
 
 QQuickDrawer::QQuickDrawer(QObject *parent) :
@@ -447,12 +435,8 @@ void QQuickDrawer::setPosition(qreal position)
     d->position = position;
     if (isComponentComplete())
         d->reposition();
-    if (d->dimmer) {
+    if (d->dimmer)
         d->dimmer->setOpacity(position);
-        // TODO: check QStyleHints::useHoverEffects in Qt 5.8
-        d->dimmer->setAcceptHoverEvents(d->modal && position > 0.0);
-        // d->dimmer->setAcceptHoverEvents(d->modal && position > 0.0 && QGuiApplication::styleHints()->useHoverEffects());
-    }
     emit positionChanged();
 }
 
@@ -544,17 +528,6 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         return d->handleMouseReleaseEvent(item, static_cast<QMouseEvent *>(event));
     default:
         return false;
-    }
-}
-
-void QQuickDrawer::componentComplete()
-{
-    Q_D(QQuickDrawer);
-    QQuickPopup::componentComplete();
-    if (d->window) {
-        bool notify = false;
-        d->prepareEnterTransition(notify);
-        d->reposition();
     }
 }
 

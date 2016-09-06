@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKOVERLAY_P_H
-#define QQUICKOVERLAY_P_H
+#ifndef QQUICKOVERLAY_P_P_H
+#define QQUICKOVERLAY_P_P_H
 
 //
 //  W A R N I N G
@@ -48,54 +48,51 @@
 // We mean it.
 //
 
-#include <QtQuick/qquickitem.h>
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include "qquickoverlay_p.h"
+
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickOverlayPrivate;
+class QQuickPopup;
+class QQuickDrawer;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
+class QQuickOverlayPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
-    Q_OBJECT
-    Q_PROPERTY(QQmlComponent *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
-    Q_PROPERTY(QQmlComponent *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickOverlay)
 
 public:
-    explicit QQuickOverlay(QQuickItem *parent = nullptr);
-    ~QQuickOverlay();
+    QQuickOverlayPrivate();
 
-    QQmlComponent *modal() const;
-    void setModal(QQmlComponent *modal);
+    static QQuickOverlayPrivate *get(QQuickOverlay *overlay)
+    {
+        return overlay->d_func();
+    }
 
-    QQmlComponent *modeless() const;
-    void setModeless(QQmlComponent *modeless);
+    void addPopup(QQuickPopup *popup);
+    void removePopup(QQuickPopup *popup);
 
-    static QQuickOverlay *overlay(QQuickWindow *window);
+    void popupAboutToShow();
+    void popupAboutToHide();
 
-Q_SIGNALS:
-    void modalChanged();
-    void modelessChanged();
-    void pressed();
-    void released();
+    void createOverlay(QQuickPopup *popup);
+    void destroyOverlay(QQuickPopup *popup);
+    void resizeOverlay(QQuickPopup *popup);
+    void toggleOverlay();
 
-protected:
-    void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) override;
+    QVector<QQuickPopup *> stackingOrderPopups() const;
+    QVector<QQuickDrawer *> stackingOrderDrawers() const;
 
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
-private:
-    Q_DISABLE_COPY(QQuickOverlay)
-    Q_DECLARE_PRIVATE(QQuickOverlay)
+    QQmlComponent *modal;
+    QQmlComponent *modeless;
+    QVector<QQuickPopup *> allPopups;
+    QVector<QQuickDrawer *> allDrawers;
+    QPointer<QQuickPopup> mouseGrabberPopup;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickOverlay)
-
-#endif // QQUICKOVERLAY_P_H
+#endif // QQUICKOVERLAY_P_P_H

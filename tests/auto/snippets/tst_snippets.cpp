@@ -101,7 +101,7 @@ void tst_Snippets::screenshots()
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     bool generateScreenshot = true;
-    foreach (const QString &baseName, nonVisualSnippets) {
+    for (const QString &baseName : qAsConst(nonVisualSnippets)) {
         if (input.contains(baseName)) {
             generateScreenshot = false;
             break;

@@ -953,9 +953,9 @@ QColor QQuickMaterialStyle::scrollBarPressedColor() const
 
 QColor QQuickMaterialStyle::dialogColor() const
 {
-    if (!m_hasBackground)
-        return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
-    return backgroundColor();
+    if (m_hasBackground)
+        return backgroundColor();
+    return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
 }
 
 QColor QQuickMaterialStyle::backgroundDimColor() const
@@ -970,7 +970,16 @@ QColor QQuickMaterialStyle::listHighlightColor() const
 
 QColor QQuickMaterialStyle::tooltipColor() const
 {
+    if (m_explicitBackground)
+        return backgroundColor();
     return color(Grey, Shade700);
+}
+
+QColor QQuickMaterialStyle::toolBarColor() const
+{
+    if (m_explicitBackground)
+        return backgroundColor();
+    return primaryColor();
 }
 
 QColor QQuickMaterialStyle::toolTextColor() const

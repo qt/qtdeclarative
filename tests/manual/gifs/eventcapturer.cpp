@@ -57,7 +57,8 @@
     // interact with the view here, in order for the events to be captured
 
     qDebug() << "\n";
-    foreach (CapturedEvent event, eventCapturer.capturedEvents())
+    const auto capturedEvents = eventCapturer.capturedEvents();
+    for (CapturedEvent event : capturedEvents)
         qDebug().noquote() << event.cppCommand();
     \endcode
 

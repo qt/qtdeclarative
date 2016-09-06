@@ -41,8 +41,10 @@ T.TextField {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                            placeholderText ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+                            || contentWidth + leftPadding + rightPadding
+    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+                             background ? background.implicitHeight : 0,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6

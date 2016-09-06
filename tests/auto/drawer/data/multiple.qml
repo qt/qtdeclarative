@@ -39,17 +39,47 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.0
 
 ApplicationWindow {
     width: 400
     height: 400
 
-    property alias drawer: drawer
+    property alias leftDrawer: leftDrawer
+    property alias leftButton: leftButton
+
+    property alias rightDrawer: rightDrawer
+    property alias rightButton: rightButton
+
+    property alias contentButton: contentButton
 
     Drawer {
-        id: drawer
-        width: 200
-        height: 200
+        id: leftDrawer
+        width: 300
+        height: 400
+        z: 1
+
+        contentItem: Button {
+            id: leftButton
+            text: "Left"
+        }
+    }
+
+    Button {
+        id: contentButton
+        text: "Content"
+        anchors.fill: parent
+    }
+
+    Drawer {
+        id: rightDrawer
+        width: 300
+        height: 400
+        edge: Qt.RightEdge
+
+        contentItem: Button {
+            id: rightButton
+            text: "Right"
+        }
     }
 }

@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKOVERLAY_P_H
-#define QQUICKOVERLAY_P_H
+#ifndef QQUICKDRAWER_P_P_H
+#define QQUICKDRAWER_P_P_H
 
 //
 //  W A R N I N G
@@ -48,54 +48,46 @@
 // We mean it.
 //
 
-#include <QtQuick/qquickitem.h>
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include "qquickdrawer_p.h"
+#include "qquickpopup_p_p.h"
+#include "qquickvelocitycalculator_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickOverlayPrivate;
-
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
+class QQuickDrawerPrivate : public QQuickPopupPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QQmlComponent *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
-    Q_PROPERTY(QQmlComponent *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickDrawer)
 
 public:
-    explicit QQuickOverlay(QQuickItem *parent = nullptr);
-    ~QQuickOverlay();
+    QQuickDrawerPrivate();
 
-    QQmlComponent *modal() const;
-    void setModal(QQmlComponent *modal);
+    static QQuickDrawerPrivate *get(QQuickDrawer *drawer)
+    {
+        return drawer->d_func();
+    }
 
-    QQmlComponent *modeless() const;
-    void setModeless(QQmlComponent *modeless);
+    qreal positionAt(const QPointF &point) const;
+    void reposition() override;
 
-    static QQuickOverlay *overlay(QQuickWindow *window);
+    bool startDrag(QQuickWindow *window, QMouseEvent *event);
+    bool grabMouse(QMouseEvent *event);
+    bool ungrabMouse(QMouseEvent *event);
 
-Q_SIGNALS:
-    void modalChanged();
-    void modelessChanged();
-    void pressed();
-    void released();
+    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
+    bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
+    bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
 
-protected:
-    void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) override;
+    bool prepareEnterTransition() override;
+    bool prepareExitTransition() override;
 
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
-
-private:
-    Q_DISABLE_COPY(QQuickOverlay)
-    Q_DECLARE_PRIVATE(QQuickOverlay)
+    Qt::Edge edge;
+    qreal offset;
+    qreal position;
+    qreal dragMargin;
+    QPointF pressPoint;
+    QQuickVelocityCalculator velocityCalculator;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickOverlay)
-
-#endif // QQUICKOVERLAY_P_H
+#endif // QQUICKDRAWER_P_P_H
