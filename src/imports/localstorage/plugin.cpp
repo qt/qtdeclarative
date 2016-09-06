@@ -585,9 +585,9 @@ import QtQuick.LocalStorage 2.0 as Sql
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 \endcode
 The above code returns the database identified by \e identifier. If the database does not already exist, it
-is created, and the function \e callback is called with the database as a parameter. \e description
-and \e estimated_size are written to the INI file (described below), but are otherwise currently
-unused.
+is created, and the function \e callback is called with the database as a parameter. \e identifier is the
+name of the physical file (with or without full path) containing the database.  \e description and
+\e estimated_size are written to the INI file (described below), but are currently unused.
 
 May throw exception with code property SQLException.DATABASE_ERR, or SQLException.VERSION_ERR.
 
@@ -595,7 +595,7 @@ When a database is first created, an INI file is also created specifying its cha
 
 \table
 \header \li \b {Key} \li \b {Value}
-\row \li Name \li The name of the database passed to \c openDatabase()
+\row \li Identifier \li The name of the database passed to \c openDatabase()
 \row \li Version \li The version of the database passed to \c openDatabase()
 \row \li Description \li The description of the database passed to \c openDatabase()
 \row \li EstimatedSize \li The estimated size (in bytes) of the database passed to \c openDatabase()
@@ -615,12 +615,19 @@ you can call \e executeSql on \e tx to upgrade the database.
 
 May throw exception with code property SQLException.DATABASE_ERR or SQLException.UNKNOWN_ERR.
 
+See example below.
+
+\snippet qml/localstorage/dbtransaction.js 2
+
 \section3 db.transaction(callback(tx))
 
 This method creates a read/write transaction and passed to \e callback. In this function,
 you can call \e executeSql on \e tx to read and modify the database.
 
 If the callback throws exceptions, the transaction is rolled back.
+Below you will find an example of a database transaction which catches exceptions.
+
+\snippet qml/localstorage/dbtransaction.js 0
 
 \section3 db.readTransaction(callback(tx))
 
@@ -643,6 +650,9 @@ It returns a results object, with the following properties:
 
 May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or SQLException.UNKNOWN_ERR.
 
+See below for an example:
+
+\snippet qml/localstorage/dbtransaction.js 1
 
 \section1 Method Documentation
 
