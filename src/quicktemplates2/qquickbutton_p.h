@@ -78,6 +78,8 @@ Q_SIGNALS:
     void flatChanged();
 
 protected:
+    QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
+
     void checkableChange() override;
     void autoRepeatChange() override;
 

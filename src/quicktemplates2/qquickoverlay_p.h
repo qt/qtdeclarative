@@ -64,12 +64,15 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
 
 public:
     explicit QQuickOverlay(QQuickItem *parent = nullptr);
+    ~QQuickOverlay();
 
     QQmlComponent *modal() const;
     void setModal(QQmlComponent *modal);
 
     QQmlComponent *modeless() const;
     void setModeless(QQmlComponent *modeless);
+
+    static QQuickOverlay *overlay(QQuickWindow *window);
 
 Q_SIGNALS:
     void modalChanged();
@@ -81,7 +84,9 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) override;
 
-    bool event(QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
 
 private:

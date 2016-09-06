@@ -37,6 +37,8 @@
 #include "qquickswitch_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtGui/qstylehints.h>
+#include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 
@@ -119,8 +121,12 @@ bool QQuickSwitchPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent *
 {
     Q_Q(QQuickSwitch);
     Q_UNUSED(child);
+    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        q->forceActiveFocus(Qt::MouseFocusReason);
+
     pressPoint = event->pos();
     q->setPressed(true);
+    emit q->pressed();
     event->accept();
     return true;
 }
@@ -140,6 +146,9 @@ bool QQuickSwitchPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *e
 bool QQuickSwitchPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event)
 {
     Q_Q(QQuickSwitch);
+    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        q->forceActiveFocus(Qt::MouseFocusReason);
+
     pressPoint = QPoint();
     q->setPressed(false);
     if (child->keepMouseGrab()) {
@@ -147,11 +156,14 @@ bool QQuickSwitchPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent
         q->setChecked(position > 0.5);
         q->setPosition(checked ? 1.0 : 0.0);
         child->setKeepMouseGrab(false);
-        if (wasChecked != checked)
+        if (wasChecked != checked) {
+            emit q->released();
             emit q->clicked();
+        }
         event->accept();
     } else {
         q->toggle();
+        emit q->released();
         emit q->clicked();
         event->accept();
     }

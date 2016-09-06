@@ -85,6 +85,7 @@ QQuickStackElement::~QQuickStackElement()
     if (ownComponent)
         delete component;
 
+    QQuickStackAttached *attached = attachedStackObject(this);
     if (item) {
         if (ownItem) {
             item->setParentItem(nullptr);
@@ -99,12 +100,14 @@ QQuickStackElement::~QQuickStackElement()
             if (item->parentItem() != originalParent) {
                 item->setParentItem(originalParent);
             } else {
-                QQuickStackAttached *attached = attachedStackObject(this);
                 if (attached)
                     QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, nullptr);
             }
         }
     }
+
+    if (attached)
+        emit attached->removed();
 
     delete context;
 }

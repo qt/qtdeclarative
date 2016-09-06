@@ -74,6 +74,11 @@ TestCase {
     }
 
     Component {
+        id: applicationWindow
+        ApplicationWindow { }
+    }
+
+    Component {
         id: styledWindow
         Window {
             Material.theme: Material.Dark
@@ -597,6 +602,78 @@ TestCase {
         compare(window.font[data.attribute], data.window)
         compare(window.pane.font[data.attribute], data.window)
         compare(control.font[data.attribute], data.window)
+
+        window.destroy()
+    }
+
+    Component {
+        id: backgroundControls
+        ApplicationWindow {
+            id: window
+            property Button button: Button { }
+            property ComboBox combobox: ComboBox { }
+            property Drawer drawer: Drawer { }
+            property GroupBox groupbox: GroupBox { Material.elevation: 10 }
+            property Frame frame: Frame { Material.elevation: 10 }
+            property Menu menu: Menu { }
+            property Page page: Page { }
+            property Pane pane: Pane { }
+            property Popup popup: Popup { }
+            property TabBar tabbar: TabBar { }
+            property ToolBar toolbar: ToolBar { }
+            property ToolTip tooltip: ToolTip { }
+        }
+    }
+
+    function test_background_data() {
+        return [
+            { tag: "button", inherit: false, wait: 400 },
+            { tag: "combobox", inherit: false, wait: 400 },
+            { tag: "drawer", inherit: true },
+            { tag: "groupbox", inherit: true },
+            { tag: "frame", inherit: true },
+            { tag: "menu", inherit: true },
+            { tag: "page", inherit: true },
+            { tag: "pane", inherit: true },
+            { tag: "popup", inherit: true },
+            { tag: "tabbar", inherit: true },
+            { tag: "toolbar", inherit: false },
+            { tag: "tooltip", inherit: false }
+        ]
+    }
+
+    function test_background(data) {
+        var window = backgroundControls.createObject(testCase)
+        verify(window)
+
+        var control = window[data.tag]
+        verify(control)
+
+        control.parent = window.contentItem
+        control.visible = true
+
+        var defaultBackground = control.background.color
+
+        window.Material.background = "#ff0000"
+        compare(window.color, "#ff0000")
+
+        // For controls that have an animated background color, we wait the length
+        // of the color animation to be sure that the color hasn't actually changed.
+        if (data.wait)
+            wait(data.wait)
+
+        // We want the control's background color to be equal to the window's background
+        // color, because we want the color to propagate to items that might actually use
+        // it... Button, ComboBox, ToolBar and ToolTip have a special background color,
+        // so they don't use the generic background color unless explicitly set, so we
+        // compare the actual background rect color instead.
+        if (data.inherit)
+            compare(control.background.color, "#ff0000")
+        else
+            compare(control.background.color, defaultBackground)
+
+        control.Material.background = "#0000ff"
+        tryCompare(control.background, "color", "#0000ff")
 
         window.destroy()
     }

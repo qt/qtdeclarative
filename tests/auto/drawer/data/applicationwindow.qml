@@ -51,12 +51,5 @@ ApplicationWindow {
         id: drawer
         width: 200
         height: 200
-
-        MouseArea {
-            // QTBUG-54629
-            anchors.fill: parent
-            anchors.margins: -Qt.styleHints.startDragDistance
-            Rectangle { color: "red"; opacity: 0.25; anchors.fill: parent }
-        }
     }
 }

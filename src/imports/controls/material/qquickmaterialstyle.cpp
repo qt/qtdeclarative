@@ -706,6 +706,7 @@ void QQuickMaterialStyle::setBackground(const QVariant &var)
     m_background = background;
     propagateBackground();
     emit backgroundChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool has)
@@ -854,7 +855,7 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted) const
 
     QColor color = Qt::transparent;
 
-    if (m_hasBackground) {
+    if (m_explicitBackground) {
         color = backgroundColor(shade);
     } else if (highlighted) {
         color = accentColor(shade);
@@ -950,16 +951,11 @@ QColor QQuickMaterialStyle::scrollBarPressedColor() const
     return QColor::fromRgba(m_theme == Light ? 0x80000000 : 0x80FFFFFF);
 }
 
-QColor QQuickMaterialStyle::drawerBackgroundColor() const
-{
-    return QColor::fromRgba(dividerColorLight);
-}
-
 QColor QQuickMaterialStyle::dialogColor() const
 {
-    if (!m_hasBackground)
-        return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
-    return backgroundColor();
+    if (m_hasBackground)
+        return backgroundColor();
+    return QColor::fromRgba(m_theme == Light ? dialogColorLight : dialogColorDark);
 }
 
 QColor QQuickMaterialStyle::backgroundDimColor() const
@@ -974,7 +970,16 @@ QColor QQuickMaterialStyle::listHighlightColor() const
 
 QColor QQuickMaterialStyle::tooltipColor() const
 {
+    if (m_explicitBackground)
+        return backgroundColor();
     return color(Grey, Shade700);
+}
+
+QColor QQuickMaterialStyle::toolBarColor() const
+{
+    if (m_explicitBackground)
+        return backgroundColor();
+    return primaryColor();
 }
 
 QColor QQuickMaterialStyle::toolTextColor() const

@@ -66,6 +66,7 @@
 #include <QtQuickTemplates2/private/qquickradiobutton_p.h>
 #include <QtQuickTemplates2/private/qquickradiodelegate_p.h>
 #include <QtQuickTemplates2/private/qquickrangeslider_p.h>
+#include <QtQuickTemplates2/private/qquickroundbutton_p.h>
 #include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 #include <QtQuickTemplates2/private/qquickscrollindicator_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
@@ -186,6 +187,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickMenuSeparator>(uri, 2, 1, "MenuSeparator");
     qmlRegisterType<QQuickPopup, 1>(uri, 2, 1, "Popup");
     qmlRegisterType<QQuickRangeSlider, 1>(uri, 2, 1, "RangeSlider");
+    qmlRegisterType<QQuickRoundButton, 1>(uri, 2, 1, "RoundButton");
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");
     qmlRegisterType<QQuickSpinBox, 1>(uri, 2, 1, "SpinBox");
     qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");

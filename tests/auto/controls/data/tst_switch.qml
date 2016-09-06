@@ -50,42 +50,16 @@ TestCase {
     when: windowShown
     name: "Switch"
 
-    SignalSpy {
-        id: checkedSpy
-        signalName: "checkedChanged"
-    }
-
-    SignalSpy {
-        id: pressedSpy
-        signalName: "pressedChanged"
-    }
-
-    SignalSpy {
-        id: clickedSpy
-        signalName: "clicked"
-    }
-
     Component {
         id: swtch
         Switch { }
     }
 
-    function init() {
-        verify(!checkedSpy.target)
-        verify(!pressedSpy.target)
-        verify(!clickedSpy.target)
-        compare(checkedSpy.count, 0)
-        compare(pressedSpy.count, 0)
-        compare(clickedSpy.count, 0)
-    }
-
-    function cleanup() {
-        checkedSpy.target = null
-        pressedSpy.target = null
-        clickedSpy.target = null
-        checkedSpy.clear()
-        pressedSpy.clear()
-        clickedSpy.clear()
+    Component {
+        id: signalSequenceSpy
+        SignalSequenceSpy {
+            signals: ["pressed", "released", "canceled", "clicked", "pressedChanged", "checkedChanged"]
+        }
     }
 
     function test_text() {
@@ -105,19 +79,18 @@ TestCase {
         var control = swtch.createObject(testCase)
         verify(control)
 
-        checkedSpy.target = control
-        verify(checkedSpy.valid)
-
         compare(control.checked, false)
-        compare(checkedSpy.count, 0)
 
+        var spy = signalSequenceSpy.createObject(control, {target: control})
+        spy.expectedSequence = [["checkedChanged", { "checked": true }]]
         control.checked = true
         compare(control.checked, true)
-        compare(checkedSpy.count, 1)
+        verify(spy.success)
 
+        spy.expectedSequence = [["checkedChanged", { "checked": false }]]
         control.checked = false
         compare(control.checked, false)
-        compare(checkedSpy.count, 2)
+        verify(spy.success)
 
         control.destroy()
     }
@@ -126,71 +99,80 @@ TestCase {
         var control = swtch.createObject(testCase)
         verify(control)
 
-        checkedSpy.target = control
-        pressedSpy.target = control
-        clickedSpy.target = control
-        verify(checkedSpy.valid)
-        verify(pressedSpy.valid)
-        verify(clickedSpy.valid)
-
         // check
+        var spy = signalSequenceSpy.createObject(control, {target: control})
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 1)
         compare(control.pressed, true)
+        verify(spy.success)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "released",
+                                "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(clickedSpy.count, 1)
-        compare(checkedSpy.count, 1)
-        compare(pressedSpy.count, 2)
         compare(control.checked, true)
         compare(control.pressed, false)
+        verify(spy.success)
 
         // uncheck
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 3)
         compare(control.pressed, true)
+        verify(spy.success)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "released",
+                                "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(clickedSpy.count, 2)
-        compare(checkedSpy.count, 2)
-        compare(pressedSpy.count, 4)
         compare(control.checked, false)
         compare(control.pressed, false)
+        verify(spy.success)
 
         // release on the right
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 5)
         compare(control.pressed, true)
+        verify(spy.success)
         mouseMove(control, control.width * 2, control.height / 2, 0, Qt.LeftButton)
         compare(control.pressed, true)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "released",
+                                "clicked"]
         mouseRelease(control, control.width * 2, control.height / 2, Qt.LeftButton)
-        compare(clickedSpy.count, 3)
-        compare(checkedSpy.count, 3)
-        compare(pressedSpy.count, 6)
         compare(control.checked, true)
         compare(control.pressed, false)
+        verify(spy.success)
 
         // release on the left
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 7)
         compare(control.pressed, true)
+        verify(spy.success)
         mouseMove(control, -control.width, control.height / 2, 0, Qt.LeftButton)
         compare(control.pressed, true)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "released",
+                                "clicked"]
         mouseRelease(control, -control.width, control.height / 2, Qt.LeftButton)
-        compare(clickedSpy.count, 4)
-        compare(checkedSpy.count, 4)
-        compare(pressedSpy.count, 8)
         compare(control.checked, false)
         compare(control.pressed, false)
+        verify(spy.success)
 
         // right button
+        spy.expectedSequence = []
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
-        compare(pressedSpy.count, 8)
         compare(control.pressed, false)
+        verify(spy.success)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
-        compare(clickedSpy.count, 4)
-        compare(checkedSpy.count, 4)
-        compare(pressedSpy.count, 8)
         compare(control.checked, false)
         compare(control.pressed, false)
+        verify(spy.success)
 
         control.destroy()
     }
@@ -199,33 +181,39 @@ TestCase {
         var control = swtch.createObject(testCase)
         verify(control)
 
-        checkedSpy.target = control
-        clickedSpy.target = control
-        verify(checkedSpy.valid)
-        verify(clickedSpy.valid)
-
         control.forceActiveFocus()
         verify(control.activeFocus)
 
         // check
+        var spy = signalSequenceSpy.createObject(control, {target: control})
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed",
+                                ["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "released",
+                                "clicked"]
         keyClick(Qt.Key_Space)
-        compare(clickedSpy.count, 1)
-        compare(checkedSpy.count, 1)
         compare(control.checked, true)
+        verify(spy.success)
 
         // uncheck
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed",
+                                ["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "released",
+                                "clicked"]
         keyClick(Qt.Key_Space)
-        compare(clickedSpy.count, 2)
-        compare(checkedSpy.count, 2)
         compare(control.checked, false)
+        verify(spy.success)
 
         // no change
+        spy.expectedSequence = []
         var keys = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab]
         for (var i = 0; i < keys.length; ++i) {
             keyClick(keys[i])
-            compare(clickedSpy.count, 2)
-            compare(checkedSpy.count, 2)
             compare(control.checked, false)
+            verify(spy.success)
         }
 
         control.destroy()
@@ -261,6 +249,17 @@ TestCase {
         var control = swtch.createObject(testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
+        control.destroy()
+    }
+
+    function test_focus() {
+        var control = swtch.createObject(testCase)
+        verify(control)
+
+        verify(!control.activeFocus)
+        mouseClick(control.indicator)
+        verify(control.activeFocus)
+
         control.destroy()
     }
 }

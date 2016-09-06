@@ -38,7 +38,6 @@
 **
 ****************************************************************************/
 
-import QtGraphicalEffects 1.0
 import QtQuick 2.8
 import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.1
@@ -226,7 +225,7 @@ ApplicationWindow {
         }
     }
 
-    Button {
+    RoundButton {
         id: editButton
         font.family: "fontello"
         text: "\uE809" // icon-pencil
@@ -244,20 +243,6 @@ ApplicationWindow {
             textArea.readOnly = false
             // Force focus on the text area so the cursor and footer show up.
             textArea.forceActiveFocus()
-        }
-
-        background: Rectangle {
-            implicitWidth: parent.width
-            implicitHeight: parent.height
-            radius: width / 2
-            color: parent.down ? Qt.darker(Material.accent) : Material.accent
-
-            layer.enabled: editButton.enabled
-            layer.effect: DropShadow {
-                color: "#44000000"
-                verticalOffset: 2
-                samples: 16
-            }
         }
     }
 

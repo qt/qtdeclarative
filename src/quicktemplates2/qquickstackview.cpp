@@ -1092,4 +1092,21 @@ QQuickStackView::Status QQuickStackAttached::status() const
     \sa status
 */
 
+/*!
+    \qmlattachedsignal QtQuick.Controls::StackView::removed()
+    \since QtQuick.Controls 2.1
+
+    This attached signal is emitted when the item it's attached to has been
+    removed from the stack. It can be used to safely destroy an Item that was
+    pushed onto the stack, for example:
+
+    \code
+    Item {
+        StackView.onRemoved: destroy() // Will be destroyed sometime after this call.
+    }
+    \endcode
+
+    \sa status
+*/
+
 QT_END_NAMESPACE

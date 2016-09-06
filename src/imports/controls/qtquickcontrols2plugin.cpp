@@ -87,8 +87,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
     qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
-    qmlRegisterType<QQuickContainer>(uri, 2, 0, "Container");
-    qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
 
     QQuickStylePrivate::init(typeUrl());
     const QString style = QQuickStyle::name();
@@ -104,6 +102,8 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("CheckBox.qml")), uri, 2, 0, "CheckBox");
     qmlRegisterType(selector.select(QStringLiteral("CheckDelegate.qml")), uri, 2, 0, "CheckDelegate");
     qmlRegisterType(selector.select(QStringLiteral("ComboBox.qml")), uri, 2, 0, "ComboBox");
+    qmlRegisterType(selector.select(QStringLiteral("Container.qml")), uri, 2, 0, "Container");
+    qmlRegisterType(selector.select(QStringLiteral("Control.qml")), uri, 2, 0, "Control");
     qmlRegisterType(selector.select(QStringLiteral("Dial.qml")), uri, 2, 0, "Dial");
     qmlRegisterType(selector.select(QStringLiteral("Drawer.qml")), uri, 2, 0, "Drawer");
     qmlRegisterType(selector.select(QStringLiteral("Frame.qml")), uri, 2, 0, "Frame");
@@ -144,6 +144,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("Dialog.qml")), uri, 2, 1, "Dialog");
     qmlRegisterType(selector.select(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
     qmlRegisterType(selector.select(QStringLiteral("MenuSeparator.qml")), uri, 2, 1, "MenuSeparator");
+    qmlRegisterType(selector.select(QStringLiteral("RoundButton.qml")), uri, 2, 1, "RoundButton");
     qmlRegisterType(selector.select(QStringLiteral("ToolSeparator.qml")), uri, 2, 1, "ToolSeparator");
 }
 

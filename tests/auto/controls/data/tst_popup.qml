@@ -1006,18 +1006,13 @@ TestCase {
         ApplicationWindow {
             property alias firstDrawer: firstDrawer
             property alias secondDrawer: secondDrawer
-            property alias upperDrawer: upperDrawer
             property alias modalPopup: modalPopup
             property alias modelessPopup: modelessPopup
             property alias plainPopup: plainPopup
             property alias modalPopupWithoutDim: modalPopupWithoutDim
             visible: true
             Drawer {
-                z: 5
-                id: upperDrawer
-            }
-            Drawer {
-                z: 1
+                z: 0
                 id: firstDrawer
             }
             Drawer {
@@ -1073,52 +1068,41 @@ TestCase {
         window.requestActivate()
         tryCompare(window, "active", true)
 
-        var countBefore = window.overlay.children.length
-        compare(countBefore, 6) // 3 drawers + 3 overlays
+        compare(window.overlay.children.length, 0)
 
         var firstOverlay = findOverlay(window, window.firstDrawer)
+        verify(!firstOverlay)
+        window.firstDrawer.open()
+        compare(window.overlay.children.length, 2) // 1 drawer + 1 overlay
+        firstOverlay = findOverlay(window, window.firstDrawer)
         verify(firstOverlay)
-        compare(firstOverlay.opacity, 0.0)
         compare(firstOverlay.z, window.firstDrawer.z)
         compare(indexOf(window.overlay.children, firstOverlay),
                 indexOf(window.overlay.children, window.firstDrawer.contentItem.parent) - 1)
+        tryCompare(firstOverlay, "opacity", 1.0)
 
         var secondOverlay = findOverlay(window, window.secondDrawer)
+        verify(!secondOverlay)
+        window.secondDrawer.open()
+        compare(window.overlay.children.length, 4) // 2 drawers + 2 overlays
+        secondOverlay = findOverlay(window, window.secondDrawer)
         verify(secondOverlay)
-        compare(secondOverlay.opacity, 0.0)
         compare(secondOverlay.z, window.secondDrawer.z)
         compare(indexOf(window.overlay.children, secondOverlay),
                 indexOf(window.overlay.children, window.secondDrawer.contentItem.parent) - 1)
+        tryCompare(secondOverlay, "opacity", 1.0)
 
-        var upperOverlay = findOverlay(window, window.upperDrawer)
-        verify(upperOverlay)
-        compare(upperOverlay.opacity, 0.0)
-        compare(upperOverlay.z, window.upperDrawer.z)
-        compare(indexOf(window.overlay.children, upperOverlay),
-                indexOf(window.overlay.children, window.upperDrawer.contentItem.parent) - 1)
-
-        window.firstDrawer.open()
-        compare(firstOverlay.z, 1.0)
-        tryCompare(firstOverlay, "opacity", 1.0)
         window.firstDrawer.close()
-        tryCompare(firstOverlay, "opacity", 0.0)
         tryCompare(window.firstDrawer, "visible", false)
+        firstOverlay = findOverlay(window, window.firstDrawer)
+        verify(!firstOverlay)
+        compare(window.overlay.children.length, 2) // 1 drawer + 1 overlay
 
-        window.secondDrawer.open()
-        compare(secondOverlay.z, 1.0)
-        tryCompare(secondOverlay, "opacity", 1.0)
         window.secondDrawer.close()
-        tryCompare(secondOverlay, "opacity", 0.0)
         tryCompare(window.secondDrawer, "visible", false)
-
-        window.firstDrawer.open()
-        window.secondDrawer.open()
-        tryCompare(firstOverlay, "opacity", 1.0)
-        tryCompare(secondOverlay, "opacity", 1.0)
-        window.firstDrawer.close()
-        window.secondDrawer.close()
-        tryCompare(firstOverlay, "opacity", 0.0)
-        tryCompare(secondOverlay, "opacity", 0.0)
+        secondOverlay = findOverlay(window, window.secondDrawer)
+        verify(!secondOverlay)
+        compare(window.overlay.children.length, 0)
 
         var modalOverlay = findOverlay(window, window.modalPopup)
         verify(!modalOverlay)
@@ -1128,7 +1112,7 @@ TestCase {
         compare(modalOverlay.z, window.modalPopup.z)
         compare(window.modalPopup.visible, true)
         tryCompare(modalOverlay, "opacity", 1.0)
-        compare(window.overlay.children.length, countBefore + 2) // 1 popup + 1 overlay
+        compare(window.overlay.children.length, 2) // 1 popup + 1 overlay
 
         var modelessOverlay = findOverlay(window, window.modelessPopup)
         verify(!modelessOverlay)
@@ -1138,13 +1122,13 @@ TestCase {
         compare(modelessOverlay.z, window.modelessPopup.z)
         compare(window.modelessPopup.visible, true)
         tryCompare(modelessOverlay, "opacity", 1.0)
-        compare(window.overlay.children.length, countBefore + 4) // 2 popups + 2 overlays
+        compare(window.overlay.children.length, 4) // 2 popups + 2 overlays
 
         window.modelessPopup.close()
         tryCompare(window.modelessPopup, "visible", false)
         modelessOverlay = findOverlay(window, window.modelessPopup)
         verify(!modelessOverlay)
-        compare(window.overlay.children.length, countBefore + 2) // 1 popup + 1 overlay
+        compare(window.overlay.children.length, 2) // 1 popup + 1 overlay
 
         compare(window.modalPopup.visible, true)
         compare(modalOverlay.opacity, 1.0)
@@ -1153,23 +1137,29 @@ TestCase {
         tryCompare(window.modalPopup, "visible", false)
         modalOverlay = findOverlay(window, window.modalPopup)
         verify(!modalOverlay)
-        compare(window.overlay.children.length, countBefore)
+        compare(window.overlay.children.length, 0)
 
         window.plainPopup.open()
         tryCompare(window.plainPopup, "visible", true)
-        compare(window.overlay.children.length, countBefore + 1) // only popup added, no overlays involved
+        compare(window.overlay.children.length, 1) // only popup added, no overlays involved
+
+        window.plainPopup.modal = true
+        compare(window.overlay.children.length, 2) // overlay added
 
         window.plainPopup.close()
         tryCompare(window.plainPopup, "visible", false)
-        compare(window.overlay.children.length, countBefore) // only popup removed, no overlays involved
+        compare(window.overlay.children.length, 0) // popup + overlay removed
 
         window.modalPopupWithoutDim.open()
         tryCompare(window.modalPopupWithoutDim, "visible", true)
-        compare(window.overlay.children.length, countBefore + 1) // only popup added, no overlays involved
+        compare(window.overlay.children.length, 1) // only popup added, no overlays involved
+
+        window.modalPopupWithoutDim.dim = true
+        compare(window.overlay.children.length, 2) // overlay added
 
         window.modalPopupWithoutDim.close()
         tryCompare(window.modalPopupWithoutDim, "visible", false)
-        compare(window.overlay.children.length, countBefore) // only popup added, no overlays involved
+        compare(window.overlay.children.length, 0) // popup + overlay removed
 
         window.destroy()
     }

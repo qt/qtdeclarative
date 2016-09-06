@@ -191,7 +191,8 @@ void tst_Gifs::tumblerWrap()
 
     gifRecorder.waitForFinish();
 
-    foreach (CapturedEvent event, eventCapturer.capturedEvents())
+    const auto capturedEvents = eventCapturer.capturedEvents();
+    for (CapturedEvent event : capturedEvents)
         qDebug().noquote() << event.cppCommand();
 }
 

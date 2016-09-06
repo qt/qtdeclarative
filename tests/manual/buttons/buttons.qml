@@ -62,6 +62,11 @@ ApplicationWindow {
                 text: "Hover"
                 checked: true
             }
+            CheckBox {
+                id: roundBox
+                text: "Round"
+                checked: false
+            }
         }
     }
 
@@ -105,25 +110,25 @@ ApplicationWindow {
                             spacing: 20
                             padding: 20
 
-                            Button { text: "Normal";   flat: modelData.flat; hoverEnabled: hoverBox.checked }
-                            Button { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; enabled: false }
-                            Button { text: "Down";     flat: modelData.flat; hoverEnabled: hoverBox.checked; down: true }
-                            Button { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; down: true; enabled: false }
+                            ButtonLoader { text: "Normal";   flat: modelData.flat; hoverEnabled: hoverBox.checked; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; enabled: false; round: roundBox.checked }
+                            ButtonLoader { text: "Down";     flat: modelData.flat; hoverEnabled: hoverBox.checked; down: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; down: true; enabled: false; round: roundBox.checked }
 
-                            Button { text: "Checked";  flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true }
-                            Button { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; enabled: false }
-                            Button { text: "Down";     flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; down: true }
-                            Button { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; down: true; enabled: false }
+                            ButtonLoader { text: "Checked";  flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; enabled: false; round: roundBox.checked }
+                            ButtonLoader { text: "Down";     flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; down: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled"; flat: modelData.flat; hoverEnabled: hoverBox.checked; checked: true; down: true; enabled: false; round: roundBox.checked }
 
-                            Button { text: "Highlighted"; flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true }
-                            Button { text: "Disabled";    flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; enabled: false }
-                            Button { text: "Down";        flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; down: true }
-                            Button { text: "Disabled";    flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; down: true; enabled: false }
+                            ButtonLoader { text: "Highlighted"; flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled";    flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; enabled: false; round: roundBox.checked }
+                            ButtonLoader { text: "Down";        flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; down: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled";    flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; down: true; enabled: false; round: roundBox.checked }
 
-                            Button { text: "Hi-checked"; flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true }
-                            Button { text: "Disabled";   flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; enabled: false }
-                            Button { text: "Down";       flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; down: true }
-                            Button { text: "Disabled";   flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; down: true; enabled: false }
+                            ButtonLoader { text: "Hi-checked"; flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled";   flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; enabled: false; round: roundBox.checked }
+                            ButtonLoader { text: "Down";       flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; down: true; round: roundBox.checked }
+                            ButtonLoader { text: "Disabled";   flat: modelData.flat; hoverEnabled: hoverBox.checked; highlighted: true; checked: true; down: true; enabled: false; round: roundBox.checked }
                         }
                     }
                 }

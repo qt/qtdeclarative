@@ -109,6 +109,24 @@ struct QQuickStyleSpec
         resolve();
     }
 
+    static QString findStyle(const QString &path, const QString &name)
+    {
+        QDir dir(path);
+        if (!dir.exists())
+            return QString();
+
+        if (name.isEmpty())
+            return dir.absolutePath() + QLatin1Char('/');
+
+        const QStringList entries = dir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QString &entry : entries) {
+            if (entry.compare(name, Qt::CaseInsensitive) == 0)
+                return dir.absoluteFilePath(entry);
+        }
+
+        return QString();
+    }
+
     void resolve(const QUrl &baseUrl = QUrl())
     {
         if (style.isEmpty())
@@ -122,10 +140,12 @@ struct QQuickStyleSpec
         }
 
         if (baseUrl.isValid()) {
-            if (style.isEmpty())
-                style = baseUrl.toString(QUrl::StripTrailingSlash) + QLatin1Char('/');
-            else if (!style.contains(QLatin1Char('/')))
-                style = baseUrl.toString(QUrl::StripTrailingSlash) + QLatin1Char('/') + style;
+            QString path = QQmlFile::urlToLocalFileOrQrc(baseUrl);
+            QString stylePath = findStyle(path, style);
+            if (!stylePath.isEmpty()) {
+                style = stylePath;
+                resolved = true;
+            }
         }
 
         if (QGuiApplication::instance()) {
@@ -134,24 +154,12 @@ struct QQuickStyleSpec
                 const QStringList importPaths = QQmlEngine().importPathList();
 
                 for (const QString &importPath : importPaths) {
-                    QDir importDir(importPath);
-                    if (importDir.cd(targetPath)) {
-                        if (style.isEmpty()) {
-                            style = importDir.absolutePath() + QLatin1Char('/');
-                            resolved = true;
-                            break;
-                        }
-                        const QStringList entries = importDir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
-                        for (const QString &entry : entries) {
-                            if (entry.compare(style, Qt::CaseInsensitive) == 0) {
-                                style = importDir.absoluteFilePath(entry);
-                                resolved = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (resolved)
+                    QString stylePath = findStyle(importPath + QLatin1Char('/') + targetPath, style);
+                    if (!stylePath.isEmpty()) {
+                        style = stylePath;
+                        resolved = true;
                         break;
+                    }
                 }
             }
             resolved = true;

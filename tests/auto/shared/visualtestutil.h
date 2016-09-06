@@ -118,9 +118,10 @@ namespace QQuickVisualTestUtil
             component.loadUrl(testCase->testFileUrl(testFilePath));
             QObject *rootObject = component.create();
             cleanup.reset(rootObject);
-            QVERIFY2(rootObject, qPrintable(QString::fromLatin1("Failed to create ApplicationWindow: %1").arg(component.errorString())));
+            QVERIFY2(rootObject, qPrintable(QString::fromLatin1("Failed to create window: %1").arg(component.errorString())));
 
-            window = qobject_cast<QQuickApplicationWindow*>(rootObject);
+            window = qobject_cast<QQuickWindow*>(rootObject);
+            appWindow = qobject_cast<QQuickApplicationWindow*>(rootObject);
             QVERIFY(window);
             QVERIFY(!window->isVisible());
         }
@@ -128,7 +129,8 @@ namespace QQuickVisualTestUtil
         QQmlEngine engine;
         QQmlComponent component;
         QScopedPointer<QObject> cleanup;
-        QQuickApplicationWindow *window;
+        QQuickApplicationWindow *appWindow;
+        QQuickWindow *window;
     };
 }
 

@@ -16,6 +16,8 @@ QML_CONTROLS = \
     CheckDelegate.qml \
     CheckIndicator.qml \
     ComboBox.qml \
+    Container.qml \
+    Control.qml \
     Dial.qml \
     Dialog.qml \
     DialogButtonBox.qml \
@@ -36,6 +38,7 @@ QML_CONTROLS = \
     RadioDelegate.qml \
     RadioIndicator.qml \
     RangeSlider.qml \
+    RoundButton.qml \
     ScrollBar.qml \
     ScrollIndicator.qml \
     Slider.qml \

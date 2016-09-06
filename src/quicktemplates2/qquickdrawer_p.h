@@ -87,8 +87,6 @@ protected:
     void mouseUngrabEvent() override;
     bool overlayEvent(QQuickItem *item, QEvent *event) override;
 
-    void componentComplete() override;
-
 private:
     Q_DISABLE_COPY(QQuickDrawer)
     Q_DECLARE_PRIVATE(QQuickDrawer)

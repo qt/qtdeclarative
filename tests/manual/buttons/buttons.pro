@@ -3,4 +3,4 @@ TARGET = buttons
 QT += qml quickcontrols2
 
 SOURCES += buttons.cpp
-RESOURCES += buttons.qml
+RESOURCES += $$files(*.qml)
