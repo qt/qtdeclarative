@@ -52,6 +52,7 @@
 
 #include <QtCore/QString>
 #include <private/qv4global_p.h>
+#include <QSharedPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -138,6 +139,61 @@ struct Pointer {
 };
 
 }
+
+#ifdef QT_NO_QOBJECT
+template <class T>
+struct QQmlQPointer {
+};
+#else
+template <class T>
+struct QQmlQPointer {
+    void init()
+    {
+        d = nullptr;
+        qObject = nullptr;
+    }
+
+    void init(T *o)
+    {
+        Q_ASSERT(d == nullptr);
+        Q_ASSERT(qObject == nullptr);
+        if (o) {
+            d = QtSharedPointer::ExternalRefCountData::getAndRef(o);
+            qObject = o;
+        }
+    }
+
+    void destroy()
+    {
+        if (d && !d->weakref.deref())
+            delete d;
+        d = nullptr;
+        qObject = nullptr;
+    }
+
+    T *data() const {
+        return d == nullptr || d->strongref.load() == 0 ? nullptr : qObject;
+    }
+    operator T*() const { return data(); }
+    inline T* operator->() const { return data(); }
+    QQmlQPointer &operator=(T *o)
+    {
+        if (d)
+            destroy();
+        init(o);
+        return *this;
+    }
+    bool isNull() const Q_DECL_NOTHROW
+    {
+        return d == nullptr || qObject == nullptr || d->strongref.load() == 0;
+    }
+
+private:
+    QtSharedPointer::ExternalRefCountData *d;
+    QObject *qObject;
+};
+Q_STATIC_ASSERT(std::is_trivial<QQmlQPointer<QObject>>::value);
+#endif
 
 }
 

@@ -66,14 +66,15 @@ Heap::QmlContextWrapper::QmlContextWrapper(QQmlContextData *context, QObject *sc
     , ownsContext(ownsContext)
     , isNullWrapper(false)
     , context(context)
-    , scopeObject(scopeObject)
 {
+    this->scopeObject.init(scopeObject);
 }
 
 Heap::QmlContextWrapper::~QmlContextWrapper()
 {
     if (context && ownsContext)
         context->destroy();
+    scopeObject.destroy();
 }
 
 ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *ctxt, QObject *scope)

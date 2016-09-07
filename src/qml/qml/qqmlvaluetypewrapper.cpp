@@ -63,8 +63,9 @@ namespace Heap {
 
 struct QQmlValueTypeReference : QQmlValueTypeWrapper
 {
-    QQmlValueTypeReference() {}
-    QPointer<QObject> object;
+    QQmlValueTypeReference() { object.init(); }
+    ~QQmlValueTypeReference() { object.destroy(); }
+    QQmlQPointer<QObject> object;
     int property;
 };
 

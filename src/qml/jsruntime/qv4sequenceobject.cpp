@@ -218,9 +218,10 @@ template <typename Container>
 struct QQmlSequence : Object {
     QQmlSequence(const Container &container);
     QQmlSequence(QObject *object, int propertyIndex);
+    ~QQmlSequence() { object.destroy(); }
 
     mutable Container container;
-    QPointer<QObject> object;
+    QQmlQPointer<QObject> object;
     int propertyIndex;
     bool isReference;
 };
@@ -558,6 +559,8 @@ Heap::QQmlSequence<Container>::QQmlSequence(const Container &container)
     , propertyIndex(-1)
     , isReference(false)
 {
+    object.init();
+
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
@@ -566,10 +569,10 @@ Heap::QQmlSequence<Container>::QQmlSequence(const Container &container)
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QObject *object, int propertyIndex)
-    : object(object)
-    , propertyIndex(propertyIndex)
+    : propertyIndex(propertyIndex)
     , isReference(true)
 {
+    this->object.init(object);
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
