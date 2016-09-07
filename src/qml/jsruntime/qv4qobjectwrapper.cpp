@@ -1842,23 +1842,33 @@ DEFINE_OBJECT_VTABLE(QObjectMethod);
 
 
 Heap::QMetaObjectWrapper::QMetaObjectWrapper(const QMetaObject *metaObject)
-    : metaObject(metaObject) {
+    : metaObject(metaObject)
+    , constructors(nullptr)
+    , constructorCount(0)
+{}
 
+Heap::QMetaObjectWrapper::~QMetaObjectWrapper()
+{
+    delete[] constructors;
 }
 
 void Heap::QMetaObjectWrapper::ensureConstructorsCache() {
 
     const int count = metaObject->constructorCount();
-    if (constructors.size() != count) {
-        constructors.clear();
-        constructors.reserve(count);
+    if (constructorCount != count) {
+        delete[] constructors;
+        constructorCount = count;
+        if (count == 0) {
+            constructors = nullptr;
+            return;
+        }
+        constructors = new QQmlPropertyData[count];
 
         for (int i = 0; i < count; ++i) {
             QMetaMethod method = metaObject->constructor(i);
-            QQmlPropertyData d;
+            QQmlPropertyData &d = constructors[i];
             d.load(method);
             d.setCoreIndex(i);
-            constructors << d;
         }
     }
 }
@@ -1897,7 +1907,7 @@ ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
 
     ExecutionEngine *v4 = engine();
     const QMetaObject* mo = d()->metaObject;
-    if (d()->constructors.isEmpty()) {
+    if (d()->constructorCount == 0) {
         return v4->throwTypeError(QStringLiteral("%1 has no invokable constructor")
                                       .arg(QLatin1String(mo->className())));
     }
@@ -1905,8 +1915,8 @@ ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
     Scope scope(v4);
     Scoped<QObjectWrapper> object(scope);
 
-    if (d()->constructors.size() == 1) {
-        object = callConstructor(d()->constructors.first(), v4, callData);
+    if (d()->constructorCount == 1) {
+        object = callConstructor(d()->constructors[0], v4, callData);
     }
     else {
         object = callOverloadedConstructor(v4, callData);
@@ -1927,7 +1937,7 @@ ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, 
 
 
 ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
-    const int numberOfConstructors = d()->constructors.size();
+    const int numberOfConstructors = d()->constructorCount;
     const int argumentCount = callArgs->argc;
     const QQmlStaticMetaObject object(d()->metaObject);
 
@@ -1939,7 +1949,7 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
     QV4::ScopedValue v(scope);
 
     for (int i = 0; i < numberOfConstructors; i++) {
-        const QQmlPropertyData & attempt = d()->constructors.at(i);
+        const QQmlPropertyData & attempt = d()->constructors[i];
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt.hasArguments()) {
@@ -1978,7 +1988,7 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         for (int i = 0; i < numberOfConstructors; i++) {
-            const QQmlPropertyData & candidate = d()->constructors.at(i);
+            const QQmlPropertyData & candidate = d()->constructors[i];
             error += QLatin1String("\n    ") +
                     QString::fromUtf8(d()->metaObject->constructor(candidate.coreIndex())
                                       .methodSignature());

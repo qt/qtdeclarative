@@ -94,10 +94,12 @@ struct QObjectMethod : FunctionObject {
 };
 
 struct QMetaObjectWrapper : FunctionObject {
-    QMetaObjectWrapper(const QMetaObject* metaObject);
     const QMetaObject* metaObject;
-    QVector<QQmlPropertyData> constructors;
+    QQmlPropertyData *constructors;
+    int constructorCount;
 
+    QMetaObjectWrapper(const QMetaObject* metaObject);
+    ~QMetaObjectWrapper();
     void ensureConstructorsCache();
 };
 
