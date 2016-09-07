@@ -119,14 +119,15 @@ struct ExecutionContext : Base {
 inline
 ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     : engine(engine)
-    , outer(nullptr)
     , lookups(nullptr)
     , constantTable(nullptr)
     , compilationUnit(nullptr)
     , type(t)
     , strictMode(false)
     , lineNumber(-1)
-{}
+{
+    outer = nullptr;
+}
 
 
 struct CallContext : ExecutionContext {

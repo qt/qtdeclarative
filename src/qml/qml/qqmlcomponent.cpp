@@ -1487,9 +1487,9 @@ QQmlComponentExtension::~QQmlComponentExtension()
 QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QQmlIncubator::IncubationMode m)
     : valuemap(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
-    , qmlContext(0)
 {
     parent.init();
+    qmlContext = nullptr;
     incubator.reset(new QQmlComponentIncubator(this, m));
 }
 

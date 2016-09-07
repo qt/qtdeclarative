@@ -124,9 +124,6 @@ struct Q_QML_EXPORT Base {
 
 template <typename T>
 struct Pointer {
-    Pointer() {}
-    Pointer(T *t) : ptr(t) {}
-
     T *operator->() const { return ptr; }
     operator T *() const { return ptr; }
 
@@ -137,6 +134,7 @@ struct Pointer {
 
     T *ptr;
 };
+Q_STATIC_ASSERT(std::is_trivial<Pointer<void>>::value);
 
 }
 
