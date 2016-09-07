@@ -363,6 +363,14 @@ QAccessible::Role QQuickTextAreaPrivate::accessibleRole() const
 }
 #endif
 
+void QQuickTextAreaPrivate::deleteDelegate(QObject *delegate)
+{
+    if (componentComplete)
+        delete delegate;
+    else
+        pendingDeletions.append(delegate);
+}
+
 QFont QQuickTextArea::font() const
 {
     return QQuickTextEdit::font();
@@ -401,7 +409,7 @@ void QQuickTextArea::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    delete d->background;
+    d->deleteDelegate(d->background);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -497,6 +505,9 @@ void QQuickTextArea::componentComplete()
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
+
+    qDeleteAll(d->pendingDeletions);
+    d->pendingDeletions.clear();
 }
 
 void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)

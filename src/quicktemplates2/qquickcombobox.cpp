@@ -627,7 +627,7 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    delete d->indicator;
+    d->deleteDelegate(d->indicator);
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
@@ -655,7 +655,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     if (d->popup == popup)
         return;
 
-    delete d->popup;
+    d->deleteDelegate(d->popup);
     if (popup) {
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);

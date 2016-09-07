@@ -226,7 +226,7 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
-    delete d->handle;
+    QQuickControlPrivate::get(d->slider)->deleteDelegate(d->handle);
     d->handle = handle;
     if (handle) {
         if (!handle->parentItem())
