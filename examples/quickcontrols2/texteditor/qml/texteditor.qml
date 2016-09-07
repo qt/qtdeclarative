@@ -99,59 +99,59 @@ ApplicationWindow {
 
     MenuBar {
         Menu {
-            title: qsTr("File")
+            title: qsTr("&File")
 
             MenuItem {
-                text: qsTr("Open")
+                text: qsTr("&Open")
                 onTriggered: openDialog.open()
             }
             MenuItem {
-                text: qsTr("Save As...")
+                text: qsTr("&Save As...")
                 onTriggered: saveDialog.open()
             }
             MenuItem {
-                text: qsTr("Quit")
+                text: qsTr("&Quit")
                 onTriggered: Qt.quit()
             }
         }
 
         Menu {
-            title: qsTr("Edit")
+            title: qsTr("&Edit")
 
             MenuItem {
-                text: qsTr("Copy")
+                text: qsTr("&Copy")
                 enabled: textArea.selectedText
                 onTriggered: textArea.copy()
             }
             MenuItem {
-                text: qsTr("Cut")
+                text: qsTr("Cu&t")
                 enabled: textArea.selectedText
                 onTriggered: textArea.cut()
             }
             MenuItem {
-                text: qsTr("Paste")
+                text: qsTr("&Paste")
                 enabled: textArea.canPaste
                 onTriggered: textArea.paste()
             }
         }
 
         Menu {
-            title: qsTr("Format")
+            title: qsTr("F&ormat")
 
             MenuItem {
-                text: qsTr("Bold")
+                text: qsTr("&Bold")
                 checkable: true
                 checked: document.bold
                 onTriggered: document.bold = !document.bold
             }
             MenuItem {
-                text: qsTr("Italic")
+                text: qsTr("&Italic")
                 checkable: true
                 checked: document.italic
                 onTriggered: document.italic = !document.italic
             }
             MenuItem {
-                text: qsTr("Underline")
+                text: qsTr("&Underline")
                 checkable: true
                 checked: document.underline
                 onTriggered: document.underline = !document.underline
