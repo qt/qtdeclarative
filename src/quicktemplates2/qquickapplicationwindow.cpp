@@ -436,7 +436,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
     The difference between \l Window::activeFocusItem and ApplicationWindow::activeFocusControl
     is that the former may point to a building block of a control, whereas the latter points
     to the enclosing control. For example, when SpinBox has focus, activeFocusItem points to
-    the editor and acticeFocusControl to the SpinBox itself.
+    the editor and activeFocusControl to the SpinBox itself.
 
     \sa Window::activeFocusItem
 */
