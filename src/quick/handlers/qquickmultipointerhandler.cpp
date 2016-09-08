@@ -153,7 +153,7 @@ qreal QQuickMultiPointerHandler::averageTouchPointDistance(const QPointF &ref)
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
     for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += (point->scenePos() - ref).manhattanLength();
+        ret += QVector2D(point->scenePos() - ref).length();
     return ret / m_currentPoints.size();
 }
 
@@ -164,7 +164,7 @@ qreal QQuickMultiPointerHandler::averageStartingDistance(const QPointF &ref)
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
     for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += (point->sceneGrabPos() - ref).manhattanLength();
+        ret += QVector2D(point->sceneGrabPos() - ref).length();
     return ret / m_currentPoints.size();
 }
 
