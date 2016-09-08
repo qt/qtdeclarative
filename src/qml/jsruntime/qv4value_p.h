@@ -427,11 +427,8 @@ public:
 
     template<typename T>
     Value &operator=(const Scoped<T> &t);
-    Value &operator=(const Value &v) {
-        _val = v._val;
-        return *this;
-    }
 };
+Q_STATIC_ASSERT(std::is_trivial<Value>::value);
 
 inline bool Value::isString() const
 {

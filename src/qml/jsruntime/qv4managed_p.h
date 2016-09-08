@@ -85,7 +85,12 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::VTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
+        QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
+        QV4::Heap::DataClass *d() const { \
+            QV4::Heap::DataClass *dptr = d_unchecked(); \
+            if (std::is_trivial<QV4::Heap::DataClass>::value) dptr->_checkIsInitialized(); \
+            return dptr; \
+        }
 
 #define V4_MANAGED(DataClass, superClass) \
     private: \

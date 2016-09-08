@@ -527,9 +527,7 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     ScopedObject proto(scope, f->protoForConstructor());
     callData->thisObject = v4->newObject(ic, proto);
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -568,9 +566,7 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
 
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -626,9 +622,7 @@ void BuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);
@@ -649,9 +643,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);

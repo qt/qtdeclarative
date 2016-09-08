@@ -54,6 +54,10 @@
 #include <private/qv4global_p.h>
 #include <QSharedPointer>
 
+// To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
+// parent's init all up the inheritance chain), define QML_CHECK_INIT_DESTROY_CALLS below.
+#undef QML_CHECK_INIT_DESTROY_CALLS
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -120,6 +124,16 @@ struct Q_QML_EXPORT Base {
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }
     void operator delete(void *, Heap::Base *) {}
+
+    void init() { setInitialized(); }
+#ifdef QML_CHECK_INIT_DESTROY_CALLS
+    bool _isInitialized;
+    void _checkIsInitialized() { Q_ASSERT(_isInitialized); }
+    void setInitialized() { Q_ASSERT(!_isInitialized); _isInitialized = true; }
+#else
+    Q_ALWAYS_INLINE void _checkIsInitialized() {}
+    Q_ALWAYS_INLINE void setInitialized() {}
+#endif
 };
 
 template <typename T>

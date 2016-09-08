@@ -133,6 +133,7 @@ struct ArrayData : public Base {
     }
 
 };
+Q_STATIC_ASSERT(std::is_trivial<ArrayData>::value);
 
 struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { return (index + offset) % alloc; }
@@ -152,6 +153,7 @@ struct SimpleArrayData : public ArrayData {
         return attrs ? attrs[i] : Attr_Data;
     }
 };
+Q_STATIC_ASSERT(std::is_trivial<SimpleArrayData>::value);
 
 struct SparseArrayData : public ArrayData {
     inline ~SparseArrayData();
