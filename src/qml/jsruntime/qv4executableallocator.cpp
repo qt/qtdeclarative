@@ -147,7 +147,7 @@ ExecutableAllocator::ExecutableAllocator()
 
 ExecutableAllocator::~ExecutableAllocator()
 {
-    foreach (ChunkOfPages *chunk, chunks) {
+    for (ChunkOfPages *chunk : qAsConst(chunks)) {
         for (Allocation *allocation = chunk->firstAllocation; allocation; allocation = allocation->next)
             if (!allocation->free)
                 allocation->invalidate();

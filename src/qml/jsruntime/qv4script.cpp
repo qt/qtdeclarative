@@ -157,7 +157,8 @@ void Script::parse()
 
     const bool parsed = parser.parseProgram();
 
-    foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+    const auto diagnosticMessages = parser.diagnosticMessages();
+    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isError()) {
             valueScope.engine->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
             return;
@@ -259,7 +260,8 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
 
     QList<QQmlError> errors;
 
-    foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+    const auto diagnosticMessages = parser.diagnosticMessages();
+    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
             qWarning("%s:%d : %s", qPrintable(url.toString()), m.loc.startLine, qPrintable(m.message));
             continue;

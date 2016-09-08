@@ -457,7 +457,7 @@ ExecutionEngine::~ExecutionEngine()
 
     QSet<QV4::CompiledData::CompilationUnit*> remainingUnits;
     qSwap(compilationUnits, remainingUnits);
-    foreach (QV4::CompiledData::CompilationUnit *unit, remainingUnits)
+    for (QV4::CompiledData::CompilationUnit *unit : qAsConst(remainingUnits))
         unit->unlink();
 
     emptyClass->destroy();
