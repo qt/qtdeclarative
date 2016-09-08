@@ -412,8 +412,8 @@ protected:
                 }
             }
             moves.order();
-            QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
-            foreach (IR::Move *move, newMoves)
+            const QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
+            for (IR::Move *move : newMoves)
                 visit(move);
         }
     }
@@ -444,7 +444,7 @@ protected:
 #if !defined(QT_NO_DEBUG)
         Q_ASSERT(_stackSlotForTemp.contains(phi->targetTemp->index));
         Q_ASSERT(_slotIsInUse[_stackSlotForTemp[phi->targetTemp->index]]);
-        foreach (IR::Expr *e, phi->incoming) {
+        for (IR::Expr *e : phi->incoming) {
             if (IR::Temp *t = e->asTemp())
                 Q_ASSERT(_stackSlotForTemp.contains(t->index));
         }

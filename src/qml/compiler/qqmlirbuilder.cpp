@@ -362,10 +362,11 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 
         QQmlJS::Parser parser(&output->jsParserEngine);
 
-        if (! parser.parse() || !parser.diagnosticMessages().isEmpty()) {
-
+        const bool parseResult = parser.parse();
+        const auto diagnosticMessages = parser.diagnosticMessages();
+        if (!parseResult || !diagnosticMessages.isEmpty()) {
             // Extract errors from the parser
-            foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+            for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
 
                 if (m.isWarning()) {
                     qWarning("%s:%d : %s", qPrintable(url), m.loc.startLine, qPrintable(m.message));
@@ -1247,7 +1248,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
     // If it's a namespace, prepend the qualifier and we'll resolve it later to the correct type.
     QString currentName = qualifiedIdElement->name.toString();
     if (qualifiedIdElement->next) {
-        foreach (const QV4::CompiledData::Import* import, _imports)
+        for (const QV4::CompiledData::Import* import : qAsConst(_imports))
             if (import->qualifierIndex != emptyStringIndex
                 && stringAt(import->qualifierIndex) == currentName) {
                 qualifiedIdElement = qualifiedIdElement->next;
@@ -1372,7 +1373,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
     QHash<const Object*, quint32> objectOffsets;
 
     int objectsSize = 0;
-    foreach (Object *o, output.objects) {
+    for (Object *o : qAsConst(output.objects)) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
         objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
@@ -1418,7 +1419,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
 
     // write imports
     char *importPtr = data + qmlUnit->offsetToImports;
-    foreach (const QV4::CompiledData::Import *imp, output.imports) {
+    for (const QV4::CompiledData::Import *imp : qAsConst(output.imports)) {
         QV4::CompiledData::Import *importToWrite = reinterpret_cast<QV4::CompiledData::Import*>(importPtr);
         *importToWrite = *imp;
         importPtr += sizeof(QV4::CompiledData::Import);
@@ -1523,7 +1524,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
     }
 
     // enable flag if we encountered pragma Singleton
-    foreach (Pragma *p, output.pragmas) {
+    for (Pragma *p : qAsConst(output.pragmas)) {
         if (p->type == Pragma::PragmaSingleton) {
             qmlUnit->flags |= QV4::CompiledData::Unit::IsSingleton;
             break;
@@ -1587,7 +1588,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     ScanFunctions scan(this, sourceCode, GlobalCode);
     scan.enterEnvironment(0, QmlBinding);
     scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
-    foreach (const CompiledFunctionOrExpression &f, functions) {
+    for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != qmlRoot);
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
 
@@ -1922,7 +1923,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
     // with the correct QML context.
 
     // Look for IDs first.
-    foreach (const IdMapping &mapping, _idObjects)
+    for (const IdMapping &mapping : qAsConst(_idObjects))
         if (name == mapping.name) {
             if (_function->isQmlBinding)
                 _function->idObjectDependencies.insert(mapping.idIndex);

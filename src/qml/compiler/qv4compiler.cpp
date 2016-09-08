@@ -211,7 +211,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(irModule->fileName);
-    foreach (QV4::IR::Function *f, irModule->functions) {
+    for (QV4::IR::Function *f : qAsConst(irModule->functions)) {
         registerString(*f->name);
         for (int i = 0; i < f->formals.size(); ++i)
             registerString(*f->formals.at(i));
@@ -242,7 +242,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     }
 
     CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
-    foreach (const CompiledData::Lookup &l, lookups)
+    for (const CompiledData::Lookup &l : qAsConst(lookups))
         *lookupsToWrite++ = l;
 
     CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);

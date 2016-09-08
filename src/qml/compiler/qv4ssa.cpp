@@ -1123,7 +1123,7 @@ public:
     {
         QVector<UntypedTemp> res;
         res.reserve(tempCount());
-        foreach (const DefUse &du, _defUses)
+        for (const DefUse &du : _defUses)
             if (du.isValid())
                 res.append(UntypedTemp(du.temp));
         return res;
@@ -1150,7 +1150,7 @@ public:
     {
         Q_ASSERT(static_cast<unsigned>(variable.index) < _defUses.size());
         QVector<Stmt *> &uses = _defUses[variable.index].uses;
-        foreach (Stmt *stmt, newUses)
+        for (Stmt *stmt : newUses)
             if (std::find(uses.begin(), uses.end(), stmt) == uses.end())
                 uses.push_back(stmt);
     }
@@ -1226,7 +1226,7 @@ public:
     QVector<Stmt*> removeDefUses(Stmt *s)
     {
         QVector<Stmt*> defStmts;
-        foreach (const Temp &usedVar, usedVars(s)) {
+        for (const Temp &usedVar : usedVars(s)) {
             if (Stmt *ds = defStmt(usedVar))
                 defStmts += ds;
             removeUse(s, usedVar);
@@ -1247,7 +1247,7 @@ public:
         buf.open(QIODevice::WriteOnly);
         QTextStream qout(&buf);
         qout << "Defines and uses:" << endl;
-        foreach (const DefUse &du, _defUses) {
+        for (const DefUse &du : _defUses) {
             if (!du.isValid())
                 continue;
             qout << '%' << du.temp.index;
@@ -1255,14 +1255,14 @@ public:
                  << ", statement: " << du.defStmt->id()
                  << endl;
             qout << "     uses:";
-            foreach (Stmt *s, du.uses)
+            for (Stmt *s : du.uses)
                 qout << ' ' << s->id();
             qout << endl;
         }
         qout << "Uses per statement:" << endl;
         for (size_t i = 0, ei = _usesPerStatement.size(); i != ei; ++i) {
             qout << "    " << i << ":";
-            foreach (const Temp &t, _usesPerStatement[i])
+            for (const Temp &t : _usesPerStatement[i])
                 qout << ' ' << t.index;
             qout << endl;
         }
@@ -1633,7 +1633,7 @@ bool hasPhiOnlyUses(Phi *phi, const DefUses &defUses, QBitArray &collectedPhis)
 {
     collectedPhis.setBit(phi->id());
 
-    foreach (Stmt *use, defUses.uses(*phi->targetTemp)) {
+    for (Stmt *use : defUses.uses(*phi->targetTemp)) {
         Phi *dependentPhi = use->asPhi();
         if (!dependentPhi)
             return false; // there is a use by a non-phi node
@@ -1679,7 +1679,7 @@ void cleanupPhis(DefUses &defUses)
         const Temp &targetVar = *phi->targetTemp;
         defUses.defStmtBlock(targetVar)->removeStatement(phi);
 
-        foreach (const Temp &usedVar, defUses.usedVars(phi))
+        for (const Temp &usedVar : defUses.usedVars(phi))
             defUses.removeUse(phi, usedVar);
         defUses.removeDef(targetVar);
     }
@@ -1729,7 +1729,7 @@ public:
         worklist.assign(worklist.size(), false);
         worklistSize = 0;
 
-        foreach (Stmt *s, stmts) {
+        for (Stmt *s : stmts) {
             if (!s)
                 continue;
 
@@ -1802,7 +1802,7 @@ public:
 
     StatementWorklist &operator+=(const QVector<Stmt *> &stmts)
     {
-        foreach (Stmt *s, stmts)
+        for (Stmt *s : stmts)
             this->operator+=(s);
 
         return *this;
@@ -2092,7 +2092,7 @@ public:
         theTemp = temp;
         if (Stmt *defStmt = defUses.defStmt(temp.temp))
             visit(defStmt);
-        foreach (Stmt *use, defUses.uses(temp.temp))
+        for (Stmt *use : defUses.uses(temp.temp))
             visit(use);
     }
 
@@ -2246,7 +2246,7 @@ private:
                 it = ty;
 
                 if (DebugTypeInference) {
-                    foreach (Stmt *s, _defUses.uses(*t)) {
+                    for (Stmt *s : _defUses.uses(*t)) {
                         QBuffer buf;
                         buf.open(QIODevice::WriteOnly);
                         QTextStream qout(&buf);
@@ -2606,7 +2606,7 @@ public:
         }
 
         PropagateTempTypes propagator(_defUses);
-        foreach (const UntypedTemp &t, knownOk) {
+        for (const UntypedTemp &t : qAsConst(knownOk)) {
             propagator.run(t, SInt32Type);
             if (Stmt *defStmt = _defUses.defStmt(t.temp)) {
                 if (Move *m = defStmt->asMove()) {
@@ -2630,7 +2630,7 @@ private:
         if (uses.isEmpty())
             return false;
 
-        foreach (Stmt *use, uses) {
+        for (Stmt *use : uses) {
             if (Move *m = use->asMove()) {
                 Temp *targetTemp = m->target->asTemp();
 
@@ -3165,7 +3165,8 @@ public:
         std::vector<BasicBlock *> backedges;
         backedges.reserve(4);
 
-        foreach (BasicBlock *bb, dt.calculateDFNodeIterOrder()) {
+        const auto order = dt.calculateDFNodeIterOrder();
+        for (BasicBlock *bb : order) {
             Q_ASSERT(!bb->isRemoved());
 
             backedges.clear();
@@ -3188,12 +3189,12 @@ public:
         if (!DebugLoopDetection)
             return;
 
-        foreach (LoopInfo *info, loopInfos) {
+        for (const LoopInfo *info : loopInfos) {
             qDebug() << "Loop header:" << info->loopHeader->index()
                      << "for loop" << quint64(info);
-            foreach (BasicBlock *bb, info->loopBody)
+            for (BasicBlock *bb : info->loopBody)
                 qDebug() << "    " << bb->index();
-            foreach (LoopInfo *nested, info->nestedLoops)
+            for (LoopInfo *nested : info->nestedLoops)
                 qDebug() << "    sub loop:" << quint64(nested);
             qDebug() << "     parent loop:" << quint64(info->parentLoop);
         }
@@ -3277,15 +3278,15 @@ private:
                 findLoop(loopHeader)->loopBody.append(bb);
         }
 
-        foreach (LoopInfo *info, loopInfos) {
-            if (BasicBlock *containingLoopHeader = info->loopHeader->containingGroup())
-                findLoop(containingLoopHeader)->addNestedLoop(info);
+        for (int i = 0, size = loopInfos.size(); i < size; ++i) {
+            if (BasicBlock *containingLoopHeader = loopInfos.at(i)->loopHeader->containingGroup())
+                findLoop(containingLoopHeader)->addNestedLoop(loopInfos.at(i));
         }
     }
 
     LoopInfo *findLoop(BasicBlock *loopHeader)
     {
-        foreach (LoopInfo *info, loopInfos) {
+        for (LoopInfo *info : qAsConst(loopInfos)) {
             if (info->loopHeader == loopHeader)
                 return info;
         }
@@ -3459,8 +3460,8 @@ public:
 };
 
 #ifndef QT_NO_DEBUG
-void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
-    foreach (BasicBlock *bb, basicBlocks) {
+void checkCriticalEdges(const QVector<BasicBlock *> &basicBlocks) {
+    for (BasicBlock *bb : basicBlocks) {
         if (bb && bb->out.size() > 1) {
             for (BasicBlock *bb2 : bb->out) {
                 if (bb2 && bb2->in.size() > 1) {
@@ -3594,7 +3595,7 @@ public:
             newUses->reserve(uses.size());
 
 //        qout << "        " << uses.size() << " uses:"<<endl;
-        foreach (Stmt *use, uses) {
+        for (Stmt *use : uses) {
 //            qout<<"        ";use->dump(qout);qout<<"\n";
             visit(use);
 //            qout<<"     -> ";use->dump(qout);qout<<"\n";
@@ -3752,7 +3753,7 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
                 return;
 
             to->in.remove(idx);
-            foreach (Stmt *outStmt, to->statements()) {
+            for (Stmt *outStmt : to->statements()) {
                 if (!outStmt)
                     continue;
                 if (Phi *phi = outStmt->asPhi()) {
@@ -3770,7 +3771,7 @@ void unlink(BasicBlock *from, BasicBlock *to, IR::Function *func, DefUses &defUs
 
         static bool isReachable(BasicBlock *bb, const DominatorTree &dt)
         {
-            foreach (BasicBlock *in, bb->in) {
+            for (BasicBlock *in : bb->in) {
                 if (in->isRemoved())
                     continue;
                 if (dt.dominates(bb, in)) // a back-edge, not interesting
@@ -3940,13 +3941,13 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
     struct Util {
         QTextStream &qout;
         Util(QTextStream &qout): qout(qout) {}
-        void genLoop(LoopDetection::LoopInfo *loop)
+        void genLoop(const LoopDetection::LoopInfo *loop)
         {
             qout << "  subgraph \"cluster" << quint64(loop) << "\" {\n";
             qout << "    L" << loop->loopHeader->index() << ";\n";
-            foreach (BasicBlock *bb, loop->loopBody)
+            for (BasicBlock *bb : loop->loopBody)
                 qout << "    L" << bb->index() << ";\n";
-            foreach (LoopDetection::LoopInfo *nested, loop->nestedLoops)
+            for (LoopDetection::LoopInfo *nested : loop->nestedLoops)
                 genLoop(nested);
             qout << "  }\n";
         }
@@ -3957,7 +3958,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
     else name = QStringLiteral("%1").arg((unsigned long long)f);
     qout << "digraph \"" << name << "\" { ordering=out;\n";
 
-    foreach (LoopDetection::LoopInfo *l, loops) {
+    for (LoopDetection::LoopInfo *l : loops) {
         if (l->parentLoop == 0)
             Util(qout).genLoop(l);
     }
@@ -4463,7 +4464,8 @@ public:
 
         qout << "Life ranges:" << endl;
         qout << "Intervals:" << endl;
-        foreach (const LifeTimeInterval *range, _sortedIntervals->intervals()) {
+        const auto intervals = _sortedIntervals->intervals();
+        for (const LifeTimeInterval *range : intervals) {
             range->dump(qout);
             qout << endl;
         }
@@ -4723,7 +4725,7 @@ private:
             clonedStmt = phi;
 
             phi->targetTemp = clone(p->targetTemp);
-            foreach (Expr *in, p->incoming)
+            for (Expr *in : p->incoming)
                 phi->incoming.append(clone(in));
             block->appendStatement(phi);
         } else {
@@ -4753,7 +4755,7 @@ public:
 
     void run(const QVector<LoopDetection::LoopInfo *> &loops)
     {
-        foreach (LoopDetection::LoopInfo *loopInfo, loops)
+        for (LoopDetection::LoopInfo *loopInfo : loops)
             peelLoop(loopInfo);
     }
 
@@ -4857,7 +4859,7 @@ private:
         // The original loop is now peeled off, and won't jump back to the loop header. Meaning, it
         // is not a loop anymore, so unmark it.
         loop->loopHeader->markAsGroupStart(false);
-        foreach (BasicBlock *bb, loop->loopBody)
+        for (BasicBlock *bb : qAsConst(loop->loopBody))
             bb->setContainingGroup(loop->loopHeader->containingGroup());
 
         // calculate the idoms in a separate loop, because addBasicBlock in the previous loop will
@@ -4875,7 +4877,7 @@ private:
         }
 
         BasicBlockSet siblings(f);
-        foreach (BasicBlock *bb, loopExits)
+        for (BasicBlock *bb : qAsConst(loopExits))
             dt.collectSiblings(bb, siblings);
 
         dt.recalculateIDoms(siblings, loop->loopHeader);
@@ -5658,7 +5660,7 @@ QList<IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, IR::Function *functio
     newMoves.reserve(_moves.size());
 
     int insertionPoint = atEnd ? bb->statements().size() - 1 : 0;
-    foreach (const Move &m, _moves) {
+    for (const Move &m : _moves) {
         IR::Move *move = function->NewStmt<IR::Move>();
         move->init(clone(m.to, function), clone(m.from, function));
         move->swap = m.needsSwap;
@@ -5677,7 +5679,7 @@ void MoveMapping::dump() const
         QTextStream os(&buf);
         IRPrinter printer(&os);
         os << "Move mapping has " << _moves.size() << " moves..." << endl;
-        foreach (const Move &m, _moves) {
+        for (const Move &m : _moves) {
             os << "\t";
             printer.print(m.to);
             if (m.needsSwap)
@@ -5694,8 +5696,8 @@ void MoveMapping::dump() const
 MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed,
                                           QList<Move> &output, QList<Move> &swaps) const
 {
-    Moves usages = sourceUsages(m.to, todo) + sourceUsages(m.to, delayed);
-    foreach (const Move &dependency, usages) {
+    const Moves usages = sourceUsages(m.to, todo) + sourceUsages(m.to, delayed);
+    for (const Move &dependency : usages) {
         if (!output.contains(dependency)) {
             if (delayed.contains(dependency)) {
                 // We have a cycle! Break it by swapping instead of assigning.
@@ -5706,7 +5708,7 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
                     QTextStream out(&buf);
                     IRPrinter printer(&out);
                     out<<"we have a cycle! temps:" << endl;
-                    foreach (const Move &m, delayed) {
+                    for (const Move &m : qAsConst(delayed)) {
                         out<<"\t";
                         printer.print(m.to);
                         out<<" <- ";

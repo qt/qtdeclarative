@@ -292,7 +292,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backend
 {
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
-    foreach (IR::Function *irFunction, irModule->functions)
+    for (IR::Function *irFunction : qAsConst(irModule->functions))
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
     result.adopt(compilationUnit.take());
