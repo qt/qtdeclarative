@@ -817,7 +817,8 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
             }
             nodeStack.append(node);
 
-            foreach (const QXmlStreamAttribute &a, reader.attributes()) {
+            const auto attributes = reader.attributes();
+            for (const QXmlStreamAttribute &a : attributes) {
                 NodeImpl *attr = new NodeImpl;
                 attr->document = document;
                 attr->type = NodeImpl::Attr;
@@ -1171,10 +1172,10 @@ QString QQmlXMLHttpRequest::headers() const
 
 void QQmlXMLHttpRequest::fillHeadersList()
 {
-    QList<QByteArray> headerList = m_network->rawHeaderList();
+    const QList<QByteArray> headerList = m_network->rawHeaderList();
 
     m_headersList.clear();
-    foreach (const QByteArray &header, headerList) {
+    for (const QByteArray &header : headerList) {
         HeaderPair pair (header.toLower(), m_network->rawHeader(header));
         if (pair.first == "set-cookie" ||
             pair.first == "set-cookie2")
@@ -1432,7 +1433,7 @@ void QQmlXMLHttpRequest::finished()
 
 void QQmlXMLHttpRequest::readEncoding()
 {
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : qAsConst(m_headersList)) {
         if (header.first == "content-type") {
             int separatorIdx = header.second.indexOf(';');
             if (separatorIdx == -1) {

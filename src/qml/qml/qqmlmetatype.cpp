@@ -1444,11 +1444,11 @@ bool qmlProtectModule(const char *uri, int majVersion)
 
 bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri, int majorVersion)
 {
-    QQmlMetaTypeData *data = metaTypeData();
+    const QQmlMetaTypeData *data = metaTypeData();
 
     // Has any type previously been installed to this namespace?
     QHashedString nameSpace(uri);
-    foreach (const QQmlType *type, data->types)
+    for (const QQmlType *type : data->types)
         if (type->module() == nameSpace && type->majorVersion() == majorVersion)
             return true;
 

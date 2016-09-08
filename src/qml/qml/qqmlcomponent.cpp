@@ -376,7 +376,7 @@ QQmlComponent::~QQmlComponent()
 
         if (isError()) {
             qWarning() << "This may have been caused by one of the following errors:";
-            foreach (const QQmlError &error, d->state.errors)
+            for (const QQmlError &error : qAsConst(d->state.errors))
                 qWarning().nospace().noquote() << QLatin1String("    ") << error;
         }
 
@@ -709,7 +709,7 @@ QString QQmlComponent::errorString() const
     QString ret;
     if(!isError())
         return ret;
-    foreach(const QQmlError &e, d->state.errors) {
+    for (const QQmlError &e : d->state.errors) {
         ret += e.url().toString() + QLatin1Char(':') +
                QString::number(e.line()) + QLatin1Char(' ') +
                e.description() + QLatin1Char('\n');

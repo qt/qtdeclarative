@@ -1364,7 +1364,8 @@ bool QQmlTypeLoader::Blob::updateQmldir(QQmlQmldirData *data, const QV4::Compile
         // Does this library contain any qualified scripts?
         QUrl libraryUrl(qmldirUrl);
         const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirIdentifier);
-        foreach (const QQmlDirParser::Script &script, qmldir->scripts()) {
+        const auto qmldirScripts = qmldir->scripts();
+        for (const QQmlDirParser::Script &script : qmldirScripts) {
             QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
             QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
             addDependency(blob);
@@ -1411,7 +1412,8 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
                 // Does this library contain any qualified scripts?
                 QUrl libraryUrl(qmldirUrl);
                 const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirFilePath);
-                foreach (const QQmlDirParser::Script &script, qmldir->scripts()) {
+                const auto qmldirScripts = qmldir->scripts();
+                for (const QQmlDirParser::Script &script : qmldirScripts) {
                     QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
                     QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
                     addDependency(blob);
@@ -2379,7 +2381,7 @@ bool QQmlTypeData::loadFromSource()
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
         errors.reserve(compiler.errors.count());
-        foreach (const QQmlJS::DiagnosticMessage &msg, compiler.errors) {
+        for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
             QQmlError e;
             e.setUrl(finalUrl());
             e.setLine(msg.loc.startLine);
@@ -2514,8 +2516,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
 void QQmlTypeData::resolveTypes()
 {
     // Add any imported scripts to our resolved set
-    foreach (const QQmlImports::ScriptReference &script, m_importCache.resolvedScripts())
-    {
+    const auto resolvedScripts = m_importCache.resolvedScripts();
+    for (const QQmlImports::ScriptReference &script : resolvedScripts) {
         QQmlScriptBlob *blob = typeLoader()->getScript(script.location);
         addDependency(blob);
 
@@ -2535,7 +2537,8 @@ void QQmlTypeData::resolveTypes()
     }
 
     // Lets handle resolved composite singleton types
-    foreach (const QQmlImports::CompositeSingletonReference &csRef, m_importCache.resolvedCompositeSingletons()) {
+    const auto resolvedCompositeSingletons = m_importCache.resolvedCompositeSingletons();
+    for (const QQmlImports::CompositeSingletonReference &csRef : resolvedCompositeSingletons) {
         TypeReference ref;
         QString typeName;
         if (!csRef.prefix.isEmpty()) {
