@@ -558,9 +558,15 @@ void QQmlChangeSet::change(QVector<Change> *changes)
 QDebug operator <<(QDebug debug, const QQmlChangeSet &set)
 {
     debug.nospace() << "QQmlChangeSet(";
-    foreach (const QQmlChangeSet::Change &remove, set.removes()) debug << remove;
-    foreach (const QQmlChangeSet::Change &insert, set.inserts()) debug << insert;
-    foreach (const QQmlChangeSet::Change &change, set.changes()) debug << change;
+    const QVector<QQmlChangeSet::Change> &removes = set.removes();
+    for (const QQmlChangeSet::Change &remove : removes)
+        debug << remove;
+    const QVector<QQmlChangeSet::Change> &inserts = set.inserts();
+    for (const QQmlChangeSet::Change &insert : inserts)
+        debug << insert;
+    const QVector<QQmlChangeSet::Change> &changes = set.changes();
+    for (const QQmlChangeSet::Change &change : changes)
+        debug << change;
     return debug.nospace() << ')';
 }
 
