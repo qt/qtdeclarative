@@ -1563,7 +1563,7 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         d->movementEndingTimer.stop();
         d->pressed = false;
         d->stealMouse = false;
-        if (!d->velocityTimeline.isActive())
+        if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
             movementEnding(true, true);
     }
 }

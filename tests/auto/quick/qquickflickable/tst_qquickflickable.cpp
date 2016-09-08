@@ -724,7 +724,10 @@ void tst_qquickflickable::wheel()
 
     QQuickFlickable *flick = window->rootObject()->findChild<QQuickFlickable*>("flick");
     QVERIFY(flick != 0);
+    QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flick);
+    QSignalSpy moveEndSpy(flick, SIGNAL(movementEnded()));
 
+    // test a vertical flick
     {
         QPoint pos(200, 200);
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(0,-120), -120, Qt::Vertical, Qt::NoButton, Qt::NoModifier);
@@ -735,9 +738,19 @@ void tst_qquickflickable::wheel()
     QTRY_VERIFY(flick->contentY() > 0);
     QCOMPARE(flick->contentX(), qreal(0));
 
-    flick->setContentY(0);
+    QTRY_COMPARE(moveEndSpy.count(), 1);
+    QCOMPARE(fp->velocityTimeline.isActive(), false);
+    QCOMPARE(fp->timeline.isActive(), false);
+    QTest::qWait(50); // make sure that onContentYChanged won't sneak in again
+    QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
+
+    // get ready to test horizontal flick
+    flick->setContentY(0); // which triggers movementEnded again
+    flick->setProperty("movementsAfterEnd", 0);
+    flick->setProperty("ended", false);
     QCOMPARE(flick->contentY(), qreal(0));
 
+    // test a horizontal flick
     {
         QPoint pos(200, 200);
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(-120,0), -120, Qt::Horizontal, Qt::NoButton, Qt::NoModifier);
@@ -748,6 +761,11 @@ void tst_qquickflickable::wheel()
 
     QTRY_VERIFY(flick->contentX() > 0);
     QCOMPARE(flick->contentY(), qreal(0));
+    QTRY_COMPARE(moveEndSpy.count(), 2);
+    QCOMPARE(fp->velocityTimeline.isActive(), false);
+    QCOMPARE(fp->timeline.isActive(), false);
+    QTest::qWait(50); // make sure that onContentXChanged won't sneak in again
+    QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
 }
 
 void tst_qquickflickable::movingAndFlicking_data()
