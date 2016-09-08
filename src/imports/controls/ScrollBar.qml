@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.ScrollBar {
@@ -55,7 +57,7 @@ T.ScrollBar {
         implicitHeight: 6
 
         radius: width / 2
-        color: control.pressed ? "#28282a" : "#bdbebf"
+        color: control.pressed ? Default.scrollBarPressedColor : Default.scrollBarColor
         visible: control.size < 1.0
         opacity: 0.0
 

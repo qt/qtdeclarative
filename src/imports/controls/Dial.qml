@@ -49,7 +49,7 @@ T.Dial {
     background: DialRing {
         width: control.availableWidth
         height: control.availableHeight
-        color: control.visualFocus ? "#0066ff" : "#353637"
+        color: control.visualFocus ? Default.focusColor : Default.frameDarkColor
         progress: control.position
         opacity: control.enabled ? 1 : 0.3
     }
@@ -62,7 +62,7 @@ T.Dial {
         y: background.y + background.height / 2 - handle.height / 2
         width: 14
         height: 10
-        source: "image://default/dial-indicator/" + (control.visualFocus ? "#0066ff" : "#353637")
+        source: "image://default/dial-indicator/" + (control.visualFocus ? Default.focusColor : Default.textColor)
         sourceSize.width: width
         sourceSize.height: height
         antialiasing: true

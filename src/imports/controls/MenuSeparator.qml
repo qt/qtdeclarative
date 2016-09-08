@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.MenuSeparator {
@@ -51,7 +53,7 @@ T.MenuSeparator {
     contentItem: Rectangle {
         implicitWidth: 188
         implicitHeight: 1
-        color: "#ccc"
+        color: Default.separatorColor
     }
     //! [contentItem]
 }

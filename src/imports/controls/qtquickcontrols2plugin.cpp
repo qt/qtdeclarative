@@ -53,6 +53,7 @@
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 
 #include "qquickbusyindicatorring_p.h"
+#include "qquickdefaultstyle_p.h"
 #include "qquickdialring_p.h"
 #include "qquickprogressstrip_p.h"
 
@@ -148,6 +149,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ToolSeparator.qml")), uri, 2, 1, "ToolSeparator");
 }
 
+static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    return new QQuickDefaultStyle;
+}
+
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(uri);
@@ -161,6 +169,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickProgressAnimator>(import, 2, 0, "ProgressStripAnimator");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
+    qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
 
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");

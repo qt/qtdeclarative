@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.Slider {
@@ -54,9 +56,13 @@ T.Slider {
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
-        color: control.enabled ? (control.pressed ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : (control.visualFocus ? "#f0f6ff" : "#ffffff")) : "#fdfdfd"
+        color: control.enabled ? (control.pressed
+            ? (control.visualFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
+            : (control.visualFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
         border.width: control.visualFocus ? 2 : 1
-        border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.pressed ? "#808080" : "#909090")) : "#d6d6d6"
+        border.color: control.enabled ? (control.visualFocus
+            ? Default.focusColor
+            : (control.pressed ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
@@ -72,7 +78,7 @@ T.Slider {
         height: horizontal ? implicitHeight : control.availableHeight
         radius: 3
         opacity: control.enabled ? 1 : 0.3
-        color: "#e0e0e0"
+        color: Default.buttonColor
         scale: horizontal && control.mirrored ? -1 : 1
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal

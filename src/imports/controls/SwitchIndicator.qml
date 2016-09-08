@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 
 Item {
     implicitWidth: 56
@@ -48,9 +50,9 @@ Item {
         height: 16
         radius: 8
         opacity: control.enabled ? 1 : 0.3
-        color: control.checked ? (control.visualFocus ? "#0066ff" : "#353637") : "#e0e0e0"
+        color: control.checked ? (control.visualFocus ? Default.focusColor : Default.buttonCheckedColor) : Default.buttonColor
         border.width: control.visualFocus ? 2 : 0
-        border.color: "#0066ff"
+        border.color: Default.focusColor
     }
 
     Rectangle {
@@ -59,9 +61,13 @@ Item {
         width: 28
         height: 28
         radius: 16
-        color: control.enabled ? (control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : (control.visualFocus ? "#f0f6ff" : "#ffffff")) : "#fdfdfd"
+        color: control.enabled ? (control.down
+            ? (control.visualFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
+            : (control.visualFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
         border.width: control.visualFocus ? 2 : 1
-        border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")) : "#d6d6d6"
+        border.color: control.enabled ? (control.visualFocus
+            ? Default.focusColor
+            : (control.down ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
 
         Behavior on x {
             enabled: !control.down

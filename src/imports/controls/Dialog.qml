@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Templates 2.1 as T
 import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 
 T.Dialog {
     id: control
@@ -57,7 +58,7 @@ T.Dialog {
     contentItem: Item { }
 
     background: Rectangle {
-        border.color: "#353637"
+        border.color: Default.frameDarkColor
     }
 
     buttonBox: DialogButtonBox {

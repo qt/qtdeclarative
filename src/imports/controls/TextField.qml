@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.TextField {
@@ -51,8 +53,8 @@ T.TextField {
     leftPadding: padding + 4
 
     opacity: enabled ? 1 : 0.2
-    color: "#353637"
-    selectionColor: "#fddd5c"
+    color: Default.textColor
+    selectionColor: Default.textSelectionColor
     selectedTextColor: color
     verticalAlignment: TextInput.AlignVCenter
 
@@ -65,7 +67,7 @@ T.TextField {
 
         text: control.placeholderText
         font: control.font
-        color: "#bdbebf"
+        color: Default.textDisabledColor
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
@@ -77,8 +79,8 @@ T.TextField {
         implicitWidth: 200
         implicitHeight: 40
         border.width: control.activeFocus ? 2 : 1
-        color: control.enabled ? "#ffffff" : "#353637"
-        border.color: control.activeFocus ? "#0066ff" : (control.enabled ? "#bdbebf" : "transparent")
+        color: control.enabled ? Default.backgroundColor : Default.disabledDarkColor
+        border.color: control.activeFocus ? Default.focusColor : (control.enabled ? Default.disabledLightColor : "transparent")
     }
     //! [background]
 }

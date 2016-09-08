@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.GroupBox {
@@ -63,7 +65,7 @@ T.GroupBox {
 
         text: control.title
         font: control.font
-        color: control.enabled ? "#353637" : "#bdbebf"
+        color: control.enabled ? Default.textColor : Default.textDisabledColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
@@ -77,7 +79,7 @@ T.GroupBox {
         height: parent.height - control.topPadding + control.padding
 
         color: "transparent"
-        border.color: "#bdbebf"
+        border.color: Default.frameLightColor
     }
     //! [background]
 }

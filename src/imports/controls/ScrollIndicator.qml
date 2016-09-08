@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.ScrollIndicator {
@@ -54,7 +56,7 @@ T.ScrollIndicator {
         implicitWidth: 2
         implicitHeight: 2
 
-        color: "#bdbebf"
+        color: Default.scrollBarColor
         visible: control.size < 1.0
         opacity: 0.0
 

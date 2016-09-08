@@ -72,7 +72,7 @@ T.ProgressBar {
         width: control.availableWidth
         height: 6
 
-        color: "#e4e4e4"
+        color: Default.progressBarColor
     }
     //! [background]
 }

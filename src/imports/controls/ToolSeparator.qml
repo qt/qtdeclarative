@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.ToolSeparator {
@@ -51,7 +53,7 @@ T.ToolSeparator {
     contentItem: Rectangle {
         implicitWidth: vertical ? 1 : 30
         implicitHeight: vertical ? 30 : 1
-        color: "#ccc"
+        color: Default.separatorColor
     }
     //! [contentItem]
 }

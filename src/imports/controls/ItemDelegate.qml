@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.ItemDelegate {
@@ -57,7 +59,7 @@ T.ItemDelegate {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
@@ -70,7 +72,9 @@ T.ItemDelegate {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted || control.visualFocus
-        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#eeeeee")
+        color: control.visualFocus
+            ? (control.pressed ? Default.focusPressedColor : Default.delegateFocusColor)
+            : (control.down ? Default.delegatePressedColor : Default.delegateColor)
     }
     //! [background]
 }

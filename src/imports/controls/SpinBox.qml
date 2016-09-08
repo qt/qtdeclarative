@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.SpinBox {
@@ -69,9 +71,9 @@ T.SpinBox {
         opacity: control.enabled ? 1 : 0.3
 
         font: control.font
-        color: "#353637"
-        selectionColor: "#0066ff"
-        selectedTextColor: "#ffffff"
+        color: Default.textColor
+        selectionColor: Default.focusColor
+        selectedTextColor: Default.textLightColor
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
 
@@ -86,7 +88,7 @@ T.SpinBox {
             height: control.height
             visible: control.activeFocus
             color: "transparent"
-            border.color: "#0066ff"
+            border.color: Default.focusColor
             border.width: 2
         }
     }
@@ -98,21 +100,21 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: up.pressed ? "#d0d0d0" : "#e0e0e0"
+        color: up.pressed ? Default.buttonPressedColor : Default.buttonColor
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: enabled ? "#353637" : "#bdbebf"
+            color: enabled ? Default.textColor : Default.textDisabledColor
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: parent.width / 3
-            color: enabled ? "#353637" : "#bdbebf"
+            color: enabled ? Default.textColor : Default.textDisabledColor
         }
     }
     //! [up.indicator]
@@ -123,14 +125,14 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: down.pressed ? "#d0d0d0" : "#e0e0e0"
+        color: down.pressed ? Default.buttonPressedColor : Default.buttonColor
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: enabled ? "#353637" : "#bdbebf"
+            color: enabled ? Default.textColor : Default.textDisabledColor
         }
     }
     //! [down.indicator]
@@ -139,7 +141,7 @@ T.SpinBox {
     background: Rectangle {
         opacity: control.enabled ? 1 : 0.3
         implicitWidth: 140
-        border.color: "#e0e0e0"
+        border.color: Default.buttonColor
     }
     //! [background]
 }
