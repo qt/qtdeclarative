@@ -898,6 +898,21 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
 }
 
 #ifndef QT_NO_LIBRARY
+static QVector<QStaticPlugin> makePlugins()
+{
+    QVector<QStaticPlugin> plugins;
+    // To avoid traversing all static plugins for all imports, we cut down
+    // the list the first time called to only contain QML plugins:
+    const auto staticPlugins = QPluginLoader::staticPlugins();
+    for (const QStaticPlugin &plugin : staticPlugins) {
+        if (plugin.metaData().value(QLatin1String("IID")).toString()
+                == QLatin1String(QQmlExtensionInterface_iid)) {
+            plugins.append(plugin);
+        }
+    }
+    return plugins;
+}
+
 /*!
     Get all static plugins that are QML plugins and has a meta data URI that matches with one of
     \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
@@ -906,16 +921,7 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
 bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                                       const QString &qmldirPath, QList<QQmlError> *errors)
 {
-    static QVector<QStaticPlugin> plugins;
-    if (plugins.isEmpty()) {
-        // To avoid traversing all static plugins for all imports, we cut down
-        // the list the first time called to only contain QML plugins:
-        foreach (const QStaticPlugin &plugin, QPluginLoader::staticPlugins()) {
-            if (plugin.metaData().value(QLatin1String("IID")).toString() == QLatin1String(QQmlExtensionInterface_iid))
-                plugins.append(plugin);
-        }
-    }
-
+    static const QVector<QStaticPlugin> plugins = makePlugins();
     foreach (const QStaticPlugin &plugin, plugins) {
         // Since a module can list more than one plugin, we keep iterating even after we found a match.
         if (QQmlExtensionPlugin *instance = qobject_cast<QQmlExtensionPlugin *>(plugin.instance())) {
