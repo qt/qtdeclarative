@@ -1121,7 +1121,7 @@ void QQmlDelegateModelPrivate::itemsChanged(const QVector<Compositor::Change> &c
 
     QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedChanges(m_groupCount);
 
-    foreach (const Compositor::Change &change, changes) {
+    for (const Compositor::Change &change : changes) {
         for (int i = 1; i < m_groupCount; ++i) {
             if (change.inGroup(i)) {
                 translatedChanges[i].append(QQmlChangeSet::Change(change.index[i], change.count));
@@ -1170,7 +1170,7 @@ void QQmlDelegateModelPrivate::itemsInserted(
     for (int i = 1; i < m_groupCount; ++i)
         inserted[i] = 0;
 
-    foreach (const Compositor::Insert &insert, inserts) {
+    for (const Compositor::Insert &insert : inserts) {
         for (; cacheIndex < insert.cacheIndex; ++cacheIndex)
             incrementIndexes(m_cache.at(cacheIndex), m_groupCount, inserted);
 
@@ -1262,7 +1262,7 @@ void QQmlDelegateModelPrivate::itemsRemoved(
     for (int i = 1; i < m_groupCount; ++i)
         removed[i] = 0;
 
-    foreach (const Compositor::Remove &remove, removes) {
+    for (const Compositor::Remove &remove : removes) {
         for (; cacheIndex < remove.cacheIndex; ++cacheIndex)
             incrementIndexes(m_cache.at(cacheIndex), m_groupCount, removed);
 
@@ -1744,7 +1744,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
 int QQmlDelegateModelItemMetaType::parseGroups(const QStringList &groups) const
 {
     int groupFlags = 0;
-    foreach (const QString &groupName, groups) {
+    for (const QString &groupName : groups) {
         int index = groupNames.indexOf(groupName);
         if (index != -1)
             groupFlags |= 2 << index;

@@ -2477,7 +2477,7 @@ void QQmlListModelParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit,
 {
     listElementTypeName = QString(); // unknown
 
-    foreach (const QV4::CompiledData::Binding *binding, bindings) {
+    for (const QV4::CompiledData::Binding *binding : bindings) {
         QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
         if (!propName.isEmpty()) { // isn't default property
             error(binding, QQmlListModel::tr("ListModel: undefined property '%1'").arg(propName));
@@ -2498,7 +2498,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, QV4::CompiledData::Compila
 
     bool setRoles = false;
 
-    foreach (const QV4::CompiledData::Binding *binding, bindings) {
+    for (const QV4::CompiledData::Binding *binding : bindings) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
             continue;
         setRoles |= applyProperty(qmlUnit, binding, rv->m_listModel, /*outter element index*/-1);

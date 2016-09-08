@@ -204,7 +204,7 @@ void QQmlConnections::setEnabled(bool enabled)
 
     d->enabled = enabled;
 
-    foreach (QQmlBoundSignal *s, d->boundsignals)
+    for (QQmlBoundSignal *s : qAsConst(d->boundsignals))
         s->setEnabled(d->enabled);
 
     emit enabledChanged();
