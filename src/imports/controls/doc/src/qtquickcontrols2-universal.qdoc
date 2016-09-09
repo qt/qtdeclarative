@@ -152,6 +152,14 @@
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
                 to use one of the pre-defined  \l {universal-accent-attached-prop} {accents}, for
                 example \c "Violet".
+        \row
+            \li \c QT_QUICK_CONTROLS_UNIVERSAL_FOREGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                pre-defined  \l {universal-accent-attached-prop}{accents}.
+        \row
+            \li \c QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                pre-defined  \l {universal-accent-attached-prop}{accents}.
     \endtable
 
     \section2 Dependency
