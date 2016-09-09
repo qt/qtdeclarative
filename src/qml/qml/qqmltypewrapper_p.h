@@ -72,7 +72,7 @@ struct QmlTypeWrapper : Object {
     };
 
     QmlTypeWrapper();
-    ~QmlTypeWrapper();
+    void destroy();
     TypeNameMode mode;
     QQmlQPointer<QObject> object;
 

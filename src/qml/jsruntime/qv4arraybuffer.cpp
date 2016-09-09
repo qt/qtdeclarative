@@ -112,7 +112,7 @@ Heap::ArrayBuffer::ArrayBuffer(const QByteArray& array)
     data->ref.ref();
 }
 
-Heap::ArrayBuffer::~ArrayBuffer()
+void Heap::ArrayBuffer::destroy()
 {
     if (!data->ref.deref())
         QTypedArrayData<char>::deallocate(data);

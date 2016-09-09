@@ -66,7 +66,7 @@ struct ArrayBufferCtor : FunctionObject {
 struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object {
     ArrayBuffer(size_t length);
     ArrayBuffer(const QByteArray& array);
-    ~ArrayBuffer();
+    void destroy();
     QTypedArrayData<char> *data;
 
     uint byteLength() const { return data->size; }

@@ -1847,7 +1847,7 @@ Heap::QMetaObjectWrapper::QMetaObjectWrapper(const QMetaObject *metaObject)
     , constructorCount(0)
 {}
 
-Heap::QMetaObjectWrapper::~QMetaObjectWrapper()
+void Heap::QMetaObjectWrapper::destroy()
 {
     delete[] constructors;
 }

@@ -60,7 +60,7 @@ Heap::QmlListWrapper::QmlListWrapper()
     o->setArrayType(Heap::ArrayData::Custom);
 }
 
-Heap::QmlListWrapper::~QmlListWrapper()
+void Heap::QmlListWrapper::destroy()
 {
     object.destroy();
 }

@@ -744,7 +744,7 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
     if (!ctx)
         return 0;
 
-    return ctx->qml->context.contextData();
+    return ctx->qml->context->contextData();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
@@ -920,7 +920,7 @@ ReturnedValue ExecutionEngine::throwError(const Value &value)
     QV4::Scope scope(this);
     QV4::Scoped<ErrorObject> error(scope, value);
     if (!!error)
-        exceptionStackTrace = error->d()->stackTrace;
+        exceptionStackTrace = *error->d()->stackTrace;
     else
         exceptionStackTrace = stackTrace();
 
@@ -1153,7 +1153,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return str;
     }
     if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
-        return ld->d()->locale;
+        return *ld->d()->locale;
     if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())

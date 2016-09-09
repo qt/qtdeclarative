@@ -68,7 +68,7 @@ struct VariantObject : Object
 {
     VariantObject();
     VariantObject(const QVariant &value);
-    ~VariantObject() {
+    void destroy() {
         Q_ASSERT(scarceData);
         if (isScarce())
             addVmePropertyReference();

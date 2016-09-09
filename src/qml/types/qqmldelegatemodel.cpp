@@ -76,7 +76,8 @@ struct QQmlDelegateModelGroupChange : Object {
 
 struct QQmlDelegateModelGroupChangeArray : Object {
     QQmlDelegateModelGroupChangeArray(const QVector<QQmlChangeSet::Change> &changes);
-    QVector<QQmlChangeSet::Change> changes;
+    void destroy() { delete changes; }
+    QVector<QQmlChangeSet::Change> *changes;
 };
 
 
@@ -1865,7 +1866,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisI
 
 DEFINE_OBJECT_VTABLE(QQmlDelegateModelItemObject);
 
-QV4::Heap::QQmlDelegateModelItemObject::~QQmlDelegateModelItemObject()
+void QV4::Heap::QQmlDelegateModelItemObject::destroy()
 {
     item->Dispose();
 }
@@ -3256,8 +3257,8 @@ public:
         return engine->memoryManager->allocObject<QQmlDelegateModelGroupChangeArray>(changes);
     }
 
-    quint32 count() const { return d()->changes.count(); }
-    const QQmlChangeSet::Change &at(int index) const { return d()->changes.at(index); }
+    quint32 count() const { return d()->changes->count(); }
+    const QQmlChangeSet::Change &at(int index) const { return d()->changes->at(index); }
 
     static QV4::ReturnedValue getIndexed(const QV4::Managed *m, uint index, bool *hasProperty)
     {
@@ -3300,7 +3301,7 @@ public:
 };
 
 QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(const QVector<QQmlChangeSet::Change> &changes)
-    : changes(changes)
+    : changes(new QVector<QQmlChangeSet::Change>(changes))
 {
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);

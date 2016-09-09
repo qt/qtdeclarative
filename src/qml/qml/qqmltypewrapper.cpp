@@ -61,7 +61,7 @@ Heap::QmlTypeWrapper::QmlTypeWrapper()
     object.init();
 }
 
-Heap::QmlTypeWrapper::~QmlTypeWrapper()
+void Heap::QmlTypeWrapper::destroy()
 {
     if (typeNamespace)
         typeNamespace->release();

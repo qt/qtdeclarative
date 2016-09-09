@@ -1059,8 +1059,8 @@ namespace Heap {
 
 struct QmlIncubatorObject : Object {
     QmlIncubatorObject(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
-    ~QmlIncubatorObject() { parent.destroy(); }
-    QScopedPointer<QQmlComponentIncubator> incubator;
+    inline void destroy();
+    QQmlComponentIncubator *incubator;
     QQmlQPointer<QObject> parent;
     QV4::Value valuemap;
     QV4::Value statusChanged;
@@ -1389,7 +1389,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     r->d()->qmlContext = v4->qmlContext();
     r->d()->parent = parent;
 
-    QQmlIncubator *incubator = r->d()->incubator.data();
+    QQmlIncubator *incubator = r->d()->incubator;
     create(*incubator, creationContext());
 
     if (incubator->status() == QQmlIncubator::Null) {
@@ -1490,7 +1490,12 @@ QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QQmlIncubator::IncubationMode 
 {
     parent.init();
     qmlContext = nullptr;
-    incubator.reset(new QQmlComponentIncubator(this, m));
+    incubator = new QQmlComponentIncubator(this, m);
+}
+
+void QV4::Heap::QmlIncubatorObject::destroy() {
+    delete incubator;
+    parent.destroy();
 }
 
 void QV4::QmlIncubatorObject::setInitialState(QObject *o)

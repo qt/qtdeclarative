@@ -161,7 +161,7 @@ namespace QV4 {
 namespace Heap {
 struct QQmlDelegateModelItemObject : Object {
     inline QQmlDelegateModelItemObject(QQmlDelegateModelItem *item);
-    ~QQmlDelegateModelItemObject();
+    void destroy();
     QQmlDelegateModelItem *item;
 };
 

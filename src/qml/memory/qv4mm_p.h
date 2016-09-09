@@ -256,24 +256,27 @@ public:
     template <typename ManagedType>
     typename ManagedType::Data *alloc()
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data();
+        t->d_unchecked()->init();
         return t->d();
     }
 
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *alloc(Arg1 arg1)
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1);
+        t->d_unchecked()->init(arg1);
         return t->d();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2)
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1, arg2);
@@ -283,6 +286,7 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1, arg2, arg3);
@@ -301,9 +305,10 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4, arg5);
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4, arg5);
         return t->d();
     }
 

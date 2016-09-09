@@ -143,8 +143,9 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlLocaleData : Object {
-    inline QQmlLocaleData() {}
-    QLocale locale;
+    inline QQmlLocaleData() { locale = new QLocale; }
+    void destroy() { delete locale; }
+    QLocale *locale;
 };
 
 }
@@ -161,7 +162,7 @@ struct QQmlLocaleData : public QV4::Object
             ctx->engine()->throwTypeError();
             return 0;
         }
-        return &thisObject->d()->locale;
+        return thisObject->d()->locale;
     }
 
     static QV4::ReturnedValue method_currencySymbol(QV4::CallContext *ctx);

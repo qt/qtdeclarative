@@ -175,17 +175,24 @@ namespace Heap {
 
 struct NamedNodeMap : Object {
     NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list);
-    ~NamedNodeMap() {
+    void destroy() {
+        delete listPtr;
         if (d)
             d->release();
     }
-    QList<NodeImpl *> list; // Only used in NamedNodeMap
+    QList<NodeImpl *> &list() {
+        if (listPtr == nullptr)
+            listPtr = new QList<NodeImpl *>;
+        return *listPtr;
+    }
+
+    QList<NodeImpl *> *listPtr; // Only used in NamedNodeMap
     NodeImpl *d;
 };
 
 struct NodeList : Object {
     NodeList(NodeImpl *data);
-    ~NodeList() {
+    void destroy() {
         if (d)
             d->release();
     }
@@ -198,7 +205,7 @@ struct NodePrototype : Object {
 
 struct Node : Object {
     Node(NodeImpl *data);
-    ~Node() {
+    void destroy() {
         if (d)
             d->release();
     }
@@ -222,9 +229,9 @@ public:
 };
 
 Heap::NamedNodeMap::NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list)
-    : list(list)
-    , d(data)
+    : d(data)
 {
+    this->list() = list;
     if (d)
         d->addref();
 }
@@ -877,10 +884,10 @@ ReturnedValue NamedNodeMap::getIndexed(const Managed *m, uint index, bool *hasPr
     const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
-    if ((int)index < r->d()->list.count()) {
+    if ((int)index < r->d()->list().count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(v4, r->d()->list.at(index));
+        return Node::create(v4, r->d()->list().at(index));
     }
     if (hasProperty)
         *hasProperty = false;
@@ -895,14 +902,14 @@ ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasPropert
 
     name->makeIdentifier(v4);
     if (name->equals(v4->id_length()))
-        return Primitive::fromInt32(r->d()->list.count()).asReturnedValue();
+        return Primitive::fromInt32(r->d()->list().count()).asReturnedValue();
 
     QString str = name->toQString();
-    for (int ii = 0; ii < r->d()->list.count(); ++ii) {
-        if (r->d()->list.at(ii)->name == str) {
+    for (int ii = 0; ii < r->d()->list().count(); ++ii) {
+        if (r->d()->list().at(ii)->name == str) {
             if (hasProperty)
                 *hasProperty = true;
-            return Node::create(v4, r->d()->list.at(ii));
+            return Node::create(v4, r->d()->list().at(ii));
         }
     }
 
@@ -1588,7 +1595,7 @@ namespace Heap {
 
 struct QQmlXMLHttpRequestWrapper : Object {
     QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request);
-    ~QQmlXMLHttpRequestWrapper() {
+    void destroy() {
         delete request;
     }
     QQmlXMLHttpRequest *request;

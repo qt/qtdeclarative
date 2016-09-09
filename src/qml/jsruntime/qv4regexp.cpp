@@ -62,8 +62,8 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     WTF::String s(string);
 
 #if ENABLE(YARR_JIT)
-    if (!jitCode().isFallBack() && jitCode().has16BitCode())
-        return uint(jitCode().execute(s.characters16(), start, s.length(), (int*)matchOffsets).start);
+    if (!jitCode()->isFallBack() && jitCode()->has16BitCode())
+        return uint(jitCode()->execute(s.characters16(), start, s.length(), (int*)matchOffsets).start);
 #endif
 
     return JSC::Yarr::interpret(byteCode().get(), s.characters16(), string.length(), start, matchOffsets);
@@ -104,19 +104,23 @@ Heap::RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignor
     subPatternCount = yarrPattern.m_numSubpatterns;
     byteCode = JSC::Yarr::byteCompile(yarrPattern, engine->bumperPointerAllocator);
 #if ENABLE(YARR_JIT)
+    jitCode = new JSC::Yarr::YarrCodeBlock;
     if (!yarrPattern.m_containsBackreferences && engine->iselFactory->jitCompileRegexps()) {
         JSC::JSGlobalData dummy(engine->regExpAllocator);
-        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, jitCode);
+        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, *jitCode);
     }
 #endif
 }
 
-Heap::RegExp::~RegExp()
+void Heap::RegExp::destroy()
 {
     if (cache) {
         RegExpCacheKey key(this);
         cache->remove(key);
     }
+#if ENABLE(YARR_JIT)
+    delete jitCode;
+#endif
 }
 
 void RegExp::markObjects(Heap::Base *that, ExecutionEngine *e)

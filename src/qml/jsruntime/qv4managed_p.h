@@ -74,7 +74,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define V4_MANAGED_SIZE_TEST
 #endif
 
-#define V4_NEEDS_DESTROY static void destroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->~Data(); }
+#define V4_NEEDS_DESTROY static void destroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->destroy(); }
 
 
 #define V4_MANAGED_ITSELF(DataClass, superClass) \

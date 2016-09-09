@@ -77,11 +77,12 @@ namespace Heap {
 
 struct RegExp : Base {
     RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
-    ~RegExp();
+    void destroy();
+
     QString pattern;
     OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
 #if ENABLE(YARR_JIT)
-    JSC::Yarr::YarrCodeBlock jitCode;
+    JSC::Yarr::YarrCodeBlock *jitCode;
 #endif
     RegExpCache *cache;
     int subPatternCount;
@@ -102,7 +103,7 @@ struct RegExp : public Managed
     QString pattern() const { return d()->pattern; }
     OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return d()->byteCode; }
 #if ENABLE(YARR_JIT)
-    JSC::Yarr::YarrCodeBlock jitCode() const { return d()->jitCode; }
+    JSC::Yarr::YarrCodeBlock *jitCode() const { return d()->jitCode; }
 #endif
     RegExpCache *cache() const { return d()->cache; }
     int subPatternCount() const { return d()->subPatternCount; }

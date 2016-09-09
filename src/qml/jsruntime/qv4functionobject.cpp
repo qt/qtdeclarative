@@ -136,7 +136,7 @@ Heap::FunctionObject::FunctionObject()
 }
 
 
-Heap::FunctionObject::~FunctionObject()
+void Heap::FunctionObject::destroy()
 {
     if (function)
         function->compilationUnit->release();

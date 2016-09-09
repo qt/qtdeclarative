@@ -79,7 +79,7 @@ struct QQmlValueTypeWrapper;
 
 struct QObjectWrapper : Object {
     QObjectWrapper(QObject *object);
-    ~QObjectWrapper() { qObj.destroy(); }
+    void destroy() { qObj.destroy(); }
 
     QObject *object() const { return qObj.data(); }
 
@@ -89,7 +89,13 @@ private:
 
 struct QObjectMethod : FunctionObject {
     QObjectMethod(QV4::ExecutionContext *scope);
-    ~QObjectMethod() { qObj.destroy(); }
+    void destroy()
+    {
+        propertyCache = nullptr;
+        qObj.destroy();
+        FunctionObject::destroy();
+    }
+
     QQmlRefPointer<QQmlPropertyCache> propertyCache;
     int index;
 
@@ -109,13 +115,13 @@ struct QMetaObjectWrapper : FunctionObject {
     int constructorCount;
 
     QMetaObjectWrapper(const QMetaObject* metaObject);
-    ~QMetaObjectWrapper();
+    void destroy();
     void ensureConstructorsCache();
 };
 
 struct QmlSignalHandler : Object {
     QmlSignalHandler(QObject *object, int signalIndex);
-    ~QmlSignalHandler() { qObj.destroy(); }
+    void destroy() { qObj.destroy(); }
     int signalIndex;
 
     QObject *object() const { return qObj.data(); }
@@ -130,6 +136,7 @@ private:
 struct Q_QML_EXPORT QObjectWrapper : public Object
 {
     V4_OBJECT2(QObjectWrapper, Object)
+    V4_NEEDS_DESTROY
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
 

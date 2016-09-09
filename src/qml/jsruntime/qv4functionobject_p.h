@@ -76,7 +76,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name);
     FunctionObject(ExecutionContext *scope, const ReturnedValue name);
     FunctionObject();
-    ~FunctionObject();
+    void destroy();
 
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }

@@ -73,7 +73,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
 #ifndef V4_BOOTSTRAP
     String(MemoryManager *mm, const QString &text);
     String(MemoryManager *mm, String *l, String *n, bool dummy);
-    ~String() {
+    void destroy() {
         if (!largestSubLength && !text->ref.deref())
             QStringData::deallocate(text);
     }

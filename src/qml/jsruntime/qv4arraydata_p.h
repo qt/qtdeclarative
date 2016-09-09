@@ -156,7 +156,7 @@ struct SimpleArrayData : public ArrayData {
 Q_STATIC_ASSERT(std::is_trivial<SimpleArrayData>::value);
 
 struct SparseArrayData : public ArrayData {
-    inline ~SparseArrayData();
+    void destroy() { delete sparse; }
 
     uint mappedIndex(uint index) const {
         SparseArrayNode *n = sparse->findNode(index);
@@ -286,11 +286,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 };
 
 namespace Heap {
-
-inline SparseArrayData::~SparseArrayData()
-{
-    delete sparse;
-}
 
 void ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
 {

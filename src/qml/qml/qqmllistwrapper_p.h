@@ -67,7 +67,7 @@ namespace Heap {
 
 struct QmlListWrapper : Object {
     QmlListWrapper();
-    ~QmlListWrapper();
+    void destroy();
     QQmlQPointer<QObject> object;
     QQmlListProperty<QObject> property;
     int propertyType;

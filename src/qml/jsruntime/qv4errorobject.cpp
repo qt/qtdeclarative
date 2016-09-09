@@ -69,6 +69,8 @@ using namespace QV4;
 
 Heap::ErrorObject::ErrorObject()
 {
+    stackTrace = nullptr;
+
     Scope scope(internalClass->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
 
@@ -91,10 +93,10 @@ Heap::ErrorObject::ErrorObject(const Value &message, ErrorType t)
     *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
     *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
 
-    e->d()->stackTrace = scope.engine->stackTrace();
-    if (!e->d()->stackTrace.isEmpty()) {
-        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace.at(0).source);
-        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace.at(0).line);
+    e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
+    if (!e->d()->stackTrace->isEmpty()) {
+        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace->at(0).source);
+        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace->at(0).line);
     }
 
     if (!message.isUndefined())
@@ -111,16 +113,16 @@ Heap::ErrorObject::ErrorObject(const Value &message, const QString &fileName, in
     *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
     *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
 
-    e->d()->stackTrace = scope.engine->stackTrace();
+    e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     StackFrame frame;
     frame.source = fileName;
     frame.line = line;
     frame.column = column;
-    e->d()->stackTrace.prepend(frame);
+    e->d()->stackTrace->prepend(frame);
 
-    if (!e->d()->stackTrace.isEmpty()) {
-        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace.at(0).source);
-        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace.at(0).line);
+    if (!e->d()->stackTrace->isEmpty()) {
+        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace->at(0).source);
+        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace->at(0).line);
     }
 
     if (!message.isUndefined())
@@ -156,10 +158,10 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
         return ctx->engine()->throwTypeError();
     if (!This->d()->stack) {
         QString trace;
-        for (int i = 0; i < This->d()->stackTrace.count(); ++i) {
+        for (int i = 0; i < This->d()->stackTrace->count(); ++i) {
             if (i > 0)
                 trace += QLatin1Char('\n');
-            const StackFrame &frame = This->d()->stackTrace[i];
+            const StackFrame &frame = This->d()->stackTrace->at(i);
             trace += frame.function + QLatin1Char('@') + frame.source;
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);

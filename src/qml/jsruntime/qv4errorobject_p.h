@@ -76,9 +76,10 @@ struct ErrorObject : Object {
     ErrorObject();
     ErrorObject(const Value &message, ErrorType t = Error);
     ErrorObject(const Value &message, const QString &fileName, int line, int column, ErrorType t = Error);
+    void destroy() { delete stackTrace; }
 
     ErrorType errorType;
-    StackTrace stackTrace;
+    StackTrace *stackTrace;
     Pointer<String> stack;
 };
 

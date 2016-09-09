@@ -7264,7 +7264,7 @@ struct WeakReferenceSentinel : public Object {
 
     }
 
-    ~WeakReferenceSentinel() {
+    void destroy() {
         *resultPtr = weakRef->isNullOrUndefined();
     }
 
