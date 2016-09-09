@@ -299,6 +299,9 @@
         \li \l [QML QtQuickControls] {Slider}
         \li \l [QML QtQuickControls2] {Slider}
     \row
+        \li \l [QML QtQuickControls] {SplitView}
+        \li \mdash
+    \row
         \li \l [QML QtQuickControls] {SpinBox}
         \li \l [QML QtQuickControls2] {SpinBox}
     \row
