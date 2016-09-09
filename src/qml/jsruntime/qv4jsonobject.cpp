@@ -867,8 +867,9 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-Heap::JsonObject::JsonObject()
+void Heap::JsonObject::init()
 {
+    Object::init();
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 

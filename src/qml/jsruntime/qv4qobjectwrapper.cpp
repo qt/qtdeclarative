@@ -195,8 +195,9 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
     }
 }
 
-Heap::QObjectWrapper::QObjectWrapper(QObject *object)
+void Heap::QObjectWrapper::init(QObject *object)
 {
+    Object::init();
     qObj.init(object);
 }
 
@@ -1680,7 +1681,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
     method->d()->setObject(object);
 
     if (QQmlData *ddata = QQmlData::get(object))
-        method->d()->propertyCache = ddata->propertyCache;
+        method->d()->setPropertyCache(ddata->propertyCache);
 
     method->d()->index = index;
     return method.asReturnedValue();
@@ -1690,21 +1691,21 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueType
 {
     Scope valueScope(scope);
     Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
-    method->d()->propertyCache = valueType->d()->propertyCache;
+    method->d()->setPropertyCache(valueType->d()->propertyCache());
     method->d()->index = index;
     method->d()->valueTypeWrapper = valueType->d();
     return method.asReturnedValue();
 }
 
-Heap::QObjectMethod::QObjectMethod(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope)
+void Heap::QObjectMethod::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope);
 }
 
 const QMetaObject *Heap::QObjectMethod::metaObject()
 {
-    if (propertyCache)
-        return propertyCache->createMetaObject();
+    if (propertyCache())
+        return propertyCache()->createMetaObject();
     return object()->metaObject();
 }
 
@@ -1776,13 +1777,13 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
             return;
         }
 
-        object = QQmlObjectOrGadget(d()->propertyCache.data(), d()->valueTypeWrapper->gadgetPtr);
+        object = QQmlObjectOrGadget(d()->propertyCache(), d()->valueTypeWrapper->gadgetPtr);
     }
 
     QQmlPropertyData method;
 
-    if (d()->propertyCache) {
-        QQmlPropertyData *data = d()->propertyCache->method(d()->index);
+    if (d()->propertyCache()) {
+        QQmlPropertyData *data = d()->propertyCache()->method(d()->index);
         if (!data) {
             scope.result = QV4::Encode::undefined();
             return;
@@ -1825,7 +1826,7 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
     if (!method.isOverload()) {
         scope.result = CallPrecise(object, method, v4, callData);
     } else {
-        scope.result = CallOverloaded(object, method, v4, callData, d()->propertyCache);
+        scope.result = CallOverloaded(object, method, v4, callData, d()->propertyCache());
     }
 }
 
@@ -1841,11 +1842,13 @@ void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
 DEFINE_OBJECT_VTABLE(QObjectMethod);
 
 
-Heap::QMetaObjectWrapper::QMetaObjectWrapper(const QMetaObject *metaObject)
-    : metaObject(metaObject)
-    , constructors(nullptr)
-    , constructorCount(0)
-{}
+void Heap::QMetaObjectWrapper::init(const QMetaObject *metaObject)
+{
+    FunctionObject::init();
+    this->metaObject = metaObject;
+    constructors = nullptr;
+    constructorCount = 0;
+}
 
 void Heap::QMetaObjectWrapper::destroy()
 {
@@ -2013,9 +2016,10 @@ DEFINE_OBJECT_VTABLE(QMetaObjectWrapper);
 
 
 
-Heap::QmlSignalHandler::QmlSignalHandler(QObject *object, int signalIndex)
-    : signalIndex(signalIndex)
+void Heap::QmlSignalHandler::init(QObject *object, int signalIndex)
 {
+    Object::init();
+    this->signalIndex = signalIndex;
     setObject(object);
 }
 
@@ -2023,7 +2027,7 @@ DEFINE_OBJECT_VTABLE(QmlSignalHandler);
 
 void QmlSignalHandler::initProto(ExecutionEngine *engine)
 {
-    if (engine->signalHandlerPrototype()->d())
+    if (engine->signalHandlerPrototype()->d_unchecked())
         return;
 
     Scope scope(engine);

@@ -174,7 +174,7 @@ public:
 namespace Heap {
 
 struct NamedNodeMap : Object {
-    NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list);
+    void init(NodeImpl *data, const QList<NodeImpl *> &list);
     void destroy() {
         delete listPtr;
         if (d)
@@ -191,7 +191,7 @@ struct NamedNodeMap : Object {
 };
 
 struct NodeList : Object {
-    NodeList(NodeImpl *data);
+    void init(NodeImpl *data);
     void destroy() {
         if (d)
             d->release();
@@ -200,11 +200,11 @@ struct NodeList : Object {
 };
 
 struct NodePrototype : Object {
-    NodePrototype();
+    void init();
 };
 
 struct Node : Object {
-    Node(NodeImpl *data);
+    void init(NodeImpl *data);
     void destroy() {
         if (d)
             d->release();
@@ -228,9 +228,10 @@ public:
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
-Heap::NamedNodeMap::NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list)
-    : d(data)
+void Heap::NamedNodeMap::init(NodeImpl *data, const QList<NodeImpl *> &list)
 {
+    Object::init();
+    d = data;
     this->list() = list;
     if (d)
         d->addref();
@@ -253,9 +254,10 @@ public:
 
 };
 
-Heap::NodeList::NodeList(NodeImpl *data)
-    : d(data)
+void Heap::NodeList::init(NodeImpl *data)
 {
+    Object::init();
+    d = data;
     if (d)
         d->addref();
 }
@@ -294,8 +296,9 @@ public:
 
 };
 
-Heap::NodePrototype::NodePrototype()
+void Heap::NodePrototype::init()
 {
+    Object::init();
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
@@ -327,9 +330,10 @@ struct Node : public Object
     bool isNull() const;
 };
 
-Heap::Node::Node(NodeImpl *data)
-    : d(data)
+void Heap::Node::init(NodeImpl *data)
 {
+    Object::init();
+    d = data;
     if (d)
         d->addref();
 }
@@ -1594,7 +1598,11 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlXMLHttpRequestWrapper : Object {
-    QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request);
+    void init(QQmlXMLHttpRequest *request) {
+        Object::init();
+        this->request = request;
+    }
+
     void destroy() {
         delete request;
     }
@@ -1602,7 +1610,7 @@ struct QQmlXMLHttpRequestWrapper : Object {
 };
 
 struct QQmlXMLHttpRequestCtor : FunctionObject {
-    QQmlXMLHttpRequestCtor(ExecutionEngine *engine);
+    void init(ExecutionEngine *engine);
 
     Pointer<Object> proto;
 };
@@ -1614,11 +1622,6 @@ struct QQmlXMLHttpRequestWrapper : public Object
     V4_OBJECT2(QQmlXMLHttpRequestWrapper, Object)
     V4_NEEDS_DESTROY
 };
-
-Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request)
-    : request(request)
-{
-}
 
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
@@ -1671,9 +1674,9 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 
 DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 
-Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
-    : Heap::FunctionObject(engine->rootContext(), QStringLiteral("XMLHttpRequest"))
+void Heap::QQmlXMLHttpRequestCtor::init(ExecutionEngine *engine)
 {
+    Heap::FunctionObject::init(engine->rootContext(), QStringLiteral("XMLHttpRequest"));
     Scope scope(engine);
     Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
 

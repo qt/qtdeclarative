@@ -50,13 +50,15 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(VariantObject);
 
-Heap::VariantObject::VariantObject()
+void Heap::VariantObject::init()
 {
+    Object::init();
     scarceData = new ExecutionEngine::ScarceResourceData;
 }
 
-Heap::VariantObject::VariantObject(const QVariant &value)
+void Heap::VariantObject::init(const QVariant &value)
 {
+    Object::init();
     scarceData = new ExecutionEngine::ScarceResourceData(value);
     if (isScarce())
         removeVmePropertyReference();

@@ -108,6 +108,7 @@ public:
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, std::size_t unmanagedSize = 0)
     {
+        V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
         Heap::Base *o = allocData(size, unmanagedSize);
         o->setVtable(ManagedType::staticVTable());
@@ -142,7 +143,6 @@ public:
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
         t->d_unchecked()->init(this, arg1);
@@ -154,7 +154,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        (void)new (t->d()) typename ObjectType::Data();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -163,8 +163,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data();
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -173,8 +173,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1);
         return t->d();
     }
 
@@ -183,8 +183,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
 
@@ -193,8 +193,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
 
@@ -203,8 +203,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3, arg4);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
 
@@ -213,7 +213,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -222,7 +222,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1);
+        t->d_unchecked()->init(arg1);
         return t->d();
     }
 
@@ -231,7 +231,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
+        t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
 
@@ -240,7 +240,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3);
+        t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
 
@@ -249,7 +249,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3, arg4);
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
 
@@ -257,7 +257,6 @@ public:
     template <typename ManagedType>
     typename ManagedType::Data *alloc()
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init();
@@ -267,7 +266,6 @@ public:
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *alloc(Arg1 arg1)
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1);
@@ -277,7 +275,6 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2)
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1, arg2);
@@ -287,7 +284,6 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1, arg2, arg3);
@@ -297,7 +293,6 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1, arg2, arg3, arg4);
@@ -307,7 +302,6 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
-        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         t->d_unchecked()->init(arg1, arg2, arg3, arg4, arg5);

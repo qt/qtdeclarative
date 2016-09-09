@@ -61,11 +61,12 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
-Heap::QmlContextWrapper::QmlContextWrapper(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : readOnly(true)
-    , ownsContext(ownsContext)
-    , isNullWrapper(false)
+void Heap::QmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
 {
+    Object::init();
+    readOnly = true;
+    this->ownsContext = ownsContext;
+    isNullWrapper = false;
     this->context = new QQmlGuardedContextData(context);
     this->scopeObject.init(scopeObject);
 }

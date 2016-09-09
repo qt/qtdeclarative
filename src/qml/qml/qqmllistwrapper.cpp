@@ -52,8 +52,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-Heap::QmlListWrapper::QmlListWrapper()
+void Heap::QmlListWrapper::init()
 {
+    Object::init();
     object.init();
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
@@ -75,7 +76,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
     Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
     r->d()->object = object;
     r->d()->propertyType = propType;
-    void *args[] = { &r->d()->property, 0 };
+    void *args[] = { &r->d()->property(), 0 };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
     return r.asReturnedValue();
 }
@@ -86,7 +87,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProp
 
     Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
     r->d()->object = prop.object;
-    r->d()->property = prop;
+    r->d()->property() = prop;
     r->d()->propertyType = propType;
     return r.asReturnedValue();
 }
@@ -96,7 +97,7 @@ QVariant QmlListWrapper::toVariant() const
     if (!d()->object)
         return QVariant();
 
-    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property, d()->propertyType, engine()->qmlEngine()));
+    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property(), d()->propertyType, engine()->qmlEngine()));
 }
 
 
@@ -107,7 +108,7 @@ ReturnedValue QmlListWrapper::get(const Managed *m, String *name, bool *hasPrope
     QV4::ExecutionEngine *v4 = w->engine();
 
     if (name->equals(v4->id_length()) && !w->d()->object.isNull()) {
-        quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
+        quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
         return Primitive::fromUInt32(count).asReturnedValue();
     }
 
@@ -126,11 +127,11 @@ ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *has
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
-    quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
-    if (index < count && w->d()->property.at) {
+    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
+    if (index < count && w->d()->property().at) {
         if (hasProperty)
             *hasProperty = true;
-        return QV4::QObjectWrapper::wrap(v4, w->d()->property.at(&w->d()->property, index));
+        return QV4::QObjectWrapper::wrap(v4, w->d()->property().at(&w->d()->property(), index));
     }
 
     if (hasProperty)
@@ -152,12 +153,12 @@ void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
     *index = UINT_MAX;
     Q_ASSERT(m->as<QmlListWrapper>());
     QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
-    quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
+    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
     if (it->arrayIndex < count) {
         *index = it->arrayIndex;
         ++it->arrayIndex;
         *attrs = QV4::Attr_Data;
-        p->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property.at(&w->d()->property, *index));
+        p->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), *index));
         return;
     }
     return QV4::Object::advanceIterator(m, it, name, index, p, attrs);

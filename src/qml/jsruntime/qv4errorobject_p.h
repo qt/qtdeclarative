@@ -73,9 +73,9 @@ struct ErrorObject : Object {
         URIError
     };
 
-    ErrorObject();
-    ErrorObject(const Value &message, ErrorType t = Error);
-    ErrorObject(const Value &message, const QString &fileName, int line, int column, ErrorType t = Error);
+    void init();
+    void init(const Value &message, ErrorType t = Error);
+    void init(const Value &message, const QString &fileName, int line, int column, ErrorType t = Error);
     void destroy() { delete stackTrace; }
 
     ErrorType errorType;
@@ -84,58 +84,58 @@ struct ErrorObject : Object {
 };
 
 struct EvalErrorObject : ErrorObject {
-    EvalErrorObject(const Value &message);
+    void init(const Value &message);
 };
 
 struct RangeErrorObject : ErrorObject {
-    RangeErrorObject(const Value &message);
+    void init(const Value &message);
 };
 
 struct ReferenceErrorObject : ErrorObject {
-    ReferenceErrorObject(const Value &message);
-    ReferenceErrorObject(const Value &msg, const QString &fileName, int lineNumber, int columnNumber);
+    void init(const Value &message);
+    void init(const Value &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct SyntaxErrorObject : ErrorObject {
-    SyntaxErrorObject(const Value &message);
-    SyntaxErrorObject(const Value &msg, const QString &fileName, int lineNumber, int columnNumber);
+    void init(const Value &message);
+    void init(const Value &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct TypeErrorObject : ErrorObject {
-    TypeErrorObject(const Value &message);
+    void init(const Value &message);
 };
 
 struct URIErrorObject : ErrorObject {
-    URIErrorObject(const Value &message);
+    void init(const Value &message);
 };
 
 struct ErrorCtor : Heap::FunctionObject {
-    ErrorCtor(QV4::ExecutionContext *scope);
-    ErrorCtor(QV4::ExecutionContext *scope, const QString &name);
+    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope, const QString &name);
 };
 
 struct EvalErrorCtor : ErrorCtor {
-    EvalErrorCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct RangeErrorCtor : ErrorCtor {
-    RangeErrorCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct ReferenceErrorCtor : ErrorCtor {
-    ReferenceErrorCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct SyntaxErrorCtor : ErrorCtor {
-    SyntaxErrorCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct TypeErrorCtor : ErrorCtor {
-    TypeErrorCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct URIErrorCtor : ErrorCtor {
-    URIErrorCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }

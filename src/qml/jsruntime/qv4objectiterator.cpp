@@ -45,30 +45,6 @@
 
 using namespace QV4;
 
-ObjectIterator::ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags)
-    : engine(e)
-    , object(scratch1)
-    , current(scratch2)
-    , arrayNode(0)
-    , arrayIndex(0)
-    , memberIndex(0)
-    , flags(flags)
-{
-    init(o);
-}
-
-ObjectIterator::ObjectIterator(Scope &scope, const Object *o, uint flags)
-    : engine(scope.engine)
-    , object(scope.alloc(1))
-    , current(scope.alloc(1))
-    , arrayNode(0)
-    , arrayIndex(0)
-    , memberIndex(0)
-    , flags(flags)
-{
-    init(o);
-}
-
 void ObjectIterator::init(const Object *o)
 {
     object->setM(o ? o->m() : 0);

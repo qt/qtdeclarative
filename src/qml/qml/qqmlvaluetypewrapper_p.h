@@ -66,14 +66,24 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
-    QQmlValueTypeWrapper() {}
-    ~QQmlValueTypeWrapper();
-    QQmlRefPointer<QQmlPropertyCache> propertyCache;
+    void init() { Object::init(); }
+    void destroy();
+    QQmlPropertyCache *propertyCache() const { return _propertyCache; }
+    void setPropertyCache(QQmlPropertyCache *c) {
+        if (c)
+            c->addref();
+        if (_propertyCache)
+            _propertyCache->release();
+        _propertyCache = c;
+    }
     mutable void *gadgetPtr;
     QQmlValueType *valueType;
 
     void setValue(const QVariant &value) const;
     QVariant toVariant() const;
+
+private:
+    QQmlPropertyCache *_propertyCache;
 };
 
 }
@@ -82,7 +92,7 @@ struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
 {
     V4_OBJECT2(QQmlValueTypeWrapper, Object)
     V4_PROTOTYPE(valueTypeWrapperPrototype)
-    static void destroy(Heap::Base *b);
+    V4_NEEDS_DESTROY
 
 public:
 

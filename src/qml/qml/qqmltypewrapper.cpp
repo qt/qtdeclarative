@@ -55,9 +55,10 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 
-Heap::QmlTypeWrapper::QmlTypeWrapper()
-    : mode(IncludeEnums)
+void Heap::QmlTypeWrapper::init()
 {
+    Object::init();
+    mode = IncludeEnums;
     object.init();
 }
 

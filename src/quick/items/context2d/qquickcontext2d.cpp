@@ -489,16 +489,16 @@ namespace QV4 {
 namespace Heap {
 
 struct QQuickJSContext2D : Object {
-    QQuickJSContext2D() {}
+    void init() { Object::init(); }
     QQuickContext2D* context;
 };
 
 struct QQuickJSContext2DPrototype : Object {
-    QQuickJSContext2DPrototype() {}
+    void init() { Object::init(); }
 };
 
 struct QQuickContext2DStyle : Object {
-    QQuickContext2DStyle()
+    void init()
     {
         brush = new QBrush;
         patternRepeatX = false;
@@ -512,14 +512,14 @@ struct QQuickContext2DStyle : Object {
 };
 
 struct QQuickJSContext2DPixelData : Object {
-    QQuickJSContext2DPixelData();
+    void init();
     void destroy() { delete image; }
 
     QImage *image;
 };
 
 struct QQuickJSContext2DImageData : Object {
-    QQuickJSContext2DImageData();
+    void init();
 
     QV4::Value pixelData;
 };
@@ -900,8 +900,9 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     static QV4::ReturnedValue proto_get_length(QV4::CallContext *ctx);
 };
 
-QV4::Heap::QQuickJSContext2DPixelData::QQuickJSContext2DPixelData()
+void QV4::Heap::QQuickJSContext2DPixelData::init()
 {
+    Object::init();
     image = new QImage;
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
@@ -924,8 +925,9 @@ struct QQuickJSContext2DImageData : public QV4::Object
     }
 };
 
-QV4::Heap::QQuickJSContext2DImageData::QQuickJSContext2DImageData()
+void QV4::Heap::QQuickJSContext2DImageData::init()
 {
+    Object::init();
     pixelData = QV4::Primitive::undefinedValue();
 
     QV4::Scope scope(internalClass->engine);

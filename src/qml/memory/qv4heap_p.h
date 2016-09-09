@@ -58,6 +58,12 @@
 // parent's init all up the inheritance chain), define QML_CHECK_INIT_DESTROY_CALLS below.
 #undef QML_CHECK_INIT_DESTROY_CALLS
 
+#if defined(_MSC_VER) && (_MSC_VER < 1900) // broken compilers:
+#  define V4_ASSERT_IS_TRIVIAL(x)
+#else // working compilers:
+#  define V4_ASSERT_IS_TRIVIAL(x) Q_STATIC_ASSERT(std::is_trivial< x >::value);
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -82,6 +88,8 @@ struct VTable
 namespace Heap {
 
 struct Q_QML_EXPORT Base {
+    void *operator new(size_t) = delete;
+
     quintptr mm_data; // vtable and markbit
 
     inline ReturnedValue asReturnedValue() const;
@@ -128,13 +136,19 @@ struct Q_QML_EXPORT Base {
     void init() { setInitialized(); }
 #ifdef QML_CHECK_INIT_DESTROY_CALLS
     bool _isInitialized;
-    void _checkIsInitialized() { Q_ASSERT(_isInitialized); }
+    void _checkIsInitialized() {
+        if (!_isInitialized)
+            fprintf(stderr, "ERROR: use of object '%s' before call to init() !!\n",
+                    vtable()->className);
+        Q_ASSERT(_isInitialized);
+    }
     void setInitialized() { Q_ASSERT(!_isInitialized); _isInitialized = true; }
 #else
     Q_ALWAYS_INLINE void _checkIsInitialized() {}
     Q_ALWAYS_INLINE void setInitialized() {}
 #endif
 };
+V4_ASSERT_IS_TRIVIAL(Base)
 
 template <typename T>
 struct Pointer {
@@ -148,7 +162,7 @@ struct Pointer {
 
     T *ptr;
 };
-Q_STATIC_ASSERT(std::is_trivial<Pointer<void>>::value);
+V4_ASSERT_IS_TRIVIAL(Pointer<void>)
 
 }
 
@@ -204,7 +218,7 @@ private:
     QtSharedPointer::ExternalRefCountData *d;
     QObject *qObject;
 };
-Q_STATIC_ASSERT(std::is_trivial<QQmlQPointer<QObject>>::value);
+V4_ASSERT_IS_TRIVIAL(QQmlQPointer<QObject>)
 #endif
 
 }

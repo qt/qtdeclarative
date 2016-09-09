@@ -88,9 +88,10 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
         QV4::Heap::DataClass *d() const { \
             QV4::Heap::DataClass *dptr = d_unchecked(); \
-            if (std::is_trivial<QV4::Heap::DataClass>::value) dptr->_checkIsInitialized(); \
+            dptr->_checkIsInitialized(); \
             return dptr; \
-        }
+        } \
+        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass)
 
 #define V4_MANAGED(DataClass, superClass) \
     private: \

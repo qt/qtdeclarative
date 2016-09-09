@@ -64,7 +64,7 @@ namespace QV4 {
 namespace Heap {
 
 struct JsonObject : Object {
-    JsonObject();
+    void init();
 };
 
 }

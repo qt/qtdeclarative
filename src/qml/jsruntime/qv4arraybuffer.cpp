@@ -46,9 +46,9 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(ArrayBufferCtor);
 DEFINE_OBJECT_VTABLE(ArrayBuffer);
 
-Heap::ArrayBufferCtor::ArrayBufferCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("ArrayBuffer"))
+void Heap::ArrayBufferCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("ArrayBuffer"));
 }
 
 void ArrayBufferCtor::construct(const Managed *m, Scope &scope, CallData *callData)
@@ -94,8 +94,9 @@ ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
 }
 
 
-Heap::ArrayBuffer::ArrayBuffer(size_t length)
+void Heap::ArrayBuffer::init(size_t length)
 {
+    Object::init();
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {
         data = 0;
@@ -106,9 +107,10 @@ Heap::ArrayBuffer::ArrayBuffer(size_t length)
     memset(data->data(), 0, length + 1);
 }
 
-Heap::ArrayBuffer::ArrayBuffer(const QByteArray& array)
-    : data(const_cast<QByteArray&>(array).data_ptr())
+void Heap::ArrayBuffer::init(const QByteArray& array)
 {
+    Object::init();
+    data = const_cast<QByteArray&>(array).data_ptr();
     data->ref.ref();
 }
 

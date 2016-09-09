@@ -62,21 +62,24 @@ namespace QV4 {
 namespace Heap {
 
 struct DelegateModelGroupFunction : FunctionObject {
-    DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg));
+    void init(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg));
 
-    uint flag;
     QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg);
+    uint flag;
 };
 
 struct QQmlDelegateModelGroupChange : Object {
-    QQmlDelegateModelGroupChange() {}
+    void init() { Object::init(); }
 
-    QQmlChangeSet::Change change;
+    QQmlChangeSet::ChangeData change;
 };
 
 struct QQmlDelegateModelGroupChangeArray : Object {
-    QQmlDelegateModelGroupChangeArray(const QVector<QQmlChangeSet::Change> &changes);
-    void destroy() { delete changes; }
+    void init(const QVector<QQmlChangeSet::Change> &changes);
+    void destroy() {
+        delete changes;
+    }
+
     QVector<QQmlChangeSet::Change> *changes;
 };
 
@@ -106,11 +109,11 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
     }
 };
 
-Heap::DelegateModelGroupFunction::DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
-    : QV4::Heap::FunctionObject(scope, QStringLiteral("DelegateModelGroupFunction"))
-    , flag(flag)
-    , code(code)
+void Heap::DelegateModelGroupFunction::init(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
 {
+    QV4::Heap::FunctionObject::init(scope, QStringLiteral("DelegateModelGroupFunction"));
+    this->flag = flag;
+    this->code = code;
 }
 
 }
@@ -3300,9 +3303,10 @@ public:
     }
 };
 
-QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(const QVector<QQmlChangeSet::Change> &changes)
-    : changes(new QVector<QQmlChangeSet::Change>(changes))
+void QV4::Heap::QQmlDelegateModelGroupChangeArray::init(const QVector<QQmlChangeSet::Change> &changes)
 {
+    Object::init();
+    this->changes = new QVector<QQmlChangeSet::Change>(changes);
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(QV4::Heap::ArrayData::Custom);

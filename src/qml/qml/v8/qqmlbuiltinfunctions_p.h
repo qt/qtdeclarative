@@ -64,7 +64,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QtObject : Object {
-    QtObject(QQmlEngine *qmlEngine);
+    void init(QQmlEngine *qmlEngine);
     QObject *platform;
     QObject *application;
 
@@ -77,14 +77,17 @@ struct QtObject : Object {
 };
 
 struct ConsoleObject : Object {
-    ConsoleObject();
+    void init();
 };
 
 struct QQmlBindingFunction : FunctionObject {
-    QQmlBindingFunction(const QV4::FunctionObject *originalFunction);
+    void init(const QV4::FunctionObject *originalFunction);
+    void destroy() {
+        delete bindingLocation;
+    }
     Pointer<FunctionObject> originalFunction;
     // Set when the binding is created later
-    QQmlSourceLocation bindingLocation;
+    QQmlSourceLocation *bindingLocation;
 };
 
 }
@@ -145,9 +148,7 @@ private:
 
 struct ConsoleObject : Object
 {
-    typedef Heap::ConsoleObject Data;
-    const Data *d() const { return static_cast<const Data *>(Object::d()); }
-    Data *d() { return static_cast<Data *>(Object::d()); }
+    V4_OBJECT2(ConsoleObject, Object)
 
     static ReturnedValue method_error(CallContext *ctx);
     static ReturnedValue method_log(CallContext *ctx);

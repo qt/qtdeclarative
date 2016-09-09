@@ -65,8 +65,8 @@ struct StringObject : Object {
         LengthPropertyIndex = 0
     };
 
-    StringObject();
-    StringObject(const QV4::String *string);
+    void init();
+    void init(const QV4::String *string);
     String *string;
 
     Heap::String *getIndex(uint index) const;
@@ -74,7 +74,7 @@ struct StringObject : Object {
 };
 
 struct StringCtor : FunctionObject {
-    StringCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }

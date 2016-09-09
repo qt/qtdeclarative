@@ -66,8 +66,8 @@ namespace Heap {
 
 struct VariantObject : Object
 {
-    VariantObject();
-    VariantObject(const QVariant &value);
+    void init();
+    void init(const QVariant &value);
     void destroy() {
         Q_ASSERT(scarceData);
         if (isScarce())

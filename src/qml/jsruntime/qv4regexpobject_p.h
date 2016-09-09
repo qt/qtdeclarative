@@ -74,16 +74,16 @@ namespace QV4 {
 namespace Heap {
 
 struct RegExpObject : Object {
-    RegExpObject();
-    RegExpObject(QV4::RegExp *value, bool global);
-    RegExpObject(const QRegExp &re);
+    void init();
+    void init(QV4::RegExp *value, bool global);
+    void init(const QRegExp &re);
 
     Pointer<RegExp> value;
     bool global;
 };
 
 struct RegExpCtor : FunctionObject {
-    RegExpCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
     Value lastMatch;
     Pointer<String> lastInput;
     int lastMatchStart;

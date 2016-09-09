@@ -69,8 +69,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(RegExpObject);
 
-Heap::RegExpObject::RegExpObject()
+void Heap::RegExpObject::init()
 {
+    Object::init();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
     o->d()->value = QV4::RegExp::create(scope.engine, QString(), false, false);
@@ -78,9 +79,10 @@ Heap::RegExpObject::RegExpObject()
     o->initProperties();
 }
 
-Heap::RegExpObject::RegExpObject(QV4::RegExp *value, bool global)
-    : global(global)
+void Heap::RegExpObject::init(QV4::RegExp *value, bool global)
 {
+    Object::init();
+    this->global = global;
     this->value = value->d();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
@@ -90,8 +92,9 @@ Heap::RegExpObject::RegExpObject(QV4::RegExp *value, bool global)
 // Converts a QRegExp to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
-Heap::RegExpObject::RegExpObject(const QRegExp &re)
+void Heap::RegExpObject::init(const QRegExp &re)
 {
+    Object::init();
     global = false;
 
     // Convert the pattern to a ECMAScript pattern.
@@ -217,9 +220,9 @@ uint RegExpObject::flags() const
 
 DEFINE_OBJECT_VTABLE(RegExpCtor);
 
-Heap::RegExpCtor::RegExpCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("RegExp"))
+void Heap::RegExpCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("RegExp"));
     clearLastMatch();
 }
 

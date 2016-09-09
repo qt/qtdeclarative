@@ -59,7 +59,7 @@ namespace QV4 {
 namespace Heap {
 
 struct MathObject : Object {
-    MathObject();
+    void init();
 };
 
 }

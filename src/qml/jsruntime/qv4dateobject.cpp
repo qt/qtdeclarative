@@ -634,13 +634,15 @@ static double getLocalTZA()
 
 DEFINE_OBJECT_VTABLE(DateObject);
 
-Heap::DateObject::DateObject(const QDateTime &date)
+void Heap::DateObject::init(const QDateTime &date)
 {
+    Object::init();
     this->date = date.isValid() ? date.toMSecsSinceEpoch() : qt_qnan();
 }
 
-Heap::DateObject::DateObject(const QTime &time)
+void Heap::DateObject::init(const QTime &time)
 {
+    Object::init();
     if (!time.isValid()) {
         date = qt_qnan();
         return;
@@ -668,9 +670,9 @@ QDateTime DateObject::toQDateTime() const
 
 DEFINE_OBJECT_VTABLE(DateCtor);
 
-Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("Date"))
+void Heap::DateCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
 void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)

@@ -64,7 +64,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlContextWrapper : Object {
-    QmlContextWrapper(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    void init(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     void destroy();
     bool readOnly;
     bool ownsContext;

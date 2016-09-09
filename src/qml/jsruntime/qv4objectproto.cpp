@@ -54,9 +54,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ObjectCtor);
 
-Heap::ObjectCtor::ObjectCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("Object"))
+void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("Object"));
 }
 
 void ObjectCtor::construct(const Managed *that, Scope &scope, CallData *callData)

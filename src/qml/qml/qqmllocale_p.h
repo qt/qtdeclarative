@@ -143,7 +143,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlLocaleData : Object {
-    inline QQmlLocaleData() { locale = new QLocale; }
+    inline void init() { locale = new QLocale; }
     void destroy() { delete locale; }
     QLocale *locale;
 };

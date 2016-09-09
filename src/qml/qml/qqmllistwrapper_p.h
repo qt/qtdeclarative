@@ -66,11 +66,18 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlListWrapper : Object {
-    QmlListWrapper();
+    void init();
     void destroy();
     QQmlQPointer<QObject> object;
-    QQmlListProperty<QObject> property;
+
+    QQmlListProperty<QObject> &property() {
+        return *reinterpret_cast<QQmlListProperty<QObject>*>(propertyData);
+    }
+
     int propertyType;
+
+private:
+    void *propertyData[sizeof(QQmlListProperty<QObject>)/sizeof(void*)];
 };
 
 }

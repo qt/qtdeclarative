@@ -110,8 +110,9 @@ namespace QV4 {
 namespace Heap {
     struct QQmlSqlDatabaseWrapper : public Object {
         enum Type { Database, Query, Rows };
-        QQmlSqlDatabaseWrapper()
+        void init()
         {
+            Object::init();
             type = Database;
             database = new QSqlDatabase;
             version = new QString;
