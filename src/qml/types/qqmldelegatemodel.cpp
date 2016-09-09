@@ -1310,9 +1310,23 @@ void QQmlDelegateModelPrivate::itemsRemoved(
                     }
                 } else {
                     if (QQDMIncubationTask *incubationTask = cacheItem->incubationTask) {
-                        for (int i = 1; i < m_groupCount; ++i) {
-                            if (remove.inGroup(i))
-                                incubationTask->index[i] = remove.index[i];
+                        if (!cacheItem->isObjectReferenced()) {
+                            releaseIncubator(cacheItem->incubationTask);
+                            cacheItem->incubationTask = 0;
+                            if (cacheItem->object) {
+                                QObject *object = cacheItem->object;
+                                cacheItem->destroyObject();
+                                if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object))
+                                    emitDestroyingPackage(package);
+                                else
+                                    emitDestroyingItem(object);
+                            }
+                            cacheItem->scriptRef -= 1;
+                        } else {
+                            for (int i = 1; i < m_groupCount; ++i) {
+                                if (remove.inGroup(i))
+                                    incubationTask->index[i] = remove.index[i];
+                            }
                         }
                     }
                     if (QQmlDelegateModelAttached *attached = cacheItem->attached) {
