@@ -715,7 +715,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
 
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
-        if (re->value()->pattern.isEmpty()) {
+        if (re->value()->pattern->isEmpty()) {
             re = (RegExpObject *)0;
             separatorValue = ctx->d()->engine->newString();
         }

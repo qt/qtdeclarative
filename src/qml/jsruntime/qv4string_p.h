@@ -71,8 +71,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     };
 
 #ifndef V4_BOOTSTRAP
-    String(MemoryManager *mm, const QString &text);
-    String(MemoryManager *mm, String *l, String *n, bool dummy);
+    void init(MemoryManager *mm, const QString &text);
+    void init(MemoryManager *mm, String *l, String *n);
     void destroy() {
         if (!largestSubLength && !text->ref.deref())
             QStringData::deallocate(text);
@@ -133,6 +133,7 @@ private:
     static void append(const String *data, QChar *ch);
 #endif
 };
+Q_STATIC_ASSERT(std::is_trivial<String>::value);
 
 }
 

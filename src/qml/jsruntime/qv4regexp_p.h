@@ -76,11 +76,11 @@ struct RegExpCacheKey;
 namespace Heap {
 
 struct RegExp : Base {
-    RegExp(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
+    void init(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
     void destroy();
 
-    QString pattern;
-    OwnPtr<JSC::Yarr::BytecodePattern> byteCode;
+    QString *pattern;
+    JSC::Yarr::BytecodePattern *byteCode;
 #if ENABLE(YARR_JIT)
     JSC::Yarr::YarrCodeBlock *jitCode;
 #endif
@@ -91,6 +91,7 @@ struct RegExp : Base {
 
     int captureCount() const { return subPatternCount + 1; }
 };
+Q_STATIC_ASSERT(std::is_trivial<RegExp>::value);
 
 }
 
@@ -100,8 +101,8 @@ struct RegExp : public Managed
     Q_MANAGED_TYPE(RegExp)
     V4_NEEDS_DESTROY
 
-    QString pattern() const { return d()->pattern; }
-    OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return d()->byteCode; }
+    QString pattern() const { return *d()->pattern; }
+    JSC::Yarr::BytecodePattern *byteCode() { return d()->byteCode; }
 #if ENABLE(YARR_JIT)
     JSC::Yarr::YarrCodeBlock *jitCode() const { return d()->jitCode; }
 #endif
@@ -112,7 +113,7 @@ struct RegExp : public Managed
 
     static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
 
-    bool isValid() const { return d()->byteCode.get(); }
+    bool isValid() const { return d()->byteCode; }
 
     uint match(const QString& string, int start, uint *matchOffsets);
 
@@ -143,7 +144,7 @@ struct RegExpCacheKey
 };
 
 inline RegExpCacheKey::RegExpCacheKey(const RegExp::Data *re)
-    : pattern(re->pattern)
+    : pattern(*re->pattern)
     , ignoreCase(re->ignoreCase)
     , multiLine(re->multiLine)
 {}

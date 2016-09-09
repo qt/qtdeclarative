@@ -66,7 +66,7 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
         return uint(jitCode()->execute(s.characters16(), start, s.length(), (int*)matchOffsets).start);
 #endif
 
-    return JSC::Yarr::interpret(byteCode().get(), s.characters16(), string.length(), start, matchOffsets);
+    return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
 }
 
 Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
@@ -90,19 +90,20 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
     return result->d();
 }
 
-Heap::RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : pattern(pattern)
-    , ignoreCase(ignoreCase)
-    , multiLine(multiline)
+void Heap::RegExp::init(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
 {
     Base::init();
+    this->pattern = new QString(pattern);
+    this->ignoreCase = ignoreCase;
+    this->multiLine = multiline;
 
     const char* error = 0;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiline, &error);
     if (error)
         return;
     subPatternCount = yarrPattern.m_numSubpatterns;
-    byteCode = JSC::Yarr::byteCompile(yarrPattern, engine->bumperPointerAllocator);
+    OwnPtr<JSC::Yarr::BytecodePattern> p = JSC::Yarr::byteCompile(yarrPattern, engine->bumperPointerAllocator);
+    byteCode = p.take();
 #if ENABLE(YARR_JIT)
     jitCode = new JSC::Yarr::YarrCodeBlock;
     if (!yarrPattern.m_containsBackreferences && engine->iselFactory->jitCompileRegexps()) {
@@ -121,6 +122,8 @@ void Heap::RegExp::destroy()
 #if ENABLE(YARR_JIT)
     delete jitCode;
 #endif
+    delete byteCode;
+    delete pattern;
 }
 
 void RegExp::markObjects(Heap::Base *that, ExecutionEngine *e)

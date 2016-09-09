@@ -555,7 +555,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
         if (!pright->stringValue()->d()->length())
             return pleft->asReturnedValue();
         MemoryManager *mm = engine->memoryManager;
-        return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d(), true))->asReturnedValue();
+        return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -572,7 +572,7 @@ QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Valu
         if (!right.stringValue()->d()->length())
             return left.asReturnedValue();
         MemoryManager *mm = engine->memoryManager;
-        return (mm->alloc<String>(mm, left.stringValue()->d(), right.stringValue()->d(), true))->asReturnedValue();
+        return (mm->alloc<String>(mm, left.stringValue()->d(), right.stringValue()->d()))->asReturnedValue();
     }
 
     Scope scope(engine);
@@ -590,7 +590,7 @@ QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Valu
     if (!pright->stringValue()->d()->length())
         return pleft->asReturnedValue();
     MemoryManager *mm = engine->memoryManager;
-    return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d(), true))->asReturnedValue();
+    return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
 }
 
 void Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)

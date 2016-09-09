@@ -145,7 +145,7 @@ void RegExpObject::initProperties()
 
     Q_ASSERT(value());
 
-    QString p = value()->pattern;
+    QString p = *value()->pattern;
     if (p.isEmpty()) {
         p = QStringLiteral("(?:)");
     } else {
@@ -180,7 +180,7 @@ Value *RegExpObject::lastIndexProperty()
 QRegExp RegExpObject::toQRegExp() const
 {
     Qt::CaseSensitivity caseSensitivity = value()->ignoreCase ? Qt::CaseInsensitive : Qt::CaseSensitive;
-    return QRegExp(value()->pattern, caseSensitivity, QRegExp::RegExp2);
+    return QRegExp(*value()->pattern, caseSensitivity, QRegExp::RegExp2);
 }
 
 QString RegExpObject::toString() const

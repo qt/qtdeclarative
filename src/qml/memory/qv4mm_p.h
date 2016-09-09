@@ -142,9 +142,10 @@ public:
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
-        (void)new (t->d()) typename ManagedType::Data(this, arg1);
+        t->d_unchecked()->init(this, arg1);
         return t->d();
     }
 
@@ -296,9 +297,10 @@ public:
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
+        Q_STATIC_ASSERT(std::is_trivial<typename ManagedType::Data>::value); // TODO: move down to allocManaged
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4);
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
 
