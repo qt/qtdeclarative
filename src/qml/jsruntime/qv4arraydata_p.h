@@ -156,7 +156,10 @@ struct SimpleArrayData : public ArrayData {
 V4_ASSERT_IS_TRIVIAL(SimpleArrayData)
 
 struct SparseArrayData : public ArrayData {
-    void destroy() { delete sparse; }
+    void destroy() {
+        delete sparse;
+        ArrayData::destroy();
+    }
 
     uint mappedIndex(uint index) const {
         SparseArrayNode *n = sparse->findNode(index);

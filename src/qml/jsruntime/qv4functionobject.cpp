@@ -147,6 +147,7 @@ void Heap::FunctionObject::destroy()
 {
     if (function)
         function->compilationUnit->release();
+    Object::destroy();
 }
 
 void FunctionObject::init(String *n, bool createProto)

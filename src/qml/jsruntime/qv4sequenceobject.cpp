@@ -221,6 +221,7 @@ struct QQmlSequence : Object {
     void destroy() {
         delete container;
         object.destroy();
+        Object::destroy();
     }
 
     mutable Container *container;

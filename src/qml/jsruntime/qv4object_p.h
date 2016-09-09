@@ -69,6 +69,7 @@ namespace Heap {
 
 struct Object : Base {
     void init() { Base::init(); }
+    void destroy() { Base::destroy(); }
 
     const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
     Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }

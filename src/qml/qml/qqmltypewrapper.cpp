@@ -67,6 +67,7 @@ void Heap::QmlTypeWrapper::destroy()
     if (typeNamespace)
         typeNamespace->release();
     object.destroy();
+    Object::destroy();
 }
 
 bool QmlTypeWrapper::isSingleton() const

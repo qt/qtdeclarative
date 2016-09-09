@@ -1497,6 +1497,7 @@ void QV4::Heap::QmlIncubatorObject::init(QQmlIncubator::IncubationMode m)
 void QV4::Heap::QmlIncubatorObject::destroy() {
     delete incubator;
     parent.destroy();
+    Object::destroy();
 }
 
 void QV4::QmlIncubatorObject::setInitialState(QObject *o)

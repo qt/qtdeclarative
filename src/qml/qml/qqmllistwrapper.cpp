@@ -64,6 +64,7 @@ void Heap::QmlListWrapper::init()
 void Heap::QmlListWrapper::destroy()
 {
     object.destroy();
+    Object::destroy();
 }
 
 ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, int propId, int propType)

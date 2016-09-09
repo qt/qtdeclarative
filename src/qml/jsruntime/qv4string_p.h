@@ -76,6 +76,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     void destroy() {
         if (!largestSubLength && !text->ref.deref())
             QStringData::deallocate(text);
+        Base::destroy();
     }
     void simplifyString() const;
     int length() const {

@@ -84,6 +84,7 @@ struct QQmlBindingFunction : FunctionObject {
     void init(const QV4::FunctionObject *originalFunction);
     void destroy() {
         delete bindingLocation;
+        Object::destroy();
     }
     Pointer<FunctionObject> originalFunction;
     // Set when the binding is created later

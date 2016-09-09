@@ -7267,6 +7267,7 @@ struct WeakReferenceSentinel : public Object {
 
     void destroy() {
         *resultPtr = weakRef->isNullOrUndefined();
+        Object::destroy();
     }
 
     WeakValue *weakRef;

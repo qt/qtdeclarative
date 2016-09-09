@@ -76,7 +76,10 @@ struct ErrorObject : Object {
     void init();
     void init(const Value &message, ErrorType t = Error);
     void init(const Value &message, const QString &fileName, int line, int column, ErrorType t = Error);
-    void destroy() { delete stackTrace; }
+    void destroy() {
+        delete stackTrace;
+        Object::destroy();
+    }
 
     ErrorType errorType;
     StackTrace *stackTrace;

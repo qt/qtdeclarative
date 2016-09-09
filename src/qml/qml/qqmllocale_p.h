@@ -144,7 +144,10 @@ namespace Heap {
 
 struct QQmlLocaleData : Object {
     inline void init() { locale = new QLocale; }
-    void destroy() { delete locale; }
+    void destroy() {
+        delete locale;
+        Object::destroy();
+    }
     QLocale *locale;
 };
 

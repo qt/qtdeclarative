@@ -67,7 +67,10 @@ struct QQmlValueTypeReference : QQmlValueTypeWrapper
         QQmlValueTypeWrapper::init();
         object.init();
     }
-    void destroy() { object.destroy(); }
+    void destroy() {
+        object.destroy();
+        QQmlValueTypeWrapper::destroy();
+    }
     QQmlQPointer<QObject> object;
     int property;
 };
@@ -77,8 +80,7 @@ struct QQmlValueTypeReference : QQmlValueTypeWrapper
 struct QQmlValueTypeReference : public QQmlValueTypeWrapper
 {
     V4_OBJECT2(QQmlValueTypeReference, QQmlValueTypeWrapper)
-
-    static void destroy(Heap::Base *that);
+    V4_NEEDS_DESTROY
 
     bool readReferenceValue() const;
 };
@@ -95,6 +97,7 @@ void Heap::QQmlValueTypeWrapper::destroy()
         valueType->metaType.destruct(gadgetPtr);
         ::operator delete(gadgetPtr);
     }
+    Object::destroy();
 }
 
 void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
@@ -489,11 +492,6 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             QMetaObject::metacall(reference->d()->object, QMetaObject::WriteProperty, reference->d()->property, a);
         }
     }
-}
-
-void QQmlValueTypeReference::destroy(Heap::Base *that)
-{
-    static_cast<Heap::QQmlValueTypeReference*>(that)->Heap::QQmlValueTypeReference::~QQmlValueTypeReference();
 }
 
 QT_END_NAMESPACE

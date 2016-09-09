@@ -179,6 +179,7 @@ struct NamedNodeMap : Object {
         delete listPtr;
         if (d)
             d->release();
+        Object::destroy();
     }
     QList<NodeImpl *> &list() {
         if (listPtr == nullptr)
@@ -195,6 +196,7 @@ struct NodeList : Object {
     void destroy() {
         if (d)
             d->release();
+        Object::destroy();
     }
     NodeImpl *d;
 };
@@ -208,6 +210,7 @@ struct Node : Object {
     void destroy() {
         if (d)
             d->release();
+        Object::destroy();
     }
     NodeImpl *d;
 };
@@ -1605,6 +1608,7 @@ struct QQmlXMLHttpRequestWrapper : Object {
 
     void destroy() {
         delete request;
+        Object::destroy();
     }
     QQmlXMLHttpRequest *request;
 };

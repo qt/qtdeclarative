@@ -77,6 +77,7 @@ void Heap::QmlContextWrapper::destroy()
         (*context)->destroy();
     delete context;
     scopeObject.destroy();
+    Object::destroy();
 }
 
 ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *ctxt, QObject *scope)

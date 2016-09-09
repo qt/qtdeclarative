@@ -168,6 +168,7 @@ struct ModelObject : public QObjectWrapper {
         m_model = model;
         m_elementIndex = elementIndex;
     }
+    void destroy() { QObjectWrapper::destroy(); }
     QQmlListModel *m_model;
     int m_elementIndex;
 };

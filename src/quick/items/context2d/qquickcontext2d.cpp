@@ -504,7 +504,10 @@ struct QQuickContext2DStyle : Object {
         patternRepeatX = false;
         patternRepeatY = false;
     }
-    void destroy() { delete brush; }
+    void destroy() {
+        delete brush;
+        Object::destroy();
+    }
 
     QBrush *brush;
     bool patternRepeatX:1;
@@ -513,7 +516,10 @@ struct QQuickContext2DStyle : Object {
 
 struct QQuickJSContext2DPixelData : Object {
     void init();
-    void destroy() { delete image; }
+    void destroy() {
+        delete image;
+        Object::destroy();
+    }
 
     QImage *image;
 };

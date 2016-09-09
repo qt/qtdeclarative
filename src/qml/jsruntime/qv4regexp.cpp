@@ -124,6 +124,7 @@ void Heap::RegExp::destroy()
 #endif
     delete byteCode;
     delete pattern;
+    Base::destroy();
 }
 
 void RegExp::markObjects(Heap::Base *that, ExecutionEngine *e)

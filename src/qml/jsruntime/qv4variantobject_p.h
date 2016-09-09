@@ -73,6 +73,7 @@ struct VariantObject : Object
         if (isScarce())
             addVmePropertyReference();
         delete scarceData;
+        Object::destroy();
     }
     bool isScarce() const;
     int vmePropertyReferenceCount;

@@ -123,6 +123,7 @@ namespace Heap {
             delete database;
             delete version;
             delete sqlQuery;
+            Object::destroy();
         }
 
         Type type;

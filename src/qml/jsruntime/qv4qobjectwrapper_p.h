@@ -79,7 +79,10 @@ struct QQmlValueTypeWrapper;
 
 struct QObjectWrapper : Object {
     void init(QObject *object);
-    void destroy() { qObj.destroy(); }
+    void destroy() {
+        qObj.destroy();
+        Object::destroy();
+    }
 
     QObject *object() const { return qObj.data(); }
 
@@ -131,7 +134,10 @@ struct QMetaObjectWrapper : FunctionObject {
 
 struct QmlSignalHandler : Object {
     void init(QObject *object, int signalIndex);
-    void destroy() { qObj.destroy(); }
+    void destroy() {
+        qObj.destroy();
+        Object::destroy();
+    }
     int signalIndex;
 
     QObject *object() const { return qObj.data(); }

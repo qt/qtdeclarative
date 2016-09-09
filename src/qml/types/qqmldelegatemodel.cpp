@@ -78,6 +78,7 @@ struct QQmlDelegateModelGroupChangeArray : Object {
     void init(const QVector<QQmlChangeSet::Change> &changes);
     void destroy() {
         delete changes;
+        Object::destroy();
     }
 
     QVector<QQmlChangeSet::Change> *changes;
@@ -1872,6 +1873,7 @@ DEFINE_OBJECT_VTABLE(QQmlDelegateModelItemObject);
 void QV4::Heap::QQmlDelegateModelItemObject::destroy()
 {
     item->Dispose();
+    Object::destroy();
 }
 
 
