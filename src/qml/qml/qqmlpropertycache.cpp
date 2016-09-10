@@ -1091,8 +1091,20 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj,
     return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
 }
 
+// these two functions are copied from qmetaobject.cpp
 static inline const QMetaObjectPrivate *priv(const uint* data)
 { return reinterpret_cast<const QMetaObjectPrivate*>(data); }
+
+static inline const QByteArray stringData(const QMetaObject *mo, int index)
+{
+    Q_ASSERT(priv(mo->d.data)->revision >= 7);
+    const QByteArrayDataPtr data = { const_cast<QByteArrayData*>(&mo->d.stringdata[index]) };
+    Q_ASSERT(data.ptr->ref.isStatic());
+    Q_ASSERT(data.ptr->alloc == 0);
+    Q_ASSERT(data.ptr->capacityReserved == 0);
+    Q_ASSERT(data.ptr->size >= 0);
+    return data;
+}
 
 bool QQmlPropertyCache::isDynamicMetaObject(const QMetaObject *mo)
 {
@@ -1399,8 +1411,7 @@ bool QQmlPropertyCache::addToHash(QCryptographicHash &hash, const QMetaObject &m
 
     hash.addData(reinterpret_cast<const char *>(mo.d.data), fieldCount * sizeof(uint));
     for (int i = 0; i < stringCount; ++i) {
-        const QByteArrayDataPtr data = { const_cast<QByteArrayData*>(&mo.d.stringdata[i]) };
-        hash.addData(QByteArray(data));
+        hash.addData(stringData(&mo, i));
     }
 
     return true;
