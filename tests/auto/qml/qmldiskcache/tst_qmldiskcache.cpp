@@ -554,7 +554,16 @@ void tst_qmldiskcache::cacheResources()
         QCOMPARE(obj->property("value").toInt(), 20);
     }
 
-    QCOMPARE(QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files).count(), 1);
+    const QStringList entries = QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files);
+    QCOMPARE(entries.count(), 1);
+
+    {
+        QFile cacheFile(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst());
+        QVERIFY2(cacheFile.open(QIODevice::ReadOnly), qPrintable(cacheFile.errorString()));
+        QV4::CompiledData::Unit unit;
+        QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));
+        QCOMPARE(qint64(unit.sourceTimeStamp), QFileInfo(QCoreApplication::applicationFilePath()).lastModified().toMSecsSinceEpoch());
+    }
 }
 
 QTEST_MAIN(tst_qmldiskcache)

@@ -3102,8 +3102,14 @@ QByteArray QQmlDataBlob::Data::readAll(QString *error, qint64 *sourceTimeStamp) 
         *error = f.errorString();
         return QByteArray();
     }
-    if (sourceTimeStamp)
-        *sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
+    if (sourceTimeStamp) {
+        QDateTime timeStamp = QFileInfo(f).lastModified();
+        // Files from the resource system do not have any time stamps, so fall back to the application
+        // executable.
+        if (!timeStamp.isValid())
+            timeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+        *sourceTimeStamp = timeStamp.toMSecsSinceEpoch();
+    }
     QByteArray data(f.size(), Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();
