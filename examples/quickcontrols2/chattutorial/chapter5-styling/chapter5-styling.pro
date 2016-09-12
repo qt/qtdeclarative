@@ -3,7 +3,7 @@ TEMPLATE = app
 QT += qml quick sql
 CONFIG += c++11
 
-!contains(sql-drivers, sqlite): QTPLUGIN += qsqlite
+!qtConfig(sql-sqlite): QTPLUGIN += qsqlite
 
 HEADERS += sqlcontactmodel.h \
     sqlconversationmodel.h
