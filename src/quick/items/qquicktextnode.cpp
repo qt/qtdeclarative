@@ -160,10 +160,18 @@ void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
     QSGImageNode *node = sg->sceneGraphContext()->createImageNode();
     QSGTexture *texture = sg->createTexture(image);
+    if (m_ownerElement->smooth()) {
+        texture->setFiltering(QSGTexture::Linear);
+        texture->setMipmapFiltering(QSGTexture::Linear);
+    }
     m_textures.append(texture);
     node->setTargetRect(rect);
     node->setInnerTargetRect(rect);
     node->setTexture(texture);
+    if (m_ownerElement->smooth()) {
+        node->setFiltering(QSGTexture::Linear);
+        node->setMipmapFiltering(QSGTexture::Linear);
+    }
     appendChildNode(node);
     node->update();
 }
