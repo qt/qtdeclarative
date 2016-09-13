@@ -69,7 +69,7 @@ inline qreal qmlMod(qreal x, qreal y)
     return fmod(x, y);
 }
 
-static QQmlOpenMetaObjectType *qPathViewAttachedType = 0;
+static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;
 
 QQuickPathViewAttached::QQuickPathViewAttached(QObject *parent)
 : QObject(parent), m_percent(-1), m_view(0), m_onPath(false), m_isCurrent(false)
@@ -96,7 +96,7 @@ void QQuickPathViewAttached::setValue(const QByteArray &name, const QVariant &va
 }
 
 QQuickPathViewPrivate::QQuickPathViewPrivate()
-  : path(0), currentIndex(0), currentItemOffset(0.0), startPc(0)
+  : path(nullptr), currentIndex(0), currentItemOffset(0.0), startPc(0)
     , offset(0.0), offsetAdj(0.0), mappedRange(1.0), mappedCache(0.0)
     , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
     , autoHighlight(true), highlightUp(false), layoutScheduled(false)
@@ -106,7 +106,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
     , moveReason(Other), movementDirection(QQuickPathView::Shortest), moveDirection(QQuickPathView::Shortest)
-    , attType(0), highlightComponent(0), highlightItem(0)
+    , attType(nullptr), highlightComponent(nullptr), highlightItem(nullptr)
     , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
     , highlightPosition(0)
     , highlightRangeStart(0), highlightRangeEnd(0)
@@ -163,7 +163,7 @@ void QQuickPathView::createdItem(int index, QObject *object)
     if (d->requestedIndex != index) {
         qPathViewAttachedType = d->attachedType();
         QQuickPathViewAttached *att = static_cast<QQuickPathViewAttached *>(qmlAttachedPropertiesObject<QQuickPathView>(item));
-        qPathViewAttachedType = 0;
+        qPathViewAttachedType = nullptr;
         if (att) {
             att->m_view = this;
             att->setOnPath(false);
@@ -186,7 +186,7 @@ void QQuickPathView::initItem(int index, QObject *object)
         item->setParentItem(this);
         qPathViewAttachedType = d->attachedType();
         QQuickPathViewAttached *att = static_cast<QQuickPathViewAttached *>(qmlAttachedPropertiesObject<QQuickPathView>(item));
-        qPathViewAttachedType = 0;
+        qPathViewAttachedType = nullptr;
         if (att) {
             att->m_view = this;
             qreal percent = d->positionOfIndex(index);
@@ -215,7 +215,7 @@ void QQuickPathViewPrivate::releaseItem(QQuickItem *item)
             att->setOnPath(false);
     } else if (flags & QQmlInstanceModel::Destroyed) {
         // but we still reference it
-        item->setParentItem(0);
+        item->setParentItem(nullptr);
     }
 }
 
@@ -244,7 +244,7 @@ void QQuickPathViewPrivate::clear()
 {
     if (currentItem) {
         releaseItem(currentItem);
-        currentItem = 0;
+        currentItem = nullptr;
     }
     for (QQuickItem *p : qAsConst(items))
         releaseItem(p);
@@ -315,13 +315,13 @@ void QQuickPathViewPrivate::createHighlight()
 
     bool changed = false;
     if (highlightItem) {
-        highlightItem->setParentItem(0);
+        highlightItem->setParentItem(nullptr);
         highlightItem->deleteLater();
-        highlightItem = 0;
+        highlightItem = nullptr;
         changed = true;
     }
 
-    QQuickItem *item = 0;
+    QQuickItem *item = nullptr;
     if (highlightComponent) {
         QQmlContext *creationContext = highlightComponent->creationContext();
         QQmlContext *highlightContext = new QQmlContext(
@@ -636,7 +636,7 @@ void QQuickPathView::setModel(const QVariant &m)
 
     d->modelVariant = model;
     QObject *object = qvariant_cast<QObject*>(model);
-    QQmlInstanceModel *vim = 0;
+    QQmlInstanceModel *vim = nullptr;
     if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
         if (d->ownModel) {
             delete d->model;
@@ -716,7 +716,7 @@ void QQuickPathView::setPath(QQuickPath *path)
         d->clear();
         if (d->attType) {
             d->attType->release();
-            d->attType = 0;
+            d->attType = nullptr;
         }
         d->regenerate();
     }
@@ -755,7 +755,7 @@ void QQuickPathView::setCurrentIndex(int idx)
         }
         int oldCurrentIdx = d->currentIndex;
         QQuickItem *oldCurrentItem = d->currentItem;
-        d->currentItem = 0;
+        d->currentItem = nullptr;
         d->moveReason = QQuickPathViewPrivate::SetIndex;
         d->currentIndex = idx;
         if (d->modelCount) {
@@ -1237,7 +1237,7 @@ QQmlComponent *QQuickPathView::delegate() const
             return dataModel->delegate();
     }
 
-    return 0;
+    return nullptr;
 }
 
 void QQuickPathView::setDelegate(QQmlComponent *delegate)
@@ -1518,7 +1518,7 @@ int QQuickPathView::indexAt(qreal x, qreal y) const
 {
     Q_D(const QQuickPathView);
     QQuickItem *item = itemAt(x, y);
-    return item ? d->model->indexOf(item, 0) : -1;
+    return item ? d->model->indexOf(item, nullptr) : -1;
 }
 
 /*!
@@ -1533,7 +1533,7 @@ QQuickItem *QQuickPathView::itemAt(qreal x, qreal y) const
 {
     Q_D(const QQuickPathView);
     if (!d->isValid())
-        return 0;
+        return nullptr;
 
     for (QQuickItem *item : d->items) {
         QPointF p = item->mapFromItem(this, QPointF(x, y));
@@ -1541,7 +1541,7 @@ QQuickItem *QQuickPathView::itemAt(qreal x, qreal y) const
             return item;
     }
 
-    return 0;
+    return nullptr;
 }
 
 QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) const
@@ -1810,7 +1810,7 @@ bool QQuickPathView::sendMouseEvent(QMouseEvent *event)
     QPointF localPos = mapFromScene(event->windowPos());
 
     QQuickWindow *c = window();
-    QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
+    QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;
     if (grabber == this && d->stealMouse) {
         // we are already the grabber and we do want the mouse event to ourselves.
         return true;
@@ -1836,7 +1836,7 @@ bool QQuickPathView::sendMouseEvent(QMouseEvent *event)
         default:
             break;
         }
-        grabber = c ? c->mouseGrabberItem() : 0;
+        grabber = c ? c->mouseGrabberItem() : nullptr;
         if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled) {
             grabMouse();
         }
@@ -1951,7 +1951,7 @@ void QQuickPathView::refill()
     QList<QQuickItem*>::iterator it = d->items.begin();
     while (it != d->items.end()) {
         QQuickItem *item = *it;
-        int idx = d->model->indexOf(item, 0);
+        int idx = d->model->indexOf(item, nullptr);
         qreal pos = d->positionOfIndex(idx);
         if (lcItemViewDelegateLifecycle().isDebugEnabled()) {
             QQuickText *text = qmlobject_cast<QQuickText*>(item);
@@ -1996,7 +1996,7 @@ void QQuickPathView::refill()
                 startPos = 2.0;
 
                 for (QQuickItem * item : qAsConst(d->items)) {
-                    int idx = d->model->indexOf(item, 0);
+                    int idx = d->model->indexOf(item, nullptr);
                     qreal curPos = d->positionOfIndex(idx);
                     if (curPos > endPos) {
                         endPos = curPos;
@@ -2198,7 +2198,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
                 if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                     att->setIsCurrentItem(true);
                 d->releaseItem(d->currentItem);
-                d->currentItem = 0;
+                d->currentItem = nullptr;
             }
             d->currentIndex = qMin(r.index, d->modelCount - r.count - 1);
             currentChanged = true;
@@ -2312,7 +2312,7 @@ void QQuickPathViewPrivate::createCurrentItem()
 
     bool inItems = false;
     for (QQuickItem *item : qAsConst(items)) {
-        if (model->indexOf(item, 0) == currentIndex) {
+        if (model->indexOf(item, nullptr) == currentIndex) {
             inItems = true;
             break;
         }
@@ -2350,7 +2350,7 @@ void QQuickPathViewPrivate::updateCurrent()
         }
         int oldCurrentIndex = currentIndex;
         currentIndex = idx;
-        currentItem = 0;
+        currentItem = nullptr;
         createCurrentItem();
         if (oldCurrentIndex != currentIndex)
             emit q->currentIndexChanged();

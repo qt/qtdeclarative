@@ -98,7 +98,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
 
 public:
-    QQuickPathView(QQuickItem *parent=0);
+    QQuickPathView(QQuickItem *parent = nullptr);
     virtual ~QQuickPathView();
 
     QVariant model() const;
