@@ -926,5 +926,17 @@ Item {
             waitForRendering(layout)
             layout.destroy()
         }
+
+
+        function test_defaultPropertyAliasCrash() {
+            var containerUserComponent = Qt.createComponent("rowlayout/ContainerUser.qml");
+            compare(containerUserComponent.status, Component.Ready);
+
+            var containerUser = containerUserComponent.createObject(testCase);
+            verify(containerUser);
+
+            // Shouldn't crash.
+            containerUser.destroy();
+        }
     }
 }
