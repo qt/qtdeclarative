@@ -379,6 +379,22 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+void QQuickOverlay::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickOverlay);
+    if (d->mouseGrabberPopup) {
+        d->mouseGrabberPopup->overlayEvent(this, event);
+        return;
+    } else {
+        const auto popups = d->stackingOrderPopups();
+        for (QQuickPopup *popup : popups) {
+            if (popup->overlayEvent(this, event))
+                return;
+        }
+    }
+    event->ignore();
+}
+
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickOverlay);

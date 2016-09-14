@@ -137,7 +137,7 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
     if (d->label == label)
         return;
 
-    delete d->label;
+    d->deleteDelegate(d->label);
     d->label = label;
     if (label && !label->parentItem())
         label->setParentItem(this);

@@ -83,9 +83,15 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void deleteDelegate(QObject *object);
+
     QFont font;
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
+    // This list contains the default delegates which were
+    // replaced with custom ones via declarative assignments
+    // before Component.completed() was emitted. See QTBUG-50992.
+    QVector<QObject *> pendingDeletions;
 };
 
 QT_END_NAMESPACE

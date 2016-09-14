@@ -150,8 +150,15 @@
         \row
             \li \c QT_QUICK_CONTROLS_UNIVERSAL_ACCENT
             \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
-                to use one of the pre-defined  \l {universal-accent-attached-prop} {accents}, for
-                example \c "Violet".
+                to use one of the \l {pre-defined Universal colors}, for example \c "Violet".
+        \row
+            \li \c QT_QUICK_CONTROLS_UNIVERSAL_FOREGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                \l {pre-defined Universal colors}.
+        \row
+            \li \c QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND
+            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
+                \l {pre-defined Universal colors}.
     \endtable
 
     \section2 Dependency
@@ -169,19 +176,9 @@
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
-    \b {See also} \l {Default Style}, \l {Material Style}
+    \section2 Pre-defined Universal Colors
 
-    \section1 Attached Property Documentation
-
-    \styleproperty {Universal.accent} {color} {universal-accent-attached-prop}
-    \target universal-accent-attached-prop
-    This attached property holds the accent color of the theme. The property
-    can be attached to any window or item. The value is propagated to children.
-
-    Even though the accent can be any \l {colorbasictypedocs}{color}, it is
-    recommended to use one of the pre-defined accents that have been designed
-    to work well with the rest of the Universal style palette:
-
+    Available pre-defined colors:
     \value Universal.Lime \stylecolor {#A4C400} {}
     \value Universal.Green \stylecolor {#60A917} {}
     \value Universal.Emerald \stylecolor {#008A00} {}
@@ -202,6 +199,19 @@
     \value Universal.Steel \stylecolor {#647687} {}
     \value Universal.Mauve \stylecolor {#76608A} {}
     \value Universal.Taupe \stylecolor {#87794E} {}
+
+    \b {See also} \l {Default Style}, \l {Material Style}
+
+    \section1 Attached Property Documentation
+
+    \styleproperty {Universal.accent} {color} {universal-accent-attached-prop}
+    \target universal-accent-attached-prop
+    This attached property holds the accent color of the theme. The property
+    can be attached to any window or item. The value is propagated to children.
+
+    \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
+    recommended to use one of the  \l {pre-defined Universal colors} that have been
+    designed to work well with the rest of the Universal style palette.
 
     \endstyleproperty
 
@@ -241,8 +251,8 @@
 
     \stylemethod {color} {color} {enumeration} {predefined} {color-attached-method}
     \target color-attached-method
-    This attached method returns the color value of the specified \l {pre-defined colors}
-    {pre-defined color}.
+    This attached method returns the effective color value of the specified
+    \l {pre-defined Universal colors}{pre-defined Universal color}.
 
     \qml
     import QtQuick 2.0

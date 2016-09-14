@@ -53,8 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialStylePrivate;
-
 class QQuickMaterialStyle : public QQuickStyleAttached
 {
     Q_OBJECT
