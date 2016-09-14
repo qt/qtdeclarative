@@ -109,9 +109,15 @@ public:
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(const QQuickItem *item);
 
+    void deleteDelegate(QObject *object);
+
     struct ExtraData {
         ExtraData();
         QFont font;
+        // This list contains the default delegates which were
+        // replaced with custom ones via declarative assignments
+        // before Component.completed() was emitted. See QTBUG-50992.
+        QVector<QObject*> pendingDeletions;
     };
     QLazilyAllocated<ExtraData> extra;
 

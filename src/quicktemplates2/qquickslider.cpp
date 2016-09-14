@@ -406,7 +406,7 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
-    delete d->handle;
+    d->deleteDelegate(d->handle);
     d->handle = handle;
     if (handle && !handle->parentItem())
         handle->setParentItem(this);

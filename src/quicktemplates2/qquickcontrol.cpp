@@ -717,6 +717,18 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
     return QLocale();
 }
 
+/*
+   Deletes "delegate" if Component.completed() has been emitted,
+   otherwise stores it in pendingDeletions.
+*/
+void QQuickControlPrivate::deleteDelegate(QObject *delegate)
+{
+    if (componentComplete)
+        delete delegate;
+    else
+        extra.value().pendingDeletions.append(delegate);
+}
+
 void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
 {
     Q_Q(QQuickControl);
@@ -943,7 +955,7 @@ void QQuickControl::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    delete d->background;
+    d->deleteDelegate(d->background);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -975,7 +987,7 @@ void QQuickControl::setContentItem(QQuickItem *item)
         return;
 
     contentItemChange(item, d->contentItem);
-    delete d->contentItem;
+    d->deleteDelegate(d->contentItem);
     d->contentItem = item;
     if (item) {
         if (!item->parentItem())
@@ -1003,6 +1015,11 @@ void QQuickControl::componentComplete()
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
 #endif
+
+    if (d->extra.isAllocated()) {
+        qDeleteAll(d->extra.value().pendingDeletions);
+        d->extra.value().pendingDeletions.clear();
+    }
 }
 
 QFont QQuickControl::defaultFont() const
