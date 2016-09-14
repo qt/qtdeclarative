@@ -74,6 +74,7 @@ private slots:
     void returnToBounds();
     void returnToBounds_data();
     void wheel();
+    void trackpad();
     void movingAndFlicking();
     void movingAndFlicking_data();
     void movingAndDragging();
@@ -765,6 +766,50 @@ void tst_qquickflickable::wheel()
     QCOMPARE(fp->velocityTimeline.isActive(), false);
     QCOMPARE(fp->timeline.isActive(), false);
     QTest::qWait(50); // make sure that onContentXChanged won't sneak in again
+    QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
+}
+
+void tst_qquickflickable::trackpad()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("wheel.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickFlickable *flick = window->rootObject()->findChild<QQuickFlickable*>("flick");
+    QVERIFY(flick != 0);
+    QSignalSpy moveEndSpy(flick, SIGNAL(movementEnded()));
+    QPoint pos(200, 200);
+
+    {
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,-100), QPoint(0,-120), -120, Qt::Vertical, Qt::NoButton, Qt::NoModifier, Qt::ScrollBegin);
+        event.setAccepted(false);
+        QGuiApplication::sendEvent(window.data(), &event);
+    }
+
+    QTRY_VERIFY(flick->contentY() > 0);
+    QCOMPARE(flick->contentX(), qreal(0));
+
+    flick->setContentY(0);
+    QCOMPARE(flick->contentY(), qreal(0));
+
+    {
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(-100,0), QPoint(-120,0), -120, Qt::Horizontal, Qt::NoButton, Qt::NoModifier, Qt::ScrollUpdate);
+        event.setAccepted(false);
+        QGuiApplication::sendEvent(window.data(), &event);
+    }
+
+    QTRY_VERIFY(flick->contentX() > 0);
+    QCOMPARE(flick->contentY(), qreal(0));
+
+    {
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,0), QPoint(0,0), 0, Qt::Horizontal, Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd);
+        event.setAccepted(false);
+        QGuiApplication::sendEvent(window.data(), &event);
+    }
+
+    QTRY_COMPARE(moveEndSpy.count(), 1); // QTBUG-55871
     QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
 }
 
