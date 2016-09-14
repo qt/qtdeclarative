@@ -139,6 +139,7 @@ private slots:
     void cursorVisible();
     void delegateLoading_data();
     void delegateLoading();
+    void cursorDelegateHeight();
     void navigation();
     void readOnly();
 #ifndef QT_NO_CLIPBOARD
@@ -2777,6 +2778,43 @@ void tst_qquicktextedit::delegateLoading()
     //###This was only needed for code coverage, and could be a case of overzealous defensive programming
     //delegate = view.rootObject()->findChild<QQuickItem*>("delegateErrorB");
     //QVERIFY(!delegate);
+}
+
+void tst_qquicktextedit::cursorDelegateHeight()
+{
+    QQuickView view(testFileUrl("cursorHeight.qml"));
+    view.show();
+    view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
+    QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
+    QVERIFY(textEditObject);
+    // Delegate creation is deferred until focus in or cursor visibility is forced.
+    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+    QVERIFY(!textEditObject->isCursorVisible());
+
+    // Test that the delegate gets created.
+    textEditObject->setFocus(true);
+    QVERIFY(textEditObject->isCursorVisible());
+    QQuickItem* delegateObject = textEditObject->findChild<QQuickItem*>("cursorInstance");
+    QVERIFY(delegateObject);
+
+    const int largerHeight = textEditObject->cursorRectangle().height();
+
+    textEditObject->setCursorPosition(0);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+    QCOMPARE(delegateObject->height(), textEditObject->cursorRectangle().height());
+
+    // Move the cursor to the next line, which has a smaller font.
+    textEditObject->setCursorPosition(5);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+    QVERIFY(textEditObject->cursorRectangle().height() < largerHeight);
+    QCOMPARE(delegateObject->height(), textEditObject->cursorRectangle().height());
+
+    // Test that the delegate gets deleted
+    textEditObject->setCursorDelegate(0);
+    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
 }
 
 /*

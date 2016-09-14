@@ -2290,6 +2290,7 @@ void QQuickTextEdit::moveCursorDelegate()
     QRectF cursorRect = cursorRectangle();
     d->cursorItem->setX(cursorRect.x());
     d->cursorItem->setY(cursorRect.y());
+    d->cursorItem->setHeight(cursorRect.height());
 }
 
 void QQuickTextEdit::updateSelection()
