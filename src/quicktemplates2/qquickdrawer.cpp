@@ -309,6 +309,12 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
     Q_Q(QQuickDrawer);
     Q_UNUSED(item);
 
+    // Don't react to synthesized mouse move events at INF,INF coordinates.
+    // QQuickWindowPrivate::translateTouchToMouse() uses them to clear hover
+    // on touch release (QTBUG-55995).
+    if (qIsInf(event->screenPos().x()) || qIsInf(event->screenPos().y()))
+        return true;
+
     const QPointF movePoint = event->windowPos();
 
     if (grabMouse(event)) {
