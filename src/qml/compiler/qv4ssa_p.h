@@ -341,7 +341,7 @@ public:
     }
 
 protected:
-    virtual int allocateFreeSlot()
+    int allocateFreeSlot() override
     {
         for (int i = 0, ei = _slotIsInUse.size(); i != ei; ++i) {
             if (!_slotIsInUse[i]) {
@@ -358,7 +358,7 @@ protected:
         return -1;
     }
 
-    virtual void process(IR::Stmt *s)
+    void process(IR::Stmt *s) override
     {
 //        qDebug("L%d statement %d:", _currentBasicBlock->index, s->id);
 
@@ -438,7 +438,7 @@ protected:
 //        qDebug() << "\t - force activating temp" << t.index << "on slot" << _stackSlotForTemp[t.index];
     }
 
-    virtual void visitPhi(IR::Phi *phi)
+    void visitPhi(IR::Phi *phi) override
     {
         Q_UNUSED(phi);
 #if !defined(QT_NO_DEBUG)
