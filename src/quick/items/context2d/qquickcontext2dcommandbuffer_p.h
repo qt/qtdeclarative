@@ -245,7 +245,7 @@ public:
     void replay(QPainter* painter, QQuickContext2D::State& state, const QVector2D &scaleFactor);
 
 private:
-    QPen makePen(const QQuickContext2D::State& state);
+    static QPen makePen(const QQuickContext2D::State& state);
     void setPainterState(QPainter* painter, const QQuickContext2D::State& state, const QPen& pen);
     int cmdIdx;
     int intIdx;
