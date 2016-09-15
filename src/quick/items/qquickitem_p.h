@@ -859,7 +859,7 @@ private:
     void inputMethodEvent(QInputMethodEvent *, bool post) Q_DECL_OVERRIDE;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const Q_DECL_OVERRIDE;
 #endif
-    const QByteArray keyToSignal(int key);
+    static QByteArray keyToSignal(int key);
 
     bool isConnected(const char *signalName);
 };

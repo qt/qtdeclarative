@@ -806,7 +806,7 @@ const SigMap sigMap[] = {
     { 0, 0 }
 };
 
-const QByteArray QQuickKeysAttached::keyToSignal(int key)
+QByteArray QQuickKeysAttached::keyToSignal(int key)
 {
     QByteArray keySignal;
     if (key >= Qt::Key_0 && key <= Qt::Key_9) {
