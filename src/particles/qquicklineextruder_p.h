@@ -56,7 +56,7 @@ class QQuickLineExtruder : public QQuickParticleExtruder
 {
     Q_OBJECT
     //Default is topleft to bottom right. Flipped makes it topright to bottom left
-    Q_PROPERTY(bool mirrored READ mirrored WRITE setmirrored NOTIFY mirroredChanged)
+    Q_PROPERTY(bool mirrored READ mirrored WRITE setMirrored NOTIFY mirroredChanged)
 
 public:
     explicit QQuickLineExtruder(QObject *parent = 0);
@@ -72,7 +72,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
 
-    void setmirrored(bool arg)
+    void setMirrored(bool arg)
     {
         if (m_mirrored != arg) {
             m_mirrored = arg;
