@@ -397,6 +397,10 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
     switch (change) {
+    case ItemVisibleHasChanged:
+        if (!value.boolValue)
+            setHovered(false);
+        break;
     case ItemParentHasChanged:
         if (value.item) {
             d->resolveFont();
