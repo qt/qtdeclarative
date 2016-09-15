@@ -78,8 +78,8 @@ public:
     QQuickAbstractAnimation *animation() const;
     void setAnimation(QQuickAbstractAnimation *animation);
 
-    void classBegin();
-    void componentComplete() {}
+    void classBegin() override;
+    void componentComplete() override {}
 Q_SIGNALS:
     void progressChanged();
     void animationChanged();
