@@ -192,6 +192,10 @@ public:
     bool hasBottomMargin;
     bool allowVerticalFlip;
     bool allowHorizontalFlip;
+    bool allowVerticalMove;
+    bool allowHorizontalMove;
+    bool allowVerticalResize;
+    bool allowHorizontalResize;
     bool hadActiveFocusBeforeExitTransition;
     qreal x;
     qreal y;

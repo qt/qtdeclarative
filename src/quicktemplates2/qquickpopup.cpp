@@ -133,6 +133,10 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasBottomMargin(false)
     , allowVerticalFlip(false)
     , allowHorizontalFlip(false)
+    , allowVerticalMove(true)
+    , allowHorizontalMove(true)
+    , allowVerticalResize(true)
+    , allowHorizontalResize(true)
     , hadActiveFocusBeforeExitTransition(false)
     , x(0)
     , y(0)
@@ -589,7 +593,10 @@ void QQuickPopupPrivate::reposition()
     bool widthAdjusted = false;
     bool heightAdjusted = false;
 
-    QRectF rect(x, y, !hasWidth && iw > 0 ? iw : w, !hasHeight && ih > 0 ? ih : h);
+    QRectF rect(allowHorizontalMove ? x : popupItem->x(),
+                allowVerticalMove ? y : popupItem->y(),
+                !hasWidth && iw > 0 ? iw : w,
+                !hasHeight && ih > 0 ? ih : h);
     if (parentItem) {
         rect = parentItem->mapRectToScene(rect);
 
@@ -615,31 +622,39 @@ void QQuickPopupPrivate::reposition()
             }
 
             // push inside the margins if specified
-            if (margins.top() >= 0 && rect.top() < bounds.top())
-                rect.moveTop(margins.top());
-            if (margins.bottom() >= 0 && rect.bottom() > bounds.bottom())
-                rect.moveBottom(bounds.bottom());
-            if (margins.left() >= 0 && rect.left() < bounds.left())
-                rect.moveLeft(margins.left());
-            if (margins.right() >= 0 && rect.right() > bounds.right())
-                rect.moveRight(bounds.right());
+            if (allowVerticalMove) {
+                if (margins.top() >= 0 && rect.top() < bounds.top())
+                    rect.moveTop(margins.top());
+                if (margins.bottom() >= 0 && rect.bottom() > bounds.bottom())
+                    rect.moveBottom(bounds.bottom());
+            }
+            if (allowHorizontalMove) {
+                if (margins.left() >= 0 && rect.left() < bounds.left())
+                    rect.moveLeft(margins.left());
+                if (margins.right() >= 0 && rect.right() > bounds.right())
+                    rect.moveRight(bounds.right());
+            }
 
             if (iw > 0 && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
                 // neither the flipped or pushed geometry fits inside the window, choose
                 // whichever side (left vs. right) fits larger part of the popup
-                if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
-                    rect.moveLeft(bounds.left());
-                else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
-                    rect.moveRight(bounds.right());
+                if (allowHorizontalMove && allowHorizontalFlip) {
+                    if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
+                        rect.moveLeft(bounds.left());
+                    else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
+                        rect.moveRight(bounds.right());
+                }
 
                 // as a last resort, adjust the width to fit the window
-                if (rect.left() < bounds.left()) {
-                    rect.setLeft(bounds.left());
-                    widthAdjusted = true;
-                }
-                if (rect.right() > bounds.right()) {
-                    rect.setRight(bounds.right());
-                    widthAdjusted = true;
+                if (allowHorizontalResize) {
+                    if (rect.left() < bounds.left()) {
+                        rect.setLeft(bounds.left());
+                        widthAdjusted = true;
+                    }
+                    if (rect.right() > bounds.right()) {
+                        rect.setRight(bounds.right());
+                        widthAdjusted = true;
+                    }
                 }
             } else if (iw > 0 && rect.left() >= bounds.left() && rect.right() <= bounds.right()
                        && iw != w) {
@@ -651,19 +666,23 @@ void QQuickPopupPrivate::reposition()
             if (ih > 0 && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
                 // neither the flipped or pushed geometry fits inside the window, choose
                 // whichever side (above vs. below) fits larger part of the popup
-                if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
-                    rect.moveTop(bounds.top());
-                else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
-                    rect.moveBottom(bounds.bottom());
+                if (allowVerticalMove && allowVerticalFlip) {
+                    if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
+                        rect.moveTop(bounds.top());
+                    else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
+                        rect.moveBottom(bounds.bottom());
+                }
 
                 // as a last resort, adjust the height to fit the window
-                if (rect.top() < bounds.top()) {
-                    rect.setTop(bounds.top());
-                    heightAdjusted = true;
-                }
-                if (rect.bottom() > bounds.bottom()) {
-                    rect.setBottom(bounds.bottom());
-                    heightAdjusted = true;
+                if (allowVerticalResize) {
+                    if (rect.top() < bounds.top()) {
+                        rect.setTop(bounds.top());
+                        heightAdjusted = true;
+                    }
+                    if (rect.bottom() > bounds.bottom()) {
+                        rect.setBottom(bounds.bottom());
+                        heightAdjusted = true;
+                    }
                 }
             } else if (ih > 0 && rect.top() >= bounds.top() && rect.bottom() <= bounds.bottom()
                        && ih != h) {
