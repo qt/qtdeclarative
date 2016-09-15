@@ -67,7 +67,7 @@ public:
     Q_INVOKABLE bool saveToFile(const QString &fileName);
 
 protected:
-    bool event(QEvent *);
+    bool event(QEvent *) override;
 
 Q_SIGNALS:
     void ready();

@@ -120,7 +120,7 @@ public:
 
     // Called during sync() on the scene graph thread while GUI is blocked.
     virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window) = 0;
-    bool event(QEvent *e);
+    bool event(QEvent *e) override;
 #ifndef QT_NO_OPENGL
     void initializeOpenGL(QOpenGLContext *gl, QOffscreenSurface *s) {
         m_gl = gl;
@@ -221,17 +221,17 @@ public:
     QQuickContext2DImageTexture();
     ~QQuickContext2DImageTexture();
 
-    virtual QQuickCanvasItem::RenderTarget renderTarget() const;
+    QQuickCanvasItem::RenderTarget renderTarget() const override;
 
-    virtual QQuickContext2DTile* createTile() const;
-    virtual QPaintDevice* beginPainting();
-    virtual void endPainting();
-    virtual void compositeTile(QQuickContext2DTile* tile);
+    QQuickContext2DTile* createTile() const override;
+    QPaintDevice* beginPainting() override;
+    void endPainting() override;
+    void compositeTile(QQuickContext2DTile* tile) override;
 
-    virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window);
+    QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window) override;
 
 public Q_SLOTS:
-    virtual void grabImage(const QRectF& region = QRectF());
+    void grabImage(const QRectF& region = QRectF()) override;
 
 private:
     QImage m_image;
