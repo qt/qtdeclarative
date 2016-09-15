@@ -125,6 +125,8 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasDim(false)
     , visible(false)
     , complete(false)
+    , hasWidth(false)
+    , hasHeight(false)
     , hasTopMargin(false)
     , hasLeftMargin(false)
     , hasRightMargin(false)
@@ -587,7 +589,7 @@ void QQuickPopupPrivate::reposition()
     bool widthAdjusted = false;
     bool heightAdjusted = false;
 
-    QRectF rect(x, y, iw > 0 ? iw : w, ih > 0 ? ih : h);
+    QRectF rect(x, y, !hasWidth && iw > 0 ? iw : w, !hasHeight && ih > 0 ? ih : h);
     if (parentItem) {
         rect = parentItem->mapRectToScene(rect);
 
@@ -681,9 +683,9 @@ void QQuickPopupPrivate::reposition()
         emit q->yChanged();
     }
 
-    if (widthAdjusted && rect.width() > 0)
+    if (!hasWidth && widthAdjusted && rect.width() > 0)
         popupItem->setWidth(rect.width());
-    if (heightAdjusted && rect.height() > 0)
+    if (!hasHeight && heightAdjusted && rect.height() > 0)
         popupItem->setHeight(rect.height());
 }
 
@@ -907,12 +909,14 @@ qreal QQuickPopup::width() const
 void QQuickPopup::setWidth(qreal width)
 {
     Q_D(QQuickPopup);
+    d->hasWidth = true;
     d->popupItem->setWidth(width);
 }
 
 void QQuickPopup::resetWidth()
 {
     Q_D(QQuickPopup);
+    d->hasWidth = false;
     d->popupItem->resetWidth();
 }
 
@@ -930,12 +934,14 @@ qreal QQuickPopup::height() const
 void QQuickPopup::setHeight(qreal height)
 {
     Q_D(QQuickPopup);
+    d->hasHeight = true;
     d->popupItem->setHeight(height);
 }
 
 void QQuickPopup::resetHeight()
 {
     Q_D(QQuickPopup);
+    d->hasHeight = false;
     d->popupItem->resetHeight();
 }
 

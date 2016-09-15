@@ -183,6 +183,8 @@ public:
     bool hasDim;
     bool visible;
     bool complete;
+    bool hasWidth;
+    bool hasHeight;
     bool hasTopMargin;
     bool hasLeftMargin;
     bool hasRightMargin;

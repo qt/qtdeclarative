@@ -940,14 +940,52 @@ TestCase {
         var control = popupControl.createObject(testCase)
         verify(control)
 
-        control.width = 200
-        control.height = 200
-
         control.open()
         waitForRendering(control.contentItem)
 
-        compare(control.width, 200)
-        compare(control.height, 200)
+        // implicit size of the content
+        control.contentItem.implicitWidth = 10
+        compare(control.implicitWidth, 10 + control.leftPadding + control.rightPadding)
+        compare(control.width, control.implicitWidth)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.contentItem.implicitHeight = 20
+        compare(control.implicitHeight, 20 + control.topPadding + control.bottomPadding)
+        compare(control.height, control.implicitHeight)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+
+        // implicit size of the popup
+        control.implicitWidth = 30
+        compare(control.implicitWidth, 30)
+        compare(control.width, 30)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.implicitHeight = 40
+        compare(control.implicitHeight, 40)
+        compare(control.height, 40)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+
+        // set explicit size
+        control.width = 50
+        compare(control.implicitWidth, 30)
+        compare(control.width, 50)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.height = 60
+        compare(control.implicitHeight, 40)
+        compare(control.height, 60)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+
+        // reset explicit size
+        control.width = undefined
+        compare(control.implicitWidth, 30)
+        compare(control.width, 30)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.height = undefined
+        compare(control.implicitHeight, 40)
+        compare(control.height, 40)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
 
         control.destroy()
     }
