@@ -453,9 +453,9 @@ struct Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directive
     QList<const QV4::CompiledData::Import *> imports;
     bool hasPragmaLibrary;
 
-    virtual void pragmaLibrary();
-    virtual void importFile(const QString &jsfile, const QString &module, int lineNumber, int column);
-    virtual void importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column);
+    void pragmaLibrary() override;
+    void importFile(const QString &jsfile, const QString &module, int lineNumber, int column) override;
+    void importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column) override;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
@@ -470,21 +470,21 @@ public:
     using QQmlJS::AST::Visitor::visit;
     using QQmlJS::AST::Visitor::endVisit;
 
-    virtual bool visit(QQmlJS::AST::UiArrayMemberList *ast);
-    virtual bool visit(QQmlJS::AST::UiImport *ast);
-    virtual bool visit(QQmlJS::AST::UiPragma *ast);
-    virtual bool visit(QQmlJS::AST::UiHeaderItemList *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectInitializer *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectMemberList *ast);
-    virtual bool visit(QQmlJS::AST::UiParameterList *ast);
-    virtual bool visit(QQmlJS::AST::UiProgram *);
-    virtual bool visit(QQmlJS::AST::UiQualifiedId *ast);
-    virtual bool visit(QQmlJS::AST::UiArrayBinding *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectBinding *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectDefinition *ast);
-    virtual bool visit(QQmlJS::AST::UiPublicMember *ast);
-    virtual bool visit(QQmlJS::AST::UiScriptBinding *ast);
-    virtual bool visit(QQmlJS::AST::UiSourceElement *ast);
+    bool visit(QQmlJS::AST::UiArrayMemberList *ast) override;
+    bool visit(QQmlJS::AST::UiImport *ast) override;
+    bool visit(QQmlJS::AST::UiPragma *ast) override;
+    bool visit(QQmlJS::AST::UiHeaderItemList *ast) override;
+    bool visit(QQmlJS::AST::UiObjectInitializer *ast) override;
+    bool visit(QQmlJS::AST::UiObjectMemberList *ast) override;
+    bool visit(QQmlJS::AST::UiParameterList *ast) override;
+    bool visit(QQmlJS::AST::UiProgram *) override;
+    bool visit(QQmlJS::AST::UiQualifiedId *ast) override;
+    bool visit(QQmlJS::AST::UiArrayBinding *ast) override;
+    bool visit(QQmlJS::AST::UiObjectBinding *ast) override;
+    bool visit(QQmlJS::AST::UiObjectDefinition *ast) override;
+    bool visit(QQmlJS::AST::UiPublicMember *ast) override;
+    bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
+    bool visit(QQmlJS::AST::UiSourceElement *ast) override;
 
     void accept(QQmlJS::AST::Node *node);
 
@@ -602,8 +602,8 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
 protected:
-    virtual void beginFunctionBodyHook();
-    virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    void beginFunctionBodyHook() override;
+    QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col) override;
 
 private:
     QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
