@@ -440,7 +440,7 @@ private:
     }
 
     template<class MaterialData>
-    MaterialData* getState(QSGMaterial* m){
+    static MaterialData* getState(QSGMaterial* m) {
         return static_cast<QSGSimpleMaterial<MaterialData> *>(m)->state();
     }
     EntryEffect m_entryEffect;
