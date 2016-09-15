@@ -7,8 +7,6 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
-QMAKE_DOCS = $$PWD/doc/qtquickcontrols2.qdocconf
-
 OTHER_FILES += \
     qmldir
 
@@ -20,6 +18,7 @@ RESOURCES += \
 
 include(controls.pri)
 !static: include(designer/designer.pri)
+include(doc/doc.pri)
 
 qtquickcompiler {
     qmlfiles.prefix = /qt-project.org/imports/QtQuick/Controls.2
