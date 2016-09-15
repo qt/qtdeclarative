@@ -40,7 +40,10 @@
 #include "../shared/visualtestutil.h"
 
 #include <QtGui/qstylehints.h>
+#include <QtGui/qtouchdevice.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
@@ -74,6 +77,9 @@ private slots:
     void wheel();
 
     void multiple();
+
+    void touch_data();
+    void touch();
 };
 
 void tst_Drawer::visible_data()
@@ -613,6 +619,58 @@ void tst_Drawer::multiple()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
     QTRY_COMPARE(rightDrawer->position(), 1.0);
     QCOMPARE(leftDrawer->position(), 0.0);
+}
+
+void tst_Drawer::touch_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::newRow("Window") << "window.qml";
+    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+}
+
+void tst_Drawer::touch()
+{
+    QFETCH(QString, source);
+    QQuickApplicationHelper helper(this, source);
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+
+    struct TouchDeviceDeleter
+    {
+        static inline void cleanup(QTouchDevice *device)
+        {
+            QWindowSystemInterface::unregisterTouchDevice(device);
+            delete device;
+        }
+    };
+
+    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device.data());
+
+    // drag to open
+    QTest::touchEvent(window, device.data()).press(0, QPoint(0, 100));
+    QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 0.5);
+    QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 1.0);
+
+    // drag to close
+    QTest::touchEvent(window, device.data()).press(0, QPoint(300, 100));
+    QTest::touchEvent(window, device.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
+    for (int x = 300; x > 100; x -= 10) {
+        QTest::touchEvent(window, device.data()).move(0, QPoint(x, 100));
+        QQuickWindowPrivate::get(window)->flushDelayedTouchEvent();
+    }
+    QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 0.5);
+    QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 0.0);
 }
 
 QTEST_MAIN(tst_Drawer)

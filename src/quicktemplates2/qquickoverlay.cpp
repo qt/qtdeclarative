@@ -404,7 +404,11 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             switch (event->type()) {
             case QEvent::MouseButtonPress:
                 emit pressed();
-                return popup->overlayEvent(item, event);
+                if (popup->overlayEvent(item, event)) {
+                    d->mouseGrabberPopup = popup;
+                    return true;
+                }
+                break;
             case QEvent::MouseMove:
                 return popup->overlayEvent(item, event);
             case QEvent::MouseButtonRelease:
