@@ -152,7 +152,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathLine : public QQuickCurve
 public:
     QQuickPathLine(QObject *parent=0) : QQuickCurve(parent) {}
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
@@ -180,7 +180,7 @@ public:
     void setRelativeControlY(qreal y);
     bool hasRelativeControlY();
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void controlXChanged();
@@ -238,7 +238,7 @@ public:
     void setRelativeControl2Y(qreal y);
     bool hasRelativeControl2Y();
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void control1XChanged();
@@ -267,7 +267,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathCatmullRomCurve : public QQuickCurve
 public:
     QQuickPathCatmullRomCurve(QObject *parent=0) : QQuickCurve(parent) {}
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
@@ -297,7 +297,7 @@ public:
     ArcDirection direction() const;
     void setDirection(ArcDirection direction);
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void radiusXChanged();
@@ -322,7 +322,7 @@ public:
     QString path() const;
     void setPath(const QString &path);
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void pathChanged();
@@ -401,8 +401,8 @@ Q_SIGNALS:
     void startYChanged();
 
 protected:
-    virtual void componentComplete();
-    virtual void classBegin();
+    void componentComplete() override;
+    void classBegin() override;
     void disconnectPathElements();
     void connectPathElements();
     void gatherAttributes();

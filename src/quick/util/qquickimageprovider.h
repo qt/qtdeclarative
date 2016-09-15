@@ -90,8 +90,8 @@ public:
     QQuickImageProvider(ImageType type, Flags flags = Flags());
     virtual ~QQuickImageProvider();
 
-    ImageType imageType() const;
-    Flags flags() const;
+    ImageType imageType() const override;
+    Flags flags() const override;
 
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);

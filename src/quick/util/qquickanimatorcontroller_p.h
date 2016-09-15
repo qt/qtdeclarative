@@ -74,8 +74,8 @@ public:
     void beforeNodeSync();
     void afterNodeSync();
 
-    void animationFinished(QAbstractAnimationJob *job);
-    void animationStateChanged(QAbstractAnimationJob *job, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void animationFinished(QAbstractAnimationJob *job) override;
+    void animationStateChanged(QAbstractAnimationJob *job, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 
     void requestSync();
 

@@ -100,14 +100,14 @@ public:
 
     int time() const;
 
-    virtual int duration() const;
+    int duration() const override;
 Q_SIGNALS:
     void updated();
     void completed();
 
 protected:
-    virtual void updateCurrentTime(int);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int) override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     void remove(QQuickTimeLineObject *);
@@ -181,7 +181,7 @@ public:
         Q_ASSERT(_class);
     }
 
-    virtual void setValue(qreal v)
+    void setValue(qreal v) override
     {
         QQuickTimeLineValue::setValue(v);
         if (_setFunctionReal) (_class->*_setFunctionReal)(v);
