@@ -323,13 +323,13 @@ void QQuickStochasticEngine::setGoal(int state, int sprite, bool jump)
     return;
 }
 
-QQuickPixmap::Status QQuickSpriteEngine::status()//Composed status of all Sprites
+QQuickPixmap::Status QQuickSpriteEngine::status() const //Composed status of all Sprites
 {
     if (!m_startedImageAssembly)
         return QQuickPixmap::Null;
     int null, loading, ready;
     null = loading = ready = 0;
-    for (QQuickSprite* s : qAsConst(m_sprites)) {
+    for (QQuickSprite* s : m_sprites) {
         switch (s->m_pix.status()) {
             // ### Maybe add an error message here, because this null shouldn't be reached but when it does, the image fails without an error message.
             case QQuickPixmap::Null : null++; break;

@@ -255,7 +255,7 @@ public:
     QQuickPathViewAttached(QObject *parent);
     ~QQuickPathViewAttached();
 
-    QQuickPathView *view() { return m_view; }
+    QQuickPathView *view() const { return m_view; }
 
     bool isCurrentItem() const { return m_isCurrent; }
     void setIsCurrentItem(bool c) {

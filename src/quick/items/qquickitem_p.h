@@ -858,7 +858,7 @@ private:
 #endif
     static QByteArray keyToSignal(int key);
 
-    bool isConnected(const char *signalName);
+    bool isConnected(const char *signalName) const;
 };
 
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const

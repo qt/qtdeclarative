@@ -244,7 +244,7 @@ void QQuickParticleAffector::updateOffsets()
         m_offset = m_system->mapFromItem(this, QPointF(0, 0));
 }
 
-bool QQuickParticleAffector::isColliding(QQuickParticleData *d)
+bool QQuickParticleAffector::isColliding(QQuickParticleData *d) const
 {
     qreal myCurX = d->curX(m_system);
     qreal myCurY = d->curY(m_system);

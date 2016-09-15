@@ -874,9 +874,9 @@ bool QQuickFlickable::isAtYBeginning() const
     }
     \endcode
 */
-QQuickItem *QQuickFlickable::contentItem()
+QQuickItem *QQuickFlickable::contentItem() const
 {
-    Q_D(QQuickFlickable);
+    Q_D(const QQuickFlickable);
     return d->contentItem;
 }
 

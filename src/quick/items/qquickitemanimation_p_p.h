@@ -129,7 +129,7 @@ public:
 
     void clearTemplate() { animationTemplate = 0; }
 
-    QQuickPathAnimationUpdater *pathUpdater() { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
+    QQuickPathAnimationUpdater *pathUpdater() const { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
 private:
     QQuickPathAnimationPrivate *animationTemplate;
 };

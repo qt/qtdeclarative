@@ -240,8 +240,8 @@ public:
     QPainterPath createTextGlyphs(qreal x, qreal y, const QString& text);
     QQmlRefPointer<QQuickCanvasPixmap> createPixmap(const QUrl& url);
 
-    QOpenGLContext *glContext() { return m_glContext; }
-    QSurface *surface() { return m_surface.data(); }
+    QOpenGLContext *glContext() const { return m_glContext; }
+    QSurface *surface() const { return m_surface.data(); }
     void setGrabbedImage(const QImage& grab);
 
     State state;

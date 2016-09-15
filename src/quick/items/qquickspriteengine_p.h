@@ -289,11 +289,11 @@ public:
     void advance(int index=0) Q_DECL_OVERRIDE;
 
     //Similar API to QQuickPixmap for async loading convenience
-    bool isNull() { return status() == QQuickPixmap::Null; }
-    bool isReady() { return status() == QQuickPixmap::Ready; }
-    bool isLoading() { return status() == QQuickPixmap::Loading; }
-    bool isError() { return status() == QQuickPixmap::Error; }
-    QQuickPixmap::Status status();//Composed status of all Sprites
+    bool isNull() const { return status() == QQuickPixmap::Null; }
+    bool isReady() const { return status() == QQuickPixmap::Ready; }
+    bool isLoading() const { return status() == QQuickPixmap::Loading; }
+    bool isError() const { return status() == QQuickPixmap::Error; }
+    QQuickPixmap::Status status() const; //Composed status of all Sprites
     void startAssemblingImage();
     QImage assembledImage(int maxSize = 2048);
 

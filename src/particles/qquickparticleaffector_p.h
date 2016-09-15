@@ -200,7 +200,7 @@ private:
 
     QStringList m_whenCollidingWith;
 
-    bool isColliding(QQuickParticleData* d);
+    bool isColliding(QQuickParticleData* d) const;
 };
 
 QT_END_NAMESPACE

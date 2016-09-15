@@ -131,7 +131,7 @@ public:
     QQuickItemParticleAttached(QObject* parent)
         : QObject(parent), m_mp(0)
     {;}
-    QQuickItemParticle* particle() {return m_mp;}
+    QQuickItemParticle* particle() const { return m_mp; }
     void detach(){Q_EMIT detached();}
     void attach(){Q_EMIT attached();}
 private:

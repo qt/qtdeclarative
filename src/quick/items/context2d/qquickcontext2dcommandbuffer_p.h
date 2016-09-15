@@ -67,7 +67,7 @@ public:
     void reset();
     void clear();
 
-    inline int size() {return commands.size();}
+    inline int size() const { return commands.size(); }
     inline bool isEmpty() const {return commands.isEmpty(); }
     inline bool hasNext() const {return cmdIdx < commands.size(); }
     inline QQuickContext2D::PaintCommand takeNextCommand() { return commands.at(cmdIdx++); }

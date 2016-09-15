@@ -789,9 +789,9 @@ QByteArray QQuickKeysAttached::keyToSignal(int key)
     return keySignal;
 }
 
-bool QQuickKeysAttached::isConnected(const char *signalName)
+bool QQuickKeysAttached::isConnected(const char *signalName) const
 {
-    Q_D(QQuickKeysAttached);
+    Q_D(const QQuickKeysAttached);
     int signal_index = d->signalIndex(signalName);
     return d->isSignalConnected(signal_index);
 }
