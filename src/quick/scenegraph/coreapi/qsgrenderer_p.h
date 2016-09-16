@@ -138,7 +138,7 @@ class QSGBindableFboId : public QSGBindable
 {
 public:
     QSGBindableFboId(GLuint);
-    virtual void bind() const;
+    void bind() const override;
 private:
     GLuint m_id;
 };
@@ -160,8 +160,8 @@ public:
     static void dump(QSGNode *n);
 
     QSGNodeDumper() : m_indent(0) {}
-    void visitNode(QSGNode *n);
-    void visitChildren(QSGNode *n);
+    void visitNode(QSGNode *n) override;
+    void visitChildren(QSGNode *n) override;
 
 private:
     int m_indent;

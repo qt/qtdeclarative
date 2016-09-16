@@ -87,19 +87,19 @@ public:
     bool ownsTexture() const { return m_owns_texture; }
 
     void setTextureId(int id);
-    int textureId() const;
+    int textureId() const override;
     void setTextureSize(const QSize &size) { m_texture_size = size; }
-    QSize textureSize() const { return m_texture_size; }
+    QSize textureSize() const override { return m_texture_size; }
 
     void setHasAlphaChannel(bool alpha) { m_has_alpha = alpha; }
-    bool hasAlphaChannel() const { return m_has_alpha; }
+    bool hasAlphaChannel() const override { return m_has_alpha; }
 
-    bool hasMipmaps() const { return mipmapFiltering() != QSGTexture::None; }
+    bool hasMipmaps() const override { return mipmapFiltering() != QSGTexture::None; }
 
     void setImage(const QImage &image);
     const QImage &image() { return m_image; }
 
-    virtual void bind();
+    void bind() override;
 
     static QSGPlainTexture *fromImage(const QImage &image) {
         QSGPlainTexture *t = new QSGPlainTexture();

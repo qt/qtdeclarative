@@ -149,8 +149,8 @@ public:
     {
     }
 
-    QSGMaterialShader *createShader() const { return m_func(); }
-    QSGMaterialType *type() const { return &m_type; }
+    QSGMaterialShader *createShader() const override { return m_func(); }
+    QSGMaterialType *type() const override { return &m_type; }
 
     State *state() { return &m_state; }
     const State *state() const { return &m_state; }

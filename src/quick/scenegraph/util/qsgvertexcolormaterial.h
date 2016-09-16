@@ -49,11 +49,11 @@ class Q_QUICK_EXPORT QSGVertexColorMaterial : public QSGMaterial
 public:
     QSGVertexColorMaterial();
 
-    int compare(const QSGMaterial *other) const;
+    int compare(const QSGMaterial *other) const override;
 
 protected:
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 };
 
 QT_END_NAMESPACE
