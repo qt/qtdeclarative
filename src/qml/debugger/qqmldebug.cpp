@@ -119,4 +119,22 @@ bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName,
     return false;
 }
 
+enum { HookCount = 3 };
+
+// Only add to the end, and bump version if you do.
+quintptr Q_QML_EXPORT qtDeclarativeHookData[] = {
+    // Version of this Array. Bump if you add to end.
+    1,
+
+    // Number of entries in this array.
+    HookCount,
+
+    // TypeInformationVersion, an integral value, bumped whenever private
+    // object sizes or member offsets that are used in Qt Creator's
+    // data structure "pretty printing" change.
+    1
+};
+
+Q_STATIC_ASSERT(HookCount == sizeof(qtDeclarativeHookData) / sizeof(qtDeclarativeHookData[0]));
+
 QT_END_NAMESPACE
