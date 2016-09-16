@@ -250,6 +250,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickPointerEvent *event READ pointerEvent)
     Q_PROPERTY(QPointF pos READ pos)
     Q_PROPERTY(QPointF scenePos READ scenePos)
     Q_PROPERTY(QPointF scenePressPos READ scenePressPos)
