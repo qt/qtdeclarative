@@ -1235,8 +1235,12 @@ void tst_TouchMouse::hoverEnabled()
     // device->setType(QTouchDevice::TouchScreen);
     // QWindowSystemInterface::registerTouchDevice(device);
 
+    // Ensure the cursor is away from the window
+    QCursor::setPos(0, 0);
+
     QQuickView *window = createView();
     window->setSource(testFileUrl("hoverMouseAreas.qml"));
+    window->setPosition(10, 10);
 
     window->show();
     window->requestActivate();

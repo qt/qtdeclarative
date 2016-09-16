@@ -224,7 +224,7 @@ void QSGDefaultPainterNode::updateGeometry()
     if (m_actualRenderTarget == QQuickPaintedItem::Image)
         source = QRectF(0, 0, 1, 1);
     else
-        source = QRectF(0, 0, qreal(m_size.width()) / m_fboSize.width(), qreal(m_size.height()) / m_fboSize.height());
+        source = QRectF(0, 0, qreal(m_textureSize.width()) / m_fboSize.width(), qreal(m_textureSize.height()) / m_fboSize.height());
     QRectF dest(0, 0, m_size.width(), m_size.height());
     if (m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
         dest = QRectF(QPointF(0, m_size.height()), QPointF(m_size.width(), 0));
@@ -306,7 +306,7 @@ void QSGDefaultPainterNode::updateRenderTarget()
     QSGPainterTexture *texture = new QSGPainterTexture;
     if (m_actualRenderTarget == QQuickPaintedItem::Image) {
         texture->setOwnsTexture(true);
-        texture->setTextureSize(m_size);
+        texture->setTextureSize(m_textureSize);
     } else {
         texture->setTextureId(m_fbo->texture());
         texture->setOwnsTexture(false);
