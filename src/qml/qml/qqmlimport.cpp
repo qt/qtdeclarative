@@ -229,7 +229,7 @@ public:
     };
     QList<Import *> imports;
 
-    Import *findImport(const QString &uri);
+    Import *findImport(const QString &uri) const;
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
                      int *vmajor, int *vminor, QQmlType** type_return,
@@ -784,14 +784,13 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
     return false;
 }
 
-QQmlImportNamespace::Import *QQmlImportNamespace::findImport(const QString &uri)
+QQmlImportNamespace::Import *QQmlImportNamespace::findImport(const QString &uri) const
 {
-    for (QList<Import *>::iterator it = imports.begin(), end = imports.end(); it != end; ++it) {
-        if ((*it)->uri == uri)
-            return *it;
+    for (Import *import : imports) {
+        if (import->uri == uri)
+            return import;
     }
-
-    return 0;
+    return nullptr;
 }
 
 bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
