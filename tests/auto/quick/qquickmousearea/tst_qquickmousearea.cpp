@@ -117,6 +117,7 @@ private slots:
     void moveAndReleaseWithoutPress();
     void nestedStopAtBounds();
     void nestedStopAtBounds_data();
+    void nestedFlickableStopAtBounds();
     void containsPress_data();
     void containsPress();
 
@@ -1733,6 +1734,98 @@ void tst_QQuickMouseArea::nestedStopAtBounds()
     QTest::mouseMove(&view, position);
     QTRY_COMPARE(outer->drag()->active(), false);
     QTRY_COMPARE(inner->drag()->active(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+}
+
+void tst_QQuickMouseArea::nestedFlickableStopAtBounds()
+{
+    QQuickView view;
+    QByteArray errorMessage;
+    QVERIFY2(initView(view, testFileUrl("nestedFlickableStopAtBounds.qml"), false, &errorMessage), errorMessage.constData());
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickMouseArea *mouseArea =  view.rootObject()->findChild<QQuickMouseArea*>("mouseArea");
+    QVERIFY(mouseArea);
+
+    QQuickFlickable *flickable = mouseArea->findChild<QQuickFlickable*>("flickable");
+    QVERIFY(flickable);
+
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    QPoint position(200, 280);
+    int &pos = position.ry();
+
+    // Drag up - should move the Flickable to end
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    pos -= threshold * 2;
+    QTest::mouseMove(&view, position);
+    pos -= threshold * 2;
+    QTest::mouseMove(&view, position);
+    QTest::qWait(10);
+    pos -= 150;
+    QTest::mouseMove(&view, position);
+    QVERIFY(flickable->isDragging());
+    QVERIFY(!mouseArea->drag()->active());
+    QCOMPARE(flickable->isAtYEnd(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QTRY_VERIFY(!flickable->isMoving());
+
+    pos = 280;
+
+    // Drag up again - should activate MouseArea drag
+    QVERIFY(!mouseArea->drag()->active());
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    pos -= threshold * 2;
+    QTest::mouseMove(&view, position);
+    pos -= threshold * 2;
+    QTest::mouseMove(&view, position);
+    QTest::qWait(10);
+    pos -= 20;
+    QTest::mouseMove(&view, position);
+    QVERIFY(mouseArea->drag()->active());
+    QCOMPARE(flickable->isAtYEnd(), true);
+    QVERIFY(!flickable->isDragging());
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    // Drag to the top and verify that the MouseArea doesn't steal the grab when we drag back (QTBUG-56036)
+    pos = 50;
+
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    pos += threshold;
+    QTest::mouseMove(&view, position);
+    pos += threshold;
+    QTest::mouseMove(&view, position);
+    QTest::qWait(10);
+    pos += 150;
+    QTest::mouseMove(&view, position);
+    QVERIFY(flickable->isDragging());
+    QVERIFY(!mouseArea->drag()->active());
+    QCOMPARE(flickable->isAtYBeginning(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QTRY_VERIFY(!flickable->isMoving());
+
+    pos = 280;
+
+    // Drag up again - should not activate MouseArea drag
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    pos -= threshold;
+    QTest::mouseMove(&view, position);
+    pos -= threshold;
+    QTest::mouseMove(&view, position);
+    QTest::qWait(10);
+    pos -= 100;
+    QTest::mouseMove(&view, position);
+    QVERIFY(flickable->isDragging());
+    QVERIFY(!mouseArea->drag()->active());
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 }
 
