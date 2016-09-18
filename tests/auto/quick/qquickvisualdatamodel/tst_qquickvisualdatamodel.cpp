@@ -4094,9 +4094,10 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
             controller.incubateFor(50);
         } while (timer.elapsed() < 1000 && controller.incubatingObjectCount() > 0);
 
-        QVERIFY(requester.itemInitialized);
-        QCOMPARE(requester.itemCreated, requester.itemInitialized);
-        QCOMPARE(requester.itemDestroyed, requester.itemInitialized);
+        // The item was removed before incubation started. We should not have any item created.
+        QVERIFY(!requester.itemInitialized);
+        QVERIFY(!requester.itemCreated);
+        QVERIFY(!requester.itemDestroyed);
     } else {
         item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
         QVERIFY(item);

@@ -761,7 +761,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
 {
     Q_Q(QQuickDragAttached);
 
-    QDrag *drag = new QDrag(q);
+    QDrag *drag = new QDrag(source ? source : q);
     QMimeData *mimeData = new QMimeData();
 
     for (auto it = externalMimeData.cbegin(), end = externalMimeData.cend(); it != end; ++it)
