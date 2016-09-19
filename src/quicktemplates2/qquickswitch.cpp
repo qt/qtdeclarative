@@ -90,7 +90,6 @@ class QQuickSwitchPrivate : public QQuickAbstractButtonPrivate
 public:
     QQuickSwitchPrivate() : position(0) { }
 
-    void updatePosition();
     qreal positionAt(const QPoint &point) const;
 
     bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
@@ -101,12 +100,6 @@ public:
     qreal position;
     QPoint pressPoint;
 };
-
-void QQuickSwitchPrivate::updatePosition()
-{
-    Q_Q(QQuickSwitch);
-    q->setPosition(checked ? 1.0 : 0.0);
-}
 
 qreal QQuickSwitchPrivate::positionAt(const QPoint &point) const
 {
@@ -188,7 +181,6 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
     d->keepPressed = true;
     setCheckable(true);
     setFiltersChildMouseEvents(true);
-    QObjectPrivate::connect(this, &QQuickAbstractButton::checkedChanged, d_func(), &QQuickSwitchPrivate::updatePosition);
 }
 
 /*!
@@ -253,6 +245,12 @@ bool QQuickSwitch::childMouseEventFilter(QQuickItem *child, QEvent *event)
         }
     }
     return false;
+}
+
+void QQuickSwitch::checkStateSet()
+{
+    Q_D(QQuickSwitch);
+    setPosition(d->checked ? 1.0 : 0.0);
 }
 
 QT_END_NAMESPACE

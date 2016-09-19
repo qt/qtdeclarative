@@ -76,6 +76,8 @@ protected:
     void mirrorChange() override;
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
 
+    void checkStateSet() override;
+
 private:
     Q_DISABLE_COPY(QQuickSwitch)
     Q_DECLARE_PRIVATE(QQuickSwitch)
