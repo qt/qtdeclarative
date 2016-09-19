@@ -73,9 +73,13 @@ Q_SIGNALS:
     void visualPositionChanged();
 
 protected:
-    void mirrorChange() override;
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
+    void mirrorChange() override;
+
+    void nextCheckState() override;
     void checkStateSet() override;
 
 private:
