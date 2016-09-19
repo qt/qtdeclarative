@@ -184,6 +184,8 @@ bool QQuickSwitchPrivate::handleMouseUngrabEvent(QQuickItem *child)
 QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
     QQuickAbstractButton(*(new QQuickSwitchPrivate), parent)
 {
+    Q_D(QQuickSwitch);
+    d->keepPressed = true;
     setCheckable(true);
     setFiltersChildMouseEvents(true);
     QObjectPrivate::connect(this, &QQuickAbstractButton::checkedChanged, d_func(), &QQuickSwitchPrivate::updatePosition);

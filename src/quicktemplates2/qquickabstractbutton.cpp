@@ -105,7 +105,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    down(false), explicitDown(false), pressed(false), checked(false), checkable(false),
+    down(false), explicitDown(false), pressed(false), keepPressed(false), checked(false), checkable(false),
     autoExclusive(false), autoRepeat(false), wasHeld(false),
     holdTimer(0), delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), indicator(nullptr), group(nullptr)
 {
@@ -525,7 +525,7 @@ void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mouseMoveEvent(event);
-    setPressed(contains(event->pos()));
+    setPressed(d->keepPressed || contains(event->pos()));
 
     if (d->autoRepeat)
         d->stopPressRepeat();
@@ -540,7 +540,7 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     bool wasPressed = d->pressed;
     setPressed(false);
 
-    if (contains(event->pos()))
+    if (d->keepPressed || contains(event->pos()))
         nextCheckState();
 
     if (wasPressed) {

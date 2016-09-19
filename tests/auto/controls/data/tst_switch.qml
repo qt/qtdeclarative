@@ -95,6 +95,29 @@ TestCase {
         control.destroy()
     }
 
+    function test_pressed_data() {
+        return [
+            { tag: "indicator", x: 15 },
+            { tag: "background", x: 5 }
+        ]
+    }
+
+    function test_pressed(data) {
+        var control = swtch.createObject(testCase, {padding: 10})
+        verify(control)
+
+        // stays pressed when dragged outside
+        compare(control.pressed, false)
+        mousePress(control, data.x, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, true)
+        mouseMove(control, -1, control.height / 2)
+        compare(control.pressed, true)
+        mouseRelease(control, -1, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, false)
+
+        control.destroy()
+    }
+
     function test_mouse() {
         var control = swtch.createObject(testCase)
         verify(control)
