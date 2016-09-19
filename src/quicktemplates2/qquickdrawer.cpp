@@ -527,7 +527,7 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         d->tryClose(item, static_cast<QMouseEvent *>(event));
         return d->handleMouseReleaseEvent(item, static_cast<QMouseEvent *>(event));
     default:
-        return false;
+        return QQuickPopup::overlayEvent(item, event);
     }
 }
 

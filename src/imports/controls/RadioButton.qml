@@ -68,7 +68,7 @@ T.RadioButton {
 
         text: control.text
         font: control.font
-        color: control.down ? "#26282a" : "#353637"
+        color: control.down ? Default.textDarkColor : Default.textColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

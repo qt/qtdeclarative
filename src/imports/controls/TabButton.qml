@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.TabButton {
@@ -54,7 +56,7 @@ T.TabButton {
         font: control.font
         elide: Text.ElideRight
         opacity: enabled ? 1 : 0.3
-        color: !control.checked ? "#ffffff" : control.down ? "#26282a" : "#353637"
+        color: !control.checked ? Default.textLightColor : control.down ? Default.textDarkColor : Default.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -63,7 +65,9 @@ T.TabButton {
     //! [background]
     background: Rectangle {
         implicitHeight: 40
-        color: control.down ? (control.checked ? "#e4e4e4" : "#585a5c") : (control.checked ? "transparent" : "#353637")
+        color: control.down
+            ? (control.checked ? Default.tabButtonCheckedPressedColor : Default.tabButtonPressedColor)
+            : (control.checked ? "transparent" : Default.tabButtonColor)
     }
     //! [background]
 }

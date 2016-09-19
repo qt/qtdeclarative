@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.SwipeDelegate {
@@ -57,7 +59,7 @@ T.SwipeDelegate {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
@@ -75,7 +77,9 @@ T.SwipeDelegate {
 
     //! [background]
     background: Rectangle {
-        color: control.visualFocus ? (control.down ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#ffffff")
+        color: control.visualFocus
+            ? (control.down ? Default.focusPressedColor : Default.delegateFocusColor)
+            : (control.down ? Default.delegatePressedColor : Default.backgroundColor)
 
         Behavior on x {
             enabled: !control.down

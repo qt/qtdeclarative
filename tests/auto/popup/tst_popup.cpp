@@ -43,6 +43,7 @@
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquickslider_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -65,6 +66,8 @@ private slots:
     void activeFocusOnClose2();
     void hover_data();
     void hover();
+    void wheel_data();
+    void wheel();
     void parentDestroyed();
 };
 
@@ -512,6 +515,90 @@ void tst_popup::hover()
     // hover the parent button after closing the popup
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
     QVERIFY(parentButton->isHovered());
+}
+
+void tst_popup::wheel_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<bool>("modal");
+
+    QTest::newRow("Window:modal") << "window-wheel.qml" << true;
+    QTest::newRow("Window:modeless") << "window-wheel.qml" << false;
+    QTest::newRow("ApplicationWindow:modal") << "applicationwindow-wheel.qml" << true;
+    QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-wheel.qml" << false;
+}
+
+static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees)
+{
+    QQuickWindow *window = item->window();
+    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0), QPoint(0, 8 * degrees), 0, Qt::Vertical, Qt::NoButton, 0);
+    QSpontaneKeyEvent::setSpontaneous(&wheelEvent);
+    return qGuiApp->notify(window, &wheelEvent);
+}
+
+void tst_popup::wheel()
+{
+    QFETCH(QString, source);
+    QFETCH(bool, modal);
+
+    QQuickApplicationHelper helper(this, source);
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickSlider *contentSlider = window->property("contentSlider").value<QQuickSlider*>();
+    QVERIFY(contentSlider);
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup && popup->contentItem());
+    popup->setModal(modal);
+
+    QQuickSlider *popupSlider = window->property("popupSlider").value<QQuickSlider*>();
+    QVERIFY(popupSlider);
+
+    {
+        // wheel over the content
+        qreal oldContentValue = contentSlider->value();
+        qreal oldPopupValue = popupSlider->value();
+
+        QVERIFY(sendWheelEvent(contentSlider, QPoint(contentSlider->width() / 2, contentSlider->height() / 2), 15));
+
+        QVERIFY(!qFuzzyCompare(contentSlider->value(), oldContentValue)); // must have moved
+        QVERIFY(qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must not have moved
+    }
+
+    QSignalSpy openedSpy(popup, SIGNAL(opened()));
+    QVERIFY(openedSpy.isValid());
+    popup->open();
+    QVERIFY(openedSpy.count() == 1 || openedSpy.wait());
+
+    {
+        // wheel over the popup content
+        qreal oldContentValue = contentSlider->value();
+        qreal oldPopupValue = popupSlider->value();
+
+        QVERIFY(sendWheelEvent(popupSlider, QPoint(popupSlider->width() / 2, popupSlider->height() / 2), 15));
+
+        QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue)); // must not have moved
+        QVERIFY(!qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must have moved
+    }
+
+    {
+        // wheel over the overlay
+        qreal oldContentValue = contentSlider->value();
+        qreal oldPopupValue = popupSlider->value();
+
+        QVERIFY(sendWheelEvent(QQuickOverlay::overlay(window), QPoint(0, 0), 15));
+
+        if (modal) {
+            // the content below a modal overlay must not move
+            QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue));
+        } else {
+            // the content below a modeless overlay must move
+            QVERIFY(!qFuzzyCompare(contentSlider->value(), oldContentValue));
+        }
+        QVERIFY(qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must not have moved
+    }
 }
 
 void tst_popup::parentDestroyed()

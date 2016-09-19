@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.ToolBar {
@@ -53,7 +55,7 @@ T.ToolBar {
     //! [background]
     background: Rectangle {
         implicitHeight: 40
-        color: "#eeeeee"
+        color: Default.delegateColor
     }
     //! [background]
 }

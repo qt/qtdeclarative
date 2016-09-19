@@ -51,7 +51,12 @@
 #include "qquickplatformmenuitemgroup_p.h"
 #include "qquickplatformmenuseparator_p.h"
 
+#include "qquickplatformstandardpaths_p.h"
+
 #include "qquickplatformsystemtrayicon_p.h"
+
+Q_DECLARE_METATYPE(QStandardPaths::StandardLocation)
+Q_DECLARE_METATYPE(QStandardPaths::LocateOptions)
 
 static inline void initResources()
 {
@@ -86,16 +91,21 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickPlatformDialog>(uri, 1, 0, "Dialog", QQuickPlatformDialog::tr("Dialog is an abstract base class"));
     qmlRegisterType<QQuickPlatformColorDialog>(uri, 1, 0, "ColorDialog");
     qmlRegisterType<QQuickPlatformFileDialog>(uri, 1, 0, "FileDialog");
+    qmlRegisterType<QQuickPlatformFileNameFilter>();
     qmlRegisterType<QQuickPlatformFolderDialog>(uri, 1, 0, "FolderDialog");
     qmlRegisterType<QQuickPlatformFontDialog>(uri, 1, 0, "FontDialog");
     qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
-    qmlRegisterUncreatableType<QPlatformDialogHelper>(uri, 1, 0, "StandardButton", QQuickPlatformDialog::tr("Cannot create an instance of StandardButton"));
 
     qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
     qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
     qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
     qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
     qmlRegisterType<QQuickPlatformMenuSeparator>(uri, 1, 0, "MenuSeparator");
+
+    qmlRegisterUncreatableType<QPlatformDialogHelper>(uri, 1, 0, "StandardButton", QQuickPlatformDialog::tr("Cannot create an instance of StandardButton"));
+    qmlRegisterSingletonType<QQuickPlatformStandardPaths>(uri, 1, 0, "StandardPaths", QQuickPlatformStandardPaths::create);
+    qRegisterMetaType<QStandardPaths::StandardLocation>();
+    qRegisterMetaType<QStandardPaths::LocateOptions>();
 
     qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
 }

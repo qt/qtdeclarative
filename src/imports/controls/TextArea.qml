@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.TextArea {
@@ -51,8 +53,8 @@ T.TextArea {
     leftPadding: padding + 4
 
     opacity: enabled ? 1 : 0.2
-    color: "#353637"
-    selectionColor: "#fddd5c"
+    color: Default.textColor
+    selectionColor: Default.textSelectionColor
     selectedTextColor: color
 
     Text {
@@ -64,7 +66,7 @@ T.TextArea {
 
         text: control.placeholderText
         font: control.font
-        color: "#c2c2c2"
+        color: Default.textDisabledLightColor
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)

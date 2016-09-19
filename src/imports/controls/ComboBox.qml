@@ -37,6 +37,7 @@
 import QtQuick 2.6
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.ComboBox {
@@ -70,7 +71,7 @@ T.ComboBox {
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://default/double-arrow/" + (control.visualFocus ? "#0066ff" : "#353637")
+        source: "image://default/double-arrow/" + (control.visualFocus ? Default.focusColor : Default.textColor)
         sourceSize.width: width
         sourceSize.height: height
     }
@@ -83,7 +84,7 @@ T.ComboBox {
 
         text: control.displayText
         font: control.font
-        color: control.visualFocus ? "#0066ff" : "#353637"
+        color: control.visualFocus ? Default.focusColor : Default.textColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -95,9 +96,9 @@ T.ComboBox {
         implicitWidth: 120
         implicitHeight: 40
 
-        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") :
-            (control.pressed || popup.visible ? "#d0d0d0" : "#e0e0e0")
-        border.color: "#0066ff"
+        color: control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
+            (control.pressed || popup.visible ? Default.buttonPressedColor : Default.buttonColor)
+        border.color: Default.focusColor
         border.width: control.visualFocus ? 2 : 0
         visible: !control.flat || control.pressed
     }
@@ -123,7 +124,7 @@ T.ComboBox {
                 width: listview.width
                 height: listview.height
                 color: "transparent"
-                border.color: "#bdbebf"
+                border.color: Default.frameLightColor
             }
 
             T.ScrollIndicator.vertical: ScrollIndicator { }

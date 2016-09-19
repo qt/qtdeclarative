@@ -480,6 +480,7 @@ void QQuickDial::setHandle(QQuickItem *handle)
     if (handle == d->handle)
         return;
 
+    d->deleteDelegate(d->handle);
     d->handle = handle;
     if (d->handle && !d->handle->parentItem())
         d->handle->setParentItem(this);

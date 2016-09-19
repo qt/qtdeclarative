@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
     FolderDialog {
         id: folderDialog
         currentFolder: viewer.folder
+        folder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
     }
 
     MyViewer {
@@ -89,7 +90,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa FileDialog
+    \sa FileDialog, StandardPaths
 */
 
 QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)

@@ -36,6 +36,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.Menu {
@@ -66,8 +67,8 @@ T.Menu {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
-        color: "#ffffff"
-        border.color: "#353637"
+        color: Default.backgroundColor
+        border.color: Default.frameDarkColor
     }
     //! [background]
 }

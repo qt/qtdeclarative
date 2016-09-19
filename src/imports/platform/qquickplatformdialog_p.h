@@ -129,6 +129,7 @@ protected:
     virtual bool useNativeDialog() const;
     virtual void onCreate(QPlatformDialogHelper *dialog);
     virtual void onShow(QPlatformDialogHelper *dialog);
+    virtual void onHide(QPlatformDialogHelper *dialog);
 
     QWindow *findParentWindow() const;
 

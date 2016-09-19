@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.MenuItem {
@@ -56,7 +58,7 @@ T.MenuItem {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
@@ -84,7 +86,7 @@ T.MenuItem {
             y: 1
             width: parent.width - 2
             height: parent.height - 2
-            color: control.visualFocus || control.down ? "#eeeeee" : "transparent"
+            color: control.visualFocus || control.down ? Default.delegateColor : "transparent"
         }
     }
     //! [background]

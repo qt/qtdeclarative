@@ -82,7 +82,9 @@
     \section1 Examples
 
     \list
-      \li \l{Qt Quick Controls 2 Examples}
+      \li \l{Qt Quick Controls 2 - Gallery}{Gallery}
+      \li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat Tutorial}
+      \li \l{Qt Quick Controls 2 Examples}{All Examples}
     \endlist
 
     \section1 Related Modules

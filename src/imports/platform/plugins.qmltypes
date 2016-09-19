@@ -130,10 +130,34 @@ Module {
         Property { name: "folder"; type: "QUrl" }
         Property { name: "options"; type: "QFileDialogOptions::FileDialogOptions" }
         Property { name: "nameFilters"; type: "QStringList" }
-        Property { name: "selectedNameFilter"; type: "string" }
+        Property {
+            name: "selectedNameFilter"
+            type: "QQuickPlatformFileNameFilter"
+            isReadonly: true
+            isPointer: true
+        }
         Property { name: "defaultSuffix"; type: "string" }
         Property { name: "acceptLabel"; type: "string" }
         Property { name: "rejectLabel"; type: "string" }
+    }
+    Component {
+        name: "QQuickPlatformFileNameFilter"
+        prototype: "QObject"
+        Property { name: "index"; type: "int" }
+        Property { name: "name"; type: "string"; isReadonly: true }
+        Property { name: "extensions"; type: "QStringList"; isReadonly: true }
+        Signal {
+            name: "indexChanged"
+            Parameter { name: "index"; type: "int" }
+        }
+        Signal {
+            name: "nameChanged"
+            Parameter { name: "name"; type: "string" }
+        }
+        Signal {
+            name: "extensionsChanged"
+            Parameter { name: "extensions"; type: "QStringList" }
+        }
     }
     Component {
         name: "QQuickPlatformFolderDialog"

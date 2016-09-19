@@ -283,6 +283,7 @@ void QQuickPlatformDialog::close()
     if (!m_handle || !m_visible)
         return;
 
+    onHide(m_handle);
     m_handle->hide();
     m_visible = false;
     emit visibleChanged();
@@ -381,6 +382,11 @@ void QQuickPlatformDialog::onCreate(QPlatformDialogHelper *dialog)
 }
 
 void QQuickPlatformDialog::onShow(QPlatformDialogHelper *dialog)
+{
+    Q_UNUSED(dialog);
+}
+
+void QQuickPlatformDialog::onHide(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
 }

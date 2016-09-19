@@ -412,4 +412,32 @@ MetaInfo {
             requiredImport: "QtQuick.Controls"
         }
     }
+
+    Type {
+        name: "QtQuick.Controls.TabBar"
+        icon: "images/toolbar-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Tab Bar"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/toolbar-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+            Property { name: "width"; type: "int"; value: 240 }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.TabButton"
+        icon: "images/toolbutton-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Tab Button"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/toolbutton-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Tab Button\")" }
+        }
+    }
 }

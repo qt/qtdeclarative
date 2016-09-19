@@ -59,7 +59,7 @@ T.CheckDelegate {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
@@ -81,7 +81,7 @@ T.CheckDelegate {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
-        color: control.down ? "#bdbebf" : "#eeeeee"
+        color: control.down ? Default.delegatePressedColor : Default.delegateColor
     }
     //! [background]
 }

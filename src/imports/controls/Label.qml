@@ -35,11 +35,13 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.Label {
     id: control
 
-    color: "#26282a"
-    linkColor: "#45a7d7" // TODO
+    color: Default.textDarkColor
+    linkColor: Default.textLinkColor
 }

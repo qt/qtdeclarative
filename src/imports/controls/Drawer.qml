@@ -35,6 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 import QtQuick.Templates 2.1 as T
 
 T.Drawer {
@@ -69,7 +71,7 @@ T.Drawer {
             readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
             width: horizontal ? 1 : parent.width
             height: horizontal ? parent.height : 1
-            color: "#353637"
+            color: Default.frameDarkColor
             x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
             y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
         }

@@ -102,6 +102,8 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void deleteDelegate(QObject *object);
+
     bool hovered;
     QFont font;
     QQuickItem *background;
@@ -110,6 +112,10 @@ public:
     QQuickPressHandler pressHandler;
     QQuickAccessibleAttached *accessibleAttached;
     QQuickFlickable *flickable;
+    // This list contains the default delegates which were
+    // replaced with custom ones via declarative assignments
+    // before Component.completed() was emitted. See QTBUG-50992.
+    QVector<QObject *> pendingDeletions;
 };
 
 QT_END_NAMESPACE
