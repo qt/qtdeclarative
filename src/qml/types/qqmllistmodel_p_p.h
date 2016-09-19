@@ -71,8 +71,8 @@ public:
     bool m_enabled;
 
 protected:
-    void propertyWrite(int index);
-    void propertyWritten(int index);
+    void propertyWrite(int index) override;
+    void propertyWritten(int index) override;
 
 private:
     DynamicRoleModelNode *m_owner;
@@ -138,7 +138,7 @@ public:
     bool initialized() const { return m_initialized; }
 
 protected:
-    void propertyWritten(int index);
+    void propertyWritten(int index) override;
 
 private:
     using QQmlOpenMetaObject::setValue;

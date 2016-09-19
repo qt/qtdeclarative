@@ -72,7 +72,7 @@ class Q_AUTOTEST_EXPORT QQmlInstantiator : public QObject, public QQmlParserStat
 
 public:
     QQmlInstantiator(QObject *parent = 0);
-    virtual ~QQmlInstantiator();
+    ~QQmlInstantiator();
 
     bool isActive() const;
     void setActive(bool newVal);
@@ -92,8 +92,8 @@ public:
 
     Q_INVOKABLE QObject *objectAt(int index) const;
 
-    void classBegin();
-    void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
 Q_SIGNALS:
     void modelChanged();

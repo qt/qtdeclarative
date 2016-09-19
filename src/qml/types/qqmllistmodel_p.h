@@ -85,11 +85,11 @@ public:
     QQmlListModel(QObject *parent=0);
     ~QQmlListModel();
 
-    QModelIndex index(int row, int column, const QModelIndex &parent) const;
-    int rowCount(const QModelIndex &parent) const;
-    QVariant data(const QModelIndex &index, int role) const;
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
-    QHash<int,QByteArray> roleNames() const;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    QHash<int,QByteArray> roleNames() const override;
 
     QVariant data(int index, int role) const;
     int count() const;

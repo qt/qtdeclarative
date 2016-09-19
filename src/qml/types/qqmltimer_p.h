@@ -87,10 +87,10 @@ public:
     void setTriggeredOnStart(bool triggeredOnStart);
 
 protected:
-    void classBegin();
-    void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
-    bool event(QEvent *);
+    bool event(QEvent *) override;
 
 public Q_SLOTS:
     void start();

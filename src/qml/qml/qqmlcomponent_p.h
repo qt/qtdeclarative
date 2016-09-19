@@ -89,8 +89,8 @@ public:
     static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v);
 
     QQmlTypeData *typeData;
-    virtual void typeDataReady(QQmlTypeData *);
-    virtual void typeDataProgress(QQmlTypeData *, qreal);
+    void typeDataReady(QQmlTypeData *) override;
+    void typeDataProgress(QQmlTypeData *, qreal) override;
 
     void fromTypeData(QQmlTypeData *data);
 
