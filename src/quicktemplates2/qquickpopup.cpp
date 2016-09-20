@@ -929,8 +929,13 @@ void QQuickPopup::setWidth(qreal width)
 void QQuickPopup::resetWidth()
 {
     Q_D(QQuickPopup);
+    if (!d->hasWidth)
+        return;
+
     d->hasWidth = false;
     d->popupItem->resetWidth();
+    if (d->popupItem->isVisible())
+        d->reposition();
 }
 
 /*!
@@ -954,8 +959,13 @@ void QQuickPopup::setHeight(qreal height)
 void QQuickPopup::resetHeight()
 {
     Q_D(QQuickPopup);
+    if (!d->hasHeight)
+        return;
+
     d->hasHeight = false;
     d->popupItem->resetHeight();
+    if (d->popupItem->isVisible())
+        d->reposition();
 }
 
 /*!

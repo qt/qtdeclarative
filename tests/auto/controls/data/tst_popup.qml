@@ -355,6 +355,24 @@ TestCase {
         control.destroy()
     }
 
+    function test_resetSize() {
+        var control = popupControl.createObject(testCase, {visible: true, margins: 0})
+        verify(control)
+
+        control.width = control.implicitWidth = testCase.width + 10
+        control.height = control.implicitHeight = testCase.height + 10
+
+        compare(control.width, testCase.width + 10)
+        compare(control.height, testCase.height + 10)
+
+        control.width = undefined
+        control.height = undefined
+        compare(control.width, testCase.width)
+        compare(control.height, testCase.height)
+
+        control.destroy()
+    }
+
     function test_negativeMargins() {
         var control = popupControl.createObject(testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
         verify(control)
