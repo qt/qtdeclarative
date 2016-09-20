@@ -454,6 +454,22 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Control propagates explicit font properties from parent to children. If you change a specific
     property on a control's font, that property propagates to all of the control's children,
     overriding any system defaults for that property.
+
+    \code
+    Page {
+        font.family: "Courier"
+
+        Column {
+            Label {
+                text: qsTr("This will use Courier...")
+            }
+
+            Switch {
+                text: qsTr("... and so will this")
+            }
+        }
+    }
+    \endcode
 */
 QFont QQuickControl::font() const
 {
@@ -987,6 +1003,19 @@ void QQuickControl::setWheelEnabled(bool enabled)
 
     This property holds the background item.
 
+    \code
+    Button {
+        id: control
+        text: qsTr("Button")
+        background: Rectangle {
+            implicitWidth: 100
+            implicitHeight: 40
+            opacity: enabled ? 1 : 0.3
+            color: control.down ? "#d0d0d0" : "#e0e0e0"
+        }
+    }
+    \endcode
+
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
           width or height for a background item.
@@ -1036,6 +1065,18 @@ void QQuickControl::setBackground(QQuickItem *background)
     with a custom one, you should also consider providing a sensible implicit
     size for it (unless it is an item like \l Text which has its own implicit
     size).
+
+    \code
+    Button {
+        id: control
+        text: qsTr("Button")
+        contentItem: Label {
+            text: control.text
+            font: control.font
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+    \endcode
 
     \sa {Control Layout}, padding
 */
