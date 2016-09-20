@@ -70,7 +70,25 @@ QT_BEGIN_NAMESPACE
     events from the window system, and paints a representation of itself on
     the screen.
 
+    \section1 Control Layout
+
+    The following diagram illustrates the layout of a typical control:
+
     \image qtquickcontrols2-control.png
+
+    The \l {Item::}{implicitWidth} and \l {Item::}{implicitHeight} of a control
+    are typically based on the implicit sizes of the background and the content
+    item plus any \l {Control::}{padding}. These properties determine how large
+    the control will be when no explicit \l {Item::}{width} or
+    \l {Item::}{height} is specified.
+
+    The \l {Control::}{background} item fills the entire width and height of the
+    control, unless an explicit size has been given for it.
+
+    The geometry of the \l {Control::}{contentItem} is determined by the
+    padding.
+
+    \section1 Event Handling
 
     All controls, except non-interactive indicators, do not let clicks and
     touches through to items below them. For example, if \l Pane is used as the
@@ -946,6 +964,8 @@ void QQuickControl::setWheelEnabled(bool enabled)
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
           width or height for a background item.
+
+    \sa {Control Layout}
 */
 QQuickItem *QQuickControl::background() const
 {
@@ -977,6 +997,8 @@ void QQuickControl::setBackground(QQuickItem *background)
     This property holds the visual content item.
 
     \note The content item is automatically resized inside the \l padding of the control.
+
+    \sa {Control Layout}
 */
 QQuickItem *QQuickControl::contentItem() const
 {
