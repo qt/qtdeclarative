@@ -480,7 +480,8 @@ void QQuickControl::resetFont()
     \qmlproperty real QtQuick.Controls::Control::availableWidth
     \readonly
 
-    This property holds the width available after deducting horizontal padding.
+    This property holds the width available to the \l contentItem after
+    deducting horizontal padding from the \l {Item::}{width} of the control.
 
     \sa {Control Layout}, padding, leftPadding, rightPadding
 */
@@ -493,7 +494,8 @@ qreal QQuickControl::availableWidth() const
     \qmlproperty real QtQuick.Controls::Control::availableHeight
     \readonly
 
-    This property holds the height available after deducting vertical padding.
+    This property holds the height available to the \l contentItem after
+    deducting vertical padding from the \l {Item::}{height} of the control.
 
     \sa {Control Layout}, padding, topPadding, bottomPadding
 */
@@ -506,6 +508,18 @@ qreal QQuickControl::availableHeight() const
     \qmlproperty real QtQuick.Controls::Control::padding
 
     This property holds the default padding.
+
+    Padding adds a space between each edge of the content item and the
+    background item, effectively controlling the size of the content item. To
+    specify a padding value for a specific edge of the control, set its
+    relevant property:
+
+    \list
+    \li \l {Control::}{leftPadding}
+    \li \l {Control::}{rightPadding}
+    \li \l {Control::}{topPadding}
+    \li \l {Control::}{bottomPadding}
+    \endlist
 
     \sa {Control Layout}, availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
@@ -656,6 +670,12 @@ void QQuickControl::resetBottomPadding()
     \qmlproperty real QtQuick.Controls::Control::spacing
 
     This property holds the spacing.
+
+    Spacing is useful for controls that have multiple or repetitive building
+    blocks. For example, some styles use spacing to determine the distance
+    between the text and indicator of \l CheckBox. Spacing is not enforced by
+    Control, so each style may interpret it differently, and some may ignore it
+    altogether.
 */
 qreal QQuickControl::spacing() const
 {
@@ -788,9 +808,11 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
     This property holds whether the control is mirrored.
 
     This property is provided for convenience. A control is considered mirrored
-    when its visual layout direction is right-to-left.
+    when its visual layout direction is right-to-left; that is, when using a
+    right-to-left locale or when \l {LayoutMirroring::enabled}{LayoutMirroring.enabled}
+    is \c true.
 
-    \sa locale, {LayoutMirroring}{LayoutMirroring}
+    \sa locale, {LayoutMirroring}{LayoutMirroring}, {Right-to-left User Interfaces}
 */
 bool QQuickControl::isMirrored() const
 {
@@ -939,6 +961,10 @@ void QQuickControl::setHoverEnabled(bool enabled)
     \qmlproperty bool QtQuick.Controls::Control::wheelEnabled
 
     This property determines whether the control handles wheel events. The default value is \c false.
+
+    \note Care must be taken when enabling wheel events for controls within scrollable items such
+    as \l Flickable, as the control will consume the events and hence interrupt scrolling of the
+    Flickable.
 */
 bool QQuickControl::isWheelEnabled() const
 {
@@ -964,6 +990,12 @@ void QQuickControl::setWheelEnabled(bool enabled)
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
           width or height for a background item.
+
+    \note Most controls use the implicit size of the background item to calculate
+    the implicit size of the control itself. If you replace the background item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Image which has its own implicit
+    size).
 
     \sa {Control Layout}
 */
@@ -996,9 +1028,16 @@ void QQuickControl::setBackground(QQuickItem *background)
 
     This property holds the visual content item.
 
-    \note The content item is automatically resized inside the \l padding of the control.
+    \note The content item is automatically resized to fit within the
+    \l padding of the control.
 
-    \sa {Control Layout}
+    \note Most controls use the implicit size of the content item to calculate
+    the implicit size of the control itself. If you replace the content item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Text which has its own implicit
+    size).
+
+    \sa {Control Layout}, padding
 */
 QQuickItem *QQuickControl::contentItem() const
 {
