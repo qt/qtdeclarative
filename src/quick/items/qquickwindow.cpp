@@ -630,6 +630,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
     Q_ASSERT(pointerEvent->asPointerTouchEvent());
     QTouchEvent *event = pointerEvent->asPointerTouchEvent()->touchEventForItem(item);
+    if (!event)
+        return false;
 
     // For each point, check if it is accepted, if not, try the next point.
     // Any of the fingers can become the mouse one.
