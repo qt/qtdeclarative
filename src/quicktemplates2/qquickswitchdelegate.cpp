@@ -153,8 +153,16 @@ void QQuickSwitchDelegate::mouseMoveEvent(QMouseEvent *event)
     QQuickItemDelegate::mouseMoveEvent(event);
 
     const QPointF movePoint = event->localPos();
-    if (!keepMouseGrab())
-        setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(), Qt::XAxis, event));
+    if (!keepMouseGrab()) {
+        // don't start dragging the handle unless the initial press was at the indicator,
+        // or the drag has reached the indicator area. this prevents unnatural jumps when
+        // dragging far outside the indicator.
+        const qreal pressPos = d->positionAt(d->pressPoint);
+        const qreal movePos = d->positionAt(movePoint);
+        if ((pressPos >= 0.0 && pressPos <= 1.0) || (movePos >= 0.0 && movePos <= 1.0))
+            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(), Qt::XAxis, event));
+    }
+
     if (keepMouseGrab())
         setPosition(d->positionAt(movePoint));
 }

@@ -267,6 +267,40 @@ TestCase {
         compare(control.pressed, false)
         verify(spy.success)
 
+        // press-drag-release from and to outside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        mousePress(control, control.width)
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        mouseMove(control, control.width - control.rightPadding)
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        mouseMove(control, control.width / 2)
+        compare(control.position, 0.5)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        mouseMove(control, control.width - control.rightPadding)
+        compare(control.position, 1.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "released",
+                                "clicked"]
+        mouseRelease(control, control.width)
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(spy.success)
+
         control.destroy()
     }
 
