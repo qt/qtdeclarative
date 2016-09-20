@@ -595,7 +595,10 @@ void QQuickPopupPrivate::reposition()
 
         if (window) {
             const QMarginsF margins = getMargins();
-            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
+            const QRectF bounds(qMax<qreal>(0.0, margins.left()),
+                                qMax<qreal>(0.0, margins.top()),
+                                window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
+                                window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
 
             // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
             if (allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {

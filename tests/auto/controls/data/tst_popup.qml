@@ -355,6 +355,30 @@ TestCase {
         control.destroy()
     }
 
+    function test_negativeMargins() {
+        var control = popupControl.createObject(testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
+        verify(control)
+
+        control.open()
+        verify(control.visible)
+
+        compare(control.x, 0)
+        compare(control.y, 0)
+
+        compare(control.margins, -1)
+        compare(control.topMargin, -1)
+        compare(control.leftMargin, -1)
+        compare(control.rightMargin, -1)
+        compare(control.bottomMargin, -1)
+
+        control.x = -10
+        control.y = -10
+        compare(control.x, 0)
+        compare(control.y, 0)
+
+        control.destroy()
+    }
+
     function test_margins() {
         var control = popupControl.createObject(testCase, {width: 100, height: 100})
         verify(control)
