@@ -78,7 +78,6 @@ public:
 
     void createOverlay(QQuickPopup *popup);
     void destroyOverlay(QQuickPopup *popup);
-    void resizeOverlay(QQuickPopup *popup);
     void toggleOverlay();
 
     QVector<QQuickPopup *> stackingOrderPopups() const;

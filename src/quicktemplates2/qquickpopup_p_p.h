@@ -157,6 +157,7 @@ public:
     void init();
     bool tryClose(QQuickItem *item, QMouseEvent *event);
     virtual void reposition();
+    virtual void resizeOverlay();
 
     virtual bool prepareEnterTransition();
     virtual bool prepareExitTransition();

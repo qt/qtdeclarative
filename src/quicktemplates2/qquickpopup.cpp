@@ -689,6 +689,16 @@ void QQuickPopupPrivate::reposition()
         popupItem->setHeight(rect.height());
 }
 
+void QQuickPopupPrivate::resizeOverlay()
+{
+    if (!dimmer)
+        return;
+
+    qreal w = window ? window->width() : 0;
+    qreal h = window ? window->height() : 0;
+    dimmer->setSize(QSizeF(w, h));
+}
+
 void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
 {
     if (item == m_parentItem)
