@@ -464,7 +464,7 @@ void QQuickControl::resetFont()
 
     This property holds the width available after deducting horizontal padding.
 
-    \sa padding, leftPadding, rightPadding
+    \sa {Control Layout}, padding, leftPadding, rightPadding
 */
 qreal QQuickControl::availableWidth() const
 {
@@ -477,7 +477,7 @@ qreal QQuickControl::availableWidth() const
 
     This property holds the height available after deducting vertical padding.
 
-    \sa padding, topPadding, bottomPadding
+    \sa {Control Layout}, padding, topPadding, bottomPadding
 */
 qreal QQuickControl::availableHeight() const
 {
@@ -489,7 +489,7 @@ qreal QQuickControl::availableHeight() const
 
     This property holds the default padding.
 
-    \sa availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
+    \sa {Control Layout}, availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
 qreal QQuickControl::padding() const
 {
@@ -531,7 +531,7 @@ void QQuickControl::resetPadding()
 
     This property holds the top padding.
 
-    \sa padding, bottomPadding, availableHeight
+    \sa {Control Layout}, padding, bottomPadding, availableHeight
 */
 qreal QQuickControl::topPadding() const
 {
@@ -558,7 +558,7 @@ void QQuickControl::resetTopPadding()
 
     This property holds the left padding.
 
-    \sa padding, rightPadding, availableWidth
+    \sa {Control Layout}, padding, rightPadding, availableWidth
 */
 qreal QQuickControl::leftPadding() const
 {
@@ -585,7 +585,7 @@ void QQuickControl::resetLeftPadding()
 
     This property holds the right padding.
 
-    \sa padding, leftPadding, availableWidth
+    \sa {Control Layout}, padding, leftPadding, availableWidth
 */
 qreal QQuickControl::rightPadding() const
 {
@@ -612,7 +612,7 @@ void QQuickControl::resetRightPadding()
 
     This property holds the bottom padding.
 
-    \sa padding, topPadding, availableHeight
+    \sa {Control Layout}, padding, topPadding, availableHeight
 */
 qreal QQuickControl::bottomPadding() const
 {
