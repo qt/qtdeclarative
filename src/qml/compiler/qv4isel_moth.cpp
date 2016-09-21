@@ -579,18 +579,20 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
     addInstruction(store);
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject) {
         Instruction::LoadScopeObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
+        load.captureRequired = captureRequired;
         load.result = getResultParam(target);
         addInstruction(load);
     } else if (kind == IR::Member::MemberOfQmlContextObject) {
         Instruction::LoadContextObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
+        load.captureRequired = captureRequired;
         load.result = getResultParam(target);
         addInstruction(load);
     } else if (kind == IR::Member::MemberOfIdObjectsArray) {

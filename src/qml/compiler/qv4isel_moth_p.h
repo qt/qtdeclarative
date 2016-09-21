@@ -138,7 +138,7 @@ protected:
     void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName) override;
     void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex) override;
     void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex) override;
-    void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target) override;
+    void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target) override;
     void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target) override;
     void getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target) override;
     void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex) override;

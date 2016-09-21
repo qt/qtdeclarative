@@ -154,6 +154,7 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
 }
 
 ReturnedValue ArrayBufferPrototype::method_get_byteLength(CallContext *ctx)
@@ -197,4 +198,13 @@ ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
     memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
 
     return newBuffer.asReturnedValue();
+}
+
+ReturnedValue ArrayBufferPrototype::method_toString(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<ArrayBuffer> a(scope, ctx->thisObject());
+    if (!a)
+        return Encode::undefined();
+    return Encode(ctx->engine()->newString(QString::fromUtf8(a->asByteArray())));
 }

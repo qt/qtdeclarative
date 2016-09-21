@@ -106,6 +106,7 @@ struct ArrayBufferPrototype: Object
 
     static ReturnedValue method_get_byteLength(CallContext *ctx);
     static ReturnedValue method_slice(CallContext *ctx);
+    static ReturnedValue method_toString(CallContext *ctx);
 };
 
 

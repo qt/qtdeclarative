@@ -160,10 +160,9 @@ QV8Engine::~QV8Engine()
     qDeleteAll(m_extensionData);
     m_extensionData.clear();
 
-#if !defined(QT_NO_XMLSTREAMREADER) && defined(QT_NO_NETWORK)
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
-#endif
+
     delete m_listModelData;
     m_listModelData = 0;
 

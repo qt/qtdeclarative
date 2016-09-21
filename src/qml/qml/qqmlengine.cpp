@@ -116,6 +116,39 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
     QQmlValueTypeFactory::registerValueTypes(uri, versionMajor, versionMinor);
 }
 
+// Declared in qqml.h
+int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
+                                     const char *uri, int versionMajor,
+                                     int versionMinor, const char *qmlName,
+                                     const QString& reason)
+{
+    QQmlPrivate::RegisterType type = {
+        0,
+
+        0,
+        0,
+        0,
+        Q_NULLPTR,
+        reason,
+
+        uri, versionMajor, versionMinor, qmlName, &staticMetaObject,
+
+        QQmlAttachedPropertiesFunc(),
+        Q_NULLPTR,
+
+        0,
+        0,
+        0,
+
+        Q_NULLPTR, Q_NULLPTR,
+
+        Q_NULLPTR,
+        0
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
 /*!
   \qmltype QtObject
     \instantiates QObject

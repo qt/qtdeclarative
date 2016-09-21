@@ -730,12 +730,12 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
     }
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index), Assembler::TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(target, getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index), Assembler::TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfIdObjectsArray)
         generateRuntimeCall(target, getQmlIdObject, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else

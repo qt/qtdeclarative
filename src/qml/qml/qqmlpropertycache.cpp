@@ -45,7 +45,6 @@
 #include <private/qv8engine_p.h>
 
 #include <private/qmetaobject_p.h>
-#include <private/qqmlaccessors_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 
 #include <private/qv4value_p.h>
@@ -500,34 +499,15 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     int signalCount = metaObjectSignalCount(metaObject);
     int classInfoCount = QMetaObjectPrivate::get(metaObject)->classInfoCount;
 
-    QQmlAccessorProperties::Properties accessorProperties;
-
     if (classInfoCount) {
         int classInfoOffset = metaObject->classInfoOffset();
-        bool hasFastProperty = false;
         for (int ii = 0; ii < classInfoCount; ++ii) {
             int idx = ii + classInfoOffset;
             QMetaClassInfo mci = metaObject->classInfo(idx);
             const char *name = mci.name();
-            if (0 == qstrcmp(name, "qt_HasQmlAccessors")) {
-                hasFastProperty = true;
-            } else if (0 == qstrcmp(name, "DefaultProperty")) {
+            if (0 == qstrcmp(name, "DefaultProperty")) {
                 _defaultPropertyName = QString::fromUtf8(mci.value());
             }
-        }
-
-        if (hasFastProperty) {
-            accessorProperties = QQmlAccessorProperties::properties(metaObject);
-            if (accessorProperties.count == 0)
-                qFatal("QQmlPropertyCache: %s has FastProperty class info, but has not "
-                       "installed property accessors", metaObject->className());
-        } else {
-#ifndef QT_NO_DEBUG
-            accessorProperties = QQmlAccessorProperties::properties(metaObject);
-            if (accessorProperties.count != 0)
-                qFatal("QQmlPropertyCache: %s has fast property accessors, but is missing "
-                       "FastProperty class info", metaObject->className());
-#endif
         }
     }
 
@@ -1111,8 +1091,20 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj,
     return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
 }
 
+// these two functions are copied from qmetaobject.cpp
 static inline const QMetaObjectPrivate *priv(const uint* data)
 { return reinterpret_cast<const QMetaObjectPrivate*>(data); }
+
+static inline const QByteArray stringData(const QMetaObject *mo, int index)
+{
+    Q_ASSERT(priv(mo->d.data)->revision >= 7);
+    const QByteArrayDataPtr data = { const_cast<QByteArrayData*>(&mo->d.stringdata[index]) };
+    Q_ASSERT(data.ptr->ref.isStatic());
+    Q_ASSERT(data.ptr->alloc == 0);
+    Q_ASSERT(data.ptr->capacityReserved == 0);
+    Q_ASSERT(data.ptr->size >= 0);
+    return data;
+}
 
 bool QQmlPropertyCache::isDynamicMetaObject(const QMetaObject *mo)
 {
@@ -1419,8 +1411,7 @@ bool QQmlPropertyCache::addToHash(QCryptographicHash &hash, const QMetaObject &m
 
     hash.addData(reinterpret_cast<const char *>(mo.d.data), fieldCount * sizeof(uint));
     for (int i = 0; i < stringCount; ++i) {
-        const QByteArrayDataPtr data = { const_cast<QByteArrayData*>(&mo.d.stringdata[i]) };
-        hash.addData(QByteArray(data));
+        hash.addData(stringData(&mo, i));
     }
 
     return true;

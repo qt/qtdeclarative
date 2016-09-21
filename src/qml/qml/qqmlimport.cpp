@@ -1732,29 +1732,32 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                                                   const QString &baseName)
 {
 #if defined(Q_OS_WIN)
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName,
-                         QStringList()
+    static const QString prefix;
+    static const QStringList suffixes = {
 # ifdef QT_DEBUG
-                         << QLatin1String("d.dll") // try a qmake-style debug build first
+        QLatin1String("d.dll"), // try a qmake-style debug build first
 # endif
-                         << QLatin1String(".dll"));
+        QLatin1String(".dll")
+    };
 #elif defined(Q_OS_DARWIN)
-
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName,
-                         QStringList()
+    static const QString prefix = QLatin1String("lib");
+    static const QStringList suffixes = {
 # ifdef QT_DEBUG
-                         << QLatin1String("_debug.dylib") // try a qmake-style debug build first
-                         << QLatin1String(".dylib")
+        QLatin1String("_debug.dylib"), // try a qmake-style debug build first
+        QLatin1String(".dylib"),
 # else
-                         << QLatin1String(".dylib")
-                         << QLatin1String("_debug.dylib") // try a qmake-style debug build after
+        QLatin1String(".dylib"),
+        QLatin1String("_debug.dylib"), // try a qmake-style debug build after
 # endif
-                         << QLatin1String(".so")
-                         << QLatin1String(".bundle"),
-                         QLatin1String("lib"));
+        QLatin1String(".so"),
+        QLatin1String(".bundle")
+    };
 # else  // Unix
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, QStringList() << QLatin1String(".so"), QLatin1String("lib"));
+    static const QString prefix = QLatin1String("lib");
+    static const QStringList suffixes = { QLatin1String(".so") };
 #endif
+
+    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, suffixes, prefix);
 }
 
 /*!

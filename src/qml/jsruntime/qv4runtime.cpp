@@ -988,7 +988,7 @@ ReturnedValue Runtime::method_callActivationProperty(ExecutionEngine *engine, in
 ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
 {
     Scope scope(engine);
-    ScopedFunctionObject o(scope, method_getQmlScopeObjectProperty(engine, callData->thisObject, propertyIndex));
+    ScopedFunctionObject o(scope, method_getQmlScopeObjectProperty(engine, callData->thisObject, propertyIndex, /*captureRequired*/true));
     if (!o) {
         QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
@@ -1001,7 +1001,7 @@ ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine
 ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
 {
     Scope scope(engine);
-    ScopedFunctionObject o(scope, method_getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex));
+    ScopedFunctionObject o(scope, method_getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex, /*captureRequired*/true));
     if (!o) {
         QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
@@ -1209,7 +1209,7 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
 ReturnedValue Runtime::method_typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
 {
     Scope scope(engine);
-    ScopedValue prop(scope, method_getQmlScopeObjectProperty(engine, context, propertyIndex));
+    ScopedValue prop(scope, method_getQmlScopeObjectProperty(engine, context, propertyIndex, /*captureRequired*/true));
     if (scope.engine->hasException)
         return Encode::undefined();
     return method_typeofValue(engine, prop);
@@ -1218,7 +1218,7 @@ ReturnedValue Runtime::method_typeofScopeObjectProperty(ExecutionEngine *engine,
 ReturnedValue Runtime::method_typeofContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
 {
     Scope scope(engine);
-    ScopedValue prop(scope, method_getQmlContextObjectProperty(engine, context, propertyIndex));
+    ScopedValue prop(scope, method_getQmlContextObjectProperty(engine, context, propertyIndex, /*captureRequired*/true));
     if (scope.engine->hasException)
         return Encode::undefined();
     return method_typeofValue(engine, prop);
@@ -1453,16 +1453,16 @@ QV4::ReturnedValue Runtime::method_getQmlAttachedProperty(ExecutionEngine *engin
     return QV4::QObjectWrapper::getProperty(engine, attachedObject, propertyIndex, /*captureRequired*/true);
 }
 
-ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
+ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, false);
+    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, captureRequired);
 }
 
-ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
+ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->context->contextObject, propertyIndex, false);
+    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->context->contextObject, propertyIndex, captureRequired);
 }
 
 ReturnedValue Runtime::method_getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)

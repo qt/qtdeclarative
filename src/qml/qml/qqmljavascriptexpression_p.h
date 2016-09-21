@@ -146,6 +146,14 @@ public:
 protected:
     void createQmlBinding(QQmlContextData *ctxt, QObject *scope, const QString &code, const QString &filename, quint16 line);
 
+    void cancelPermanentGuards() const
+    {
+        if (m_permanentDependenciesRegistered) {
+            for (QQmlJavaScriptExpressionGuard *it = permanentGuards.first(); it; it = permanentGuards.next(it))
+                it->cancelNotify();
+        }
+    }
+
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;

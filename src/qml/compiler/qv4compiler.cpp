@@ -278,6 +278,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *i
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
     quint32 currentOffset = sizeof(QV4::CompiledData::Function);
+    currentOffset = (currentOffset + 7) & ~quint32(0x7);
 
     function->nameIndex = getStringId(*irFunction->name);
     function->flags = 0;

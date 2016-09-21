@@ -124,7 +124,7 @@ protected:
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
     virtual void initClosure(IR::Closure *closure, IR::Expr *target);
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target);
-    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target);
+    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target);
     virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target);
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName);
     virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex);

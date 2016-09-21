@@ -1,14 +1,16 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS += \
-    qml \
-    quick \
-    qmltest
+    qml
 
-qtHaveModule(gui):qtConfig(opengl(es1|es2)?): \
-    SUBDIRS += particles
+qtHaveModule(gui) {
+    SUBDIRS += \
+        quick \
+        qmltest
 
-qtHaveModule(gui): qtHaveModule(widgets): SUBDIRS += quickwidgets
+    qtConfig(opengl(es1|es2)?): SUBDIRS += particles
+    qtHaveModule(widgets): SUBDIRS += quickwidgets
+}
 
 SUBDIRS += \
     plugins \

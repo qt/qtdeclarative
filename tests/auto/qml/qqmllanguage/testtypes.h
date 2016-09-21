@@ -730,9 +730,19 @@ private:
 
 
 namespace MyNamespace {
+    Q_NAMESPACE
+    enum MyNSEnum {
+        Key1 = 1,
+        Key2,
+        Key5 = 5
+    };
+    Q_ENUM_NS(MyNSEnum);
+
     class MyNamespacedType : public QObject
     {
         Q_OBJECT
+        Q_PROPERTY(MyNamespace::MyNSEnum myEnum MEMBER m_myEnum)
+        MyNamespace::MyNSEnum m_myEnum = MyNSEnum::Key1;
     };
 
     class MySecondNamespacedType : public QObject

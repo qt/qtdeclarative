@@ -1920,7 +1920,7 @@ ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, 
 
     const QMetaObject* mo = d()->metaObject;
     const QQmlStaticMetaObject object(mo);
-    return CallPrecise(object, data, engine, callArgs, QMetaObject::InvokeMetaMethod);
+    return CallPrecise(object, data, engine, callArgs, QMetaObject::CreateInstance);
 }
 
 

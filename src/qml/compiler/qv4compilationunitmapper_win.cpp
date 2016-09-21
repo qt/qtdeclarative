@@ -116,6 +116,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
 
     return reinterpret_cast<CompiledData::Unit*>(dataPtr);
 #else
+    Q_UNUSED(sourcePath);
     *errorString = QStringLiteral("Compilation unit mapping not supported on WinRT 8.1");
     return nullptr;
 #endif

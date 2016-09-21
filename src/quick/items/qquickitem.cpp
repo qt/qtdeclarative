@@ -66,7 +66,6 @@
 #include <private/qqmlopenmetaobject_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qquickitem_p.h>
-#include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include <private/qv4engine_p.h>
@@ -106,37 +105,6 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
                     item->isFocusScope() || !scope ? depth + 1 : depth);
         }
     }
-}
-
-static void QQuickItem_parentNotifier(QObject *o, QQmlNotifier **n)
-{
-    QQuickItemPrivate *d = QQuickItemPrivate::get(static_cast<QQuickItem *>(o));
-    *n = &d->parentNotifier;
-}
-
-QML_PRIVATE_ACCESSOR(QQuickItem, QQuickItem *, parent, parentItem, setParentItem)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, x, x, setX)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, y, y, setY)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, width, width, setWidth)
-QML_PRIVATE_ACCESSOR(QQuickItem, qreal, height, height, setHeight)
-
-static QQmlAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentWrite, QQuickItem_parentNotifier };
-static QQmlAccessors QQuickItem_x = { QQuickItem_xRead, QQuickItem_xWrite, 0 };
-static QQmlAccessors QQuickItem_y = { QQuickItem_yRead, QQuickItem_yWrite, 0 };
-static QQmlAccessors QQuickItem_width = { QQuickItem_widthRead, QQuickItem_widthWrite, 0 };
-static QQmlAccessors QQuickItem_height = { QQuickItem_heightRead, QQuickItem_heightWrite, 0 };
-
-QML_DECLARE_PROPERTIES(QQuickItem) {
-    { QML_PROPERTY_NAME(parent), 0, &QQuickItem_parent },
-    { QML_PROPERTY_NAME(x), 0, &QQuickItem_x },
-    { QML_PROPERTY_NAME(y), 0, &QQuickItem_y },
-    { QML_PROPERTY_NAME(width), 0, &QQuickItem_width },
-    { QML_PROPERTY_NAME(height), 0, &QQuickItem_height }
-};
-
-void QQuickItemPrivate::registerAccessorProperties()
-{
-    QML_DEFINE_PROPERTIES(QQuickItem);
 }
 
 /*!
@@ -1482,6 +1450,9 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     behavior to all child items as well. If the \c LayoutMirroring attached property has not been defined
     for an item, mirroring is not enabled.
 
+    \note Since Qt 5.8, \c LayoutMirroring can be attached to a \l Window. In practice, it is the same as
+    attaching \c LayoutMirroring to the window's \c contentItem.
+
     The following example shows mirroring in action. The \l Row below is specified as being anchored
     to the left of its parent. However, since mirroring has been enabled, the anchor is horizontally
     reversed and it is now anchored to the right. Also, since items in a \l Row are positioned
@@ -1531,11 +1502,15 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
 QQuickLayoutMirroringAttached::QQuickLayoutMirroringAttached(QObject *parent) : QObject(parent), itemPrivate(0)
 {
-    if (QQuickItem *item = qobject_cast<QQuickItem*>(parent)) {
+    if (QQuickItem *item = qobject_cast<QQuickItem *>(parent))
         itemPrivate = QQuickItemPrivate::get(item);
+    else if (QQuickWindow *window = qobject_cast<QQuickWindow *>(parent))
+        itemPrivate = QQuickItemPrivate::get(window->contentItem());
+
+    if (itemPrivate)
         itemPrivate->extra.value().layoutDirectionAttached = this;
-    } else
-        qmlInfo(parent) << tr("LayoutDirection attached property only works with Items");
+    else
+        qmlInfo(parent) << tr("LayoutDirection attached property only works with Items and Windows");
 }
 
 QQuickLayoutMirroringAttached * QQuickLayoutMirroringAttached::qmlAttachedProperties(QObject *object)
@@ -3164,8 +3139,6 @@ QQuickItemPrivate::~QQuickItemPrivate()
 void QQuickItemPrivate::init(QQuickItem *parent)
 {
     Q_Q(QQuickItem);
-
-    registerAccessorProperties();
 
     baselineOffset = 0.0;
 

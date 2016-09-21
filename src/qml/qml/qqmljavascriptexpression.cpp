@@ -115,12 +115,17 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
 {
     activeGuards.setFlagValue(v);
-    if (!v) clearActiveGuards();
+    permanentGuards.setFlagValue(v);
+    if (!v) {
+        clearActiveGuards();
+        clearPermanentGuards();
+        m_permanentDependenciesRegistered = false;
+    }
 }
 
 void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 {
-    clearActiveGuards();
+    setNotifyOnValueChanged(false);
 }
 
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
@@ -429,6 +434,7 @@ void QQmlJavaScriptExpression::clearActiveGuards()
 
 void QQmlJavaScriptExpression::clearPermanentGuards()
 {
+    m_permanentDependenciesRegistered = false;
     while (QQmlJavaScriptExpressionGuard *g = permanentGuards.takeFirst())
         g->Delete();
 }
