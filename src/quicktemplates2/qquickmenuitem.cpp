@@ -52,26 +52,30 @@ QT_BEGIN_NAMESPACE
     \brief A menu item within a Menu.
 
     MenuItem is a convenience type that implements the AbstractButton API,
-    providing an easy way to respond to menu items being clicked, for example.
+    providing a familiar way to respond to menu items being \l triggered, for
+    example.
 
     \code
     Button {
         id: fileButton
         text: "File"
         onClicked: menu.open()
-    }
-    Menu {
-        id: menu
-        anchor.target: fileButton
 
-        MenuItem {
-            text: "New..."
-        }
-        MenuItem {
-            text: "Open..."
-        }
-        MenuItem {
-            text: "Save"
+        Menu {
+            id: menu
+
+            MenuItem {
+                text: "New..."
+                onTriggered: document.reset()
+            }
+            MenuItem {
+                text: "Open..."
+                onTriggered: openDialog.open()
+            }
+            MenuItem {
+                text: "Save"
+                onTriggered: saveDialog.open()
+            }
         }
     }
     \endcode
@@ -110,6 +114,11 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
     \qmlproperty bool QtQuick.Controls::MenuItem::checkable
 
     This property holds whether the menu item is checkable.
+
+    A checkable menu item toggles between checked (on) and unchecked (off) when
+    the user clicks on it or interacts with it via the keyboard.
+
+    \sa {AbstractButton::}{checked}
 */
 
 void QQuickMenuItem::checkableChange()
