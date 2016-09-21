@@ -166,6 +166,37 @@ QQuickPage::QQuickPage(QQuickItem *parent) :
     \qmlproperty string QtQuick.Controls::Page::title
 
     This property holds the page title.
+
+    The title is often displayed at the top of a page to give
+    the user context about the page they are viewing.
+
+    \code
+    ApplicationWindow {
+        visible: true
+        width: 400
+        height: 400
+
+        header: Label {
+            text: view.currentItem.title
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        SwipeView {
+            id: view
+            anchors.fill: parent
+
+            Page {
+                title: qsTr("Home")
+            }
+            Page {
+                title: qsTr("Discover")
+            }
+            Page {
+                title: qsTr("Activity")
+            }
+        }
+    }
+    \endcode
 */
 
 QString QQuickPage::title() const
@@ -281,7 +312,13 @@ void QQuickPage::setFooter(QQuickItem *footer)
 
     This property holds the list of content data.
 
-    \sa Item::data
+    The list contains all objects that have been declared in QML as children
+    of the container.
+
+    \note Unlike \c contentChildren, \c contentData does include non-visual QML
+    objects.
+
+    \sa Item::data, contentChildren
 */
 QQmlListProperty<QObject> QQuickPage::contentData()
 {
@@ -298,7 +335,13 @@ QQmlListProperty<QObject> QQuickPage::contentData()
 
     This property holds the list of content children.
 
-    \sa Item::children
+    The list contains all items that have been declared in QML as children
+    of the page.
+
+    \note Unlike \c contentData, \c contentChildren does not include non-visual
+    QML objects.
+
+    \sa Item::children, contentData
 */
 QQmlListProperty<QQuickItem> QQuickPage::contentChildren()
 {
