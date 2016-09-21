@@ -1863,8 +1863,6 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
     deliverPointerEvent(pointerEventInstance(e.data()));
 }
 
-static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
-
 bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
@@ -1940,6 +1938,8 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
         lastMousePosition = event->touchPoints().at(0).pos();
 
     qCDebug(DBG_TOUCH) << event;
+
+    static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
 
     if (qquickwindow_no_touch_compression || pointerEventRecursionGuard) {
         deliverPointerEvent(pointerEventInstance(event));
