@@ -360,7 +360,7 @@ QQuickPen *QQuickRectangle::border()
     The gradient to use to fill the rectangle.
 
     This property allows for the construction of simple vertical gradients.
-    Other gradients may by formed by adding rotation to the rectangle.
+    Other gradients may be formed by adding rotation to the rectangle.
 
     \div {class="float-left"}
     \inlineimage declarative-rect_gradient.png
