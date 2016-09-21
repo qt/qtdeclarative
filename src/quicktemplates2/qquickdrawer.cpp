@@ -69,6 +69,28 @@ QT_BEGIN_NAMESPACE
             of the window.
     \endtable
 
+    \code
+    import QtQuick 2.7
+    import QtQuick.Controls 2.0
+
+    ApplicationWindow {
+        id: window
+        visible: true
+
+        Drawer {
+            id: drawer
+            width: 0.66 * window.width
+            height: window.height
+        }
+    }
+    \endcode
+
+    Drawer is a special type of popup that resides at one of the window \l {edge}{edges}.
+    By default, Drawer re-parents itself to the window \l {ApplicationWindow::}{overlay},
+    and therefore operates on window coordinates. It is also possible to manually set the
+    \l {Popup::}{parent} to something else to make the drawer operate in a specific
+    coordinate space.
+
     In the image above, the application's contents are \e "pushed" across the
     screen. This is achieved by applying a translation to the contents:
 

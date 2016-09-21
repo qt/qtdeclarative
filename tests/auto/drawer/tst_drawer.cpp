@@ -69,6 +69,7 @@ private slots:
     void dragMargin();
 
     void reposition();
+    void header();
 
     void hover_data();
     void hover();
@@ -350,6 +351,37 @@ void tst_Drawer::reposition()
 
     drawer->close();
     QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
+}
+
+void tst_Drawer::header()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("header.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+    QQuickItem *popupItem = drawer->popupItem();
+
+    drawer->open();
+    QVERIFY(drawer->isVisible());
+
+    QCOMPARE(drawer->parentItem(), overlay);
+    QCOMPARE(drawer->height(), overlay->height());
+    QCOMPARE(popupItem->height(), overlay->height());
+
+    drawer->setParentItem(content);
+    QCOMPARE(drawer->parentItem(), content);
+    QCOMPARE(drawer->height(), content->height());
+    QCOMPARE(popupItem->height(), content->height());
 }
 
 void tst_Drawer::hover_data()

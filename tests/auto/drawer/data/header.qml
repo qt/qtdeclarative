@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -38,64 +38,20 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import QtTest 1.0
+import QtQuick 2.6
 import QtQuick.Controls 2.0
 
-TestCase {
-    id: testCase
+ApplicationWindow {
     width: 400
     height: 400
-    visible: true
-    when: windowShown
-    name: "Drawer"
 
-    Component {
+    property alias drawer: drawer
+
+    header: ToolBar { }
+
+    Drawer {
         id: drawer
-        Drawer { }
-    }
-
-    function test_defaults() {
-        var control = drawer.createObject(testCase)
-        compare(control.edge, Qt.LeftEdge)
-        compare(control.position, 0.0)
-        compare(control.dragMargin, Qt.styleHints.startDragDistance)
-        compare(control.parent, ApplicationWindow.overlay)
-        control.destroy()
-    }
-
-    Component {
-        id: rectDrawer
-
-        Drawer {
-            Rectangle {
-                width: 200
-                height: 400
-                color: "steelblue"
-            }
-        }
-    }
-
-    function test_swipeVelocity() {
-        skip("QTBUG-52003");
-
-        var control = rectDrawer.createObject(testCase)
-        verify(control.contentItem)
-        compare(control.edge, Qt.LeftEdge)
-        compare(control.position, 0.0)
-
-        var dragDistance = Math.max(20, Qt.styleHints.startDragDistance + 5)
-        var distance = dragDistance * 1.1
-        if (distance >= control.width * 0.7)
-            skip("This test requires a startDragDistance that is less than the opening threshold of the drawer")
-
-        mousePress(control, 0, 0, Qt.LeftButton)
-        mouseMove(control, distance, 0, Qt.LeftButton)
-        verify(control.position > 0)
-        tryCompare(control, "position", distance / control.contentItem.width)
-        mouseRelease(control, distance, 0, Qt.LeftButton)
-        tryCompare(control, "position", 1.0)
-
-        control.destroy()
+        width: 200
+        height: parent.height
     }
 }

@@ -41,6 +41,8 @@ import QtQuick.Controls.Universal 2.0
 T.Drawer {
     id: control
 
+    parent: T.ApplicationWindow.overlay
+
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
