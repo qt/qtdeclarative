@@ -58,7 +58,28 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-pageindicator.png
 
-    \snippet qtquickcontrols2-pageindicator.qml 1
+    \code
+    Column {
+        StackLayout {
+            id: stackLayout
+
+            Page {
+                // ...
+            }
+            Page {
+                // ...
+            }
+            Page {
+                // ...
+            }
+        }
+
+        PageIndicator {
+            currentIndex: stackLayout.currentIndex
+            count: stackLayout.count
+        }
+    }
+    \endcode
 
     \sa SwipeView, {Customizing PageIndicator}, {Indicator Controls}
 */
@@ -198,6 +219,14 @@ void QQuickPageIndicator::setCurrentIndex(int index)
     This property holds whether the control is interactive. An interactive page indicator
     reacts to presses and automatically changes the \l {currentIndex}{current index}
     appropriately.
+
+    \snippet qtquickcontrols2-pageindicator-interactive.qml 1
+
+    \note Page indicators are typically quite small (in order to avoid
+    distracting the user from the actual content of the user interface). They
+    can be hard to click, and might not be easily recognized as interactive by
+    the user. For these reasons, they are best used to complement primary
+    methods of navigation (such as \l SwipeView), not replace them.
 
     The default value is \c false.
 */
