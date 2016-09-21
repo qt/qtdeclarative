@@ -54,8 +54,10 @@ QT_BEGIN_NAMESPACE
     \l ColumnLayout.
 
     Items declared as children of a Pane are automatically parented to the
-    Pane's contentItem. Items created dynamically need to be explicitly
-    parented to the contentItem.
+    Pane's \l {Control::}{contentItem}. Items created dynamically need to be
+    explicitly parented to the contentItem.
+
+    \section1 Content Sizing
 
     If only a single item is used within a Pane, it will resize to fit the
     implicit size of its contained item. This makes it particularly suitable
@@ -64,6 +66,40 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-pane.png
 
     \snippet qtquickcontrols2-pane.qml 1
+
+    Sometimes there might be two items within the pane:
+
+    \code
+    Pane {
+        SwipeView {
+            // ...
+        }
+        PageIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+        }
+    }
+    \endcode
+
+    In this case, Pane cannot calculate a sensible implicit size. Since we're
+    anchoring the \l PageIndicator over the \l SwipeView, we can simply set the
+    content size to the view's implicit size:
+
+    \code
+    Pane {
+        contentWidth: view.implicitWidth
+        contentHeight: view.implicitHeight
+
+        SwipeView {
+            id: view
+            // ...
+        }
+        PageIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+        }
+     }
+    \endcode
 
     \sa {Customizing Pane}, {Container Controls}
 */
@@ -89,11 +125,12 @@ QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent) :
 /*!
     \qmlproperty real QtQuick.Controls::Pane::contentWidth
 
-    This property holds the content width. It is used for calculating the
-    total implicit width of the pane.
+    This property holds the content width. It is used for calculating the total
+    implicit width of the pane.
 
-    \note If only a single item is used within the pane, the implicit width
-          of its contained item is used as the content width.
+    For more information, see \l {Content Sizing}.
+
+    \sa contentHeight
 */
 qreal QQuickPane::contentWidth() const
 {
@@ -114,11 +151,12 @@ void QQuickPane::setContentWidth(qreal width)
 /*!
     \qmlproperty real QtQuick.Controls::Pane::contentHeight
 
-    This property holds the content height. It is used for calculating the
-    total implicit height of the pane.
+    This property holds the content height. It is used for calculating the total
+    implicit height of the pane.
 
-    \note If only a single item is used within the pane, the implicit height
-          of its contained item is used as the content height.
+    For more information, see \l {Content Sizing}.
+
+    \sa contentWidth
 */
 qreal QQuickPane::contentHeight() const
 {
@@ -142,7 +180,13 @@ void QQuickPane::setContentHeight(qreal height)
 
     This property holds the list of content data.
 
-    \sa Item::data
+    The list contains all objects that have been declared in QML as children
+    of the pane.
+
+    \note Unlike \c contentChildren, \c contentData does include non-visual QML
+    objects.
+
+    \sa Item::data, contentChildren
 */
 QQmlListProperty<QObject> QQuickPane::contentData()
 {
@@ -159,7 +203,13 @@ QQmlListProperty<QObject> QQuickPane::contentData()
 
     This property holds the list of content children.
 
-    \sa Item::children
+    The list contains all items that have been declared in QML as children
+    of the pane.
+
+    \note Unlike \c contentData, \c contentChildren does not include non-visual
+    QML objects.
+
+    \sa Item::children, contentData
 */
 QQmlListProperty<QQuickItem> QQuickPane::contentChildren()
 {
