@@ -117,7 +117,7 @@ the focus, but it cannot control the focus when it is imported or reused.
 Likewise, the \c window component does not have the ability to know if its
 imported components are requesting the focus.
 
-To solve this problem, the QML introduces a concept known as a \e {focus scope}.
+To solve this problem, QML introduces a concept known as a \e {focus scope}.
 For existing Qt users, a focus scope is like an automatic focus proxy.
 A focus scope is created by declaring the \l FocusScope type.
 

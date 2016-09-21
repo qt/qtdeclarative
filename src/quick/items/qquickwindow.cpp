@@ -1509,6 +1509,15 @@ bool QQuickWindow::event(QEvent *e)
         // return in order to avoid the QWindow::event below
         return d->deliverTouchCancelEvent(static_cast<QTouchEvent*>(e));
         break;
+    case QEvent::Enter: {
+        QEnterEvent *enter = static_cast<QEnterEvent*>(e);
+        bool accepted = enter->isAccepted();
+        bool delivered = d->deliverHoverEvent(d->contentItem, enter->windowPos(), d->lastMousePosition,
+            QGuiApplication::keyboardModifiers(), 0L, accepted);
+        enter->setAccepted(accepted);
+        return delivered;
+    }
+        break;
     case QEvent::Leave:
         d->clearHover();
         d->lastMousePosition = QPointF();
