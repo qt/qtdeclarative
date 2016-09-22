@@ -58,6 +58,7 @@ public:
         : complete(false)
         , visible(false)
         , visibility(QQuickWindow::AutomaticVisibility)
+        , targetScreen(nullptr)
     {
     }
 
@@ -65,6 +66,7 @@ public:
     bool visible;
     QQuickWindow::Visibility visibility;
     QV4::PersistentValue rootItemMarker;
+    QObject *targetScreen;
 };
 
 QQuickWindowQmlImpl::QQuickWindowQmlImpl(QWindow *parent)
@@ -170,6 +172,26 @@ void QQuickWindowQmlImpl::setWindowVisibility()
     }
 }
 
+QObject *QQuickWindowQmlImpl::targetScreen() const
+{
+    Q_D(const QQuickWindowQmlImpl);
+    return d->targetScreen;
+}
+
+void QQuickWindowQmlImpl::setTargetScreen(QObject *screen)
+{
+    Q_D(QQuickWindowQmlImpl);
+    if (d->targetScreen != screen) {
+        d->targetScreen = screen;
+        emit targetScreenChanged();
+        QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
+        if (screenWrapper)
+            setScreen(screenWrapper->wrappedScreen());
+        else
+            setScreen(nullptr);
+    }
+}
+
 void QQuickWindowModule::defineModule()
 {
     const char uri[] = "QtQuick.Window";
@@ -181,7 +203,10 @@ void QQuickWindowModule::defineModule()
     qmlRegisterRevision<QQuickWindow,2>(uri, 2, 2);
     qmlRegisterType<QQuickWindowQmlImpl>(uri, 2, 1, "Window");
     qmlRegisterType<QQuickWindowQmlImpl,1>(uri, 2, 2, "Window");
+    qmlRegisterType<QQuickWindowQmlImpl,2>(uri, 2, 3, "Window");
     qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreen,1>(uri, 2, 3, "Screen", QStringLiteral("Screen can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreenInfo,2>(uri, 2, 3, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
 }
 
 QT_END_NAMESPACE

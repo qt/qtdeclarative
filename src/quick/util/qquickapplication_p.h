@@ -56,9 +56,9 @@
 #include <qqml.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <private/qtquickglobal_p.h>
+#include "../items/qquickscreen_p.h"
 
 QT_BEGIN_NAMESPACE
-
 
 class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
 {
@@ -68,6 +68,7 @@ class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
     Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT)
     Q_PROPERTY(Qt::ApplicationState state READ state NOTIFY stateChanged)
     Q_PROPERTY(QFont font READ font CONSTANT)
+    Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged)
 
 public:
     explicit QQuickApplication(QObject *parent = 0);
@@ -77,14 +78,20 @@ public:
     bool supportsMultipleWindows() const;
     Qt::ApplicationState state() const;
     QFont font() const;
+    QQmlListProperty<QQuickScreenInfo> screens();
 
 Q_SIGNALS:
     void activeChanged();
     void layoutDirectionChanged();
     void stateChanged(Qt::ApplicationState state);
+    void screensChanged();
+
+private Q_SLOTS:
+    void updateScreens();
 
 private:
     Q_DISABLE_COPY(QQuickApplication)
+    QVector<QQuickScreenInfo *> m_screens;
 };
 
 QT_END_NAMESPACE

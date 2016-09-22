@@ -33,13 +33,15 @@
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
 #include "../../shared/util.h"
-
+#include <QtQuick/private/qquickscreen_p.h>
+#include <QDebug>
 class tst_qquickscreen : public QQmlDataTest
 {
     Q_OBJECT
 private slots:
     void basicProperties();
     void screenOnStartup();
+    void fullScreenList();
 };
 
 void tst_qquickscreen::basicProperties()
@@ -62,6 +64,10 @@ void tst_qquickscreen::basicProperties()
     QCOMPARE(int(screen->orientationUpdateMask()), root->property("updateMask").toInt());
     QCOMPARE(screen->devicePixelRatio(), root->property("devicePixelRatio").toReal());
     QVERIFY(screen->devicePixelRatio() >= 1.0);
+    QCOMPARE(screen->geometry().x(), root->property("vx").toInt());
+    QCOMPARE(screen->geometry().y(), root->property("vy").toInt());
+
+    QVERIFY(root->property("screenCount").toInt() == QGuiApplication::screens().count());
 }
 
 void tst_qquickscreen::screenOnStartup()
@@ -83,6 +89,38 @@ void tst_qquickscreen::screenOnStartup()
     QCOMPARE(int(screen->orientationUpdateMask()), root->property("updateMask").toInt());
     QCOMPARE(screen->devicePixelRatio(), root->property("devicePixelRatio").toReal());
     QVERIFY(screen->devicePixelRatio() >= 1.0);
+    QCOMPARE(screen->geometry().x(), root->property("vx").toInt());
+    QCOMPARE(screen->geometry().y(), root->property("vy").toInt());
+}
+
+void tst_qquickscreen::fullScreenList()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("screen.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem* root = view.rootObject();
+    QVERIFY(root);
+
+    QJSValue screensArray = root->property("allScreens").value<QJSValue>();
+    QVERIFY(screensArray.isArray());
+    int length = screensArray.property("length").toInt();
+    const QList<QScreen *> screenList = QGuiApplication::screens();
+    QVERIFY(length == screenList.count());
+
+    for (int i = 0; i < length; ++i) {
+        QQuickScreenInfo *info = qobject_cast<QQuickScreenInfo *>(screensArray.property(i).toQObject());
+        QVERIFY(info != nullptr);
+        QCOMPARE(screenList[i]->name(), info->name());
+        QCOMPARE(screenList[i]->size().width(), info->width());
+        QCOMPARE(screenList[i]->size().height(), info->height());
+        QCOMPARE(screenList[i]->availableVirtualGeometry().width(), info->desktopAvailableWidth());
+        QCOMPARE(screenList[i]->availableVirtualGeometry().height(), info->desktopAvailableHeight());
+        QCOMPARE(screenList[i]->devicePixelRatio(), info->devicePixelRatio());
+        QCOMPARE(screenList[i]->geometry().x(), info->virtualX());
+        QCOMPARE(screenList[i]->geometry().y(), info->virtualY());
+    }
 }
 
 QTEST_MAIN(tst_qquickscreen)

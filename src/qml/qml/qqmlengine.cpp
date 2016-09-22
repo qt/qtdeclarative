@@ -554,6 +554,18 @@ The following functions are also on the Qt object.
     \li This read-only property can be used to determine whether or not the
         platform supports multiple windows. Some embedded platforms do not support
         multiple windows, for example.
+
+    \row
+    \li \c application.screens
+    \li An array containing the descriptions of all connected screens. The
+    elements of the array are objects with the same properties as the
+    \l{Screen} attached object. In practice the array corresponds to the screen
+    list returned by QGuiApplication::screens(). In addition to examining
+    properties like name, width, height, etc., the array elements can also be
+    assigned to the targetScreen property of Window items, thus serving as an
+    alternative to the C++ side's QWindow::setScreen(). This property has been
+    added in Qt 5.9.
+
     \endtable
 
     The object also has one signal, aboutToQuit(), which is the same as \l QCoreApplication::aboutToQuit().
@@ -570,6 +582,8 @@ The following functions are also on the Qt object.
     \li application.layoutDirection
     \li application.font
     \endlist
+
+    \sa Screen, Window, Window.targetScreen
 */
 
 /*!

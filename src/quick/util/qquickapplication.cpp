@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickapplication_p.h"
-
+#include <private/qquickscreen_p.h>
 #include <private/qobject_p.h>
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -63,6 +63,10 @@ QQuickApplication::QQuickApplication(QObject *parent)
                 this, SIGNAL(stateChanged(Qt::ApplicationState)));
         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
                 this, SIGNAL(activeChanged()));
+
+        connect(qApp, &QGuiApplication::screenAdded, this, &QQuickApplication::updateScreens);
+        connect(qApp, &QGuiApplication::screenRemoved, this, &QQuickApplication::updateScreens);
+        updateScreens();
     }
 }
 
@@ -93,6 +97,34 @@ Qt::ApplicationState QQuickApplication::state() const
 QFont QQuickApplication::font() const
 {
     return QGuiApplication::font();
+}
+
+int screens_count(QQmlListProperty<QQuickScreenInfo> *prop)
+{
+    return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->count();
+}
+
+QQuickScreenInfo *screens_at(QQmlListProperty<QQuickScreenInfo> *prop, int idx)
+{
+    return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->at(idx);
+}
+
+QQmlListProperty<QQuickScreenInfo> QQuickApplication::screens()
+{
+    return QQmlListProperty<QQuickScreenInfo>(this,
+        const_cast<QVector<QQuickScreenInfo *> *>(&m_screens), &screens_count, &screens_at);
+}
+
+void QQuickApplication::updateScreens()
+{
+    const QList<QScreen *> screenList = QGuiApplication::screens();
+    m_screens.resize(screenList.count());
+    for (int i = 0; i < screenList.count(); ++i) {
+        if (!m_screens[i])
+            m_screens[i] = new QQuickScreenInfo(this);
+        m_screens[i]->setWrappedScreen(screenList[i]);
+    }
+    emit screensChanged();
 }
 
 QT_END_NAMESPACE

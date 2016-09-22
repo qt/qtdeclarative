@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Window 2.1
+import QtQuick.Window 2.3
 import "../shared" as Shared
 
 QtObject {
@@ -47,7 +47,7 @@ QtObject {
     property SystemPalette palette: SystemPalette { }
 
     property var controlWindow: Window {
-        width: visibilityLabel.implicitWidth * 1.2
+        width: col.implicitWidth + defaultSpacing * 2
         height: col.implicitHeight + defaultSpacing * 2
         color: palette.window
         title: "Control Window"
@@ -127,12 +127,17 @@ QtObject {
                       " and has visibility " + parent.visibilityToString(testWindow.visibility)
             }
             Rectangle {
-                id: horizontalRule
-                color: "black"
+                color: palette.text
                 width: parent.width
                 height: 1
             }
-            ScreenInfo { }
+            CurrentScreen { }
+            Rectangle {
+                color: palette.text
+                width: parent.width
+                height: 1
+            }
+            AllScreens { width: parent.width }
         }
     }
 

@@ -67,6 +67,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
 
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
     Q_PROPERTY(Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged)
+    Q_PROPERTY(QObject *targetScreen READ targetScreen WRITE setTargetScreen NOTIFY targetScreenChanged REVISION 2)
 
 public:
     QQuickWindowQmlImpl(QWindow *parent = Q_NULLPTR);
@@ -74,11 +75,15 @@ public:
     void setVisible(bool visible);
     void setVisibility(Visibility visibility);
 
+    QObject *targetScreen() const;
+    void setTargetScreen(QObject *screen);
+
     static QQuickWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     void visibleChanged(bool arg);
     void visibilityChanged(QWindow::Visibility visibility);
+    Q_REVISION(2) void targetScreenChanged();
 
 protected:
     void classBegin() Q_DECL_OVERRIDE;

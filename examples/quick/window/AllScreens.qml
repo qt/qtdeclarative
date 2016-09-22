@@ -39,64 +39,37 @@
 ****************************************************************************/
 
 import QtQuick 2.3
-import QtQuick.Window 2.1
+import QtQuick.Window 2.3
 import "../shared" as Shared
 
-Item {
+Column {
     id: root
-    width: 400
-    height: propertyGrid.implicitHeight + 16
+    spacing: 8
 
-    function orientationToString(o) {
-        switch (o) {
-        case Qt.PrimaryOrientation:
-            return "primary";
-        case Qt.PortraitOrientation:
-            return "portrait";
-        case Qt.LandscapeOrientation:
-            return "landscape";
-        case Qt.InvertedPortraitOrientation:
-            return "inverted portrait";
-        case Qt.InvertedLandscapeOrientation:
-            return "inverted landscape";
-        }
-        return "unknown";
+    Shared.Label {
+        text: "Total number of screens: " + screenInfo.count
+        font.bold: true
     }
 
-    Grid {
-        id: propertyGrid
-        columns: 2
-        spacing: 8
-        x: spacing
-        y: spacing
+    Flow {
+        spacing: 12
+        width: parent.width
 
-        //! [screen]
-        Shared.Label {
-            text: "Screen \"" + Screen.name + "\":"
-            font.bold: true
+        Repeater {
+            id: screenInfo
+            model: Qt.application.screens
+            Shared.Label {
+                lineHeight: 1.5
+                text: name + "\n" + virtualX + ", " + virtualY + " " + modelData.width + "x" + modelData.height
+            }
         }
-        Item { width: 1; height: 1 } // spacer
+    }
 
-        Shared.Label { text: "dimensions" }
-        Shared.Label { text: Screen.width + "x" + Screen.height }
-
-        Shared.Label { text: "pixel density" }
-        Shared.Label { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
-
-        Shared.Label { text: "logical pixel density" }
-        Shared.Label { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
-
-        Shared.Label { text: "device pixel ratio" }
-        Shared.Label { text: Screen.devicePixelRatio.toFixed(2) }
-
-        Shared.Label { text: "available virtual desktop" }
-        Shared.Label { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
-
-        Shared.Label { text: "orientation" }
-        Shared.Label { text: orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
-
-        Shared.Label { text: "primary orientation" }
-        Shared.Label { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
-        //! [screen]
+    Component.onCompleted: {
+        var screens = Qt.application.screens;
+        for (var i = 0; i < screens.length; ++i)
+            console.log("screen " + screens[i].name + " has geometry " +
+                        screens[i].virtualX + ", " + screens[i].virtualY + " " +
+                        screens[i].width + "x" + screens[i].height)
     }
 }

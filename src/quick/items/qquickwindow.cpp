@@ -4146,6 +4146,28 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
+    \qmlproperty variant Window::targetScreen
+
+    Specifies the screen the window should be placed on. Equivalent to
+    QWindow::setScreen().
+
+    The value must be an element from the Qt.application.screens array.
+
+    By default the value is null which leads to using the primary screen.
+
+    \note To ensure that the window is associated with the desired screen right
+    upon the underlying native window's initial creation, make sure this
+    property is set as early as possible and that the setting of its value is
+    not deferred. This can be particularly important on embedded platforms
+    without a windowing system, where only one window per screen is allowed at a
+    time.
+
+    \since 5.9
+
+    \sa QWindow::setScreen(), QScreen, Qt.application
+ */
+
+/*!
     \qmlproperty Item Window::activeFocusItem
     \since 5.1
 

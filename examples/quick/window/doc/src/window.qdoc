@@ -73,7 +73,7 @@
     \l Screen has several properties which are generally useful to
     applications which need to rotate some content when the screen orientation
     changes, to position windows on the screen or to convert real units to
-    logical pixel units.  ScreenInfo.qml (which is displayed inline in
+    logical pixel units.  CurrentScreen.qml (which is displayed inline in
     window.qml, or can be run by itself with qmlscene) simply displays the
     property values, while the splash screen uses them to center the window on
     the screen.

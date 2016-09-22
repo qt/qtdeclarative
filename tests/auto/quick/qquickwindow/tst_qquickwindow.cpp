@@ -311,6 +311,7 @@ private slots:
     void clearWindow();
 
     void qmlCreation();
+    void qmlCreationWithScreen();
     void clearColor();
     void defaultState();
 
@@ -1109,6 +1110,24 @@ void tst_qquickwindow::qmlCreation()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("window.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+    QCOMPARE(window->color(), QColor(Qt::green));
+
+    QQuickItem *item = window->findChild<QQuickItem*>("item");
+    QVERIFY(item);
+    QCOMPARE(item->window(), window);
+}
+
+void tst_qquickwindow::qmlCreationWithScreen()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("windowWithScreen.qml"));
     QObject *created = component.create();
     QScopedPointer<QObject> cleanup(created);
     QVERIFY(created);

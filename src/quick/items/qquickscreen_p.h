@@ -63,10 +63,10 @@ class QQuickItem;
 class QQuickWindow;
 class QScreen;
 
-class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
+
+class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
@@ -79,11 +79,12 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
     // TODO Qt 6 Remove this orientation -> incomplete device orientation -> better use OrientationSensor
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
-    Q_PROPERTY(Qt::ScreenOrientations orientationUpdateMask READ orientationUpdateMask
-               WRITE setOrientationUpdateMask NOTIFY orientationUpdateMaskChanged)
+
+    Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION 1)
+    Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 1)
 
 public:
-    QQuickScreenAttached(QObject* attachee);
+    QQuickScreenInfo(QObject *parent = nullptr);
 
     QString name() const;
     int width() const;
@@ -95,13 +96,11 @@ public:
     qreal devicePixelRatio() const;
     Qt::ScreenOrientation primaryOrientation() const;
     Qt::ScreenOrientation orientation() const;
-    Qt::ScreenOrientations orientationUpdateMask() const;
-    void setOrientationUpdateMask(Qt::ScreenOrientations mask);
+    int virtualX() const;
+    int virtualY() const;
 
-    //Treats int as Qt::ScreenOrientation, due to QTBUG-20639
-    Q_INVOKABLE int angleBetween(int a, int b);
-
-    void windowChanged(QQuickWindow*);
+    void setWrappedScreen(QScreen *screen);
+    QScreen *wrappedScreen() const;
 
 Q_SIGNALS:
     void nameChanged();
@@ -113,13 +112,37 @@ Q_SIGNALS:
     void devicePixelRatioChanged();
     void primaryOrientationChanged();
     void orientationChanged();
+    Q_REVISION(1) void virtualXChanged();
+    Q_REVISION(1) void virtualYChanged();
+
+protected:
+    QPointer<QScreen> m_screen;
+};
+
+class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QQuickScreenInfo
+{
+    Q_OBJECT
+    Q_PROPERTY(Qt::ScreenOrientations orientationUpdateMask READ orientationUpdateMask
+               WRITE setOrientationUpdateMask NOTIFY orientationUpdateMaskChanged)
+
+public:
+    QQuickScreenAttached(QObject* attachee);
+
+    Qt::ScreenOrientations orientationUpdateMask() const;
+    void setOrientationUpdateMask(Qt::ScreenOrientations mask);
+
+    //Treats int as Qt::ScreenOrientation, due to QTBUG-20639
+    Q_INVOKABLE int angleBetween(int a, int b);
+
+    void windowChanged(QQuickWindow*);
+
+Q_SIGNALS:
     void orientationUpdateMaskChanged();
 
 protected Q_SLOTS:
     void screenChanged(QScreen*);
 
 private:
-    QPointer<QScreen> m_screen;
     QQuickWindow* m_window;
     QQuickItem* m_attachee;
     Qt::ScreenOrientations m_updateMask;
@@ -136,5 +159,6 @@ public:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPEINFO(QQuickScreen, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPE(QQuickScreenInfo)
 
 #endif
