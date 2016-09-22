@@ -403,6 +403,7 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
                 return popup->overlayEvent(item, event);
             case QEvent::MouseButtonRelease:
                 emit released();
+                d->mouseGrabberPopup = nullptr;
                 return popup->overlayEvent(item, event);
             default:
                 break;

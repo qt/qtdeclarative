@@ -82,6 +82,8 @@ private slots:
 
     void touch_data();
     void touch();
+
+    void grabber();
 };
 
 void tst_Drawer::visible_data()
@@ -743,6 +745,42 @@ void tst_Drawer::touch()
     QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
     QTRY_COMPARE(drawer->position(), 0.0);
+}
+
+void tst_Drawer::grabber()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QSignalSpy drawerOpenedSpy(drawer, SIGNAL(opened()));
+    QSignalSpy drawerClosedSpy(drawer, SIGNAL(closed()));
+    QVERIFY(drawerOpenedSpy.isValid());
+    QVERIFY(drawerClosedSpy.isValid());
+
+    drawer->open();
+    QVERIFY(drawerOpenedSpy.wait());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(300, 100));
+    QVERIFY(drawerClosedSpy.wait());
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    QSignalSpy popupOpenedSpy(popup, SIGNAL(opened()));
+    QSignalSpy popupClosedSpy(popup, SIGNAL(closed()));
+    QVERIFY(popupOpenedSpy.isValid());
+    QVERIFY(popupClosedSpy.isValid());
+
+    popup->open();
+    QTRY_COMPARE(popupOpenedSpy.count(), 1);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 300));
+    QTRY_COMPARE(popupClosedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_Drawer)
