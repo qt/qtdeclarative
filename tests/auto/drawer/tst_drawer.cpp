@@ -402,6 +402,9 @@ void tst_Drawer::header()
     QVERIFY(drawer);
     QQuickItem *popupItem = drawer->popupItem();
 
+    QQuickButton *button = window->property("button").value<QQuickButton*>();
+    QVERIFY(button);
+
     drawer->open();
     QVERIFY(drawer->isVisible());
 
@@ -413,6 +416,12 @@ void tst_Drawer::header()
     QCOMPARE(drawer->parentItem(), content);
     QCOMPARE(drawer->height(), content->height());
     QCOMPARE(popupItem->height(), content->height());
+
+    // must be possible to interact with the header when the drawer is below the header
+    QSignalSpy clickSpy(button, SIGNAL(clicked()));
+    QVERIFY(clickSpy.isValid());
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + button->width() / 2, button->y() + button->height() / 2));
+    QCOMPARE(clickSpy.count(), 1);
 }
 
 void tst_Drawer::hover_data()

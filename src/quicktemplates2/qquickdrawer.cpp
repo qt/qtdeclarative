@@ -369,8 +369,11 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
     pressPoint = event->windowPos();
     velocityCalculator.startMeasuring(pressPoint, event->timestamp());
 
-    // don't block press events a) outside a non-modal drawer, or b) to drawer children
-    event->setAccepted(modal && !popupItem->isAncestorOf(item));
+    // don't block press events
+    // a) outside a non-modal drawer,
+    // b) to drawer children, or
+    // c) outside a modal drawer's background dimming
+    event->setAccepted(modal && !popupItem->isAncestorOf(item) && (!dimmer || dimmer->contains(dimmer->mapFromScene(pressPoint))));
     return event->isAccepted();
 }
 
