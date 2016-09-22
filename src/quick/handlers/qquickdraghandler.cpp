@@ -67,6 +67,13 @@ QQuickDragHandler::~QQuickDragHandler()
 {
 }
 
+bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
+{
+    // If we've already been interested in a point, stay interested, even if it has strayed outside bounds.
+    return ((point->state() != QQuickEventPoint::Pressed && currentPointId() == point->pointId())
+            || QQuickPointerSingleHandler::wantsEventPoint(point));
+}
+
 void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
 {
     // If there's no target or the target has no parent, we shouldn't be dragging

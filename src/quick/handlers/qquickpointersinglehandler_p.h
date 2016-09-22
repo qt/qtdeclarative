@@ -74,6 +74,7 @@ protected:
     virtual bool wantsEventPoint(QQuickEventPoint *point);
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
+    quint64 currentPointId() const { return m_currentPointId; }
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
     void handleGrabCancel(QQuickEventPoint *point) override;
 

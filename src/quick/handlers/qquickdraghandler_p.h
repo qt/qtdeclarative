@@ -109,6 +109,9 @@ Q_SIGNALS:
 //    void gestureStarted(QQuickGestureEvent *gesture);
     void draggingChanged();
 
+protected:
+    bool wantsEventPoint(QQuickEventPoint *point) override;
+
 private:
     void ungrab();
     void enforceAxisConstraints(QPointF *localPos);
