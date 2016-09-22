@@ -82,6 +82,7 @@ public:
     bool down;
     bool explicitDown;
     bool pressed;
+    bool keepPressed;
     bool checked;
     bool checkable;
     bool autoExclusive;

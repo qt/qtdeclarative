@@ -69,6 +69,54 @@ QT_BEGIN_NAMESPACE
             of the window.
     \endtable
 
+    \code
+    import QtQuick 2.7
+    import QtQuick.Controls 2.0
+
+    ApplicationWindow {
+        id: window
+        visible: true
+
+        Drawer {
+            id: drawer
+            width: 0.66 * window.width
+            height: window.height
+        }
+    }
+    \endcode
+
+    Drawer is a special type of popup that resides at one of the window \l {edge}{edges}.
+    By default, Drawer re-parents itself to the window \l {ApplicationWindow::}{overlay},
+    and therefore operates on window coordinates. It is also possible to manually set the
+    \l {Popup::}{parent} to something else to make the drawer operate in a specific
+    coordinate space.
+
+    Drawer can be configured to cover only part of its window edge. The following example
+    illustrates how Drawer can be positioned to appear below a window header:
+
+    \code
+    import QtQuick 2.7
+    import QtQuick.Controls 2.0
+
+    ApplicationWindow {
+        id: window
+        visible: true
+
+        header: ToolBar { }
+
+        Drawer {
+            y: header.height
+            width: window.width * 0.6
+            height: window.height - header.height
+        }
+    }
+    \endcode
+
+    The \l position property determines how much of the drawer is visible, as
+    a value between \c 0.0 and \c 1.0. It is not possible to set the x-coordinate
+    (or horizontal margins) of a drawer at the left or right window edge, or the
+    y-coordinate (or vertical margins) of a drawer at the top or bottom window edge.
+
     In the image above, the application's contents are \e "pushed" across the
     screen. This is achieved by applying a translation to the contents:
 
@@ -117,6 +165,7 @@ QQuickDrawerPrivate::QQuickDrawerPrivate()
     : edge(Qt::LeftEdge), offset(0), position(0),
       dragMargin(QGuiApplication::styleHints()->startDragDistance())
 {
+    setEdge(Qt::LeftEdge);
 }
 
 qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
@@ -161,6 +210,27 @@ void QQuickDrawerPrivate::reposition()
         popupItem->setY(window->height() - position * popupItem->height());
         break;
     }
+
+    QQuickPopupPrivate::reposition();
+}
+
+void QQuickDrawerPrivate::resizeOverlay()
+{
+    if (!dimmer || !window)
+        return;
+
+    QRectF geometry(0, 0, window->width(), window->height());
+
+    if (edge == Qt::LeftEdge || edge == Qt::RightEdge) {
+        geometry.setY(popupItem->y());
+        geometry.setHeight(popupItem->height());
+    } else {
+        geometry.setX(popupItem->x());
+        geometry.setWidth(popupItem->width());
+    }
+
+    dimmer->setPosition(geometry.topLeft());
+    dimmer->setSize(geometry.size());
 }
 
 static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int threshold = -1)
@@ -309,6 +379,12 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
     Q_Q(QQuickDrawer);
     Q_UNUSED(item);
 
+    // Don't react to synthesized mouse move events at INF,INF coordinates.
+    // QQuickWindowPrivate::translateTouchToMouse() uses them to clear hover
+    // on touch release (QTBUG-55995).
+    if (qIsInf(event->screenPos().x()) || qIsInf(event->screenPos().y()))
+        return true;
+
     const QPointF movePoint = event->windowPos();
 
     if (grabMouse(event)) {
@@ -374,6 +450,22 @@ bool QQuickDrawerPrivate::prepareExitTransition()
     return QQuickPopupPrivate::prepareExitTransition();
 }
 
+void QQuickDrawerPrivate::setEdge(Qt::Edge e)
+{
+    edge = e;
+    if (edge == Qt::LeftEdge || edge == Qt::RightEdge) {
+        allowVerticalMove = true;
+        allowVerticalResize = true;
+        allowHorizontalMove = false;
+        allowHorizontalResize = false;
+    } else {
+        allowVerticalMove = false;
+        allowVerticalResize = false;
+        allowHorizontalMove = true;
+        allowHorizontalResize = true;
+    }
+}
+
 QQuickDrawer::QQuickDrawer(QObject *parent) :
     QQuickPopup(*(new QQuickDrawerPrivate), parent)
 {
@@ -406,7 +498,7 @@ void QQuickDrawer::setEdge(Qt::Edge edge)
     if (d->edge == edge)
         return;
 
-    d->edge = edge;
+    d->setEdge(edge);
     if (isComponentComplete())
         d->reposition();
     emit edgeChanged();
@@ -529,6 +621,13 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
     default:
         return QQuickPopup::overlayEvent(item, event);
     }
+}
+
+void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickDrawer);
+    QQuickPopup::geometryChanged(newGeometry, oldGeometry);
+    d->resizeOverlay();
 }
 
 QT_END_NAMESPACE

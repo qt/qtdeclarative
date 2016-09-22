@@ -52,9 +52,11 @@ QT_BEGIN_NAMESPACE
 
     CheckBox presents an option button that can be toggled on (checked) or
     off (unchecked). Check boxes are typically used to select one or more
-    options from a set of options.
+    options from a set of options. For larger sets of options, such as those
+    in a list, consider using \l CheckDelegate instead.
 
-    The state of the checkbox can be set with the \l {AbstractButton::}{checked} property.
+    CheckBox inherits its API from \l AbstractButton. For instance, the
+    state of the checkbox can be set with the \l {AbstractButton::}{checked} property.
 
     In addition to the checked and unchecked states, there is a third state:
     partially checked. The partially checked state can be enabled using the

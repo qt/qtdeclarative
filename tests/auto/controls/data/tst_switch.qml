@@ -95,6 +95,29 @@ TestCase {
         control.destroy()
     }
 
+    function test_pressed_data() {
+        return [
+            { tag: "indicator", x: 15 },
+            { tag: "background", x: 5 }
+        ]
+    }
+
+    function test_pressed(data) {
+        var control = swtch.createObject(testCase, {padding: 10})
+        verify(control)
+
+        // stays pressed when dragged outside
+        compare(control.pressed, false)
+        mousePress(control, data.x, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, true)
+        mouseMove(control, -1, control.height / 2)
+        compare(control.pressed, true)
+        mouseRelease(control, -1, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, false)
+
+        control.destroy()
+    }
+
     function test_mouse() {
         var control = swtch.createObject(testCase)
         verify(control)
@@ -171,6 +194,110 @@ TestCase {
         verify(spy.success)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(control.checked, false)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        control.destroy()
+    }
+
+    function test_drag() {
+        var control = swtch.createObject(testCase, {leftPadding: 100, rightPadding: 100})
+        verify(control)
+
+        var spy = signalSequenceSpy.createObject(control, {target: control})
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, false)
+
+        // press-drag-release inside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        mousePress(control.indicator, 0)
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        mouseMove(control.indicator, control.width)
+        compare(control.position, 1.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "released",
+                                "clicked"]
+        mouseRelease(control.indicator, control.indicator.width)
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // press-drag-release outside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed"]
+        mousePress(control, 0)
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        mouseMove(control, control.width - control.rightPadding)
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+
+        mouseMove(control, control.width / 2)
+        compare(control.position, 0.5)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+
+        mouseMove(control, control.leftPadding)
+        compare(control.position, 0.0)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "released",
+                                "clicked"]
+        mouseRelease(control, control.width)
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // press-drag-release from and to outside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        mousePress(control, control.width)
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        mouseMove(control, control.width - control.rightPadding)
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        mouseMove(control, control.width / 2)
+        compare(control.position, 0.5)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        mouseMove(control, control.width - control.rightPadding)
+        compare(control.position, 1.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "released",
+                                "clicked"]
+        mouseRelease(control, control.width)
+        compare(control.position, 1.0)
+        compare(control.checked, true)
         compare(control.pressed, false)
         verify(spy.success)
 

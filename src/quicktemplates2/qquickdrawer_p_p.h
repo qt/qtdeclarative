@@ -68,6 +68,7 @@ public:
 
     qreal positionAt(const QPointF &point) const;
     void reposition() override;
+    void resizeOverlay() override;
 
     bool startDrag(QQuickWindow *window, QMouseEvent *event);
     bool grabMouse(QMouseEvent *event);
@@ -79,6 +80,8 @@ public:
 
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;
+
+    void setEdge(Qt::Edge edge);
 
     Qt::Edge edge;
     qreal offset;

@@ -40,9 +40,13 @@
 #include "../shared/visualtestutil.h"
 
 #include <QtGui/qstylehints.h>
+#include <QtGui/qtouchdevice.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
@@ -66,6 +70,7 @@ private slots:
     void dragMargin();
 
     void reposition();
+    void header();
 
     void hover_data();
     void hover();
@@ -74,6 +79,9 @@ private slots:
     void wheel();
 
     void multiple();
+
+    void touch_data();
+    void touch();
 };
 
 void tst_Drawer::visible_data()
@@ -323,27 +331,88 @@ void tst_Drawer::dragMargin()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDistance, drawer->height() / 2));
 }
 
+static QRectF geometry(const QQuickItem *item)
+{
+    return QRectF(item->x(), item->y(), item->width(), item->height());
+}
+
 void tst_Drawer::reposition()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+    QQuickApplicationHelper helper(this, QStringLiteral("reposition.qml"));
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
-    drawer->setEdge(Qt::RightEdge);
+    QQuickItem *popupItem = drawer->popupItem();
+    QVERIFY(popupItem);
 
     drawer->open();
-    QTRY_COMPARE(drawer->popupItem()->x(), window->width() - drawer->width());
+    QQuickItem *dimmer = QQuickPopupPrivate::get(drawer)->dimmer;
+    QVERIFY(dimmer);
+
+    QCOMPARE(geometry(dimmer), QRectF(0, 0, window->width(), window->height()));
+    QTRY_COMPARE(geometry(popupItem), QRectF(0, 0, window->width() / 2, window->height()));
+
+    drawer->setY(100);
+    QCOMPARE(geometry(dimmer), QRectF(0, 100, window->width(), window->height() - 100));
+    QCOMPARE(geometry(popupItem), QRectF(0, 100, window->width() / 2, window->height() - 100));
+
+    drawer->setHeight(window->height());
+    QCOMPARE(geometry(dimmer), QRectF(0, 100, window->width(), window->height()));
+    QCOMPARE(geometry(popupItem), QRectF(0, 100, window->width() / 2, window->height()));
+
+    drawer->resetHeight();
+    QCOMPARE(geometry(dimmer), QRectF(0, 100, window->width(), window->height() - 100));
+    QCOMPARE(geometry(popupItem), QRectF(0, 100, window->width() / 2, window->height() - 100));
+
+    drawer->setParentItem(window->contentItem());
+    QCOMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
+    QCOMPARE(geometry(popupItem), QRectF(0, 150, window->width() / 2, window->height() - 150));
+
+    drawer->setEdge(Qt::RightEdge);
+    QCOMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
+    QTRY_COMPARE(geometry(popupItem), QRectF(window->width() - drawer->width(), 150, window->width() / 2, window->height() - 150));
 
     window->setWidth(window->width() + 100);
-    QTRY_COMPARE(drawer->popupItem()->x(), window->width() - drawer->width());
+    QTRY_COMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
+    QCOMPARE(geometry(popupItem), QRectF(window->width() - drawer->width(), 150, window->width() / 2, window->height() - 150));
 
     drawer->close();
-    QTRY_COMPARE(drawer->popupItem()->x(), static_cast<qreal>(window->width()));
+    QTRY_COMPARE(geometry(popupItem), QRectF(window->width(), 150, window->width() / 2, window->height() - 150));
+}
+
+void tst_Drawer::header()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("header.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+    QQuickItem *popupItem = drawer->popupItem();
+
+    drawer->open();
+    QVERIFY(drawer->isVisible());
+
+    QCOMPARE(drawer->parentItem(), overlay);
+    QCOMPARE(drawer->height(), overlay->height());
+    QCOMPARE(popupItem->height(), overlay->height());
+
+    drawer->setParentItem(content);
+    QCOMPARE(drawer->parentItem(), content);
+    QCOMPARE(drawer->height(), content->height());
+    QCOMPARE(popupItem->height(), content->height());
 }
 
 void tst_Drawer::hover_data()
@@ -613,6 +682,58 @@ void tst_Drawer::multiple()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
     QTRY_COMPARE(rightDrawer->position(), 1.0);
     QCOMPARE(leftDrawer->position(), 0.0);
+}
+
+void tst_Drawer::touch_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::newRow("Window") << "window.qml";
+    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+}
+
+void tst_Drawer::touch()
+{
+    QFETCH(QString, source);
+    QQuickApplicationHelper helper(this, source);
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+
+    struct TouchDeviceDeleter
+    {
+        static inline void cleanup(QTouchDevice *device)
+        {
+            QWindowSystemInterface::unregisterTouchDevice(device);
+            delete device;
+        }
+    };
+
+    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device.data());
+
+    // drag to open
+    QTest::touchEvent(window, device.data()).press(0, QPoint(0, 100));
+    QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 0.5);
+    QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 1.0);
+
+    // drag to close
+    QTest::touchEvent(window, device.data()).press(0, QPoint(300, 100));
+    QTest::touchEvent(window, device.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
+    for (int x = 300; x > 100; x -= 10) {
+        QTest::touchEvent(window, device.data()).move(0, QPoint(x, 100));
+        QQuickWindowPrivate::get(window)->flushFrameSynchronousEvents();
+    }
+    QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 0.5);
+    QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
+    QTRY_COMPARE(drawer->position(), 0.0);
 }
 
 QTEST_MAIN(tst_Drawer)

@@ -113,7 +113,7 @@ void QQuickOverlayPrivate::createOverlay(QQuickPopup *popup)
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
     if (!p->dimmer)
         p->dimmer = createDimmer(popup->isModal() ? modal : modeless, popup, q);
-    resizeOverlay(popup);
+    p->resizeOverlay();
 }
 
 void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
@@ -123,16 +123,6 @@ void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
         p->dimmer->setParentItem(nullptr);
         p->dimmer->deleteLater();
         p->dimmer = nullptr;
-    }
-}
-
-void QQuickOverlayPrivate::resizeOverlay(QQuickPopup *popup)
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
-    if (p->dimmer) {
-        p->dimmer->setWidth(q->width());
-        p->dimmer->setHeight(q->height());
     }
 }
 
@@ -320,7 +310,7 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
     Q_D(QQuickOverlay);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     for (QQuickPopup *popup : qAsConst(d->allPopups))
-        d->resizeOverlay(popup);
+        QQuickPopupPrivate::get(popup)->resizeOverlay();
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
@@ -404,7 +394,11 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             switch (event->type()) {
             case QEvent::MouseButtonPress:
                 emit pressed();
-                return popup->overlayEvent(item, event);
+                if (popup->overlayEvent(item, event)) {
+                    d->mouseGrabberPopup = popup;
+                    return true;
+                }
+                break;
             case QEvent::MouseMove:
                 return popup->overlayEvent(item, event);
             case QEvent::MouseButtonRelease:

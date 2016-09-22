@@ -54,9 +54,14 @@ QT_BEGIN_NAMESPACE
 
     CheckDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Check delegates are typically used to select one or more
-    options from a set of options.
+    options from a set of options in a list. For smaller sets of options, or
+    for options that need to be uniquely identifiable, consider using
+    \l CheckBox instead.
 
-    The state of the check delegate can be set with the
+    CheckDelegate inherits its API from \l ItemDelegate, which is inherited
+    from AbstractButton. For instance, you can set \l {AbstractButton::text}{text},
+    and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton
+    API. The state of the check delegate can be set with the
     \l {AbstractButton::}{checked} property.
 
     In addition to the checked and unchecked states, there is a third state:
@@ -75,7 +80,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing CheckDelegate}, {Delegate Controls}
+    \sa {Customizing CheckDelegate}, {Delegate Controls}, CheckBox
 */
 
 class QQuickCheckDelegatePrivate : public QQuickItemDelegatePrivate

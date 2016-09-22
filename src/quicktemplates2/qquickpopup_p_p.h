@@ -157,6 +157,7 @@ public:
     void init();
     bool tryClose(QQuickItem *item, QMouseEvent *event);
     virtual void reposition();
+    virtual void resizeOverlay();
 
     virtual bool prepareEnterTransition();
     virtual bool prepareExitTransition();
@@ -183,12 +184,18 @@ public:
     bool hasDim;
     bool visible;
     bool complete;
+    bool hasWidth;
+    bool hasHeight;
     bool hasTopMargin;
     bool hasLeftMargin;
     bool hasRightMargin;
     bool hasBottomMargin;
     bool allowVerticalFlip;
     bool allowHorizontalFlip;
+    bool allowVerticalMove;
+    bool allowHorizontalMove;
+    bool allowVerticalResize;
+    bool allowHorizontalResize;
     bool hadActiveFocusBeforeExitTransition;
     qreal x;
     qreal y;

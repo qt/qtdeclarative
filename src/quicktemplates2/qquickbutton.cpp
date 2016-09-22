@@ -110,6 +110,17 @@ QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
     \qmlproperty bool QtQuick.Controls::Button::checkable
 
     This property holds whether the button is checkable.
+
+    A checkable button toggles between checked (on) and unchecked (off) when
+    the user clicks on it or presses the space bar while the button has active
+    focus.
+
+    Setting \l {AbstractButton::}{checked} to \c true forces this property to
+    \c true.
+
+    The default value is \c false.
+
+    \sa CheckBox, Switch
 */
 
 void QQuickButton::checkableChange()
@@ -120,8 +131,10 @@ void QQuickButton::checkableChange()
 /*!
     \qmlproperty bool QtQuick.Controls::Button::autoRepeat
 
-    This property holds whether the button repeats pressed(), released()
-    and clicked() signals while the button is pressed and held down.
+    This property holds whether the button repeats
+    \l {AbstractButton::}{pressed()}, \l {AbstractButton::}{released()}
+    and \l {AbstractButton::}{clicked()} signals while the button is pressed
+    and held down.
 
     The default value is \c false.
 */
