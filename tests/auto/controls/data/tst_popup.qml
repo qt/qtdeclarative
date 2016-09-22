@@ -485,41 +485,6 @@ TestCase {
         control.destroy()
     }
 
-    function test_flip_data() {
-        return [
-            {tag: "flip top-bottom", parentX: 0, parentY: 0, popupX: 0, popupY: -50, popupItemX: 0, popupItemY: 50, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "flip bottom-top", parentX: 0, parentY: 300, popupX: 0, popupY: 50, popupItemX: 0, popupItemY: 250, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "flip left-right", parentX: 0, parentY: 0, popupX: -50, popupY: 0, popupItemX: 50, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "flip right-left", parentX: 300, parentY: 0, popupX: 50, popupY: 0, popupItemX: 250, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-
-            {tag: "no flip top-bottom", parentX: 0, parentY: 50, popupX: 0, popupY: -50, popupItemX: 0, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "no flip bottom-top", parentX: 0, parentY: 250, popupX: 0, popupY: 50, popupItemX: 0, popupItemY: 300, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "no flip left-right", parentX: 50, parentY: 0, popupX: -50, popupY: 0, popupItemX: 0, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "no flip right-left", parentX: 250, parentY: 0, popupX: 50, popupY: 0, popupItemX: 300, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-
-            {tag: "disallow flip top-bottom", parentX: 0, parentY: 0, popupX: 0, popupY: -50, popupItemX: 0, popupItemY: -50, allowVerticalFlip: false, allowHorizontalFlip: false },
-            {tag: "disallow flip bottom-top", parentX: 0, parentY: 300, popupX: 0, popupY: 50, popupItemX: 0, popupItemY: 350, allowVerticalFlip: false, allowHorizontalFlip: false },
-            {tag: "disallow flip left-right", parentX: 0, parentY: 0, popupX: -50, popupY: 0, popupItemX: -50, popupItemY: 0, allowVerticalFlip: false, allowHorizontalFlip: false },
-            {tag: "disallow flip right-left", parentX: 300, parentY: 0, popupX: 50, popupY: 0, popupItemX: 350, popupItemY: 0, allowVerticalFlip: false, allowHorizontalFlip: false }
-        ]
-    }
-
-    function test_flip(data) {
-        var parentItem = rect.createObject(testCase, {color: "red", x: data.parentX, y: data.parentY, width: 100, height: 100})
-        verify(parentItem)
-
-        var control = popupControl.createObject(parentItem, {x: data.popupX, y: data.popupY, width: 100, height: 100, allowVerticalFlip: data.allowVerticalFlip, allowHorizontalFlip: data.allowHorizontalFlip})
-        verify(control)
-
-        control.open()
-        verify(control.visible)
-
-        compare(control.contentItem.parent.y, data.popupItemY)
-        compare(control.contentItem.parent.x, data.popupItemX)
-
-        parentItem.destroy()
-    }
-
     function test_background() {
         var control = popupTemplate.createObject(testCase)
         verify(control)
