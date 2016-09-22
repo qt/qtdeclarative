@@ -90,6 +90,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         } else if ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point))) {
             m_dragging = true;
+            setGrab(point, true);
             emit draggingChanged();
         }
     } break;
