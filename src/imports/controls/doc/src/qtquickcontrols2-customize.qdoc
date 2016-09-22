@@ -489,6 +489,24 @@
         \snippet qtquickcontrols2-pane-custom.qml file
 
 
+    \section2 Customizing Popup
+
+        Popup consists of a \l {Popup::background}{background} and
+        \l {Popup::contentItem}{content item}.
+
+        \image qtquickcontrols2-popup-custom.png
+
+        \quotefromfile qtquickcontrols2-popup-custom.qml
+        \skipto import QtQuick 2.6
+        \printuntil import QtQuick.Controls 2.0
+        \codeline
+        \skipto Popup
+        \printuntil {
+        \printuntil }
+        \printuntil }
+        \printuntil }
+
+
     \section2 Customizing ProgressBar
 
         ProgressBar consists of two visual items: \l {Control::background}{background}
