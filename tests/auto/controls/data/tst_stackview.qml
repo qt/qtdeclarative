@@ -861,4 +861,22 @@ TestCase {
 
         control.destroy()
     }
+
+    // QTBUG-56158
+    function test_repeatedPop() {
+        var control = stackView.createObject(testCase, {initialItem: component, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        for (var i = 0; i < 12; ++i)
+            control.push(component)
+        tryCompare(control, "busy", false)
+
+        while (control.depth > 1) {
+            control.pop()
+            wait(50)
+        }
+        tryCompare(control, "busy", false)
+
+        control.destroy()
+    }
 }

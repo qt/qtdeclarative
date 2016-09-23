@@ -251,8 +251,9 @@ bool QQuickStackElement::prepareTransition(QQuickItemViewTransitioner *transitio
     return false;
 }
 
-void QQuickStackElement::startTransition(QQuickItemViewTransitioner *transitioner)
+void QQuickStackElement::startTransition(QQuickItemViewTransitioner *transitioner, QQuickStackView::Status status)
 {
+    setStatus(status);
     if (transitioner)
         QQuickItemViewTransitionableItem::startTransition(transitioner, index);
 }
@@ -415,27 +416,23 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
 {
     ensureTransitioner();
 
-    if (exit) {
-        exit->removal = true;
-        exit->setStatus(QQuickStackView::Deactivating);
+    if (exit)
         exit->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, true);
-    }
-    if (enter) {
-        enter->setStatus(QQuickStackView::Activating);
+    if (enter)
         enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
-    }
 
     if (exit) {
+        exit->removal = true;
         if (immediate || !exit->item || !exit->prepareTransition(transitioner, viewBounds))
-            completeTransition(exit, transitioner->removeTransition);
+            completeTransition(exit, transitioner->removeTransition, QQuickStackView::Deactivating);
         else
-            exit->startTransition(transitioner);
+            exit->startTransition(transitioner, QQuickStackView::Deactivating);
     }
     if (enter) {
         if (immediate || !enter->item || !enter->prepareTransition(transitioner, QRectF()))
-            completeTransition(enter, transitioner->removeDisplacedTransition);
+            completeTransition(enter, transitioner->removeDisplacedTransition, QQuickStackView::Activating);
         else
-            enter->startTransition(transitioner);
+            enter->startTransition(transitioner, QQuickStackView::Activating);
     }
 
     if (transitioner) {
@@ -448,26 +445,22 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
 {
     ensureTransitioner();
 
-    if (enter) {
-        enter->setStatus(QQuickStackView::Activating);
+    if (enter)
         enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
-    }
-    if (exit) {
-        exit->setStatus(QQuickStackView::Deactivating);
+    if (exit)
         exit->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
-    }
 
     if (enter) {
         if (immediate || !enter->item || !enter->prepareTransition(transitioner, viewBounds))
-            completeTransition(enter, transitioner->addTransition);
+            completeTransition(enter, transitioner->addTransition, QQuickStackView::Activating);
         else
-            enter->startTransition(transitioner);
+            enter->startTransition(transitioner, QQuickStackView::Activating);
     }
     if (exit) {
         if (immediate || !exit->item || !exit->prepareTransition(transitioner, QRectF()))
-            completeTransition(exit, transitioner->addDisplacedTransition);
+            completeTransition(exit, transitioner->addDisplacedTransition, QQuickStackView::Deactivating);
         else
-            exit->startTransition(transitioner);
+            exit->startTransition(transitioner, QQuickStackView::Deactivating);
     }
 
     if (transitioner) {
@@ -480,27 +473,23 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
 {
     ensureTransitioner();
 
-    if (exit) {
-        exit->removal = true;
-        exit->setStatus(QQuickStackView::Deactivating);
+    if (exit)
         exit->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
-    }
-    if (enter) {
-        enter->setStatus(QQuickStackView::Activating);
+    if (enter)
         enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
-    }
 
     if (exit) {
+        exit->removal = true;
         if (immediate || !exit->item || !exit->prepareTransition(transitioner, QRectF()))
-            completeTransition(exit, transitioner->moveDisplacedTransition);
+            completeTransition(exit, transitioner->moveDisplacedTransition, QQuickStackView::Deactivating);
         else
-            exit->startTransition(transitioner);
+            exit->startTransition(transitioner, QQuickStackView::Deactivating);
     }
     if (enter) {
         if (immediate || !enter->item || !enter->prepareTransition(transitioner, viewBounds))
-            completeTransition(enter, transitioner->moveTransition);
+            completeTransition(enter, transitioner->moveTransition, QQuickStackView::Activating);
         else
-            enter->startTransition(transitioner);
+            enter->startTransition(transitioner, QQuickStackView::Activating);
     }
 
     if (transitioner) {
@@ -509,8 +498,9 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
     }
 }
 
-void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQuickTransition *transition)
+void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQuickTransition *transition, QQuickStackView::Status status)
 {
+    element->setStatus(status);
     if (transition) {
         // TODO: add a proper way to complete a transition
         QQmlListProperty<QQuickAbstractAnimation> animations = transition->animations();
