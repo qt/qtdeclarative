@@ -703,7 +703,7 @@ void InstructionSelection::loadString(const QString &str, IR::Expr *target)
 #else
     _as->store32(Assembler::ReturnValueRegister, destAddr);
     destAddr.offset += 4;
-    _as->store32(Assembler::TrustedImm32(QV4::Value::Managed_Type), destAddr);
+    _as->store32(Assembler::TrustedImm32(QV4::Value::Managed_Type_Internal), destAddr);
 #endif
 }
 
@@ -1103,7 +1103,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
+        _as->rshift32(Assembler::TrustedImm32(Value::IsDoubleTag_Shift), Assembler::ScratchRegister);
         Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
                                               Assembler::TrustedImm32(0));
 #else
@@ -1194,10 +1194,15 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
         _as->load64(addr, Assembler::ScratchRegister);
         _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
 
-        // check if it's a number
-        _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsNumber_Shift), Assembler::ScratchRegister);
-        Assembler::Jump isInt = _as->branch32(Assembler::Equal, Assembler::ScratchRegister, Assembler::TrustedImm32(1));
-        Assembler::Jump fallback = _as->branch32(Assembler::Equal, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
+        // check if it's integer convertible
+        _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsIntegerConvertible_Shift), Assembler::ScratchRegister);
+        Assembler::Jump isIntConvertible = _as->branch32(Assembler::Equal, Assembler::ScratchRegister, Assembler::TrustedImm32(3));
+
+        // nope, not integer convertible, so check for a double:
+        _as->urshift64(Assembler::TrustedImm32(
+                           QV4::Value::IsDoubleTag_Shift - QV4::Value::IsIntegerConvertible_Shift),
+                       Assembler::ScratchRegister);
+        Assembler::Jump fallback = _as->branch32(Assembler::GreaterThan, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
 
         // it's a double
         _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ScratchRegister);
@@ -1212,7 +1217,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
         generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
                              _as->loadAddress(Assembler::ScratchRegister, source));
 
-        isInt.link(_as);
+        isIntConvertible.link(_as);
         success.link(_as);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
@@ -1784,9 +1789,9 @@ void InstructionSelection::visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *tr
 {
     Q_ASSERT(binop->op == IR::OpStrictEqual || binop->op == IR::OpStrictNotEqual);
 
-    if (visitCJumpStrictNullUndefined(IR::NullType, binop, trueBlock, falseBlock))
+    if (visitCJumpStrictNull(binop, trueBlock, falseBlock))
         return;
-    if (visitCJumpStrictNullUndefined(IR::UndefinedType, binop, trueBlock, falseBlock))
+    if (visitCJumpStrictUndefined(binop, trueBlock, falseBlock))
         return;
     if (visitCJumpStrictBool(binop, trueBlock, falseBlock))
         return;
@@ -1802,16 +1807,14 @@ void InstructionSelection::visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *tr
 }
 
 // Only load the non-null temp.
-bool InstructionSelection::visitCJumpStrictNullUndefined(IR::Type nullOrUndef, IR::Binop *binop,
-                                                         IR::BasicBlock *trueBlock,
-                                                         IR::BasicBlock *falseBlock)
+bool InstructionSelection::visitCJumpStrictNull(IR::Binop *binop,
+                                                IR::BasicBlock *trueBlock,
+                                                IR::BasicBlock *falseBlock)
 {
-    Q_ASSERT(nullOrUndef == IR::NullType || nullOrUndef == IR::UndefinedType);
-
     IR::Expr *varSrc = 0;
-    if (binop->left->type == IR::VarType && binop->right->type == nullOrUndef)
+    if (binop->left->type == IR::VarType && binop->right->type == IR::NullType)
         varSrc = binop->left;
-    else if (binop->left->type == nullOrUndef && binop->right->type == IR::VarType)
+    else if (binop->left->type == IR::NullType && binop->right->type == IR::VarType)
         varSrc = binop->right;
     if (!varSrc)
         return false;
@@ -1822,7 +1825,7 @@ bool InstructionSelection::visitCJumpStrictNullUndefined(IR::Type nullOrUndef, I
     }
 
     if (IR::Const *c = varSrc->asConst()) {
-        if (c->type == nullOrUndef)
+        if (c->type == IR::NullType)
             _as->jumpToBlock(_block, trueBlock);
         else
             _as->jumpToBlock(_block, falseBlock);
@@ -1835,9 +1838,54 @@ bool InstructionSelection::visitCJumpStrictNullUndefined(IR::Type nullOrUndef, I
     _as->load32(tagAddr, tagReg);
 
     Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
-                                                                           : Assembler::NotEqual;
-    const Assembler::TrustedImm32 tag(nullOrUndef == IR::NullType ? int(QV4::Value::Null_Type_Internal)
-                                                                    : int(QV4::Value::Undefined_Type));
+                                                                         : Assembler::NotEqual;
+    const Assembler::TrustedImm32 tag(QV4::Value::Null_Type_Internal);
+    _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
+    return true;
+}
+
+bool InstructionSelection::visitCJumpStrictUndefined(IR::Binop *binop,
+                                                     IR::BasicBlock *trueBlock,
+                                                     IR::BasicBlock *falseBlock)
+{
+    IR::Expr *varSrc = 0;
+    if (binop->left->type == IR::VarType && binop->right->type == IR::UndefinedType)
+        varSrc = binop->left;
+    else if (binop->left->type == IR::UndefinedType && binop->right->type == IR::VarType)
+        varSrc = binop->right;
+    if (!varSrc)
+        return false;
+
+    if (varSrc->asTemp() && varSrc->asTemp()->kind == IR::Temp::PhysicalRegister) {
+        _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    if (IR::Const *c = varSrc->asConst()) {
+        if (c->type == IR::UndefinedType)
+            _as->jumpToBlock(_block, trueBlock);
+        else
+            _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
+                                                                         : Assembler::NotEqual;
+    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+    Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    _as->load64(addr, tagReg);
+    const Assembler::TrustedImm64 tag(0);
+#else // !QV4_USE_64_BIT_VALUE_ENCODING
+    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    _as->load32(tagAddr, tagReg);
+    Assembler::Jump j = _as->branch32(Assembler::invert(cond), tagReg, Assembler::TrustedImm32(0));
+    _as->addPatch(falseBlock, j);
+
+    tagAddr.offset += 4;
+    _as->load32(tagAddr, tagReg);
+    const Assembler::TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
+#endif
     _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
 }
@@ -1928,10 +1976,14 @@ bool InstructionSelection::visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Bin
     if (binop->op == IR::OpNotEqual)
         qSwap(trueBlock, falseBlock);
     Assembler::Jump isNull = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::Null_Type_Internal)));
-    Assembler::Jump isUndefined = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::Undefined_Type)));
+    Assembler::Jump isNotUndefinedTag = _as->branch32(Assembler::NotEqual, tagReg, Assembler::TrustedImm32(int(QV4::Value::Managed_Type_Internal)));
+    tagAddr.offset -= 4;
+    _as->load32(tagAddr, tagReg);
+    Assembler::Jump isNotUndefinedValue = _as->branch32(Assembler::NotEqual, tagReg, Assembler::TrustedImm32(0));
     _as->addPatch(trueBlock, isNull);
-    _as->addPatch(trueBlock, isUndefined);
-    _as->jumpToBlock(_block, falseBlock);
+    _as->addPatch(falseBlock, isNotUndefinedTag);
+    _as->addPatch(falseBlock, isNotUndefinedValue);
+    _as->jumpToBlock(_block, trueBlock);
 
     return true;
 }

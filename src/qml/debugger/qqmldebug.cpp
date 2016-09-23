@@ -132,7 +132,7 @@ quintptr Q_QML_EXPORT qtDeclarativeHookData[] = {
     // TypeInformationVersion, an integral value, bumped whenever private
     // object sizes or member offsets that are used in Qt Creator's
     // data structure "pretty printing" change.
-    1
+    2
 };
 
 Q_STATIC_ASSERT(HookCount == sizeof(qtDeclarativeHookData) / sizeof(qtDeclarativeHookData[0]));

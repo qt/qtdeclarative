@@ -374,6 +374,11 @@ public:
     void addPatch(DataLabelPtr patch, IR::BasicBlock *target);
     void generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
                              IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+    void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm64 right,
+                                IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
+                                IR::BasicBlock *falseBlock);
+#endif
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm32 right,
                                 IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
                                 IR::BasicBlock *falseBlock);
