@@ -45,19 +45,20 @@ ApplicationWindow {
     width: 400
     height: 400
 
-    property alias drawer: drawer
-    property alias button: button
+    property alias modalPopup: modalPopup
+    property alias modelessPopup: modelessPopup
 
-    header: ToolBar {
-        ToolButton {
-            id: button
-            text: "="
-        }
+    Popup {
+        id: modalPopup
+        modal: true
+        width: 200
+        height: 200
     }
 
-    Drawer {
-        id: drawer
-        width: 200
-        height: parent.height
+    Popup {
+        id: modelessPopup
+        modal: false
+        width: 100
+        height: 100
     }
 }

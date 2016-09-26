@@ -69,14 +69,21 @@ ApplicationWindow {
                     fillMode: Image.Pad
                     horizontalAlignment: Image.AlignHCenter
                     verticalAlignment: Image.AlignVCenter
-                    source: "qrc:/images/drawer.png"
+                    source: stackView.depth > 1 ? "images/back.png" : "images/drawer.png"
                 }
-                onClicked: drawer.open()
+                onClicked: {
+                    if (stackView.depth > 1) {
+                        stackView.pop()
+                        listView.currentIndex = -1
+                    } else {
+                        drawer.open()
+                    }
+                }
             }
 
             Label {
                 id: titleLabel
-                text: "Gallery"
+                text: listView.currentItem ? listView.currentItem.text : "Gallery"
                 font.pixelSize: 20
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -115,6 +122,7 @@ ApplicationWindow {
         id: drawer
         width: Math.min(window.width, window.height) / 3 * 2
         height: window.height
+        dragMargin: stackView.depth > 1 ? 0 : undefined
 
         ListView {
             id: listView
@@ -128,8 +136,7 @@ ApplicationWindow {
                 onClicked: {
                     if (listView.currentIndex != index) {
                         listView.currentIndex = index
-                        titleLabel.text = model.title
-                        stackView.replace(model.source)
+                        stackView.push(model.source)
                     }
                     drawer.close()
                 }

@@ -388,9 +388,19 @@ void QQuickOverlay::wheelEvent(QWheelEvent *event)
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickOverlay);
-    for (QQuickPopup *popup : qAsConst(d->allPopups)) {
-        QQuickItem *dimmer = QQuickPopupPrivate::get(popup)->dimmer;
-        if (item == dimmer) {
+    const auto popups = d->stackingOrderPopups();
+    for (QQuickPopup *popup : popups) {
+        QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
+
+        // Stop filtering overlay events when reaching a popup item or an item
+        // that is inside the popup. Let the popup content handle its events.
+        if (item == p->popupItem || p->popupItem->isAncestorOf(item))
+            break;
+
+        // Let the popup try closing itself when pressing or releasing over its
+        // background dimming OR over another popup underneath, in case the popup
+        // does not have background dimming.
+        if (item == p->dimmer || !p->popupItem->isAncestorOf(item)) {
             switch (event->type()) {
             case QEvent::MouseButtonPress:
                 emit pressed();
@@ -403,6 +413,7 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
                 return popup->overlayEvent(item, event);
             case QEvent::MouseButtonRelease:
                 emit released();
+                d->mouseGrabberPopup = nullptr;
                 return popup->overlayEvent(item, event);
             default:
                 break;

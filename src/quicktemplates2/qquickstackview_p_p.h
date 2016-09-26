@@ -80,7 +80,7 @@ public:
 
     void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
     bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
-    void startTransition(QQuickItemViewTransitioner *transitioner);
+    void startTransition(QQuickItemViewTransitioner *transitioner, QQuickStackView::Status status);
 
     void itemDestroyed(QQuickItem *item) override;
 
@@ -125,7 +125,7 @@ public:
 
     void ensureTransitioner();
     void startTransition(const QQuickStackTransition &first, const QQuickStackTransition &second, bool immediate);
-    void completeTransition(QQuickStackElement *element, QQuickTransition *transition);
+    void completeTransition(QQuickStackElement *element, QQuickTransition *transition, QQuickStackView::Status status);
 
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
     void setBusy(bool busy);

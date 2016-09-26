@@ -69,6 +69,7 @@ private slots:
     void wheel_data();
     void wheel();
     void parentDestroyed();
+    void nested();
 };
 
 void tst_popup::visible_data()
@@ -607,6 +608,32 @@ void tst_popup::parentDestroyed()
     popup.setParentItem(new QQuickItem);
     delete popup.parentItem();
     QVERIFY(!popup.parentItem());
+}
+
+void tst_popup::nested()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("nested.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+    QVERIFY(modalPopup);
+
+    QQuickPopup *modelessPopup = window->property("modelessPopup").value<QQuickPopup *>();
+    QVERIFY(modelessPopup);
+
+    modalPopup->open();
+    QCOMPARE(modalPopup->isVisible(), true);
+
+    modelessPopup->open();
+    QCOMPARE(modelessPopup->isVisible(), true);
+
+    // click outside the modeless popup on the top, but inside the modal popup below
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 150));
+
+    QTRY_COMPARE(modelessPopup->isVisible(), false);
+    QCOMPARE(modalPopup->isVisible(), true);
 }
 
 QTEST_MAIN(tst_popup)

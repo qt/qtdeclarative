@@ -46,17 +46,17 @@ ApplicationWindow {
     height: 400
 
     property alias drawer: drawer
-    property alias button: button
-
-    header: ToolBar {
-        ToolButton {
-            id: button
-            text: "="
-        }
-    }
+    property alias popup: popup
 
     Drawer {
         id: drawer
+        width: 200
+        height: parent.height
+    }
+
+    Popup {
+        id: popup
+        x: 200
         width: 200
         height: parent.height
     }
