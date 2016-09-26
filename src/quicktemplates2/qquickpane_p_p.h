@@ -61,6 +61,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlP
 public:
     QQuickPanePrivate();
 
+    QQuickItem *getContentItem() override;
+
     qreal contentWidth;
     qreal contentHeight;
 };

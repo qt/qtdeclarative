@@ -63,10 +63,6 @@ T.Drawer {
     exit: Transition { SmoothedAnimation { velocity: 5 } }
     //! [exit]
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
-
     //! [background]
     background: Rectangle {
         Rectangle {

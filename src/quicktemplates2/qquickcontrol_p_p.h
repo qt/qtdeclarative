@@ -88,6 +88,8 @@ public:
     void resizeBackground();
     virtual void resizeContent();
 
+    virtual QQuickItem *getContentItem();
+
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;

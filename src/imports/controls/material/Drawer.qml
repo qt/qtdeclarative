@@ -53,8 +53,6 @@ T.Drawer {
     enter: Transition { SmoothedAnimation { velocity: 5 } }
     exit: Transition { SmoothedAnimation { velocity: 5 } }
 
-    contentItem: Item { }
-
     background: Rectangle {
         color: control.Material.dialogColor
 

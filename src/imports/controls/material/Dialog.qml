@@ -70,8 +70,6 @@ T.Dialog {
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
     }
 
-    contentItem: Item { }
-
     background: Rectangle {
         radius: 2
         color: control.Material.dialogColor

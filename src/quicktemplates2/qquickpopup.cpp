@@ -352,6 +352,8 @@ public:
 
     void resolveFont() override;
 
+    QQuickItem *getContentItem() override;
+
     QQuickPopup *popup;
 };
 
@@ -376,6 +378,14 @@ void QQuickPopupItemPrivate::resolveFont()
 {
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
         inheritFont(window->font());
+}
+
+QQuickItem *QQuickPopupItemPrivate::getContentItem()
+{
+    Q_Q(QQuickPopupItem);
+    if (!contentItem)
+        contentItem = new QQuickItem(q);
+    return contentItem;
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :

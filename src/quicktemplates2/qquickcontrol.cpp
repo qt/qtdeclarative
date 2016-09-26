@@ -214,6 +214,11 @@ void QQuickControlPrivate::resizeContent()
     }
 }
 
+QQuickItem *QQuickControlPrivate::getContentItem()
+{
+    return contentItem;
+}
+
 #ifndef QT_NO_ACCESSIBILITY
 void QQuickControlPrivate::accessibilityActiveChanged(bool active)
 {
@@ -1082,8 +1087,8 @@ void QQuickControl::setBackground(QQuickItem *background)
 */
 QQuickItem *QQuickControl::contentItem() const
 {
-    Q_D(const QQuickControl);
-    return d->contentItem;
+    QQuickControlPrivate *d = const_cast<QQuickControlPrivate *>(d_func());
+    return d->getContentItem();
 }
 
 void QQuickControl::setContentItem(QQuickItem *item)

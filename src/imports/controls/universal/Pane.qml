@@ -49,8 +49,6 @@ T.Pane {
 
     padding: 12
 
-    contentItem: Item { }
-
     background: Rectangle {
         color: control.Universal.background
     }

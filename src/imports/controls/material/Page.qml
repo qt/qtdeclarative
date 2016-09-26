@@ -41,8 +41,6 @@ import QtQuick.Controls.Material 2.1
 T.Page {
     id: control
 
-    contentItem: Item { }
-
     background: Rectangle {
         color: control.Material.backgroundColor
     }
