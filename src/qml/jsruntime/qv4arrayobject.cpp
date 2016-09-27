@@ -178,6 +178,10 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue arg(scope, ctx->argument(0));
+    ScopedObject instance(scope, ctx->thisObject().toObject(scope.engine));
+
+    if (!instance)
+        return ctx->d()->engine->newString()->asReturnedValue();
 
     QString r4;
     if (arg->isUndefined())
@@ -185,8 +189,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
     else
         r4 = arg->toQString();
 
-    ScopedObject self(scope, ctx->thisObject());
-    ScopedValue length(scope, self->get(ctx->d()->engine->id_length()));
+    ScopedValue length(scope, instance->get(ctx->d()->engine->id_length()));
     const quint32 r2 = length->isUndefined() ? 0 : length->toUInt32();
 
     if (!r2)
@@ -195,7 +198,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
     QString R;
 
     // ### FIXME
-    if (ArrayObject *a = self->as<ArrayObject>()) {
+    if (ArrayObject *a = instance->as<ArrayObject>()) {
         ScopedValue e(scope);
         for (uint i = 0; i < a->getLength(); ++i) {
             if (i)
@@ -212,7 +215,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
         // crazy!
         //
         ScopedString name(scope, ctx->d()->engine->newString(QStringLiteral("0")));
-        ScopedValue r6(scope, self->get(name));
+        ScopedValue r6(scope, instance->get(name));
         if (!r6->isNullOrUndefined())
             R = r6->toQString();
 
@@ -221,7 +224,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
             R += r4;
 
             name = Primitive::fromDouble(k).toString(scope.engine);
-            r12 = self->get(name);
+            r12 = instance->get(name);
             if (scope.hasException())
                 return Encode::undefined();
 
