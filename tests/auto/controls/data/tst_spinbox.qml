@@ -478,4 +478,36 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_valueFromText_data() {
+        return [
+            { tag: "editable", editable: true },
+            { tag: "non-editable", editable: false }
+        ]
+    }
+
+    function test_valueFromText(data) {
+        var control = spinBox.createObject(testCase, {editable: data.editable})
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        var valueFromTextCalls = 0
+        control.valueFromText = function(text, locale) {
+            ++valueFromTextCalls
+            return Number.fromLocaleString(locale, text);
+        }
+
+        keyClick(Qt.Key_Enter)
+        compare(valueFromTextCalls, data.editable ? 1 : 0)
+
+        keyClick(Qt.Key_Return)
+        compare(valueFromTextCalls, data.editable ? 2 : 0)
+
+        control.focus = false
+        compare(valueFromTextCalls, data.editable ? 3 : 0)
+
+        control.destroy()
+    }
 }
