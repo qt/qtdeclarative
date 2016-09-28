@@ -4507,6 +4507,76 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 }
 
 /*!
+    \since 5.7
+    \qmlmethod object QtQuick::Item::mapFromGlobal(real x, real y)
+
+    Maps the point (\a x, \a y), which is in the global coordinate system, to the
+    item's coordinate system, and returns a \l point  matching the mapped coordinate.
+*/
+/*!
+    \internal
+  */
+void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2) {
+        v4->throwTypeError();
+        return;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue vx(scope, (*args)[0]);
+    QV4::ScopedValue vy(scope, (*args)[1]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        v4->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+    QVariant result = mapFromGlobal(QPointF(x, y));
+
+    QV4::ScopedObject rv(scope, v4->fromVariant(result));
+    args->setReturnValue(rv.asReturnedValue());
+}
+
+/*!
+    \since 5.7
+    \qmlmethod object QtQuick::Item::mapToGlobal(real x, real y)
+
+    Maps the point (\a x, \a y), which is in this item's coordinate system, to the
+    global coordinate system, and returns a \l point  matching the mapped coordinate.
+*/
+/*!
+    \internal
+  */
+void QQuickItem::mapToGlobal(QQmlV4Function *args) const
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2) {
+        v4->throwTypeError();
+        return;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue vx(scope, (*args)[0]);
+    QV4::ScopedValue vy(scope, (*args)[1]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        v4->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+    QVariant result = mapToGlobal(QPointF(x, y));
+
+    QV4::ScopedObject rv(scope, v4->fromVariant(result));
+    args->setReturnValue(rv.asReturnedValue());
+}
+
+/*!
     \qmlmethod QtQuick::Item::forceActiveFocus()
 
     Forces active focus on the item.

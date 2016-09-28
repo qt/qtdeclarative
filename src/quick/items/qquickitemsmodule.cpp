@@ -281,6 +281,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
                                                            QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
     qmlRegisterType<QQuickShaderEffectSource, 1>(uri, 2, 6, "ShaderEffectSource");
 
+    qmlRegisterType<QQuickItem, 7>(uri, 2, 7, "Item");
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
     qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
     qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");

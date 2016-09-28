@@ -321,12 +321,12 @@ public:
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     QPointF mapToScene(const QPointF &point) const;
-    Q_REVISION(7) Q_INVOKABLE QPointF mapToGlobal(const QPointF &point) const;
+    QPointF mapToGlobal(const QPointF &point) const;
     QRectF mapRectToItem(const QQuickItem *item, const QRectF &rect) const;
     QRectF mapRectToScene(const QRectF &rect) const;
     QPointF mapFromItem(const QQuickItem *item, const QPointF &point) const;
     QPointF mapFromScene(const QPointF &point) const;
-    Q_REVISION(7) Q_INVOKABLE QPointF mapFromGlobal(const QPointF &point) const;
+    QPointF mapFromGlobal(const QPointF &point) const;
     QRectF mapRectFromItem(const QQuickItem *item, const QRectF &rect) const;
     QRectF mapRectFromScene(const QRectF &rect) const;
 
@@ -334,6 +334,8 @@ public:
 
     Q_INVOKABLE void mapFromItem(QQmlV4Function*) const;
     Q_INVOKABLE void mapToItem(QQmlV4Function*) const;
+    Q_REVISION(7) Q_INVOKABLE void mapFromGlobal(QQmlV4Function*) const;
+    Q_REVISION(7) Q_INVOKABLE void mapToGlobal(QQmlV4Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
     Q_REVISION(1) Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
