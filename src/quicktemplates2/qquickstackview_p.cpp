@@ -270,8 +270,9 @@ bool QQuickStackElement::prepareTransition(QQuickItemViewTransitioner *transitio
     return false;
 }
 
-void QQuickStackElement::startTransition(QQuickItemViewTransitioner *transitioner)
+void QQuickStackElement::startTransition(QQuickItemViewTransitioner *transitioner, QQuickStackView::Status status)
 {
+    setStatus(status);
     if (transitioner)
         QQuickItemViewTransitionableItem::startTransition(transitioner, index);
 }
@@ -432,26 +433,22 @@ void QQuickStackViewPrivate::ensureTransitioner()
 
 void QQuickStackViewPrivate::startTransition(const QQuickStackTransition &first, const QQuickStackTransition &second, bool immediate)
 {
-    if (first.element) {
-        first.element->setStatus(first.status);
+    if (first.element)
         first.element->transitionNextReposition(transitioner, first.type, first.target);
-    }
-    if (second.element) {
-        second.element->setStatus(second.status);
+    if (second.element)
         second.element->transitionNextReposition(transitioner, second.type, second.target);
-    }
 
     if (first.element) {
         if (immediate || !first.element->item || !first.element->prepareTransition(transitioner, first.viewBounds))
-            completeTransition(first.element, transitioner->removeTransition);
+            completeTransition(first.element, transitioner->removeTransition, first.status);
         else
-            first.element->startTransition(transitioner);
+            first.element->startTransition(transitioner, first.status);
     }
     if (second.element) {
         if (immediate || !second.element->item || !second.element->prepareTransition(transitioner, second.viewBounds))
-            completeTransition(second.element, transitioner->removeDisplacedTransition);
+            completeTransition(second.element, transitioner->removeDisplacedTransition, second.status);
         else
-            second.element->startTransition(transitioner);
+            second.element->startTransition(transitioner, second.status);
     }
 
     if (transitioner) {
@@ -460,8 +457,9 @@ void QQuickStackViewPrivate::startTransition(const QQuickStackTransition &first,
     }
 }
 
-void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQuickTransition *transition)
+void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQuickTransition *transition, QQuickStackView::Status status)
 {
+    element->setStatus(status);
     if (transition) {
         // TODO: add a proper way to complete a transition
         QQmlListProperty<QQuickAbstractAnimation> animations = transition->animations();

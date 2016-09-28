@@ -80,22 +80,17 @@ public:
     {
     }
 
-    void updatePosition();
-    qreal positionAt(const QPoint &point) const;
+    qreal positionAt(const QPointF &point) const;
 
     qreal position;
 };
 
-void QQuickSwitchDelegatePrivate::updatePosition()
-{
-    Q_Q(QQuickSwitchDelegate);
-    q->setPosition(checked ? 1.0 : 0.0);
-}
-
-qreal QQuickSwitchDelegatePrivate::positionAt(const QPoint &point) const
+qreal QQuickSwitchDelegatePrivate::positionAt(const QPointF &point) const
 {
     Q_Q(const QQuickSwitchDelegate);
-    qreal pos = point.x() / indicator->width();
+    qreal pos = 0.0;
+    if (indicator)
+        pos = indicator->mapFromItem(q, point).x() / indicator->width();
     if (q->isMirrored())
         return 1.0 - pos;
     return pos;
@@ -104,9 +99,9 @@ qreal QQuickSwitchDelegatePrivate::positionAt(const QPoint &point) const
 QQuickSwitchDelegate::QQuickSwitchDelegate(QQuickItem *parent) :
     QQuickItemDelegate(*(new QQuickSwitchDelegatePrivate), parent)
 {
+    Q_D(QQuickSwitchDelegate);
+    d->keepPressed = true;
     setCheckable(true);
-
-    QObjectPrivate::connect(this, &QQuickAbstractButton::checkedChanged, d_func(), &QQuickSwitchDelegatePrivate::updatePosition);
 }
 
 /*!
@@ -147,6 +142,37 @@ qreal QQuickSwitchDelegate::visualPosition() const
     return d->position;
 }
 
+void QQuickSwitchDelegate::mousePressEvent(QMouseEvent *event)
+{
+    QQuickItemDelegate::mousePressEvent(event);
+}
+
+void QQuickSwitchDelegate::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickSwitchDelegate);
+    QQuickItemDelegate::mouseMoveEvent(event);
+
+    const QPointF movePoint = event->localPos();
+    if (!keepMouseGrab()) {
+        // don't start dragging the handle unless the initial press was at the indicator,
+        // or the drag has reached the indicator area. this prevents unnatural jumps when
+        // dragging far outside the indicator.
+        const qreal pressPos = d->positionAt(d->pressPoint);
+        const qreal movePos = d->positionAt(movePoint);
+        if ((pressPos >= 0.0 && pressPos <= 1.0) || (movePos >= 0.0 && movePos <= 1.0))
+            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(), Qt::XAxis, event));
+    }
+
+    if (keepMouseGrab())
+        setPosition(d->positionAt(movePoint));
+}
+
+void QQuickSwitchDelegate::mouseReleaseEvent(QMouseEvent *event)
+{
+    QQuickItemDelegate::mouseReleaseEvent(event);
+    setKeepMouseGrab(false);
+}
+
 QFont QQuickSwitchDelegate::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
@@ -156,6 +182,21 @@ void QQuickSwitchDelegate::mirrorChange()
 {
     QQuickItemDelegate::mirrorChange();
     emit visualPositionChanged();
+}
+
+void QQuickSwitchDelegate::nextCheckState()
+{
+    Q_D(QQuickSwitchDelegate);
+    if (keepMouseGrab())
+        setChecked(d->position > 0.5);
+    else
+        QQuickItemDelegate::nextCheckState();
+}
+
+void QQuickSwitchDelegate::checkStateSet()
+{
+    Q_D(QQuickSwitchDelegate);
+    setPosition(d->checked ? 1.0 : 0.0);
 }
 
 QT_END_NAMESPACE

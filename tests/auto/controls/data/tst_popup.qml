@@ -355,6 +355,48 @@ TestCase {
         control.destroy()
     }
 
+    function test_resetSize() {
+        var control = popupControl.createObject(testCase, {visible: true, margins: 0})
+        verify(control)
+
+        control.width = control.implicitWidth = testCase.width + 10
+        control.height = control.implicitHeight = testCase.height + 10
+
+        compare(control.width, testCase.width + 10)
+        compare(control.height, testCase.height + 10)
+
+        control.width = undefined
+        control.height = undefined
+        compare(control.width, testCase.width)
+        compare(control.height, testCase.height)
+
+        control.destroy()
+    }
+
+    function test_negativeMargins() {
+        var control = popupControl.createObject(testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
+        verify(control)
+
+        control.open()
+        verify(control.visible)
+
+        compare(control.x, 0)
+        compare(control.y, 0)
+
+        compare(control.margins, -1)
+        compare(control.topMargin, -1)
+        compare(control.leftMargin, -1)
+        compare(control.rightMargin, -1)
+        compare(control.bottomMargin, -1)
+
+        control.x = -10
+        control.y = -10
+        compare(control.x, 0)
+        compare(control.y, 0)
+
+        control.destroy()
+    }
+
     function test_margins() {
         var control = popupControl.createObject(testCase, {width: 100, height: 100})
         verify(control)
@@ -441,41 +483,6 @@ TestCase {
         compare(control.contentItem.parent.y, -testCase.height)
 
         control.destroy()
-    }
-
-    function test_flip_data() {
-        return [
-            {tag: "flip top-bottom", parentX: 0, parentY: 0, popupX: 0, popupY: -50, popupItemX: 0, popupItemY: 50, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "flip bottom-top", parentX: 0, parentY: 300, popupX: 0, popupY: 50, popupItemX: 0, popupItemY: 250, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "flip left-right", parentX: 0, parentY: 0, popupX: -50, popupY: 0, popupItemX: 50, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "flip right-left", parentX: 300, parentY: 0, popupX: 50, popupY: 0, popupItemX: 250, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-
-            {tag: "no flip top-bottom", parentX: 0, parentY: 50, popupX: 0, popupY: -50, popupItemX: 0, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "no flip bottom-top", parentX: 0, parentY: 250, popupX: 0, popupY: 50, popupItemX: 0, popupItemY: 300, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "no flip left-right", parentX: 50, parentY: 0, popupX: -50, popupY: 0, popupItemX: 0, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-            {tag: "no flip right-left", parentX: 250, parentY: 0, popupX: 50, popupY: 0, popupItemX: 300, popupItemY: 0, allowVerticalFlip: true, allowHorizontalFlip: true },
-
-            {tag: "disallow flip top-bottom", parentX: 0, parentY: 0, popupX: 0, popupY: -50, popupItemX: 0, popupItemY: -50, allowVerticalFlip: false, allowHorizontalFlip: false },
-            {tag: "disallow flip bottom-top", parentX: 0, parentY: 300, popupX: 0, popupY: 50, popupItemX: 0, popupItemY: 350, allowVerticalFlip: false, allowHorizontalFlip: false },
-            {tag: "disallow flip left-right", parentX: 0, parentY: 0, popupX: -50, popupY: 0, popupItemX: -50, popupItemY: 0, allowVerticalFlip: false, allowHorizontalFlip: false },
-            {tag: "disallow flip right-left", parentX: 300, parentY: 0, popupX: 50, popupY: 0, popupItemX: 350, popupItemY: 0, allowVerticalFlip: false, allowHorizontalFlip: false }
-        ]
-    }
-
-    function test_flip(data) {
-        var parentItem = rect.createObject(testCase, {color: "red", x: data.parentX, y: data.parentY, width: 100, height: 100})
-        verify(parentItem)
-
-        var control = popupControl.createObject(parentItem, {x: data.popupX, y: data.popupY, width: 100, height: 100, allowVerticalFlip: data.allowVerticalFlip, allowHorizontalFlip: data.allowHorizontalFlip})
-        verify(control)
-
-        control.open()
-        verify(control.visible)
-
-        compare(control.contentItem.parent.y, data.popupItemY)
-        compare(control.contentItem.parent.x, data.popupItemX)
-
-        parentItem.destroy()
     }
 
     function test_background() {
@@ -975,14 +982,52 @@ TestCase {
         var control = popupControl.createObject(testCase)
         verify(control)
 
-        control.width = 200
-        control.height = 200
-
         control.open()
         waitForRendering(control.contentItem)
 
-        compare(control.width, 200)
-        compare(control.height, 200)
+        // implicit size of the content
+        control.contentItem.implicitWidth = 10
+        compare(control.implicitWidth, 10 + control.leftPadding + control.rightPadding)
+        compare(control.width, control.implicitWidth)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.contentItem.implicitHeight = 20
+        compare(control.implicitHeight, 20 + control.topPadding + control.bottomPadding)
+        compare(control.height, control.implicitHeight)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+
+        // implicit size of the popup
+        control.implicitWidth = 30
+        compare(control.implicitWidth, 30)
+        compare(control.width, 30)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.implicitHeight = 40
+        compare(control.implicitHeight, 40)
+        compare(control.height, 40)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+
+        // set explicit size
+        control.width = 50
+        compare(control.implicitWidth, 30)
+        compare(control.width, 50)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.height = 60
+        compare(control.implicitHeight, 40)
+        compare(control.height, 60)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+
+        // reset explicit size
+        control.width = undefined
+        compare(control.implicitWidth, 30)
+        compare(control.width, 30)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+
+        control.height = undefined
+        compare(control.implicitHeight, 40)
+        compare(control.height, 40)
+        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
 
         control.destroy()
     }

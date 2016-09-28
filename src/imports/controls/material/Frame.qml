@@ -50,8 +50,6 @@ T.Frame {
 
     padding: 12
 
-    contentItem: Item { }
-
     background: Rectangle {
         radius: 2
         color: control.Material.elevation > 0 ? control.Material.backgroundColor : "transparent"

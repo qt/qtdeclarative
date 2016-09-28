@@ -9,6 +9,7 @@ RESOURCES += \
     gallery.qml \
     qtquickcontrols2.conf \
     $$files(images/*.png) \
+    $$files(images/+material/*.png) \
     $$files(pages/*.qml)
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/gallery

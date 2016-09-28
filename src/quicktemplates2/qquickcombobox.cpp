@@ -688,7 +688,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 
     d->deleteDelegate(d->popup);
     if (popup) {
-        popup->setAllowVerticalFlip(true);
+        QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
     }
     d->popup = popup;

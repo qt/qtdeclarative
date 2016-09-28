@@ -135,9 +135,10 @@
     The configuration file can specify the preferred style (may be overridden by either
     of the methods described earlier) and certain style-specific attributes. The following
     example specifies that the preferred style is the Material style. Furthermore, when the
-    application is run with the Material style, its theme is light and the accent color is
-    brown. However, if the application is run with the Universal style instead, the accent
-    color is red and the appropriate theme is chosen based on the system theme colors.
+    application is run with the Material style, its theme is light and the accent and primary
+    colors are teal and blue grey, respectively. However, if the application is run with the
+    Universal style instead, the accent color is red and the appropriate theme is chosen based
+    on the system theme colors.
 
     \code
     [Controls]
@@ -149,7 +150,8 @@
 
     [Material]
     Theme=Light
-    Accent=Brown
+    Accent=Teal
+    Primary=BlueGrey
     \endcode
 
     In order to make it possible for Qt Quick Controls 2 to find the configuration file,

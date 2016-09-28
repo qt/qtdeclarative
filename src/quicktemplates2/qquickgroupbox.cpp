@@ -48,10 +48,10 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A frame with a logical group of controls.
+    \brief A logical group of controls within a titled visual frame.
 
     GroupBox is used to layout a logical group of controls together, within
-    a titled visual frame. GroupBox does not provide a layout of its own, but
+    a \l {title}{titled} visual frame. GroupBox does not provide a layout of its own, but
     requires you to position its contents, for instance by creating a \l RowLayout
     or a \l ColumnLayout.
 
@@ -75,8 +75,8 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-groupbox-checkable.png
 
     It is a common pattern to enable or disable the groupbox's children when
-    its checkbox is toggled on or off, but it is the application that decides
-    on the behavior of the groupbox.
+    its checkbox is toggled on or off, but it is up to the application to decide
+    on the behavior of the checkbox.
 
     \snippet qtquickcontrols2-groupbox-checkable.qml 1
 
@@ -101,6 +101,9 @@ QQuickGroupBox::QQuickGroupBox(QQuickItem *parent) :
     \qmlproperty string QtQuick.Controls::GroupBox::title
 
     This property holds the title.
+
+    The title is typically displayed above the groupbox to
+    summarize its contents.
 */
 QString QQuickGroupBox::title() const
 {

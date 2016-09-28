@@ -51,8 +51,6 @@ T.Popup {
 
     padding: 12
 
-    contentItem: Item { }
-
     background: Rectangle {
         color: control.Universal.chromeMediumLowColor
         border.color: control.Universal.chromeHighColor

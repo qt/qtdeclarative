@@ -50,8 +50,6 @@ T.Pane {
 
     padding: 12
 
-    contentItem: Item { }
-
     background: Rectangle {
         color: control.Material.backgroundColor
         radius: control.Material.elevation > 0 ? 2 : 0

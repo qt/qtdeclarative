@@ -125,12 +125,18 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasDim(false)
     , visible(false)
     , complete(false)
+    , hasWidth(false)
+    , hasHeight(false)
     , hasTopMargin(false)
     , hasLeftMargin(false)
     , hasRightMargin(false)
     , hasBottomMargin(false)
     , allowVerticalFlip(false)
     , allowHorizontalFlip(false)
+    , allowVerticalMove(true)
+    , allowHorizontalMove(true)
+    , allowVerticalResize(true)
+    , allowHorizontalResize(true)
     , hadActiveFocusBeforeExitTransition(false)
     , x(0)
     , y(0)
@@ -346,6 +352,8 @@ public:
 
     void resolveFont() override;
 
+    QQuickItem *getContentItem() override;
+
     QQuickPopup *popup;
 };
 
@@ -370,6 +378,14 @@ void QQuickPopupItemPrivate::resolveFont()
 {
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
         inheritFont(window->font());
+}
+
+QQuickItem *QQuickPopupItemPrivate::getContentItem()
+{
+    Q_Q(QQuickPopupItem);
+    if (!contentItem)
+        contentItem = new QQuickItem(q);
+    return contentItem;
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
@@ -587,13 +603,19 @@ void QQuickPopupPrivate::reposition()
     bool widthAdjusted = false;
     bool heightAdjusted = false;
 
-    QRectF rect(x, y, iw > 0 ? iw : w, ih > 0 ? ih : h);
+    QRectF rect(allowHorizontalMove ? x : popupItem->x(),
+                allowVerticalMove ? y : popupItem->y(),
+                !hasWidth && iw > 0 ? iw : w,
+                !hasHeight && ih > 0 ? ih : h);
     if (parentItem) {
         rect = parentItem->mapRectToScene(rect);
 
         if (window) {
             const QMarginsF margins = getMargins();
-            const QRectF bounds = QRectF(0, 0, window->width(), window->height()).marginsRemoved(margins);
+            const QRectF bounds(qMax<qreal>(0.0, margins.left()),
+                                qMax<qreal>(0.0, margins.top()),
+                                window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
+                                window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
 
             // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
             if (allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
@@ -610,31 +632,39 @@ void QQuickPopupPrivate::reposition()
             }
 
             // push inside the margins if specified
-            if (margins.top() >= 0 && rect.top() < bounds.top())
-                rect.moveTop(margins.top());
-            if (margins.bottom() >= 0 && rect.bottom() > bounds.bottom())
-                rect.moveBottom(bounds.bottom());
-            if (margins.left() >= 0 && rect.left() < bounds.left())
-                rect.moveLeft(margins.left());
-            if (margins.right() >= 0 && rect.right() > bounds.right())
-                rect.moveRight(bounds.right());
+            if (allowVerticalMove) {
+                if (margins.top() >= 0 && rect.top() < bounds.top())
+                    rect.moveTop(margins.top());
+                if (margins.bottom() >= 0 && rect.bottom() > bounds.bottom())
+                    rect.moveBottom(bounds.bottom());
+            }
+            if (allowHorizontalMove) {
+                if (margins.left() >= 0 && rect.left() < bounds.left())
+                    rect.moveLeft(margins.left());
+                if (margins.right() >= 0 && rect.right() > bounds.right())
+                    rect.moveRight(bounds.right());
+            }
 
             if (iw > 0 && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
                 // neither the flipped or pushed geometry fits inside the window, choose
                 // whichever side (left vs. right) fits larger part of the popup
-                if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
-                    rect.moveLeft(bounds.left());
-                else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
-                    rect.moveRight(bounds.right());
+                if (allowHorizontalMove && allowHorizontalFlip) {
+                    if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
+                        rect.moveLeft(bounds.left());
+                    else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
+                        rect.moveRight(bounds.right());
+                }
 
                 // as a last resort, adjust the width to fit the window
-                if (rect.left() < bounds.left()) {
-                    rect.setLeft(bounds.left());
-                    widthAdjusted = true;
-                }
-                if (rect.right() > bounds.right()) {
-                    rect.setRight(bounds.right());
-                    widthAdjusted = true;
+                if (allowHorizontalResize) {
+                    if (rect.left() < bounds.left()) {
+                        rect.setLeft(bounds.left());
+                        widthAdjusted = true;
+                    }
+                    if (rect.right() > bounds.right()) {
+                        rect.setRight(bounds.right());
+                        widthAdjusted = true;
+                    }
                 }
             } else if (iw > 0 && rect.left() >= bounds.left() && rect.right() <= bounds.right()
                        && iw != w) {
@@ -646,19 +676,23 @@ void QQuickPopupPrivate::reposition()
             if (ih > 0 && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
                 // neither the flipped or pushed geometry fits inside the window, choose
                 // whichever side (above vs. below) fits larger part of the popup
-                if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
-                    rect.moveTop(bounds.top());
-                else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
-                    rect.moveBottom(bounds.bottom());
+                if (allowVerticalMove && allowVerticalFlip) {
+                    if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
+                        rect.moveTop(bounds.top());
+                    else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
+                        rect.moveBottom(bounds.bottom());
+                }
 
                 // as a last resort, adjust the height to fit the window
-                if (rect.top() < bounds.top()) {
-                    rect.setTop(bounds.top());
-                    heightAdjusted = true;
-                }
-                if (rect.bottom() > bounds.bottom()) {
-                    rect.setBottom(bounds.bottom());
-                    heightAdjusted = true;
+                if (allowVerticalResize) {
+                    if (rect.top() < bounds.top()) {
+                        rect.setTop(bounds.top());
+                        heightAdjusted = true;
+                    }
+                    if (rect.bottom() > bounds.bottom()) {
+                        rect.setBottom(bounds.bottom());
+                        heightAdjusted = true;
+                    }
                 }
             } else if (ih > 0 && rect.top() >= bounds.top() && rect.bottom() <= bounds.bottom()
                        && ih != h) {
@@ -681,10 +715,20 @@ void QQuickPopupPrivate::reposition()
         emit q->yChanged();
     }
 
-    if (widthAdjusted && rect.width() > 0)
+    if (!hasWidth && widthAdjusted && rect.width() > 0)
         popupItem->setWidth(rect.width());
-    if (heightAdjusted && rect.height() > 0)
+    if (!hasHeight && heightAdjusted && rect.height() > 0)
         popupItem->setHeight(rect.height());
+}
+
+void QQuickPopupPrivate::resizeOverlay()
+{
+    if (!dimmer)
+        return;
+
+    qreal w = window ? window->width() : 0;
+    qreal h = window ? window->height() : 0;
+    dimmer->setSize(QSizeF(w, h));
 }
 
 void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
@@ -907,13 +951,20 @@ qreal QQuickPopup::width() const
 void QQuickPopup::setWidth(qreal width)
 {
     Q_D(QQuickPopup);
+    d->hasWidth = true;
     d->popupItem->setWidth(width);
 }
 
 void QQuickPopup::resetWidth()
 {
     Q_D(QQuickPopup);
+    if (!d->hasWidth)
+        return;
+
+    d->hasWidth = false;
     d->popupItem->resetWidth();
+    if (d->popupItem->isVisible())
+        d->reposition();
 }
 
 /*!
@@ -930,13 +981,20 @@ qreal QQuickPopup::height() const
 void QQuickPopup::setHeight(qreal height)
 {
     Q_D(QQuickPopup);
+    d->hasHeight = true;
     d->popupItem->setHeight(height);
 }
 
 void QQuickPopup::resetHeight()
 {
     Q_D(QQuickPopup);
+    if (!d->hasHeight)
+        return;
+
+    d->hasHeight = false;
     d->popupItem->resetHeight();
+    if (d->popupItem->isVisible())
+        d->reposition();
 }
 
 /*!
@@ -1335,64 +1393,6 @@ void QQuickPopup::resetBottomPadding()
 {
     Q_D(QQuickPopup);
     d->popupItem->resetBottomPadding();
-}
-
-/*!
-    \since QtQuick.Controls 2.1
-    \qmlproperty bool QtQuick.Controls::Popup::allowVerticalFlip
-
-    This property holds whether the popup is allowed to flip vertically.
-
-    A popup can be flipped from above its parent item to below it, or vice
-    versa, in order to make the popup fit inside the window.
-
-    The default value is \c false.
-
-    \sa allowHorizontalFlip
-*/
-bool QQuickPopup::allowVerticalFlip() const
-{
-    Q_D(const QQuickPopup);
-    return d->allowVerticalFlip;
-}
-
-void QQuickPopup::setAllowVerticalFlip(bool allow)
-{
-    Q_D(QQuickPopup);
-    if (d->allowVerticalFlip == allow)
-        return;
-
-    d->allowVerticalFlip = allow;
-    emit allowVerticalFlipChanged();
-}
-
-/*!
-    \since QtQuick.Controls 2.1
-    \qmlproperty bool QtQuick.Controls::Popup::allowHorizontalFlip
-
-    This property holds whether the popup is allowed to flip horizontally.
-
-    A popup can be flipped from the left side of its parent item to the right
-    side, or vice versa, in order to make the popup fit inside the window.
-
-    The default value is \c false.
-
-    \sa allowVerticalFlip
-*/
-bool QQuickPopup::allowHorizontalFlip() const
-{
-    Q_D(const QQuickPopup);
-    return d->allowHorizontalFlip;
-}
-
-void QQuickPopup::setAllowHorizontalFlip(bool allow)
-{
-    Q_D(QQuickPopup);
-    if (d->allowHorizontalFlip == allow)
-        return;
-
-    d->allowHorizontalFlip = allow;
-    emit allowHorizontalFlipChanged();
 }
 
 /*!

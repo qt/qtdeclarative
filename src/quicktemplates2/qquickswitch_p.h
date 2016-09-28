@@ -73,8 +73,14 @@ Q_SIGNALS:
     void visualPositionChanged();
 
 protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
     void mirrorChange() override;
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
+
+    void nextCheckState() override;
+    void checkStateSet() override;
 
 private:
     Q_DISABLE_COPY(QQuickSwitch)

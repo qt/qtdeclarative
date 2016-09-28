@@ -54,8 +54,8 @@ QT_BEGIN_NAMESPACE
     or a \l ColumnLayout.
 
     Items declared as children of a Frame are automatically parented to the
-    Frame's contentItem. Items created dynamically need to be explicitly
-    parented to the contentItem.
+    Frame's \l {Control::}{contentItem}. Items created dynamically need to be
+    explicitly parented to the contentItem.
 
     If only a single item is used within a Frame, it will resize to fit the
     implicit size of its contained item. This makes it particularly suitable

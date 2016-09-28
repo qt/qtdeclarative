@@ -113,7 +113,7 @@ void QQuickOverlayPrivate::createOverlay(QQuickPopup *popup)
     QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
     if (!p->dimmer)
         p->dimmer = createDimmer(popup->isModal() ? modal : modeless, popup, q);
-    resizeOverlay(popup);
+    p->resizeOverlay();
 }
 
 void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
@@ -123,16 +123,6 @@ void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
         p->dimmer->setParentItem(nullptr);
         p->dimmer->deleteLater();
         p->dimmer = nullptr;
-    }
-}
-
-void QQuickOverlayPrivate::resizeOverlay(QQuickPopup *popup)
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
-    if (p->dimmer) {
-        p->dimmer->setWidth(q->width());
-        p->dimmer->setHeight(q->height());
     }
 }
 
@@ -320,7 +310,7 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
     Q_D(QQuickOverlay);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     for (QQuickPopup *popup : qAsConst(d->allPopups))
-        d->resizeOverlay(popup);
+        QQuickPopupPrivate::get(popup)->resizeOverlay();
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
@@ -398,17 +388,32 @@ void QQuickOverlay::wheelEvent(QWheelEvent *event)
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickOverlay);
-    for (QQuickPopup *popup : qAsConst(d->allPopups)) {
-        QQuickItem *dimmer = QQuickPopupPrivate::get(popup)->dimmer;
-        if (item == dimmer) {
+    const auto popups = d->stackingOrderPopups();
+    for (QQuickPopup *popup : popups) {
+        QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
+
+        // Stop filtering overlay events when reaching a popup item or an item
+        // that is inside the popup. Let the popup content handle its events.
+        if (item == p->popupItem || p->popupItem->isAncestorOf(item))
+            break;
+
+        // Let the popup try closing itself when pressing or releasing over its
+        // background dimming OR over another popup underneath, in case the popup
+        // does not have background dimming.
+        if (item == p->dimmer || !p->popupItem->isAncestorOf(item)) {
             switch (event->type()) {
             case QEvent::MouseButtonPress:
                 emit pressed();
-                return popup->overlayEvent(item, event);
+                if (popup->overlayEvent(item, event)) {
+                    d->mouseGrabberPopup = popup;
+                    return true;
+                }
+                break;
             case QEvent::MouseMove:
                 return popup->overlayEvent(item, event);
             case QEvent::MouseButtonRelease:
                 emit released();
+                d->mouseGrabberPopup = nullptr;
                 return popup->overlayEvent(item, event);
             default:
                 break;

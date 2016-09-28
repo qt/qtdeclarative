@@ -70,7 +70,25 @@ QT_BEGIN_NAMESPACE
     events from the window system, and paints a representation of itself on
     the screen.
 
+    \section1 Control Layout
+
+    The following diagram illustrates the layout of a typical control:
+
     \image qtquickcontrols2-control.png
+
+    The \l {Item::}{implicitWidth} and \l {Item::}{implicitHeight} of a control
+    are typically based on the implicit sizes of the background and the content
+    item plus any \l {Control::}{padding}. These properties determine how large
+    the control will be when no explicit \l {Item::}{width} or
+    \l {Item::}{height} is specified.
+
+    The \l {Control::}{background} item fills the entire width and height of the
+    control, unless an explicit size has been given for it.
+
+    The geometry of the \l {Control::}{contentItem} is determined by the
+    padding.
+
+    \section1 Event Handling
 
     All controls, except non-interactive indicators, do not let clicks and
     touches through to items below them. For example, if \l Pane is used as the
@@ -194,6 +212,11 @@ void QQuickControlPrivate::resizeContent()
         contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
         contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight()));
     }
+}
+
+QQuickItem *QQuickControlPrivate::getContentItem()
+{
+    return contentItem;
 }
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -397,6 +420,10 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
     switch (change) {
+    case ItemVisibleHasChanged:
+        if (!value.boolValue)
+            setHovered(false);
+        break;
     case ItemParentHasChanged:
         if (value.item) {
             d->resolveFont();
@@ -432,6 +459,22 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Control propagates explicit font properties from parent to children. If you change a specific
     property on a control's font, that property propagates to all of the control's children,
     overriding any system defaults for that property.
+
+    \code
+    Page {
+        font.family: "Courier"
+
+        Column {
+            Label {
+                text: qsTr("This will use Courier...")
+            }
+
+            Switch {
+                text: qsTr("... and so will this")
+            }
+        }
+    }
+    \endcode
 */
 QFont QQuickControl::font() const
 {
@@ -458,9 +501,10 @@ void QQuickControl::resetFont()
     \qmlproperty real QtQuick.Controls::Control::availableWidth
     \readonly
 
-    This property holds the width available after deducting horizontal padding.
+    This property holds the width available to the \l contentItem after
+    deducting horizontal padding from the \l {Item::}{width} of the control.
 
-    \sa padding, leftPadding, rightPadding
+    \sa {Control Layout}, padding, leftPadding, rightPadding
 */
 qreal QQuickControl::availableWidth() const
 {
@@ -471,9 +515,10 @@ qreal QQuickControl::availableWidth() const
     \qmlproperty real QtQuick.Controls::Control::availableHeight
     \readonly
 
-    This property holds the height available after deducting vertical padding.
+    This property holds the height available to the \l contentItem after
+    deducting vertical padding from the \l {Item::}{height} of the control.
 
-    \sa padding, topPadding, bottomPadding
+    \sa {Control Layout}, padding, topPadding, bottomPadding
 */
 qreal QQuickControl::availableHeight() const
 {
@@ -485,7 +530,19 @@ qreal QQuickControl::availableHeight() const
 
     This property holds the default padding.
 
-    \sa availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
+    Padding adds a space between each edge of the content item and the
+    background item, effectively controlling the size of the content item. To
+    specify a padding value for a specific edge of the control, set its
+    relevant property:
+
+    \list
+    \li \l {Control::}{leftPadding}
+    \li \l {Control::}{rightPadding}
+    \li \l {Control::}{topPadding}
+    \li \l {Control::}{bottomPadding}
+    \endlist
+
+    \sa {Control Layout}, availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
 qreal QQuickControl::padding() const
 {
@@ -527,7 +584,7 @@ void QQuickControl::resetPadding()
 
     This property holds the top padding.
 
-    \sa padding, bottomPadding, availableHeight
+    \sa {Control Layout}, padding, bottomPadding, availableHeight
 */
 qreal QQuickControl::topPadding() const
 {
@@ -554,7 +611,7 @@ void QQuickControl::resetTopPadding()
 
     This property holds the left padding.
 
-    \sa padding, rightPadding, availableWidth
+    \sa {Control Layout}, padding, rightPadding, availableWidth
 */
 qreal QQuickControl::leftPadding() const
 {
@@ -581,7 +638,7 @@ void QQuickControl::resetLeftPadding()
 
     This property holds the right padding.
 
-    \sa padding, leftPadding, availableWidth
+    \sa {Control Layout}, padding, leftPadding, availableWidth
 */
 qreal QQuickControl::rightPadding() const
 {
@@ -608,7 +665,7 @@ void QQuickControl::resetRightPadding()
 
     This property holds the bottom padding.
 
-    \sa padding, topPadding, availableHeight
+    \sa {Control Layout}, padding, topPadding, availableHeight
 */
 qreal QQuickControl::bottomPadding() const
 {
@@ -634,6 +691,12 @@ void QQuickControl::resetBottomPadding()
     \qmlproperty real QtQuick.Controls::Control::spacing
 
     This property holds the spacing.
+
+    Spacing is useful for controls that have multiple or repetitive building
+    blocks. For example, some styles use spacing to determine the distance
+    between the text and indicator of \l CheckBox. Spacing is not enforced by
+    Control, so each style may interpret it differently, and some may ignore it
+    altogether.
 */
 qreal QQuickControl::spacing() const
 {
@@ -766,9 +829,11 @@ void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
     This property holds whether the control is mirrored.
 
     This property is provided for convenience. A control is considered mirrored
-    when its visual layout direction is right-to-left.
+    when its visual layout direction is right-to-left; that is, when using a
+    right-to-left locale or when \l {LayoutMirroring::enabled}{LayoutMirroring.enabled}
+    is \c true.
 
-    \sa locale, {LayoutMirroring}{LayoutMirroring}
+    \sa locale, {LayoutMirroring}{LayoutMirroring}, {Right-to-left User Interfaces}
 */
 bool QQuickControl::isMirrored() const
 {
@@ -917,6 +982,10 @@ void QQuickControl::setHoverEnabled(bool enabled)
     \qmlproperty bool QtQuick.Controls::Control::wheelEnabled
 
     This property determines whether the control handles wheel events. The default value is \c false.
+
+    \note Care must be taken when enabling wheel events for controls within scrollable items such
+    as \l Flickable, as the control will consume the events and hence interrupt scrolling of the
+    Flickable.
 */
 bool QQuickControl::isWheelEnabled() const
 {
@@ -939,9 +1008,30 @@ void QQuickControl::setWheelEnabled(bool enabled)
 
     This property holds the background item.
 
+    \code
+    Button {
+        id: control
+        text: qsTr("Button")
+        background: Rectangle {
+            implicitWidth: 100
+            implicitHeight: 40
+            opacity: enabled ? 1 : 0.3
+            color: control.down ? "#d0d0d0" : "#e0e0e0"
+        }
+    }
+    \endcode
+
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
           width or height for a background item.
+
+    \note Most controls use the implicit size of the background item to calculate
+    the implicit size of the control itself. If you replace the background item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Image which has its own implicit
+    size).
+
+    \sa {Control Layout}
 */
 QQuickItem *QQuickControl::background() const
 {
@@ -972,12 +1062,33 @@ void QQuickControl::setBackground(QQuickItem *background)
 
     This property holds the visual content item.
 
-    \note The content item is automatically resized inside the \l padding of the control.
+    \note The content item is automatically resized to fit within the
+    \l padding of the control.
+
+    \note Most controls use the implicit size of the content item to calculate
+    the implicit size of the control itself. If you replace the content item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Text which has its own implicit
+    size).
+
+    \code
+    Button {
+        id: control
+        text: qsTr("Button")
+        contentItem: Label {
+            text: control.text
+            font: control.font
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+    \endcode
+
+    \sa {Control Layout}, padding
 */
 QQuickItem *QQuickControl::contentItem() const
 {
-    Q_D(const QQuickControl);
-    return d->contentItem;
+    QQuickControlPrivate *d = const_cast<QQuickControlPrivate *>(d_func());
+    return d->getContentItem();
 }
 
 void QQuickControl::setContentItem(QQuickItem *item)

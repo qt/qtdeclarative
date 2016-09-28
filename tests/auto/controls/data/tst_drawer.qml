@@ -60,6 +60,7 @@ TestCase {
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
         compare(control.dragMargin, Qt.styleHints.startDragDistance)
+        compare(control.parent, ApplicationWindow.overlay)
         control.destroy()
     }
 

@@ -52,8 +52,6 @@ T.Popup {
 
     padding: 12
 
-    contentItem: Item { }
-
     background: Rectangle {
         border.color: Default.frameDarkColor
     }

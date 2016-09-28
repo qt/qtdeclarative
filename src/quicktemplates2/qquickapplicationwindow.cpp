@@ -443,7 +443,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
     The difference between \l Window::activeFocusItem and ApplicationWindow::activeFocusControl
     is that the former may point to a building block of a control, whereas the latter points
     to the enclosing control. For example, when SpinBox has focus, activeFocusItem points to
-    the editor and acticeFocusControl to the SpinBox itself.
+    the editor and activeFocusControl to the SpinBox itself.
 
     \sa Window::activeFocusItem
 */
@@ -622,47 +622,49 @@ public:
 
     void windowChange(QQuickWindow *wnd);
 
-    QQuickApplicationWindow *window;
+    QQuickWindow *window;
 };
 
 void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
 {
     Q_Q(QQuickApplicationWindowAttached);
-    if (window && !QQuickApplicationWindowPrivate::get(window))
-        window = nullptr; // being deleted (QTBUG-52731)
+    if (window == wnd)
+        return;
+
+    QQuickApplicationWindow *oldWindow = qobject_cast<QQuickApplicationWindow *>(window);
+    if (oldWindow && !QQuickApplicationWindowPrivate::get(oldWindow))
+        oldWindow = nullptr; // being deleted (QTBUG-52731)
+
+    if (oldWindow) {
+        QObject::disconnect(oldWindow, &QQuickApplicationWindow::activeFocusControlChanged,
+                            q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
+        QObject::disconnect(oldWindow, &QQuickApplicationWindow::headerChanged,
+                            q, &QQuickApplicationWindowAttached::headerChanged);
+        QObject::disconnect(oldWindow, &QQuickApplicationWindow::footerChanged,
+                            q, &QQuickApplicationWindowAttached::footerChanged);
+    }
 
     QQuickApplicationWindow *newWindow = qobject_cast<QQuickApplicationWindow *>(wnd);
-    if (window != newWindow) {
-        QQuickApplicationWindow *oldWindow = window;
-        if (oldWindow) {
-            QObject::disconnect(oldWindow, &QQuickApplicationWindow::activeFocusControlChanged,
-                                q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
-            QObject::disconnect(oldWindow, &QQuickApplicationWindow::headerChanged,
-                                q, &QQuickApplicationWindowAttached::headerChanged);
-            QObject::disconnect(oldWindow, &QQuickApplicationWindow::footerChanged,
-                                q, &QQuickApplicationWindowAttached::footerChanged);
-        }
-        if (newWindow) {
-            QObject::connect(newWindow, &QQuickApplicationWindow::activeFocusControlChanged,
-                             q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
-            QObject::connect(newWindow, &QQuickApplicationWindow::headerChanged,
-                             q, &QQuickApplicationWindowAttached::headerChanged);
-            QObject::connect(newWindow, &QQuickApplicationWindow::footerChanged,
-                             q, &QQuickApplicationWindowAttached::footerChanged);
-        }
-
-        window = newWindow;
-        emit q->windowChanged();
-        emit q->contentItemChanged();
-        emit q->overlayChanged();
-
-        if ((oldWindow && oldWindow->activeFocusControl()) || (newWindow && newWindow->activeFocusControl()))
-            emit q->activeFocusControlChanged();
-        if ((oldWindow && oldWindow->header()) || (newWindow && newWindow->header()))
-            emit q->headerChanged();
-        if ((oldWindow && oldWindow->footer()) || (newWindow && newWindow->footer()))
-            emit q->footerChanged();
+    if (newWindow) {
+        QObject::connect(newWindow, &QQuickApplicationWindow::activeFocusControlChanged,
+                         q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
+        QObject::connect(newWindow, &QQuickApplicationWindow::headerChanged,
+                         q, &QQuickApplicationWindowAttached::headerChanged);
+        QObject::connect(newWindow, &QQuickApplicationWindow::footerChanged,
+                         q, &QQuickApplicationWindowAttached::footerChanged);
     }
+
+    window = wnd;
+    emit q->windowChanged();
+    emit q->contentItemChanged();
+    emit q->overlayChanged();
+
+    if ((oldWindow && oldWindow->activeFocusControl()) || (newWindow && newWindow->activeFocusControl()))
+        emit q->activeFocusControlChanged();
+    if ((oldWindow && oldWindow->header()) || (newWindow && newWindow->header()))
+        emit q->headerChanged();
+    if ((oldWindow && oldWindow->footer()) || (newWindow && newWindow->footer()))
+        emit q->footerChanged();
 }
 
 QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent)
@@ -698,7 +700,7 @@ QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent
 QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window;
+    return qobject_cast<QQuickApplicationWindow *>(d->window);
 }
 
 /*!
@@ -711,7 +713,9 @@ QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->contentItem() : nullptr;
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
+        return window->contentItem();
+    return nullptr;
 }
 
 /*!
@@ -728,7 +732,9 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->activeFocusControl() : nullptr;
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
+        return window->activeFocusControl();
+    return nullptr;
 }
 
 /*!
@@ -742,7 +748,9 @@ QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 QQuickItem *QQuickApplicationWindowAttached::header() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->header() : nullptr;
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
+        return window->header();
+    return nullptr;
 }
 
 /*!
@@ -756,7 +764,9 @@ QQuickItem *QQuickApplicationWindowAttached::header() const
 QQuickItem *QQuickApplicationWindowAttached::footer() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->footer() : nullptr;
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
+        return window->footer();
+    return nullptr;
 }
 
 /*!
@@ -769,7 +779,7 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
 QQuickOverlay *QQuickApplicationWindowAttached::overlay() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->overlay() : nullptr;
+    return QQuickOverlay::overlay(d->window);
 }
 
 QT_END_NAMESPACE

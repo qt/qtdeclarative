@@ -89,6 +89,15 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    Typically, menu items are statically declared as children of the menu, but
+    Menu also provides API to \l {addItem}{add}, \l {insertItem}{insert},
+    \l {moveItem}{move} and \l {removeItem}{remove} items dynamically. The
+    items in a menu can be accessed using \l itemAt() or
+    \l {Popup::}{contentChildren}.
+
+    Although \l {MenuItem}{MenuItems} are most commonly used with Menu, it can
+    contain any type of item.
+
     \sa {Customizing Menu}, {Menu Controls}, {Popup Controls}
 */
 
@@ -350,7 +359,7 @@ void QQuickMenu::moveItem(int from, int to)
 /*!
     \qmlmethod void QtQuick.Controls::Menu::removeItem(int index)
 
-    Removes an item at \a index.
+    Removes the item at \a index.
 
     \note The ownership of the item is transferred to the caller.
 */
@@ -372,8 +381,20 @@ void QQuickMenu::removeItem(int index)
 
     This property holds the model used to display menu items.
 
-    By default, the model is an \l ObjectModel, in order to allow declaring
-    menu items as children of the menu.
+    The content model is provided for visualization purposes. It can be assigned
+    as a model to a content item that presents the contents of the menu.
+
+    \code
+    Menu {
+        id: menu
+        contentItem: ListView {
+            model: menu.contentModel
+        }
+    }
+    \endcode
+
+    The model allows menu items to be statically declared as children of the
+    menu.
 */
 QVariant QQuickMenu::contentModel() const
 {
@@ -387,7 +408,14 @@ QVariant QQuickMenu::contentModel() const
 
     This property holds the list of content data.
 
-    \sa Item::data
+    The list contains all objects that have been declared in QML as children
+    of the menu, and also items that have been dynamically added or
+    inserted using the \l addItem() and \l insertItem() methods, respectively.
+
+    \note Unlike \c contentChildren, \c contentData does include non-visual QML
+    objects. It is not re-ordered when items are inserted or moved.
+
+    \sa Item::data, contentChildren
 */
 QQmlListProperty<QObject> QQuickMenu::contentData()
 {
@@ -402,9 +430,11 @@ QQmlListProperty<QObject> QQuickMenu::contentData()
 /*!
     \qmlproperty string QtQuick.Controls::Menu::title
 
-    Title for the menu as a submenu or in a menubar.
+    This property holds the title for the menu.
 
-    Its value defaults to an empty string.
+    The title of a menu is often displayed in the text of a menu item when the
+    menu is a submenu, and in the text of a tool button when it is in a
+    menubar.
 */
 QString QQuickMenu::title() const
 {

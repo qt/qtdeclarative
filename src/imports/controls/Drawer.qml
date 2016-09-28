@@ -42,6 +42,8 @@ import QtQuick.Templates 2.1 as T
 T.Drawer {
     id: control
 
+    parent: T.ApplicationWindow.overlay
+
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
@@ -60,10 +62,6 @@ T.Drawer {
     //! [exit]
     exit: Transition { SmoothedAnimation { velocity: 5 } }
     //! [exit]
-
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
 
     //! [background]
     background: Rectangle {

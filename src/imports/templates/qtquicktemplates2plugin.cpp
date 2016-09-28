@@ -185,7 +185,6 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 1, "DialogButtonBox");
     qmlRegisterType<QQuickDialogButtonBoxAttached>();
     qmlRegisterType<QQuickMenuSeparator>(uri, 2, 1, "MenuSeparator");
-    qmlRegisterType<QQuickPopup, 1>(uri, 2, 1, "Popup");
     qmlRegisterType<QQuickRangeSlider, 1>(uri, 2, 1, "RangeSlider");
     qmlRegisterType<QQuickRoundButton, 1>(uri, 2, 1, "RoundButton");
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");

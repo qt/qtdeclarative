@@ -53,8 +53,6 @@ T.GroupBox {
     padding: 12
     topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
-    contentItem: Item { }
-
     label: Text {
         x: control.leftPadding
         width: control.availableWidth
