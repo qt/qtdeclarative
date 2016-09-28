@@ -37,44 +37,32 @@
 **
 ****************************************************************************/
 
-#include "qquickdesignercustomparserobject_p.h"
-#include "qquickdesignersupportmetainfo_p.h"
-#include "qqmldesignermetaobject_p.h"
+#ifndef QUICKDESIGNERCUSTOMPARSEROBJECT_H
+#define QUICKDESIGNERCUSTOMPARSEROBJECT_H
 
-#include <private/qqmlmetatype_p.h>
+#include <QObject>
+#include <private/qqmlcustomparser_p.h>
 
 QT_BEGIN_NAMESPACE
 
-bool QQuickDesignerSupportMetaInfo::isSubclassOf(QObject *object, const QByteArray &superTypeName)
+class QQuickDesignerCustomParserObject : public QObject
 {
-    if (object == 0)
-        return false;
+    Q_OBJECT
 
-    const QMetaObject *metaObject = object->metaObject();
+public:
+    QQuickDesignerCustomParserObject();
+};
 
-    while (metaObject) {
-         QQmlType *qmlType =  QQmlMetaType::qmlType(metaObject);
-         if (qmlType && qmlType->qmlTypeName() == QLatin1String(superTypeName)) // ignore version numbers
-             return true;
-
-         if (metaObject->className() == superTypeName)
-             return true;
-
-         metaObject = metaObject->superClass();
-    }
-
-    return false;
-}
-
-void QQuickDesignerSupportMetaInfo::registerNotifyPropertyChangeCallBack(void (*callback)(QObject *, const QQuickDesignerSupport::PropertyName &))
+class QQuickDesignerCustomParser : public QQmlCustomParser
 {
-    QQmlDesignerMetaObject::registerNotifyPropertyChangeCallBack(callback);
-}
+public:
+    QQuickDesignerCustomParser()
+    : QQmlCustomParser(AcceptsAttachedProperties | AcceptsSignalHandlers) {}
 
-void QQuickDesignerSupportMetaInfo::registerMockupObject(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
-{
-    qmlRegisterCustomType<QQuickDesignerCustomParserObject>(uri, versionMajor, versionMinor, qmlName, new QQuickDesignerCustomParser);
-}
+    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+};
 
 QT_END_NAMESPACE
 
+#endif // QUICKDESIGNERCUSTOMPARSEROBJECT_H

@@ -38,43 +38,22 @@
 ****************************************************************************/
 
 #include "qquickdesignercustomparserobject_p.h"
-#include "qquickdesignersupportmetainfo_p.h"
-#include "qqmldesignermetaobject_p.h"
-
-#include <private/qqmlmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
-bool QQuickDesignerSupportMetaInfo::isSubclassOf(QObject *object, const QByteArray &superTypeName)
+QQuickDesignerCustomParserObject::QQuickDesignerCustomParserObject()
 {
-    if (object == 0)
-        return false;
 
-    const QMetaObject *metaObject = object->metaObject();
-
-    while (metaObject) {
-         QQmlType *qmlType =  QQmlMetaType::qmlType(metaObject);
-         if (qmlType && qmlType->qmlTypeName() == QLatin1String(superTypeName)) // ignore version numbers
-             return true;
-
-         if (metaObject->className() == superTypeName)
-             return true;
-
-         metaObject = metaObject->superClass();
-    }
-
-    return false;
 }
 
-void QQuickDesignerSupportMetaInfo::registerNotifyPropertyChangeCallBack(void (*callback)(QObject *, const QQuickDesignerSupport::PropertyName &))
+void QQuickDesignerCustomParser::verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &)
 {
-    QQmlDesignerMetaObject::registerNotifyPropertyChangeCallBack(callback);
+    /* Nothing to do we accept anything */
 }
 
-void QQuickDesignerSupportMetaInfo::registerMockupObject(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+void QQuickDesignerCustomParser::applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &)
 {
-    qmlRegisterCustomType<QQuickDesignerCustomParserObject>(uri, versionMajor, versionMinor, qmlName, new QQuickDesignerCustomParser);
+    /* Nothing to do we accept anything */
 }
 
 QT_END_NAMESPACE
-
