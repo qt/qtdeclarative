@@ -250,7 +250,7 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
     if (!item)
         qmlInfo(object) << "ToolTip must be attached to an Item";
 
-    return new QQuickToolTipAttached(item);
+    return new QQuickToolTipAttached(object);
 }
 
 void QQuickToolTip::open()
@@ -350,8 +350,8 @@ QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
     return tip;
 }
 
-QQuickToolTipAttached::QQuickToolTipAttached(QQuickItem *item) :
-    QObject(*(new QQuickToolTipAttachedPrivate), item)
+QQuickToolTipAttached::QQuickToolTipAttached(QObject *parent) :
+    QObject(*(new QQuickToolTipAttachedPrivate), parent)
 {
 }
 

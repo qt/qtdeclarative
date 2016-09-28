@@ -185,6 +185,7 @@ TestCase {
 
     function test_warning() {
         ignoreWarning(Qt.resolvedUrl("tst_tooltip.qml") + ":68:5: QML QtObject: ToolTip must be attached to an Item")
-        object.ToolTip.text = ""
+        ignoreWarning("<Unknown File>:1:30: QML ToolTip: cannot find any window to open popup in.")
+        object.ToolTip.show("") // don't crash (QTBUG-56243)
     }
 }
