@@ -894,6 +894,10 @@ QTouchEvent *QQuickPointerTouchEvent::asTouchEvent() const
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *dev) {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
+    if (!dev) {
+        dbg << "QQuickPointerDevice(0)";
+        return dbg;
+    }
     dbg << "QQuickPointerDevice("<< dev->name() << ' ';
     QtDebugUtils::formatQEnum(dbg, dev->type());
     dbg << ' ';
