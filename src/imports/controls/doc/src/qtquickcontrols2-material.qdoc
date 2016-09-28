@@ -79,28 +79,6 @@
 
     \image qtquickcontrols2-material-attributes.png
 
-    The following example illustrates how to create a red \e stop button with light text:
-
-    \table
-        \row
-            \li
-                \qml
-                import QtQuick 2.0
-                import QtQuick.Controls 2.0
-                import QtQuick.Controls.Material 2.0
-
-                Button {
-                    text: "Stop"
-                    highlighted: true
-
-                    Material.accent: Material.Red
-                    Material.theme: Material.Dark
-                }
-                \endqml
-            \li
-                \image qtquickcontrols2-material-button.png
-    \endtable
-
     All attributes can be specified for any window or item, and they automatically
     propagate to children in the same manner as \l {Control::font}{fonts}. In the
     following example, the window and all three radio buttons appear in the dark
@@ -261,6 +239,17 @@
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
+    In the following example, the accent color of the highlighted button is
+    changed to \c Material.Orange:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-accent.qml 1
+            \li
+                \image qtquickcontrols2-material-accent.png
+    \endtable
+
     The default value is \c Material.Pink.
 
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
@@ -276,6 +265,17 @@
 
     The default value is theme-specific (light or dark).
 
+    In the following example, the background color of the button is changed to
+    \c Material.Teal:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-background.qml 1
+            \li
+                \image qtquickcontrols2-material-background.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Material.elevation} {int} {material-elevation-attached-prop}
@@ -286,6 +286,18 @@
 
     The default value is control-specific.
 
+    In the following example, the elevation of the pane is set to \c 6
+    in order to achieve the look of an
+    \l {https://material.google.com/components/cards.html}{elevated card}:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-elevation.qml 1
+            \li
+                \image qtquickcontrols2-material-elevation.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Material.foreground} {color} {material-foreground-attached-prop}
@@ -295,12 +307,25 @@
 
     The default value is theme-specific (light or dark).
 
+    In the following example, the foreground color of the button is set to \c
+    Material.Brown:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-foreground.qml 1
+            \li
+                \image qtquickcontrols2-material-foreground.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Material.primary} {color} {material-primary-attached-prop}
     \target material-primary-attached-prop
     This attached property holds the primary color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
+
+    The primary color is used as the background color of ToolBar by default.
 
     The default value is \c Material.Indigo.
 
@@ -319,6 +344,17 @@
     \value Material.Light Light theme (default)
     \value Material.Dark Dark theme
 
+    In the following example, the theme for both the pane and the button is set
+    to \c Material.Dark:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-theme.qml 1
+            \li
+                \image qtquickcontrols2-material-theme.png
+    \endtable
+
     \endstyleproperty
 
     \section1 Attached Method Documentation
@@ -331,9 +367,6 @@
     defaults to \c Material.Shade500.
 
     \qml
-    import QtQuick 2.0
-    import QtQuick.Controls.Material 2.0
-
     Rectangle {
         color: Material.color(Material.Red)
     }
