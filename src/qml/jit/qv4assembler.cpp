@@ -139,8 +139,30 @@ void Assembler::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBl
     generateCJumpOnCompare(NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
 }
 
-void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left,TrustedImm32 right,
-                                       IR::BasicBlock *currentBlock,  IR::BasicBlock *trueBlock,
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+void Assembler::generateCJumpOnCompare(RelationalCondition cond,
+                                       RegisterID left,
+                                       TrustedImm64 right,
+                                       IR::BasicBlock *currentBlock,
+                                       IR::BasicBlock *trueBlock,
+                                       IR::BasicBlock *falseBlock)
+{
+    if (trueBlock == _nextBlock) {
+        Jump target = branch64(invert(cond), left, right);
+        addPatch(falseBlock, target);
+    } else {
+        Jump target = branch64(cond, left, right);
+        addPatch(trueBlock, target);
+        jumpToBlock(currentBlock, falseBlock);
+    }
+}
+#endif
+
+void Assembler::generateCJumpOnCompare(RelationalCondition cond,
+                                       RegisterID left,
+                                       TrustedImm32 right,
+                                       IR::BasicBlock *currentBlock,
+                                       IR::BasicBlock *trueBlock,
                                        IR::BasicBlock *falseBlock)
 {
     if (trueBlock == _nextBlock) {
@@ -153,8 +175,11 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left
     }
 }
 
-void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
-                                       IR::BasicBlock *currentBlock,  IR::BasicBlock *trueBlock,
+void Assembler::generateCJumpOnCompare(RelationalCondition cond,
+                                       RegisterID left,
+                                       RegisterID right,
+                                       IR::BasicBlock *currentBlock,
+                                       IR::BasicBlock *trueBlock,
                                        IR::BasicBlock *falseBlock)
 {
     if (trueBlock == _nextBlock) {
@@ -338,9 +363,8 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
     // not an int, check if it's a double:
     isNoInt.link(this);
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(Assembler::Equal, Assembler::ScratchRegister,
-                                            Assembler::TrustedImm32(0));
+    rshift32(TrustedImm32(Value::IsDoubleTag_Shift), ScratchRegister);
+    Assembler::Jump isNoDbl = branch32(Equal, ScratchRegister, TrustedImm32(0));
 #else
     and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
     Assembler::Jump isNoDbl = branch32(Assembler::Equal, Assembler::ScratchRegister,

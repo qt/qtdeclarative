@@ -76,23 +76,85 @@ private:
     /*
         We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
 
-        In both cases, we use 8 bytes for a value and a different variant of NaN boxing. A Double NaN (actually -qNaN)
-        is indicated by a number that has the top 13 bits set. The other values are usually set to 0 by the
-        processor, and are thus free for us to store other data. We keep pointers in there for managed objects,
-        and encode the other types using the free space given to use by the unused bits for NaN values. This also
-        works for pointers on 64 bit systems, as they all currently only have 48 bits of addressable memory.
+        In both cases, we use 8 bytes for a value and a different variant of NaN boxing. A Double
+        NaN (actually -qNaN) is indicated by a number that has the top 13 bits set, and for a
+        signalling NaN it is the top 14 bits. The other values are usually set to 0 by the
+        processor, and are thus free for us to store other data. We keep pointers in there for
+        managed objects, and encode the other types using the free space given to use by the unused
+        bits for NaN values. This also works for pointers on 64 bit systems, as they all currently
+        only have 48 bits of addressable memory. (Note: we do leave the lower 49 bits available for
+        pointers.)
 
-        On 32bit, we store doubles as doubles. All other values, have the high 32bits set to a value that
-        will make the number a NaN. The Masks below are used for encoding the other types.
+        On 32bit, we store doubles as doubles. All other values, have the high 32bits set to a value
+        that will make the number a NaN. The Masks below are used for encoding the other types.
 
-        On 64 bit, we xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will get encoded
-        with the 13 highest bits all 0. We are now using special values for bits 14-17 to encode our values. These
-        can be used, as the highest valid pointer on a 64 bit system is 2^48-1.
+        On 64 bit, we xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will
+        get encoded with bits 63-49 all set to 0. We then use bit 48 to distinguish between
+        managed/undefined (0), or Null/Int/Bool/Empty (1). So, storing a 49 bit pointer will leave
+        the top 15 bits 0, which is exactly the 'natural' representation of pointers. If bit 49 is
+        set, bit 48 indicates Empty (0) or integer-convertible (1). Then the 3 bit below that are
+        used to encode Null/Int/Bool.
 
-        If they are all 0, we have a pointer to a Managed object. If bit 14 is set we have an integer.
-        This makes testing for pointers and numbers very fast (we have a number if any of the highest 14 bits is set).
+        On both 32bit and 64bit, Undefined is encoded as a managed pointer with value 0. This is
+        the same as a nullptr.
 
-        Bit 15-17 is then used to encode other immediates.
+        Specific bit-sequences:
+        0 = always 0
+        1 = always 1
+        x = stored value
+        a,b,c,d = specific bit values, see notes
+
+        64bit:
+
+        32109876 54321098 76543210 98765432 10987654 32109876 54321098 76543210 |
+        66665555 55555544 44444444 33333333 33222222 22221111 11111100 00000000 | JS Value
+        ------------------------------------------------------------------------+--------------
+        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 | Undefined
+        00000000 0000000x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Managed (heap pointer)
+        a0000000 0000bc00 00000000 00000000 00000000 00000000 00000000 00000000 | NaN/Inf
+        dddddddd ddddddxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
+        00000000 00000010 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
+        00000000 00000011 10000000 00000000 00000000 00000000 00000000 00000000 | Null
+        00000000 00000011 01000000 00000000 00000000 00000000 00000000 0000000x | Bool
+        00000000 00000011 00100000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
+
+        Notes:
+        - a: xor-ed signbit, always 1 for NaN
+        - bc, xor-ed values: 11 = inf, 10 = sNaN, 01 = qNaN, 00 = boxed value
+        - d: xor-ed bits, where at least one bit is set, so: (val >> (64-14)) > 0
+        - Undefined maps to C++ nullptr, so the "default" initialization is the same for both C++
+          and JS
+        - Managed has the left 15 bits set to 0, so: (val >> (64-15)) == 0
+        - empty, Null, Bool, and Int have the left 14 bits set to 0, and bit 49 set to 1,
+          so: (val >> (64-15)) == 1
+        - Null, Bool, and Int have bit 48 set, indicating integer-convertible
+        - xoring _val with NaNEncodeMask will convert to a double in "natural" representation, where
+          any non double results in a NaN
+
+        32bit:
+
+        32109876 54321098 76543210 98765432 10987654 32109876 54321098 76543210 |
+        66665555 55555544 44444444 33333333 33222222 22221111 11111100 00000000 | JS Value
+        ------------------------------------------------------------------------+--------------
+        01111111 11111100 00000000 00000000 00000000 00000000 00000000 00000000 | Undefined
+        01111111 11111100 00000000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Managed (heap pointer)
+        a1111111 1111bc00 00000000 00000000 00000000 00000000 00000000 00000000 | NaN/Inf
+        xddddddd ddddddxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
+        01111111 11111110 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
+        01111111 11111111 10000000 00000000 00000000 00000000 00000000 00000000 | Null
+        01111111 11111111 01000000 00000000 00000000 00000000 00000000 0000000x | Bool
+        01111111 11111111 00100000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
+
+        Notes:
+        - the upper 32 bits are the tag, the lower 32 bits the value
+        - Undefined has a nullptr in the value, Managed has a non-nullptr stored in the value
+        - a: sign bit, always 0 for NaN
+        - b,c: 00=inf, 01 = sNaN, 10 = qNaN, 11 = boxed value
+        - d: stored double value, as long as not *all* of them are 1, because that's a boxed value
+          (see above)
+        - empty, Null, Bool, and Int have bit 63 set to 0, bits 62-50 set to 1 (same as undefined
+          and managed), and bit 49 set to 1 (where undefined and managed have it set to 0)
+        - Null, Bool, and Int have bit 48 set, indicating integer-convertible
     */
 
     quint64 _val;
@@ -140,7 +202,7 @@ public:
     {
         quint32 v;
         memcpy(&v, &b, 4);
-        setTagValue(Managed_Type, v);
+        setTagValue(Managed_Type_Internal, v);
     }
 #endif
 
@@ -156,12 +218,32 @@ public:
 
     Q_ALWAYS_INLINE void setEmpty()
     {
-        setTagValue(Empty_Type, value());
+        setTagValue(Empty_Type_Internal, value());
     }
 
     Q_ALWAYS_INLINE void setEmpty(int i)
     {
-        setTagValue(Empty_Type, quint32(i));
+        setTagValue(Empty_Type_Internal, quint32(i));
+    }
+
+    enum Type {
+        Undefined_Type,
+        Managed_Type,
+        Empty_Type,
+        Integer_Type,
+        Boolean_Type,
+        Null_Type,
+        Double_Type
+    };
+
+    inline Type type() const {
+        if (isUndefined()) return Undefined_Type;
+        if (isManaged()) return Managed_Type;
+        if (isEmpty()) return Empty_Type;
+        if (isInteger()) return Integer_Type;
+        if (isBoolean()) return Boolean_Type;
+        if (isNull()) return Null_Type;
+        Q_ASSERT(isDouble()); return Double_Type;
     }
 
 #ifndef QV4_USE_64_BIT_VALUE_ENCODING
@@ -169,101 +251,64 @@ public:
         SilentNaNBit           =                  0x00040000,
         NaN_Mask               =                  0x7ff80000,
         NotDouble_Mask         =                  0x7ffa0000,
-        Type_Mask              =                  0xffffc000,
-        Immediate_Mask         = NotDouble_Mask | 0x00004000 | SilentNaNBit,
-        IsNullOrUndefined_Mask = Immediate_Mask |    0x08000,
+        Immediate_Mask         = NotDouble_Mask | 0x00020000u | SilentNaNBit,
         Tag_Shift = 32
     };
-    enum ValueType {
-        Undefined_Type = Immediate_Mask | 0x00000,
-        Null_Type      = Immediate_Mask | 0x10000,
-        Boolean_Type   = Immediate_Mask | 0x08000,
-        Integer_Type   = Immediate_Mask | 0x18000,
-        Managed_Type   = NotDouble_Mask | 0x00000 | SilentNaNBit,
-        Empty_Type     = NotDouble_Mask | 0x18000 | SilentNaNBit
-    };
 
-    enum ImmediateFlags {
-        ConvertibleToInt = Immediate_Mask | 0x1
-    };
-
-    enum ValueTypeInternal {
-        Null_Type_Internal = Null_Type | ConvertibleToInt,
-        Boolean_Type_Internal = Boolean_Type | ConvertibleToInt,
-        Integer_Type_Internal = Integer_Type | ConvertibleToInt,
-
+    enum {
+        Managed_Type_Internal  = NotDouble_Mask
     };
 #else
-    static const quint64 NaNEncodeMask = 0xffff800000000000ll;
-    static const quint64 IsInt32Mask  = 0x0002000000000000ll;
-    static const quint64 IsDoubleMask = 0xfffc000000000000ll;
-    static const quint64 IsNumberMask = IsInt32Mask|IsDoubleMask;
-    static const quint64 IsNullOrUndefinedMask = 0x0000800000000000ll;
-    static const quint64 IsNullOrBooleanMask = 0x0001000000000000ll;
-    static const quint64 IsConvertibleToIntMask = IsInt32Mask|IsNullOrBooleanMask;
+    static const quint64 NaNEncodeMask  = 0xfffc000000000000ll;
+    static const quint64 Immediate_Mask = 0x00020000u; // bit 49
 
     enum Masks {
         NaN_Mask = 0x7ff80000,
-        Type_Mask = 0xffff8000,
-        IsDouble_Mask = 0xfffc0000,
-        Immediate_Mask = 0x00018000,
-        IsNullOrUndefined_Mask = 0x00008000,
-        IsNullOrBoolean_Mask = 0x00010000,
-        Tag_Shift = 32
-    };
-    enum ValueType {
-        Undefined_Type = IsNullOrUndefined_Mask,
-        Null_Type = IsNullOrUndefined_Mask|IsNullOrBoolean_Mask,
-        Boolean_Type = IsNullOrBoolean_Mask,
-        Integer_Type = 0x20000|IsNullOrBoolean_Mask,
-        Managed_Type = 0,
-        Empty_Type = Undefined_Type | 0x4000
     };
     enum {
         IsDouble_Shift = 64-14,
-        IsNumber_Shift = 64-15,
-        IsConvertibleToInt_Shift = 64-16,
-        IsManaged_Shift = 64-17
-    };
-
-
-    enum ValueTypeInternal {
-        Null_Type_Internal = Null_Type,
-        Boolean_Type_Internal = Boolean_Type,
-        Integer_Type_Internal = Integer_Type
+        IsManagedOrUndefined_Shift = 64-15,
+        IsIntegerConvertible_Shift = 64-16,
+        Tag_Shift = 32,
+        IsDoubleTag_Shift = IsDouble_Shift - Tag_Shift,
+        Managed_Type_Internal = 0
     };
 #endif
-
-    inline unsigned type() const {
-        return tag() & Type_Mask;
-    }
+    enum ValueTypeInternal {
+        Empty_Type_Internal   = Immediate_Mask   | 0,
+        ConvertibleToInt      = Immediate_Mask   | 0x10000u, // bit 48
+        Null_Type_Internal    = ConvertibleToInt | 0x08000u,
+        Boolean_Type_Internal = ConvertibleToInt | 0x04000u,
+        Integer_Type_Internal = ConvertibleToInt | 0x02000u
+    };
 
     // used internally in property
-    inline bool isEmpty() const { return tag() == Empty_Type; }
-
-    inline bool isUndefined() const { return tag() == Undefined_Type; }
+    inline bool isEmpty() const { return tag() == Empty_Type_Internal; }
     inline bool isNull() const { return tag() == Null_Type_Internal; }
-    inline bool isBoolean() const { return tag ()== Boolean_Type_Internal; }
+    inline bool isBoolean() const { return tag() == Boolean_Type_Internal; }
+    inline bool isInteger() const { return tag() == Integer_Type_Internal; }
+    inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
+    inline bool isNumber() const { return isDouble() || isInteger(); }
+
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    inline bool isInteger() const { return (_val >> IsNumber_Shift) == 1; }
+    inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
-    inline bool isNumber() const { return (_val >> IsNumber_Shift); }
-    inline bool isManaged() const { return !(_val >> IsManaged_Shift); }
-    inline bool isNullOrUndefined() const { return ((_val >> IsManaged_Shift) & ~2) == 1; }
-    inline bool integerCompatible() const { return ((_val >> IsConvertibleToInt_Shift) & ~2) == 1; }
+    inline bool isManaged() const { return !isUndefined() && ((_val >> IsManagedOrUndefined_Shift) == 0); }
+
+    inline bool integerCompatible() const {
+        return (_val >> IsIntegerConvertible_Shift) == 3;
+    }
     static inline bool integerCompatible(Value a, Value b) {
         return a.integerCompatible() && b.integerCompatible();
     }
     static inline bool bothDouble(Value a, Value b) {
         return a.isDouble() && b.isDouble();
     }
-    inline bool isNaN() const { return (tag() & 0x7fff8000) == 0x00078000; }
+    inline bool isNaN() const { return (tag() & 0x7ffc0000  ) == 0x00040000; }
 #else
-    inline bool isInteger() const { return tag() == Integer_Type_Internal; }
+    inline bool isUndefined() const { return tag() == Managed_Type_Internal && value() == 0; }
     inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isNumber() const { return tag() == Integer_Type_Internal || (tag() & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isManaged() const { return tag() == Managed_Type; }
-    inline bool isNullOrUndefined() const { return (tag() & IsNullOrUndefined_Mask) == Undefined_Type; }
+    inline bool isManaged() const { return tag() == Managed_Type_Internal && !isUndefined(); }
     inline bool integerCompatible() const { return (tag() & ConvertibleToInt) == ConvertibleToInt; }
     static inline bool integerCompatible(Value a, Value b) {
         return ((a.tag() & b.tag()) & ConvertibleToInt) == ConvertibleToInt;
@@ -503,14 +548,14 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
-    v.setTagValue(Undefined_Type, 0);
+    v.setM(Q_NULLPTR);
     return v;
 }
 
 inline Primitive Primitive::emptyValue()
 {
     Primitive v;
-    v.setTagValue(Value::Empty_Type, 0);
+    v.setEmpty(0);
     return v;
 }
 
@@ -538,7 +583,6 @@ inline Primitive Primitive::fromDouble(double d)
 inline Primitive Primitive::fromInt32(int i)
 {
     Primitive v;
-    v.setTagValue(Integer_Type_Internal, 0);
     v.setInt_32(i);
     return v;
 }
@@ -556,31 +600,23 @@ inline Primitive Primitive::fromUInt32(uint i)
 
 struct Encode {
     static ReturnedValue undefined() {
-        return quint64(Value::Undefined_Type) << Value::Tag_Shift;
+        return Primitive::undefinedValue().rawValue();
     }
     static ReturnedValue null() {
-        return quint64(Value::Null_Type_Internal) << Value::Tag_Shift;
+        return Primitive::nullValue().rawValue();
     }
 
     Encode(bool b) {
-        val = (quint64(Value::Boolean_Type_Internal) << Value::Tag_Shift) | (uint)b;
+        val = Primitive::fromBoolean(b).rawValue();
     }
     Encode(double d) {
-        Value v;
-        v.setDouble(d);
-        val = v.rawValue();
+        val = Primitive::fromDouble(d).rawValue();
     }
     Encode(int i) {
-        val = (quint64(Value::Integer_Type_Internal) << Value::Tag_Shift) | (uint)i;
+        val = Primitive::fromInt32(i).rawValue();
     }
     Encode(uint i) {
-        if (i <= INT_MAX) {
-            val = (quint64(Value::Integer_Type_Internal) << Value::Tag_Shift) | i;
-        } else {
-            Value v;
-            v.setDouble(i);
-            val = v.rawValue();
-        }
+        val = Primitive::fromUInt32(i).rawValue();
     }
     Encode(ReturnedValue v) {
         val = v;
