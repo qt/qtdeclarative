@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -41,36 +41,21 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
-ScrollablePage {
+Page {
     id: page
 
-    Column {
-        spacing: 40
-        width: parent.width
+    default property alias content: pane.contentItem
 
-        Label {
+    Flickable {
+        anchors.fill: parent
+        contentHeight: pane.implicitHeight
+        flickableDirection: Flickable.AutoFlickIfNeeded
+
+        Pane {
+            id: pane
             width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "RadioButton presents an option button that can be toggled on or off. "
-                + "Radio buttons are typically used to select one option from a set of options."
         }
 
-        Column {
-            spacing: 20
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            RadioButton {
-                text: "First"
-            }
-            RadioButton {
-                text: "Second"
-                checked: true
-            }
-            RadioButton {
-                text: "Third"
-                enabled: false
-            }
-        }
+        ScrollIndicator.vertical: ScrollIndicator { }
     }
 }

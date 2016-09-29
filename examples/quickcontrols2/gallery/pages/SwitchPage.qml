@@ -41,45 +41,36 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
-Flickable {
-    id: flickable
-    contentHeight: pane.height
+ScrollablePage {
+    id: page
 
-    Pane {
-        id: pane
+    Column {
+        spacing: 40
         width: parent.width
 
-        Column {
-            id: column
-            spacing: 40
+        Label {
             width: parent.width
+            wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
+            text: "Switch is an option button that can be dragged or toggled on or off. "
+                + "Switches are typically used to select between two states."
+        }
 
-            Label {
-                width: parent.width
-                wrapMode: Label.Wrap
-                horizontalAlignment: Qt.AlignHCenter
-                text: "Switch is an option button that can be dragged or toggled on or off. "
-                    + "Switches are typically used to select between two states."
+        Column {
+            spacing: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            Switch {
+                text: "First"
             }
-
-            Column {
-                spacing: 20
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                Switch {
-                    text: "First"
-                }
-                Switch {
-                    text: "Second"
-                    checked: true
-                }
-                Switch {
-                    text: "Third"
-                    enabled: false
-                }
+            Switch {
+                text: "Second"
+                checked: true
+            }
+            Switch {
+                text: "Third"
+                enabled: false
             }
         }
     }
-
-    ScrollIndicator.vertical: ScrollIndicator { }
 }

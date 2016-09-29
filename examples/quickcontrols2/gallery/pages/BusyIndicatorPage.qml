@@ -41,12 +41,12 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
-Pane {
-    id: pane
+ScrollablePage {
+    id: page
 
     Column {
         spacing: 40
-        anchors.fill: parent
+        width: parent.width
 
         Label {
             width: parent.width
@@ -57,7 +57,7 @@ Pane {
         }
 
         BusyIndicator {
-            readonly property int size: Math.min(pane.availableWidth, pane.availableHeight) / 5
+            readonly property int size: Math.min(page.availableWidth, page.availableHeight) / 5
             width: size
             height: size
             anchors.horizontalCenter: parent.horizontalCenter

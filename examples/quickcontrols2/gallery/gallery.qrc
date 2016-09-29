@@ -52,6 +52,7 @@
         <file>pages/ProgressBarPage.qml</file>
         <file>pages/RadioButtonPage.qml</file>
         <file>pages/RangeSliderPage.qml</file>
+        <file>pages/ScrollablePage.qml</file>
         <file>pages/ScrollBarPage.qml</file>
         <file>pages/ScrollIndicatorPage.qml</file>
         <file>pages/SliderPage.qml</file>

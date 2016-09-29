@@ -41,51 +41,42 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
-Flickable {
-    id: flickable
-    contentHeight: pane.height
+ScrollablePage {
+    id: page
 
-    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, pane.availableWidth / 3))
+    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, page.availableWidth / 3))
 
-    Pane {
-        id: pane
+    Column {
+        spacing: 40
         width: parent.width
 
-        Column {
-            id: column
-            spacing: 40
+        Label {
             width: parent.width
+            wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
+            text: "Button presents a push-button that can be pushed or clicked by the user. "
+                + "Buttons are normally used to perform an action, or to answer a question."
+        }
 
-            Label {
-                width: parent.width
-                wrapMode: Label.Wrap
-                horizontalAlignment: Qt.AlignHCenter
-                text: "Button presents a push-button that can be pushed or clicked by the user. "
-                    + "Buttons are normally used to perform an action, or to answer a question."
+        Column {
+            spacing: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            Button {
+                text: "First"
+                width: itemWidth
             }
-
-            Column {
-                spacing: 20
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                Button {
-                    text: "First"
-                    width: itemWidth
-                }
-                Button {
-                    id: button
-                    text: "Second"
-                    width: itemWidth
-                    highlighted: true
-                }
-                Button {
-                    text: "Third"
-                    enabled: false
-                    width: itemWidth
-                }
+            Button {
+                id: button
+                text: "Second"
+                width: itemWidth
+                highlighted: true
+            }
+            Button {
+                text: "Third"
+                enabled: false
+                width: itemWidth
             }
         }
     }
-
-    ScrollIndicator.vertical: ScrollIndicator { }
 }
