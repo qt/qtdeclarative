@@ -181,6 +181,8 @@ QString QQuickImageResponse::errorString() const
     This method is used to communicate that the response is no longer required by the engine.
 
     It may be reimplemented to cancel a request in the provider side, however, it is not mandatory.
+
+    A cancelled QQuickImageResponse still needs to emit finished().
 */
 void QQuickImageResponse::cancel()
 {
