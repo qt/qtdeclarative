@@ -530,6 +530,12 @@ TestCase {
         compare(tab2.width, (control.width - 2 * data.spacing - 50) / 2)
         compare(tab3.width, 50)
 
+        var expectedWidth = tab3.contentItem.implicitWidth + tab3.leftPadding + tab3.rightPadding
+        tab3.width = tab3.implicitWidth
+        tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
+        tryCompare(tab2, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
+        compare(tab3.width, expectedWidth)
+
         control.destroy()
     }
 }
