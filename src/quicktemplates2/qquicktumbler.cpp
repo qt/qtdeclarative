@@ -436,9 +436,10 @@ public:
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 
     void _q_calculateDisplacement();
+    void emitIfDisplacementChanged(qreal oldDisplacement, qreal newDisplacement);
 
     // The Tumbler that contains the delegate. Required to calculated the displacement.
-    QQuickTumbler *tumbler;
+    QPointer<QQuickTumbler> tumbler;
     // The index of the delegate. Used to calculate the displacement.
     int index;
     // The displacement for our delegate.
@@ -476,14 +477,23 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
     const int previousDisplacement = displacement;
     displacement = 0;
 
+    if (!tumbler) {
+        emitIfDisplacementChanged(previousDisplacement, displacement);
+        return;
+    }
+
     const int count = tumbler->count();
     // This can happen in tests, so it may happen in normal usage too.
-    if (count == 0)
+    if (count == 0) {
+        emitIfDisplacementChanged(previousDisplacement, displacement);
         return;
+    }
 
     ContentItemType contentType = contentItemType(tumbler->contentItem());
-    if (contentType == UnsupportedContentItemType)
+    if (contentType == UnsupportedContentItemType) {
+        emitIfDisplacementChanged(previousDisplacement, displacement);
         return;
+    }
 
     qreal offset = 0;
 
@@ -507,8 +517,13 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
         displacement = reverseDisplacement - index;
     }
 
+    emitIfDisplacementChanged(previousDisplacement, displacement);
+}
+
+void QQuickTumblerAttachedPrivate::emitIfDisplacementChanged(qreal oldDisplacement, qreal newDisplacement)
+{
     Q_Q(QQuickTumblerAttached);
-    if (displacement != previousDisplacement)
+    if (newDisplacement != oldDisplacement)
         emit q->displacementChanged();
 }
 
@@ -532,6 +547,18 @@ QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
 
 QQuickTumblerAttached::~QQuickTumblerAttached()
 {
+    Q_D(QQuickTumblerAttached);
+    if (!d->tumbler || !d->tumbler->contentItem())
+        return;
+
+    QQuickItem *rootContentItem = d->tumbler->contentItem();
+    const ContentItemType contentType = contentItemType(rootContentItem);
+    QQuickItem *actualItem = actualContentItem(rootContentItem, contentType);
+    if (!actualItem)
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(actualItem);
+    p->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
 }
 
 /*!

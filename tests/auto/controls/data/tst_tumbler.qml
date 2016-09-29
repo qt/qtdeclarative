@@ -63,7 +63,8 @@ TestCase {
     }
 
     function cleanup() {
-        tumbler.destroy();
+        if (tumbler)
+            tumbler.destroy();
     }
 
     function tumblerXCenter() {
@@ -232,6 +233,48 @@ TestCase {
         tumbler.monthTumbler.currentIndex = 1;
         tryCompare(tumbler.monthTumbler, "currentIndex", 1);
         tryCompare(tumbler.dayTumbler, "currentIndex", 27);
+    }
+
+    Component {
+        id: timePickerComponent
+
+        Row {
+            property alias minuteTumbler: minuteTumbler
+            property alias amPmTumbler: amPmTumbler
+
+            Tumbler {
+                id: minuteTumbler
+                currentIndex: 6
+                model: 60
+                width: 50
+                height: 150
+            }
+
+            Tumbler {
+                id: amPmTumbler
+                model: ["AM", "PM"]
+                width: 50
+                height: 150
+                contentItem: ListView {
+                    anchors.fill: parent
+                    model: amPmTumbler.model
+                    delegate: amPmTumbler.delegate
+                }
+            }
+        }
+    }
+
+    function test_listViewTimePicker() {
+        tumbler.destroy();
+
+        var root = timePickerComponent.createObject(testCase);
+        verify(root);
+
+        mouseDrag(root.minuteTumbler, root.minuteTumbler.width / 2, root.minuteTumbler.height / 2, 0, 50);
+        // Shouldn't crash.
+        mouseDrag(root.amPmTumbler, root.amPmTumbler.width / 2, root.amPmTumbler.height / 2, 0, 50);
+
+        root.destroy();
     }
 
     function test_displacement_data() {
