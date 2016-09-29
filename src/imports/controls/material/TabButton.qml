@@ -65,7 +65,6 @@ T.TabButton {
         implicitHeight: 48
 
         clip: true
-        trigger: Ripple.Release
         pressed: control.pressed
         anchor: control
         active: control.down || control.visualFocus || control.hovered

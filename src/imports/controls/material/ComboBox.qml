@@ -110,7 +110,6 @@ T.ComboBox {
             clipRadius: control.flat ? 0 : 2
             width: parent.width
             height: parent.height
-            trigger: Ripple.Press
             pressed: control.pressed
             anchor: control
             active: control.pressed || control.visualFocus || control.hovered

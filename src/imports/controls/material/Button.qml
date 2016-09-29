@@ -112,7 +112,6 @@ T.Button {
             clipRadius: 2
             width: parent.width
             height: parent.height
-            trigger: control.flat ? Ripple.Press : Ripple.Release
             pressed: control.pressed
             anchor: control
             active: control.down || control.visualFocus || control.hovered
