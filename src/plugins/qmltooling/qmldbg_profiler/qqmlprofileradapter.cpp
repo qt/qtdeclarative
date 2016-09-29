@@ -101,7 +101,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
                         ds << static_cast<qint64>(d.locationId);
                     messages.append(ds.squeezedData());
                     ds.clear();
-                    ds << d.time << QQmlProfilerDefinitions::RangeData
+                    ds << d.time << int(QQmlProfilerDefinitions::RangeData)
                        << static_cast<quint32>(d.detailType)
                        << (i->location.sourceFile.isEmpty() ? i->url.toString() :
                                                               i->location.sourceFile);
