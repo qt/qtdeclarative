@@ -4122,6 +4122,18 @@ void tst_qquicktext::padding()
     QCOMPARE(obj->bottomPadding(), 1.11);
     QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
 
+    obj->setWidth(cw / 2);
+    obj->setElideMode(QQuickText::ElideRight);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+    obj->setElideMode(QQuickText::ElideNone);
+    obj->resetWidth();
+
+    obj->setWrapMode(QQuickText::WordWrap);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+    obj->setWrapMode(QQuickText::NoWrap);
+
     obj->setText("Qt");
     QVERIFY(obj->contentWidth() < cw);
     QCOMPARE(obj->contentHeight(), ch);

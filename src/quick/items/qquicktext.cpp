@@ -921,7 +921,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
             bool wasInLayout = internalWidthUpdate;
             internalWidthUpdate = true;
-            q->setImplicitHeight(naturalHeight);
+            q->setImplicitHeight(naturalHeight + q->topPadding() + q->bottomPadding());
             internalWidthUpdate = wasInLayout;
 
             multilineElide = elideMode == QQuickText::ElideRight
