@@ -627,12 +627,12 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
 
 #ifdef Q_OS_LINUX
     const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
-    if (strstr(vendor, "nouveau"))
+    if (vendor && strstr(vendor, "nouveau"))
         m_brokenIBOs = true;
     const char *renderer = (const char *) funcs->glGetString(GL_RENDERER);
-    if (strstr(renderer, "llvmpipe"))
+    if (renderer && strstr(renderer, "llvmpipe"))
         m_serializedRender = true;
-    if (strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
+    if (vendor && renderer && strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
         m_brokenIBOs = true;
 #endif
 

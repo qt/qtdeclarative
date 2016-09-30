@@ -1573,7 +1573,7 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         d->movementEndingTimer.stop();
         d->pressed = false;
         d->stealMouse = false;
-        if (!d->velocityTimeline.isActive())
+        if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
             movementEnding(true, true);
     }
 }
@@ -1626,7 +1626,7 @@ void QQuickFlickable::viewportMoved(Qt::Orientations orient)
 void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                                            QQuickTimeLineCallback::Callback fixupCallback)
 {
-    if (pressed || calcVelocity) {
+    if (!scrollingPhase && (pressed || calcVelocity)) {
         int elapsed = data.velocityTime.restart();
         if (elapsed > 0) {
             qreal velocity = (data.lastPos - data.move.value()) * 1000 / elapsed;

@@ -150,6 +150,9 @@ private slots:
     void zeroWidthAndElidedDoesntRender();
 
 
+    void hAlignWidthDependsOnImplicitWidth_data();
+    void hAlignWidthDependsOnImplicitWidth();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4114,6 +4117,18 @@ void tst_qquicktext::padding()
     QCOMPARE(obj->bottomPadding(), 1.11);
     QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
 
+    obj->setWidth(cw / 2);
+    obj->setElideMode(QQuickText::ElideRight);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+    obj->setElideMode(QQuickText::ElideNone);
+    obj->resetWidth();
+
+    obj->setWrapMode(QQuickText::WordWrap);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+    obj->setWrapMode(QQuickText::NoWrap);
+
     obj->setText("Qt");
     QVERIFY(obj->contentWidth() < cw);
     QCOMPARE(obj->contentHeight(), ch);
@@ -4168,6 +4183,51 @@ void tst_qquicktext::zeroWidthAndElidedDoesntRender()
 
     text->setWidth(10);
     QCOMPARE(text->contentWidth(), reference->contentWidth());
+}
+
+void tst_qquicktext::hAlignWidthDependsOnImplicitWidth_data()
+{
+    QTest::addColumn<QQuickText::HAlignment>("horizontalAlignment");
+    QTest::addColumn<QQuickText::TextElideMode>("elide");
+    QTest::addColumn<int>("extraWidth");
+
+    QTest::newRow("AlignHCenter, ElideNone, 0 extraWidth") << QQuickText::AlignHCenter << QQuickText::ElideNone << 0;
+    QTest::newRow("AlignRight, ElideNone, 0 extraWidth") << QQuickText::AlignRight << QQuickText::ElideNone << 0;
+    QTest::newRow("AlignHCenter, ElideRight, 0 extraWidth") << QQuickText::AlignHCenter << QQuickText::ElideRight << 0;
+    QTest::newRow("AlignRight, ElideRight, 0 extraWidth") << QQuickText::AlignRight << QQuickText::ElideRight << 0;
+    QTest::newRow("AlignHCenter, ElideNone, 20 extraWidth") << QQuickText::AlignHCenter << QQuickText::ElideNone << 20;
+    QTest::newRow("AlignRight, ElideNone, 20 extraWidth") << QQuickText::AlignRight << QQuickText::ElideNone << 20;
+    QTest::newRow("AlignHCenter, ElideRight, 20 extraWidth") << QQuickText::AlignHCenter << QQuickText::ElideRight << 20;
+    QTest::newRow("AlignRight, ElideRight, 20 extraWidth") << QQuickText::AlignRight << QQuickText::ElideRight << 20;
+}
+
+void tst_qquicktext::hAlignWidthDependsOnImplicitWidth()
+{
+    QFETCH(QQuickText::HAlignment, horizontalAlignment);
+    QFETCH(QQuickText::TextElideMode, elide);
+    QFETCH(int, extraWidth);
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("hAlignWidthDependsOnImplicitWidth.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickItem *rect = window->rootObject();
+    QVERIFY(rect);
+
+    QVERIFY(rect->setProperty("horizontalAlignment", horizontalAlignment));
+    QVERIFY(rect->setProperty("elide", elide));
+    QVERIFY(rect->setProperty("extraWidth", extraWidth));
+
+    QImage image = window->grabWindow();
+    const int rectX = 100 * window->screen()->devicePixelRatio();
+    QCOMPARE(numberOfNonWhitePixels(0, rectX - 1, image), 0);
+
+    QVERIFY(rect->setProperty("text", "this is mis-aligned"));
+    image = window->grabWindow();
+    QCOMPARE(numberOfNonWhitePixels(0, rectX - 1, image), 0);
 }
 
 QTEST_MAIN(tst_qquicktext)
