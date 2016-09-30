@@ -108,7 +108,7 @@ T.ComboBox {
 
     popup: T.Popup {
         width: control.width
-        implicitHeight: Math.min(396, listview.contentHeight)
+        implicitHeight: Math.min(396, contentItem.implicitHeight)
         topMargin: 8
         bottomMargin: 8
 
@@ -116,8 +116,8 @@ T.ComboBox {
         Universal.accent: control.Universal.accent
 
         contentItem: ListView {
-            id: listview
             clip: true
+            implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
 
