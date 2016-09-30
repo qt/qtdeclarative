@@ -188,4 +188,52 @@ TestCase {
         ignoreWarning("<Unknown File>:1:30: QML ToolTip: cannot find any window to open popup in.")
         object.ToolTip.show("") // don't crash (QTBUG-56243)
     }
+
+    Component {
+        id: toolTipWithExitTransition
+
+        ToolTip {
+            enter: Transition {
+                NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 100 }
+            }
+            exit: Transition {
+                NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 1000 }
+            }
+        }
+    }
+
+    function test_makeVisibleWhileExitTransitionRunning_data() {
+        return [
+            { tag: "imperative", imperative: true },
+            { tag: "declarative", imperative: false }
+        ]
+    }
+
+    function test_makeVisibleWhileExitTransitionRunning(data) {
+        var control = toolTipWithExitTransition.createObject(testCase)
+
+        // Show, hide, and show the tooltip again. Its exit transition should
+        // start and get cancelled, and then its enter transition should run.
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
+        tryCompare(control, "opacity", 1)
+
+        if (data.imperative)
+            control.close()
+        else
+            control.visible = false
+        verify(control.exit.running)
+        wait(100) // TODO: replace with tryVerify() in 5.8
+        verify(control.opacity < 1)
+
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
+        tryCompare(control, "opacity", 1)
+
+        control.destroy()
+    }
 }

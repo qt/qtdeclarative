@@ -256,7 +256,7 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 void QQuickToolTip::open()
 {
     Q_D(QQuickToolTip);
-    if (d->delay > 0)
+    if (!d->visible && d->delay > 0)
         d->startDelay();
     else
         QQuickPopup::open();

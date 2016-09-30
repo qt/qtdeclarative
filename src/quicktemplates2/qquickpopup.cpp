@@ -770,6 +770,9 @@ QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *p
 
 void QQuickPopupTransitionManager::transitionEnter()
 {
+    if (popup->transitionState == QQuickPopupPrivate::ExitTransition)
+        cancel();
+
     if (!popup->prepareEnterTransition())
         return;
 
@@ -829,7 +832,7 @@ QQuickPopup::~QQuickPopup()
 void QQuickPopup::open()
 {
     Q_D(QQuickPopup);
-    if (d->visible)
+    if (d->visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
         return;
 
     if (d->complete)
@@ -1767,7 +1770,7 @@ bool QQuickPopup::isVisible() const
 void QQuickPopup::setVisible(bool visible)
 {
     Q_D(QQuickPopup);
-    if (d->visible == visible)
+    if (d->visible == visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
         return;
 
     d->visible = visible;
