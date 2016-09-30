@@ -490,10 +490,6 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 
 QSize QSGContext::minimumFBOSize() const
 {
-#ifdef Q_OS_MAC
-    if (QSysInfo::MacintoshVersion < QSysInfo::MV_10_8)
-        return QSize(33, 33);
-#endif
     return QSize(1, 1);
 }
 
