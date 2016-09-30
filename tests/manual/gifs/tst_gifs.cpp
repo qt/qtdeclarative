@@ -54,6 +54,7 @@ private slots:
     void rangeSlider();
     void busyIndicator();
     void switchGif();
+    void button_data();
     void button();
     void tabBar();
     void menu();
@@ -325,14 +326,23 @@ void tst_Gifs::switchGif()
     gifRecorder.waitForFinish();
 }
 
+void tst_Gifs::button_data()
+{
+    QTest::addColumn<QString>("qmlFileName");
+    QTest::newRow("button") << QString::fromLatin1("qtquickcontrols2-button.qml");
+    QTest::newRow("button-flat") << QString::fromLatin1("qtquickcontrols2-button-flat.qml");
+    QTest::newRow("button-highlighted") << QString::fromLatin1("qtquickcontrols2-button-highlighted.qml");
+}
+
 void tst_Gifs::button()
 {
+    QFETCH(QString, qmlFileName);
+
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
-    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName(qmlFileName);
 
     gifRecorder.start();
 
