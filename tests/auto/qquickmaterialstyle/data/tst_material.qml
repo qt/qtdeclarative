@@ -677,4 +677,19 @@ TestCase {
 
         window.destroy()
     }
+
+    Component {
+        id: busyIndicator
+        BusyIndicator { }
+    }
+
+    function test_shade() {
+        var control = busyIndicator.createObject(testCase)
+
+        compare(control.contentItem.color.toString(), Material.color(Material.Pink, Material.Shade500))
+        control.Material.theme = Material.Dark
+        compare(control.contentItem.color.toString(), Material.color(Material.Pink, Material.Shade200))
+
+        control.destroy()
+    }
 }

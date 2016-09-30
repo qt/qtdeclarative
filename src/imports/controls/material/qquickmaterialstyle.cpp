@@ -479,6 +479,8 @@ void QQuickMaterialStyle::setTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_customAccent)
+        emit accentChanged();
     if (!m_hasBackground)
         emit backgroundChanged();
     if (!m_hasForeground)
@@ -494,6 +496,8 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_customAccent)
+        emit accentChanged();
     if (!m_hasBackground)
         emit backgroundChanged();
     if (!m_hasForeground)
