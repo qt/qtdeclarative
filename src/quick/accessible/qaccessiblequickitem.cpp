@@ -61,10 +61,6 @@ int QAccessibleQuickItem::childCount() const
 QRect QAccessibleQuickItem::rect() const
 {
     const QRect r = itemScreenRect(item());
-
-    if (!r.isValid()) {
-        qWarning() << item()->metaObject()->className() << item()->property("accessibleText") << r;
-    }
     return r;
 }
 
