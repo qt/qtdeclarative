@@ -68,6 +68,7 @@ class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
     Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT)
     Q_PROPERTY(Qt::ApplicationState state READ state NOTIFY stateChanged)
     Q_PROPERTY(QFont font READ font CONSTANT)
+    Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName NOTIFY displayNameChanged)
     Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged)
 
 public:
@@ -79,9 +80,12 @@ public:
     Qt::ApplicationState state() const;
     QFont font() const;
     QQmlListProperty<QQuickScreenInfo> screens();
+    QString displayName() const;
+    void setDisplayName(const QString &displayName);
 
 Q_SIGNALS:
     void activeChanged();
+    void displayNameChanged();
     void layoutDirectionChanged();
     void stateChanged(Qt::ApplicationState state);
     void screensChanged();

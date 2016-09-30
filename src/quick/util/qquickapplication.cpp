@@ -63,6 +63,8 @@ QQuickApplication::QQuickApplication(QObject *parent)
                 this, SIGNAL(stateChanged(Qt::ApplicationState)));
         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
                 this, SIGNAL(activeChanged()));
+        connect(qApp, SIGNAL(applicationDisplayNameChanged()),
+                this, SIGNAL(displayNameChanged()));
 
         connect(qApp, &QGuiApplication::screenAdded, this, &QQuickApplication::updateScreens);
         connect(qApp, &QGuiApplication::screenRemoved, this, &QQuickApplication::updateScreens);
@@ -97,6 +99,16 @@ Qt::ApplicationState QQuickApplication::state() const
 QFont QQuickApplication::font() const
 {
     return QGuiApplication::font();
+}
+
+QString QQuickApplication::displayName() const
+{
+    return QGuiApplication::applicationDisplayName();
+}
+
+void QQuickApplication::setDisplayName(const QString &displayName)
+{
+    return QGuiApplication::setApplicationDisplayName(displayName);
 }
 
 int screens_count(QQmlListProperty<QQuickScreenInfo> *prop)

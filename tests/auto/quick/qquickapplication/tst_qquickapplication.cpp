@@ -36,8 +36,9 @@
 #include <qpa/qwindowsysteminterface.h>
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
+#include "../../shared/util.h"
 
-class tst_qquickapplication : public QObject
+class tst_qquickapplication : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -51,6 +52,7 @@ private slots:
     void inputMethod();
     void styleHints();
     void cleanup();
+    void displayName();
 
 private:
     QQmlEngine engine;
@@ -237,6 +239,29 @@ void tst_qquickapplication::styleHints()
     item->setParentItem(view.rootObject());
 
     QCOMPARE(qvariant_cast<QObject*>(item->property("styleHints")), qApp->styleHints());
+}
+
+void tst_qquickapplication::displayName()
+{
+    QString name[3] = { QStringLiteral("APP NAME 0"),
+                        QStringLiteral("APP NAME 1"),
+                        QStringLiteral("APP NAME 2")
+                      };
+
+    QQmlComponent component(&engine, testFileUrl("tst_displayname.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(item);
+    QQuickView view;
+    item->setParentItem(view.rootObject());
+
+    QCoreApplication::setApplicationName(name[0]);
+    QCOMPARE(qvariant_cast<QString>(item->property("displayName")), name[0]);
+
+    QGuiApplication::setApplicationName(name[1]);
+    QCOMPARE(qvariant_cast<QString>(item->property("displayName")), name[1]);
+
+    QMetaObject::invokeMethod(item, "updateDisplayName", Q_ARG(QVariant, QVariant(name[2])));
+    QCOMPARE(QGuiApplication::applicationDisplayName(), name[2]);
 }
 
 QTEST_MAIN(tst_qquickapplication)

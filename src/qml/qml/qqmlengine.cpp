@@ -537,6 +537,10 @@ The following functions are also on the Qt object.
     \li This is the application name set on the QCoreApplication instance. This property can be written
     to in order to set the application name.
     \row
+    \li \c application.displayName (since Qt 5.9)
+    \li This is the application display name set on the QGuiApplication instance. This property can be written
+    to in order to set the application display name.
+    \row
     \li \c application.version
     \li This is the application version set on the QCoreApplication instance. This property can be written
     to in order to set the application version.
