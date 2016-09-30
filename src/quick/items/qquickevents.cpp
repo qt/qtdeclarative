@@ -46,6 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerEvents, "qt.quick.pointer.events")
+Q_LOGGING_CATEGORY(lcPointerGrab, "qt.quick.pointer.grab")
 
 /*!
     \qmltype KeyEvent
@@ -523,6 +524,14 @@ QQuickItem *QQuickEventPoint::grabber() const
 
 void QQuickEventPoint::setGrabber(QQuickItem *grabber)
 {
+    if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled()) && m_grabber.data() != grabber) {
+        auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
+        static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
+        QString deviceName = (device ? device->name() : QLatin1String("null device"));
+        deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+        qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
+                               << ": grab" << m_grabber << "->" << grabber;
+    }
     m_grabber = QPointer<QQuickItem>(grabber);
 }
 
