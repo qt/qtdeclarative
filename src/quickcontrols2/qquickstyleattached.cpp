@@ -241,10 +241,13 @@ void QQuickStyleAttached::parentStyleChange(QQuickStyleAttached *newParent, QQui
 
 void QQuickStyleAttached::itemWindowChanged(QQuickWindow *window)
 {
-    Q_UNUSED(window);
+    QQuickStyleAttached *parentStyle = nullptr;
     QQuickItem *item = qobject_cast<QQuickItem *>(sender());
     if (item)
-        setParentStyle(findParentStyle(metaObject(), item));
+        parentStyle = findParentStyle(metaObject(), item);
+    if (!parentStyle)
+        parentStyle = attachedStyle(metaObject(), window);
+    setParentStyle(parentStyle);
 }
 
 void QQuickStyleAttached::itemParentChanged(QQuickItem *item, QQuickItem *parent)
