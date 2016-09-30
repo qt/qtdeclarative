@@ -86,11 +86,15 @@ public:
     void updateCurrentIndex();
     void updateLayout();
 
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) override;
+
+    bool updatingLayout;
     QQuickTabBar::Position position;
 };
 
-QQuickTabBarPrivate::QQuickTabBarPrivate() : position(QQuickTabBar::Header)
+QQuickTabBarPrivate::QQuickTabBarPrivate() : updatingLayout(false), position(QQuickTabBar::Header)
 {
+    changeTypes |= Geometry;
 }
 
 void QQuickTabBarPrivate::updateCurrentItem()
@@ -132,12 +136,20 @@ void QQuickTabBarPrivate::updateLayout()
             const qreal totalSpacing = qMax(0, count - 1) * spacing;
             const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / resizableItems.count();
 
+            updatingLayout = true;
             for (QQuickItem *item : qAsConst(resizableItems)) {
                 item->setWidth(itemWidth);
                 QQuickItemPrivate::get(item)->widthValid = false;
             }
+            updatingLayout = false;
         }
     }
+}
+
+void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+{
+    if (!updatingLayout)
+        updateLayout();
 }
 
 QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
