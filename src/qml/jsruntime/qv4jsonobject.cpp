@@ -38,6 +38,7 @@
 #include <qv4objectiterator_p.h>
 #include <qv4scopedvalue_p.h>
 #include <qv4runtime_p.h>
+#include <qv4variantobject_p.h>
 #include "qv4string_p.h"
 
 #include <qstack.h>
@@ -724,6 +725,10 @@ QString Stringify::Str(const QString &key, const Value &v)
     if (value->isNumber()) {
         double d = value->toNumber();
         return std::isfinite(d) ? value->toQString() : QStringLiteral("null");
+    }
+
+    if (const QV4::VariantObject *v = value->as<QV4::VariantObject>()) {
+        return v->d()->data.toString();
     }
 
     o = value->asReturnedValue();
