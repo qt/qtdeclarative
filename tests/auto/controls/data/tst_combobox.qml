@@ -1115,4 +1115,302 @@ TestCase {
         closedSpy.target = null
         control.destroy()
     }
+
+    RegExpValidator {
+        id: regExpValidator
+        regExp: /(red|blue|green)?/
+    }
+
+    function test_validator() {
+        var control = comboBox.createObject(testCase, {editable: true, validator: regExpValidator})
+
+        control.editText = "blu"
+        compare(control.acceptableInput, false)
+        control.editText = "blue"
+        compare(control.acceptableInput, true)
+        control.editText = "bluee"
+        compare(control.acceptableInput, false)
+        control.editText = ""
+        compare(control.acceptableInput, true)
+        control.editText = ""
+        control.forceActiveFocus()
+        keyPress(Qt.Key_A)
+        compare(control.editText, "")
+        keyPress(Qt.Key_A)
+        compare(control.editText, "")
+        keyPress(Qt.Key_R)
+        compare(control.editText, "r")
+        keyPress(Qt.Key_A)
+        compare(control.editText, "r")
+        compare(control.acceptableInput, false)
+        keyPress(Qt.Key_E)
+        compare(control.editText, "re")
+        compare(control.acceptableInput, false)
+        keyPress(Qt.Key_D)
+        compare(control.editText, "red")
+        compare(control.acceptableInput, true)
+
+        control.destroy()
+    }
+
+    Component {
+        id: appendFindBox
+        ComboBox {
+            editable: true
+            model: ListModel {
+                ListElement { text:"first" }
+            }
+            onAccepted: {
+                if (find(editText) === -1)
+                    model.append({text: editText})
+            }
+        }
+    }
+
+    function test_append_find() {
+        var control = appendFindBox.createObject(testCase)
+
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "first")
+        control.forceActiveFocus()
+        compare(control.activeFocus, true)
+
+        control.selectAll()
+        keyPress(Qt.Key_T)
+        keyPress(Qt.Key_H)
+        keyPress(Qt.Key_I)
+        keyPress(Qt.Key_R)
+        keyPress(Qt.Key_D)
+        compare(control.count, 1)
+        compare(control.currentText, "first")
+        compare(control.editText, "third")
+
+        keyPress(Qt.Key_Enter)
+        compare(control.count, 2)
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "third")
+
+        control.destroy()
+    }
+
+    function test_editable() {
+        var control = comboBox.createObject(testCase, {editable: true, model: ["Banana", "Coco", "Coconut", "Apple", "Cocomuffin"]})
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        var acceptCount = 0
+
+        var acceptSpy = signalSpy.createObject(control, {target: control, signalName: "accepted"})
+        verify(acceptSpy.valid)
+
+        compare(control.editText, "Banana")
+        compare(control.currentText, "Banana")
+        compare(control.currentIndex, 0)
+        compare(acceptSpy.count, 0)
+        control.editText = ""
+
+        keyPress(Qt.Key_C)
+        compare(control.editText, "coco")
+        compare(control.currentText, "Banana")
+        compare(control.currentIndex, 0)
+
+        keyPress(Qt.Key_Right)
+        keyPress(Qt.Key_N)
+        compare(control.editText, "coconut")
+        compare(control.currentText, "Banana")
+        compare(control.currentIndex, 0)
+
+        keyPress(Qt.Key_Enter) // Accept
+        compare(control.editText, "Coconut")
+        compare(control.currentText, "Coconut")
+        compare(control.currentIndex, 2)
+        compare(acceptSpy.count, ++acceptCount)
+
+        keyPress(Qt.Key_Backspace)
+        keyPress(Qt.Key_Backspace)
+        keyPress(Qt.Key_Backspace)
+        keyPress(Qt.Key_M)
+        compare(control.editText, "Cocomuffin")
+        compare(control.currentText, "Coconut")
+        compare(control.currentIndex, 2)
+
+        keyPress(Qt.Key_Enter) // Accept
+        compare(control.editText, "Cocomuffin")
+        compare(control.currentText, "Cocomuffin")
+        compare(control.currentIndex, 4)
+        compare(acceptSpy.count, ++acceptCount)
+
+        keyPress(Qt.Key_Return) // Accept
+        compare(control.editText, "Cocomuffin")
+        compare(control.currentText, "Cocomuffin")
+        compare(control.currentIndex, 4)
+        compare(acceptSpy.count, ++acceptCount)
+
+        control.editText = ""
+        compare(control.editText, "")
+        compare(control.currentText, "Cocomuffin")
+        compare(control.currentIndex, 4)
+
+        keyPress(Qt.Key_A)
+        compare(control.editText, "apple")
+        compare(control.currentText, "Cocomuffin")
+        compare(control.currentIndex, 4)
+
+        keyPress(Qt.Key_Return) // Accept
+        compare(control.editText, "Apple")
+        compare(control.currentText, "Apple")
+        compare(control.currentIndex, 3)
+        compare(acceptSpy.count, ++acceptCount)
+
+        control.editText = ""
+        keyPress(Qt.Key_A)
+        keyPress(Qt.Key_B)
+        compare(control.editText, "ab")
+        compare(control.currentText, "Apple")
+        compare(control.currentIndex, 3)
+
+        keyPress(Qt.Key_Return) // Accept
+        compare(control.editText, "ab")
+        compare(control.currentText, "")
+        compare(control.currentIndex, -1)
+        compare(acceptSpy.count, ++acceptCount)
+
+        control.editText = ""
+        compare(control.editText, "")
+        compare(control.currentText, "")
+        compare(control.currentIndex, -1)
+
+        keyPress(Qt.Key_C)
+        keyPress(Qt.Key_Return) // Accept
+        compare(control.editText, "Coco")
+        compare(control.currentText, "Coco")
+        compare(control.currentIndex, 1)
+        compare(acceptSpy.count, ++acceptCount)
+
+        keyPress(Qt.Key_Down)
+        compare(control.editText, "Coconut")
+        compare(control.currentText, "Coconut")
+        compare(control.currentIndex, 2)
+
+        keyPress(Qt.Key_Up)
+        compare(control.editText, "Coco")
+        compare(control.currentText, "Coco")
+        compare(control.currentIndex, 1)
+
+        control.editText = ""
+        compare(control.editText, "")
+        compare(control.currentText, "Coco")
+        compare(control.currentIndex, 1)
+
+        keyPress(Qt.Key_C)
+        keyPress(Qt.Key_O)
+        keyPress(Qt.Key_C) // autocompletes "coco"
+        keyPress(Qt.Key_Backspace)
+        keyPress(Qt.Key_Return) // Accept "coc"
+        compare(control.editText, "coc")
+        compare(control.currentText, "")
+        compare(control.currentIndex, -1)
+        compare(acceptSpy.count, ++acceptCount)
+
+        control.editText = ""
+        compare(control.editText, "")
+        compare(control.currentText, "")
+        compare(control.currentIndex, -1)
+
+        keyPress(Qt.Key_C)
+        keyPress(Qt.Key_O)
+        keyPress(Qt.Key_C) // autocompletes "coc"
+        keyPress(Qt.Key_Space)
+        keyPress(Qt.Key_Return) // Accept "coc "
+        compare(control.editText, "coc ")
+        compare(control.currentText, "")
+        compare(control.currentIndex, -1)
+        compare(acceptSpy.count, ++acceptCount)
+
+        control.destroy()
+    }
+
+    Component {
+        id: keysAttachedBox
+        ComboBox {
+            editable: true
+            property bool gotit: false
+            Keys.onPressed: {
+                if (!gotit && event.key === Qt.Key_B) {
+                    gotit = true
+                    event.accepted = true
+                }
+            }
+        }
+    }
+
+    function test_keys_attached() {
+        var control = keysAttachedBox.createObject(testCase)
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        verify(!control.gotit)
+        compare(control.editText, "")
+
+        keyPress(Qt.Key_A)
+        verify(control.activeFocus)
+        verify(!control.gotit)
+        compare(control.editText, "a")
+
+        keyPress(Qt.Key_B)
+        verify(control.activeFocus)
+        expectFail("", "An editable ComboBox does not yet support the Keys attached property.")
+        verify(control.gotit)
+        compare(control.editText, "a")
+
+        keyPress(Qt.Key_B)
+        verify(control.activeFocus)
+        verify(control.gotit)
+        compare(control.editText, "ab")
+
+        control.destroy()
+    }
+
+    function test_minusOneIndexResetsSelection_QTBUG_35794_data() {
+        return [
+            { tag: "editable", editable: true },
+            { tag: "non-editable", editable: false }
+        ]
+    }
+
+    function test_minusOneIndexResetsSelection_QTBUG_35794(data) {
+        var control = comboBox.createObject(testCase, {editable: data.editable, model: ["A", "B", "C"]})
+        verify(control)
+
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "A")
+        control.currentIndex = -1
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+        control.currentIndex = 1
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "B")
+
+        control.destroy()
+    }
+
+    function test_minusOneToZeroSelection_QTBUG_38036() {
+        var control = comboBox.createObject(testCase, {model: ["A", "B", "C"]})
+        verify(control)
+
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "A")
+        control.currentIndex = -1
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+        control.currentIndex = 0
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "A")
+
+        control.destroy()
+    }
 }

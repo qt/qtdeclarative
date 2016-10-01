@@ -53,6 +53,8 @@ T.ComboBox {
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
+    Universal.theme: editable && activeFocus ? Universal.Light : undefined
+
     delegate: ItemDelegate {
         width: parent.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
@@ -66,22 +68,40 @@ T.ComboBox {
         source: "image://universal/downarrow/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor)
         sourceSize.width: width
         sourceSize.height: height
+
+        Rectangle {
+            z: -1
+            width: parent.width
+            height: parent.height
+            color: control.activeFocus ? control.Universal.accent :
+                   control.pressed ? control.Universal.baseMediumLowColor :
+                   control.hovered ? control.Universal.baseLowColor : "transparent"
+            visible: control.editable && !contentItem.hovered && (control.pressed || control.hovered)
+            opacity: control.activeFocus && !control.pressed ? 0.4 : 1.0
+        }
     }
 
-    contentItem: Text {
-        leftPadding: control.mirrored ? 0 : 12
-        rightPadding: control.mirrored ? 10 : 0
+    contentItem: T.TextField {
+        leftPadding: control.mirrored ? 1 : 12
+        rightPadding: control.mirrored ? 10 : 1
         topPadding: 5 - control.topPadding
         bottomPadding: 7 - control.bottomPadding
 
-        text: control.displayText
+        text: control.editable ? control.editText : control.displayText
+
+        enabled: control.editable
+        autoScroll: control.editable
+        readOnly: control.popup.visible
+        inputMethodHints: control.inputMethodHints
+        validator: control.validator
+
         font: control.font
+        color: !control.enabled ? control.Universal.chromeDisabledLowColor :
+                control.editable && control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.foreground
+        selectionColor: control.Universal.accent
+        selectedTextColor: control.Universal.chromeWhiteColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
-
-        opacity: enabled ? 1.0 : 0.2
-        color: control.Universal.foreground
     }
 
     background: Rectangle {
@@ -90,11 +110,13 @@ T.ComboBox {
 
         border.width: control.flat ? 0 : 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.down ? control.Universal.baseMediumLowColor :
+                       control.editable && control.activeFocus ? control.Universal.accent :
+                       control.down || popup.visible ? control.Universal.baseMediumLowColor :
                        control.hovered ? control.Universal.baseMediumColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
                 control.down ? control.Universal.listMediumColor :
-                control.flat && control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
+                control.flat && control.hovered ? control.Universal.listLowColor :
+                control.editable && control.activeFocus ? control.Universal.background : control.Universal.altMediumLowColor
         visible: !control.flat || control.pressed || control.hovered || control.visualFocus
 
         Rectangle {
@@ -103,7 +125,7 @@ T.ComboBox {
             width: parent.width - 4
             height: parent.height - 4
 
-            visible: control.visualFocus
+            visible: control.visualFocus && !control.editable
             color: control.Universal.accent
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }

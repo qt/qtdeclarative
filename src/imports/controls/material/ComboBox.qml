@@ -73,17 +73,27 @@ T.ComboBox {
         source: "image://material/drop-indicator/" + (control.enabled ? control.Material.foreground : control.Material.hintTextColor)
     }
 
-    contentItem: Text {
+    contentItem: T.TextField {
         padding: 6
-        leftPadding: control.mirrored ? 0 : 12
-        rightPadding: control.mirrored ? 12 : 0
+        leftPadding: control.editable ? 2 : control.mirrored ? 0 : 12
+        rightPadding: control.editable ? 2 : control.mirrored ? 12 : 0
 
-        text: control.displayText
+        text: control.editable ? control.editText : control.displayText
+
+        enabled: control.editable
+        autoScroll: control.editable
+        readOnly: control.popup.visible
+        inputMethodHints: control.inputMethodHints
+        validator: control.validator
+
         font: control.font
         color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
+        selectionColor: control.Material.accentColor
+        selectedTextColor: control.Material.primaryHighlightedTextColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+
+        cursorDelegate: CursorDelegate { }
     }
 
     background: Rectangle {
@@ -94,32 +104,43 @@ T.ComboBox {
         y: 6
         height: parent.height - 12
         radius: control.flat ? 0 : 2
-        color: control.Material.dialogColor
+        color: !control.editable ? control.Material.dialogColor : "transparent"
 
         Behavior on color {
+            enabled: !control.editable
             ColorAnimation {
                 duration: 400
             }
         }
 
-        layer.enabled: control.enabled && control.Material.background.a > 0
+        layer.enabled: control.enabled && !control.editable && control.Material.background.a > 0
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
+        }
+
+        Rectangle {
+            visible: control.editable
+            y: parent.y + control.baselineOffset
+            width: parent.width
+            height: control.activeFocus ? 2 : 1
+            color: control.editable && control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
         }
 
         Ripple {
             clip: control.flat
             clipRadius: control.flat ? 0 : 2
-            width: parent.width
+            x: control.editable && control.indicator ? control.indicator.x : 0
+            width: control.editable && control.indicator ? control.indicator.width : parent.width
             height: parent.height
             pressed: control.pressed
-            anchor: control
+            anchor: control.editable && control.indicator ? control.indicator : control
             active: control.pressed || control.visualFocus || control.hovered
             color: control.Material.rippleColor
         }
     }
 
     popup: T.Popup {
+        y: control.editable ? control.height - 5 : 0
         width: control.width
         implicitHeight: contentItem.implicitHeight
         transformOrigin: Item.Top

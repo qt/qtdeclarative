@@ -64,40 +64,54 @@ T.ComboBox {
     indicator: Image {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://default/double-arrow/" + (control.visualFocus ? Default.focusColor : Default.textColor)
+        source: "image://default/double-arrow/" + (!control.editable && control.visualFocus ? Default.focusColor : Default.textColor)
         sourceSize.width: width
         sourceSize.height: height
         opacity: enabled ? 1 : 0.3
     }
 
-    contentItem: Text {
-        leftPadding: control.mirrored ? 0 : 12
-        rightPadding: control.mirrored ? 12 : 0
+    contentItem: T.TextField {
+        leftPadding: !control.mirrored ? 12 : control.editable && activeFocus ? 3 : 1
+        rightPadding: control.mirrored ? 12 : control.editable && activeFocus ? 3 : 1
         topPadding: 6 - control.padding
         bottomPadding: 6 - control.padding
 
-        text: control.displayText
+        text: control.editable ? control.editText : control.displayText
+
+        enabled: control.editable
+        autoScroll: control.editable
+        readOnly: control.popup.visible
+        inputMethodHints: control.inputMethodHints
+        validator: control.validator
+
         font: control.font
-        color: control.visualFocus ? Default.focusColor : Default.textColor
+        color: !control.editable && control.visualFocus ? Default.focusColor : Default.textColor
+        selectionColor: Default.focusColor
+        selectedTextColor: Default.textLightColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
-        opacity: enabled ? 1 : 0.3
+        opacity: control.enabled ? 1 : 0.3
+
+        background: Rectangle {
+            visible: control.editable && !control.flat
+            border.width: parent && parent.activeFocus ? 2 : 1
+            border.color: parent && parent.activeFocus ? Default.focusColor : Default.buttonColor
+        }
     }
 
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 40
 
-        color: control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
-            (control.down ? Default.buttonPressedColor : Default.buttonColor)
+        color: !control.editable && control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
+            (control.down || popup.visible ? Default.buttonPressedColor : Default.buttonColor)
         border.color: Default.focusColor
-        border.width: control.visualFocus ? 2 : 0
-        visible: !control.flat || control.pressed
+        border.width: !control.editable && control.visualFocus ? 2 : 0
+        visible: !control.flat || control.down
     }
 
     popup: T.Popup {
-        y: control.height - (control.visualFocus ? 0 : 1)
+        y: control.height
         width: control.width
         implicitHeight: contentItem.implicitHeight
         topMargin: 6

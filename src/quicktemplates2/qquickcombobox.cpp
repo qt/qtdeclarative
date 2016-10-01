@@ -41,11 +41,15 @@
 
 #include <QtCore/qregexp.h>
 #include <QtCore/qabstractitemmodel.h>
+#include <QtGui/qinputmethod.h>
+#include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/private/qlazilyallocated_p.h>
 #include <QtQml/private/qqmldelegatemodel_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +75,30 @@ QT_BEGIN_NAMESPACE
     \code
     ComboBox {
         model: ["First", "Second", "Third"]
+    }
+    \endcode
+
+    \section1 Editable ComboBox
+
+    ComboBox can be made \l editable. An editable combo box auto-completes
+    its text based on what is available in the model.
+
+    The following example demonstrates appending content to an editable
+    combo box by reacting to the \l accepted signal.
+
+    \code
+    ComboBox {
+        editable: true
+        model: ListModel {
+            id: model
+            ListElement { text: "Banana" }
+            ListElement { text: "Apple" }
+            ListElement { text: "Coconut" }
+        }
+        onAccepted: {
+            if (find(editText) === -1)
+                model.append({text: editText})
+        }
     }
     \endcode
 
@@ -130,6 +158,19 @@ QT_BEGIN_NAMESPACE
     \sa highlightedIndex
 */
 
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal void QtQuick.Controls::ComboBox::accepted()
+
+    This signal is emitted when the \uicontrol Return or \uicontrol Enter key is pressed
+    on an \l editable combo box. If the confirmed string is not currently in the model,
+    the \l currentIndex will be set to \c -1 and the \c currentText will be updated
+    accordingly.
+
+    \note If there is a \l validator set on the combo box, the signal will only be
+          emitted if the input is in an acceptable state.
+*/
+
 namespace {
     enum Activation { NoActivate, Activate };
     enum Highlighting { NoHighlight, Highlight };
@@ -181,8 +222,15 @@ public:
     void itemClicked();
 
     void createdItem(int index, QObject *object);
+    void modelUpdated();
     void countChanged();
+
+    void updateEditText();
     void updateCurrentText();
+
+    void acceptInput();
+    QString tryComplete(const QString &inputText);
+
     void incrementCurrentIndex();
     void decrementCurrentIndex();
     void setCurrentIndex(int index, Activation activate);
@@ -212,6 +260,23 @@ public:
     QQmlComponent *delegate;
     QQuickItem *indicator;
     QQuickPopup *popup;
+
+    struct ExtraData {
+        ExtraData()
+            : editable(false),
+              accepting(false),
+              allowComplete(false),
+              inputMethodHints(Qt::ImhNone),
+              validator(nullptr) { }
+
+        bool editable;
+        bool accepting;
+        bool allowComplete;
+        Qt::InputMethodHints inputMethodHints;
+        QString editText;
+        QValidator *validator;
+    };
+    QLazilyAllocated<ExtraData> extra;
 };
 
 QQuickComboBoxPrivate::QQuickComboBoxPrivate()
@@ -267,6 +332,9 @@ void QQuickComboBoxPrivate::togglePopup(bool accept)
 void QQuickComboBoxPrivate::popupVisibleChanged()
 {
     Q_Q(QQuickComboBox);
+    if (isPopupVisible())
+        QGuiApplication::inputMethod()->reset();
+
     updateHighlightedIndex();
     if (!hasDown) {
         q->setDown(pressed || isPopupVisible());
@@ -286,6 +354,7 @@ void QQuickComboBoxPrivate::itemClicked()
 
 void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 {
+    Q_Q(QQuickComboBox);
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (popup && item && !item->parentItem()) {
         item->setParentItem(popup->contentItem());
@@ -298,7 +367,13 @@ void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
         connect(button, &QQuickAbstractButton::clicked, this, &QQuickComboBoxPrivate::itemClicked);
     }
 
-    if (index == currentIndex)
+    if (index == currentIndex && !q->isEditable())
+        updateCurrentText();
+}
+
+void QQuickComboBoxPrivate::modelUpdated()
+{
+    if (!extra.isAllocated() || !extra->accepting)
         updateCurrentText();
 }
 
@@ -308,6 +383,26 @@ void QQuickComboBoxPrivate::countChanged()
     if (q->count() == 0)
         q->setCurrentIndex(-1);
     emit q->countChanged();
+}
+
+void QQuickComboBoxPrivate::updateEditText()
+{
+    Q_Q(QQuickComboBox);
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(contentItem);
+    if (!input)
+        return;
+
+    const QString text = input->text();
+
+    if (extra.isAllocated() && extra->allowComplete && !text.isEmpty()) {
+        const QString completed = tryComplete(text);
+        if (completed.length() > text.length()) {
+            input->setText(completed);
+            input->select(completed.length(), text.length());
+            return;
+        }
+    }
+    q->setEditText(text);
 }
 
 void QQuickComboBoxPrivate::updateCurrentText()
@@ -324,6 +419,45 @@ void QQuickComboBoxPrivate::updateCurrentText()
         displayText = text;
         emit q->displayTextChanged();
     }
+    if (!extra.isAllocated() || !extra->accepting)
+        q->setEditText(currentText);
+}
+
+void QQuickComboBoxPrivate::acceptInput()
+{
+    Q_Q(QQuickComboBox);
+    int idx = q->find(extra.value().editText, Qt::MatchFixedString);
+    if (idx > -1)
+        q->setCurrentIndex(idx);
+
+    extra.value().accepting = true;
+    emit q->accepted();
+
+    if (idx == -1)
+        q->setCurrentIndex(q->find(extra.value().editText, Qt::MatchFixedString));
+    extra.value().accepting = false;
+}
+
+QString QQuickComboBoxPrivate::tryComplete(const QString &input)
+{
+    Q_Q(QQuickComboBox);
+    QString match;
+
+    const int itemCount = q->count();
+    for (int idx = 0; idx < itemCount; ++idx) {
+        const QString text = q->textAt(idx);
+        if (!text.startsWith(input, Qt::CaseInsensitive))
+            continue;
+
+        // either the first or the shortest match
+        if (match.isEmpty() || text.length() < match.length())
+            match = text;
+    }
+
+    if (match.isEmpty())
+        return input;
+
+    return input + match.mid(input.length());
 }
 
 void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)
@@ -345,6 +479,8 @@ void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)
 void QQuickComboBoxPrivate::incrementCurrentIndex()
 {
     Q_Q(QQuickComboBox);
+    if (extra.isAllocated())
+        extra->allowComplete = false;
     if (isPopupVisible()) {
         if (highlightedIndex < q->count() - 1)
             setHighlightedIndex(highlightedIndex + 1, Highlight);
@@ -352,10 +488,14 @@ void QQuickComboBoxPrivate::incrementCurrentIndex()
         if (currentIndex < q->count() - 1)
             setCurrentIndex(currentIndex + 1, Activate);
     }
+    if (extra.isAllocated())
+        extra->allowComplete = true;
 }
 
 void QQuickComboBoxPrivate::decrementCurrentIndex()
 {
+    if (extra.isAllocated())
+        extra->allowComplete = false;
     if (isPopupVisible()) {
         if (highlightedIndex > 0)
             setHighlightedIndex(highlightedIndex - 1, Highlight);
@@ -363,6 +503,8 @@ void QQuickComboBoxPrivate::decrementCurrentIndex()
         if (currentIndex > 0)
             setCurrentIndex(currentIndex - 1, Activate);
     }
+    if (extra.isAllocated())
+        extra->allowComplete = true;
 }
 
 void QQuickComboBoxPrivate::updateHighlightedIndex()
@@ -449,7 +591,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
     QQmlInstanceModel* oldModel = delegateModel;
     if (oldModel) {
         disconnect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
-        disconnect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
+        disconnect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::modelUpdated);
         disconnect(delegateModel, &QQmlInstanceModel::createdItem, this, &QQuickComboBoxPrivate::createdItem);
     }
 
@@ -469,7 +611,7 @@ void QQuickComboBoxPrivate::createDelegateModel()
 
     if (delegateModel) {
         connect(delegateModel, &QQmlInstanceModel::countChanged, this, &QQuickComboBoxPrivate::countChanged);
-        connect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::updateCurrentText);
+        connect(delegateModel, &QQmlInstanceModel::modelUpdated, this, &QQuickComboBoxPrivate::modelUpdated);
         connect(delegateModel, &QQmlInstanceModel::createdItem, this, &QQuickComboBoxPrivate::createdItem);
     }
 
@@ -485,6 +627,7 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
     setFocusPolicy(Qt::StrongFocus);
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::LeftButton);
+    setInputMethodHints(Qt::ImhNoPredictiveText);
 }
 
 QQuickComboBox::~QQuickComboBox()
@@ -564,6 +707,48 @@ QQmlInstanceModel *QQuickComboBox::delegateModel() const
 {
     Q_D(const QQuickComboBox);
     return d->delegateModel;
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::ComboBox::editable
+
+    This property holds whether the combo box is editable.
+
+    The default value is \c false.
+
+    \sa validator
+*/
+bool QQuickComboBox::isEditable() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() && d->extra->editable;
+}
+
+void QQuickComboBox::setEditable(bool editable)
+{
+    Q_D(QQuickComboBox);
+    if (editable == isEditable())
+        return;
+
+    if (d->contentItem) {
+        if (editable) {
+            d->contentItem->installEventFilter(this);
+            if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
+                QObjectPrivate::connect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
+                QObjectPrivate::connect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
+            }
+        } else {
+            d->contentItem->removeEventFilter(this);
+            if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
+                QObjectPrivate::disconnect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
+                QObjectPrivate::disconnect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
+            }
+        }
+    }
+
+    d->extra.value().editable = editable;
+    emit editableChanged();
 }
 
 /*!
@@ -765,6 +950,35 @@ void QQuickComboBox::resetDisplayText()
 }
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty string QtQuick.Controls::ComboBox::editText
+
+    This property holds the text in the text field of an editable combo box.
+
+    \sa editable
+*/
+QString QQuickComboBox::editText() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() ? d->extra->editText : QString();
+}
+
+void QQuickComboBox::setEditText(const QString &text)
+{
+    Q_D(QQuickComboBox);
+    if (text == editText())
+        return;
+
+    d->extra.value().editText = text;
+    emit editTextChanged();
+}
+
+void QQuickComboBox::resetEditText()
+{
+    setEditText(QString());
+}
+
+/*!
     \qmlproperty string QtQuick.Controls::ComboBox::textRole
 
     This property holds the model role used for populating the combo box.
@@ -901,6 +1115,115 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 }
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty Validator QtQuick.Controls::ComboBox::validator
+
+    This property holds an input text validator for an editable combo box.
+
+    When a validator is set, the text field will only accept input which
+    leaves the text property in an intermediate state. The \l accepted signal
+    will only be emitted if the text is in an acceptable state when the
+    \uicontrol Return or \uicontrol Enter key is pressed.
+
+    The currently supported validators are \l[QtQuick]{IntValidator},
+    \l[QtQuick]{DoubleValidator}, and \l[QtQuick]{RegExpValidator}. An
+    example of using validators is shown below, which allows input of
+    integers between \c 0 and \c 10 into the text field:
+
+    \code
+    ComboBox {
+        model: 10
+        editable: true
+        validator: IntValidator {
+            top: 9
+            bottom: 0
+        }
+    }
+    \endcode
+
+    \sa acceptableInput, accepted, editable
+*/
+QValidator *QQuickComboBox::validator() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() ? d->extra->validator : nullptr;
+}
+
+void QQuickComboBox::setValidator(QValidator *validator)
+{
+    Q_D(QQuickComboBox);
+    if (validator == QQuickComboBox::validator())
+        return;
+
+    d->extra.value().validator = validator;
+    if (validator)
+        validator->setLocale(d->locale);
+    emit validatorChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty flags QtQuick.Controls::ComboBox::inputMethodHints
+
+    Provides hints to the input method about the expected content of the combo box and how it
+    should operate.
+
+    The default value is \c Qt.ImhNoPredictiveText.
+
+    \include inputmethodhints.qdocinc
+*/
+Qt::InputMethodHints QQuickComboBox::inputMethodHints() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() ? d->extra->inputMethodHints : Qt::ImhNoPredictiveText;
+}
+
+void QQuickComboBox::setInputMethodHints(Qt::InputMethodHints hints)
+{
+    Q_D(QQuickComboBox);
+    if (hints == inputMethodHints())
+        return;
+
+    d->extra.value().inputMethodHints = hints;
+    emit inputMethodHintsChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::ComboBox::inputMethodComposing
+    \readonly
+
+    This property holds whether an editable combo box has partial text input from an input method.
+
+    While it is composing, an input method may rely on mouse or key events from the combo box to
+    edit or commit the partial text. This property can be used to determine when to disable event
+    handlers that may interfere with the correct operation of an input method.
+*/
+bool QQuickComboBox::isInputMethodComposing() const
+{
+    Q_D(const QQuickComboBox);
+    return d->contentItem && d->contentItem->property("inputMethodComposing").toBool();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::ComboBox::acceptableInput
+    \readonly
+
+    This property holds whether the combo box contains acceptable text in the editable text field.
+
+    If a validator has been set, the value is \c true only if the current text is acceptable
+    to the validator as a final string (not as an intermediate string).
+
+    \sa validator, accepted
+*/
+bool QQuickComboBox::hasAcceptableInput() const
+{
+    Q_D(const QQuickComboBox);
+    return d->contentItem && d->contentItem->property("acceptableInput").toBool();
+}
+
+/*!
     \qmlmethod string QtQuick.Controls::ComboBox::textAt(int index)
 
     Returns the text for the specified \a index, or an empty string
@@ -977,12 +1300,75 @@ void QQuickComboBox::decrementCurrentIndex()
     d->decrementCurrentIndex();
 }
 
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlmethod void QtQuick.Controls::ComboBox::selectAll()
+
+    Selects all the text in the editable text field of the combo box.
+
+    \sa editText
+*/
+void QQuickComboBox::selectAll()
+{
+    Q_D(QQuickComboBox);
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem);
+    if (!input)
+        return;
+    input->selectAll();
+}
+
+bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
+{
+    Q_D(QQuickComboBox);
+    switch (event->type()) {
+    case QEvent::MouseButtonRelease:
+        if (d->isPopupVisible())
+            d->hidePopup(false);
+        break;
+    case QEvent::KeyPress: {
+        const int key = static_cast<QKeyEvent *>(event)->key();
+        if (d->extra.isAllocated())
+            d->extra->allowComplete = key != Qt::Key_Backspace && key != Qt::Key_Delete;
+        break;
+    }
+    case QEvent::FocusOut:
+        d->hidePopup(false);
+        setPressed(false);
+        break;
+    case QEvent::InputMethod:
+        if (d->extra.isAllocated())
+            d->extra->allowComplete = !static_cast<QInputMethodEvent*>(event)->commitString().isEmpty();
+        break;
+    default:
+        break;
+    }
+    return QQuickControl::eventFilter(object, event);
+}
+
+void QQuickComboBox::focusInEvent(QFocusEvent *event)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::focusInEvent(event);
+    if (d->contentItem && isEditable())
+        d->contentItem->forceActiveFocus(event->reason());
+}
+
 void QQuickComboBox::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::focusOutEvent(event);
     d->hidePopup(false);
     setPressed(false);
+}
+
+void QQuickComboBox::inputMethodEvent(QInputMethodEvent *event)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::inputMethodEvent(event);
+    if (!isEditable() && !event->commitString().isEmpty())
+        d->keySearch(event->commitString());
+    else
+        event->ignore();
 }
 
 void QQuickComboBox::keyPressEvent(QKeyEvent *event)
@@ -1030,7 +1416,7 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         event->accept();
         break;
     default:
-        if (!event->text().isEmpty())
+        if (!isEditable() && !event->text().isEmpty())
             d->keySearch(event->text());
         else
             event->ignore();
@@ -1047,13 +1433,15 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Space:
-        d->togglePopup(true);
+        if (!isEditable())
+            d->togglePopup(true);
         setPressed(false);
         event->accept();
         break;
     case Qt::Key_Enter:
     case Qt::Key_Return:
-        d->hidePopup(d->isPopupVisible());
+        if (!isEditable() || d->isPopupVisible())
+            d->hidePopup(d->isPopupVisible());
         setPressed(false);
         event->accept();
         break;
@@ -1124,6 +1512,36 @@ void QQuickComboBox::componentComplete()
         else
             d->updateCurrentText();
     }
+}
+
+void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_D(QQuickComboBox);
+    if (oldItem) {
+        oldItem->removeEventFilter(this);
+        if (QQuickTextInput *oldInput = qobject_cast<QQuickTextInput *>(oldItem)) {
+            QObjectPrivate::disconnect(oldInput, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
+            QObjectPrivate::disconnect(oldInput, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
+            disconnect(oldInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickComboBox::inputMethodComposingChanged);
+            disconnect(oldInput, &QQuickTextInput::acceptableInputChanged, this, &QQuickComboBox::acceptableInputChanged);
+        }
+    }
+    if (newItem && isEditable()) {
+        newItem->installEventFilter(this);
+        if (QQuickTextInput *newInput = qobject_cast<QQuickTextInput *>(newItem)) {
+            QObjectPrivate::connect(newInput, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
+            QObjectPrivate::connect(newInput, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
+            connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickComboBox::inputMethodComposingChanged);
+            connect(newInput, &QQuickTextInput::acceptableInputChanged, this, &QQuickComboBox::acceptableInputChanged);
+        }
+    }
+}
+
+void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    QQuickControl::localeChange(newLocale, oldLocale);
+    if (QValidator *v = validator())
+        v->setLocale(newLocale);
 }
 
 QFont QQuickComboBox::defaultFont() const

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 ScrollablePage {
     id: page
@@ -58,6 +58,29 @@ ScrollablePage {
 
         ComboBox {
             model: ["First", "Second", "Third"]
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        Label {
+            width: parent.width
+            wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
+            text: "ComboBox can be made \l editable. An editable combo box auto-"
+                + "completes its text based on what is available in the model."
+        }
+
+        ComboBox {
+            editable: true
+            model: ListModel {
+                id: model
+                ListElement { text: "Banana" }
+                ListElement { text: "Apple" }
+                ListElement { text: "Coconut" }
+            }
+            onAccepted: {
+                if (find(editText) === -1)
+                    model.append({text: editText})
+            }
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }
