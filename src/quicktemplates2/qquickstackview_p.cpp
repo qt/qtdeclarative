@@ -138,6 +138,16 @@ bool QQuickStackElement::load(QQuickStackView *parent)
     if (!item) {
         ownItem = true;
 
+        if (component->isLoading()) {
+            QObject::connect(component, &QQmlComponent::statusChanged, [this](QQmlComponent::Status status) {
+                if (status == QQmlComponent::Ready)
+                    load(view);
+                else if (status == QQmlComponent::Error)
+                    qWarning() << qPrintable(component->errorString().trimmed());
+            });
+            return true;
+        }
+
         QQmlContext *creationContext = component->creationContext();
         if (!creationContext)
             creationContext = qmlContext(parent);
