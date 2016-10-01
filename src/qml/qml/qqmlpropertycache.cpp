@@ -240,7 +240,7 @@ Creates a new empty QQmlPropertyCache.
 QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e)
     : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
       signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(0), argumentsCache(0)
+      _metaObject(0), argumentsCache(0), _jsFactoryMethodIndex(-1)
 {
     Q_ASSERT(engine);
 }
@@ -251,7 +251,7 @@ Creates a new QQmlPropertyCache of \a metaObject.
 QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e, const QMetaObject *metaObject)
     : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
       signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(0), argumentsCache(0)
+      _metaObject(0), argumentsCache(0), _jsFactoryMethodIndex(-1)
 {
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
@@ -524,10 +524,16 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         for (int ii = 0; ii < classInfoCount; ++ii) {
             int idx = ii + classInfoOffset;
 
-            if (0 == qstrcmp(metaObject->classInfo(idx).name(), "qt_HasQmlAccessors")) {
+            const char * const classInfoName = metaObject->classInfo(idx).name();
+            if (0 == qstrcmp(classInfoName, "qt_HasQmlAccessors")) {
                 hasFastProperty = true;
-            } else if (0 == qstrcmp(metaObject->classInfo(idx).name(), "DefaultProperty")) {
+            } else if (0 == qstrcmp(classInfoName, "DefaultProperty")) {
                 _defaultPropertyName = QString::fromUtf8(metaObject->classInfo(idx).value());
+            } else if (0 == qstrcmp(classInfoName, "qt_QmlJSWrapperFactoryMethod")) {
+                const char * const factoryMethod = metaObject->classInfo(idx).value();
+                _jsFactoryMethodIndex = metaObject->indexOfSlot(factoryMethod);
+                if (_jsFactoryMethodIndex != -1)
+                    _jsFactoryMethodIndex -= metaObject->methodOffset();
             }
         }
 

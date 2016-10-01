@@ -302,6 +302,7 @@ public:
 
     void _q_resourceObjectDeleted(QObject *);
     void _q_windowChanged(QQuickWindow *w);
+    quint64 _q_createJSWrapper(QV4::ExecutionEngine *engine);
 
     enum ChangeType {
         Geometry = 0x01,
@@ -605,9 +606,6 @@ public:
     virtual void mirrorChange() {}
 
     void setHasCursorInChild(bool hasCursor);
-
-    // recursive helper to let a visual parent mark its visual children
-    void markObjects(QV4::ExecutionEngine *e);
 };
 
 /*

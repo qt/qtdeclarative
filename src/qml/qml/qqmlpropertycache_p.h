@@ -80,6 +80,8 @@ class QQmlPropertyCacheCreator;
 class QQmlPropertyRawData
 {
 public:
+    typedef QObjectPrivate::StaticMetaCallFunction StaticMetaCallFunction;
+
     enum Flag {
         NoFlags           = 0x00000000,
         ValueTypeFlagMask = 0x0000FFFF, // Flags in valueTypeFlags must fit in this mask
@@ -326,6 +328,8 @@ public:
 
     void toMetaObjectBuilder(QMetaObjectBuilder &);
 
+    inline bool callJSFactoryMethod(QObject *object, void **args) const;
+
 protected:
     virtual void destroy();
     virtual void clear();
@@ -394,6 +398,7 @@ private:
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
+    int _jsFactoryMethodIndex;
 };
 
 // QQmlMetaObject serves as a wrapper around either QMetaObject or QQmlPropertyCache.
@@ -560,6 +565,17 @@ int QQmlPropertyCache::signalCount() const
 int QQmlPropertyCache::signalOffset() const
 {
     return signalHandlerIndexCacheStart;
+}
+
+bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const
+{
+    if (_jsFactoryMethodIndex != -1) {
+        _metaObject->d.static_metacall(object, QMetaObject::InvokeMetaMethod, _jsFactoryMethodIndex, args);
+        return true;
+    }
+    if (_parent)
+        return _parent->callJSFactoryMethod(object, args);
+    return false;
 }
 
 QQmlMetaObject::QQmlMetaObject()
