@@ -58,12 +58,14 @@ DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 Heap::QmlTypeWrapper::QmlTypeWrapper()
     : mode(IncludeEnums)
 {
+    object.init();
 }
 
 Heap::QmlTypeWrapper::~QmlTypeWrapper()
 {
     if (typeNamespace)
         typeNamespace->release();
+    object.destroy();
 }
 
 bool QmlTypeWrapper::isSingleton() const

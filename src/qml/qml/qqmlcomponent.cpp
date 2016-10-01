@@ -1059,8 +1059,9 @@ namespace Heap {
 
 struct QmlIncubatorObject : Object {
     QmlIncubatorObject(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
+    ~QmlIncubatorObject() { parent.destroy(); }
     QScopedPointer<QQmlComponentIncubator> incubator;
-    QPointer<QObject> parent;
+    QQmlQPointer<QObject> parent;
     QV4::Value valuemap;
     QV4::Value statusChanged;
     Pointer<Heap::QmlContext> qmlContext;
@@ -1486,8 +1487,9 @@ QQmlComponentExtension::~QQmlComponentExtension()
 QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QQmlIncubator::IncubationMode m)
     : valuemap(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
-    , qmlContext(0)
 {
+    parent.init();
+    qmlContext = nullptr;
     incubator.reset(new QQmlComponentIncubator(this, m));
 }
 

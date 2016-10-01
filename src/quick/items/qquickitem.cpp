@@ -2703,8 +2703,6 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
-    d->parentNotifier.notify();
-
     emit parentChanged(d->parentItem);
     if (isVisible() && d->parentItem)
         emit d->parentItem->visibleChildrenChanged();
@@ -7124,6 +7122,11 @@ void QQuickItem::unsetCursor()
     Grabs the mouse input.
 
     This item will receive all mouse events until ungrabMouse() is called.
+    Usually this function should not be called, since accepting for example
+    a mouse press event makes sure that the following events are delivered
+    to the item.
+    If an item wants to take over mouse events from the current receiver,
+    it needs to call this function.
 
     \warning This function should be used with caution.
   */
@@ -7138,6 +7141,12 @@ void QQuickItem::grabMouse()
 
 /*!
     Releases the mouse grab following a call to grabMouse().
+
+    Note that this function should only be called when the item wants
+    to stop handling further events. There is no need to call this function
+    after a release or cancel event since no future events will be received
+    in any case. No move or release events will be delivered after this
+    function was called.
 */
 void QQuickItem::ungrabMouse()
 {
@@ -7203,6 +7212,10 @@ void QQuickItem::grabTouchPoints(const QVector<int> &ids)
 
 /*!
     Ungrabs the touch points owned by this item.
+
+    \note there is hardly any reason to call this function. It should only be
+    called when an item does not want to receive any further events, so no
+    move or release events will be delivered after calling this function.
 
     \sa grabTouchPoints()
 */

@@ -77,6 +77,8 @@ bool String::isEqualTo(Managed *t, Managed *o)
 Heap::String::String(MemoryManager *mm, const QString &t)
     : mm(mm)
 {
+    Base::init();
+
     subtype = String::StringType_Unknown;
 
     text = const_cast<QString &>(t).data_ptr();
@@ -87,9 +89,11 @@ Heap::String::String(MemoryManager *mm, const QString &t)
     len = text->size;
 }
 
-Heap::String::String(MemoryManager *mm, String *l, String *r)
+Heap::String::String(MemoryManager *mm, String *l, String *r, bool) // TODO: remove the dummy bool when String is trivial
     : mm(mm)
 {
+    Base::init();
+
     subtype = String::StringType_Unknown;
 
     left = l;

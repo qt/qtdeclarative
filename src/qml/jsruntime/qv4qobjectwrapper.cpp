@@ -196,8 +196,8 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
 }
 
 Heap::QObjectWrapper::QObjectWrapper(QObject *object)
-    : object(object)
 {
+    qObj.init(object);
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
@@ -210,21 +210,21 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
 {
     Q_UNUSED(revisionMode);
 
-    QQmlData *ddata = QQmlData::get(d()->object, false);
+    QQmlData *ddata = QQmlData::get(d()->object(), false);
     if (!ddata)
         return 0;
     QQmlPropertyData *result = 0;
     if (ddata && ddata->propertyCache)
-        result = ddata->propertyCache->property(name, d()->object, qmlContext);
+        result = ddata->propertyCache->property(name, d()->object(), qmlContext);
     else
-        result = QQmlPropertyCache::property(engine->jsEngine(), d()->object, name, qmlContext, *local);
+        result = QQmlPropertyCache::property(engine->jsEngine(), d()->object(), name, qmlContext, *local);
     return result;
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode,
                                              bool *hasProperty, bool includeImports) const
 {
-    if (QQmlData::wasDeleted(d()->object)) {
+    if (QQmlData::wasDeleted(d()->object())) {
         if (hasProperty)
             *hasProperty = false;
         return QV4::Encode::undefined();
@@ -237,7 +237,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
         if (hasProperty)
             *hasProperty = true;
         ExecutionContext *global = v4->rootContext();
-        return QV4::QObjectMethod::create(global, d()->object, index);
+        return QV4::QObjectMethod::create(global, d()->object(), index);
     }
 
     QQmlPropertyData local;
@@ -256,10 +256,10 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                     if (r.scriptIndex != -1) {
                         return QV4::Encode::undefined();
                     } else if (r.type) {
-                        return QmlTypeWrapper::create(v4, d()->object,
+                        return QmlTypeWrapper::create(v4, d()->object(),
                                                       r.type, Heap::QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
-                        return QmlTypeWrapper::create(v4, d()->object,
+                        return QmlTypeWrapper::create(v4, d()->object(),
                                                       qmlContext->imports, r.importNamespace, Heap::QmlTypeWrapper::ExcludeEnums);
                     }
                     Q_ASSERT(!"Unreachable");
@@ -269,7 +269,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
         return QV4::Object::get(this, name, hasProperty);
     }
 
-    QQmlData *ddata = QQmlData::get(d()->object, false);
+    QQmlData *ddata = QQmlData::get(d()->object(), false);
 
     if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result)) {
@@ -282,7 +282,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     if (hasProperty)
         *hasProperty = true;
 
-    return getProperty(v4, d()->object, result);
+    return getProperty(v4, d()->object(), result);
 }
 
 ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired)
@@ -577,7 +577,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value)
 {
-    setProperty(engine, d()->object, propertyIndex, value);
+    setProperty(engine, d()->object(), propertyIndex, value);
 }
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, const Value &value)
@@ -630,12 +630,12 @@ void QObjectWrapper::put(Managed *m, String *name, const Value &value)
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = that->engine();
 
-    if (v4->hasException || QQmlData::wasDeleted(that->d()->object))
+    if (v4->hasException || QQmlData::wasDeleted(that->d()->object()))
         return;
 
     QQmlContextData *qmlContext = v4->callingQmlContext();
-    if (!setQmlProperty(v4, qmlContext, that->d()->object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
-        QQmlData *ddata = QQmlData::get(that->d()->object);
+    if (!setQmlProperty(v4, qmlContext, that->d()->object(), name, QV4::QObjectWrapper::IgnoreRevision, value)) {
+        QQmlData *ddata = QQmlData::get(that->d()->object());
         // Types created by QML are not extensible at run-time, but for other QObjects we can store them
         // as regular JavaScript properties, like on JavaScript objects.
         if (ddata && ddata->context) {
@@ -673,8 +673,8 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
 
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
 
-    if (that->d()->object) {
-        const QMetaObject *mo = that->d()->object->metaObject();
+    if (that->d()->object()) {
+        const QMetaObject *mo = that->d()->object()->metaObject();
         // These indices don't apply to gadgets, so don't block them.
         const bool preventDestruction = mo->superClass() || mo == &QObject::staticMetaObject;
         const int propertyCount = mo->propertyCount();
@@ -944,7 +944,7 @@ void QObjectWrapper::markObjects(Heap::Base *that, QV4::ExecutionEngine *e)
 {
     QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
 
-    if (QObject *o = This->object.data()) {
+    if (QObject *o = This->object()) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
         if (vme)
             vme->mark(e);
@@ -966,18 +966,18 @@ void QObjectWrapper::destroyObject(bool lastCall)
     if (!h->internalClass)
         return; // destroyObject already got called
 
-    if (h->object) {
-        QQmlData *ddata = QQmlData::get(h->object, false);
+    if (h->object()) {
+        QQmlData *ddata = QQmlData::get(h->object(), false);
         if (ddata) {
-            if (!h->object->parent() && !ddata->indestructible) {
+            if (!h->object()->parent() && !ddata->indestructible) {
                 if (ddata && ddata->ownContext && ddata->context)
                     ddata->context->emitDestruction();
                 // This object is notionally destroyed now
                 ddata->isQueuedForDeletion = true;
                 if (lastCall)
-                    delete h->object;
+                    delete h->object();
                 else
-                    h->object->deleteLater();
+                    h->object()->deleteLater();
             }
         }
     }
@@ -1675,7 +1675,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
 {
     Scope valueScope(scope);
     Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->allocObject<QObjectMethod>(scope));
-    method->d()->object = object;
+    method->d()->setObject(object);
 
     if (QQmlData *ddata = QQmlData::get(object))
         method->d()->propertyCache = ddata->propertyCache;
@@ -1703,7 +1703,7 @@ const QMetaObject *Heap::QObjectMethod::metaObject()
 {
     if (propertyCache)
         return propertyCache->createMetaObject();
-    return object->metaObject();
+    return object()->metaObject();
 }
 
 QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) const
@@ -1712,10 +1712,10 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) co
     if (const QMetaObject *metaObject = d()->metaObject()) {
 
         result += QString::fromUtf8(metaObject->className()) +
-                QLatin1String("(0x") + QString::number((quintptr)d()->object.data(),16);
+                QLatin1String("(0x") + QString::number((quintptr)d()->object(),16);
 
-        if (d()->object) {
-            QString objectName = d()->object->objectName();
+        if (d()->object()) {
+            QString objectName = d()->object()->objectName();
             if (!objectName.isEmpty())
                 result += QLatin1String(", \"") + objectName + QLatin1Char('\"');
         }
@@ -1730,9 +1730,9 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) co
 
 QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const
 {
-    if (!d()->object)
+    if (!d()->object())
         return Encode::undefined();
-    if (QQmlData::keepAliveDuringGarbageCollection(d()->object))
+    if (QQmlData::keepAliveDuringGarbageCollection(d()->object()))
         return ctx->engine()->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;
@@ -1740,9 +1740,9 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, con
         delay = args[0].toUInt32();
 
     if (delay > 0)
-        QTimer::singleShot(delay, d()->object, SLOT(deleteLater()));
+        QTimer::singleShot(delay, d()->object(), SLOT(deleteLater()));
     else
-        d()->object->deleteLater();
+        d()->object()->deleteLater();
 
     return Encode::undefined();
 }
@@ -1767,8 +1767,8 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
         return;
     }
 
-    QQmlObjectOrGadget object(d()->object.data());
-    if (!d()->object) {
+    QQmlObjectOrGadget object(d()->object());
+    if (!d()->object()) {
         if (!d()->valueTypeWrapper) {
             scope.result = Encode::undefined();
             return;
@@ -1787,7 +1787,7 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
         }
         method = *data;
     } else {
-        const QMetaObject *mo = d()->object->metaObject();
+        const QMetaObject *mo = d()->object()->metaObject();
         const QMetaMethod moMethod = mo->method(d()->index);
         method.load(moMethod);
 
@@ -1840,23 +1840,33 @@ DEFINE_OBJECT_VTABLE(QObjectMethod);
 
 
 Heap::QMetaObjectWrapper::QMetaObjectWrapper(const QMetaObject *metaObject)
-    : metaObject(metaObject) {
+    : metaObject(metaObject)
+    , constructors(nullptr)
+    , constructorCount(0)
+{}
 
+Heap::QMetaObjectWrapper::~QMetaObjectWrapper()
+{
+    delete[] constructors;
 }
 
 void Heap::QMetaObjectWrapper::ensureConstructorsCache() {
 
     const int count = metaObject->constructorCount();
-    if (constructors.size() != count) {
-        constructors.clear();
-        constructors.reserve(count);
+    if (constructorCount != count) {
+        delete[] constructors;
+        constructorCount = count;
+        if (count == 0) {
+            constructors = nullptr;
+            return;
+        }
+        constructors = new QQmlPropertyData[count];
 
         for (int i = 0; i < count; ++i) {
             QMetaMethod method = metaObject->constructor(i);
-            QQmlPropertyData d;
+            QQmlPropertyData &d = constructors[i];
             d.load(method);
             d.setCoreIndex(i);
-            constructors << d;
         }
     }
 }
@@ -1895,7 +1905,7 @@ ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
 
     ExecutionEngine *v4 = engine();
     const QMetaObject* mo = d()->metaObject;
-    if (d()->constructors.isEmpty()) {
+    if (d()->constructorCount == 0) {
         return v4->throwTypeError(QLatin1String(mo->className())
                                   + QLatin1String(" has no invokable constructor"));
     }
@@ -1903,8 +1913,8 @@ ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
     Scope scope(v4);
     Scoped<QObjectWrapper> object(scope);
 
-    if (d()->constructors.size() == 1) {
-        object = callConstructor(d()->constructors.first(), v4, callData);
+    if (d()->constructorCount == 1) {
+        object = callConstructor(d()->constructors[0], v4, callData);
     }
     else {
         object = callOverloadedConstructor(v4, callData);
@@ -1925,7 +1935,7 @@ ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, 
 
 
 ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
-    const int numberOfConstructors = d()->constructors.size();
+    const int numberOfConstructors = d()->constructorCount;
     const int argumentCount = callArgs->argc;
     const QQmlStaticMetaObject object(d()->metaObject);
 
@@ -1937,7 +1947,7 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
     QV4::ScopedValue v(scope);
 
     for (int i = 0; i < numberOfConstructors; i++) {
-        const QQmlPropertyData & attempt = d()->constructors.at(i);
+        const QQmlPropertyData & attempt = d()->constructors[i];
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt.hasArguments()) {
@@ -1976,7 +1986,7 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         for (int i = 0; i < numberOfConstructors; i++) {
-            const QQmlPropertyData & candidate = d()->constructors.at(i);
+            const QQmlPropertyData & candidate = d()->constructors[i];
             error += QLatin1String("\n    ") +
                     QString::fromUtf8(d()->metaObject->constructor(candidate.coreIndex())
                                       .methodSignature());
@@ -2002,9 +2012,9 @@ DEFINE_OBJECT_VTABLE(QMetaObjectWrapper);
 
 
 Heap::QmlSignalHandler::QmlSignalHandler(QObject *object, int signalIndex)
-    : object(object)
-    , signalIndex(signalIndex)
+    : signalIndex(signalIndex)
 {
+    setObject(object);
 }
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);

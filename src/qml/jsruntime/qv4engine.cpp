@@ -488,8 +488,9 @@ void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
-    Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(sizeof(GlobalContext::Data) + sizeof(CallData)));
-    new (r->d()) GlobalContext::Data(this);
+    Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(
+                                sizeof(GlobalContext::Data) + sizeof(CallData)));
+    r->d_unchecked()->init(this);
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
     r->d()->callData->tag = QV4::Value::Integer_Type_Internal;
     r->d()->callData->argc = 0;
@@ -572,7 +573,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
     if (length) {
         size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
         Heap::SimpleArrayData *d = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
-        new (d) Heap::SimpleArrayData;
+        d->init();
         d->alloc = length;
         d->type = Heap::ArrayData::Simple;
         d->offset = 0;

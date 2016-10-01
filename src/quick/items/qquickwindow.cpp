@@ -630,6 +630,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
     Q_ASSERT(pointerEvent->asPointerTouchEvent());
     QTouchEvent *event = pointerEvent->asPointerTouchEvent()->touchEventForItem(item);
+    if (!event)
+        return false;
 
     // For each point, check if it is accepted, if not, try the next point.
     // Any of the fingers can become the mouse one.
@@ -1508,6 +1510,15 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::TouchCancel:
         // return in order to avoid the QWindow::event below
         return d->deliverTouchCancelEvent(static_cast<QTouchEvent*>(e));
+        break;
+    case QEvent::Enter: {
+        QEnterEvent *enter = static_cast<QEnterEvent*>(e);
+        bool accepted = enter->isAccepted();
+        bool delivered = d->deliverHoverEvent(d->contentItem, enter->windowPos(), d->lastMousePosition,
+            QGuiApplication::keyboardModifiers(), 0L, accepted);
+        enter->setAccepted(accepted);
+        return delivered;
+    }
         break;
     case QEvent::Leave:
         d->clearHover();

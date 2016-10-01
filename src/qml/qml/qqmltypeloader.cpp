@@ -1967,10 +1967,13 @@ void QQmlTypeLoader::trimCache()
         QList<TypeCache::Iterator> unneededTypes;
         for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)  {
             QQmlTypeData *typeData = iter.value();
+
+            const bool hasError = !typeData->m_compiledData && !typeData->m_errors.isEmpty();
+            const bool isNotReferenced = typeData->isComplete() && typeData->m_compiledData
+                    && typeData->m_compiledData->count() == 1;
             // typeData->m_compiledData may be set early on in the proccess of loading a file, so it's important
             // to check the general loading status of the typeData before making any other decisions.
-            if (typeData->isComplete() && typeData->m_compiledData && typeData->count() == 1
-                    && typeData->m_compiledData->count() == 1) {
+            if (typeData->count() == 1 && (hasError || isNotReferenced)) {
                 // There are no live objects of this type
                 unneededTypes.append(iter);
             }

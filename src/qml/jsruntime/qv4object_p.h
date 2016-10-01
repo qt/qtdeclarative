@@ -68,7 +68,7 @@ namespace QV4 {
 namespace Heap {
 
 struct Object : Base {
-    inline Object() {}
+    inline Object() { Base::init(); }
 
     const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
     Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
@@ -90,7 +90,12 @@ struct Object : Base {
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        Data *d() const { return static_cast<Data *>(m()); }
+        Data *d_unchecked() const { return static_cast<Data *>(m()); } \
+        Data *d() const { \
+            Data *dptr = d_unchecked(); \
+            if (std::is_trivial<Data>::value) dptr->_checkIsInitialized(); \
+            return dptr; \
+        }
 
 #define V4_OBJECT2(DataClass, superClass) \
     private: \
@@ -103,7 +108,12 @@ struct Object : Base {
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
+        QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
+        QV4::Heap::DataClass *d() const { \
+            QV4::Heap::DataClass *dptr = d_unchecked(); \
+            if (std::is_trivial<QV4::Heap::DataClass>::value) dptr->_checkIsInitialized(); \
+            return dptr; \
+        }
 
 #define V4_INTERNALCLASS(c) \
     static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \

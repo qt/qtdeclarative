@@ -79,9 +79,9 @@ Heap::RegExpObject::RegExpObject()
 }
 
 Heap::RegExpObject::RegExpObject(QV4::RegExp *value, bool global)
-    : value(value->d())
-    , global(global)
+    : global(global)
 {
+    this->value = value->d();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
     o->initProperties();

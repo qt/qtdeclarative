@@ -276,7 +276,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2);
+        t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
 
@@ -285,7 +285,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3);
+        t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
 

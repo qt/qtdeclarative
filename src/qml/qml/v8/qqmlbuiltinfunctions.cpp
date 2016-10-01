@@ -1304,8 +1304,8 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 
 Heap::QQmlBindingFunction::QQmlBindingFunction(const QV4::FunctionObject *originalFunction)
     : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
-    , originalFunction(originalFunction->d())
 {
+    this->originalFunction = originalFunction->d();
 }
 
 void QQmlBindingFunction::initBindingLocation()

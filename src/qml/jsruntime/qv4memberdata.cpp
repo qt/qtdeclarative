@@ -58,9 +58,9 @@ static Heap::MemberData *reallocateHelper(ExecutionEngine *e, Heap::MemberData *
     Scope scope(e);
     Scoped<MemberData> newMemberData(scope, e->memoryManager->allocManaged<MemberData>(alloc));
     if (old)
-        memcpy(newMemberData->d(), old, sizeof(Heap::MemberData) + old->size * sizeof(Value));
+        memcpy(newMemberData->d_unchecked(), old, sizeof(Heap::MemberData) + old->size * sizeof(Value));
     else
-        new (newMemberData->d()) Heap::MemberData;
+        newMemberData->d_unchecked()->init();
     newMemberData->d()->size = n;
     return newMemberData->d();
 }

@@ -69,18 +69,18 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
-    : scope(scope->d())
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = scope->d();
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     f->init(name, createProto);
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : scope(scope->d())
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = scope->d();
     Scope s(scope->engine());
     ScopedString name(s, function->name());
     ScopedFunctionObject f(s, this);
@@ -88,9 +88,9 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *fun
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
-    : scope(scope->d())
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = scope->d();
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     ScopedString n(s, s.engine->newString(name));
@@ -98,9 +98,9 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : scope(scope)
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = scope;
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
     ScopedString n(s, s.engine->newString(name));
@@ -108,9 +108,9 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
-    : scope(scope->d())
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = scope->d();
     Scope s(scope);
     ScopedFunctionObject f(s, this);
     ScopedString n(s, name);
@@ -118,9 +118,9 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
-    : scope(scope)
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = scope;
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
     ScopedString n(s, name);
@@ -128,9 +128,9 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
 }
 
 Heap::FunctionObject::FunctionObject()
-    : scope(internalClass->engine->rootContext()->d())
-    , function(Q_NULLPTR)
+    : function(Q_NULLPTR)
 {
+    this->scope = internalClass->engine->rootContext()->d();
     Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()) == Index_Prototype);
     *propertyData(Index_Prototype) = Encode::undefined();
 }
@@ -527,9 +527,7 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     ScopedObject proto(scope, f->protoForConstructor());
     callData->thisObject = v4->newObject(ic, proto);
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -568,9 +566,7 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
 
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -626,9 +622,7 @@ void BuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);
@@ -649,9 +643,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data ctx(v4);
-    ctx.mm_data = 0;
-    ctx.setVtable(CallContext::staticVTable());
+    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);
@@ -667,9 +659,9 @@ DEFINE_OBJECT_VTABLE(BoundFunction);
 Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target,
                                    const Value &boundThis, QV4::MemberData *boundArgs)
     : Heap::FunctionObject(scope, QStringLiteral("__bound function__"))
-    , target(target->d())
-    , boundArgs(boundArgs ? boundArgs->d() : 0)
 {
+    this->target = target->d();
+    this->boundArgs = boundArgs ? boundArgs->d() : 0;
     this->boundThis = boundThis;
 
     Scope s(scope);

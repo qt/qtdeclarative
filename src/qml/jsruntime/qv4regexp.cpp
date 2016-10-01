@@ -95,6 +95,8 @@ Heap::RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignor
     , ignoreCase(ignoreCase)
     , multiLine(multiline)
 {
+    Base::init();
+
     const char* error = 0;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiline, &error);
     if (error)
