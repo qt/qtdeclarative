@@ -33,6 +33,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickflickable_p_p.h>
+#include <private/qquickmousearea_p.h>
 #include <private/qquicktransition_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <math.h>
@@ -92,6 +93,7 @@ private slots:
     void contentSize();
     void ratios_smallContent();
     void contentXYNotTruncatedToInt();
+    void keepGrab();
 
 private:
     void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
@@ -1861,6 +1863,52 @@ void tst_qquickflickable::contentXYNotTruncatedToInt()
 
     // make sure we are not clipped at 2^31
     QVERIFY(flickable->contentX() > qreal(1e10));
+}
+
+void tst_qquickflickable::keepGrab()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("keepGrab.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+
+    QQuickMouseArea *ma = flickable->findChild<QQuickMouseArea*>("ma");
+    QVERIFY(ma);
+    ma->setPreventStealing(true);
+
+    QPoint pos(250, 250);
+    moveAndPress(window.data(), pos);
+    for (int i = 0; i < 6; ++i) {
+        pos += QPoint(10, 10);
+        QTest::mouseMove(window.data(), pos);
+        QTest::qWait(10);
+    }
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(310, 310));
+    QTest::qWait(10);
+
+    QCOMPARE(flickable->contentX(), 0.0);
+    QCOMPARE(flickable->contentY(), 0.0);
+
+    ma->setPreventStealing(false);
+
+    pos = QPoint(250, 250);
+    moveAndPress(window.data(), pos);
+    for (int i = 0; i < 6; ++i) {
+        pos += QPoint(10, 10);
+        QTest::mouseMove(window.data(), pos);
+        QTest::qWait(10);
+    }
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(310, 310));
+    QTest::qWait(10);
+
+    QVERIFY(flickable->contentX() != 0.0);
+    QVERIFY(flickable->contentY() != 0.0);
 }
 
 QTEST_MAIN(tst_qquickflickable)
