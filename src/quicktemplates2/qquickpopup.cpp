@@ -833,12 +833,7 @@ QQuickPopup::~QQuickPopup()
 */
 void QQuickPopup::open()
 {
-    Q_D(QQuickPopup);
-    if (d->visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
-        return;
-
-    if (d->complete)
-        d->transitionManager.transitionEnter();
+    setVisible(true);
 }
 
 /*!
@@ -850,12 +845,7 @@ void QQuickPopup::open()
 */
 void QQuickPopup::close()
 {
-    Q_D(QQuickPopup);
-    if (!d->visible)
-        return;
-
-    if (d->complete)
-        d->transitionManager.transitionExit();
+    setVisible(false);
 }
 
 /*!
@@ -1775,12 +1765,13 @@ void QQuickPopup::setVisible(bool visible)
     if (d->visible == visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
         return;
 
-    d->visible = visible;
     if (d->complete) {
         if (visible)
             d->transitionManager.transitionEnter();
         else
             d->transitionManager.transitionExit();
+    } else {
+        d->visible = visible;
     }
 }
 

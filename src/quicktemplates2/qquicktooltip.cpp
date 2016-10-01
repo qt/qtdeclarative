@@ -244,6 +244,20 @@ void QQuickToolTip::setTimeout(int timeout)
     emit timeoutChanged();
 }
 
+void QQuickToolTip::setVisible(bool visible)
+{
+    Q_D(QQuickToolTip);
+    if (visible) {
+        if (!d->visible && d->delay > 0) {
+            d->startDelay();
+            return;
+        }
+    } else {
+        d->stopDelay();
+    }
+    QQuickPopup::setVisible(visible);
+}
+
 QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
@@ -251,22 +265,6 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
         qmlInfo(object) << "ToolTip must be attached to an Item";
 
     return new QQuickToolTipAttached(object);
-}
-
-void QQuickToolTip::open()
-{
-    Q_D(QQuickToolTip);
-    if (!d->visible && d->delay > 0)
-        d->startDelay();
-    else
-        QQuickPopup::open();
-}
-
-void QQuickToolTip::close()
-{
-    Q_D(QQuickToolTip);
-    d->stopDelay();
-    QQuickPopup::close();
 }
 
 QFont QQuickToolTip::defaultFont() const
@@ -295,10 +293,10 @@ void QQuickToolTip::timerEvent(QTimerEvent *event)
     Q_D(QQuickToolTip);
     if (event->timerId() == d->timeoutTimer.timerId()) {
         d->stopTimeout();
-        close();
+        QQuickPopup::setVisible(false);
     } else if (event->timerId() == d->delayTimer.timerId()) {
         d->stopDelay();
-        QQuickPopup::open();
+        QQuickPopup::setVisible(true);
     }
 }
 

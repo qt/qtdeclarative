@@ -156,8 +156,10 @@ TestCase {
 
     function test_delay_data() {
         return [
-            {tag: "0", delay: 0},
-            {tag: "100", delay: 100},
+            {tag: "imperative:0", delay: 0, imperative: true},
+            {tag: "imperative:100", delay: 100, imperative: true},
+            {tag: "declarative:0", delay: 0, imperative: false},
+            {tag: "declarative:100", delay: 100, imperative: false}
         ]
     }
 
@@ -165,18 +167,31 @@ TestCase {
         var control = toolTip.createObject(testCase, {delay: data.delay})
 
         compare(control.visible, false)
-        control.open()
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
         compare(control.visible, data.delay <= 0)
         tryCompare(control, "visible", true)
 
         control.destroy()
     }
 
-    function test_timeout() {
+    function test_timeout_data() {
+        return [
+            {tag: "imperative", imperative: true},
+            {tag: "declarative", imperative: false}
+        ]
+    }
+
+    function test_timeout(data) {
         var control = toolTip.createObject(testCase, {timeout: 100})
 
         compare(control.visible, false)
-        control.open()
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
         compare(control.visible, true)
         tryCompare(control, "visible", false)
 
