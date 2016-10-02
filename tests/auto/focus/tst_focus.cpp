@@ -63,6 +63,8 @@ private slots:
 
     void reason_data();
     void reason();
+
+    void visualFocus();
 };
 
 void tst_focus::initTestCase()
@@ -243,6 +245,35 @@ void tst_focus::reason()
     QEXPECT_FAIL("TextArea", "", Continue);
     QEXPECT_FAIL("TextField", "", Continue);
     QCOMPARE(control->property("visualFocus"), QVariant(true));
+}
+
+void tst_focus::visualFocus()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("visualFocus.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QQuickItem *column = view.rootObject();
+    QVERIFY(column);
+    QCOMPARE(column->childItems().count(), 2);
+
+    QQuickControl *button = qobject_cast<QQuickControl *>(column->childItems().first());
+    QVERIFY(button);
+
+    QQuickItem *textfield = column->childItems().last();
+    QVERIFY(textfield);
+
+    button->forceActiveFocus(Qt::TabFocusReason);
+    QVERIFY(button->hasActiveFocus());
+    QVERIFY(button->hasVisualFocus());
+    QVERIFY(button->property("showFocus").toBool());
+
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, QPoint(textfield->x() + textfield->width() / 2, textfield->y() + textfield->height() / 2));
+    QVERIFY(!button->hasActiveFocus());
+    QVERIFY(!button->hasVisualFocus());
+    QVERIFY(!button->property("showFocus").toBool());
 }
 
 QTEST_MAIN(tst_focus)

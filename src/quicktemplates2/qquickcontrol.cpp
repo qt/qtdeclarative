@@ -902,7 +902,7 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
     Qt::FocusReason oldReason = d->focusReason;
     d->focusReason = reason;
     emit focusReasonChanged();
-    if (d->activeFocus && isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
+    if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
         emit visualFocusChanged();
 }
 
