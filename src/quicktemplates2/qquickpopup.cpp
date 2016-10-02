@@ -248,12 +248,14 @@ void QQuickPopupPrivate::finalizeExitTransition()
     popupItem->setParentItem(nullptr);
     popupItem->setVisible(false);
 
-    if (hadActiveFocusBeforeExitTransition) {
-        QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
-        if (applicationWindow)
-            applicationWindow->contentItem()->setFocus(true);
-        else if (window)
-            window->contentItem()->setFocus(true);
+    if (hadActiveFocusBeforeExitTransition && window) {
+        if (!qobject_cast<QQuickPopupItem *>(window->activeFocusItem())) {
+            QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+            if (applicationWindow)
+                applicationWindow->contentItem()->setFocus(true);
+            else
+                window->contentItem()->setFocus(true);
+        }
     }
 
     visible = false;
