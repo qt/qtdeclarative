@@ -9,6 +9,7 @@ SOURCES += \
     $$PWD/qquickdialring.cpp
 
 QML_CONTROLS = \
+    AbstractButton.qml \
     ApplicationWindow.qml \
     BusyIndicator.qml \
     Button.qml \

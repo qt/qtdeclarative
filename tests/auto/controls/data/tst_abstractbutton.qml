@@ -55,6 +55,11 @@ TestCase {
         AbstractButton {}
     }
 
+    Component {
+        id: item
+        Item { }
+    }
+
     function test_text() {
         var control = button.createObject(testCase);
         verify(control);
@@ -66,5 +71,36 @@ TestCase {
         compare(control.text, "");
 
         control.destroy();
+    }
+
+    function test_baseline() {
+        var control = button.createObject(testCase, {padding: 6})
+        verify(control)
+        compare(control.baselineOffset, 0)
+        control.contentItem = item.createObject(control, {baselineOffset: 12})
+        compare(control.baselineOffset, 18)
+        control.destroy()
+    }
+
+    function test_implicitSize() {
+        var control = button.createObject(testCase)
+        verify(control)
+
+        compare(control.implicitWidth, 0)
+        compare(control.implicitHeight, 0)
+
+        control.contentItem = item.createObject(control, {implicitWidth: 10, implicitHeight: 20})
+        compare(control.implicitWidth, 10)
+        compare(control.implicitHeight, 20)
+
+        control.background = item.createObject(control, {implicitWidth: 20, implicitHeight: 30})
+        compare(control.implicitWidth, 20)
+        compare(control.implicitHeight, 30)
+
+        control.padding = 100
+        compare(control.implicitWidth, 210)
+        compare(control.implicitHeight, 220)
+
+        control.destroy()
     }
 }
