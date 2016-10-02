@@ -60,13 +60,24 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tabbar.qml 1
 
-    \section2 Flickable Tabs
+    \section2 Resizing Tabs
 
     By default, TabBar resizes its buttons to fit the width of the control.
     The available space is distributed equally to each button. The default
     resizing behavior can be overridden by setting an explicit width for the
-    buttons. If the total width of the buttons exceeds the available width
-    of the tab bar, it automatically becomes flickable.
+    buttons.
+
+    The following example illustrates how to keep each tab button at their
+    implicit size instead of being resized to fit the tabbar:
+
+    \borderedimage qtquickcontrols2-tabbar-explicit.png
+
+    \snippet qtquickcontrols2-tabbar-explicit.qml 1
+
+    \section2 Flickable Tabs
+
+    If the total width of the buttons exceeds the available width of the tab bar,
+    it automatically becomes flickable.
 
     \image qtquickcontrols2-tabbar-flickable.png
 
