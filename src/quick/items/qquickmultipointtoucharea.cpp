@@ -852,10 +852,10 @@ bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
     return false;
 }
 
-bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *i, QEvent *event)
+bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEvent *event)
 {
     if (!isEnabled() || !isVisible())
-        return QQuickItem::childMouseEventFilter(i, event);
+        return QQuickItem::childMouseEventFilter(receiver, event);
     switch (event->type()) {
     case QEvent::MouseButtonPress:
     case QEvent::MouseMove:
@@ -878,7 +878,7 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *i, QEvent *eve
     default:
         break;
     }
-    return QQuickItem::childMouseEventFilter(i, event);
+    return QQuickItem::childMouseEventFilter(receiver, event);
 }
 
 bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
