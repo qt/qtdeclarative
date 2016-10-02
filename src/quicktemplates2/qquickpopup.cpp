@@ -165,6 +165,10 @@ QQuickPopupPrivate::QQuickPopupPrivate()
 {
 }
 
+QQuickPopupPrivate::~QQuickPopupPrivate()
+{
+}
+
 void QQuickPopupPrivate::init()
 {
     Q_Q(QQuickPopup);

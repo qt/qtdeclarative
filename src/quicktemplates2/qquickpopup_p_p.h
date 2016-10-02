@@ -142,12 +142,13 @@ private:
     QQuickPopupPrivate *m_popup;
 };
 
-class QQuickPopupPrivate : public QObjectPrivate, public QQuickItemChangeListener
+class Q_AUTOTEST_EXPORT QQuickPopupPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickPopup)
 
 public:
     QQuickPopupPrivate();
+    ~QQuickPopupPrivate();
 
     static QQuickPopupPrivate *get(QQuickPopup *popup)
     {
