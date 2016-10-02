@@ -433,8 +433,8 @@
 
     \section2 Customizing ItemDelegate
 
-        ItemDelegate consists of three visual items: \l {Control::background}{background},
-        \l {Control::contentItem}{content item} and \l {AbstractButton::indicator}{indicator}.
+        ItemDelegate consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
 
         \image qtquickcontrols2-itemdelegate-custom.png
 
