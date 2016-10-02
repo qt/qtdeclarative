@@ -706,8 +706,6 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 }
             } else if (p.state() & Qt::TouchPointReleased) {
                 // currently handled point was released
-                touchMouseId = -1;
-                touchMouseDevice = nullptr;
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
@@ -722,6 +720,9 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     }
                     if (q->mouseGrabberItem()) // might have ungrabbed due to event
                         q->mouseGrabberItem()->ungrabMouse();
+
+                    touchMouseId = -1;
+                    touchMouseDevice = nullptr;
                     return me->isAccepted();
                 }
             }
