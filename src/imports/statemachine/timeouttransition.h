@@ -59,8 +59,8 @@ public:
     int timeout() const;
     void setTimeout(int timeout);
 
-    void classBegin() {}
-    void componentComplete();
+    void classBegin() override {}
+    void componentComplete() override;
 
 Q_SIGNALS:
     void timeoutChanged();
