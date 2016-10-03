@@ -41,14 +41,14 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.1
 
-Pane {
-    id: pane
+ScrollablePage {
+    id: page
 
-    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 3, pane.availableWidth / 3 * 2))
+    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 3, page.availableWidth / 3 * 2))
 
     Column {
         spacing: 40
-        anchors.fill: parent
+        width: parent.width
 
         Label {
             width: parent.width
@@ -63,7 +63,7 @@ Pane {
 
             Column {
                 spacing: 20
-                width: pane.itemWidth
+                width: page.itemWidth
 
                 RadioButton {
                     text: "First"

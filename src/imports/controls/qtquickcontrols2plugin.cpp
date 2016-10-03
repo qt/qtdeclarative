@@ -34,22 +34,14 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtCore/qurl.h>
-#include <QtCore/qfile.h>
-#include <QtCore/qcoreapplication.h>
 #include <QtCore/private/qfileselector_p.h>
-
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
-#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
-#include <QtQuickTemplates2/private/qquickcontainer_p.h>
-#include <QtQuickTemplates2/private/qquickcontrol_p.h>
-#include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
+#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
+#include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 
 #include "qquickbusyindicatorring_p.h"
@@ -85,7 +77,6 @@ QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlu
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
     qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
 
@@ -97,6 +88,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     QQuickStyleSelector selector;
     selector.setBaseUrl(typeUrl());
 
+    qmlRegisterType(selector.select(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
     qmlRegisterType(selector.select(QStringLiteral("Button.qml")), uri, 2, 0, "Button");

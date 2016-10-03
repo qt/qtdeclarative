@@ -37,7 +37,8 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qtquic
 exampledirs += ../../../../examples/quickcontrols2 \
                ../ \
                ../../../quicktemplates2 \
-               snippets
+               snippets \
+               snippets/screenshots
 
 examplesinstallpath = quickcontrols2
 

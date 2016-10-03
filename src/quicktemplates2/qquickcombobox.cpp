@@ -170,6 +170,7 @@ public:
     void updateCurrentText();
     void incrementCurrentIndex();
     void decrementCurrentIndex();
+    void updateHighlightedIndex();
     void setHighlightedIndex(int index);
 
     void createDelegateModel();
@@ -201,19 +202,17 @@ void QQuickComboBoxPrivate::showPopup()
 {
     if (popup && !popup->isVisible())
         popup->open();
-    setHighlightedIndex(currentIndex);
 }
 
 void QQuickComboBoxPrivate::hidePopup(bool accept)
 {
     Q_Q(QQuickComboBox);
-    if (popup && popup->isVisible())
-        popup->close();
     if (accept) {
         q->setCurrentIndex(highlightedIndex);
         emit q->activated(currentIndex);
     }
-    setHighlightedIndex(-1);
+    if (popup && popup->isVisible())
+        popup->close();
 }
 
 void QQuickComboBoxPrivate::togglePopup(bool accept)
@@ -302,6 +301,11 @@ void QQuickComboBoxPrivate::decrementCurrentIndex()
             emit q->activated(currentIndex);
         }
     }
+}
+
+void QQuickComboBoxPrivate::updateHighlightedIndex()
+{
+    setHighlightedIndex(popup->isVisible() ? currentIndex : -1);
 }
 
 void QQuickComboBoxPrivate::setHighlightedIndex(int index)
@@ -686,10 +690,13 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     if (d->popup == popup)
         return;
 
+    if (d->popup)
+        QObjectPrivate::disconnect(d->popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::updateHighlightedIndex);
     d->deleteDelegate(d->popup);
     if (popup) {
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
+        QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::updateHighlightedIndex);
     }
     d->popup = popup;
     emit popupChanged();

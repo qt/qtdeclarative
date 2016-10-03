@@ -62,7 +62,17 @@ TestCase {
     }
 
     Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
+    Component {
         id: comboBox
+        ComboBox { }
+    }
+
+    Component {
+        id: emptyBox
         ComboBox {
             delegate: ItemDelegate {
                 width: popup.width
@@ -131,7 +141,7 @@ TestCase {
     }
 
     function test_objects() {
-        var control = comboBox.createObject(testCase)
+        var control = emptyBox.createObject(testCase)
         verify(control)
 
         var items = [
@@ -238,7 +248,7 @@ TestCase {
     }
 
     function test_textRole(data) {
-        var control = comboBox.createObject(testCase)
+        var control = emptyBox.createObject(testCase)
         verify(control)
 
         control.model = data.model
@@ -443,7 +453,7 @@ TestCase {
         keyClick(Qt.Key_Space)
 
         compare(control.currentIndex, 1)
-        compare(control.highlightedIndex, -1)
+        tryCompare(control, "highlightedIndex", -1)
 
         control.destroy()
     }
@@ -859,6 +869,53 @@ TestCase {
         listmodel.setProperty(0, "text", "First")
         compare(control.currentText, "Second")
 
+        control.destroy()
+    }
+
+    // QTBUG-55030
+    function test_highlightRange() {
+        var control = comboBox.createObject(testCase, {model: 100})
+        verify(control)
+
+        control.currentIndex = 50
+        compare(control.currentIndex, 50)
+        compare(control.highlightedIndex, -1)
+
+        var openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
+        verify(openedSpy.valid)
+
+        control.popup.open()
+        compare(control.highlightedIndex, 50)
+        tryCompare(openedSpy, "count", 1)
+
+        var listview = control.popup.contentItem
+        verify(listview)
+
+        var first = listview.itemAt(0, listview.contentY)
+        verify(first)
+        compare(first.text, "50")
+
+        var closedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "closed"})
+        verify(closedSpy.valid)
+
+        control.popup.close()
+        tryCompare(closedSpy, "count", 1)
+        compare(control.highlightedIndex, -1)
+
+        control.currentIndex = 99
+        compare(control.currentIndex, 99)
+        compare(control.highlightedIndex, -1)
+
+        control.popup.open()
+        compare(control.highlightedIndex, 99)
+        tryCompare(openedSpy, "count", 2)
+
+        var last = listview.itemAt(0, listview.contentY + listview.height - 1)
+        verify(last)
+        compare(last.text, "99")
+
+        openedSpy.target = null
+        closedSpy.target = null
         control.destroy()
     }
 }

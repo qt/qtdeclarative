@@ -41,45 +41,36 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.1
 
-Flickable {
-    id: flickable
-    contentHeight: pane.height
+ScrollablePage {
+    id: page
 
-    Pane {
-        id: pane
+    Column {
+        spacing: 40
         width: parent.width
 
-        Column {
-            id: column
-            spacing: 40
+        Label {
             width: parent.width
+            wrapMode: Label.Wrap
+            horizontalAlignment: Qt.AlignHCenter
+            text: "RadioButton presents an option button that can be toggled on or off. "
+                + "Radio buttons are typically used to select one option from a set of options."
+        }
 
-            Label {
-                width: parent.width
-                wrapMode: Label.Wrap
-                horizontalAlignment: Qt.AlignHCenter
-                text: "RadioButton presents an option button that can be toggled on or off. "
-                    + "Radio buttons are typically used to select one option from a set of options."
+        Column {
+            spacing: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            RadioButton {
+                text: "First"
             }
-
-            Column {
-                spacing: 20
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                RadioButton {
-                    text: "First"
-                }
-                RadioButton {
-                    text: "Second"
-                    checked: true
-                }
-                RadioButton {
-                    text: "Third"
-                    enabled: false
-                }
+            RadioButton {
+                text: "Second"
+                checked: true
+            }
+            RadioButton {
+                text: "Third"
+                enabled: false
             }
         }
     }
-
-    ScrollIndicator.vertical: ScrollIndicator { }
 }

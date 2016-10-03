@@ -701,6 +701,7 @@ public:
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
 
     void _q_calculateDisplacement();
+    void emitIfDisplacementChanged(qreal oldDisplacement, qreal newDisplacement);
 
     // The Tumbler that contains the delegate. Required to calculated the displacement.
     QPointer<QQuickTumbler> tumbler;
@@ -742,20 +743,26 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
     displacement = 0;
 
     // Can happen if the attached properties are accessed on the wrong type of item or the tumbler was destroyed.
-    if (!tumbler)
+    if (!tumbler) {
+        emitIfDisplacementChanged(previousDisplacement, displacement);
         return;
+    }
 
     // Can happen if there is no ListView or PathView within the contentItem.
     QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(tumbler);
-    if (!tumblerPrivate->viewContentItem)
+    if (!tumblerPrivate->viewContentItem) {
+        emitIfDisplacementChanged(previousDisplacement, displacement);
         return;
+    }
 
     // The attached property gets created before our count is updated, so just cheat here
     // to avoid having to listen to count changes.
     const int count = tumblerPrivate->view->property("count").toInt();
     // This can happen in tests, so it may happen in normal usage too.
-    if (count == 0)
+    if (count == 0) {
+        emitIfDisplacementChanged(previousDisplacement, displacement);
         return;
+    }
 
     if (tumblerPrivate->viewContentItemType == QQuickTumblerPrivate::PathViewContentItem) {
         const qreal offset = tumblerPrivate->view->property("offset").toReal();
@@ -777,8 +784,13 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
         displacement = reverseDisplacement - index;
     }
 
+    emitIfDisplacementChanged(previousDisplacement, displacement);
+}
+
+void QQuickTumblerAttachedPrivate::emitIfDisplacementChanged(qreal oldDisplacement, qreal newDisplacement)
+{
     Q_Q(QQuickTumblerAttached);
-    if (displacement != previousDisplacement)
+    if (newDisplacement != oldDisplacement)
         emit q->displacementChanged();
 }
 
@@ -817,6 +829,16 @@ QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent) :
 
 QQuickTumblerAttached::~QQuickTumblerAttached()
 {
+    Q_D(QQuickTumblerAttached);
+    if (!d->tumbler)
+        return;
+
+    QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(d->tumbler);
+    if (!tumblerPrivate->viewContentItem)
+        return;
+
+    QQuickItemPrivate *viewContentItemPrivate = QQuickItemPrivate::get(tumblerPrivate->viewContentItem);
+    viewContentItemPrivate->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
 }
 
 /*!

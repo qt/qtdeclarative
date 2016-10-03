@@ -64,6 +64,7 @@ private slots:
     void closePolicy();
     void activeFocusOnClose1();
     void activeFocusOnClose2();
+    void activeFocusOnClose3();
     void hover_data();
     void hover();
     void wheel_data();
@@ -452,6 +453,38 @@ void tst_popup::activeFocusOnClose2()
         closePopup2Button->mapToScene(QPointF(closePopup2Button->width() / 2, closePopup2Button->height() / 2)).toPoint());
     QVERIFY(!popup2->isVisible());
     QVERIFY(popup1->hasActiveFocus());
+}
+
+void tst_popup::activeFocusOnClose3()
+{
+    // Test that a closing popup that had focus doesn't steal focus from
+    // another popup that the focus was transferred to.
+    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose3.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup1 = helper.appWindow->property("popup1").value<QQuickPopup*>();
+    QVERIFY(popup1);
+
+    QQuickPopup *popup2 = helper.appWindow->property("popup2").value<QQuickPopup*>();
+    QVERIFY(popup2);
+
+    popup1->open();
+    QVERIFY(popup1->isVisible());
+    QTRY_VERIFY(popup1->hasActiveFocus());
+
+    popup2->open();
+    popup1->close();
+
+    QSignalSpy closedSpy(popup1, SIGNAL(closed()));
+    QVERIFY(closedSpy.isValid());
+    QVERIFY(closedSpy.wait());
+
+    QVERIFY(!popup1->isVisible());
+    QVERIFY(popup2->isVisible());
+    QTRY_VERIFY(popup2->hasActiveFocus());
 }
 
 void tst_popup::hover_data()

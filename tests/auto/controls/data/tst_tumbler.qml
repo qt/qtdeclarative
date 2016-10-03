@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -51,6 +51,9 @@ TestCase {
     name: "Tumbler"
 
     property var tumbler: null
+    // With the help of cleanup(), ensures that all items created during a test function
+    // are destroyed if that test fails.
+    property Item cleanupItem
     readonly property real implicitTumblerWidth: 60
     readonly property real implicitTumblerHeight: 200
     readonly property real defaultImplicitDelegateHeight: implicitTumblerHeight / 3
@@ -66,20 +69,37 @@ TestCase {
         }
     }
 
+    Component {
+        id: itemComponent
+
+        Item {
+            anchors.fill: parent
+        }
+    }
+
     function init() {
-        createTumbler();
+        cleanupItem = itemComponent.createObject(testCase);
+        verify(cleanupItem);
     }
 
     function cleanup() {
-        tumbler.destroy();
-        tumblerView = null;
+        var destroyed = false;
+        cleanupItem.Component.destruction.connect(function() { destroyed = true; });
+
+        cleanupItem.destroy();
+
+        // Waiting until it's deleted before continuing makes debugging
+        // test failures much easier, because there aren't unrelated items hanging around.
+        // TODO: Replace with tryVerify(!tumbler) in 5.8.
+        while (!destroyed)
+            wait(0)
     }
 
     function createTumbler(args) {
         if (args === undefined)
-            tumbler = tumblerComponent.createObject(testCase);
+            tumbler = tumblerComponent.createObject(cleanupItem);
         else
-            tumbler = tumblerComponent.createObject(testCase, args);
+            tumbler = tumblerComponent.createObject(cleanupItem, args);
         verify(tumbler, "Tumbler: failed to create an instance");
         tumblerView = findView(tumbler);
         verify(tumblerView);
@@ -128,6 +148,7 @@ TestCase {
     }
 
     function test_wrapWithoutAttachedProperties() {
+        createTumbler();
         verify(tumbler.wrap);
 
         tumbler.delegate = noAttachedPropertiesDelegate;
@@ -136,7 +157,14 @@ TestCase {
         verify(findView(tumbler));
     }
 
+    // TODO: test that currentIndex is maintained between contentItem changes...
+//    function tst_dynamicContentItemChange() {
+//    }
+
     function test_currentIndex() {
+        createTumbler();
+        compare(tumbler.contentItem.parent, tumbler);
+
         tumbler.model = 5;
 
         compare(tumbler.currentIndex, 0);
@@ -256,7 +284,7 @@ TestCase {
 
     function test_currentIndexAtCreation(data) {
         // Test setting currentIndex at creation time
-        var tumbler = data.component.createObject(testCase);
+        tumbler = data.component.createObject(cleanupItem);
         verify(tumbler);
         // A "statically declared" currentIndex will be pending until the count has changed,
         // which happens when the model is set, which happens on the TumblerView's next polish.
@@ -279,11 +307,11 @@ TestCase {
         } else {
             fuzzyCompare(tumblerView.contentY, tumblerDelegateHeight * data.currentIndex - tumblerView.preferredHighlightBegin, fuzz);
         }
-
-        tumbler.destroy();
     }
 
     function test_keyboardNavigation() {
+        createTumbler();
+
         tumbler.model = 5;
         tumbler.forceActiveFocus();
         tumblerView.highlightMoveDuration = 0;
@@ -312,6 +340,8 @@ TestCase {
     }
 
     function test_itemsCorrectlyPositioned() {
+        createTumbler();
+
         tumbler.model = 4;
         tumbler.height = 120;
         compare(tumblerDelegateHeight, 40);
@@ -320,7 +350,7 @@ TestCase {
         wait(tumblerView.highlightMoveDuration);
         var firstItemCenterPos = itemCenterPos(1);
         var firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
-        var actualPos = testCase.mapFromItem(firstItem, 0, 0);
+        var actualPos = cleanupItem.mapFromItem(firstItem, 0, 0);
         compare(actualPos.x, tumbler.leftPadding);
         compare(actualPos.y, tumbler.topPadding + 40);
 
@@ -331,7 +361,7 @@ TestCase {
         firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
         verify(firstItem);
         // Test QTBUG-40298.
-        actualPos = testCase.mapFromItem(firstItem, 0, 0);
+        actualPos = cleanupItem.mapFromItem(firstItem, 0, 0);
         compare(actualPos.x, tumbler.leftPadding);
         compare(actualPos.y, tumbler.topPadding);
 
@@ -348,8 +378,11 @@ TestCase {
     }
 
     function test_focusPastTumbler() {
+        tumbler = tumblerComponent.createObject(cleanupItem);
+        verify(tumbler);
+
         var mouseArea = Qt.createQmlObject(
-            "import QtQuick 2.2; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", testCase, "");
+            "import QtQuick 2.2; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", cleanupItem, "");
 
         tumbler.forceActiveFocus();
         verify(tumbler.activeFocus);
@@ -357,16 +390,12 @@ TestCase {
         keyClick(Qt.Key_Tab);
         verify(!tumbler.activeFocus);
         verify(mouseArea.activeFocus);
-
-        mouseArea.destroy();
     }
 
     function test_datePicker() {
-        tumbler.destroy();
-
         var component = Qt.createComponent("TumblerDatePicker.qml");
         compare(component.status, Component.Ready, component.errorString());
-        tumbler = component.createObject(testCase);
+        tumbler = component.createObject(cleanupItem);
         // Should not be any warnings.
 
         tryCompare(tumbler.dayTumbler, "currentIndex", 0);
@@ -394,6 +423,44 @@ TestCase {
         tumbler.monthTumbler.currentIndex = 1;
         tryCompare(tumbler.monthTumbler, "currentIndex", 1);
         tryCompare(tumbler.dayTumbler, "currentIndex", 27);
+    }
+
+    Component {
+        id: timePickerComponent
+
+        Row {
+            property alias minuteTumbler: minuteTumbler
+            property alias amPmTumbler: amPmTumbler
+
+            Tumbler {
+                id: minuteTumbler
+                currentIndex: 6
+                model: 60
+                width: 50
+                height: 150
+            }
+
+            Tumbler {
+                id: amPmTumbler
+                model: ["AM", "PM"]
+                width: 50
+                height: 150
+                contentItem: ListView {
+                    anchors.fill: parent
+                    model: amPmTumbler.model
+                    delegate: amPmTumbler.delegate
+                }
+            }
+        }
+    }
+
+    function test_listViewTimePicker() {
+        var root = timePickerComponent.createObject(cleanupItem);
+        verify(root);
+
+        mouseDrag(root.minuteTumbler, root.minuteTumbler.width / 2, root.minuteTumbler.height / 2, 0, 50);
+        // Shouldn't crash.
+        mouseDrag(root.amPmTumbler, root.amPmTumbler.width / 2, root.amPmTumbler.height / 2, 0, 50);
     }
 
     function test_displacement_data() {
@@ -451,6 +518,8 @@ TestCase {
     }
 
     function test_displacement(data) {
+        createTumbler();
+
         // TODO: test setting these in the opposite order (delegate after model
         // doesn't seem to cause a change in delegates in PathView)
         tumbler.wrap = true;
@@ -468,6 +537,8 @@ TestCase {
     }
 
     function test_wrap() {
+        createTumbler();
+
         tumbler.model = 5;
         compare(tumbler.count, 5);
 
@@ -501,6 +572,9 @@ TestCase {
     }
 
     function test_countWrap() {
+        tumbler = tumblerComponent.createObject(cleanupItem);
+        verify(tumbler);
+
         // Check that a count that is less than visibleItemCount results in wrap being set to false.
         verify(2 < tumbler.visibleItemCount);
         tumbler.model = 2;
@@ -510,7 +584,7 @@ TestCase {
 
     function test_explicitlyNonwrapping() {
         // Check that explicitly setting wrap to false works even when it was implicitly false.
-        var explicitlyNonWrapping = twoItemTumbler.createObject(testCase);
+        var explicitlyNonWrapping = twoItemTumbler.createObject(cleanupItem);
         verify(explicitlyNonWrapping);
         tryCompare(explicitlyNonWrapping, "wrap", false);
 
@@ -523,13 +597,11 @@ TestCase {
         // Test resetting wrap back to the default behavior.
         explicitlyNonWrapping.wrap = undefined;
         compare(explicitlyNonWrapping.wrap, true);
-
-        explicitlyNonWrapping.destroy();
     }
 
     function test_explicitlyWrapping() {
         // Check that explicitly setting wrap to true works even when it was implicitly true.
-        var explicitlyWrapping = tenItemTumbler.createObject(testCase);
+        var explicitlyWrapping = tenItemTumbler.createObject(cleanupItem);
         verify(explicitlyWrapping);
         compare(explicitlyWrapping.wrap, true);
 
@@ -541,8 +613,6 @@ TestCase {
         // Test resetting wrap back to the default behavior.
         explicitlyWrapping.wrap = undefined;
         compare(explicitlyWrapping.wrap, false);
-
-        explicitlyWrapping.destroy();
     }
 
     Component {
@@ -603,7 +673,7 @@ TestCase {
     }
 
     function test_customContentItemAtConstruction(data) {
-        var tumbler = data.component.createObject(testCase);
+        var tumbler = data.component.createObject(cleanupItem);
         // Shouldn't assert.
 
         tumbler.model = 5;
@@ -622,8 +692,6 @@ TestCase {
         compare(tumbler.count, 5);
         compare(tumblerView.currentIndex, 3);
         compare(tumbler.currentIndex, 3);
-
-        tumbler.destroy();
     }
 
     function test_customContentItemAfterConstruction_data() {
@@ -634,6 +702,8 @@ TestCase {
     }
 
     function test_customContentItemAfterConstruction(data) {
+        createTumbler();
+
         tumbler.model = 5;
         compare(tumbler.count, 5);
 
@@ -692,6 +762,8 @@ TestCase {
     }
 
     function test_displacementListView(data) {
+        createTumbler();
+
         tumbler.wrap = false;
         tumbler.delegate = displacementDelegate;
         tumbler.model = 5;
@@ -761,6 +833,8 @@ TestCase {
     }
 
     function test_listViewFlickAboveBounds(data) {
+        createTumbler();
+
         tumbler.wrap = false;
         tumbler.delegate = displacementDelegate;
         tumbler.model = data.model;
@@ -826,6 +900,8 @@ TestCase {
     }
 
     function test_visibleItemCount(data) {
+        createTumbler();
+
         tumbler.delegate = objectNameDelegate;
         tumbler.visibleItemCount = data.visibleItemCount;
 
@@ -851,6 +927,9 @@ TestCase {
     }
 
     function test_attachedProperties() {
+        tumbler = tumblerComponent.createObject(cleanupItem);
+        verify(tumbler);
+
         // TODO: crashes somewhere in QML's guts
 //        tumbler.model = 5;
 //        tumbler.delegate = wrongDelegateTypeComponent;
@@ -862,8 +941,8 @@ TestCase {
         noParentDelegateComponent.createObject(null);
 
         ignoreWarning("Tumbler: attempting to access attached property on item without an \"index\" property");
-        var object = noParentDelegateComponent.createObject(testCase);
-        object.destroy();
+        var object = noParentDelegateComponent.createObject(cleanupItem);
+        verify(object);
     }
 
     property Component paddingDelegate: Text {
@@ -910,6 +989,8 @@ TestCase {
     }
 
     function test_padding(data) {
+        createTumbler();
+
         tumbler.delegate = paddingDelegate;
         tumbler.model = 5;
         compare(tumbler.padding, 0);

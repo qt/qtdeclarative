@@ -35,39 +35,14 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
-import QtQuick.Controls.impl 2.1
-import QtQuick.Templates 2.1 as T
+import QtQuick.Templates 2.0 as T
 
-T.TabButton {
+T.AbstractButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            (contentItem ? contentItem.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
-
-    padding: 6
-
-    //! [contentItem]
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        opacity: enabled ? 1 : 0.3
-        color: !control.checked ? Default.textLightColor : control.down ? Default.textDarkColor : Default.textColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [contentItem]
-
-    //! [background]
-    background: Rectangle {
-        implicitHeight: 40
-        color: control.down
-            ? (control.checked ? Default.tabButtonCheckedPressedColor : Default.tabButtonPressedColor)
-            : (control.checked ? "transparent" : Default.tabButtonColor)
-    }
-    //! [background]
+                             (contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding)
+    baselineOffset: contentItem ? contentItem.y + contentItem.baselineOffset : 0
 }

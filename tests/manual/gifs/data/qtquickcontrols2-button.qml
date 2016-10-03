@@ -49,7 +49,7 @@ Window {
 
     Button {
         id: button
-        text: pressed ? "Pressed" : "Normal"
+        text: pressed ? "Pressed" : "Button"
         anchors.centerIn: parent
     }
 }

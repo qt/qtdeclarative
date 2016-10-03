@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -39,36 +39,39 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.0
+import QtQuick.Layouts 1.1
+import QtQuick.Window 2.0
 
-ScrollablePage {
-    id: page
+Window {
+    width: column.implicitWidth
+    height: column.implicitHeight
+    visible: true
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, page.availableWidth / 3))
+    property alias english: english
+    property alias norwegian: norwegian
 
-    Column {
-        spacing: 40
-        width: parent.width
+    ColumnLayout {
+        id: column
+        anchors.centerIn: parent
 
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Slider is used to select a value by sliding a handle along a track."
+        CheckBox {
+            text: qsTr("Languages")
+            checkState: english.checked && norwegian.checked
+                ? Qt.Checked : (english.checked || norwegian.checked) ? Qt.PartiallyChecked : Qt.Unchecked
+            tristate: true
         }
-
-        Slider {
-            id: slider
-            value: 0.5
-            width: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
+        CheckBox {
+            id: english
+            text: qsTr("English")
+            checked: true
+            leftPadding: indicator.width
         }
-
-        Slider {
-            orientation: Qt.Vertical
-            value: 0.5
-            height: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
+        CheckBox {
+            id: norwegian
+            text: qsTr("Norwegian")
+            checked: true
+            leftPadding: indicator.width
         }
     }
 }

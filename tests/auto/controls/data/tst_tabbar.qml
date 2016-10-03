@@ -514,17 +514,37 @@ TestCase {
         control.destroy()
     }
 
-    function test_layout() {
-        var control = tabBar.createObject(testCase, {spacing: 0, width: 200})
+    function test_layout_data() {
+        return [
+            { tag: "spacing:0", spacing: 0 },
+            { tag: "spacing:1", spacing: 1 },
+            { tag: "spacing:10", spacing: 10 },
+        ]
+    }
 
-        var tab1 = tabButton.createObject(control)
+    function test_layout(data) {
+        var control = tabBar.createObject(testCase, {spacing: data.spacing, width: 200})
+
+        var tab1 = tabButton.createObject(control, {text: "First"})
         control.addItem(tab1)
         tryCompare(tab1, "width", control.width)
 
-        var tab2 = tabButton.createObject(control)
+        var tab2 = tabButton.createObject(control, {text: "Second"})
         control.addItem(tab2)
-        tryCompare(tab1, "width", control.width / 2)
-        tryCompare(tab2, "width", control.width / 2)
+        tryCompare(tab1, "width", (control.width - data.spacing) / 2)
+        compare(tab2.width, (control.width - data.spacing) / 2)
+
+        var tab3 = tabButton.createObject(control, {width: 50, text: "Third"})
+        control.addItem(tab3)
+        tryCompare(tab1, "width", (control.width - 2 * data.spacing - 50) / 2)
+        compare(tab2.width, (control.width - 2 * data.spacing - 50) / 2)
+        compare(tab3.width, 50)
+
+        var expectedWidth = tab3.contentItem.implicitWidth + tab3.leftPadding + tab3.rightPadding
+        tab3.width = tab3.implicitWidth
+        tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
+        tryCompare(tab2, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
+        compare(tab3.width, expectedWidth)
 
         control.destroy()
     }

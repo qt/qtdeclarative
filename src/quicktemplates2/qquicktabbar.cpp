@@ -86,11 +86,15 @@ public:
     void updateCurrentIndex();
     void updateLayout();
 
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
+
+    bool updatingLayout;
     QQuickTabBar::Position position;
 };
 
-QQuickTabBarPrivate::QQuickTabBarPrivate() : position(QQuickTabBar::Header)
+QQuickTabBarPrivate::QQuickTabBarPrivate() : updatingLayout(false), position(QQuickTabBar::Header)
 {
+    changeTypes |= Geometry;
 }
 
 void QQuickTabBarPrivate::updateCurrentItem()
@@ -113,19 +117,39 @@ void QQuickTabBarPrivate::updateLayout()
     Q_Q(QQuickTabBar);
     const int count = contentModel->count();
     if (count > 0 && contentItem) {
-        const qreal itemWidth = (contentItem->width() - qMax(0, count - 1) * spacing) / count;
+        qreal reservedWidth = 0;
+        QVector<QQuickItem *> resizableItems;
+        resizableItems.reserve(count);
 
         for (int i = 0; i < count; ++i) {
             QQuickItem *item = q->itemAt(i);
             if (item) {
                 QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-                if (!p->widthValid) {
-                    item->setWidth(itemWidth);
-                    p->widthValid = false;
-                }
+                if (!p->widthValid)
+                    resizableItems += item;
+                else
+                    reservedWidth += item->width();
             }
         }
+
+        if (!resizableItems.isEmpty()) {
+            const qreal totalSpacing = qMax(0, count - 1) * spacing;
+            const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / resizableItems.count();
+
+            updatingLayout = true;
+            for (QQuickItem *item : qAsConst(resizableItems)) {
+                item->setWidth(itemWidth);
+                QQuickItemPrivate::get(item)->widthValid = false;
+            }
+            updatingLayout = false;
+        }
     }
+}
+
+void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
+{
+    if (!updatingLayout)
+        updateLayout();
 }
 
 QQuickTabBar::QQuickTabBar(QQuickItem *parent) :

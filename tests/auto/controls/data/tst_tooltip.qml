@@ -156,8 +156,10 @@ TestCase {
 
     function test_delay_data() {
         return [
-            {tag: "0", delay: 0},
-            {tag: "100", delay: 100},
+            {tag: "imperative:0", delay: 0, imperative: true},
+            {tag: "imperative:100", delay: 100, imperative: true},
+            {tag: "declarative:0", delay: 0, imperative: false},
+            {tag: "declarative:100", delay: 100, imperative: false}
         ]
     }
 
@@ -165,18 +167,31 @@ TestCase {
         var control = toolTip.createObject(testCase, {delay: data.delay})
 
         compare(control.visible, false)
-        control.open()
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
         compare(control.visible, data.delay <= 0)
         tryCompare(control, "visible", true)
 
         control.destroy()
     }
 
-    function test_timeout() {
+    function test_timeout_data() {
+        return [
+            {tag: "imperative", imperative: true},
+            {tag: "declarative", imperative: false}
+        ]
+    }
+
+    function test_timeout(data) {
         var control = toolTip.createObject(testCase, {timeout: 100})
 
         compare(control.visible, false)
-        control.open()
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
         compare(control.visible, true)
         tryCompare(control, "visible", false)
 
@@ -185,6 +200,55 @@ TestCase {
 
     function test_warning() {
         ignoreWarning(Qt.resolvedUrl("tst_tooltip.qml") + ":68:5: QML QtObject: ToolTip must be attached to an Item")
-        object.ToolTip.text = ""
+        ignoreWarning("<Unknown File>:1:30: QML ToolTip: cannot find any window to open popup in.")
+        object.ToolTip.show("") // don't crash (QTBUG-56243)
+    }
+
+    Component {
+        id: toolTipWithExitTransition
+
+        ToolTip {
+            enter: Transition {
+                NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 100 }
+            }
+            exit: Transition {
+                NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 1000 }
+            }
+        }
+    }
+
+    function test_makeVisibleWhileExitTransitionRunning_data() {
+        return [
+            { tag: "imperative", imperative: true },
+            { tag: "declarative", imperative: false }
+        ]
+    }
+
+    function test_makeVisibleWhileExitTransitionRunning(data) {
+        var control = toolTipWithExitTransition.createObject(testCase)
+
+        // Show, hide, and show the tooltip again. Its exit transition should
+        // start and get cancelled, and then its enter transition should run.
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
+        tryCompare(control, "opacity", 1)
+
+        if (data.imperative)
+            control.close()
+        else
+            control.visible = false
+        verify(control.exit.running)
+        wait(100) // TODO: replace with tryVerify() in 5.8
+        verify(control.opacity < 1)
+
+        if (data.imperative)
+            control.open()
+        else
+            control.visible = true
+        tryCompare(control, "opacity", 1)
+
+        control.destroy()
     }
 }

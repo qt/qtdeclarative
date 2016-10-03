@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -39,36 +39,30 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.0
 
-ScrollablePage {
-    id: page
+ApplicationWindow {
+    width: 400
+    height: 400
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, page.availableWidth / 3))
+    property alias popup1: popup1
+    property alias popup2: popup2
 
-    Column {
-        spacing: 40
-        width: parent.width
+    Button {
+        focus: true
+    }
 
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Slider is used to select a value by sliding a handle along a track."
-        }
+    Popup {
+        id: popup1
+        focus: true
+        enter: Transition { PauseAnimation { duration: 200 } }
+        exit: Transition { PauseAnimation { duration: 200 } }
+    }
 
-        Slider {
-            id: slider
-            value: 0.5
-            width: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        Slider {
-            orientation: Qt.Vertical
-            value: 0.5
-            height: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+    Popup {
+        id: popup2
+        focus: true
+        enter: Transition { PauseAnimation { duration: 100 } }
+        exit: Transition { PauseAnimation { duration: 100 } }
     }
 }

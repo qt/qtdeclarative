@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,36 +39,23 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.0
 
-ScrollablePage {
+Page {
     id: page
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, page.availableWidth / 3))
+    default property alias content: pane.contentItem
 
-    Column {
-        spacing: 40
-        width: parent.width
+    Flickable {
+        anchors.fill: parent
+        contentHeight: pane.implicitHeight
+        flickableDirection: Flickable.AutoFlickIfNeeded
 
-        Label {
+        Pane {
+            id: pane
             width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Slider is used to select a value by sliding a handle along a track."
         }
 
-        Slider {
-            id: slider
-            value: 0.5
-            width: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        Slider {
-            orientation: Qt.Vertical
-            value: 0.5
-            height: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+        ScrollIndicator.vertical: ScrollIndicator { }
     }
 }

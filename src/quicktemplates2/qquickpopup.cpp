@@ -91,7 +91,10 @@ QT_BEGIN_NAMESPACE
     scene, it is recommended to use ApplicationWindow. ApplicationWindow also
     provides background dimming effects.
 
-    \sa {Popup Controls}, ApplicationWindow
+    Popup lays out its content in a similar fashion to \l Control. For more
+    information, see the \l {Control Layout} section of the documentation.
+
+    \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
 
 /*!
@@ -159,6 +162,10 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , popupItem(nullptr)
     , positioner(this)
     , transitionManager(this)
+{
+}
+
+QQuickPopupPrivate::~QQuickPopupPrivate()
 {
 }
 
@@ -245,12 +252,14 @@ void QQuickPopupPrivate::finalizeExitTransition()
     popupItem->setParentItem(nullptr);
     popupItem->setVisible(false);
 
-    if (hadActiveFocusBeforeExitTransition) {
-        QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
-        if (applicationWindow)
-            applicationWindow->contentItem()->setFocus(true);
-        else if (window)
-            window->contentItem()->setFocus(true);
+    if (hadActiveFocusBeforeExitTransition && window) {
+        if (!qobject_cast<QQuickPopupItem *>(window->activeFocusItem())) {
+            QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
+            if (applicationWindow)
+                applicationWindow->contentItem()->setFocus(true);
+            else
+                window->contentItem()->setFocus(true);
+        }
     }
 
     visible = false;
@@ -777,6 +786,9 @@ QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *p
 
 void QQuickPopupTransitionManager::transitionEnter()
 {
+    if (popup->transitionState == QQuickPopupPrivate::ExitTransition)
+        cancel();
+
     if (!popup->prepareEnterTransition())
         return;
 
@@ -830,36 +842,32 @@ QQuickPopup::~QQuickPopup()
     \qmlmethod void QtQuick.Controls::Popup::open()
 
     Opens the popup.
+
+    \sa visible
 */
 void QQuickPopup::open()
 {
-    Q_D(QQuickPopup);
-    if (d->visible)
-        return;
-
-    if (d->complete)
-        d->transitionManager.transitionEnter();
+    setVisible(true);
 }
 
 /*!
     \qmlmethod void QtQuick.Controls::Popup::close()
 
     Closes the popup.
+
+    \sa visible
 */
 void QQuickPopup::close()
 {
-    Q_D(QQuickPopup);
-    if (!d->visible)
-        return;
-
-    if (d->complete)
-        d->transitionManager.transitionExit();
+    setVisible(false);
 }
 
 /*!
     \qmlproperty real QtQuick.Controls::Popup::x
 
     This property holds the x-coordinate of the popup.
+
+    \sa y, z
 */
 qreal QQuickPopup::x() const
 {
@@ -877,6 +885,8 @@ void QQuickPopup::setX(qreal x)
     \qmlproperty real QtQuick.Controls::Popup::y
 
     This property holds the y-coordinate of the popup.
+
+    \sa x, z
 */
 qreal QQuickPopup::y() const
 {
@@ -920,7 +930,14 @@ void QQuickPopup::setPosition(const QPointF &pos)
     \qmlproperty real QtQuick.Controls::Popup::z
 
     This property holds the z-value of the popup. Z-value determines
-    the stacking order of popups. The default z-value is \c 0.
+    the stacking order of popups.
+
+    If two visible popups have the same z-value, the last one that
+    was opened will be on top.
+
+    The default z-value is \c 0.
+
+    \sa x, y
 */
 qreal QQuickPopup::z() const
 {
@@ -1085,7 +1102,8 @@ void QQuickPopup::setContentHeight(qreal height)
     \qmlproperty real QtQuick.Controls::Popup::availableWidth
     \readonly
 
-    This property holds the width available after deducting horizontal padding.
+    This property holds the width available to the \l contentItem after
+    deducting horizontal padding from the \l {Item::}{width} of the popup.
 
     \sa padding, leftPadding, rightPadding
 */
@@ -1099,7 +1117,8 @@ qreal QQuickPopup::availableWidth() const
     \qmlproperty real QtQuick.Controls::Popup::availableHeight
     \readonly
 
-    This property holds the height available after deducting vertical padding.
+    This property holds the height available to the \l contentItem after
+    deducting vertical padding from the \l {Item::}{height} of the popup.
 
     \sa padding, topPadding, bottomPadding
 */
@@ -1275,6 +1294,8 @@ void QQuickPopup::resetBottomMargin()
 
     This property holds the default padding.
 
+    \include qquickpopup-padding.qdocinc
+
     \sa availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
 qreal QQuickPopup::padding() const
@@ -1299,6 +1320,8 @@ void QQuickPopup::resetPadding()
     \qmlproperty real QtQuick.Controls::Popup::topPadding
 
     This property holds the top padding.
+
+    \include qquickpopup-padding.qdocinc
 
     \sa padding, bottomPadding, availableHeight
 */
@@ -1325,6 +1348,8 @@ void QQuickPopup::resetTopPadding()
 
     This property holds the left padding.
 
+    \include qquickpopup-padding.qdocinc
+
     \sa padding, rightPadding, availableWidth
 */
 qreal QQuickPopup::leftPadding() const
@@ -1350,6 +1375,8 @@ void QQuickPopup::resetLeftPadding()
 
     This property holds the right padding.
 
+    \include qquickpopup-padding.qdocinc
+
     \sa padding, leftPadding, availableWidth
 */
 qreal QQuickPopup::rightPadding() const
@@ -1374,6 +1401,8 @@ void QQuickPopup::resetRightPadding()
     \qmlproperty real QtQuick.Controls::Popup::bottomPadding
 
     This property holds the bottom padding.
+
+    \include qquickpopup-padding.qdocinc
 
     \sa padding, topPadding, availableHeight
 */
@@ -1502,6 +1531,14 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     \note If the background item has no explicit size specified, it automatically
           follows the popup's size. In most cases, there is no need to specify
           width or height for a background item.
+
+    \note Most popups use the implicit size of the background item to calculate
+    the implicit size of the popup itself. If you replace the background item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Image which has its own implicit
+    size).
+
+    \sa {Customizing Popup}
 */
 QQuickItem *QQuickPopup::background() const
 {
@@ -1528,6 +1565,17 @@ void QQuickPopup::setBackground(QQuickItem *background)
     popup is made visible, the content item is automatically reparented to
     the \l {ApplicationWindow::overlay}{overlay item} of its application
     window.
+
+    \note The content item is automatically resized to fit within the
+    \l padding of the popup.
+
+    \note Most popups use the implicit size of the content item to calculate
+    the implicit size of the popup itself. If you replace the content item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Text which has its own implicit
+    size).
+
+    \sa {Customizing Popup}
 */
 QQuickItem *QQuickPopup::contentItem() const
 {
@@ -1547,7 +1595,13 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 
     This property holds the list of content data.
 
-    \sa Item::data
+    The list contains all objects that have been declared in QML as children
+    of the popup.
+
+    \note Unlike \c contentChildren, \c contentData does include non-visual QML
+    objects.
+
+    \sa Item::data, contentChildren
 */
 QQmlListProperty<QObject> QQuickPopup::contentData()
 {
@@ -1564,7 +1618,13 @@ QQmlListProperty<QObject> QQuickPopup::contentData()
 
     This property holds the list of content children.
 
-    \sa Item::children
+    The list contains all items that have been declared in QML as children
+    of the popup.
+
+    \note Unlike \c contentData, \c contentChildren does not include non-visual
+    QML objects.
+
+    \sa Item::children, contentData
 */
 QQmlListProperty<QQuickItem> QQuickPopup::contentChildren()
 {
@@ -1599,7 +1659,14 @@ void QQuickPopup::setClip(bool clip)
 /*!
     \qmlproperty bool QtQuick.Controls::Popup::focus
 
-    This property holds whether the popup has focus. The default value is \c false.
+    This property holds whether the popup wants focus.
+
+    When the popup actually receives focus, \l activeFocus will be \c true.
+    For more information, see \l {Keyboard Focus in Qt Quick}.
+
+    The default value is \c false.
+
+    \sa activeFocus
 */
 bool QQuickPopup::hasFocus() const
 {
@@ -1621,6 +1688,8 @@ void QQuickPopup::setFocus(bool focus)
     \readonly
 
     This property holds whether the popup has active focus.
+
+    \sa focus, {Keyboard Focus in Qt Quick}
 */
 bool QQuickPopup::hasActiveFocus() const
 {
@@ -1695,6 +1764,8 @@ void QQuickPopup::resetDim()
     \qmlproperty bool QtQuick.Controls::Popup::visible
 
     This property holds whether the popup is visible. The default value is \c false.
+
+    \sa open(), close()
 */
 bool QQuickPopup::isVisible() const
 {
@@ -1705,15 +1776,16 @@ bool QQuickPopup::isVisible() const
 void QQuickPopup::setVisible(bool visible)
 {
     Q_D(QQuickPopup);
-    if (d->visible == visible)
+    if (d->visible == visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
         return;
 
-    d->visible = visible;
     if (d->complete) {
         if (visible)
             d->transitionManager.transitionEnter();
         else
             d->transitionManager.transitionExit();
+    } else {
+        d->visible = visible;
     }
 }
 

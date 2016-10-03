@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -39,36 +39,18 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
+import QtQuick.Window 2.0
+import QtQuick.Controls 2.0
 
-ScrollablePage {
-    id: page
+Window {
+    width: button.width
+    height: button.height
+    visible: true
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, page.availableWidth / 3))
-
-    Column {
-        spacing: 40
-        width: parent.width
-
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Slider is used to select a value by sliding a handle along a track."
-        }
-
-        Slider {
-            id: slider
-            value: 0.5
-            width: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        Slider {
-            orientation: Qt.Vertical
-            value: 0.5
-            height: itemWidth
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+    Button {
+        id: button
+        text: pressed ? "Pressed" : "Button"
+        highlighted: true
+        anchors.centerIn: parent
     }
 }
