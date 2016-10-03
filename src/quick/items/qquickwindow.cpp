@@ -2253,6 +2253,10 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             auto point = event->point(0);
             if (point->isAccepted())
                 return false;
+
+            // The only reason to already have a mouse grabber here is
+            // synthetic events - flickable sends one when setPressDelay is used.
+            auto oldMouseGrabber = q->mouseGrabberItem();
             QPointF localPos = item->mapFromScene(point->scenePos());
             Q_ASSERT(item->contains(localPos)); // transform is checked already
             QMouseEvent *me = event->asMouseEvent(localPos);
@@ -2260,7 +2264,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             q->sendEvent(item, me);
             if (me->isAccepted()) {
                 auto mouseGrabber = q->mouseGrabberItem();
-                if (mouseGrabber && mouseGrabber != item) {
+                if (mouseGrabber && mouseGrabber != item && mouseGrabber != oldMouseGrabber) {
                     item->mouseUngrabEvent();
                 } else {
                     item->grabMouse();
