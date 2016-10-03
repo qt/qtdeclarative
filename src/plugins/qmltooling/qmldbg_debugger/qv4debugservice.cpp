@@ -152,7 +152,7 @@ class UnknownV8CommandHandler: public V8CommandHandler
 public:
     UnknownV8CommandHandler(): V8CommandHandler(QString()) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         QString msg = QLatin1String("unimplemented command \"")
                 + req.value(QLatin1String("command")).toString()
@@ -167,7 +167,7 @@ class V8VersionRequest: public V8CommandHandler
 public:
     V8VersionRequest(): V8CommandHandler(QStringLiteral("version")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         addCommand();
         addRequestSequence();
@@ -186,7 +186,7 @@ class V8SetBreakPointRequest: public V8CommandHandler
 public:
     V8SetBreakPointRequest(): V8CommandHandler(QStringLiteral("setbreakpoint")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
         QJsonObject args = req.value(QLatin1String("arguments")).toObject();
@@ -237,7 +237,7 @@ class V8ClearBreakPointRequest: public V8CommandHandler
 public:
     V8ClearBreakPointRequest(): V8CommandHandler(QStringLiteral("clearbreakpoint")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
         QJsonObject args = req.value(QLatin1String("arguments")).toObject();
@@ -270,7 +270,7 @@ class V8BacktraceRequest: public V8CommandHandler
 public:
     V8BacktraceRequest(): V8CommandHandler(QStringLiteral("backtrace")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
 
@@ -303,7 +303,7 @@ class V8FrameRequest: public V8CommandHandler
 public:
     V8FrameRequest(): V8CommandHandler(QStringLiteral("frame")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
@@ -345,7 +345,7 @@ class V8ScopeRequest: public V8CommandHandler
 public:
     V8ScopeRequest(): V8CommandHandler(QStringLiteral("scope")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
@@ -390,7 +390,7 @@ class V8LookupRequest: public V8CommandHandler
 public:
     V8LookupRequest(): V8CommandHandler(QStringLiteral("lookup")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
@@ -430,7 +430,7 @@ class V8ContinueRequest: public V8CommandHandler
 public:
     V8ContinueRequest(): V8CommandHandler(QStringLiteral("continue")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         // decypher the payload:
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
@@ -476,7 +476,7 @@ class V8DisconnectRequest: public V8CommandHandler
 public:
     V8DisconnectRequest(): V8CommandHandler(QStringLiteral("disconnect")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         debugService->debuggerAgent.removeAllBreakPoints();
         debugService->debuggerAgent.resumeAll();
@@ -494,7 +494,7 @@ class V8SetExceptionBreakRequest: public V8CommandHandler
 public:
     V8SetExceptionBreakRequest(): V8CommandHandler(QStringLiteral("setexceptionbreak")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         bool wasEnabled = debugService->debuggerAgent.breakOnThrow();
 
@@ -534,7 +534,7 @@ class V8ScriptsRequest: public V8CommandHandler
 public:
     V8ScriptsRequest(): V8CommandHandler(QStringLiteral("scripts")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         //decypher the payload:
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
@@ -606,7 +606,7 @@ class V8EvaluateRequest: public V8CommandHandler
 public:
     V8EvaluateRequest(): V8CommandHandler(QStringLiteral("evaluate")) {}
 
-    virtual void handleRequest()
+    void handleRequest() override
     {
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
         QString expression = arguments.value(QLatin1String("expression")).toString();
