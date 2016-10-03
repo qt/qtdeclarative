@@ -72,7 +72,8 @@ public:
         return m_angle;
     }
 protected:
-    virtual bool affectParticle(QQuickParticleData *d, qreal dt);
+    bool affectParticle(QQuickParticleData *d, qreal dt) override;
+
 Q_SIGNALS:
 
     void magnitudeChanged(qreal arg);

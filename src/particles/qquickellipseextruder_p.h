@@ -60,8 +60,8 @@ class QQuickEllipseExtruder : public QQuickParticleExtruder
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)//###Use base class? If it's still box
 public:
     explicit QQuickEllipseExtruder(QObject *parent = 0);
-    virtual QPointF extrude(const QRectF &);
-    virtual bool contains(const QRectF &bounds, const QPointF &point);
+    QPointF extrude(const QRectF &) override;
+    bool contains(const QRectF &bounds, const QPointF &point) override;
 
     bool fill() const
     {

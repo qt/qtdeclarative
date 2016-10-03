@@ -60,7 +60,7 @@ class QQuickLineExtruder : public QQuickParticleExtruder
 
 public:
     explicit QQuickLineExtruder(QObject *parent = 0);
-    virtual QPointF extrude(const QRectF &);
+    QPointF extrude(const QRectF &) override;
     bool mirrored() const
     {
         return m_mirrored;

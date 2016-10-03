@@ -62,8 +62,8 @@ class QQuickRectangleExtruder : public QQuickParticleExtruder
 
 public:
     explicit QQuickRectangleExtruder(QObject *parent = 0);
-    virtual QPointF extrude(const QRectF &);
-    virtual bool contains(const QRectF &bounds, const QPointF &point);
+    QPointF extrude(const QRectF &) override;
+    bool contains(const QRectF &bounds, const QPointF &point) override;
     bool fill() const
     {
         return m_fill;

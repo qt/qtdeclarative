@@ -70,7 +70,7 @@ public:
 
     bool fade() const { return m_fade; }
 
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
     static QQuickItemParticleAttached *qmlAttachedProperties(QObject *object);
     QQmlComponent* delegate() const
@@ -100,9 +100,9 @@ public Q_SLOTS:
     }
 
 protected:
-    virtual void reset();
-    virtual void commit(int gIdx, int pIdx);
-    virtual void initialize(int gIdx, int pIdx);
+    void reset() override;
+    void commit(int gIdx, int pIdx) override;
+    void initialize(int gIdx, int pIdx) override;
     void prepareNextFrame();
 private:
     void processDeletables();

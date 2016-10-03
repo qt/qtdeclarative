@@ -185,7 +185,7 @@ protected:
     bool activeGroup(int g);
     bool shouldAffect(QQuickParticleData* datum);//Call to do the logic on whether it is affecting that datum
     void postAffect(QQuickParticleData* datum);//Call to do the post-affect logic on particles which WERE affected(once off, needs reset, affected signal)
-    virtual void componentComplete();
+    void componentComplete() override;
     bool isAffectedConnected();
     static const qreal simulationDelta;
     static const qreal simulationCutoff;
