@@ -41,14 +41,14 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.1
 
-Pane {
-    id: pane
+ScrollablePage {
+    id: page
 
     readonly property int itemWidth: Math.max(box.implicitWidth, Math.min(box.implicitWidth * 2, pane.availableWidth / 3))
 
     Column {
         spacing: 40
-        anchors.fill: parent
+        width: parent.width
 
         Label {
             width: parent.width

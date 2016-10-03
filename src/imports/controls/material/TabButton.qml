@@ -43,9 +43,9 @@ T.TabButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.contentWidth + leftPadding + rightPadding)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.contentHeight + topPadding + bottomPadding)
+                             contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 12
@@ -65,7 +65,6 @@ T.TabButton {
         implicitHeight: 48
 
         clip: true
-        trigger: Ripple.Release
         pressed: control.pressed
         anchor: control
         active: control.down || control.visualFocus || control.hovered

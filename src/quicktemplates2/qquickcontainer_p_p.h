@@ -90,6 +90,7 @@ public:
     QQmlObjectModel *contentModel;
     int currentIndex;
     bool updatingCurrent;
+    QQuickItemPrivate::ChangeTypes changeTypes;
 };
 
 QT_END_NAMESPACE

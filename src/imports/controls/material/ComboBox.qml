@@ -110,7 +110,6 @@ T.ComboBox {
             clipRadius: control.flat ? 0 : 2
             width: parent.width
             height: parent.height
-            trigger: Ripple.Press
             pressed: control.pressed
             anchor: control
             active: control.pressed || control.visualFocus || control.hovered
@@ -120,7 +119,7 @@ T.ComboBox {
 
     popup: T.Popup {
         width: control.width
-        implicitHeight: listview.contentHeight
+        implicitHeight: contentItem.implicitHeight
         transformOrigin: Item.Top
         topMargin: 12
         bottomMargin: 12
@@ -142,10 +141,12 @@ T.ComboBox {
         }
 
         contentItem: ListView {
-            id: listview
             clip: true
+            implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
+            highlightRangeMode: ListView.ApplyRange
+            highlightMoveDuration: 0
 
             T.ScrollIndicator.vertical: ScrollIndicator { }
         }

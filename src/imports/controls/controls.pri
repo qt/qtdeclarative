@@ -11,6 +11,7 @@ SOURCES += \
     $$PWD/qquickdefaultstyle.cpp
 
 QML_CONTROLS = \
+    AbstractButton.qml \
     ApplicationWindow.qml \
     BusyIndicator.qml \
     Button.qml \

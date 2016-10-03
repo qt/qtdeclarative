@@ -41,8 +41,8 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.1
 
-Pane {
-    id: pane
+ScrollablePage {
+    id: page
 
     Column {
         spacing: 40

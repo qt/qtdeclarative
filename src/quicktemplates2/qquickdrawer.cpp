@@ -422,7 +422,7 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
 static QList<QQuickStateAction> prepareTransition(QQuickDrawer *drawer, QQuickTransition *transition, qreal to)
 {
     QList<QQuickStateAction> actions;
-    if (!transition || !QQuickPopupPrivate::get(drawer)->window)
+    if (!transition || !QQuickPopupPrivate::get(drawer)->window || !transition->enabled())
         return actions;
 
     qmlExecuteDeferred(transition);

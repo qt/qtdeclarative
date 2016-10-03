@@ -57,17 +57,6 @@ QT_BEGIN_NAMESPACE
     a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
     \e Yes, \e No, and \e Help.
 
-    \table
-    \row \li \image qtquickcontrols2-button-normal.png
-         \li A button in its normal state.
-    \row \li \image qtquickcontrols2-button-pressed.png
-         \li A button that is pressed.
-    \row \li \image qtquickcontrols2-button-focused.png
-         \li A button that has active focus.
-    \row \li \image qtquickcontrols2-button-disabled.png
-         \li A button that is disabled.
-    \endtable
-
     A button emits the signal \l {AbstractButton::}{clicked()} when it is activated by the user.
     Connect to this signal to perform the button's action. Buttons also
     provide the signals \l {AbstractButton::}{canceled()}, \l {AbstractButton::}{doubleClicked()}, \l {AbstractButton::}{pressed()},
@@ -154,6 +143,8 @@ QFont QQuickButton::defaultFont() const
 
     This property holds whether the button is highlighted.
 
+    \image qtquickcontrols2-button-highlighted.gif
+
     A button can be highlighted in order to draw the user's attention towards
     it. It has no effect on keyboard interaction.
 
@@ -179,6 +170,8 @@ void QQuickButton::setHighlighted(bool highlighted)
     \qmlproperty bool QtQuick.Controls::Button::flat
 
     This property holds whether the button is flat.
+
+    \image qtquickcontrols2-button-flat.gif
 
     A flat button typically does not draw a background unless it is pressed or checked.
 

@@ -77,7 +77,6 @@ T.ItemDelegate {
             height: parent.height
 
             clip: visible
-            trigger: Ripple.Release
             pressed: control.pressed
             anchor: control
             active: control.down || control.visualFocus || control.hovered

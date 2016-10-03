@@ -41,12 +41,12 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.1
 
-Pane {
-    id: pane
+ScrollablePage {
+    id: page
 
     Column {
         spacing: 40
-        anchors.fill: parent
+        width: parent.width
 
         Label {
             width: parent.width
@@ -59,7 +59,7 @@ Pane {
             id: button
             text: "Open"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
+            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, page.availableWidth / 3))
 
             onClicked: optionsMenu.open()
         }

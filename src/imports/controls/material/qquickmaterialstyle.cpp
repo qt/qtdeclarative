@@ -391,7 +391,7 @@ static bool globalBackgroundCustom = true;
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
 static const QRgb backgroundColorDark = 0xFF303030;
 static const QRgb dialogColorLight = 0xFFFFFFFF;
-static const QRgb dialogColorDark = 0xFF303030;
+static const QRgb dialogColorDark = 0xFF424242;
 static const QRgb primaryTextColorLight = 0xDD000000;
 static const QRgb primaryTextColorDark = 0xFFFFFFFF;
 static const QRgb secondaryTextColorLight = 0x89000000;
@@ -469,6 +469,8 @@ void QQuickMaterialStyle::setTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_customAccent)
+        emit accentChanged();
     if (!m_hasBackground)
         emit backgroundChanged();
     if (!m_hasForeground)
@@ -484,6 +486,8 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
     propagateTheme();
     emit themeChanged();
     emit paletteChanged();
+    if (!m_customAccent)
+        emit accentChanged();
     if (!m_hasBackground)
         emit backgroundChanged();
     if (!m_hasForeground)

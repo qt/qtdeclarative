@@ -139,10 +139,11 @@ private:
 void tst_Sanity::initTestCase()
 {
     QDirIterator it(QQC2_IMPORT_PATH, QStringList() << "*.qml" << "*.js", QDir::Files, QDirIterator::Subdirectories);
+    const QStringList excludeDirs = QStringList() << QStringLiteral("snippets") << QStringLiteral("screenshots") << QStringLiteral("designer");
     while (it.hasNext()) {
         it.next();
         QFileInfo info = it.fileInfo();
-        if (info.dir().dirName() != QStringLiteral("snippets") && info.dir().dirName() != QStringLiteral("designer"))
+        if (!excludeDirs.contains(info.dir().dirName()))
             files.insert(info.dir().dirName() + "/" + info.fileName(), info.filePath());
     }
 }

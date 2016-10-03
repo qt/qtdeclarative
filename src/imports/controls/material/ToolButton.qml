@@ -73,7 +73,6 @@ T.ToolButton {
         clip: !square
         width: square ? parent.height / 2 : parent.width
         height: square ? parent.height / 2 : parent.height
-        trigger: square ? Ripple.Press : Ripple.Release
         pressed: control.pressed
         anchor: control
         active: control.enabled && (control.down || control.visualFocus || control.hovered)

@@ -108,15 +108,18 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
-        implicitHeight: listview.contentHeight
+        implicitHeight: contentItem.implicitHeight
         topMargin: 6
         bottomMargin: 6
 
         contentItem: ListView {
             id: listview
             clip: true
+            implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
+            highlightRangeMode: ListView.ApplyRange
+            highlightMoveDuration: 0
 
             Rectangle {
                 z: 10

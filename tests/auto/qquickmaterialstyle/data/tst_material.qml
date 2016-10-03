@@ -41,6 +41,7 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtTest 1.0
+import QtQuick.Templates 2.1 as T
 import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.1
 
@@ -127,12 +128,21 @@ TestCase {
             visible: true
             property alias popup: popupInstance
             property alias label: labelInstance
+            property alias label2: labelInstance2
             Popup {
                 id: popupInstance
                 Label {
                     id: labelInstance
                     text: "test"
                     color: popupInstance.Material.textSelectionColor
+                }
+                Component.onCompleted: open()
+            }
+            T.Popup {
+                contentItem: Label {
+                    id: labelInstance2
+                    text: "test"
+                    color: Material.textSelectionColor
                 }
                 Component.onCompleted: open()
             }
@@ -291,16 +301,19 @@ TestCase {
         var popupObject = popupComponent.createObject(testCase)
         compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
+        compare(popupObject.label2.color.toString(), popupObject.Material.textSelectionColor.toString())
 
         popupObject.Material[prop] = data.value1
         compare(popupObject.Material[prop], data.value1)
         compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
+        compare(popupObject.label2.color.toString(), popupObject.Material.textSelectionColor.toString())
 
         popupObject.Material[prop] = data.value2
         compare(popupObject.Material[prop], data.value2)
         compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
+        compare(popupObject.label2.color.toString(), popupObject.Material.textSelectionColor.toString())
 
         popupObject.destroy()
     }
@@ -500,11 +513,11 @@ TestCase {
         compare(control.Material[prop], "#80808080")
 
         // unknown
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material." + prop + " value: 123")
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":58:9: QML Button: unknown Material." + prop + " value: 123")
         control.Material[prop] = 123
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material." + prop + " value: foo")
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":58:9: QML Button: unknown Material." + prop + " value: foo")
         control.Material[prop] = "foo"
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":57:9: QML Button: unknown Material." + prop + " value: #1")
+        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":58:9: QML Button: unknown Material." + prop + " value: #1")
         control.Material[prop] = "#1"
 
         control.destroy()
@@ -676,5 +689,20 @@ TestCase {
         tryCompare(control.background, "color", "#0000ff")
 
         window.destroy()
+    }
+
+    Component {
+        id: busyIndicator
+        BusyIndicator { }
+    }
+
+    function test_shade() {
+        var control = busyIndicator.createObject(testCase)
+
+        compare(control.contentItem.color.toString(), Material.color(Material.Pink, Material.Shade500))
+        control.Material.theme = Material.Dark
+        compare(control.contentItem.color.toString(), Material.color(Material.Pink, Material.Shade200))
+
+        control.destroy()
     }
 }

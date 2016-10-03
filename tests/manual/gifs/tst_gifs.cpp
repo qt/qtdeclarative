@@ -54,6 +54,7 @@ private slots:
     void rangeSlider();
     void busyIndicator();
     void switchGif();
+    void button_data();
     void button();
     void tabBar();
     void menu();
@@ -64,6 +65,8 @@ private slots:
     void delegates();
     void dial_data();
     void dial();
+    void checkBox();
+    void checkBoxTriState();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -328,14 +331,23 @@ void tst_Gifs::switchGif()
     gifRecorder.waitForFinish();
 }
 
+void tst_Gifs::button_data()
+{
+    QTest::addColumn<QString>("qmlFileName");
+    QTest::newRow("button") << QString::fromLatin1("qtquickcontrols2-button.qml");
+    QTest::newRow("button-flat") << QString::fromLatin1("qtquickcontrols2-button-flat.qml");
+    QTest::newRow("button-highlighted") << QString::fromLatin1("qtquickcontrols2-button-highlighted.qml");
+}
+
 void tst_Gifs::button()
 {
+    QFETCH(QString, qmlFileName);
+
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
-    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName(qmlFileName);
 
     gifRecorder.start();
 
@@ -596,6 +608,62 @@ void tst_Gifs::dial()
 
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, posAlongArc(
         arcCenter, startAngle, endAngle, distanceFromCenter, 1, QEasingCurve::InOutQuad), 30);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::checkBox()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(5);
+    gifRecorder.setQmlFileName("qtquickcontrols2-checkbox.qml");
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *second = window->property("second").value<QQuickItem*>();
+    QVERIFY(second);
+    QQuickItem *third = window->property("third").value<QQuickItem*>();
+    QVERIFY(third);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        second->mapToScene(QPointF(second->width() / 2, second->height() / 2)).toPoint(), 400);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        third->mapToScene(QPointF(third->width() / 2, third->height() / 2)).toPoint(), 800);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        third->mapToScene(QPointF(third->width() / 2, third->height() / 2)).toPoint(), 800);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        second->mapToScene(QPointF(second->width() / 2, second->height() / 2)).toPoint(), 800);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::checkBoxTriState()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setQmlFileName("qtquickcontrols2-checkbox-tristate.qml");
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *english = window->property("english").value<QQuickItem*>();
+    QVERIFY(english);
+    QQuickItem *norwegian = window->property("norwegian").value<QQuickItem*>();
+    QVERIFY(norwegian);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        english->mapToScene(QPointF(english->width() / 2, english->height() / 2)).toPoint(), 1000);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        norwegian->mapToScene(QPointF(norwegian->width() / 2, norwegian->height() / 2)).toPoint(), 1000);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        norwegian->mapToScene(QPointF(norwegian->width() / 2, norwegian->height() / 2)).toPoint(), 1000);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+        english->mapToScene(QPointF(english->width() / 2, english->height() / 2)).toPoint(), 1000);
 
     gifRecorder.waitForFinish();
 }

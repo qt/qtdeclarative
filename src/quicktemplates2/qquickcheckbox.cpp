@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-buttons
     \brief An option button that can be checked or unchecked.
 
+    \image qtquickcontrols2-checkbox.gif
+
     CheckBox presents an option button that can be toggled on (checked) or
     off (unchecked). Check boxes are typically used to select one or more
     options from a set of options. For larger sets of options, such as those
@@ -64,17 +66,6 @@ QT_BEGIN_NAMESPACE
     state can not be determined; generally because of other states that affect
     the checkbox. This state is useful when several child nodes are selected
     in a treeview, for example.
-
-    \table
-    \row \li \image qtquickcontrols2-checkbox-normal.png
-         \li A check box in its normal state.
-    \row \li \image qtquickcontrols2-checkbox-checked.png
-         \li A check box that is checked.
-    \row \li \image qtquickcontrols2-checkbox-focused.png
-         \li A check box that has active focus.
-    \row \li \image qtquickcontrols2-checkbox-disabled.png
-         \li A check box that is disabled.
-    \endtable
 
     \code
     ColumnLayout {
@@ -119,6 +110,10 @@ QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
     \qmlproperty bool QtQuick.Controls::CheckBox::tristate
 
     This property holds whether the checkbox is a tri-state checkbox.
+
+    In the animation below, the first checkbox is tri-state:
+
+    \image qtquickcontrols2-checkbox-tristate.gif
 
     The default is \c false, i.e., the checkbox has only two states.
 */
