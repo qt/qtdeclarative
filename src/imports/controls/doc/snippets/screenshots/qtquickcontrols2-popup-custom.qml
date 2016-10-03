@@ -35,12 +35,13 @@ Item {
     height: 200
 
     Binding {
-        target: root
+        target: popup
         property: "visible"
         value: root.Window.active
     }
 //! [1]
 Popup {
+    id: popup
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 200
