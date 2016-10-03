@@ -86,8 +86,8 @@ void OpenGLRenderNode::init()
         "   gl_FragColor = col * opacity;\n"
         "}\n";
 
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
+    m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->bindAttributeLocation("posAttr", 0);
     m_program->bindAttributeLocation("colAttr", 1);
     m_program->link();
