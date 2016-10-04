@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
@@ -223,13 +223,15 @@ TestCase {
 
     function test_mouse_data() {
         return [
-            { tag: "horizontal", orientation: Qt.Horizontal },
-            { tag: "vertical", orientation: Qt.Vertical }
+            { tag: "horizontal", orientation: Qt.Horizontal, live: false },
+            { tag: "vertical", orientation: Qt.Vertical, live: false },
+            { tag: "horizontal:live", orientation: Qt.Horizontal, live: true },
+            { tag: "vertical:live", orientation: Qt.Vertical, live: true }
         ]
     }
 
     function test_mouse(data) {
-        var control = slider.createObject(testCase, {orientation: data.orientation})
+        var control = slider.createObject(testCase, {orientation: data.orientation, live: data.live})
         verify(control)
 
         pressedSpy.target = control
@@ -251,8 +253,8 @@ TestCase {
         mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
-        compare(control.value, 0.0)
-        verify(control.position, 0.5)
+        compare(control.value, data.live ? 0.5 : 0.0)
+        compare(control.position, 0.5)
 
         mouseRelease(control, control.width * 0.5, control.height * 0.5, Qt.LeftButton)
         compare(pressedSpy.count, 2)
@@ -270,13 +272,13 @@ TestCase {
         mouseMove(control, control.width * 2, -control.height, 0, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
-        compare(control.value, 0.5)
+        compare(control.value, data.live ? 1.0 : 0.5)
         compare(control.position, 1.0)
 
         mouseMove(control, control.width * 0.75, control.height * 0.25, 0, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
-        compare(control.value, 0.5)
+        compare(control.value, data.live ? control.position : 0.5)
         verify(control.position >= 0.75)
 
         mouseRelease(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)

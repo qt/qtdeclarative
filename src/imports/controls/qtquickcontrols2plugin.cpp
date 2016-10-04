@@ -42,6 +42,7 @@
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
+#include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 
@@ -142,6 +143,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ToolSeparator.qml")), uri, 2, 1, "ToolSeparator");
 
     // QtQuick.Controls 2.2 (Qt 5.9)
+    qmlRegisterRevision<QQuickSlider, 2>(uri, 2, 2);
     qmlRegisterRevision<QQuickTumbler, 2>(uri, 2, 2);
 }
 

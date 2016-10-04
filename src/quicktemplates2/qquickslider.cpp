@@ -77,7 +77,7 @@ class QQuickSliderPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSlider)
 
 public:
-    QQuickSliderPrivate() : from(0), to(1), value(0), position(0), stepSize(0), pressed(false),
+    QQuickSliderPrivate() : from(0), to(1), value(0), position(0), stepSize(0), live(false), pressed(false),
         orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
         handle(nullptr)
     {
@@ -93,6 +93,7 @@ public:
     qreal value;
     qreal position;
     qreal stepSize;
+    bool live;
     bool pressed;
     QPoint pressPoint;
     Qt::Orientation orientation;
@@ -222,12 +223,12 @@ void QQuickSlider::setTo(qreal to)
 
     This property holds the value in the range \c from - \c to. The default value is \c 0.0.
 
-    Unlike the \l position property, the \c value is not updated while the
-    handle is dragged, but only after the value has been chosen and the slider
-    has been released. The \l valueAt() method can be used to get continuous
-    updates.
+    Unlike the \l position property, the \c value is not updated by default
+    while the handle is dragged, but only after the value has been chosen and
+    the slider has been released. The \l live property can be used to make the
+    slider provide live updates for the \c value property.
 
-    \sa position, valueAt()
+    \sa position, live, valueAt()
 */
 qreal QQuickSlider::value() const
 {
@@ -256,9 +257,9 @@ void QQuickSlider::setValue(qreal value)
     This property holds the logical position of the handle.
 
     The position is defined as a percentage of the control's size, scaled
-    to \c {0.0 - 1.0}. Unlike the \l value property, the \c position is
-    continuously updated while the handle is dragged. For visualizing a
-    slider, the right-to-left aware \l visualPosition should be used instead.
+    to \c {0.0 - 1.0}. The \c position is continuously updated while the
+    handle is dragged. For visualizing a slider, the right-to-left aware
+    \l visualPosition should be used instead.
 
     \sa value, visualPosition, valueAt()
 */
@@ -338,6 +339,33 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 
     d->snapMode = mode;
     emit snapModeChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::Slider::live
+
+    This property holds whether the slider provides live updates for the \l value
+    property while the handle is dragged.
+
+    The default value is \c false.
+
+    \sa value
+*/
+bool QQuickSlider::live() const
+{
+    Q_D(const QQuickSlider);
+    return d->live;
+}
+
+void QQuickSlider::setLive(bool live)
+{
+    Q_D(QQuickSlider);
+    if (d->live == live)
+        return;
+
+    d->live = live;
+    emit liveChanged();
 }
 
 /*!
@@ -521,7 +549,10 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
-        d->setPosition(pos);
+        if (d->live)
+            setValue(valueAt(pos));
+        else
+            d->setPosition(pos);
     }
 }
 
