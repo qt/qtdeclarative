@@ -196,6 +196,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTextField, 1>(uri, 2, 1, "TextField");
     qmlRegisterType<QQuickToolSeparator>(uri, 2, 1, "ToolSeparator");
     qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
+
+    // QtQuick.Templates 2.2 (Qt 5.9)
+    qmlRegisterRevision<QQuickTumbler, 2>(uri, 2, 2);
 }
 
 QT_END_NAMESPACE

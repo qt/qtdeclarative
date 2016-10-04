@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
@@ -1044,5 +1044,31 @@ TestCase {
         compare(tumblerView.offset, 0);
         ++tumbler.currentIndex;
         tryCompare(tumblerView, "offset", 4, tumblerView.highlightMoveDuration * 2);
+    }
+
+    function test_moving_data() {
+        return [
+            { tag: "wrap:true", wrap: true },
+            { tag: "wrap:false", wrap: false }
+        ]
+    }
+
+    function test_moving(data) {
+        createTumbler({wrap: data.wrap, model: 5})
+        compare(tumbler.wrap, data.wrap)
+        compare(tumbler.moving, false)
+
+        waitForRendering(tumbler)
+
+        mousePress(tumbler, tumbler.width / 2, tumbler.height / 2, Qt.LeftButton)
+        compare(tumbler.moving, false)
+
+        for (var y = tumbler.height / 2; y >= tumbler.height / 4; y -= 10)
+            mouseMove(tumbler, tumbler.width / 2, y, 1)
+        compare(tumbler.moving, true)
+
+        mouseRelease(tumbler, tumbler.width / 2, tumbler.height / 4, Qt.LeftButton)
+        compare(tumbler.moving, true)
+        tryCompare(tumbler, "moving", false)
     }
 }

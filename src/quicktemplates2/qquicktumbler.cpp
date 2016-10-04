@@ -439,6 +439,19 @@ void QQuickTumbler::resetWrap()
     d->setWrapBasedOnCount();
 }
 
+/*!
+    \qmlproperty bool QtQuick.Controls::Tumbler::moving
+    \since QtQuick.Controls 2.2
+
+    This property describes whether the tumbler is currently moving, due to
+    the user either dragging or flicking it.
+*/
+bool QQuickTumbler::isMoving() const
+{
+    Q_D(const QQuickTumbler);
+    return d->view && d->view->property("moving").toBool();
+}
+
 QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)
 {
     return new QQuickTumblerAttached(object);
@@ -505,6 +518,7 @@ void QQuickTumblerPrivate::disconnectFromView()
     QObject::disconnect(view, SIGNAL(currentIndexChanged()), q, SLOT(_q_onViewCurrentIndexChanged()));
     QObject::disconnect(view, SIGNAL(currentItemChanged()), q, SIGNAL(currentItemChanged()));
     QObject::disconnect(view, SIGNAL(countChanged()), q, SLOT(_q_onViewCountChanged()));
+    QObject::disconnect(view, SIGNAL(movingChanged()), q, SIGNAL(movingChanged()));
 
     QQuickItemPrivate *oldViewContentItemPrivate = QQuickItemPrivate::get(viewContentItem);
     oldViewContentItemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Children);
@@ -529,6 +543,7 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
     QObject::connect(view, SIGNAL(currentIndexChanged()), q, SLOT(_q_onViewCurrentIndexChanged()));
     QObject::connect(view, SIGNAL(currentItemChanged()), q, SIGNAL(currentItemChanged()));
     QObject::connect(view, SIGNAL(countChanged()), q, SLOT(_q_onViewCountChanged()));
+    QObject::connect(view, SIGNAL(movingChanged()), q, SIGNAL(movingChanged()));
 
     QQuickItemPrivate *viewContentItemPrivate = QQuickItemPrivate::get(viewContentItem);
     viewContentItemPrivate->addItemChangeListener(this, QQuickItemPrivate::Children);

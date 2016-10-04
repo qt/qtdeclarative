@@ -67,6 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap RESET resetWrap NOTIFY wrapChanged FINAL REVISION 1)
+    Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged FINAL REVISION 2)
 
 public:
     explicit QQuickTumbler(QQuickItem *parent = nullptr);
@@ -91,6 +92,8 @@ public:
     void setWrap(bool wrap);
     void resetWrap();
 
+    bool isMoving() const;
+
     static QQuickTumblerAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
@@ -101,6 +104,7 @@ Q_SIGNALS:
     void delegateChanged();
     void visibleItemCountChanged();
     Q_REVISION(1) void wrapChanged();
+    Q_REVISION(2) void movingChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
