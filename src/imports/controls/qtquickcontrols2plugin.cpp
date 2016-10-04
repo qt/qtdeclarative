@@ -77,9 +77,6 @@ QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlu
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
-    qmlRegisterType<QQuickButtonGroupAttached>();
-
     QQuickStylePrivate::init(typeUrl());
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
@@ -88,10 +85,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     QQuickStyleSelector selector;
     selector.setBaseUrl(typeUrl());
 
+    // QtQuick.Controls 2.0 (Qt 5.7)
     qmlRegisterType(selector.select(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
     qmlRegisterType(selector.select(QStringLiteral("Button.qml")), uri, 2, 0, "Button");
+    qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
+    qmlRegisterType<QQuickButtonGroupAttached>();
     qmlRegisterType(selector.select(QStringLiteral("CheckBox.qml")), uri, 2, 0, "CheckBox");
     qmlRegisterType(selector.select(QStringLiteral("CheckDelegate.qml")), uri, 2, 0, "CheckDelegate");
     qmlRegisterType(selector.select(QStringLiteral("ComboBox.qml")), uri, 2, 0, "ComboBox");

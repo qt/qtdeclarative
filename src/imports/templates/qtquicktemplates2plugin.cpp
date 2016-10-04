@@ -112,6 +112,7 @@ QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensio
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
+    // QtQuick.Templates 2.0 (Qt 5.7)
     qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 2, 0, "ApplicationWindow");
     qmlRegisterType<QQuickApplicationWindowAttached>();
@@ -177,7 +178,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickTextInput, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
 
-    // QtQuick.Controls 2.1 (Qt 5.8)
+    // QtQuick.Templates 2.1 (Qt 5.8)
     qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
     qmlRegisterType<QQuickComboBox, 1>(uri, 2, 1, "ComboBox");
     qmlRegisterType<QQuickContainer, 1>(uri, 2, 1, "Container");
