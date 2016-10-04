@@ -462,11 +462,8 @@ Module {
         name: "QQuickPopup"
         defaultProperty: "contentData"
         prototype: "QObject"
-        exports: [
-            "QtQuick.Templates/Popup 2.0",
-            "QtQuick.Templates/Popup 2.1"
-        ]
-        exportMetaObjectRevisions: [0, 1]
+        exports: ["QtQuick.Templates/Popup 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "ClosePolicy"
             values: {
@@ -513,8 +510,6 @@ Module {
         Property { name: "leftPadding"; type: "double" }
         Property { name: "rightPadding"; type: "double" }
         Property { name: "bottomPadding"; type: "double" }
-        Property { name: "allowVerticalFlip"; revision: 1; type: "bool" }
-        Property { name: "allowHorizontalFlip"; revision: 1; type: "bool" }
         Property { name: "locale"; type: "QLocale" }
         Property { name: "font"; type: "QFont" }
         Property { name: "parent"; type: "QQuickItem"; isPointer: true }
@@ -534,8 +529,6 @@ Module {
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
-        Signal { name: "allowVerticalFlipChanged"; revision: 1 }
-        Signal { name: "allowHorizontalFlipChanged"; revision: 1 }
         Signal {
             name: "windowChanged"
             Parameter { name: "window"; type: "QQuickWindow"; isPointer: true }
@@ -1060,8 +1053,6 @@ Module {
         Property { name: "delay"; type: "int" }
         Property { name: "timeout"; type: "int" }
         Property { name: "text"; type: "string" }
-        Method { name: "open" }
-        Method { name: "close" }
     }
     Component {
         name: "QQuickToolTipAttached"

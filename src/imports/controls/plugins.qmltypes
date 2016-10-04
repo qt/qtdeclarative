@@ -20,6 +20,53 @@ Module {
         exportMetaObjectRevisions: [0]
     }
     Component {
+        name: "QQuickDefaultStyle"
+        prototype: "QObject"
+        exports: ["QtQuick.Controls.impl/Default 2.1"]
+        isCreatable: false
+        isSingleton: true
+        exportMetaObjectRevisions: [0]
+        Property { name: "backgroundColor"; type: "QColor"; isReadonly: true }
+        Property { name: "overlayModalColor"; type: "QColor"; isReadonly: true }
+        Property { name: "overlayDimColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textDarkColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textLightColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textLinkColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textSelectionColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textDisabledColor"; type: "QColor"; isReadonly: true }
+        Property { name: "textDisabledLightColor"; type: "QColor"; isReadonly: true }
+        Property { name: "focusColor"; type: "QColor"; isReadonly: true }
+        Property { name: "focusLightColor"; type: "QColor"; isReadonly: true }
+        Property { name: "focusPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "buttonColor"; type: "QColor"; isReadonly: true }
+        Property { name: "buttonPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "buttonCheckedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "buttonCheckedPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "buttonCheckedFocusColor"; type: "QColor"; isReadonly: true }
+        Property { name: "toolButtonColor"; type: "QColor"; isReadonly: true }
+        Property { name: "tabButtonColor"; type: "QColor"; isReadonly: true }
+        Property { name: "tabButtonPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "tabButtonCheckedPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "delegateColor"; type: "QColor"; isReadonly: true }
+        Property { name: "delegatePressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "delegateFocusColor"; type: "QColor"; isReadonly: true }
+        Property { name: "indicatorPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "indicatorDisabledColor"; type: "QColor"; isReadonly: true }
+        Property { name: "indicatorFrameColor"; type: "QColor"; isReadonly: true }
+        Property { name: "indicatorFramePressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "indicatorFrameDisabledColor"; type: "QColor"; isReadonly: true }
+        Property { name: "frameDarkColor"; type: "QColor"; isReadonly: true }
+        Property { name: "frameLightColor"; type: "QColor"; isReadonly: true }
+        Property { name: "scrollBarColor"; type: "QColor"; isReadonly: true }
+        Property { name: "scrollBarPressedColor"; type: "QColor"; isReadonly: true }
+        Property { name: "progressBarColor"; type: "QColor"; isReadonly: true }
+        Property { name: "pageIndicatorColor"; type: "QColor"; isReadonly: true }
+        Property { name: "separatorColor"; type: "QColor"; isReadonly: true }
+        Property { name: "disabledDarkColor"; type: "QColor"; isReadonly: true }
+        Property { name: "disabledLightColor"; type: "QColor"; isReadonly: true }
+    }
+    Component {
         name: "QQuickDialRing"
         defaultProperty: "data"
         prototype: "QQuickPaintedItem"
@@ -46,6 +93,14 @@ Module {
         Property { name: "model"; type: "QVariant" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
         Property { name: "path"; type: "QQuickPath"; isPointer: true }
+    }
+    Component {
+        prototype: "QQuickAbstractButton"
+        name: "QtQuick.Controls/AbstractButton 2.0"
+        exports: ["QtQuick.Controls/AbstractButton 2.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "data"
     }
     Component {
         prototype: "QQuickApplicationWindow"
@@ -897,11 +952,8 @@ Module {
         name: "QQuickPopup"
         defaultProperty: "contentData"
         prototype: "QObject"
-        exports: [
-            "QtQuick.Templates/Popup 2.0",
-            "QtQuick.Templates/Popup 2.1"
-        ]
-        exportMetaObjectRevisions: [0, 1]
+        exports: ["QtQuick.Templates/Popup 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "ClosePolicy"
             values: {
@@ -948,8 +1000,6 @@ Module {
         Property { name: "leftPadding"; type: "double" }
         Property { name: "rightPadding"; type: "double" }
         Property { name: "bottomPadding"; type: "double" }
-        Property { name: "allowVerticalFlip"; revision: 1; type: "bool" }
-        Property { name: "allowHorizontalFlip"; revision: 1; type: "bool" }
         Property { name: "locale"; type: "QLocale" }
         Property { name: "font"; type: "QFont" }
         Property { name: "parent"; type: "QQuickItem"; isPointer: true }
@@ -969,8 +1019,6 @@ Module {
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
-        Signal { name: "allowVerticalFlipChanged"; revision: 1 }
-        Signal { name: "allowHorizontalFlipChanged"; revision: 1 }
         Signal {
             name: "windowChanged"
             Parameter { name: "window"; type: "QQuickWindow"; isPointer: true }
@@ -1495,8 +1543,6 @@ Module {
         Property { name: "delay"; type: "int" }
         Property { name: "timeout"; type: "int" }
         Property { name: "text"; type: "string" }
-        Method { name: "open" }
-        Method { name: "close" }
     }
     Component {
         name: "QQuickToolTipAttached"
