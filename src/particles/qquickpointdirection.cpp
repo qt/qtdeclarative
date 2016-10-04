@@ -75,7 +75,7 @@ QQuickPointDirection::QQuickPointDirection(QObject *parent) :
 {
 }
 
-const QPointF QQuickPointDirection::sample(const QPointF &)
+QPointF QQuickPointDirection::sample(const QPointF &)
 {
     QPointF ret;
     ret.setX(m_x - m_xVariation + rand() / float(RAND_MAX) * m_xVariation * 2);

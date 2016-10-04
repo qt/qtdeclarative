@@ -62,7 +62,7 @@ class QQuickAngleDirection : public QQuickDirection
     Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
 public:
     explicit QQuickAngleDirection(QObject *parent = 0);
-    const QPointF sample(const QPointF &from);
+    QPointF sample(const QPointF &from) override;
     qreal angle() const
     {
         return m_angle;

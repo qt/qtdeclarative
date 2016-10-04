@@ -62,7 +62,7 @@ class QQuickDirection : public QObject
 public:
     explicit QQuickDirection(QObject *parent = 0);
 
-    virtual const QPointF sample(const QPointF &from);
+    virtual QPointF sample(const QPointF &from);
 Q_SIGNALS:
 
 public Q_SLOTS:
