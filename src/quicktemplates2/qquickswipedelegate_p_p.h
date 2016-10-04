@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSWIPEDELEGATE_P_H
-#define QQUICKSWIPEDELEGATE_P_H
+#ifndef QQUICKSWIPEDELEGATE_P_P_H
+#define QQUICKSWIPEDELEGATE_P_P_H
 
 //
 //  W A R N I N G
@@ -48,44 +48,29 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
+#include <QtQuickTemplates2/private/qquickitemdelegate_p_p.h>
+#include <QtQuickTemplates2/private/qquickswipe_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSwipeDelegatePrivate;
-class QQuickSwipe;
+class QQuickSwipeDelegate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
+class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT)
+    Q_DECLARE_PUBLIC(QQuickSwipeDelegate)
 
 public:
-    explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);
+    QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *control);
 
-    QQuickSwipe *swipe() const;
+    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
+    bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
+    bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
 
-protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
+    void resizeContent() override;
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-
-    QFont defaultFont() const override;
-
-#ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const override;
-#endif
-
-private:
-    Q_DISABLE_COPY(QQuickSwipeDelegate)
-    Q_DECLARE_PRIVATE(QQuickSwipeDelegate)
+    QQuickSwipe swipe;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwipeDelegate)
-
-#endif // QQUICKSWIPEDELEGATE_P_H
+#endif // QQUICKSWIPEDELEGATE_P_P_H

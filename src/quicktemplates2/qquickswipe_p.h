@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSWIPEDELEGATE_P_H
-#define QQUICKSWIPEDELEGATE_P_H
+#ifndef QQUICKSWIPE_P_H
+#define QQUICKSWIPE_P_H
 
 //
 //  W A R N I N G
@@ -48,44 +48,70 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
+#include <QtCore/qobject.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSwipeDelegatePrivate;
-class QQuickSwipe;
+class QQmlComponent;
+class QQuickItem;
+class QQuickSwipeDelegate;
+class QQuickSwipePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT)
+    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(bool complete READ isComplete NOTIFY completeChanged FINAL)
+    Q_PROPERTY(QQmlComponent *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
+    Q_PROPERTY(QQmlComponent *behind READ behind WRITE setBehind NOTIFY behindChanged FINAL)
+    Q_PROPERTY(QQmlComponent *right READ right WRITE setRight NOTIFY rightChanged FINAL)
+    Q_PROPERTY(QQuickItem *leftItem READ leftItem NOTIFY leftItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *behindItem READ behindItem NOTIFY behindItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *rightItem READ rightItem NOTIFY rightItemChanged FINAL)
 
 public:
-    explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);
+    explicit QQuickSwipe(QQuickSwipeDelegate *control);
 
-    QQuickSwipe *swipe() const;
+    qreal position() const;
+    void setPosition(qreal position);
 
-protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
+    bool isComplete() const;
+    void setComplete(bool complete);
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    QQmlComponent *left() const;
+    void setLeft(QQmlComponent *left);
 
-    QFont defaultFont() const override;
+    QQmlComponent *behind() const;
+    void setBehind(QQmlComponent *behind);
 
-#ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const override;
-#endif
+    QQmlComponent *right() const;
+    void setRight(QQmlComponent *right);
+
+    QQuickItem *leftItem() const;
+    void setLeftItem(QQuickItem *item);
+
+    QQuickItem *behindItem() const;
+    void setBehindItem(QQuickItem *item);
+
+    QQuickItem *rightItem() const;
+    void setRightItem(QQuickItem *item);
+
+Q_SIGNALS:
+    void positionChanged();
+    void completeChanged();
+    void leftChanged();
+    void behindChanged();
+    void rightChanged();
+    void leftItemChanged();
+    void behindItemChanged();
+    void rightItemChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickSwipeDelegate)
-    Q_DECLARE_PRIVATE(QQuickSwipeDelegate)
+    Q_DISABLE_COPY(QQuickSwipe)
+    Q_DECLARE_PRIVATE(QQuickSwipe)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwipeDelegate)
-
-#endif // QQUICKSWIPEDELEGATE_P_H
+#endif // QQUICKSWIPE_P_H
