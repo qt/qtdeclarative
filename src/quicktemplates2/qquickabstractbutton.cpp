@@ -384,7 +384,7 @@ void QQuickAbstractButton::setCheckable(bool checkable)
     one button can be checked at any time; checking another button automatically
     unchecks the previously checked one.
 
-    \note The property has no effect on buttons that belong to an ButtonGroup.
+    \note The property has no effect on buttons that belong to a ButtonGroup.
 
     RadioButton and TabButton are auto-exclusive by default.
 */
