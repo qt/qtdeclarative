@@ -92,7 +92,7 @@ T.SpinBox {
                 id: timer
                 running: control.activeFocus
                 repeat: true
-                interval: Qt.styleHints.cursorFlashTime
+                interval: Qt.styleHints.cursorFlashTime / 2
                 onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
                 // force the cursor visible when gaining focus
                 onRunningChanged: cursor.opacity = 1
