@@ -618,7 +618,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable_data()
 
     // the item should never see the event,
     // due to the pressDelay which never delivers if we start moving
-//    QTest::newRow("scroll before press delay is over") << true;
+    QTest::newRow("scroll before press delay is over") << true;
 
     // wait until the "button" sees the press but then
     // start moving: the button gets a press and cancel event
