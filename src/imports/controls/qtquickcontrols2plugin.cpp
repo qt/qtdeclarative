@@ -41,7 +41,6 @@
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
-#include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 
 #include "qquickbusyindicatorring_p.h"
@@ -133,7 +132,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.1 (Qt 5.8)
     qmlRegisterType<QQuickButtonGroup,1 >(uri, 2, 1, "ButtonGroup");
-    qmlRegisterType<QQuickContainer,1>(uri, 2, 1, "Container");
     qmlRegisterType(selector.select(QStringLiteral("Dialog.qml")), uri, 2, 1, "Dialog");
     qmlRegisterType(selector.select(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
     qmlRegisterType(selector.select(QStringLiteral("MenuSeparator.qml")), uri, 2, 1, "MenuSeparator");
