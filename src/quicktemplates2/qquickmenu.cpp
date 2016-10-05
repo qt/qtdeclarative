@@ -415,7 +415,7 @@ QVariant QQuickMenu::contentModel() const
     \note Unlike \c contentChildren, \c contentData does include non-visual QML
     objects. It is not re-ordered when items are inserted or moved.
 
-    \sa Item::data, contentChildren
+    \sa Item::data, Popup::contentChildren
 */
 QQmlListProperty<QObject> QQuickMenu::contentData()
 {
