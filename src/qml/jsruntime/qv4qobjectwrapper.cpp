@@ -1045,6 +1045,10 @@ void QObjectWrapper::destroyObject(bool lastCall)
                     delete h->object;
                 else
                     h->object->deleteLater();
+            } else {
+                // If the object is C++-owned, we still have to release the weak reference we have
+                // to it.
+                ddata->jsWrapper.clear();
             }
         }
     }

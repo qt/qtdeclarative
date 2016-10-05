@@ -46,7 +46,7 @@
 #include "PageAllocation.h"
 #include "StdLibExtras.h"
 
-#include <QTime>
+#include <QElapsedTimer>
 #include <QMap>
 #include <QScopedValueRollback>
 
@@ -568,18 +568,17 @@ void MemoryManager::runGC()
     } else {
         const size_t totalMem = getAllocatedMem();
 
-        QTime t;
+        QElapsedTimer t;
         t.start();
         mark();
-        int markTime = t.elapsed();
-        t.restart();
+        qint64 markTime = t.restart();
         const size_t usedBefore = getUsedMem();
         const size_t largeItemsBefore = getLargeItemsMem();
         int chunksBefore = m_d->heapChunks.size();
         sweep();
         const size_t usedAfter = getUsedMem();
         const size_t largeItemsAfter = getLargeItemsMem();
-        int sweepTime = t.elapsed();
+        qint64 sweepTime = t.elapsed();
 
         qDebug() << "========== GC ==========";
         qDebug() << "Marked object in" << markTime << "ms.";
