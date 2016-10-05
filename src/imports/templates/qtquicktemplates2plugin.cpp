@@ -198,6 +198,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
 
     // QtQuick.Templates 2.2 (Qt 5.9)
+    qmlRegisterRevision<QQuickDial, 2>(uri, 2, 2);
     qmlRegisterRevision<QQuickRangeSlider, 2>(uri, 2, 2);
     qmlRegisterRevision<QQuickSlider, 2>(uri, 2, 2);
     qmlRegisterRevision<QQuickTumbler, 2>(uri, 2, 2);

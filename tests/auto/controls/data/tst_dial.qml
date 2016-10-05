@@ -172,9 +172,10 @@ TestCase {
 
     function test_dragging_data() {
         return [
-            { tag: "default", from: 0, to: 1, leftValue: 0.20, topValue: 0.5, rightValue: 0.8, bottomValue: 1.0 },
-            { tag: "scaled2", from: 0, to: 2, leftValue: 0.4, topValue: 1.0, rightValue: 1.6, bottomValue: 2.0 },
-            { tag: "scaled1", from: -1, to: 0, leftValue: -0.8, topValue: -0.5, rightValue: -0.2, bottomValue: 0.0 }
+            { tag: "default", from: 0, to: 1, leftValue: 0.20, topValue: 0.5, rightValue: 0.8, bottomValue: 1.0, live: false },
+            { tag: "scaled2", from: 0, to: 2, leftValue: 0.4, topValue: 1.0, rightValue: 1.6, bottomValue: 2.0, live: false },
+            { tag: "scaled1", from: -1, to: 0, leftValue: -0.8, topValue: -0.5, rightValue: -0.2, bottomValue: 0.0, live: false },
+            { tag: "live", from: 0, to: 1, leftValue: 0.20, topValue: 0.5, rightValue: 0.8, bottomValue: 1.0, live: true }
         ]
     }
 
@@ -183,32 +184,35 @@ TestCase {
         verify(dial.wrap);
         dial.from = data.from;
         dial.to = data.to;
+        dial.live = data.live;
 
         valueSpy.target = dial;
         verify(valueSpy.valid);
 
+        var minimumExpectedValueCount = data.live ? 2 : 1;
+
         // drag to the left
         mouseDrag(dial, dial.width / 2, dial.height / 2, -dial.width / 2, 0, Qt.LeftButton);
         fuzzyCompare(dial.value, data.leftValue, 0.1);
-        verify(valueSpy.count > 0);
+        verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
 
         // drag to the top
         mouseDrag(dial, dial.width / 2, dial.height / 2, 0, -dial.height / 2, Qt.LeftButton);
         fuzzyCompare(dial.value, data.topValue, 0.1);
-        verify(valueSpy.count > 0);
+        verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
 
         // drag to the right
         mouseDrag(dial, dial.width / 2, dial.height / 2, dial.width / 2, 0, Qt.LeftButton);
         fuzzyCompare(dial.value, data.rightValue, 0.1);
-        verify(valueSpy.count > 0);
+        verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
 
         // drag to the bottom (* 0.6 to ensure we don't go over to the minimum position)
         mouseDrag(dial, dial.width / 2, dial.height / 2, 10, dial.height / 2, Qt.LeftButton);
         fuzzyCompare(dial.value, data.bottomValue, 0.1);
-        verify(valueSpy.count > 0);
+        verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
     }
 

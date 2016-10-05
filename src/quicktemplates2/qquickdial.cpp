@@ -95,6 +95,7 @@ public:
         pressed(false),
         snapMode(QQuickDial::NoSnap),
         wrap(false),
+        live(false),
         handle(nullptr)
     {
     }
@@ -116,6 +117,7 @@ public:
     QPoint pressPoint;
     QQuickDial::SnapMode snapMode;
     bool wrap;
+    bool live;
     QQuickItem *handle;
 };
 
@@ -246,11 +248,12 @@ void QQuickDial::setTo(qreal to)
     This property holds the value in the range \c from - \c to. The default
     value is \c 0.0.
 
-    Unlike the \l position property, the \c value is not updated while the
-    handle is dragged. The value is updated after the value has been chosen
-    and the dial has been released.
+    Unlike the \l position property, the \c value is not updated by default
+    while the handle is dragged. The value is updated after the value has
+    been chosen and the dial has been released. The \l live property can be
+    used to make the dial provide live updates for the \c value property.
 
-    \sa position
+    \sa position, live
 */
 qreal QQuickDial::value() const
 {
@@ -445,6 +448,33 @@ void QQuickDial::setPressed(bool pressed)
 }
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::Dial::live
+
+    This property holds whether the dial provides live updates for the \l value
+    property while the handle is dragged.
+
+    The default value is \c false.
+
+    \sa value
+*/
+bool QQuickDial::live() const
+{
+    Q_D(const QQuickDial);
+    return d->live;
+}
+
+void QQuickDial::setLive(bool live)
+{
+    Q_D(QQuickDial);
+    if (d->live == live)
+        return;
+
+    d->live = live;
+    emit liveChanged();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::Dial::increase()
 
     Increases the value by \l stepSize, or \c 0.1 if stepSize is not defined.
@@ -571,8 +601,12 @@ void QQuickDial::mouseMoveEvent(QMouseEvent *event)
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
 
-        if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos)))
-            d->setPosition(pos);
+        if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos))) {
+            if (d->live)
+                setValue(d->valueAt(pos));
+            else
+                d->setPosition(pos);
+        }
     }
 }
 

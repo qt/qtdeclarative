@@ -69,6 +69,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
 public:
@@ -106,6 +107,9 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
+    bool live() const;
+    void setLive(bool live);
+
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
 
@@ -123,6 +127,7 @@ Q_SIGNALS:
     void snapModeChanged();
     void wrapChanged();
     void pressedChanged();
+    Q_REVISION(2) void liveChanged();
     void handleChanged();
 
 protected:
