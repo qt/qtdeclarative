@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
 
 struct QQuickStyleSpec
 {
-    QQuickStyleSpec() : resolved(false) { }
+    QQuickStyleSpec() : custom(false), resolved(false) { }
 
     QString name()
     {
@@ -109,6 +109,12 @@ struct QQuickStyleSpec
         style = s;
         resolved = false;
         resolve();
+    }
+
+    void setFallbackStyle(const QString &fallback, const QByteArray &method)
+    {
+        fallbackStyle = fallback;
+        fallbackMethod = method;
     }
 
     static QString findStyle(const QString &path, const QString &name)
@@ -135,11 +141,18 @@ struct QQuickStyleSpec
             style = QGuiApplicationPrivate::styleOverride;
         if (style.isEmpty())
             style = QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_STYLE"));
-        if (style.isEmpty()) {
+        if (fallbackStyle.isEmpty())
+            setFallbackStyle(QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
+        if (style.isEmpty() || fallbackStyle.isEmpty()) {
             QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
-            if (settings)
-                style = settings->value(QStringLiteral("Style")).toString();
+            if (settings) {
+                if (style.isEmpty())
+                    style = settings->value(QStringLiteral("Style")).toString();
+                if (fallbackStyle.isEmpty())
+                    setFallbackStyle(settings->value(QStringLiteral("FallbackStyle")).toString(), ":/qtquickcontrols2.conf");
+            }
         }
+        custom = style.contains(QLatin1Char('/'));
 
         if (baseUrl.isValid()) {
             QString path = QQmlFile::urlToLocalFileOrQrc(baseUrl);
@@ -151,7 +164,7 @@ struct QQuickStyleSpec
         }
 
         if (QGuiApplication::instance()) {
-            if (!style.contains(QLatin1Char('/'))) {
+            if (!custom) {
                 const QString targetPath = QStringLiteral("QtQuick/Controls.2");
                 const QStringList importPaths = QQmlEngine().importPathList();
 
@@ -168,15 +181,54 @@ struct QQuickStyleSpec
         }
     }
 
+    void reset()
+    {
+        custom = false;
+        resolved = false;
+        style.clear();
+        fallbackStyle.clear();
+        fallbackMethod.clear();
+    }
+
+    bool custom;
     bool resolved;
     QString style;
+    QString fallbackStyle;
+    QByteArray fallbackMethod;
 };
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
+QString QQuickStylePrivate::fallbackStyle()
+{
+    return styleSpec()->fallbackStyle;
+}
+
+bool QQuickStylePrivate::isCustomStyle()
+{
+    return styleSpec()->custom;
+}
+
 void QQuickStylePrivate::init(const QUrl &baseUrl)
 {
-    styleSpec()->resolve(baseUrl);
+    QQuickStyleSpec *spec = styleSpec();
+    spec->resolve(baseUrl);
+
+    if (!spec->fallbackStyle.isEmpty()) {
+        QString fallbackStyle = spec->findStyle(baseUrl.toLocalFile(), spec->fallbackStyle);
+        if (fallbackStyle.isEmpty()) {
+            if (spec->fallbackStyle.compare(QStringLiteral("Default")) != 0) {
+                qWarning() << "ERROR: unable to locate fallback style" << spec->fallbackStyle;
+                qInfo().nospace().noquote() << spec->fallbackMethod << ": the fallback style must be the name of one of the built-in Qt Quick Controls 2 styles.";
+            }
+            spec->fallbackStyle.clear();
+        }
+    }
+}
+
+void QQuickStylePrivate::reset()
+{
+    styleSpec()->reset();
 }
 
 /*!
@@ -218,6 +270,25 @@ void QQuickStyle::setStyle(const QString &style)
     }
 
     styleSpec()->setStyle(style);
+}
+
+/*!
+    \since 5.9
+    Sets the application fallback style to \a style.
+
+    \note The fallback style must be the name of one of the built-in Qt Quick Controls 2 styles, e.g. "Material".
+
+    \note The style must be configured \b before loading QML that imports Qt Quick Controls 2.
+          It is not possible to change the style after the QML types have been registered.
+*/
+void QQuickStyle::setFallbackStyle(const QString &style)
+{
+    if (QQmlMetaType::isModule(QStringLiteral("QtQuick.Controls"), 2, 0)) {
+        qWarning() << "ERROR: QQuickStyle::setFallbackStyle() must be called before loading QML that imports Qt Quick Controls 2.";
+        return;
+    }
+
+    styleSpec()->setFallbackStyle(style, "QQuickStyle::setFallbackStyle()");
 }
 
 QT_END_NAMESPACE

@@ -38,14 +38,27 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 
 class tst_QQuickStyle : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void init();
     void lookup();
+    void commandLineArgument();
+    void environmentVariables();
 };
+
+void tst_QQuickStyle::init()
+{
+    QQuickStylePrivate::reset();
+    QGuiApplicationPrivate::styleOverride.clear();
+    qunsetenv("QT_QUICK_CONTROLS_STYLE");
+    qunsetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE");
+}
 
 void tst_QQuickStyle::lookup()
 {
@@ -65,6 +78,20 @@ void tst_QQuickStyle::lookup()
 
     QCOMPARE(QQuickStyle::name(), QString("Material"));
     QVERIFY(!QQuickStyle::path().isEmpty());
+}
+
+void tst_QQuickStyle::commandLineArgument()
+{
+    QGuiApplicationPrivate::styleOverride = "CmdLineArgStyle";
+    QCOMPARE(QQuickStyle::name(), QString("CmdLineArgStyle"));
+}
+
+void tst_QQuickStyle::environmentVariables()
+{
+    qputenv("QT_QUICK_CONTROLS_STYLE", "EnvVarStyle");
+    qputenv("QT_QUICK_CONTROLS_FALLBACK_STYLE", "EnvVarFallbackStyle");
+    QCOMPARE(QQuickStyle::name(), QString("EnvVarStyle"));
+    QCOMPARE(QQuickStylePrivate::fallbackStyle(), QString("EnvVarFallbackStyle"));
 }
 
 QTEST_MAIN(tst_QQuickStyle)
