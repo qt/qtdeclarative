@@ -52,6 +52,8 @@ T.ToolBar {
 
     Material.foreground: Material.toolTextColor
 
+    spacing: 16
+
     background: Rectangle {
         implicitHeight: 48
         color: control.Material.toolBarColor
