@@ -1,7 +1,8 @@
-QT += core-private gui-private qml-private quick-private quicktemplates2-private
+QT += testlib-private core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2
 
 HEADERS += $$PWD/visualtestutil.h \
-           $$PWD/util.h
+           $$PWD/util.h \
+           $$PWD/qtest_quickcontrols.h
 SOURCES += $$PWD/visualtestutil.cpp \
            $$PWD/util.cpp
 
