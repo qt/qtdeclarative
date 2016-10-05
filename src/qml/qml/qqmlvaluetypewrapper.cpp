@@ -230,7 +230,7 @@ bool QQmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     QV4::QQmlValueTypeWrapper *lv = static_cast<QQmlValueTypeWrapper *>(m);
 
     if (QV4::VariantObject *rv = other->as<VariantObject>())
-        return lv->isEqual(rv->d()->data);
+        return lv->isEqual(rv->d()->data());
 
     if (QV4::QQmlValueTypeWrapper *v = other->as<QQmlValueTypeWrapper>())
         return lv->isEqual(v->toVariant());

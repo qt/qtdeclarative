@@ -1079,7 +1079,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     QV4::Scope scope(e);
 
     if (const QV4::VariantObject *v = value.as<QV4::VariantObject>())
-        return v->d()->data;
+        return v->d()->data();
 
     if (typeHint == QVariant::Bool)
         return QVariant(value.toBoolean());
@@ -1693,7 +1693,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
         return true;
     if (value->as<QV4::VariantObject>() && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = value->as<QV4::VariantObject>()->d()->data;
+        QVariant &var = value->as<QV4::VariantObject>()->d()->data();
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -1705,7 +1705,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
-                    const QVariant &v = vo->d()->data;
+                    const QVariant &v = vo->d()->data();
                     canCast = (type == v.userType()) || (valueType && (valueType == v.userType()));
                 }
                 else if (proto->as<QV4::QObjectWrapper>()) {
@@ -1760,7 +1760,7 @@ static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const Value &value)
     QV4::Scoped<QV4::VariantObject> v(scope, value);
 
     if (v) {
-        QVariant variant = v->d()->data;
+        QVariant variant = v->d()->data();
         int type = variant.userType();
         if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());
