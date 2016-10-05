@@ -313,6 +313,7 @@ class QQuickRangeSliderPrivate : public QQuickControlPrivate
 
 public:
     QQuickRangeSliderPrivate() :
+        live(false),
         from(defaultFrom),
         to(defaultTo),
         stepSize(0),
@@ -325,6 +326,7 @@ public:
 
     void updateHover(const QPointF &pos);
 
+    bool live;
     qreal from;
     qreal to;
     qreal stepSize;
@@ -471,8 +473,10 @@ void QQuickRangeSlider::setTo(qreal to)
             If \l to is greater than \l from, the value of the first handle
             must be greater than the second, and vice versa.
 
-            Unlike \l {first.position}{position}, value is not updated while the
-            handle is dragged, but rather when it has been released.
+            Unlike \l {first.position}{position}, value is not updated by default
+            while the handle is dragged, but rather when it has been released. The
+            \l live property can be used to make the slider provide live updates
+            for value.
 
             The default value is \c 0.0.
     \row
@@ -533,8 +537,10 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
             If \l to is greater than \l from, the value of the first handle
             must be greater than the second, and vice versa.
 
-            Unlike \l {second.position}{position}, value is not updated while the
-            handle is dragged, but rather when it has been released.
+            Unlike \l {second.position}{position}, value is not updated by default
+            while the handle is dragged, but rather when it has been released. The
+            \l live property can be used to make the slider provide live updates
+            for value.
 
             The default value is \c 0.0.
     \row
@@ -648,6 +654,33 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 
     d->orientation = orientation;
     emit orientationChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::RangeSlider::live
+
+    This property holds whether the slider provides live updates for the \l first.value
+    and \l second.value properties while the respective handles are dragged.
+
+    The default value is \c false.
+
+    \sa first.value, second.value
+*/
+bool QQuickRangeSlider::live() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->live;
+}
+
+void QQuickRangeSlider::setLive(bool live)
+{
+    Q_D(QQuickRangeSlider);
+    if (d->live == live)
+        return;
+
+    d->live = live;
+    emit liveChanged();
 }
 
 /*!
@@ -868,7 +901,10 @@ void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
             qreal pos = positionAt(this, pressedNode->handle(), event->pos());
             if (d->snapMode == SnapAlways)
                 pos = snapPosition(this, pos);
-            QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
+            if (d->live)
+                pressedNode->setValue(valueAt(this, pos));
+            else
+                QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
         }
     }
 }

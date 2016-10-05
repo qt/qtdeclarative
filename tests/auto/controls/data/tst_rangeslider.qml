@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
@@ -294,13 +294,15 @@ TestCase {
 
     function test_mouse_data() {
         return [
-            { tag: "horizontal", orientation: Qt.Horizontal },
-            { tag: "vertical", orientation: Qt.Vertical }
+            { tag: "horizontal", orientation: Qt.Horizontal, live: false },
+            { tag: "vertical", orientation: Qt.Vertical, live: false },
+            { tag: "horizontal:live", orientation: Qt.Horizontal, live: true },
+            { tag: "vertical:live", orientation: Qt.Vertical, live: true }
         ]
     }
 
     function test_mouse(data) {
-        var control = sliderComponent.createObject(testCase, { orientation: data.orientation })
+        var control = sliderComponent.createObject(testCase, { orientation: data.orientation, live: data.live })
         verify(control)
 
         firstPressedSpy.target = control.first
@@ -386,7 +388,7 @@ TestCase {
         compare(firstPressedSpy.count, 5)
         compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, true)
-        compare(control.first.value, 0.0)
+        compare(control.first.value, data.live ? 0.5 : 0.0)
         compare(control.first.position, 0.5)
         compare(control.first.visualPosition, 0.5)
         compare(control.second.pressed, false)

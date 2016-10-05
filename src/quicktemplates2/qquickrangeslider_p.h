@@ -65,6 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
     Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
 
 public:
     explicit QQuickRangeSlider(QQuickItem *parent = nullptr);
@@ -94,6 +95,9 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
+    bool live() const;
+    void setLive(bool live);
+
     Q_INVOKABLE void setValues(qreal firstValue, qreal secondValue);
 
 Q_SIGNALS:
@@ -102,6 +106,7 @@ Q_SIGNALS:
     void stepSizeChanged();
     void snapModeChanged();
     void orientationChanged();
+    Q_REVISION(2) void liveChanged();
 
 protected:
     void focusInEvent(QFocusEvent *event) override;
