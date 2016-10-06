@@ -48,15 +48,10 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-indicators
     \brief Indicates the progress of an operation.
 
+    \image qtquickcontrols2-progressbar.gif
+
     ProgressBar indicates the progress of an operation. The value should be updated
     regularly. The range is defined by \l from and \l to, which both can contain any value.
-
-    \table
-    \row \li \image qtquickcontrols2-progressbar-normal.png
-         \li A progress bar in its normal state.
-    \row \li \image qtquickcontrols2-progressbar-disabled.png
-         \li A progress bar that is disabled.
-    \endtable
 
     \code
     ProgressBar {
@@ -214,8 +209,7 @@ qreal QQuickProgressBar::visualPosition() const
     A progress bar in indeterminate mode displays that an operation is in progress, but it
     doesn't show how much progress has been made.
 
-    See below for an example:
-    \image qtquickcontrols2-progressbar-indeterminate.png
+    \image qtquickcontrols2-progressbar-indeterminate.gif
 
 */
 bool QQuickProgressBar::isIndeterminate() const

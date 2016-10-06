@@ -68,6 +68,8 @@ private slots:
     void checkBox();
     void checkBoxTriState();
     void scrollBar();
+    void progressBar_data();
+    void progressBar();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -696,6 +698,29 @@ void tst_Gifs::scrollBar()
         qAbs(rhsWindowTop.y() - rhsWindowBottom.y()), QEasingCurve::InCubic, 10);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rhsWindowTop, 20);
 
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::progressBar_data()
+{
+    QTest::addColumn<bool>("indeterminate");
+
+    QTest::newRow("indeterminate:false") << false;
+    QTest::newRow("indeterminate:true") << true;
+}
+
+void tst_Gifs::progressBar()
+{
+    QFETCH(bool, indeterminate);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-progressbar%1").arg(
+        indeterminate ? QLatin1String("-indeterminate.qml") : QLatin1String(".qml")));
+
+    gifRecorder.start();
     gifRecorder.waitForFinish();
 }
 
