@@ -79,6 +79,8 @@ public:
     void resolveFont();
     void inheritFont(const QFont &f);
 
+    void updateHoverEnabled(bool h, bool e);
+
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;
 
@@ -96,6 +98,7 @@ public:
     void deleteDelegate(QObject *object);
 
     bool hovered;
+    bool explicitHoverEnabled;
     QFont font;
     QQuickItem *background;
     QString placeholder;

@@ -53,8 +53,6 @@ T.Button {
     leftPadding: padding - 4
     rightPadding: padding - 4
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
                              : control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined

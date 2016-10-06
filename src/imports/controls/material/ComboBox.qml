@@ -54,8 +54,6 @@ T.ComboBox {
     spacing: 6
     padding: 16
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     Material.elevation: flat ? control.pressed || control.hovered ? 2 : 0
                              : control.pressed ? 8 : 2
     Material.background: flat ? "transparent" : undefined

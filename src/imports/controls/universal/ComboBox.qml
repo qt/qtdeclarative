@@ -50,8 +50,6 @@ T.ComboBox {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     spacing: 10
     padding: 12
     topPadding: padding - 7

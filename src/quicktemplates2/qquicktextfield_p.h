@@ -67,7 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText NOTIFY placeholderTextChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION 1)
-    Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
+    Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
 
 public:
     explicit QQuickTextField(QQuickItem *parent = nullptr);
@@ -90,6 +90,7 @@ public:
 
     bool isHoverEnabled() const;
     void setHoverEnabled(bool enabled);
+    void resetHoverEnabled();
 
 Q_SIGNALS:
     void fontChanged();

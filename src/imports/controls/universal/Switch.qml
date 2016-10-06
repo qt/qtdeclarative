@@ -48,8 +48,6 @@ T.Switch {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     padding: 5
     spacing: 8
 

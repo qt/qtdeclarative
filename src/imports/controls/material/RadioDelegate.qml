@@ -54,8 +54,6 @@ T.RadioDelegate {
     bottomPadding: 8
     spacing: 16
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

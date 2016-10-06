@@ -131,7 +131,8 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : hovered(false), background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
+    : hovered(false), explicitHoverEnabled(false), background(nullptr),
+      focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -355,6 +356,21 @@ void QQuickTextAreaPrivate::inheritFont(const QFont &f)
         emit q->fontChanged();
 }
 
+void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
+{
+    Q_Q(QQuickTextArea);
+    if (!xplicit && explicitHoverEnabled)
+        return;
+
+    bool wasEnabled = q->isHoverEnabled();
+    explicitHoverEnabled = xplicit;
+    if (wasEnabled != enabled) {
+        q->setAcceptHoverEvents(enabled);
+        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
+        emit q->hoverEnabledChanged();
+    }
+}
+
 void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -549,11 +565,20 @@ bool QQuickTextArea::isHoverEnabled() const
 void QQuickTextArea::setHoverEnabled(bool enabled)
 {
     Q_D(QQuickTextArea);
-    if (enabled == d->hoverEnabled)
+    if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
-    setAcceptHoverEvents(enabled);
-    emit hoverEnabledChanged();
+    d->updateHoverEnabled(enabled, true); // explicit=true
+}
+
+void QQuickTextArea::resetHoverEnabled()
+{
+    Q_D(QQuickTextArea);
+    if (!d->explicitHoverEnabled)
+        return;
+
+    d->explicitHoverEnabled = false;
+    d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 }
 
 bool QQuickTextArea::contains(const QPointF &point) const
@@ -575,6 +600,8 @@ void QQuickTextArea::componentComplete()
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::componentComplete();
+    if (!d->explicitHoverEnabled)
+        setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
@@ -588,8 +615,11 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item)
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+        if (!d->explicitHoverEnabled)
+            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+    }
 }
 
 void QQuickTextArea::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

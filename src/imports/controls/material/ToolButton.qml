@@ -50,8 +50,6 @@ T.ToolButton {
 
     padding: 6
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     contentItem: Text {
         text: control.text
         font: control.font

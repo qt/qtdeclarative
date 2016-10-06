@@ -111,6 +111,10 @@ public:
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(const QQuickItem *item);
 
+    void updateHoverEnabled(bool enabled, bool xplicit);
+    static void updateHoverEnabledRecur(QQuickItem *item, bool enabled);
+    static bool calcHoverEnabled(const QQuickItem *item);
+
     void deleteDelegate(QObject *object);
 
     struct ExtraData {
@@ -131,6 +135,7 @@ public:
     bool hasLocale;
     bool hovered;
     bool wheelEnabled;
+    bool explicitHoverEnabled;
     qreal padding;
     qreal topPadding;
     qreal leftPadding;

@@ -47,8 +47,6 @@ T.TabButton {
                              contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     padding: 12 // PivotItemMargin
 
     contentItem: Text {

@@ -852,7 +852,9 @@ TestCase {
         verify(control)
 
         compare(control.hovered, false)
-        compare(control.hoverEnabled, false)
+        compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
+
+        control.hoverEnabled = false
 
         mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, false)
@@ -870,6 +872,42 @@ TestCase {
 
         control.visible = false
         compare(control.hovered, false)
+
+        control.destroy()
+    }
+
+    function test_hoverEnabled() {
+        var control = component.createObject(testCase)
+        compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
+
+        var child = component.createObject(control)
+        var grandChild = component.createObject(child)
+
+        var childExplicitHoverEnabled = component.createObject(control, {hoverEnabled: true})
+        var grandChildExplicitHoverDisabled = component.createObject(childExplicitHoverEnabled, {hoverEnabled: false})
+
+        var childExplicitHoverDisabled = component.createObject(control, {hoverEnabled: false})
+        var grandChildExplicitHoverEnabled = component.createObject(childExplicitHoverDisabled, {hoverEnabled: true})
+
+        control.hoverEnabled = false
+        compare(control.hoverEnabled, false)
+        compare(grandChild.hoverEnabled, false)
+
+        compare(childExplicitHoverEnabled.hoverEnabled, true)
+        compare(grandChildExplicitHoverDisabled.hoverEnabled, false)
+
+        compare(childExplicitHoverDisabled.hoverEnabled, false)
+        compare(grandChildExplicitHoverEnabled.hoverEnabled, true)
+
+        control.hoverEnabled = true
+        compare(control.hoverEnabled, true)
+        compare(grandChild.hoverEnabled, true)
+
+        compare(childExplicitHoverEnabled.hoverEnabled, true)
+        compare(grandChildExplicitHoverDisabled.hoverEnabled, false)
+
+        compare(childExplicitHoverDisabled.hoverEnabled, false)
+        compare(grandChildExplicitHoverEnabled.hoverEnabled, true)
 
         control.destroy()
     }

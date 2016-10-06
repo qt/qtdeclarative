@@ -49,8 +49,6 @@ T.RadioButton {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     padding: 6
     spacing: 8
 

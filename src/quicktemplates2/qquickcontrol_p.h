@@ -74,7 +74,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
     Q_PROPERTY(bool visualFocus READ hasVisualFocus NOTIFY visualFocusChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
-    Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged FINAL)
+    Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL)
     Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
@@ -132,6 +132,7 @@ public:
 
     bool isHoverEnabled() const;
     void setHoverEnabled(bool enabled);
+    void resetHoverEnabled();
 
     bool isWheelEnabled() const;
     void setWheelEnabled(bool enabled);

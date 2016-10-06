@@ -46,8 +46,6 @@ T.Slider {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                             (handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     padding: 6
 
     property bool useSystemFocusVisuals: true

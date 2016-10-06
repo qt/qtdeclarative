@@ -51,8 +51,6 @@ T.RoundButton {
     // external vertical padding is 6 (to increase touch area)
     padding: 12
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
                              : control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined

@@ -109,7 +109,8 @@ QQuickControlPrivate::ExtraData::ExtraData()
 }
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false), hovered(false), wheelEnabled(false),
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
+    hasLocale(false), hovered(false), wheelEnabled(false), explicitHoverEnabled(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
     focusPolicy(Qt::NoFocus), focusReason(Qt::OtherFocusReason),
     background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
@@ -361,6 +362,62 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
     }
 }
 
+void QQuickControlPrivate::updateHoverEnabled(bool enabled, bool xplicit)
+{
+    Q_Q(QQuickControl);
+    if (!xplicit && explicitHoverEnabled)
+        return;
+
+    bool wasEnabled = q->isHoverEnabled();
+    explicitHoverEnabled = xplicit;
+    if (wasEnabled != enabled) {
+        q->setAcceptHoverEvents(enabled);
+        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
+        emit q->hoverEnabledChanged();
+    }
+}
+
+void QQuickControlPrivate::updateHoverEnabledRecur(QQuickItem *item, bool enabled)
+{
+    const auto childItems = item->childItems();
+    for (QQuickItem *child : childItems) {
+        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
+            QQuickControlPrivate::get(control)->updateHoverEnabled(enabled, false);
+        else
+            updateHoverEnabledRecur(child, enabled);
+    }
+}
+
+bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
+{
+    const QQuickItem *p = item;
+    while (p) {
+        // QQuickPopupItem accepts hover events to avoid leaking them through.
+        // Don't inherit that to the children of the popup, but fallback to the
+        // environment variable or style hint.
+        if (qobject_cast<const QQuickPopupItem *>(p))
+            break;
+
+        if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
+            return control->isHoverEnabled();
+
+        QVariant v = p->property("hoverEnabled");
+        if (v.isValid() && v.userType() == QMetaType::Bool)
+            return v.toBool();
+
+        p = p->parentItem();
+    }
+
+    bool ok = false;
+    int env = qEnvironmentVariableIntValue("QT_QUICK_CONTROLS_HOVER_ENABLED", &ok);
+    if (ok)
+        return env != 0;
+
+    // TODO: QQuickApplicationWindow::isHoverEnabled()
+
+    return QGuiApplication::styleHints()->useHoverEffects();
+}
+
 QString QQuickControl::accessibleName() const
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -429,6 +486,8 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
             d->resolveFont();
             if (!d->hasLocale)
                 d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
+            if (!d->explicitHoverEnabled)
+                d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
         }
         break;
     case ItemActiveFocusHasChanged:
@@ -958,7 +1017,11 @@ void QQuickControl::setHovered(bool hovered)
 /*!
     \qmlproperty bool QtQuick.Controls::Control::hoverEnabled
 
-    This property determines whether the control accepts hover events. The default value is \c false.
+    This property determines whether the control accepts hover events. The default value
+    is \c Qt.styleHints.useHoverEffects.
+
+    Setting this property propagates the value to all child controls that do not have
+    \c hoverEnabled explicitly set.
 
     \sa hovered
 */
@@ -971,11 +1034,20 @@ bool QQuickControl::isHoverEnabled() const
 void QQuickControl::setHoverEnabled(bool enabled)
 {
     Q_D(QQuickControl);
-    if (enabled == d->hoverEnabled)
+    if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
-    setAcceptHoverEvents(enabled);
-    emit hoverEnabledChanged();
+    d->updateHoverEnabled(enabled, true); // explicit=true
+}
+
+void QQuickControl::resetHoverEnabled()
+{
+    Q_D(QQuickControl);
+    if (!d->explicitHoverEnabled)
+        return;
+
+    d->explicitHoverEnabled = false;
+    d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 }
 
 /*!
@@ -1122,6 +1194,8 @@ void QQuickControl::componentComplete()
     QQuickItem::componentComplete();
     if (!d->hasLocale)
         d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
+    if (!d->explicitHoverEnabled)
+        setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);

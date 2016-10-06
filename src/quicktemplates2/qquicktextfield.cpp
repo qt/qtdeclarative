@@ -115,6 +115,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
     : hovered(false)
+    , explicitHoverEnabled(false)
     , background(nullptr)
     , focusReason(Qt::OtherFocusReason)
     , accessibleAttached(nullptr)
@@ -219,6 +220,21 @@ void QQuickTextFieldPrivate::inheritFont(const QFont &f)
     q->QQuickTextInput::setFont(resolvedFont);
     if (changed)
         emit q->fontChanged();
+}
+
+void QQuickTextFieldPrivate::updateHoverEnabled(bool enabled, bool xplicit)
+{
+    Q_Q(QQuickTextField);
+    if (!xplicit && explicitHoverEnabled)
+        return;
+
+    bool wasEnabled = q->isHoverEnabled();
+    explicitHoverEnabled = xplicit;
+    if (wasEnabled != enabled) {
+        q->setAcceptHoverEvents(enabled);
+        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
+        emit q->hoverEnabledChanged();
+    }
 }
 
 void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
@@ -430,11 +446,20 @@ bool QQuickTextField::isHoverEnabled() const
 void QQuickTextField::setHoverEnabled(bool enabled)
 {
     Q_D(QQuickTextField);
-    if (enabled == d->hoverEnabled)
+    if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
-    setAcceptHoverEvents(enabled);
-    emit hoverEnabledChanged();
+    d->updateHoverEnabled(enabled, true); // explicit=true
+}
+
+void QQuickTextField::resetHoverEnabled()
+{
+    Q_D(QQuickTextField);
+    if (!d->explicitHoverEnabled)
+        return;
+
+    d->explicitHoverEnabled = false;
+    d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 }
 
 void QQuickTextField::classBegin()
@@ -448,6 +473,8 @@ void QQuickTextField::componentComplete()
 {
     Q_D(QQuickTextField);
     QQuickTextInput::componentComplete();
+    if (!d->explicitHoverEnabled)
+        setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
@@ -461,8 +488,11 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
 {
     Q_D(QQuickTextField);
     QQuickTextInput::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item)
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+        if (!d->explicitHoverEnabled)
+            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+    }
 }
 
 void QQuickTextField::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

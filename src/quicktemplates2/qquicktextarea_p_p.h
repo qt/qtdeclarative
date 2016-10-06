@@ -81,6 +81,8 @@ public:
     void resolveFont();
     void inheritFont(const QFont &f);
 
+    void updateHoverEnabled(bool h, bool e);
+
     void attachFlickable(QQuickFlickable *flickable);
     void detachFlickable();
     void ensureCursorVisible();
@@ -105,6 +107,7 @@ public:
     void deleteDelegate(QObject *object);
 
     bool hovered;
+    bool explicitHoverEnabled;
     QFont font;
     QQuickItem *background;
     QString placeholder;
