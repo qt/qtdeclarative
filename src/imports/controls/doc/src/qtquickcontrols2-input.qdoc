@@ -91,7 +91,7 @@
 
     \section1 RangeSlider Control
 
-    \image qtquickcontrols2-rangeslider.png
+    \image qtquickcontrols2-rangeslider.gif
 
     \l RangeSlider is used to select a range specified by two values,
     by sliding each handle along a track.
