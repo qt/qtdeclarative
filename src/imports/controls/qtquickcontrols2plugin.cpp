@@ -41,7 +41,6 @@
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
-#include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickTemplates2/private/qquickdial_p.h>
 #include <QtQuickTemplates2/private/qquickrangeslider_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
@@ -81,9 +80,6 @@ QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlu
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
-    qmlRegisterType<QQuickButtonGroupAttached>();
-
     QQuickStylePrivate::init(typeUrl());
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
@@ -92,10 +88,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     QQuickStyleSelector selector;
     selector.setBaseUrl(typeUrl());
 
+    // QtQuick.Controls 2.0 (Qt 5.7)
     qmlRegisterType(selector.select(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
     qmlRegisterType(selector.select(QStringLiteral("Button.qml")), uri, 2, 0, "Button");
+    qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
+    qmlRegisterType<QQuickButtonGroupAttached>();
     qmlRegisterType(selector.select(QStringLiteral("CheckBox.qml")), uri, 2, 0, "CheckBox");
     qmlRegisterType(selector.select(QStringLiteral("CheckDelegate.qml")), uri, 2, 0, "CheckDelegate");
     qmlRegisterType(selector.select(QStringLiteral("ComboBox.qml")), uri, 2, 0, "ComboBox");
@@ -137,7 +136,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.1 (Qt 5.8)
     qmlRegisterType<QQuickButtonGroup,1 >(uri, 2, 1, "ButtonGroup");
-    qmlRegisterType<QQuickContainer,1>(uri, 2, 1, "Container");
     qmlRegisterType(selector.select(QStringLiteral("Dialog.qml")), uri, 2, 1, "Dialog");
     qmlRegisterType(selector.select(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
     qmlRegisterType(selector.select(QStringLiteral("MenuSeparator.qml")), uri, 2, 1, "MenuSeparator");

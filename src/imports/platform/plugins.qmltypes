@@ -7,7 +7,7 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable Qt.labs.platform 1.0'
 
 Module {
-    dependencies: ["QtQuick 2.7"]
+    dependencies: ["QtQuick 2.8"]
     Component {
         name: "QPlatformDialogHelper"
         prototype: "QObject"
@@ -354,6 +354,70 @@ Module {
         Signal { name: "applyClicked" }
         Signal { name: "resetClicked" }
         Signal { name: "restoreDefaultsClicked" }
+    }
+    Component {
+        name: "QQuickPlatformStandardPaths"
+        prototype: "QObject"
+        exports: ["Qt.labs.platform/StandardPaths 1.0"]
+        isCreatable: false
+        isSingleton: true
+        exportMetaObjectRevisions: [0]
+        Method {
+            name: "displayName"
+            type: "string"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+        }
+        Method {
+            name: "findExecutable"
+            type: "QUrl"
+            Parameter { name: "executableName"; type: "string" }
+            Parameter { name: "paths"; type: "QStringList" }
+        }
+        Method {
+            name: "findExecutable"
+            type: "QUrl"
+            Parameter { name: "executableName"; type: "string" }
+        }
+        Method {
+            name: "locate"
+            type: "QUrl"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+            Parameter { name: "fileName"; type: "string" }
+            Parameter { name: "options"; type: "QStandardPaths::LocateOptions" }
+        }
+        Method {
+            name: "locate"
+            type: "QUrl"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+            Parameter { name: "fileName"; type: "string" }
+        }
+        Method {
+            name: "locateAll"
+            type: "QList<QUrl>"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+            Parameter { name: "fileName"; type: "string" }
+            Parameter { name: "options"; type: "QStandardPaths::LocateOptions" }
+        }
+        Method {
+            name: "locateAll"
+            type: "QList<QUrl>"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+            Parameter { name: "fileName"; type: "string" }
+        }
+        Method {
+            name: "setTestModeEnabled"
+            Parameter { name: "testMode"; type: "bool" }
+        }
+        Method {
+            name: "standardLocations"
+            type: "QList<QUrl>"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+        }
+        Method {
+            name: "writableLocation"
+            type: "QUrl"
+            Parameter { name: "type"; type: "QStandardPaths::StandardLocation" }
+        }
     }
     Component {
         name: "QQuickPlatformSystemTrayIcon"

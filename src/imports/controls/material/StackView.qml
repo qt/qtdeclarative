@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.8
 import QtQuick.Templates 2.1 as T
 
 T.StackView {
