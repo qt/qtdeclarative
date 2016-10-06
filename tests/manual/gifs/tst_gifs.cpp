@@ -66,6 +66,7 @@ private slots:
     void dial_data();
     void dial();
     void scrollBar();
+    void scrollIndicator();
     void progressBar_data();
     void progressBar();
     void triState_data();
@@ -726,6 +727,36 @@ void tst_Gifs::scrollBar()
     moveSmoothly(window, rhsWindowBottom, rhsWindowTop,
         qAbs(rhsWindowTop.y() - rhsWindowBottom.y()), QEasingCurve::InCubic, 10);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rhsWindowTop, 20);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::scrollIndicator()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setQmlFileName("qtquickcontrols2-scrollindicator.qml");
+
+    gifRecorder.start();
+
+    // Flick in the center of the screen to show that there's a scroll indicator.
+    QQuickWindow *window = gifRecorder.window();
+    const QPoint windowBottom = QPoint(0, window->height() - 1);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowBottom, 100);
+    QTest::mouseMove(window, windowBottom - QPoint(0, 10), 30);
+    QTest::mouseMove(window, windowBottom - QPoint(0, 30), 30);
+    QTest::mouseMove(window, windowBottom - QPoint(0, 60), 30);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowBottom - QPoint(0, 100), 30);
+
+    // Scroll back down.
+    const QPoint windowTop = QPoint(0, 0);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowTop, 2000);
+    QTest::mouseMove(window, windowTop + QPoint(0, 10), 30);
+    QTest::mouseMove(window, windowTop + QPoint(0, 30), 30);
+    QTest::mouseMove(window, windowTop + QPoint(0, 60), 30);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowTop + QPoint(0, 100), 30);
 
     gifRecorder.waitForFinish();
 }
