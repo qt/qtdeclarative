@@ -54,7 +54,7 @@
 
     \section1 ScrollBar Control
 
-    \image qtquickcontrols2-scrollbar.png
+    \image qtquickcontrols2-scrollbar.gif
 
     \l ScrollBar is an interactive bar that indicates the current scroll
     position, and can be used to scroll to a specific position in a

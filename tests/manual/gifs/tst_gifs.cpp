@@ -67,6 +67,7 @@ private slots:
     void dial();
     void checkBox();
     void checkBoxTriState();
+    void scrollBar();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -661,6 +662,39 @@ void tst_Gifs::checkBoxTriState()
         norwegian->mapToScene(QPointF(norwegian->width() / 2, norwegian->height() / 2)).toPoint(), 1000);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         english->mapToScene(QPointF(english->width() / 2, english->height() / 2)).toPoint(), 1000);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::scrollBar()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setQmlFileName("qtquickcontrols2-scrollbar.qml");
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *scrollBar = window->property("scrollBar").value<QQuickItem*>();
+    QVERIFY(scrollBar);
+
+    // Flick in the center of the screen to show that there's a scroll bar.
+    const QPoint lhsWindowBottom = QPoint(0, window->height() - 1);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, lhsWindowBottom, 100);
+    QTest::mouseMove(window, lhsWindowBottom - QPoint(0, 10), 30);
+    QTest::mouseMove(window, lhsWindowBottom - QPoint(0, 30), 30);
+    QTest::mouseMove(window, lhsWindowBottom - QPoint(0, 60), 30);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, lhsWindowBottom - QPoint(0, 100), 30);
+
+    // Scroll with the scroll bar.
+    const QPoint rhsWindowBottom = QPoint(window->width() - 1, window->height() - 1);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, rhsWindowBottom, 2000);
+    const QPoint rhsWindowTop = QPoint(window->width() - 1, 1);
+    moveSmoothly(window, rhsWindowBottom, rhsWindowTop,
+        qAbs(rhsWindowTop.y() - rhsWindowBottom.y()), QEasingCurve::InCubic, 10);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, rhsWindowTop, 20);
 
     gifRecorder.waitForFinish();
 }

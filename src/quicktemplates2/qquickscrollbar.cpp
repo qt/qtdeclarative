@@ -52,11 +52,11 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-indicators
     \brief An interactive scroll bar control.
 
+    \image qtquickcontrols2-scrollbar.gif
+
     ScrollBar is an interactive bar that can be used to scroll to a specific
     position. A scroll bar can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
-
-    \image qtquickcontrols2-scrollbar.png
 
     \code
     Flickable {
