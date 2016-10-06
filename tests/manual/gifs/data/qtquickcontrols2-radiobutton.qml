@@ -48,6 +48,7 @@ Window {
     height: column.implicitHeight
     visible: true
 
+    property alias control1: control1
     property alias control2: control2
     property alias control3: control3
 
@@ -55,17 +56,17 @@ Window {
         id: column
         anchors.centerIn: parent
 
-        CheckBox {
-            checked: true
+        RadioButton {
+            id: control1
             text: qsTr("First")
+            checked: true
         }
-        CheckBox {
+        RadioButton {
             id: control2
             text: qsTr("Second")
         }
-        CheckBox {
+        RadioButton {
             id: control3
-            checked: true
             text: qsTr("Third")
         }
     }

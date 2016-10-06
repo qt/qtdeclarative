@@ -66,7 +66,7 @@
 
     \section1 CheckBox Control
 
-    \image qtquickcontrols2-checkbox.png
+    \image qtquickcontrols2-checkbox.gif
 
     \l CheckBox is used to build multi-selection option lists. Any number of
     options can be selected, including none, but the options should
@@ -102,7 +102,7 @@
 
     \section1 RadioButton Control
 
-    \image qtquickcontrols2-radiobutton.png
+    \image qtquickcontrols2-radiobutton.gif
 
     \l RadioButton is used to select only one option from a set of options.
     Selecting one option automatically deselects the one selected before.

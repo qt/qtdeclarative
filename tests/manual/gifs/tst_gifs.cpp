@@ -65,12 +65,13 @@ private slots:
     void delegates();
     void dial_data();
     void dial();
-    void checkBox();
     void scrollBar();
     void progressBar_data();
     void progressBar();
     void triState_data();
     void triState();
+    void checkables_data();
+    void checkables();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -613,30 +614,40 @@ void tst_Gifs::dial()
     gifRecorder.waitForFinish();
 }
 
-void tst_Gifs::checkBox()
+void tst_Gifs::checkables_data()
 {
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<QVector<int> >("pressIndices");
+
+    QTest::newRow("checkbox") << "checkbox" << (QVector<int>() << 1 << 2 << 2 << 1);
+    QTest::newRow("radiobutton") << "radiobutton" << (QVector<int>() << 1 << 2 << 1 << 0);
+}
+
+void tst_Gifs::checkables()
+{
+    QFETCH(QString, name);
+    QFETCH(QVector<int>, pressIndices);
+
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(5);
-    gifRecorder.setQmlFileName("qtquickcontrols2-checkbox.qml");
+    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-%1.qml").arg(name));
 
     gifRecorder.start();
 
     QQuickWindow *window = gifRecorder.window();
-    QQuickItem *second = window->property("second").value<QQuickItem*>();
-    QVERIFY(second);
-    QQuickItem *third = window->property("third").value<QQuickItem*>();
-    QVERIFY(third);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        second->mapToScene(QPointF(second->width() / 2, second->height() / 2)).toPoint(), 400);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        third->mapToScene(QPointF(third->width() / 2, third->height() / 2)).toPoint(), 800);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        third->mapToScene(QPointF(third->width() / 2, third->height() / 2)).toPoint(), 800);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        second->mapToScene(QPointF(second->width() / 2, second->height() / 2)).toPoint(), 800);
+    for (int i = 0; i < pressIndices.size(); ++i) {
+        const int pressIndex = pressIndices.at(i);
+        const char *controlId = qPrintable(QString::fromLatin1("control%1").arg(pressIndex + 1));
+        QQuickItem *control = window->property(controlId).value<QQuickItem*>();
+        QVERIFY(control);
+
+        const QPoint pos = control->mapToScene(QPointF(control->width() / 2, control->height() / 2)).toPoint();
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pos, 800);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos, 300);
+    }
 
     gifRecorder.waitForFinish();
 }
