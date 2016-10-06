@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -57,7 +57,7 @@ QtObject {
             anchors.margins: defaultSpacing
             spacing: defaultSpacing
             property real cellWidth: col.width / 3 - spacing
-            Text { text: "Control the second window:" }
+            Shared.Label { text: "Control the second window:" }
             Grid {
                 id: grid
                 columns: 3
@@ -121,7 +121,7 @@ QtObject {
                 }
                 return "unknown";
             }
-            Text {
+            Shared.Label {
                 id: visibilityLabel
                 text: "second window is " + (testWindow.visible ? "visible" : "invisible") +
                       " and has visibility " + parent.visibilityToString(testWindow.visibility)
@@ -145,7 +145,7 @@ QtObject {
         Rectangle {
             anchors.fill: parent
             anchors.margins: defaultSpacing
-            Text {
+            Shared.Label {
                 anchors.centerIn: parent
                 text: "Second Window"
             }

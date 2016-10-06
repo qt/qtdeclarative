@@ -6,6 +6,7 @@
         <file>Slider.qml</file>
         <file>images/slider_handle.png</file>
         <file>CheckBox.qml</file>
+        <file>Label.qml</file>
         <file>TabSet.qml</file>
         <file>TextField.qml</file>
         <file>images/back.png</file>

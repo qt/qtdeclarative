@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -40,6 +40,7 @@
 
 import QtQuick 2.3
 import QtQuick.Window 2.1
+import "../shared" as Shared
 
 Item {
     id: root
@@ -70,32 +71,32 @@ Item {
         y: spacing
 
         //! [screen]
-        Text {
+        Shared.Label {
             text: "Screen \"" + Screen.name + "\":"
             font.bold: true
         }
         Item { width: 1; height: 1 } // spacer
 
-        Text { text: "dimensions" }
-        Text { text: Screen.width + "x" + Screen.height }
+        Shared.Label { text: "dimensions" }
+        Shared.Label { text: Screen.width + "x" + Screen.height }
 
-        Text { text: "pixel density" }
-        Text { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
+        Shared.Label { text: "pixel density" }
+        Shared.Label { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
 
-        Text { text: "logical pixel density" }
-        Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
+        Shared.Label { text: "logical pixel density" }
+        Shared.Label { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
 
-        Text { text: "device pixel ratio" }
-        Text { text: Screen.devicePixelRatio.toFixed(2) }
+        Shared.Label { text: "device pixel ratio" }
+        Shared.Label { text: Screen.devicePixelRatio.toFixed(2) }
 
-        Text { text: "available virtual desktop" }
-        Text { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
+        Shared.Label { text: "available virtual desktop" }
+        Shared.Label { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
 
-        Text { text: "orientation" }
-        Text { text: orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
+        Shared.Label { text: "orientation" }
+        Shared.Label { text: orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
 
-        Text { text: "primary orientation" }
-        Text { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
+        Shared.Label { text: "primary orientation" }
+        Shared.Label { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
         //! [screen]
     }
 }
