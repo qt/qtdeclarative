@@ -66,10 +66,11 @@ private slots:
     void dial_data();
     void dial();
     void checkBox();
-    void checkBoxTriState();
     void scrollBar();
     void progressBar_data();
     void progressBar();
+    void triState_data();
+    void triState();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -640,13 +641,23 @@ void tst_Gifs::checkBox()
     gifRecorder.waitForFinish();
 }
 
-void tst_Gifs::checkBoxTriState()
+void tst_Gifs::triState_data()
 {
+    QTest::addColumn<QString>("name");
+
+    QTest::newRow("checkbox-tristate") << "checkbox-tristate";
+    QTest::newRow("checkdelegate-tristate") << "checkdelegate-tristate";
+}
+
+void tst_Gifs::triState()
+{
+    QFETCH(QString, name);
+
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(6);
-    gifRecorder.setQmlFileName("qtquickcontrols2-checkbox-tristate.qml");
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-%1.qml").arg(name));
 
     gifRecorder.start();
 
@@ -656,14 +667,21 @@ void tst_Gifs::checkBoxTriState()
     QQuickItem *norwegian = window->property("norwegian").value<QQuickItem*>();
     QVERIFY(norwegian);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        english->mapToScene(QPointF(english->width() / 2, english->height() / 2)).toPoint(), 1000);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        norwegian->mapToScene(QPointF(norwegian->width() / 2, norwegian->height() / 2)).toPoint(), 1000);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        norwegian->mapToScene(QPointF(norwegian->width() / 2, norwegian->height() / 2)).toPoint(), 1000);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        english->mapToScene(QPointF(english->width() / 2, english->height() / 2)).toPoint(), 1000);
+    const QPoint englishCenter = english->mapToScene(
+        QPointF(english->width() / 2, english->height() / 2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, englishCenter, 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, englishCenter, 300);
+
+    const QPoint norwegianCenter = norwegian->mapToScene(
+        QPointF(norwegian->width() / 2, norwegian->height() / 2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, norwegianCenter, 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, norwegianCenter, 300);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, norwegianCenter, 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, norwegianCenter, 300);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, englishCenter, 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, englishCenter, 300);
 
     gifRecorder.waitForFinish();
 }
