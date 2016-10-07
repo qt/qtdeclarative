@@ -88,8 +88,8 @@ class QAnimationActionProxy : public QAbstractAnimationAction
 {
 public:
     QAnimationActionProxy(T *instance) : m_instance(instance) {}
-    virtual void doAction() { (m_instance->*method)(); }
-    virtual void debugAction(QDebug d, int indentLevel) const { (m_instance->*debugMethod)(d, indentLevel); }
+    void doAction() override { (m_instance->*method)(); }
+    void debugAction(QDebug d, int indentLevel) const override { (m_instance->*debugMethod)(d, indentLevel); }
 private:
     T *m_instance;
 };

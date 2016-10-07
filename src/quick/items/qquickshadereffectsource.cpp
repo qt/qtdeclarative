@@ -64,7 +64,7 @@ public:
     {
     }
 
-    QSGTexture *texture() const {
+    QSGTexture *texture() const override {
         sourceTexture->setMipmapFiltering(mipmapFiltering);
         sourceTexture->setFiltering(filtering);
         sourceTexture->setHorizontalWrapMode(horizontalWrap);

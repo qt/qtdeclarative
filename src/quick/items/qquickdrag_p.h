@@ -290,7 +290,7 @@ public:
 
     Q_INVOKABLE int drop();
 
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
 
 public Q_SLOTS:
     void start(QQmlV4Function *);

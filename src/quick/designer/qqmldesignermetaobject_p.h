@@ -74,7 +74,7 @@ protected:
 
     void createNewDynamicProperty(const QString &name);
     int openMetaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
-    int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
+    int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
     void notifyPropertyChange(int id);
     void setValue(int id, const QVariant &value);
     QVariant propertyWriteValue(int, const QVariant &);

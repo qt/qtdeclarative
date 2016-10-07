@@ -69,7 +69,7 @@ public:
         emit textureChanged();
     }
 
-    QSGTexture *texture() const {
+    QSGTexture *texture() const override {
         if (m_texture) {
             m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
             m_texture->setMipmapFiltering(m_mipmap ? QSGTexture::Linear : QSGTexture::None);
