@@ -476,7 +476,6 @@ public:
     inline QSGRenderContext *sceneGraphRenderContext() const;
 
     QQuickItem *parentItem;
-    QQmlNotifier parentNotifier;
 
     QList<QQuickItem *> childItems;
     mutable QList<QQuickItem *> *sortedChildItems;

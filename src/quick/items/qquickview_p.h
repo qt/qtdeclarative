@@ -115,9 +115,10 @@ namespace QV4 {
 namespace Heap {
 
 struct QQuickRootItemMarker : Object {
-    inline QQuickRootItemMarker(QQuickWindow *window)
-        : window(window)
+    inline void init(QQuickWindow *window)
     {
+        Object::init();
+        this->window = window;
     }
 
     QQuickWindow *window;

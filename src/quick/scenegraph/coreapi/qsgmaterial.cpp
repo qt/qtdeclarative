@@ -681,7 +681,6 @@ QSGMaterial::~QSGMaterial()
     the full matrix of the geometry nodes for rendering.
 
     \value CustomCompileStep Starting with Qt 5.2, the scene graph will not always call
-
     QSGMaterialShader::compile() when its shader program is compiled and linked.
     Set this flag to enforce that the function is called.
 

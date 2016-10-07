@@ -55,15 +55,19 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 
-Heap::QmlTypeWrapper::QmlTypeWrapper()
-    : mode(IncludeEnums)
+void Heap::QmlTypeWrapper::init()
 {
+    Object::init();
+    mode = IncludeEnums;
+    object.init();
 }
 
-Heap::QmlTypeWrapper::~QmlTypeWrapper()
+void Heap::QmlTypeWrapper::destroy()
 {
     if (typeNamespace)
         typeNamespace->release();
+    object.destroy();
+    Object::destroy();
 }
 
 bool QmlTypeWrapper::isSingleton() const

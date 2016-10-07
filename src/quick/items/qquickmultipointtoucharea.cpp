@@ -470,8 +470,10 @@ void QQuickMultiPointTouchArea::grabGesture()
 
     QVector<int> ids;
     ids.reserve(_touchPoints.size());
-    for (auto it = _touchPoints.keyBegin(), end = _touchPoints.keyEnd(); it != end; ++it)
-        ids.append(*it);
+    for (auto it = _touchPoints.keyBegin(), end = _touchPoints.keyEnd(); it != end; ++it) {
+        if (*it != -1) // -1 might be the mouse-point, but we already grabbed the mouse above.
+            ids.append(*it);
+    }
     grabTouchPoints(ids);
     setKeepTouchGrab(true);
 }
@@ -852,10 +854,10 @@ bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
     return false;
 }
 
-bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *i, QEvent *event)
+bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEvent *event)
 {
     if (!isEnabled() || !isVisible())
-        return QQuickItem::childMouseEventFilter(i, event);
+        return QQuickItem::childMouseEventFilter(receiver, event);
     switch (event->type()) {
     case QEvent::MouseButtonPress:
     case QEvent::MouseMove:
@@ -878,7 +880,7 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *i, QEvent *eve
     default:
         break;
     }
-    return QQuickItem::childMouseEventFilter(i, event);
+    return QQuickItem::childMouseEventFilter(receiver, event);
 }
 
 bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)

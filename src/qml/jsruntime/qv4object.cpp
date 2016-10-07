@@ -1160,10 +1160,10 @@ void Object::initSparseArray()
 
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
-Heap::ArrayObject::ArrayObject(const QStringList &list)
-    : Heap::Object()
+void Heap::ArrayObject::init(const QStringList &list)
 {
-    init();
+    Object::init();
+    commonInit();
     Scope scope(internalClass->engine);
     ScopedObject a(scope, this);
 

@@ -229,8 +229,10 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
                     *unmanagedHeapSize -= heapBytes;
                 }
 
-                if (m->vtable()->destroy)
+                if (m->vtable()->destroy) {
                     m->vtable()->destroy(m);
+                    m->_checkIsDestroyed();
+                }
 
                 memset(m, 0, header->itemSize);
 #ifdef V4_USE_VALGRIND

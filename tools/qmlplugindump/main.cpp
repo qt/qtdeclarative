@@ -76,7 +76,7 @@
 static const uint qtQmlMajorVersion = 2;
 static const uint qtQmlMinorVersion = 2;
 static const uint qtQuickMajorVersion = 2;
-static const uint qtQuickMinorVersion = 7;
+static const uint qtQuickMinorVersion = 8;
 
 const QString qtQuickQualifiedName = QString::fromLatin1("QtQuick %1.%2")
         .arg(qtQuickMajorVersion)

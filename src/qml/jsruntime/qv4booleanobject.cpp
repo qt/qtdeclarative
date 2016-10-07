@@ -45,9 +45,9 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(BooleanCtor);
 DEFINE_OBJECT_VTABLE(BooleanObject);
 
-Heap::BooleanCtor::BooleanCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("Boolean"))
+void Heap::BooleanCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("Boolean"));
 }
 
 void BooleanCtor::construct(const Managed *, Scope &scope, CallData *callData)

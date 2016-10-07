@@ -71,9 +71,9 @@ const NumberLocale *NumberLocale::instance()
     return numberLocaleHolder();
 }
 
-Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("Number"))
+void Heap::NumberCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("Number"));
 }
 
 void NumberCtor::construct(const Managed *, Scope &scope, CallData *callData)

@@ -7,7 +7,20 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable QtQuick.Window 2.2'
 
 Module {
-    dependencies: []
+    dependencies: ["QtQuick 2.8"]
+    Component {
+        name: "QQuickRootItem"
+        defaultProperty: "data"
+        prototype: "QQuickItem"
+        Method {
+            name: "setWidth"
+            Parameter { name: "w"; type: "int" }
+        }
+        Method {
+            name: "setHeight"
+            Parameter { name: "h"; type: "int" }
+        }
+    }
     Component {
         name: "QQuickScreen"
         prototype: "QObject"
@@ -102,6 +115,7 @@ Module {
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "width"; type: "int"; isReadonly: true }
         Property { name: "height"; type: "int"; isReadonly: true }
+        Property { name: "window"; type: "QQuickWindow"; isReadonly: true; isPointer: true }
     }
     Component {
         name: "QQuickWindowQmlImpl"

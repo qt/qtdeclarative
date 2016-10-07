@@ -67,8 +67,11 @@
 
 using namespace QV4;
 
-Heap::ErrorObject::ErrorObject()
+void Heap::ErrorObject::init()
 {
+    Object::init();
+    stackTrace = nullptr;
+
     Scope scope(internalClass->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
 
@@ -81,8 +84,9 @@ Heap::ErrorObject::ErrorObject()
     *propertyData(QV4::ErrorObject::Index_LineNumber) = Encode::undefined();
 }
 
-Heap::ErrorObject::ErrorObject(const Value &message, ErrorType t)
+void Heap::ErrorObject::init(const Value &message, ErrorType t)
 {
+    Object::init();
     errorType = t;
 
     Scope scope(internalClass->engine);
@@ -91,18 +95,19 @@ Heap::ErrorObject::ErrorObject(const Value &message, ErrorType t)
     *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
     *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
 
-    e->d()->stackTrace = scope.engine->stackTrace();
-    if (!e->d()->stackTrace.isEmpty()) {
-        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace.at(0).source);
-        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace.at(0).line);
+    e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
+    if (!e->d()->stackTrace->isEmpty()) {
+        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace->at(0).source);
+        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace->at(0).line);
     }
 
     if (!message.isUndefined())
         *propertyData(QV4::ErrorObject::Index_Message) = message;
 }
 
-Heap::ErrorObject::ErrorObject(const Value &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
+void Heap::ErrorObject::init(const Value &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
 {
+    Object::init();
     errorType = t;
 
     Scope scope(internalClass->engine);
@@ -111,16 +116,16 @@ Heap::ErrorObject::ErrorObject(const Value &message, const QString &fileName, in
     *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
     *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
 
-    e->d()->stackTrace = scope.engine->stackTrace();
+    e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     StackFrame frame;
     frame.source = fileName;
     frame.line = line;
     frame.column = column;
-    e->d()->stackTrace.prepend(frame);
+    e->d()->stackTrace->prepend(frame);
 
-    if (!e->d()->stackTrace.isEmpty()) {
-        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace.at(0).source);
-        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace.at(0).line);
+    if (!e->d()->stackTrace->isEmpty()) {
+        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace->at(0).source);
+        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace->at(0).line);
     }
 
     if (!message.isUndefined())
@@ -156,10 +161,10 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
         return ctx->engine()->throwTypeError();
     if (!This->d()->stack) {
         QString trace;
-        for (int i = 0; i < This->d()->stackTrace.count(); ++i) {
+        for (int i = 0; i < This->d()->stackTrace->count(); ++i) {
             if (i > 0)
                 trace += QLatin1Char('\n');
-            const StackFrame &frame = This->d()->stackTrace[i];
+            const StackFrame &frame = This->d()->stackTrace->at(i);
             trace += frame.function + QLatin1Char('@') + frame.source;
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);
@@ -181,44 +186,44 @@ DEFINE_OBJECT_VTABLE(ErrorObject);
 
 DEFINE_OBJECT_VTABLE(SyntaxErrorObject);
 
-Heap::SyntaxErrorObject::SyntaxErrorObject(const Value &msg)
-    : Heap::ErrorObject(msg, SyntaxError)
+void Heap::SyntaxErrorObject::init(const Value &msg)
 {
+    Heap::ErrorObject::init(msg, SyntaxError);
 }
 
-Heap::SyntaxErrorObject::SyntaxErrorObject(const Value &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : Heap::ErrorObject(msg, fileName, lineNumber, columnNumber, SyntaxError)
+void Heap::SyntaxErrorObject::init(const Value &msg, const QString &fileName, int lineNumber, int columnNumber)
 {
+    Heap::ErrorObject::init(msg, fileName, lineNumber, columnNumber, SyntaxError);
 }
 
-Heap::EvalErrorObject::EvalErrorObject(const Value &message)
-    : Heap::ErrorObject(message, EvalError)
+void Heap::EvalErrorObject::init(const Value &message)
 {
+    Heap::ErrorObject::init(message, EvalError);
 }
 
-Heap::RangeErrorObject::RangeErrorObject(const Value &message)
-    : Heap::ErrorObject(message, RangeError)
+void Heap::RangeErrorObject::init(const Value &message)
 {
+    Heap::ErrorObject::init(message, RangeError);
 }
 
-Heap::ReferenceErrorObject::ReferenceErrorObject(const Value &message)
-    : Heap::ErrorObject(message, ReferenceError)
+void Heap::ReferenceErrorObject::init(const Value &message)
 {
+    Heap::ErrorObject::init(message, ReferenceError);
 }
 
-Heap::ReferenceErrorObject::ReferenceErrorObject(const Value &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : Heap::ErrorObject(msg, fileName, lineNumber, columnNumber, ReferenceError)
+void Heap::ReferenceErrorObject::init(const Value &msg, const QString &fileName, int lineNumber, int columnNumber)
 {
+    Heap::ErrorObject::init(msg, fileName, lineNumber, columnNumber, ReferenceError);
 }
 
-Heap::TypeErrorObject::TypeErrorObject(const Value &message)
-    : Heap::ErrorObject(message, TypeError)
+void Heap::TypeErrorObject::init(const Value &message)
 {
+    Heap::ErrorObject::init(message, TypeError);
 }
 
-Heap::URIErrorObject::URIErrorObject(const Value &message)
-    : Heap::ErrorObject(message, URIError)
+void Heap::URIErrorObject::init(const Value &message)
 {
+    Heap::ErrorObject::init(message, URIError);
 }
 
 DEFINE_OBJECT_VTABLE(ErrorCtor);
@@ -229,14 +234,14 @@ DEFINE_OBJECT_VTABLE(SyntaxErrorCtor);
 DEFINE_OBJECT_VTABLE(TypeErrorCtor);
 DEFINE_OBJECT_VTABLE(URIErrorCtor);
 
-Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("Error"))
+void Heap::ErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("Error"));
 }
 
-Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope, const QString &name)
-    : Heap::FunctionObject(scope, name)
+void Heap::ErrorCtor::init(QV4::ExecutionContext *scope, const QString &name)
 {
+    Heap::FunctionObject::init(scope, name);
 }
 
 void ErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
@@ -250,9 +255,9 @@ void ErrorCtor::call(const Managed *that, Scope &scope, CallData *callData)
     static_cast<const Object *>(that)->construct(scope, callData);
 }
 
-Heap::EvalErrorCtor::EvalErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::ErrorCtor(scope, QStringLiteral("EvalError"))
+void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::ErrorCtor::init(scope, QStringLiteral("EvalError"));
 }
 
 void EvalErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
@@ -261,9 +266,9 @@ void EvalErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
     scope.result = ErrorObject::create<EvalErrorObject>(scope.engine, v);
 }
 
-Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::ErrorCtor(scope, QStringLiteral("RangeError"))
+void Heap::RangeErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::ErrorCtor::init(scope, QStringLiteral("RangeError"));
 }
 
 void RangeErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
@@ -272,9 +277,9 @@ void RangeErrorCtor::construct(const Managed *, Scope &scope, CallData *callData
     scope.result = ErrorObject::create<RangeErrorObject>(scope.engine, v);
 }
 
-Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::ErrorCtor(scope, QStringLiteral("ReferenceError"))
+void Heap::ReferenceErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::ErrorCtor::init(scope, QStringLiteral("ReferenceError"));
 }
 
 void ReferenceErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
@@ -283,9 +288,9 @@ void ReferenceErrorCtor::construct(const Managed *, Scope &scope, CallData *call
     scope.result = ErrorObject::create<ReferenceErrorObject>(scope.engine, v);
 }
 
-Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::ErrorCtor(scope, QStringLiteral("SyntaxError"))
+void Heap::SyntaxErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::ErrorCtor::init(scope, QStringLiteral("SyntaxError"));
 }
 
 void SyntaxErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
@@ -294,9 +299,9 @@ void SyntaxErrorCtor::construct(const Managed *, Scope &scope, CallData *callDat
     scope.result = ErrorObject::create<SyntaxErrorObject>(scope.engine, v);
 }
 
-Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::ErrorCtor(scope, QStringLiteral("TypeError"))
+void Heap::TypeErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::ErrorCtor::init(scope, QStringLiteral("TypeError"));
 }
 
 void TypeErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
@@ -305,9 +310,9 @@ void TypeErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)
     scope.result = ErrorObject::create<TypeErrorObject>(scope.engine, v);
 }
 
-Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
-    : Heap::ErrorCtor(scope, QStringLiteral("URIError"))
+void Heap::URIErrorCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::ErrorCtor::init(scope, QStringLiteral("URIError"));
 }
 
 void URIErrorCtor::construct(const Managed *, Scope &scope, CallData *callData)

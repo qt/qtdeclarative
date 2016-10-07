@@ -66,6 +66,7 @@ struct MemberData : Base {
     };
     Value data[1];
 };
+V4_ASSERT_IS_TRIVIAL(MemberData)
 
 }
 

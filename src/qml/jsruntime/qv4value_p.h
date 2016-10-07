@@ -102,19 +102,16 @@ public:
     Q_ALWAYS_INLINE quint64 rawValue() const { return _val; }
     Q_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
 
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN || defined(QV4_USE_64_BIT_VALUE_ENCODING)
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     static inline int valueOffset() { return 0; }
     static inline int tagOffset() { return 4; }
+#else // !Q_LITTLE_ENDIAN
+    static inline int valueOffset() { return 4; }
+    static inline int tagOffset() { return 0; }
+#endif
     Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
     Q_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
     Q_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
-#else // !Q_LITTLE_ENDIAN && !defined(QV4_USE_64_BIT_VALUE_ENCODING)
-    static inline int valueOffset() { return 4; }
-    static inline int tagOffset() { return 0; }
-    Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(value) << 32 | tag; }
-    Q_ALWAYS_INLINE quint32 tag() const { return _val & quint64(~quint32(0)); }
-    Q_ALWAYS_INLINE quint32 value() const { return _val >> 32; }
-#endif
 
 #if defined(V4_BOOTSTRAP)
     Q_ALWAYS_INLINE Heap::Base *m() const { Q_UNREACHABLE(); return Q_NULLPTR; }
@@ -430,11 +427,8 @@ public:
 
     template<typename T>
     Value &operator=(const Scoped<T> &t);
-    Value &operator=(const Value &v) {
-        _val = v._val;
-        return *this;
-    }
 };
+V4_ASSERT_IS_TRIVIAL(Value)
 
 inline bool Value::isString() const
 {

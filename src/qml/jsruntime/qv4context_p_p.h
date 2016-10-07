@@ -69,7 +69,7 @@ QObject *QmlContext::qmlScope() const
 
 QQmlContextData *QmlContext::qmlContext() const
 {
-    return d()->qml->context;
+    return *d()->qml->context;
 }
 
 void QmlContext::takeContextOwnership() {

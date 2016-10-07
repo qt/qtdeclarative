@@ -61,9 +61,9 @@ using namespace QV4;
 struct Print: FunctionObject
 {
     struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope)
-            : Heap::FunctionObject(scope, QStringLiteral("print"))
+        void init(ExecutionContext *scope)
         {
+            Heap::FunctionObject::init(scope, QStringLiteral("print"));
         }
     };
     V4_OBJECT(FunctionObject)
@@ -86,9 +86,9 @@ DEFINE_OBJECT_VTABLE(Print);
 struct GC: public FunctionObject
 {
     struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope)
-            : Heap::FunctionObject(scope, QStringLiteral("gc"))
+        void init(ExecutionContext *scope)
         {
+            Heap::FunctionObject::init(scope, QStringLiteral("gc"));
         }
 
     };

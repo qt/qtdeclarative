@@ -42,6 +42,7 @@ private slots:
     void testLoadComplete();
     void loadComponentSynchronously();
     void trimCache();
+    void trimCache2();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -104,6 +105,19 @@ void tst_QQMLTypeLoader::trimCache()
             QVERIFY(!loader.isTypeLoaded(url));
         // The cache is free to keep the others.
     }
+}
+
+void tst_QQMLTypeLoader::trimCache2()
+{
+    QQuickView *window = new QQuickView();
+    window->setSource(testFileUrl("trim_cache2.qml"));
+    QQmlTypeLoader &loader = QQmlEnginePrivate::get(window->engine())->typeLoader;
+    // in theory if gc has already run this could be false
+    // QCOMPARE(loader.isTypeLoaded(testFileUrl("MyComponent2.qml")), true);
+    window->engine()->collectGarbage();
+    QTest::qWait(1);    // force event loop
+    window->engine()->trimComponentCache();
+    QCOMPARE(loader.isTypeLoaded(testFileUrl("MyComponent2.qml")), false);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

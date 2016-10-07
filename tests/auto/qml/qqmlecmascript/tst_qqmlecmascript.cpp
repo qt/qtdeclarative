@@ -7258,14 +7258,16 @@ namespace QV4 {
 
 namespace Heap {
 struct WeakReferenceSentinel : public Object {
-    WeakReferenceSentinel(WeakValue *weakRef, bool *resultPtr)
-        : weakRef(weakRef)
-        , resultPtr(resultPtr) {
-
+    void init(WeakValue *weakRef, bool *resultPtr)
+    {
+        Object::init();
+        this->weakRef = weakRef;
+        this->resultPtr = resultPtr;
     }
 
-    ~WeakReferenceSentinel() {
+    void destroy() {
         *resultPtr = weakRef->isNullOrUndefined();
+        Object::destroy();
     }
 
     WeakValue *weakRef;

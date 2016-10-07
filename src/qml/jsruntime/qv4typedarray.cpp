@@ -202,10 +202,10 @@ const TypedArrayOperations operations[Heap::TypedArray::NTypes] = {
 };
 
 
-Heap::TypedArrayCtor::TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::Type t)
-    : Heap::FunctionObject(scope, QLatin1String(operations[t].name))
-    , type(t)
+void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t)
 {
+    Heap::FunctionObject::init(scope, QLatin1String(operations[t].name));
+    type = t;
 }
 
 void TypedArrayCtor::construct(const Managed *m, Scope &scope, CallData *callData)
@@ -363,10 +363,11 @@ void TypedArrayCtor::call(const Managed *that, Scope &scope, CallData *callData)
     construct(that, scope, callData);
 }
 
-Heap::TypedArray::TypedArray(Type t)
-    : type(operations + t),
-      arrayType(t)
+void Heap::TypedArray::init(Type t)
 {
+    Object::init();
+    type = operations + t;
+    arrayType = t;
 }
 
 Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type t)

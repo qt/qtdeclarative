@@ -160,8 +160,8 @@ protected:
 namespace QV4 {
 namespace Heap {
 struct QQmlDelegateModelItemObject : Object {
-    inline QQmlDelegateModelItemObject(QQmlDelegateModelItem *item);
-    ~QQmlDelegateModelItemObject();
+    inline void init(QQmlDelegateModelItem *item);
+    void destroy();
     QQmlDelegateModelItem *item;
 };
 
@@ -174,9 +174,10 @@ struct QQmlDelegateModelItemObject : QV4::Object
     V4_NEEDS_DESTROY
 };
 
-QV4::Heap::QQmlDelegateModelItemObject::QQmlDelegateModelItemObject(QQmlDelegateModelItem *item)
-    : item(item)
+void QV4::Heap::QQmlDelegateModelItemObject::init(QQmlDelegateModelItem *item)
 {
+    Object::init();
+    this->item = item;
 }
 
 

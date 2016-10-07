@@ -101,7 +101,20 @@ struct ExecutionContext : Base {
         Type_CallContext = 0x6
     };
 
-    inline ExecutionContext(ExecutionEngine *engine, ContextType t);
+    void init(ExecutionEngine *engine, ContextType t)
+    {
+        Base::init();
+
+        callData = nullptr;
+        this->engine = engine;
+        outer = nullptr;
+        lookups = nullptr;
+        constantTable = nullptr;
+        compilationUnit = nullptr;
+        type = t;
+        strictMode = false;
+        lineNumber = -1;
+    }
 
     CallData *callData;
 
@@ -115,24 +128,14 @@ struct ExecutionContext : Base {
     bool strictMode : 8;
     int lineNumber;
 };
-
-inline
-ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : engine(engine)
-    , outer(nullptr)
-    , lookups(nullptr)
-    , constantTable(nullptr)
-    , compilationUnit(nullptr)
-    , type(t)
-    , strictMode(false)
-    , lineNumber(-1)
-{}
-
+V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
 struct CallContext : ExecutionContext {
-    CallContext(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
-        : ExecutionContext(engine, t)
+    static CallContext createOnStack(ExecutionEngine *v4);
+
+    void init(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
     {
+        ExecutionContext::init(engine, t);
         function = 0;
         locals = 0;
         activation = 0;
@@ -142,27 +145,43 @@ struct CallContext : ExecutionContext {
     Value *locals;
     Pointer<Object> activation;
 };
+V4_ASSERT_IS_TRIVIAL(CallContext)
 
 struct GlobalContext : ExecutionContext {
-    GlobalContext(ExecutionEngine *engine);
+    void init(ExecutionEngine *engine);
     Pointer<Object> global;
 };
+V4_ASSERT_IS_TRIVIAL(GlobalContext)
 
 struct CatchContext : ExecutionContext {
-    CatchContext(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
+    void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
     Pointer<String> exceptionVarName;
     Value exceptionValue;
 };
+V4_ASSERT_IS_TRIVIAL(CatchContext)
 
 struct WithContext : ExecutionContext {
-    WithContext(ExecutionContext *outerContext, Object *with);
+    void init(ExecutionContext *outerContext, Object *with)
+    {
+        Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_WithContext);
+        outer = outerContext;
+        callData = outer->callData;
+        lookups = outer->lookups;
+        constantTable = outer->constantTable;
+        compilationUnit = outer->compilationUnit;
+
+        withObject = with;
+    }
+
     Pointer<Object> withObject;
 };
+V4_ASSERT_IS_TRIVIAL(WithContext)
 
 struct QmlContextWrapper;
 
 struct QmlContext : ExecutionContext {
-    QmlContext(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
+    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
+
     Pointer<QmlContextWrapper> qml;
 };
 
@@ -277,6 +296,16 @@ inline const CatchContext *ExecutionContext::asCatchContext() const
 inline const WithContext *ExecutionContext::asWithContext() const
 {
     return d()->type == Heap::ExecutionContext::Type_WithContext ? static_cast<const WithContext *>(this) : 0;
+}
+
+inline Heap::CallContext Heap::CallContext::createOnStack(ExecutionEngine *v4)
+{
+    Heap::CallContext ctxt;
+    memset(&ctxt, 0, sizeof(Heap::CallContext));
+    ctxt.mm_data = 0;
+    ctxt.setVtable(QV4::CallContext::staticVTable());
+    ctxt.init(v4);
+    return ctxt;
 }
 
 /* Function *f, int argc */

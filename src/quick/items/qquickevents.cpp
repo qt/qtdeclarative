@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerEvents, "qt.quick.pointer.events")
-Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
+Q_LOGGING_CATEGORY(lcPointerGrab, "qt.quick.pointer.grab")
 
 /*!
     \qmltype KeyEvent
@@ -564,7 +564,14 @@ QQuickItem *QQuickEventPoint::grabberItem() const
 void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
 {
     if (grabber != m_grabber.data()) {
-        qCDebug(lcPointerHandlerDispatch) << this << grabber;
+        if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
+            auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
+            static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
+            QString deviceName = (device ? device->name() : QLatin1String("null device"));
+            deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+            qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
+                                   << ": grab" << m_grabber << "->" << grabber;
+        }
         m_grabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
@@ -579,7 +586,14 @@ QQuickPointerHandler *QQuickEventPoint::grabberPointerHandler() const
 void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber)
 {
     if (grabber != m_grabber.data()) {
-        qCDebug(lcPointerHandlerDispatch) << this << grabber;
+        if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
+            auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
+            static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
+            QString deviceName = (device ? device->name() : QLatin1String("null device"));
+            deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+            qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
+                                   << ": grab" << m_grabber << "->" << grabber;
+        }
         m_grabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = true;
         m_sceneGrabPos = m_scenePos;
@@ -965,6 +979,10 @@ QTouchEvent *QQuickPointerTouchEvent::asTouchEvent() const
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *dev) {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
+    if (!dev) {
+        dbg << "QQuickPointerDevice(0)";
+        return dbg;
+    }
     dbg << "QQuickPointerDevice("<< dev->name() << ' ';
     QtDebugUtils::formatQEnum(dbg, dev->type());
     dbg << ' ';

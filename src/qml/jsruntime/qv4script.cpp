@@ -65,7 +65,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlBindingWrapper : FunctionObject {
-    QmlBindingWrapper(QV4::QmlContext *scope, Function *f);
+    void init(QV4::QmlContext *scope, Function *f);
 };
 
 }
@@ -84,9 +84,10 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 
-Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::QmlContext *scope, Function *f)
-    : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
+void Heap::QmlBindingWrapper::init(QV4::QmlContext *scope, Function *f)
 {
+    Heap::FunctionObject::init(scope, scope->d()->engine->id_eval(), /*createProto = */ false);
+
     Q_ASSERT(scope->inUse());
 
     function = f;

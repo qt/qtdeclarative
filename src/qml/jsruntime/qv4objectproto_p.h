@@ -61,7 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 struct ObjectCtor : FunctionObject {
-    ObjectCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }

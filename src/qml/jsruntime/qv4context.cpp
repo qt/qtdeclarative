@@ -61,8 +61,9 @@ Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *functi
 {
     Q_ASSERT(function->function());
 
-    Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(requiredMemoryForExecutionContect(function, callData->argc));
-    new (c) Heap::CallContext(d()->engine, Heap::ExecutionContext::Type_CallContext);
+    Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(
+                requiredMemoryForExecutionContect(function, callData->argc));
+    c->init(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
     c->function = function->d();
 
@@ -160,28 +161,16 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     activation->__defineOwnProperty__(scope.engine, name, desc, attrs);
 }
 
-
-Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
-    : Heap::ExecutionContext(eng, Heap::ExecutionContext::Type_GlobalContext)
+void Heap::GlobalContext::init(ExecutionEngine *eng)
 {
+    Heap::ExecutionContext::init(eng, Heap::ExecutionContext::Type_GlobalContext);
     global = eng->globalObject->d();
 }
 
-Heap::WithContext::WithContext(ExecutionContext *outerContext, Object *with)
-    : Heap::ExecutionContext(outerContext->engine, Heap::ExecutionContext::Type_WithContext)
+void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionVarName,
+                              const Value &exceptionValue)
 {
-    outer = outerContext;
-    callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
-
-    withObject = with;
-}
-
-Heap::CatchContext::CatchContext(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue)
-    : Heap::ExecutionContext(outerContext->engine, Heap::ExecutionContext::Type_CatchContext)
-{
+    Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_CatchContext);
     outer = outerContext;
     strictMode = outer->strictMode;
     callData = outer->callData;
@@ -193,9 +182,9 @@ Heap::CatchContext::CatchContext(ExecutionContext *outerContext, String *excepti
     this->exceptionValue = exceptionValue;
 }
 
-Heap::QmlContext::QmlContext(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
-    : Heap::ExecutionContext(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext)
+void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
 {
+    Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
     outer = outerContext->d();
     strictMode = false;
     callData = outer->callData;
