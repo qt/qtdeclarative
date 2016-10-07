@@ -103,8 +103,8 @@ void tst_Gifs::moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoi
     int yDifference = to.y() - from.y();
     for (int movement = 0; movement < movements; ++movement) {
         QPoint pos = QPoint(
-            from.x() + curve.valueForProgress(movement / qreal(qAbs(xDifference))) * xDifference,
-            from.y() + curve.valueForProgress(movement / qreal(qAbs(yDifference))) * yDifference);
+            from.x() + qRound(curve.valueForProgress(movement / qreal(qAbs(xDifference))) * xDifference),
+            from.y() + qRound(curve.valueForProgress(movement / qreal(qAbs(yDifference))) * yDifference));
         QTest::mouseMove(window, pos, movementDelay);
     }
 }
