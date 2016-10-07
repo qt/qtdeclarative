@@ -327,6 +327,18 @@ void QQuickSlider::setStepSize(qreal step)
     \value Slider.SnapAlways The slider snaps while the handle is dragged.
     \value Slider.SnapOnRelease The slider does not snap while being dragged, but only after the handle is released.
 
+    In the following table, the various modes are illustrated with animations.
+    The movement of the mouse cursor and the \l stepSize (\c 0.2) are identical
+    in each animation.
+
+    \table
+    \header
+        \row \li \b Value \li \b Example
+        \row \li \c Slider.NoSnap \li \image qtquickcontrols2-slider-nosnap.gif
+        \row \li \c Slider.SnapAlways \li \image qtquickcontrols2-slider-snapalways.gif
+        \row \li \c Slider.SnapOnRelease \li \image qtquickcontrols2-slider-snaponrelease.gif
+    \endtable
+
     \sa stepSize
 */
 QQuickSlider::SnapMode QQuickSlider::snapMode() const

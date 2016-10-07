@@ -51,6 +51,8 @@ private slots:
 
     void tumblerWrap();
     void slider();
+    void sliderSnap_data();
+    void sliderSnap();
     void rangeSlider();
     void busyIndicator();
     void switchGif();
@@ -235,6 +237,58 @@ void tst_Gifs::slider()
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pos2, 100);
     moveSmoothly(window, pos2, handleCenter, qAbs(handleCenter.x() - pos2.x()), QEasingCurve::OutQuint, 10);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, handleCenter, 20);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::sliderSnap_data()
+{
+    QTest::addColumn<QString>("gifBaseName");
+    QTest::addColumn<int>("snapMode");
+    QTest::newRow("NoSnap") << "qtquickcontrols2-slider-nosnap" << 0;
+    QTest::newRow("SnapAlways") << "qtquickcontrols2-slider-snapalways" << 1;
+    QTest::newRow("SnapOnRelease") << "qtquickcontrols2-slider-snaponrelease" << 2;
+}
+
+void tst_Gifs::sliderSnap()
+{
+    QFETCH(QString, gifBaseName);
+    QFETCH(int, snapMode);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(8);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName("qtquickcontrols2-slider-snap.qml");
+    gifRecorder.setOutputFileBaseName(gifBaseName);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *slider = window->property("slider").value<QQuickItem*>();
+    QVERIFY(slider);
+    QVERIFY(slider->setProperty("snapMode", QVariant(snapMode)));
+    QCOMPARE(slider->property("snapMode").toInt(), snapMode);
+    QQuickItem *handle = slider->property("handle").value<QQuickItem*>();
+    QVERIFY(handle);
+
+    const QPoint startPos(slider->property("leftPadding").toReal(), slider->height() / 2);
+    const int trackWidth = slider->property("availableWidth").toReal();
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos, 200);
+    QPoint pos1 = startPos + QPoint(trackWidth * 0.3, 0);
+    moveSmoothly(window, startPos, pos1, pos1.x() - startPos.x(), QEasingCurve::OutQuint, 30);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pos1, 0);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos, 400);
+    const QPoint pos2 = startPos + QPoint(trackWidth * 0.6, 0);
+    moveSmoothly(window, pos1, pos2, pos2.x() - pos1.x(), QEasingCurve::OutQuint, 30);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pos2, 0);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pos2, 400);
+    moveSmoothly(window, pos2, startPos, qAbs(startPos.x() - pos2.x()) / 2, QEasingCurve::OutQuint, 30);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos, 0);
 
     gifRecorder.waitForFinish();
 }
