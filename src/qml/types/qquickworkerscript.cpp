@@ -145,7 +145,7 @@ public:
         void init();
 
 #ifndef QT_NO_NETWORK
-        virtual QNetworkAccessManager *networkAccessManager();
+        QNetworkAccessManager *networkAccessManager() override;
 #endif
 
         QQuickWorkerScriptEnginePrivate *p;
@@ -192,7 +192,7 @@ signals:
     void stopThread();
 
 protected:
-    virtual bool event(QEvent *);
+    bool event(QEvent *) override;
 
 private:
     void processMessage(int, const QByteArray &);

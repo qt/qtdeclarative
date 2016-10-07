@@ -206,7 +206,7 @@ public:
     }
 
 protected:
-    virtual void timerEvent(QTimerEvent *) {
+    void timerEvent(QTimerEvent *) override {
         incubateFor(5);
     }
 };

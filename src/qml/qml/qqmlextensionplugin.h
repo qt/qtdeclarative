@@ -64,7 +64,7 @@ public:
     QUrl baseUrl() const;
 
     virtual void registerTypes(const char *uri) = 0;
-    virtual void initializeEngine(QQmlEngine *engine, const char *uri);
+    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 private:
     Q_DISABLE_COPY(QQmlExtensionPlugin)

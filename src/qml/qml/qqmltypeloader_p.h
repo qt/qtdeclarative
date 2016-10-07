@@ -242,8 +242,8 @@ public:
 
         virtual void scriptImported(QQmlScriptBlob *, const QV4::CompiledData::Location &, const QString &, const QString &) {}
 
-        virtual void dependencyError(QQmlDataBlob *);
-        virtual void dependencyComplete(QQmlDataBlob *);
+        void dependencyError(QQmlDataBlob *) override;
+        void dependencyComplete(QQmlDataBlob *) override;
 
     protected:
         virtual QString stringAt(int) const { return QString(); }
@@ -433,14 +433,14 @@ public:
     void unregisterCallback(TypeDataCallback *);
 
 protected:
-    virtual void done();
-    virtual void completed();
-    virtual void dataReceived(const Data &);
-    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit);
-    virtual void allDependenciesDone();
-    virtual void downloadProgressChanged(qreal);
+    void done() override;
+    void completed() override;
+    void dataReceived(const Data &) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
+    void allDependenciesDone() override;
+    void downloadProgressChanged(qreal) override;
 
-    virtual QString stringAt(int index) const;
+    QString stringAt(int index) const override;
 
 private:
     bool tryLoadFromDiskCache();
@@ -457,7 +457,7 @@ private:
                                       const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
 
-    virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
+    void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
 
 
     qint64 m_sourceTimeStamp = 0;
@@ -509,7 +509,7 @@ public:
     QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
 
 protected:
-    virtual void clear(); // From QQmlCleanup
+    void clear() override; // From QQmlCleanup
 
 private:
     friend class QQmlScriptBlob;
@@ -545,14 +545,14 @@ public:
     QQmlScriptData *scriptData() const;
 
 protected:
-    virtual void dataReceived(const Data &);
-    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit);
-    virtual void done();
+    void dataReceived(const Data &) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
+    void done() override;
 
-    virtual QString stringAt(int index) const;
+    QString stringAt(int index) const override;
 
 private:
-    virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
+    void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
     void initializeFromCompilationUnit(QV4::CompiledData::CompilationUnit *unit);
 
     QList<ScriptReference> m_scripts;

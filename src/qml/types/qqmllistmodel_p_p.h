@@ -124,7 +124,7 @@ public:
     ModelNodeMetaObject(QObject *object, QQmlListModel *model, int elementIndex);
     ~ModelNodeMetaObject();
 
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *object);
+    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *object) override;
 
     static ModelNodeMetaObject *get(QObject *obj);
 

@@ -142,7 +142,7 @@ void QQmlThread::callMethodInThread(void (O::*Member)())
     struct I : public Message {
         void (O::*Member)();
         I(void (O::*Member)()) : Member(Member) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)();
         }
@@ -157,7 +157,7 @@ void QQmlThread::callMethodInThread(void (O::*Member)(V), const T &arg)
         void (O::*Member)(V);
         T arg;
         I(void (O::*Member)(V), const T &arg) : Member(Member), arg(arg) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg);
         }
@@ -173,7 +173,7 @@ void QQmlThread::callMethodInThread(void (O::*Member)(V, V2), const T &arg, cons
         T arg;
         T2 arg2;
         I(void (O::*Member)(V, V2), const T &arg, const T2 &arg2) : Member(Member), arg(arg), arg2(arg2) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg, arg2);
         }
@@ -187,7 +187,7 @@ void QQmlThread::callMethodInMain(void (O::*Member)())
     struct I : public Message {
         void (O::*Member)();
         I(void (O::*Member)()) : Member(Member) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)();
         }
@@ -202,7 +202,7 @@ void QQmlThread::callMethodInMain(void (O::*Member)(V), const T &arg)
         void (O::*Member)(V);
         T arg;
         I(void (O::*Member)(V), const T &arg) : Member(Member), arg(arg) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg);
         }
@@ -218,7 +218,7 @@ void QQmlThread::callMethodInMain(void (O::*Member)(V, V2), const T &arg, const 
         T arg;
         T2 arg2;
         I(void (O::*Member)(V, V2), const T &arg, const T2 &arg2) : Member(Member), arg(arg), arg2(arg2) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg, arg2);
         }
@@ -232,7 +232,7 @@ void QQmlThread::postMethodToThread(void (O::*Member)())
     struct I : public Message {
         void (O::*Member)();
         I(void (O::*Member)()) : Member(Member) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)();
         }
@@ -247,7 +247,7 @@ void QQmlThread::postMethodToThread(void (O::*Member)(V), const T &arg)
         void (O::*Member)(V);
         T arg;
         I(void (O::*Member)(V), const T &arg) : Member(Member), arg(arg) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg);
         }
@@ -263,7 +263,7 @@ void QQmlThread::postMethodToThread(void (O::*Member)(V, V2), const T &arg, cons
         T arg;
         T2 arg2;
         I(void (O::*Member)(V, V2), const T &arg, const T2 &arg2) : Member(Member), arg(arg), arg2(arg2) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg, arg2);
         }
@@ -277,7 +277,7 @@ void QQmlThread::postMethodToMain(void (O::*Member)())
     struct I : public Message {
         void (O::*Member)();
         I(void (O::*Member)()) : Member(Member) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)();
         }
@@ -292,7 +292,7 @@ void QQmlThread::postMethodToMain(void (O::*Member)(V), const T &arg)
         void (O::*Member)(V);
         T arg;
         I(void (O::*Member)(V), const T &arg) : Member(Member), arg(arg) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg);
         }
@@ -308,7 +308,7 @@ void QQmlThread::postMethodToMain(void (O::*Member)(V, V2), const T &arg, const 
         T arg;
         T2 arg2;
         I(void (O::*Member)(V, V2), const T &arg, const T2 &arg2) : Member(Member), arg(arg), arg2(arg2) {}
-        virtual void call(QQmlThread *thread) {
+        void call(QQmlThread *thread) override {
             O *me = static_cast<O *>(thread);
             (me->*Member)(arg, arg2);
         }

@@ -190,8 +190,8 @@ public:
         , incubating(0)
         , vdm(l) {}
 
-    virtual void statusChanged(Status);
-    virtual void setInitialState(QObject *);
+    void statusChanged(Status) override;
+    void setInitialState(QObject *) override;
 
     QQmlDelegateModelItem *incubating;
     QQmlDelegateModelPrivate *vdm;

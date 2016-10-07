@@ -151,7 +151,7 @@ public:
     static ObjectOwnership objectOwnership(QObject *);
 protected:
     QQmlEngine(QQmlEnginePrivate &dd, QObject *p);
-    virtual bool event(QEvent *);
+    bool event(QEvent *) override;
 
 Q_SIGNALS:
     void quit();

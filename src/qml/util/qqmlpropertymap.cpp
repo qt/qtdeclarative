@@ -54,10 +54,10 @@ public:
     QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv, const QMetaObject *staticMetaObject);
 
 protected:
-    virtual QVariant propertyWriteValue(int, const QVariant &);
-    virtual void propertyWritten(int index);
-    virtual void propertyCreated(int, QMetaPropertyBuilder &);
-    virtual int createProperty(const char *, const char *);
+    QVariant propertyWriteValue(int, const QVariant &) override;
+    void propertyWritten(int index) override;
+    void propertyCreated(int, QMetaPropertyBuilder &) override;
+    int createProperty(const char *, const char *) override;
 
     const QString &propertyName(int index);
 

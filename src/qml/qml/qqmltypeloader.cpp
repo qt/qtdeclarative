@@ -166,7 +166,7 @@ public:
     void initializeEngine(QQmlExtensionInterface *, const char *);
 
 protected:
-    virtual void shutdownThread();
+    void shutdownThread() override;
 
 private:
     void loadThread(QQmlDataBlob *b);
@@ -2891,7 +2891,7 @@ QQmlScriptData *QQmlScriptBlob::scriptData() const
 
 struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
 {
-    virtual void linkBackendToEngine(QV4::ExecutionEngine *) {}
+    void linkBackendToEngine(QV4::ExecutionEngine *) override {}
 };
 
 void QQmlScriptBlob::dataReceived(const Data &data)

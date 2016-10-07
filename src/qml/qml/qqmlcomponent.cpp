@@ -1098,13 +1098,13 @@ public:
         , incubatorObject(inc)
     {}
 
-    virtual void statusChanged(Status s) {
+    void statusChanged(Status s) override {
         QV4::Scope scope(incubatorObject->internalClass->engine);
         QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
         i->statusChanged(s);
     }
 
-    virtual void setInitialState(QObject *o) {
+    void setInitialState(QObject *o) override {
         QV4::Scope scope(incubatorObject->internalClass->engine);
         QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
         i->setInitialState(o);

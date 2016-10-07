@@ -62,14 +62,14 @@ public:
     QParallelAnimationGroupJob();
     ~QParallelAnimationGroupJob();
 
-    int duration() const;
+    int duration() const override;
 
 protected:
-    void updateCurrentTime(int currentTime);
-    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
-    void updateDirection(QAbstractAnimationJob::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int currentTime) override;
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
+    void updateDirection(QAbstractAnimationJob::Direction direction) override;
+    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation) override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     bool shouldAnimationStart(QAbstractAnimationJob *animation, bool startIfAtEnd) const;

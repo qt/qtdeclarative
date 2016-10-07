@@ -437,8 +437,8 @@ public:
     QByteArray checksum(bool *ok);
 
 protected:
-    virtual void destroy();
-    virtual void clear();
+    void destroy() override;
+    void clear() override;
 
 private:
     friend class QQmlEnginePrivate;

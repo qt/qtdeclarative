@@ -80,7 +80,7 @@ public:
     QQmlFileSelectorInterceptor(QQmlFileSelectorPrivate* pd);
     QQmlFileSelectorPrivate* d;
 protected:
-    virtual QUrl intercept(const QUrl &path, DataType type);
+    QUrl intercept(const QUrl &path, DataType type) override;
 };
 
 QT_END_NAMESPACE
