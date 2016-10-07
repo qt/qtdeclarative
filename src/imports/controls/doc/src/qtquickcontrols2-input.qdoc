@@ -85,7 +85,7 @@
 
     \section1 Slider Control
 
-    \image qtquickcontrols2-slider.png
+    \image qtquickcontrols2-slider.gif
 
     \l Slider is used to select a value by sliding a handle along a track.
 
