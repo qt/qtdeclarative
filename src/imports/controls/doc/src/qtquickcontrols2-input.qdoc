@@ -42,7 +42,7 @@
 
     \section1 ComboBox Control
 
-    \image qtquickcontrols2-combobox.png
+    \image qtquickcontrols2-combobox.gif
 
     \l ComboBox is used to select a value from a static multiple-line drop-down list.
     It is not possible to add new values, and only one option can be selected.
