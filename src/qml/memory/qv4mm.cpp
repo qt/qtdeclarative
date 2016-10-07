@@ -234,7 +234,7 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
                     m->_checkIsDestroyed();
                 }
 
-                memset(m, 0, header->itemSize);
+                memset(m, 0, sizeof(Heap::Base));
 #ifdef V4_USE_VALGRIND
                 VALGRIND_DISABLE_ERROR_REPORTING;
                 VALGRIND_MEMPOOL_FREE(engine->memoryManager, m);
