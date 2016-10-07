@@ -140,7 +140,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount
                                    ? QSGGeometry::defaultAttributes_Point2D()
                                    : QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                    (vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2),
-                                   QSGGeometry::TypeUnsignedShort);
+                                   QSGGeometry::UnsignedShortType);
 
     } else {
         geometry->allocate((vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2));

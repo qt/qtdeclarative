@@ -1490,7 +1490,7 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
 
         d << "#V:" << g->vertexCount() << "#I:" << g->indexCount();
 
-        if (g->attributeCount() > 0 && g->attributes()->type == QSGGeometry::TypeFloat) {
+        if (g->attributeCount() > 0 && g->attributes()->type == QSGGeometry::FloatType) {
             float x1 = 1e10, x2 = -1e10, y1=1e10, y2=-1e10;
             int stride = g->sizeOfVertex();
             for (int i = 0; i < g->vertexCount(); ++i) {

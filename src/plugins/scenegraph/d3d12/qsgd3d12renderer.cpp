@@ -718,7 +718,7 @@ void QSGD3D12Renderer::renderStencilClip(const QSGClipNode *clip, int elementInd
     const QSGGeometry *g = clip->geometry();
     Q_ASSERT(g->attributeCount() == 1);
     Q_ASSERT(g->attributes()[0].tupleSize == 2);
-    Q_ASSERT(g->attributes()[0].type == QSGGeometry::TypeFloat);
+    Q_ASSERT(g->attributes()[0].type == QSGGeometry::FloatType);
 
     setInputLayout(g, &sps);
     m_engine->finalizePipeline(sps);
