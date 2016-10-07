@@ -133,7 +133,7 @@ public:
 
     qreal velocityFromMovement() const { return m_velocity_from_movement; }
     void setVelocityFromMovement(qreal s);
-    virtual void componentComplete();
+    void componentComplete() override;
 Q_SIGNALS:
     void emitParticles(QQmlV4Handle particles);
     void particlesPerSecondChanged(qreal);
