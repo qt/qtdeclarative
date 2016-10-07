@@ -936,7 +936,7 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *eve
     dbg << "QQuickEventPoint(valid:" << event->isValid() << " accepted:" << event->isAccepted()
         << " state:";
     QtDebugUtils::formatQEnum(dbg, event->state());
-    dbg << " scenePos:" << event->scenePos() << " id:" << event->pointId()
+    dbg << " scenePos:" << event->scenePos() << " id:" << hex << event->pointId() << dec
         << " timeHeld:" << event->timeHeld() << ')';
     return dbg;
 }
