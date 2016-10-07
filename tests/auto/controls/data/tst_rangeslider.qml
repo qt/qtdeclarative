@@ -50,14 +50,9 @@ TestCase {
     when: windowShown
     name: "RangeSlider"
 
-    SignalSpy {
-        id: firstPressedSpy
-        signalName: "pressedChanged"
-    }
-
-    SignalSpy {
-        id: secondPressedSpy
-        signalName: "pressedChanged"
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     Component {
@@ -82,21 +77,6 @@ TestCase {
                 anchors.centerIn: parent
             }
         }
-    }
-
-    function init() {
-        verify(!firstPressedSpy.target)
-        compare(firstPressedSpy.count, 0)
-
-        verify(!secondPressedSpy.target)
-        compare(secondPressedSpy.count, 0)
-    }
-
-    function cleanup() {
-        firstPressedSpy.target = null
-        firstPressedSpy.clear()
-        secondPressedSpy.target = null
-        secondPressedSpy.clear()
     }
 
     function test_defaults() {
@@ -303,10 +283,10 @@ TestCase {
         var control = sliderComponent.createObject(testCase, { orientation: data.orientation })
         verify(control)
 
-        firstPressedSpy.target = control.first
+        var firstPressedSpy = signalSpy.createObject(control, {target: control.first, signalName: "pressedChanged"})
         verify(firstPressedSpy.valid)
 
-        secondPressedSpy.target = control.second
+        var secondPressedSpy = signalSpy.createObject(control, {target: control.second, signalName: "pressedChanged"})
         verify(secondPressedSpy.valid)
 
         mousePress(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
@@ -473,7 +453,7 @@ TestCase {
 
         var pressedCount = 0
 
-        firstPressedSpy.target = control.first
+        var firstPressedSpy = signalSpy.createObject(control, {target: control.first, signalName: "pressedChanged"})
         verify(firstPressedSpy.valid)
 
         control.first.handle.forceActiveFocus()
@@ -511,7 +491,7 @@ TestCase {
         control.stepSize = 0.25
 
         pressedCount = 0;
-        secondPressedSpy.target = control.second
+        var secondPressedSpy = signalSpy.createObject(control, {target: control.second, signalName: "pressedChanged"})
         verify(secondPressedSpy.valid)
 
         control.second.handle.forceActiveFocus()
@@ -553,7 +533,7 @@ TestCase {
         var control = sliderComponent.createObject(testCase, { leftPadding: 10, rightPadding: 20 })
         verify(control)
 
-        firstPressedSpy.target = control.first
+        var firstPressedSpy = signalSpy.createObject(control, {target: control.first, signalName: "pressedChanged"})
         verify(firstPressedSpy.valid)
 
         mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)

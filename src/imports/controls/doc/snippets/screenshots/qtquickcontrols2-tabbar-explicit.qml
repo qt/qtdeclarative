@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -25,10 +25,28 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Controls 2.1
+import QtQuick 2.6
+import QtQuick.Controls 2.0
 
-Slider {
-    value: 0.5
-    focus: true
+Item {
+    width: 360
+    height: childrenRect.height
+
+//! [1]
+TabBar {
+    width: parent.width
+    TabButton {
+        text: "First"
+        width: implicitWidth
+    }
+    TabButton {
+        text: "Second"
+        width: implicitWidth
+    }
+    TabButton {
+        text: "Third"
+        width: implicitWidth
+    }
+}
+//! [1]
 }

@@ -48,8 +48,8 @@ Window {
     height: column.implicitHeight
     visible: true
 
-    property alias second: second
-    property alias third: third
+    property alias control2: control2
+    property alias control3: control3
 
     ColumnLayout {
         id: column
@@ -60,11 +60,11 @@ Window {
             text: qsTr("First")
         }
         CheckBox {
-            id: second
+            id: control2
             text: qsTr("Second")
         }
         CheckBox {
-            id: third
+            id: control3
             checked: true
             text: qsTr("Third")
         }

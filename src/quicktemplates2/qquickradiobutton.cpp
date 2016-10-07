@@ -50,25 +50,27 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-buttons
     \brief An option button that can be toggled on or off.
 
+    \image qtquickcontrols2-radiobutton.gif
+
     RadioButton presents an option button that can be toggled on (checked) or
     off (unchecked). Radio buttons are typically used to select one option
     from a set of options.
 
-    \table
-    \row \li \image qtquickcontrols2-radiobutton-normal.png
-         \li A radio button in its normal state.
-    \row \li \image qtquickcontrols2-radiobutton-checked.png
-         \li A radio button that is checked.
-    \row \li \image qtquickcontrols2-radiobutton-focused.png
-         \li A radio button that has active focus.
-    \row \li \image qtquickcontrols2-radiobutton-disabled.png
-         \li A radio button that is disabled.
-    \endtable
+    RadioButton inherits its API from \l AbstractButton. For instance,
+    you can set \l {AbstractButton::text}{text} and react to
+    \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
+    The state of the radio button can be set with the
+    \l {AbstractButton::}{checked} property.
 
     Radio buttons are \l {AbstractButton::autoExclusive}{auto-exclusive}
     by default. Only one button can be checked at any time amongst radio
     buttons that belong to the same parent item; checking another button
-    automatically unchecks the previously checked one.
+    automatically unchecks the previously checked one. For radio buttons
+    that do not share a common parent, ButtonGroup can be used to manage
+    exclusivity.
+
+    \l RadioDelegate is similar to RadioButton, except that it is typically
+    used in views.
 
     \code
     ColumnLayout {
@@ -85,7 +87,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}
+    \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}, RadioDelegate
 */
 
 QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :

@@ -72,65 +72,28 @@ TestCase {
         Rectangle { }
     }
 
-    SignalSpy {
-        id: availableWidthSpy
-        signalName: "availableWidthChanged"
-    }
-
-    SignalSpy {
-        id: availableHeightSpy
-        signalName: "availableHeightChanged"
-    }
-
-    SignalSpy {
-        id: paddingSpy
-        signalName: "paddingChanged"
-    }
-
-    SignalSpy {
-        id: topPaddingSpy
-        signalName: "topPaddingChanged"
-    }
-
-    SignalSpy {
-        id: leftPaddingSpy
-        signalName: "leftPaddingChanged"
-    }
-
-    SignalSpy {
-        id: rightPaddingSpy
-        signalName: "rightPaddingChanged"
-    }
-
-    SignalSpy {
-        id: bottomPaddingSpy
-        signalName: "bottomPaddingChanged"
-    }
-
-    SignalSpy {
-        id: xSpy
-        signalName: "xChanged"
-    }
-
-    SignalSpy {
-        id: ySpy
-        signalName: "yChanged"
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     function test_padding() {
         var control = popupTemplate.createObject(testCase)
         verify(control)
 
-        paddingSpy.target = control
-        topPaddingSpy.target = control
-        leftPaddingSpy.target = control
-        rightPaddingSpy.target = control
-        bottomPaddingSpy.target = control
-
+        var paddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "paddingChanged"})
         verify(paddingSpy.valid)
+
+        var topPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "topPaddingChanged"})
         verify(topPaddingSpy.valid)
+
+        var leftPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "leftPaddingChanged"})
         verify(leftPaddingSpy.valid)
+
+        var rightPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "rightPaddingChanged"})
         verify(rightPaddingSpy.valid)
+
+        var bottomPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "bottomPaddingChanged"})
         verify(bottomPaddingSpy.valid)
 
         var paddingChanges = 0
@@ -229,10 +192,10 @@ TestCase {
         var control = popupTemplate.createObject(testCase)
         verify(control)
 
-        availableWidthSpy.target = control
-        availableHeightSpy.target = control
-
+        var availableWidthSpy = signalSpy.createObject(testCase, {target: control, signalName: "availableWidthChanged"})
         verify(availableWidthSpy.valid)
+
+        var availableHeightSpy = signalSpy.createObject(testCase, {target: control, signalName: "availableHeightChanged"})
         verify(availableHeightSpy.valid)
 
         var availableWidthChanges = 0
@@ -302,10 +265,10 @@ TestCase {
         verify(control)
         verify(control.visible)
 
-        xSpy.target = control
-        ySpy.target = control
-
+        var xSpy = signalSpy.createObject(testCase, {target: control, signalName: "xChanged"})
         verify(xSpy.valid)
+
+        var ySpy = signalSpy.createObject(testCase, {target: control, signalName: "yChanged"})
         verify(ySpy.valid)
 
         // moving outside margins does not trigger change notifiers

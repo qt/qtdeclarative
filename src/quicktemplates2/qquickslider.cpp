@@ -54,20 +54,23 @@ QT_BEGIN_NAMESPACE
 
     Slider is used to select a value by sliding a handle along a track.
 
-    \table
-    \row \li \image qtquickcontrols2-slider-normal.png
-         \li A slider in its normal state.
-    \row \li \image qtquickcontrols2-slider-focused.png
-         \li A slider that has active focus.
-    \row \li \image qtquickcontrols2-slider-disabled.png
-         \li A slider that is disabled.
-    \endtable
+    In the example below, custom \l from, \l value, and \l to values are set:
 
     \code
     Slider {
-        value: 0.5
+        from: 1
+        value: 25
+        to: 100
     }
     \endcode
+
+    The \l position property is defined as a percentage of the control's size,
+    scaled within the range \c {0.0 - 1.0}. The \l visualPosition property is
+    the same, except that it is reversed in a
+    \l {Right-to-left User Interfaces}{right-to-left} application. The
+    visualPosition is useful for positioning the handle when styling Slider.
+    In the example above, \l visualPosition will be \c 0.24 in a left-to-right
+    application, and \c 0.76 in a right-to-left application.
 
     \sa {Customizing Slider}, {Input Controls}
 */
@@ -321,6 +324,18 @@ void QQuickSlider::setStepSize(qreal step)
     \value Slider.NoSnap The slider does not snap (default).
     \value Slider.SnapAlways The slider snaps while the handle is dragged.
     \value Slider.SnapOnRelease The slider does not snap while being dragged, but only after the handle is released.
+
+    In the following table, the various modes are illustrated with animations.
+    The movement of the mouse cursor and the \l stepSize (\c 0.2) are identical
+    in each animation.
+
+    \table
+    \header
+        \row \li \b Value \li \b Example
+        \row \li \c Slider.NoSnap \li \image qtquickcontrols2-slider-nosnap.gif
+        \row \li \c Slider.SnapAlways \li \image qtquickcontrols2-slider-snapalways.gif
+        \row \li \c Slider.SnapOnRelease \li \image qtquickcontrols2-slider-snaponrelease.gif
+    \endtable
 
     \sa stepSize
 */

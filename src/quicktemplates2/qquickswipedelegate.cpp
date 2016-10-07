@@ -640,7 +640,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     const QPointF mappedEventPos = item->mapToItem(q, event->pos());
     const qreal distance = (mappedEventPos - pressPoint).x();
     if (!q->keepMouseGrab()) {
-        // Taken from QQuickDrawer::handleMouseMoveEvent; see comments there.
+        // Taken from QQuickDrawerPrivate::grabMouse; see comments there.
         int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
         const bool overThreshold = QQuickWindowPrivate::dragOverThreshold(distance, Qt::XAxis, event, threshold);
         if (window && overThreshold) {

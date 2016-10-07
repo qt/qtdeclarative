@@ -108,6 +108,10 @@ QQuickCheckDelegate::QQuickCheckDelegate(QQuickItem *parent) :
 
     This property determines whether the check delegate has three states.
 
+    In the animation below, the first checkdelegate is tri-state:
+
+    \image qtquickcontrols2-checkdelegate-tristate.gif
+
     The default is \c false, i.e., the delegate has only two states.
 */
 bool QQuickCheckDelegate::isTristate() const

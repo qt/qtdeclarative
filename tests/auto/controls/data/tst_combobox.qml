@@ -51,16 +51,6 @@ TestCase {
     when: windowShown
     name: "ComboBox"
 
-    SignalSpy {
-        id: activatedSpy
-        signalName: "activated"
-    }
-
-    SignalSpy {
-        id: highlightedSpy
-        signalName: "highlighted"
-    }
-
     Component {
         id: signalSpy
         SignalSpy { }
@@ -78,22 +68,6 @@ TestCase {
                 width: popup.width
             }
         }
-    }
-
-    function init() {
-        verify(!activatedSpy.target)
-        compare(activatedSpy.count, 0)
-
-        verify(!highlightedSpy.target)
-        compare(highlightedSpy.count, 0)
-    }
-
-    function cleanup() {
-        activatedSpy.target = null
-        activatedSpy.clear()
-
-        highlightedSpy.target = null
-        highlightedSpy.clear()
     }
 
     function test_defaults() {
@@ -333,10 +307,10 @@ TestCase {
         var control = comboBox.createObject(testCase, {model: 3})
         verify(control)
 
-        activatedSpy.target = control
+        var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
         verify(activatedSpy.valid)
 
-        highlightedSpy.target = control
+        var highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
         verify(highlightedSpy.valid)
 
         waitForRendering(control)
@@ -545,10 +519,10 @@ TestCase {
         var control = comboBox.createObject(testCase, {model: 3})
         verify(control)
 
-        activatedSpy.target = control
+        var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
         verify(activatedSpy.valid)
 
-        highlightedSpy.target = control
+        var highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
         verify(highlightedSpy.valid)
 
         mouseClick(control)

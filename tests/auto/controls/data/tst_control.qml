@@ -71,21 +71,6 @@ TestCase {
         SignalSpy { }
     }
 
-    SignalSpy {
-        id: mirroredSpy
-        signalName: "mirroredChanged"
-    }
-
-    SignalSpy {
-        id: availableWidthSpy
-        signalName: "availableWidthChanged"
-    }
-
-    SignalSpy {
-        id: availableHeightSpy
-        signalName: "availableHeightChanged"
-    }
-
     function test_padding() {
         var control = component.createObject(testCase)
         verify(control)
@@ -150,10 +135,10 @@ TestCase {
         var control = component.createObject(testCase)
         verify(control)
 
-        availableWidthSpy.target = control
-        availableHeightSpy.target = control
-
+        var availableWidthSpy = signalSpy.createObject(control, {target: control, signalName: "availableWidthChanged"})
         verify(availableWidthSpy.valid)
+
+        var availableHeightSpy = signalSpy.createObject(control, {target: control, signalName: "availableHeightChanged"})
         verify(availableHeightSpy.valid)
 
         var availableWidthChanges = 0
@@ -222,7 +207,7 @@ TestCase {
         var control = component.createObject(testCase)
         verify(control)
 
-        mirroredSpy.target = control
+        var mirroredSpy = signalSpy.createObject(control, {target: control, signalName: "mirroredChanged"})
         verify(mirroredSpy.valid)
 
         control.locale = Qt.locale("en_US")

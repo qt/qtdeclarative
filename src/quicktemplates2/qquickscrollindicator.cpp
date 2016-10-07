@@ -52,11 +52,11 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-indicators
     \brief A non-interactive scroll indicator control.
 
+    \image qtquickcontrols2-scrollindicator.gif
+
     ScrollIndicator is a non-interactive indicator that indicates the current scroll
     position. A scroll indicator can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
-
-    \image qtquickcontrols2-scrollindicator.png
 
     \code
     Flickable {
