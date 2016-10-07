@@ -50,9 +50,9 @@ TestCase {
     when: windowShown
     name: "ScrollBar"
 
-    SignalSpy{
-        id: pressedSpy
-        signalName: "pressedChanged"
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     Component {
@@ -70,16 +70,6 @@ TestCase {
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.HorizontalAndVerticalFlick
         }
-    }
-
-    function init() {
-        verify(!pressedSpy.target)
-        compare(pressedSpy.count, 0)
-    }
-
-    function cleanup() {
-        pressedSpy.target = null
-        pressedSpy.clear()
     }
 
     function test_attach() {
@@ -165,7 +155,7 @@ TestCase {
         var control = scrollBar.createObject(testCase, data.properties)
         verify(control)
 
-        pressedSpy.target = control
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
         mousePress(control, 0, 0, Qt.LeftButton)

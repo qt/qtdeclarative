@@ -59,6 +59,11 @@ TestCase {
         StackView { }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     function test_initialItem() {
         var control1 = stackView.createObject(testCase)
         verify(control1)
@@ -87,18 +92,13 @@ TestCase {
         control.destroy()
     }
 
-    SignalSpy {
-        id: busySpy
-        signalName: "busyChanged"
-    }
-
     function test_busy() {
         var control = stackView.createObject(testCase)
         verify(control)
         compare(control.busy, false)
 
         var busyCount = 0
-        busySpy.target = control
+        var busySpy = signalSpy.createObject(control, {target: control, signalName: "busyChanged"})
         verify(busySpy.valid)
 
         control.push(component)

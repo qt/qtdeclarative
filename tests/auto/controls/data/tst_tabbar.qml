@@ -85,19 +85,9 @@ TestCase {
         }
     }
 
-    SignalSpy {
-        id: contentChildrenSpy
-        signalName: "contentChildrenChanged"
-    }
-
-    function init() {
-        verify(!contentChildrenSpy.target)
-        compare(contentChildrenSpy.count, 0)
-    }
-
-    function cleanup() {
-        contentChildrenSpy.target = null
-        contentChildrenSpy.clear()
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     function test_defaults() {
@@ -176,7 +166,7 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
-        contentChildrenSpy.target = control
+        var contentChildrenSpy = signalSpy.createObject(testCase, {target: control, signalName: "contentChildrenChanged"})
         verify(contentChildrenSpy.valid)
 
         compare(control.count, 0)
@@ -293,7 +283,7 @@ TestCase {
             return true
         }
 
-        contentChildrenSpy.target = control
+        var contentChildrenSpy = signalSpy.createObject(testCase, {target: control, signalName: "contentChildrenChanged"})
         verify(contentChildrenSpy.valid)
 
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", ""]))

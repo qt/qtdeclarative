@@ -50,24 +50,14 @@ TestCase {
     when: windowShown
     name: "Slider"
 
-    SignalSpy{
-        id: pressedSpy
-        signalName: "pressedChanged"
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     Component {
         id: slider
         Slider { }
-    }
-
-    function init() {
-        verify(!pressedSpy.target)
-        compare(pressedSpy.count, 0)
-    }
-
-    function cleanup() {
-        pressedSpy.target = null
-        pressedSpy.clear()
     }
 
     function test_defaults() {
@@ -232,7 +222,7 @@ TestCase {
         var control = slider.createObject(testCase, {orientation: data.orientation})
         verify(control)
 
-        pressedSpy.target = control
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
         mousePress(control, 0, 0, Qt.LeftButton)
@@ -308,7 +298,7 @@ TestCase {
 
         var pressedCount = 0
 
-        pressedSpy.target = control
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
         control.forceActiveFocus()
@@ -380,7 +370,7 @@ TestCase {
         var control = slider.createObject(testCase, {leftPadding: 10, rightPadding: 20})
         verify(control)
 
-        pressedSpy.target = control
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
         mousePress(control, 0, 0, Qt.LeftButton)

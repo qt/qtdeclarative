@@ -60,20 +60,16 @@ TestCase {
         Text { }
     }
 
-    SignalSpy {
-        id: currentItemChangedSpy
-        signalName: "currentItemChanged"
-    }
-
-    function cleanup() {
-        currentItemChangedSpy.clear()
-        currentItemChangedSpy.target = null
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     function test_current() {
         var control = swipeView.createObject(testCase)
 
-        currentItemChangedSpy.target = control
+        var currentItemChangedSpy = signalSpy.createObject(testCase, {target: control, signalName: "currentItemChanged"})
+        verify(currentItemChangedSpy.valid)
 
         compare(control.count, 0)
         compare(control.currentIndex, -1)
@@ -146,7 +142,8 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
-        currentItemChangedSpy.target = control;
+        var currentItemChangedSpy = signalSpy.createObject(testCase, {target: control, signalName: "currentItemChanged"})
+        verify(currentItemChangedSpy.valid)
 
         compare(control.count, 0)
         compare(control.currentIndex, -1)

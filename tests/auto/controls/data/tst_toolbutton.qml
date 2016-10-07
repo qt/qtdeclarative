@@ -50,38 +50,14 @@ TestCase {
     when: windowShown
     name: "ToolButton"
 
-    SignalSpy {
-        id: pressedSpy
-        signalName: "pressedChanged"
-    }
-
-    SignalSpy {
-        id: downSpy
-        signalName: "downChanged"
-    }
-
-    SignalSpy {
-        id: clickedSpy
-        signalName: "clicked"
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     Component {
         id: toolButton
         ToolButton { }
-    }
-
-    function init() {
-        verify(!pressedSpy.target)
-        verify(!clickedSpy.target)
-        compare(pressedSpy.count, 0)
-        compare(clickedSpy.count, 0)
-    }
-
-    function cleanup() {
-        pressedSpy.target = null
-        clickedSpy.target = null
-        pressedSpy.clear()
-        clickedSpy.clear()
     }
 
     function test_text() {
@@ -101,11 +77,13 @@ TestCase {
         var control = toolButton.createObject(testCase)
         verify(control)
 
-        pressedSpy.target = control
-        downSpy.target = control
-        clickedSpy.target = control
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
+
+        var downSpy = signalSpy.createObject(control, {target: control, signalName: "downChanged"})
         verify(downSpy.valid)
+
+        var clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickedSpy.valid)
 
         // check
@@ -170,7 +148,7 @@ TestCase {
         var control = toolButton.createObject(testCase)
         verify(control)
 
-        clickedSpy.target = control
+        var clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickedSpy.valid)
 
         control.forceActiveFocus()

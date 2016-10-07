@@ -55,30 +55,9 @@ TestCase {
         ButtonGroup { }
     }
 
-    SignalSpy {
-        id: checkedButtonSpy
-        signalName: "checkedButtonChanged"
-    }
-
-    SignalSpy {
-        id: buttonsSpy
-        signalName: "buttonsChanged"
-    }
-
-    function init() {
-        verify(!checkedButtonSpy.target)
-        compare(checkedButtonSpy.count, 0)
-
-        verify(!buttonsSpy.target)
-        compare(buttonsSpy.count, 0)
-    }
-
-    function cleanup() {
-        checkedButtonSpy.target = null
-        checkedButtonSpy.clear()
-
-        buttonsSpy.target = null
-        buttonsSpy.clear()
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     function test_null() {
@@ -105,7 +84,7 @@ TestCase {
         var group = buttonGroup.createObject(testCase)
         verify(group)
 
-        checkedButtonSpy.target = group
+        var checkedButtonSpy = signalSpy.createObject(testCase, {target: group, signalName: "checkedButtonChanged"})
         verify(checkedButtonSpy.valid)
         verify(!group.checkedButton)
 
@@ -176,7 +155,7 @@ TestCase {
         var group = buttonGroup.createObject(testCase)
         verify(group)
 
-        buttonsSpy.target = group
+        var buttonsSpy = signalSpy.createObject(testCase, {target: group, signalName: "buttonsChanged"})
         verify(buttonsSpy.valid)
 
         compare(group.buttons.length, 0)
@@ -301,7 +280,7 @@ TestCase {
         var group = buttonGroup.createObject(testCase)
         verify(group)
 
-        buttonsSpy.target = group
+        var buttonsSpy = signalSpy.createObject(testCase, {target: group, signalName: "buttonsChanged"})
         verify(buttonsSpy.valid)
 
         var button1 = button.createObject(testCase, {objectName: "button1", checked: true})

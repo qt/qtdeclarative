@@ -62,6 +62,11 @@ TestCase {
         }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     function test_text() {
         var control = button.createObject(testCase)
         verify(control)
@@ -179,8 +184,6 @@ TestCase {
         return "actual event:" + JSON.stringify(actual) + ", expected event:" + JSON.stringify(expected)
     }
 
-    SignalSpy { id: clickSpy; signalName: "clicked" }
-
     function test_autoRepeat() {
         var control = button.createObject(testCase)
         verify(control)
@@ -192,7 +195,7 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        clickSpy.target = control
+        var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
 
         var repeatCount = 2

@@ -50,33 +50,14 @@ TestCase {
     when: windowShown
     name: "SpinBox"
 
-    SignalSpy{
-        id: upPressedSpy
-        signalName: "pressedChanged"
-    }
-
-    SignalSpy{
-        id: downPressedSpy
-        signalName: "pressedChanged"
+    Component {
+        id: signalSpy
+        SignalSpy { }
     }
 
     Component {
         id: spinBox
         SpinBox { }
-    }
-
-    function init() {
-        verify(!upPressedSpy.target)
-        compare(upPressedSpy.count, 0)
-        verify(!downPressedSpy.target)
-        compare(downPressedSpy.count, 0)
-    }
-
-    function cleanup() {
-        upPressedSpy.target = null
-        upPressedSpy.clear()
-        downPressedSpy.target = null
-        downPressedSpy.clear()
     }
 
     function test_defaults() {
@@ -190,8 +171,11 @@ TestCase {
         var control = spinBox.createObject(testCase, {stepSize: 50})
         verify(control)
 
-        upPressedSpy.target = control.up
+        var upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
         verify(upPressedSpy.valid)
+
+        var downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
+        verify(downPressedSpy.valid)
 
         mousePress(control.up.indicator)
         compare(upPressedSpy.count, 1)
@@ -224,9 +208,6 @@ TestCase {
         compare(downPressedSpy.count, 0)
         compare(control.down.pressed, false)
         compare(control.value, control.to)
-
-        downPressedSpy.target = control.down
-        verify(downPressedSpy.valid)
 
         control.value = 50;
         mousePress(control.down.indicator)
@@ -271,10 +252,10 @@ TestCase {
         var upPressedCount = 0
         var downPressedCount = 0
 
-        upPressedSpy.target = control.up
+        var upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
         verify(upPressedSpy.valid)
 
-        downPressedSpy.target = control.down
+        var downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
         verify(downPressedSpy.valid)
 
         control.forceActiveFocus()
