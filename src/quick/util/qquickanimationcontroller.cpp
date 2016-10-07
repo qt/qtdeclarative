@@ -50,8 +50,8 @@ class QQuickAnimationControllerPrivate : public QObjectPrivate, QAnimationJobCha
 public:
     QQuickAnimationControllerPrivate()
         : progress(0.0), animation(0), animationInstance(0), finalized(false) {}
-    virtual void animationFinished(QAbstractAnimationJob *job);
-    virtual void animationCurrentTimeChanged(QAbstractAnimationJob *job, int currentTime);
+    void animationFinished(QAbstractAnimationJob *job) override;
+    void animationCurrentTimeChanged(QAbstractAnimationJob *job, int currentTime) override;
 
 
     qreal progress;

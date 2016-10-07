@@ -60,7 +60,7 @@ public:
     QQuickBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
 
-    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 
     QQmlProperty property;
     QVariant targetValue;

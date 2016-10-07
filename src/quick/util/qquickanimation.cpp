@@ -1198,14 +1198,14 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     struct QQuickSetPropertyAnimationAction : public QAbstractAnimationAction
     {
         QQuickStateActions actions;
-        virtual void doAction()
+        void doAction() override
         {
             for (int ii = 0; ii < actions.count(); ++ii) {
                 const QQuickStateAction &action = actions.at(ii);
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
             }
         }
-        virtual void debugAction(QDebug d, int indentLevel) const {
+        void debugAction(QDebug d, int indentLevel) const override {
             QByteArray ind(indentLevel, ' ');
             for (int ii = 0; ii < actions.count(); ++ii) {
                 const QQuickStateAction &action = actions.at(ii);

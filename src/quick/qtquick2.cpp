@@ -72,19 +72,19 @@ class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate
 {
 public:
     QQmlQtQuick2DebugStatesDelegate();
-    virtual ~QQmlQtQuick2DebugStatesDelegate();
-    virtual void buildStatesList(bool cleanList, const QList<QPointer<QObject> > &instances);
-    virtual void updateBinding(QQmlContext *context,
-                               const QQmlProperty &property,
-                               const QVariant &expression, bool isLiteralValue,
-                               const QString &fileName, int line, int column,
-                               bool *isBaseState);
-    virtual bool setBindingForInvalidProperty(QObject *object,
-                                              const QString &propertyName,
-                                              const QVariant &expression,
-                                              bool isLiteralValue);
-    virtual void resetBindingForInvalidProperty(QObject *object,
-                                                const QString &propertyName);
+    ~QQmlQtQuick2DebugStatesDelegate();
+    void buildStatesList(bool cleanList, const QList<QPointer<QObject> > &instances) override;
+    void updateBinding(QQmlContext *context,
+                       const QQmlProperty &property,
+                       const QVariant &expression, bool isLiteralValue,
+                       const QString &fileName, int line, int column,
+                       bool *isBaseState) override;
+    bool setBindingForInvalidProperty(QObject *object,
+                                      const QString &propertyName,
+                                      const QVariant &expression,
+                                      bool isLiteralValue) override;
+    void resetBindingForInvalidProperty(QObject *object,
+                                        const QString &propertyName) override;
 
 private:
     void buildStatesList(QObject *obj);

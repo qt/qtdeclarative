@@ -142,29 +142,29 @@ public:
     QQuickReplaceSignalHandler() {}
     ~QQuickReplaceSignalHandler() {}
 
-    virtual EventType type() const { return SignalHandler; }
+    EventType type() const override { return SignalHandler; }
 
     QQmlProperty property;
     QQmlBoundSignalExpressionPointer expression;
     QQmlBoundSignalExpressionPointer reverseExpression;
     QQmlBoundSignalExpressionPointer rewindExpression;
 
-    virtual void execute() {
+    void execute() override {
         QQmlPropertyPrivate::setSignalExpression(property, expression);
     }
 
-    virtual bool isReversable() { return true; }
-    virtual void reverse() {
+    bool isReversable() override { return true; }
+    void reverse() override {
         QQmlPropertyPrivate::setSignalExpression(property, reverseExpression);
     }
 
-    virtual void saveOriginals() {
+    void saveOriginals() override {
         saveCurrentValues();
         reverseExpression = rewindExpression;
     }
 
-    virtual bool needsCopy() { return true; }
-    virtual void copyOriginals(QQuickStateActionEvent *other)
+    bool needsCopy() override { return true; }
+    void copyOriginals(QQuickStateActionEvent *other) override
     {
         QQuickReplaceSignalHandler *rsh = static_cast<QQuickReplaceSignalHandler*>(other);
         saveCurrentValues();
@@ -173,14 +173,14 @@ public:
         reverseExpression = rsh->reverseExpression;
     }
 
-    virtual void rewind() {
+    void rewind() override {
         QQmlPropertyPrivate::setSignalExpression(property, rewindExpression);
     }
-    virtual void saveCurrentValues() {
+    void saveCurrentValues() override {
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
     }
 
-    virtual bool override(QQuickStateActionEvent*other) {
+    bool override(QQuickStateActionEvent *other) override {
         if (other == this)
             return true;
         if (other->type() != type())

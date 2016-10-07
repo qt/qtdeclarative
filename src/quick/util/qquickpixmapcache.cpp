@@ -177,7 +177,7 @@ class QQuickPixmapReaderThreadObject : public QObject {
 public:
     QQuickPixmapReaderThreadObject(QQuickPixmapReader *);
     void processJobs();
-    virtual bool event(QEvent *e);
+    bool event(QEvent *e) override;
 private slots:
     void networkRequestDone();
     void asyncResponseFinished();
@@ -892,7 +892,7 @@ public:
     void purgeCache();
 
 protected:
-    virtual void timerEvent(QTimerEvent *);
+    void timerEvent(QTimerEvent *) override;
 
 public:
     QHash<QQuickPixmapKey, QQuickPixmapData *> m_cache;
