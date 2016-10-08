@@ -573,29 +573,21 @@ Heap::QQmlSequence<Container>::QQmlSequence(QObject *object, int propertyIndex)
 namespace QV4 {
 
 typedef QQmlSequence<QStringList> QQmlQStringList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlQStringList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQStringList);
 typedef QQmlSequence<QList<QString> > QQmlStringList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlStringList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringList);
 typedef QQmlSequence<QList<int> > QQmlIntList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlIntList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntList);
 typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlUrlList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlList);
 typedef QQmlSequence<QModelIndexList> QQmlQModelIndexList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlQModelIndexList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexList);
 typedef QQmlSequence<QItemSelection> QQmlQItemSelectionRangeList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlQItemSelectionRangeList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQItemSelectionRangeList);
 typedef QQmlSequence<QList<bool> > QQmlBoolList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlBoolList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolList);
 typedef QQmlSequence<QList<qreal> > QQmlRealList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlRealList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealList);
 
 }
 
