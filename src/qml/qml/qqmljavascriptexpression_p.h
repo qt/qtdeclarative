@@ -100,7 +100,7 @@ public:
     QQmlJavaScriptExpression();
     virtual ~QQmlJavaScriptExpression();
 
-    virtual QString expressionIdentifier() = 0;
+    virtual QString expressionIdentifier() const = 0;
     virtual void expressionChanged() = 0;
 
     void evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope);

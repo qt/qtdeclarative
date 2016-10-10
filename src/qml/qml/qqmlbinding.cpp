@@ -449,7 +449,7 @@ QVariant QQmlBinding::evaluate()
     return scope.engine->toVariant(scope.result, qMetaTypeId<QList<QObject*> >());
 }
 
-QString QQmlBinding::expressionIdentifier()
+QString QQmlBinding::expressionIdentifier() const
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
     QV4::Scope scope(ep->v4engine());

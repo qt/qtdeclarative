@@ -275,9 +275,9 @@ void QQmlValueTypeWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value
     QV4::Object::advanceIterator(m, it, name, index, p, attributes);
 }
 
-bool QQmlValueTypeWrapper::isEqual(const QVariant& value)
+bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
 {
-    if (QQmlValueTypeReference *ref = as<QQmlValueTypeReference>())
+    if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
             return false;
     return (value == d()->toVariant());

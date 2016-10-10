@@ -230,7 +230,7 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
     return &getRoleOrCreate(key, type);
 }
 
-const ListLayout::Role *ListLayout::getExistingRole(const QString &key)
+const ListLayout::Role *ListLayout::getExistingRole(const QString &key) const
 {
     Role *r = 0;
     QStringHash<Role *>::Node *node = roleHash.findNode(key);
@@ -239,7 +239,7 @@ const ListLayout::Role *ListLayout::getExistingRole(const QString &key)
     return r;
 }
 
-const ListLayout::Role *ListLayout::getExistingRole(QV4::String *key)
+const ListLayout::Role *ListLayout::getExistingRole(QV4::String *key) const
 {
     Role *r = 0;
     QStringHash<Role *>::Node *node = roleHash.findNode(key);

@@ -85,7 +85,7 @@ public:
     bool expressionFunctionValid:1;
 
     // Inherited from QQmlJavaScriptExpression
-    QString expressionIdentifier() override;
+    QString expressionIdentifier() const override;
     void expressionChanged() override;
 
     QString expression;

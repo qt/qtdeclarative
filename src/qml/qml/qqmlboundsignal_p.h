@@ -79,7 +79,7 @@ public:
                               QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);
 
     // inherited from QQmlJavaScriptExpression.
-    QString expressionIdentifier() override;
+    QString expressionIdentifier() const override;
     void expressionChanged() override;
 
     // evaluation of a bound signal expression doesn't return any value

@@ -98,8 +98,8 @@ public:
 
     QVariant evaluate();
 
-    QString expressionIdentifier() Q_DECL_OVERRIDE;
-    void expressionChanged() Q_DECL_OVERRIDE;
+    QString expressionIdentifier() const override;
+    void expressionChanged() override;
 
 protected:
     virtual void doUpdate(const DeleteWatcher &watcher,

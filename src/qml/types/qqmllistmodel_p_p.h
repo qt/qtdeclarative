@@ -227,9 +227,9 @@ public:
     const Role &getRoleOrCreate(QV4::String *key, Role::DataType type);
     const Role &getRoleOrCreate(const QString &key, Role::DataType type);
 
-    const Role &getExistingRole(int index) { return *roles.at(index); }
-    const Role *getExistingRole(const QString &key);
-    const Role *getExistingRole(QV4::String *key);
+    const Role &getExistingRole(int index) const { return *roles.at(index); }
+    const Role *getExistingRole(const QString &key) const;
+    const Role *getExistingRole(QV4::String *key) const;
 
     int roleCount() const { return roles.count(); }
 
@@ -335,12 +335,12 @@ public:
         return m_layout->roleCount();
     }
 
-    const ListLayout::Role &getExistingRole(int index)
+    const ListLayout::Role &getExistingRole(int index) const
     {
         return m_layout->getExistingRole(index);
     }
 
-    const ListLayout::Role *getExistingRole(QV4::String *key)
+    const ListLayout::Role *getExistingRole(QV4::String *key) const
     {
         return m_layout->getExistingRole(key);
     }

@@ -470,7 +470,7 @@ private:
     void updateRecur(const QMetaObject *);
 
     template<typename K>
-    QQmlPropertyData *findNamedProperty(const K &key)
+    QQmlPropertyData *findNamedProperty(const K &key) const
     {
         StringCache::mapped_type *it = stringCache.value(key);
         return it ? it->second : 0;

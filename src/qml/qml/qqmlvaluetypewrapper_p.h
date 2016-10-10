@@ -91,7 +91,7 @@ public:
 
     QVariant toVariant() const;
     bool toGadget(void *data) const;
-    bool isEqual(const QVariant& value);
+    bool isEqual(const QVariant& value) const;
     int typeId() const;
     bool write(QObject *target, int propertyIndex) const;
 

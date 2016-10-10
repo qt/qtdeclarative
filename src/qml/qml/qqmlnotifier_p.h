@@ -94,9 +94,9 @@ public:
     inline QQmlNotifierEndpoint(Callback callback);
     inline ~QQmlNotifierEndpoint();
 
-    inline bool isConnected();
-    inline bool isConnected(QObject *source, int sourceSignal);
-    inline bool isConnected(QQmlNotifier *);
+    inline bool isConnected() const;
+    inline bool isConnected(QObject *source, int sourceSignal) const;
+    inline bool isConnected(QQmlNotifier *) const;
 
     void connect(QObject *source, int sourceSignal, QQmlEngine *engine);
     inline void connect(QQmlNotifier *);
@@ -162,7 +162,7 @@ QQmlNotifierEndpoint::~QQmlNotifierEndpoint()
     disconnect();
 }
 
-bool QQmlNotifierEndpoint::isConnected()
+bool QQmlNotifierEndpoint::isConnected() const
 {
     return prev != 0;
 }
@@ -171,13 +171,13 @@ bool QQmlNotifierEndpoint::isConnected()
     \a sourceSignal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */
-bool QQmlNotifierEndpoint::isConnected(QObject *source, int sourceSignal)
+bool QQmlNotifierEndpoint::isConnected(QObject *source, int sourceSignal) const
 {
     return this->sourceSignal != -1 && senderAsObject() == source &&
            this->sourceSignal == sourceSignal;
 }
 
-bool QQmlNotifierEndpoint::isConnected(QQmlNotifier *notifier)
+bool QQmlNotifierEndpoint::isConnected(QQmlNotifier *notifier) const
 {
     return sourceSignal == -1 && senderAsNotifier() == notifier;
 }
