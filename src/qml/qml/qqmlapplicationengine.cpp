@@ -287,13 +287,26 @@ void QQmlApplicationEngine::loadData(const QByteArray &data, const QUrl &url)
   Returns a list of all the root objects instantiated by the
   QQmlApplicationEngine. This will only contain objects loaded via load() or a
   convenience constructor.
+
+  \note In Qt versions prior to 5.9, this function is marked as non-\c{const}.
 */
 
-QList<QObject *> QQmlApplicationEngine::rootObjects()
+QList<QObject *> QQmlApplicationEngine::rootObjects() const
 {
-    Q_D(QQmlApplicationEngine);
+    Q_D(const QQmlApplicationEngine);
     return d->objects;
 }
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+/*!
+    \overload
+    \internal
+*/
+QList<QObject *> QQmlApplicationEngine::rootObjects()
+{
+    return qAsConst(*this).rootObjects();
+}
+#endif // < Qt 6
 
 QT_END_NAMESPACE
 
