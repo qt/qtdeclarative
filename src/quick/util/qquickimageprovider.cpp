@@ -105,7 +105,7 @@ QImage QQuickTextureFactory::image() const
 }
 
 /*!
-    Returns a QQuickTextureFactory holding the given image.
+    Returns a QQuickTextureFactory holding the given \a image.
 
     This is typically used as a helper in QQuickImageResponse::textureFactory.
 
@@ -187,6 +187,8 @@ QString QQuickImageResponse::errorString() const
     This method is used to communicate that the response is no longer required by the engine.
 
     It may be reimplemented to cancel a request in the provider side, however, it is not mandatory.
+
+    A cancelled QQuickImageResponse still needs to emit finished().
 */
 void QQuickImageResponse::cancel()
 {

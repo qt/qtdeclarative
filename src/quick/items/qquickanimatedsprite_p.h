@@ -172,6 +172,7 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 private:
+    void maybeUpdate();
     bool isCurrentFrameChangedConnected();
     void prepareNextFrame(QSGSpriteNode *node);
     void reloadImage();

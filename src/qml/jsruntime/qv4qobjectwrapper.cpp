@@ -614,8 +614,14 @@ bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
-    if (engine->jsEngine())
-        QQmlData::ensurePropertyCache(engine->jsEngine(), object);
+    if (QJSEngine *jsEngine = engine->jsEngine()) {
+        if (QQmlPropertyCache *cache = QQmlData::ensurePropertyCache(jsEngine, object)) {
+            ReturnedValue result = QV4::Encode::null();
+            void *args[] = { &result, &engine };
+            if (cache->callJSFactoryMethod(object, args))
+                return result;
+        }
+    }
     return (engine->memoryManager->allocObject<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
@@ -979,6 +985,10 @@ void QObjectWrapper::destroyObject(bool lastCall)
                     delete h->object();
                 else
                     h->object()->deleteLater();
+            } else {
+                // If the object is C++-owned, we still have to release the weak reference we have
+                // to it.
+                ddata->jsWrapper.clear();
             }
         }
     }

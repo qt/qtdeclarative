@@ -7033,15 +7033,6 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     }
 }
 
-void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
-{
-    Q_Q(QQuickItem);
-    QV4::QObjectWrapper::markWrapper(q, e);
-
-    for (QQuickItem *child : qAsConst(childItems))
-        QQuickItemPrivate::get(child)->markObjects(e);
-}
-
 #ifndef QT_NO_CURSOR
 
 /*!
@@ -8221,6 +8212,37 @@ QAccessible::Role QQuickItemPrivate::accessibleRole() const
     return QAccessible::NoRole;
 }
 #endif
+
+// helper code to let a visual parent mark its visual children for the garbage collector
+
+namespace QV4 {
+namespace Heap {
+struct QQuickItemWrapper : public QObjectWrapper {
+};
+}
+}
+
+struct QQuickItemWrapper : public QV4::QObjectWrapper {
+    V4_OBJECT2(QQuickItemWrapper, QV4::QObjectWrapper)
+    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickItemWrapper);
+
+void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+{
+    QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
+    if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
+        foreach (QQuickItem *child, QQuickItemPrivate::get(item)->childItems)
+            QV4::QObjectWrapper::markWrapper(child, e);
+    }
+    QV4::QObjectWrapper::markObjects(that, e);
+}
+
+quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
+{
+    return (engine->memoryManager->allocObject<QQuickItemWrapper>(q_func()))->asReturnedValue();
+}
 
 QT_END_NAMESPACE
 

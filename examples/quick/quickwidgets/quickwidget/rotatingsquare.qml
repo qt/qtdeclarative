@@ -57,4 +57,10 @@ Rectangle {
         anchors.centerIn: parent
         text: "Qt Quick running in a widget"
     }
+
+    function performLayerBasedGrab(fn) {
+        root.grabToImage(function(result) {
+            result.saveToFile(fn);
+        });
+    }
 }

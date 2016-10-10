@@ -1556,11 +1556,11 @@ void QQuickFlickablePrivate::replayDelayedPress()
 
         // If we have the grab, release before delivering the event
         if (QQuickWindow *w = q->window()) {
+            replayingPressEvent = true;
             if (w->mouseGrabberItem() == q)
                 q->ungrabMouse();
 
             // Use the event handler that will take care of finding the proper item to propagate the event
-            replayingPressEvent = true;
             QCoreApplication::sendEvent(w, mouseEvent.data());
             replayingPressEvent = false;
         }
@@ -1590,7 +1590,7 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         d->movementEndingTimer.stop();
         d->pressed = false;
         d->stealMouse = false;
-        if (!d->velocityTimeline.isActive())
+        if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
             movementEnding(true, true);
     }
 }
@@ -1643,7 +1643,7 @@ void QQuickFlickable::viewportMoved(Qt::Orientations orient)
 void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                                            QQuickTimeLineCallback::Callback fixupCallback)
 {
-    if (pressed || calcVelocity) {
+    if (!scrollingPhase && (pressed || calcVelocity)) {
         int elapsed = data.velocityTime.restart();
         if (elapsed > 0) {
             qreal velocity = (data.lastPos - data.move.value()) * 1000 / elapsed;
@@ -2216,7 +2216,8 @@ void QQuickFlickable::mouseUngrabEvent()
     Q_D(QQuickFlickable);
     // if our mouse grab has been removed (probably by another Flickable),
     // fix our state
-    d->cancelInteraction();
+    if (!d->replayingPressEvent)
+        d->cancelInteraction();
 }
 
 void QQuickFlickablePrivate::cancelInteraction()
