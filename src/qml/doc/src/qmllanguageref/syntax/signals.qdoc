@@ -187,7 +187,8 @@ Rectangle {
 
     signal activated(real xPosition, real yPosition)
 
-    width: 100; height: 100
+    property int side: 100
+    width: side; height: side
 
     MouseArea {
         anchors.fill: parent

@@ -77,7 +77,7 @@ namespace Heap {
 
 struct QQmlValueTypeWrapper;
 
-struct QObjectWrapper : Object {
+struct Q_QML_EXPORT QObjectWrapper : Object {
     void init(QObject *object);
     void destroy() {
         qObj.destroy();

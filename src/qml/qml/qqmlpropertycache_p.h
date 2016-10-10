@@ -431,6 +431,8 @@ public:
 
     void toMetaObjectBuilder(QMetaObjectBuilder &);
 
+    inline bool callJSFactoryMethod(QObject *object, void **args) const;
+
     static bool determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount, int *stringCount);
     static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
 
@@ -505,6 +507,7 @@ private:
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
+    int _jsFactoryMethodIndex;
     QByteArray _checksum;
 };
 
@@ -804,6 +807,17 @@ int QQmlPropertyCache::signalCount() const
 int QQmlPropertyCache::signalOffset() const
 {
     return signalHandlerIndexCacheStart;
+}
+
+bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const
+{
+    if (_jsFactoryMethodIndex != -1) {
+        _metaObject->d.static_metacall(object, QMetaObject::InvokeMetaMethod, _jsFactoryMethodIndex, args);
+        return true;
+    }
+    if (_parent)
+        return _parent->callJSFactoryMethod(object, args);
+    return false;
 }
 
 QQmlMetaObject::QQmlMetaObject()

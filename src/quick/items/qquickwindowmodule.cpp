@@ -47,6 +47,7 @@
 
 #include <private/qguiapplication_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <qpa/qplatformintegration.h>
 
 QT_BEGIN_NAMESPACE
@@ -104,12 +105,11 @@ void QQuickWindowQmlImpl::classBegin()
         if (e && !e->incubationController())
             e->setIncubationController(incubationController());
     }
-    Q_ASSERT(e);
     {
+        // The content item has CppOwnership policy (set in QQuickWindow). Ensure the presence of a JS
+        // wrapper so that the garbage collector can see the policy.
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(e);
-        QV4::Scope scope(v4);
-        QV4::ScopedObject v(scope, QV4::QQuickRootItemMarker::create(e, this));
-        d->rootItemMarker = v;
+        QV4::QObjectWrapper::wrap(v4, d->contentItem);
     }
 }
 
