@@ -123,7 +123,7 @@ public:
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
                                 const QRectF &srcRect, const QRectF &rect) override;
 
-    QQuickScaleGrid *border();
+    QQuickScaleGrid *border() const;
 
     enum TileMode { Stretch = Qt::StretchTile, Repeat = Qt::RepeatTile, Round = Qt::RoundTile };
     Q_ENUM(TileMode)

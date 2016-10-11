@@ -117,7 +117,7 @@ public:
 
     QQmlComponent *highlight() const;
     void setHighlight(QQmlComponent *highlight);
-    QQuickItem *highlightItem();
+    QQuickItem *highlightItem() const;
 
     enum HighlightRangeMode { NoHighlightRange, ApplyRange, StrictlyEnforceRange };
     Q_ENUM(HighlightRangeMode)

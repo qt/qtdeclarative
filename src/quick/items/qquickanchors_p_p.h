@@ -124,7 +124,7 @@ public:
 
     void clearItem(QQuickItem *);
 
-    QQuickGeometryChange calculateDependency(QQuickItem *);
+    QQuickGeometryChange calculateDependency(QQuickItem *) const;
     void addDepend(QQuickItem *);
     void remDepend(QQuickItem *);
     bool isItemComplete() const;
@@ -150,7 +150,7 @@ public:
     bool checkVAnchorValid(QQuickAnchorLine anchor) const;
     bool calcStretch(QQuickItem *edge1Item, QQuickAnchors::Anchor edge1Line,
                      QQuickItem *edge2Item, QQuickAnchors::Anchor edge2Line,
-                     qreal offset1, qreal offset2, QQuickAnchors::Anchor line, qreal &stretch);
+                     qreal offset1, qreal offset2, QQuickAnchors::Anchor line, qreal &stretch) const;
 
     bool isMirrored() const;
     void updateHorizontalAnchors();

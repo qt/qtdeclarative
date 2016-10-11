@@ -2079,7 +2079,7 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
     There is a unique instance per QQuickPointerDevice, which is determined
     from \a event's device.
 */
-QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event)
+QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) const
 {
     QQuickPointerDevice *dev = nullptr;
     switch (event->type()) {

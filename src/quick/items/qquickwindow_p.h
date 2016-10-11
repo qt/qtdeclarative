@@ -161,7 +161,7 @@ public:
     void deliverDelayedTouchEvent();
 
     // delivery of pointer events:
-    QQuickPointerEvent *pointerEventInstance(QEvent *ev);
+    QQuickPointerEvent *pointerEventInstance(QEvent *ev) const;
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);

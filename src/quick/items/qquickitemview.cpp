@@ -2430,14 +2430,14 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     return flags != QQmlInstanceModel::Referenced;
 }
 
-QQuickItem *QQuickItemViewPrivate::createHighlightItem()
+QQuickItem *QQuickItemViewPrivate::createHighlightItem() const
 {
     return createComponentItem(highlightComponent, 0.0, true);
 }
 
-QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault)
+QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault) const
 {
-    Q_Q(QQuickItemView);
+    Q_Q(const QQuickItemView);
 
     QQuickItem *item = 0;
     if (component) {

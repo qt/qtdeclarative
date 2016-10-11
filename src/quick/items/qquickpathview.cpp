@@ -902,7 +902,7 @@ void QQuickPathView::setHighlight(QQmlComponent *highlight)
 
   \sa highlight
 */
-QQuickItem *QQuickPathView::highlightItem()
+QQuickItem *QQuickPathView::highlightItem() const
 {
     Q_D(const QQuickPathView);
     return d->highlightItem;
@@ -1606,7 +1606,7 @@ qreal QQuickPathViewPrivate::calcVelocity() const
     return velocity;
 }
 
-qint64 QQuickPathViewPrivate::computeCurrentTime(QInputEvent *event)
+qint64 QQuickPathViewPrivate::computeCurrentTime(QInputEvent *event) const
 {
     if (0 != event->timestamp())
         return event->timestamp();

@@ -192,7 +192,7 @@ public:
     void setViewportX(qreal x);
     void setViewportY(qreal y);
 
-    qreal overShootDistance(qreal size);
+    qreal overShootDistance(qreal size) const;
 
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
 
@@ -260,8 +260,8 @@ public:
               const QVector2D &deltas, bool overThreshold, bool momentum,
               bool velocitySensitiveOverBounds, const QVector2D &velocity);
 
-    qint64 computeCurrentTime(QInputEvent *event);
-    qreal devicePixelRatio();
+    qint64 computeCurrentTime(QInputEvent *event) const;
+    qreal devicePixelRatio() const;
 
     // flickableData property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

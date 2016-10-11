@@ -143,7 +143,7 @@ QQuickFlipable::~QQuickFlipable()
   The front and back sides of the flipable.
 */
 
-QQuickItem *QQuickFlipable::front()
+QQuickItem *QQuickFlipable::front() const
 {
     Q_D(const QQuickFlipable);
     return d->front;

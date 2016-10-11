@@ -899,9 +899,9 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
     return ActionList() << a;
 }
 
-QQuickAnchorSet *QQuickAnchorChanges::anchors()
+QQuickAnchorSet *QQuickAnchorChanges::anchors() const
 {
-    Q_D(QQuickAnchorChanges);
+    Q_D(const QQuickAnchorChanges);
     return d->anchorSet;
 }
 
@@ -1134,9 +1134,9 @@ QQuickStateActionEvent::EventType QQuickAnchorChanges::type() const
     return AnchorChanges;
 }
 
-QList<QQuickStateAction> QQuickAnchorChanges::additionalActions()
+QList<QQuickStateAction> QQuickAnchorChanges::additionalActions() const
 {
-    Q_D(QQuickAnchorChanges);
+    Q_D(const QQuickAnchorChanges);
     QList<QQuickStateAction> extra;
 
     QQuickAnchors::Anchors combined = d->anchorSet->d_func()->usedAnchors | d->anchorSet->d_func()->resetAnchors;

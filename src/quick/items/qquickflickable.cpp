@@ -277,7 +277,7 @@ void QQuickFlickablePrivate::init()
     Returns the amount to overshoot by given a velocity.
     Will be roughly in range 0 - size/4
 */
-qreal QQuickFlickablePrivate::overShootDistance(qreal size)
+qreal QQuickFlickablePrivate::overShootDistance(qreal size) const
 {
     if (maxVelocity <= 0)
         return 0.0;
@@ -951,7 +951,7 @@ void QQuickFlickable::setPixelAligned(bool align)
     }
 }
 
-qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event)
+qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event) const
 {
     if (0 != event->timestamp())
         return event->timestamp();
@@ -960,7 +960,7 @@ qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event)
     return timer.elapsed();
 }
 
-qreal QQuickFlickablePrivate::devicePixelRatio()
+qreal QQuickFlickablePrivate::devicePixelRatio() const
 {
     return (window ? window->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
 }

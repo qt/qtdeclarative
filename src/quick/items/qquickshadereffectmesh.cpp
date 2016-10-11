@@ -364,7 +364,7 @@ QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, int at
     }
     \endqml
 */
-QQuickScaleGrid *QQuickBorderImageMesh::border()
+QQuickScaleGrid *QQuickBorderImageMesh::border() const
 {
     return m_border;
 }

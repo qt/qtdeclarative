@@ -125,7 +125,7 @@ public:
     QPointF pointNear(const QPointF &point, qreal *nearPercent=0) const;
     void addVelocitySample(qreal v);
     qreal calcVelocity() const;
-    qint64 computeCurrentTime(QInputEvent *event);
+    qint64 computeCurrentTime(QInputEvent *event) const;
     void setDragging(bool d);
 
     QQuickPath *path;
