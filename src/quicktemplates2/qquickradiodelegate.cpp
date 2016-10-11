@@ -56,8 +56,22 @@ QT_BEGIN_NAMESPACE
     off (unchecked). Radio delegates are typically used to select one option
     from a set of options.
 
-    The state of the radio delegate can be set with the
+    RadioDelegate inherits its API from \l ItemDelegate, which is inherited
+    from AbstractButton. For instance, you can set \l {AbstractButton::text}{text},
+    and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton
+    API. The state of the radio delegate can be set with the
     \l {AbstractButton::}{checked} property.
+
+    Radio delegates are \l {AbstractButton::autoExclusive}{auto-exclusive}
+    by default. Only one delegate can be checked at any time amongst radio
+    delegates that belong to the same parent item; checking another delegate
+    automatically unchecks the previously checked one. For radio delegates
+    that do not share a common parent, ButtonGroup can be used to manage
+    exclusivity.
+
+    \l RadioButton is similar to RadioDelegate, except that it is typically
+    not used in views, but rather when there are only a few options, and often
+    with the requirement that each button is uniquely identifiable.
 
     \code
     ButtonGroup {
@@ -74,7 +88,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing RadioDelegate}, {Delegate Controls}
+    \sa {Customizing RadioDelegate}, {Delegate Controls}, RadioButton
 */
 
 QQuickRadioDelegate::QQuickRadioDelegate(QQuickItem *parent) :

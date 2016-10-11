@@ -43,6 +43,7 @@
 /tests/manual/gifs/tst_gifs
 /tests/manual/styles/styles
 /tests/manual/testbench/testbench
+/tests/manual/screenshots/screenshots
 
 /tests/auto/snippets/screenshots/*.png
 /tests/manual/gifs/gifs/*.gif

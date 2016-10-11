@@ -335,6 +335,38 @@
     \l {Customizing a Control} section. The code can be used as a starting
     point to implement a custom look and feel.
 
+    \section2 Customizing ApplicationWindow
+
+        ApplicationWindow consists of one visual item:
+        \l {ApplicationWindow::background}{background}. It is also possible
+        to customize the \l {ApplicationWindow::overlay}{modal} and
+        \l {ApplicationWindow::overlay}{modeless} items.
+
+        \code
+        import QtQuick 2.7
+        import QtQuick.Controls 2.0
+
+        ApplicationWindow {
+            visible: true
+
+            background: Rectangle {
+                gradient: Gradient {
+                    GradientStop { position: 0; color: "#ffffff" }
+                    GradientStop { position: 1; color: "#c1bbf9" }
+                }
+            }
+
+            overlay.modal: Rectangle {
+                color: "#8f28282a"
+            }
+
+            overlay.modeless: Rectangle {
+                color: "#2f28282a"
+            }
+        }
+        \endcode
+
+
     \section2 Customizing BusyIndicator
 
         BusyIndicator consists of two visual items: \l {Control::background}{background}

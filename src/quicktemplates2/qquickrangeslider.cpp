@@ -56,17 +56,6 @@ QT_BEGIN_NAMESPACE
     RangeSlider is used to select a range specified by two values, by sliding
     each handle along a track.
 
-    \table
-    \row \li \image qtquickcontrols2-rangeslider-normal.png
-         \li A range slider in its normal state.
-    \row \li \image qtquickcontrols2-rangeslider-first-handle-focused.png
-         \li A range slider whose first handle has active focus.
-    \row \li \image qtquickcontrols2-rangeslider-second-handle-focused.png
-         \li A range slider whose second handle has active focus.
-    \row \li \image qtquickcontrols2-rangeslider-disabled.png
-         \li A range slider that is disabled.
-    \endtable
-
     \code
     RangeSlider {
         first.value: 0.25

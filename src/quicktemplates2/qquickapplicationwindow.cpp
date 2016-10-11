@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
 
     \note By default, an ApplicationWindow is not visible.
 
-    \sa Page, {Container Controls}
+    \sa {Customizing ApplicationWindow}, Page, {Container Controls}
 */
 
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
@@ -275,9 +275,15 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     The background item is stacked under the \l {contentItem}{content item},
     but above the \l {Window::color}{background color} of the window.
 
+    The background item is useful for images and gradients, for example,
+    but the \l {Window::}{color} property is preferable for solid colors,
+    as it doesn't need to create an item.
+
     \note If the background item has no explicit size specified, it automatically
           follows the control's size. In most cases, there is no need to specify
           width or height for a background item.
+
+    \sa {Customizing ApplicationWindow}, contentItem, header, footer, overlay
 */
 QQuickItem *QQuickApplicationWindow::background() const
 {
@@ -408,6 +414,17 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
     This default property holds the list of all objects declared as children of
     the window.
 
+    The data property allows you to freely mix visual children, resources and
+    other windows in an ApplicationWindow.
+
+    If you assign an Item to the contentData list, it becomes a child of the
+    window's contentItem, so that it appears inside the window. The item's
+    parent will be the window's \l contentItem.
+
+    It should not generally be necessary to refer to the contentData property,
+    as it is the default property for ApplicationWindow and thus all child
+    items are automatically assigned to this property.
+
     \sa contentItem
 */
 QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
@@ -420,6 +437,11 @@ QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
     \readonly
 
     This property holds the window content item.
+
+    The content item is stacked above the \l background item, and under the
+    \l header, \l footer, and \l overlay items.
+
+    \sa background, header, footer, overlay
 */
 QQuickItem *QQuickApplicationWindow::contentItem() const
 {
@@ -476,6 +498,14 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
         \li This property holds a component to use as a visual item that implements
             background dimming for modeless popups. It is created for and stacked below
             visible dimming popups.
+    \row
+        \li overlay.pressed()
+        \li This signal is emitted when the overlay is pressed by the user while
+            a popup is visible.
+    \row
+        \li overlay.released()
+        \li This signal is emitted when the overlay is released by the user while
+            a modal popup is visible.
     \endtable
 
     \sa Popup::modal, Popup::dim
