@@ -36,7 +36,7 @@
             "purpose": "Provides a Direct3D 12 backend for the Qt Quick Scenegraph",
             "condition": "tests.d3d12",
             "output": [
-                "privateFeature"
+                "publicFeature"
             ]
         },
         "quick-animatedimage": {
