@@ -180,12 +180,25 @@ QQuickItemGrabResult::QQuickItemGrabResult(QObject *parent)
 /*!
  * Saves the grab result as an image to \a fileName. Returns true
  * if successful; otherwise returns false.
+ *
+ * \note In Qt versions prior to 5.9, this function is marked as non-\c{const}.
+ */
+bool QQuickItemGrabResult::saveToFile(const QString &fileName) const
+{
+    Q_D(const QQuickItemGrabResult);
+    return d->image.save(fileName);
+}
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+/*!
+ * \overload
+ * \internal
  */
 bool QQuickItemGrabResult::saveToFile(const QString &fileName)
 {
-    Q_D(QQuickItemGrabResult);
-    return d->image.save(fileName);
+    return qAsConst(*this).saveToFile(fileName);
 }
+#endif // < Qt 6
 
 QUrl QQuickItemGrabResult::url() const
 {
