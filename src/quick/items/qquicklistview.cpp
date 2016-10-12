@@ -1761,7 +1761,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     State should \e never be stored in a delegate.
 
     ListView attaches a number of properties to the root item of the delegate, for example
-    \c {ListView:isCurrentItem}.  In the following example, the root delegate item can access
+    \c ListView.isCurrentItem.  In the following example, the root delegate item can access
     this attached property directly as \c ListView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
 

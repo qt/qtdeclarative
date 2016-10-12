@@ -46,6 +46,8 @@
 
 using namespace QV4;
 
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
+
 const QV4::VTable QV4::ArrayData::static_vtbl = {
     0,
     QV4::ArrayData::IsExecutionContext,
@@ -93,6 +95,8 @@ const ArrayVTable SparseArrayData::static_vtbl =
     SparseArrayData::truncate,
     SparseArrayData::length
 };
+
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SimpleArrayData));
 Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SparseArrayData));

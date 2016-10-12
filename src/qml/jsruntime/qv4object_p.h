@@ -130,7 +130,7 @@ struct ObjectVTable
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
-#define DEFINE_OBJECT_VTABLE(classname) \
+#define DEFINE_OBJECT_VTABLE_BASE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
     DEFINE_MANAGED_VTABLE_INT(classname, (QT_PREPEND_NAMESPACE(QtPrivate)::is_same<classname::SuperClass, Object>::value) ? Q_NULLPTR : &classname::SuperClass::static_vtbl.vTable), \
@@ -150,7 +150,15 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     advanceIterator                            \
 }
 
+#define DEFINE_OBJECT_VTABLE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+DEFINE_OBJECT_VTABLE_BASE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
+#define DEFINE_OBJECT_TEMPLATE_VTABLE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+template<> DEFINE_OBJECT_VTABLE_BASE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
