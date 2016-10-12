@@ -978,7 +978,7 @@ int QQmlPropertyCache::originalClone(QObject *object, int index)
     return index;
 }
 
-QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QString &property)
+static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QStringRef &property)
 {
     Q_ASSERT(metaObject);
 
@@ -1038,12 +1038,17 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     return rv;
 }
 
-inline const QString &qQmlPropertyCacheToString(const QString &string)
+static inline QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QString &property)
+{
+    return qQmlPropertyCacheCreate(metaObject, QStringRef(&property));
+}
+
+static inline const QStringRef &qQmlPropertyCacheToString(const QStringRef &string)
 {
     return string;
 }
 
-inline QString qQmlPropertyCacheToString(const QV4::String *string)
+static inline QString qQmlPropertyCacheToString(const QV4::String *string)
 {
     return string->toQString();
 }
@@ -1090,10 +1095,10 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QJSEngine *engine, QObject *obj,
-                                    const QString &name, QQmlContextData *context, QQmlPropertyData &local)
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QStringRef &name,
+                            QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QStringRef &>(engine, obj, name, context, local);
 }
 
 // these two functions are copied from qmetaobject.cpp
