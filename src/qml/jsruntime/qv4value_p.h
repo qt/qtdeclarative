@@ -223,6 +223,17 @@ public:
         setTagValue(Empty_Type_Internal, quint32(i));
     }
 
+    Q_ALWAYS_INLINE void setEmpty(quint32 i)
+    {
+        setTagValue(Empty_Type_Internal, i);
+    }
+
+    Q_ALWAYS_INLINE quint32 emptyValue()
+    {
+        Q_ASSERT(isEmpty());
+        return quint32(value());
+    }
+
     enum Type {
         Undefined_Type,
         Managed_Type,
@@ -527,6 +538,7 @@ ReturnedValue Heap::Base::asReturnedValue() const
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
     inline static Primitive emptyValue();
+    inline static Primitive emptyValue(uint v);
     static inline Primitive fromBoolean(bool b);
     static inline Primitive fromInt32(int i);
     inline static Primitive undefinedValue();
@@ -553,6 +565,13 @@ inline Primitive Primitive::emptyValue()
 {
     Primitive v;
     v.setEmpty(0);
+    return v;
+}
+
+inline Primitive Primitive::emptyValue(uint e)
+{
+    Primitive v;
+    v.setEmpty(e);
     return v;
 }
 

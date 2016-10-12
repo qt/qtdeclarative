@@ -100,7 +100,7 @@ Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SparseArrayData));
 static Q_ALWAYS_INLINE void storeValue(ReturnedValue *target, uint value)
 {
     Value v;
-    v.setTagValue(Value::fromReturnedValue(*target).tag(), value);
+    v.setEmpty(value);
     *target = v.asReturnedValue();
 }
 
@@ -189,6 +189,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     } else {
         sparse->sparse = new SparseArray;
         lastFree = &sparse->freeList;
+        storeValue(lastFree, 0);
         for (uint i = 0; i < toCopy; ++i) {
             if (!sparse->arrayData[i].isEmpty()) {
                 SparseArrayNode *n = sparse->sparse->insert(i);
@@ -209,6 +210,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         }
         storeValue(lastFree, UINT_MAX);
     }
+
+    Q_ASSERT(Value::fromReturnedValue(sparse->freeList).isEmpty());
     // ### Could explicitly free the old data
 }
 
@@ -357,12 +360,12 @@ void SparseArrayData::free(Heap::ArrayData *d, uint idx)
     Value *v = d->arrayData + idx;
     if (d->attrs && d->attrs[idx].isAccessor()) {
         // double slot, free both. Order is important, so we have a double slot for allocation again afterwards.
-        v[1].setTagValue(Value::Empty_Type, Value::fromReturnedValue(d->freeList).value());
-        v[0].setTagValue(Value::Empty_Type, idx + 1);
+        v[1].setEmpty(Value::fromReturnedValue(d->freeList).emptyValue());
+        v[0].setEmpty(idx + 1);
     } else {
-        v->setTagValue(Value::Empty_Type, Value::fromReturnedValue(d->freeList).value());
+        v->setEmpty(Value::fromReturnedValue(d->freeList).emptyValue());
     }
-    d->freeList = idx;
+    d->freeList = Primitive::emptyValue(idx).asReturnedValue();
     if (d->attrs)
         d->attrs[idx].clear();
 }
@@ -400,9 +403,9 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
             Q_ASSERT(dd->arrayData[Value::fromReturnedValue(*last).value()].value() != Value::fromReturnedValue(*last).value());
             if (dd->arrayData[Value::fromReturnedValue(*last).value()].value() == (Value::fromReturnedValue(*last).value() + 1)) {
                 // found two slots in a row
-                uint idx = Value::fromReturnedValue(*last).uint_32();
+                uint idx = Value::fromReturnedValue(*last).emptyValue();
                 Value lastV = Value::fromReturnedValue(*last);
-                lastV.setTagValue(lastV.tag(), dd->arrayData[lastV.value() + 1].value());
+                lastV.setEmpty(dd->arrayData[lastV.emptyValue() + 1].value());
                 *last = lastV.rawValue();
                 dd->attrs[idx] = Attr_Accessor;
                 return idx;
@@ -416,7 +419,8 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
         }
         uint idx = Value::fromReturnedValue(dd->freeList).value();
         Q_ASSERT(idx != UINT_MAX);
-        dd->freeList = dd->arrayData[idx].uint_32();
+        dd->freeList = dd->arrayData[idx].asReturnedValue();
+        Q_ASSERT(Value::fromReturnedValue(dd->freeList).isEmpty());
         if (dd->attrs)
             dd->attrs[idx] = Attr_Data;
         return idx;
@@ -471,13 +475,14 @@ bool SparseArrayData::del(Object *o, uint index)
 
     if (isAccessor) {
         // free up both indices
-        dd->arrayData[pidx + 1].setTagValue(Value::Empty_Type, Value::fromReturnedValue(dd->freeList).value());
-        dd->arrayData[pidx].setTagValue(Value::Undefined_Type, pidx + 1);
+        dd->arrayData[pidx + 1].setEmpty(Value::fromReturnedValue(dd->freeList).emptyValue());
+        dd->arrayData[pidx].setEmpty(pidx + 1);
     } else {
-        dd->arrayData[pidx].setTagValue(Value::Empty_Type, Value::fromReturnedValue(dd->freeList).value());
+        Q_ASSERT(dd->type == Heap::ArrayData::Sparse);
+        dd->arrayData[pidx].setEmpty(Value::fromReturnedValue(dd->freeList).emptyValue());
     }
 
-    dd->freeList = pidx;
+    dd->freeList = Primitive::emptyValue(pidx).asReturnedValue();
     dd->sparse->erase(n);
     return true;
 }

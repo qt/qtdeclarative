@@ -460,7 +460,7 @@ void MemoryManager::sweep(bool lastSweep)
         remainingWeakQObjectWrappers.reserve(pendingCount);
         for (int i = 0; i < pendingCount; ++i) {
             Value *v = m_pendingFreedObjectWrapperValue.at(i);
-            if (v->tag() == Value::Undefined_Type)
+            if (v->isUndefined() || v->isEmpty())
                 PersistentValueStorage::free(v);
             else
                 remainingWeakQObjectWrappers.append(v);

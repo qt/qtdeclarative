@@ -971,7 +971,7 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
                 tag = QV4::Value::Integer_Type_Internal;
                 break;
             default:
-                tag = QV4::Value::Undefined_Type;
+                tag = 31337; // bogus value
                 Q_UNREACHABLE();
             }
             _as->store32(Assembler::TrustedImm32(tag), addr);
@@ -1418,7 +1418,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             Address temp = _as->loadAddress(Assembler::ScratchRegister, s->cond);
             Address tag = temp;
             tag.offset += QV4::Value::tagOffset();
-            Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type));
+            Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type_Internal));
 
             Address data = temp;
             data.offset += QV4::Value::valueOffset();
@@ -1582,7 +1582,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
                     tag = QV4::Value::Boolean_Type_Internal;
                     break;
                 default:
-                    tag = QV4::Value::Undefined_Type;
+                    tag = 31337; // bogus value
                     Q_UNREACHABLE();
                 }
                 _as->or64(Assembler::TrustedImm64(tag << 32),
