@@ -3687,9 +3687,10 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
     } else {
         int remaining = m_maxLength - m_text.length();
         if (remaining != 0) {
-            m_text.insert(m_cursor, s.left(remaining));
-            for (int i = 0; i < s.leftRef(remaining).length(); ++i)
-               addCommand(Command(Insert, m_cursor++, s.at(i), -1, -1));
+            const QStringRef remainingStr = s.leftRef(remaining);
+            m_text.insert(m_cursor, remainingStr);
+            for (auto e : remainingStr)
+               addCommand(Command(Insert, m_cursor++, e, -1, -1));
             m_textDirty = true;
         }
     }
