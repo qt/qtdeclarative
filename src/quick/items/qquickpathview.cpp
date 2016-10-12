@@ -63,12 +63,6 @@ Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
 
 const qreal MinimumFlickVelocity = 75.0;
 
-inline qreal qmlMod(qreal x, qreal y)
-{
-    using std::fmod;
-    return fmod(x, y);
-}
-
 static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;
 
 QQuickPathViewAttached::QQuickPathViewAttached(QObject *parent)
@@ -280,13 +274,13 @@ qreal QQuickPathViewPrivate::positionOfIndex(qreal index) const
                                    || snapMode != QQuickPathView::NoSnap))
             start = highlightRangeStart;
         qreal globalPos = index + offset;
-        globalPos = qmlMod(globalPos, qreal(modelCount)) / modelCount;
+        globalPos = std::fmod(globalPos, qreal(modelCount)) / modelCount;
         if (pathItems != -1 && pathItems < modelCount) {
             globalPos += start / mappedRange;
-            globalPos = qmlMod(globalPos, 1.0);
+            globalPos = std::fmod(globalPos, qreal(1.0));
             pos = globalPos * mappedRange;
         } else {
-            pos = qmlMod(globalPos + start, 1.0);
+            pos = std::fmod(globalPos + start, qreal(1.0));
         }
     }
 
@@ -397,7 +391,7 @@ void QQuickPathViewPrivate::setHighlightPosition(qreal pos)
 
         qreal range = qreal(modelCount);
         // calc normalized position of highlight relative to offset
-        qreal relativeHighlight = qmlMod(pos + offset, range) / range;
+        qreal relativeHighlight = std::fmod(pos + offset, range) / range;
 
         if (!highlightUp && relativeHighlight > end / mappedRange) {
             qreal diff = 1.0 - relativeHighlight;
@@ -836,7 +830,7 @@ void QQuickPathViewPrivate::setOffset(qreal o)
     if (offset != o) {
         if (isValid() && q->isComponentComplete()) {
             qreal oldOffset = offset;
-            offset = qmlMod(o, qreal(modelCount));
+            offset = std::fmod(o, qreal(modelCount));
             if (offset < 0)
                 offset += qreal(modelCount);
             qCDebug(lcItemViewDelegateLifecycle) << o << "was" << oldOffset << "now" << offset;
@@ -1468,7 +1462,7 @@ void QQuickPathView::positionViewAtIndex(int index, int mode)
         // Small offset since the last point coincides with the first and
         // this the only "end" position that gives the expected visual result.
         qreal adj = sizeof(qreal) == sizeof(float) ? 0.00001f : 0.000000000001;
-        endOffset = qmlMod(beginOffset + count, d->modelCount) - adj;
+        endOffset = std::fmod(beginOffset + count, qreal(d->modelCount)) - adj;
     }
     qreal offset = d->offset;
     switch (mode) {
@@ -1489,8 +1483,8 @@ void QQuickPathView::positionViewAtIndex(int index, int mode)
     case Contain:
         if ((beginOffset < endOffset && (d->offset < beginOffset || d->offset > endOffset))
                 || (d->offset < beginOffset && d->offset > endOffset)) {
-            qreal diff1 = qmlMod(beginOffset - d->offset + d->modelCount, d->modelCount);
-            qreal diff2 = qmlMod(d->offset - endOffset + d->modelCount, d->modelCount);
+            qreal diff1 = std::fmod(beginOffset - d->offset + d->modelCount, qreal(d->modelCount));
+            qreal diff2 = std::fmod(d->offset - endOffset + d->modelCount, qreal(d->modelCount));
             if (diff1 < diff2)
                 offset = beginOffset;
             else
@@ -1915,7 +1909,7 @@ void QQuickPathView::componentComplete()
     if (d->model) {
         d->modelCount = d->model->count();
         if (d->modelCount && d->currentIndex != 0) // an initial value has been provided for currentIndex
-            d->offset = qmlMod(d->modelCount - currentIndexRemainder(d->currentIndex, d->modelCount), d->modelCount);
+            d->offset = std::fmod(qreal(d->modelCount - currentIndexRemainder(d->currentIndex, d->modelCount)), qreal(d->modelCount));
     }
 
     d->createHighlight();
@@ -2231,7 +2225,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         d->modelCount += i.count;
     }
 
-    d->offset = qmlMod(d->offset, d->modelCount);
+    d->offset = std::fmod(d->offset, qreal(d->modelCount));
     if (d->offset < 0)
         d->offset += d->modelCount;
     if (d->currentIndex == -1)
@@ -2249,7 +2243,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         d->tl.reset(d->moveOffset);
     } else {
         if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange) {
-            d->offset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
+            d->offset = std::fmod(qreal(d->modelCount - d->currentIndex), qreal(d->modelCount));
             changedOffset = true;
         }
         d->updateMappedRange();
@@ -2295,10 +2289,10 @@ int QQuickPathViewPrivate::calcCurrentIndex()
 {
     int current = 0;
     if (modelCount && model && items.count()) {
-        offset = qmlMod(offset, modelCount);
+        offset = std::fmod(offset, qreal(modelCount));
         if (offset < 0)
             offset += modelCount;
-        current = qRound(qAbs(qmlMod(modelCount - offset, modelCount)));
+        current = qRound(qAbs(std::fmod(modelCount - offset, qreal(modelCount))));
         current = current % modelCount;
     }
 
@@ -2383,7 +2377,7 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
     if (!model || modelCount <= 0)
         return;
 
-    qreal targetOffset = qmlMod(modelCount - index, modelCount);
+    qreal targetOffset = std::fmod(qreal(modelCount - index), qreal(modelCount));
 
     if (offset == targetOffset)
         return;
