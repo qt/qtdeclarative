@@ -219,7 +219,6 @@ ApplicationWindow {
         x: Math.round((window.width - width) / 2)
         y: Math.round(window.height / 6)
         width: Math.round(Math.min(window.width, window.height) / 3 * 2)
-        height: settingsColumn.implicitHeight + topPadding + bottomPadding
         modal: true
         focus: true
 
