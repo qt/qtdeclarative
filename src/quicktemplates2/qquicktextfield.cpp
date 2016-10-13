@@ -271,9 +271,7 @@ void QQuickTextField::setFont(const QFont &font)
 
     This property holds the background item.
 
-    \note If the background item has no explicit size specified, it automatically
-          follows the control's size. In most cases, there is no need to specify
-          width or height for a background item.
+    \input qquickcontrol-background.qdocinc notes
 
     \sa {Customizing TextField}
 */
