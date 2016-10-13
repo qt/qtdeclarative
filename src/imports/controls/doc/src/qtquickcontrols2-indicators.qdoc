@@ -52,6 +52,13 @@
     \l BusyIndicator can be used to show that an operation is in progress,
     and that the UI has to wait for the operation to complete.
 
+    \section1 ProgressBar Control
+
+    \image qtquickcontrols2-progressbar.gif
+
+    \l ProgressBar indicates the progress of an operation. The value should be
+    updated regularly.
+
     \section1 ScrollBar Control
 
     \image qtquickcontrols2-scrollbar.gif
