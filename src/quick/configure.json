@@ -4,6 +4,7 @@
         "qml-private",
         "gui-private"
     ],
+    "testDir": "../../config.tests",
 
     "commandline": {
         "options": {
