@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A container with context-sensitive controls.
+    \brief A container for context-sensitive controls.
 
     ToolBar is a container of application-wide and context sensitive
     actions and controls, such as navigation buttons and search fields.
@@ -109,8 +109,8 @@ QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
 
     This property holds the position of the toolbar.
 
-    \note If the toolbar is assigned as a header or footer of ApplicationWindow
-    or Page, the appropriate position is set automatically.
+    \note If the toolbar is assigned as a header or footer of \l ApplicationWindow
+    or \l Page, the appropriate position is set automatically.
 
     Possible values:
     \value ToolBar.Header The toolbar is at the top, as a window or page header.
