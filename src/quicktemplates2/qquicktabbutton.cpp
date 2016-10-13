@@ -48,13 +48,17 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-navigation
-    \brief A tab button control that can be found on a TabBar.
+    \brief A tab button control that can be used in a TabBar.
 
     \image qtquickcontrols2-tabbutton.png
 
     TabButton is used in conjunction with a \l TabBar.
 
     \snippet qtquickcontrols2-tabbutton.qml 1
+
+    TabButton inherits its API from AbstractButton. For instance, you can set
+    \l {AbstractButton::text}{text}, and react to \l {AbstractButton::clicked}{clicks}
+    using the AbstractButton API.
 
     \sa TabBar, {Customizing TabButton}, {Button Controls}, {Navigation Controls}
 */
