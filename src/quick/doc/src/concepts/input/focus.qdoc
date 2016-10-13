@@ -66,7 +66,7 @@ See also the \l {Keys}{Keys attached property} and \l {KeyNavigation}{KeyNavigat
 \section1 Querying the Active Focus Item
 
 Whether or not an \l Item has active focus can be queried through the
-property \c {Item::activeFocus} property. For example, here we have a \l Text
+\c {Item::activeFocus} property. For example, here we have a \l Text
 type whose text is determined by whether or not it has active focus.
 
 \snippet qml/focus/rectangle.qml active focus
@@ -98,17 +98,17 @@ The code that imports and creates two MyWidget instances:
 The MyWidget code:
 \snippet qml/focus/MyWidget.qml mywidget
 
-We would like to have the first MyWidget object to have the focus by setting its
+We want the first \c MyWidget object to have the focus, so we set its
 \c focus property to \c true. However, by running the code, we can confirm that
 the second widget receives the focus.
 
 \image declarative-qmlfocus2.png
 
 Looking at both \c MyWidget and \c window code, the problem is evident - there
-are three types that set the \c focus property set to \c true. The two
-MyWidget sets the \c focus to \c true and the \c window component also sets the
+are three types that set the \c focus property to \c true. The two
+\c {MyWidget}s set the \c focus to \c true and the \c window component also sets the
 focus. Ultimately, only one type can have keyboard focus, and the system has
-to decide which type receives the focus. When the second MyWidget is created,
+to decide which type receives the focus. When the second \c MyWidget is created,
 it receives the focus because it is the last type to set its \c focus
 property to \c true.
 
@@ -190,7 +190,7 @@ print the name of the current list item.
 
 \image declarative-qmlfocus5.png
 
-While the example is simple, there are a lot going on behind the scenes. Whenever
+While the example is simple, there is a lot going on behind the scenes. Whenever
 the current item changes, the \l ListView sets the delegate's \c {Item::focus}
 property. As the \l ListView is a focus scope, this doesn't affect the
 rest of the application. However, if the \l ListView itself has

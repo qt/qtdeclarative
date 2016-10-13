@@ -139,7 +139,7 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++()
     while (p) {
         while (index < kEntriesPerPage - 1) {
             ++index;
-            if (static_cast<Page *>(p)->values[index].tag() != QV4::Value::Empty_Type)
+            if (!static_cast<Page *>(p)->values[index].isEmpty())
                 return *this;
         }
         index = -1;

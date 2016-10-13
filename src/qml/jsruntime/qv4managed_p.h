@@ -106,6 +106,18 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define Q_VTABLE_FUNCTION(classname, func) \
     (classname::func == QV4::Managed::func ? 0 : classname::func)
 
+// Q_VTABLE_FUNCTION triggers a bogus tautological-compare warning in GCC6+
+#if defined(Q_CC_GNU) && Q_CC_GNU >= 600
+#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+    QT_WARNING_PUSH; \
+    QT_WARNING_DISABLE_GCC("-Wtautological-compare")
+
+#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
+    ;QT_WARNING_POP
+#else
+#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
+#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
+#endif
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
 {     \
@@ -125,7 +137,9 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \
-const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0)
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 struct Q_QML_PRIVATE_EXPORT Managed : Value
 {

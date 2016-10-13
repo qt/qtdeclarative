@@ -132,16 +132,20 @@ static void insertHoleIntoPropertyData(Object *object, int idx)
     int icSize = object->internalClass()->size;
     int from = qMax(idx, inlineSize);
     int to = from + 1;
-    if (from < icSize)
-        memmove(object->propertyData(to), object->propertyData(from), icSize - from - 1);
+    if (from < icSize) {
+        memmove(object->propertyData(to), object->propertyData(from),
+                (icSize - from - 1) * sizeof(Value));
+    }
     if (from == idx)
         return;
     if (inlineSize < icSize)
         *object->propertyData(inlineSize) = *object->propertyData(inlineSize - 1);
     from = idx;
     to = from + 1;
-    if (from < inlineSize - 1)
-        memmove(object->propertyData(to), object->propertyData(from), inlineSize - from - 1);
+    if (from < inlineSize - 1) {
+        memmove(object->propertyData(to), object->propertyData(from),
+                (inlineSize - from - 1) * sizeof(Value));
+    }
 }
 
 static void removeFromPropertyData(Object *object, int idx, bool accessor = false)

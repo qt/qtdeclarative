@@ -109,7 +109,7 @@ public:
     void setContentsScale(qreal s);
     qreal contentsScale() const { return m_contentsScale; }
 
-    void setFastFBOResizing(bool dynamic);
+    void setFastFBOResizing(bool fastResizing);
     bool fastFBOResizing() const { return m_fastFBOResizing; }
 
     void setTextureSize(const QSize &textureSize);
