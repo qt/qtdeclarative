@@ -107,8 +107,8 @@ void tst_animation::animationelements_data()
 {
     QTest::addColumn<QString>("type");
 
-    QSet<QString> types = QQmlMetaType::qmlTypeNames().toSet();
-    foreach (const QString &type, types) {
+    const QSet<QString> types = QQmlMetaType::qmlTypeNames().toSet();
+    for (const QString &type : types) {
         if (type.contains(QLatin1String("Animation")))
             QTest::newRow(type.toLatin1()) << type;
     }

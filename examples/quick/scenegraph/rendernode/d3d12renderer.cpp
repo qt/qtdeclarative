@@ -78,7 +78,7 @@ void D3D12RenderNode::releaseResources()
 void D3D12RenderNode::init()
 {
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    m_device = static_cast<ID3D12Device *>(rif->getResource(QSGRendererInterface::Device));
+    m_device = static_cast<ID3D12Device *>(rif->getResource(m_item->window(), QSGRendererInterface::Device));
     Q_ASSERT(m_device);
 
     D3D12_ROOT_PARAMETER rootParameter;
@@ -153,7 +153,20 @@ void D3D12RenderNode::init()
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // not in use due to !DepthEnable, but this would be the correct format otherwise
-    psoDesc.SampleDesc.Count = 1;
+    // We are rendering on the default render target so if the QuickWindow/View
+    // has requested samples > 0 then we have to follow suit.
+    const uint samples = qMax(1, m_item->window()->format().samples());
+    psoDesc.SampleDesc.Count = samples;
+    if (samples > 1) {
+        D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaInfo = {};
+        msaaInfo.Format = psoDesc.RTVFormats[0];
+        msaaInfo.SampleCount = samples;
+        if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaInfo, sizeof(msaaInfo)))) {
+            if (msaaInfo.NumQualityLevels > 0)
+                psoDesc.SampleDesc.Quality = msaaInfo.NumQualityLevels - 1;
+        }
+    }
+
     if (FAILED(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)))) {
         qWarning("Failed to create graphics pipeline state");
         return;
@@ -222,7 +235,7 @@ void D3D12RenderNode::render(const RenderState *state)
         init();
 
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(rif->getResource(QSGRendererInterface::CommandList));
+    ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(rif->getResource(m_item->window(), QSGRendererInterface::CommandList));
     Q_ASSERT(commandList);
 
     const int msize = 16 * sizeof(float);
@@ -256,5 +269,15 @@ void D3D12RenderNode::render(const RenderState *state)
 
 // No need to reimplement changedStates() because no relevant commands are
 // added to the command list in render().
+
+QSGRenderNode::RenderingFlags D3D12RenderNode::flags() const
+{
+    return BoundedRectRendering | DepthAwareRendering;
+}
+
+QRectF D3D12RenderNode::rect() const
+{
+    return QRect(0, 0, m_item->width(), m_item->height());
+}
 
 #endif // HAS_D3D12

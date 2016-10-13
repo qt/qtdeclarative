@@ -157,28 +157,24 @@ Heap::StringCtor::StringCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue StringCtor::construct(const Managed *m, CallData *callData)
+void StringCtor::construct(const Managed *m, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
-    Scope scope(v4);
     ScopedString value(scope);
     if (callData->argc)
         value = callData->args[0].toString(v4);
     else
         value = v4->newString();
-    return Encode(v4->newStringObject(value));
+    scope.result = Encode(v4->newStringObject(value));
 }
 
-ReturnedValue StringCtor::call(const Managed *m, CallData *callData)
+void StringCtor::call(const Managed *, Scope &scope, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
-    Scope scope(v4);
-    ScopedValue value(scope);
+    ExecutionEngine *v4 = scope.engine;
     if (callData->argc)
-        value = callData->args[0].toString(v4);
+        scope.result = callData->args[0].toString(v4);
     else
-        value = v4->newString();
-    return value->asReturnedValue();
+        scope.result = v4->newString();
 }
 
 void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -423,7 +419,8 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
     if (!rx) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
-        rx = context->d()->engine->regExpCtor()->construct(callData);
+        context->d()->engine->regExpCtor()->construct(scope, callData);
+        rx = scope.result.asReturnedValue();
     }
 
     if (!rx)
@@ -439,8 +436,10 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
     ScopedCallData callData(scope, 1);
     callData->thisObject = rx;
     callData->args[0] = s;
-    if (!global)
-        return exec->call(callData);
+    if (!global) {
+        exec->call(scope, callData);
+        return scope.result.asReturnedValue();
+    }
 
     ScopedString lastIndex(scope, context->d()->engine->newString(QStringLiteral("lastIndex")));
     rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
@@ -448,14 +447,13 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     double previousLastIndex = 0;
     uint n = 0;
-    ScopedValue result(scope);
     ScopedValue matchStr(scope);
     ScopedValue index(scope);
     while (1) {
-        result = exec->call(callData);
-        if (result->isNull())
+        exec->call(scope, callData);
+        if (scope.result.isNull())
             break;
-        assert(result->isObject());
+        assert(scope.result.isObject());
         index = rx->get(lastIndex, 0);
         double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
@@ -464,7 +462,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
         } else {
             previousLastIndex = thisIndex;
         }
-        matchStr = result->objectValue()->getIndexed(0);
+        matchStr = scope.result.objectValue()->getIndexed(0);
         a->arraySet(n, matchStr);
         ++n;
     }
@@ -580,7 +578,6 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     }
 
     QString result;
-    ScopedValue replacement(scope);
     ScopedValue replaceValue(scope, ctx->argument(1));
     ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
@@ -605,9 +602,9 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
             callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
             callData->args[numCaptures + 1] = ctx->d()->engine->newString(string);
 
-            replacement = searchCallback->call(callData);
+            searchCallback->call(scope, callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
-            result += replacement->toQString();
+            result += scope.result.toQString();
             lastEnd = matchEnd;
         }
         result += string.midRef(lastEnd);
@@ -640,17 +637,17 @@ ReturnedValue StringPrototype::method_search(CallContext *ctx)
 {
     Scope scope(ctx);
     QString string = getThisString(ctx);
-    ScopedValue regExpValue(scope, ctx->argument(0));
+    scope.result = ctx->argument(0);
     if (scope.engine->hasException)
         return Encode::undefined();
-    Scoped<RegExpObject> regExp(scope, regExpValue->as<RegExpObject>());
+    Scoped<RegExpObject> regExp(scope, scope.result.as<RegExpObject>());
     if (!regExp) {
         ScopedCallData callData(scope, 1);
-        callData->args[0] = regExpValue;
-        regExpValue = ctx->d()->engine->regExpCtor()->construct(callData);
+        callData->args[0] = scope.result;
+        ctx->d()->engine->regExpCtor()->construct(scope, callData);
         if (scope.engine->hasException)
             return Encode::undefined();
-        regExp = regExpValue->as<RegExpObject>();
+        regExp = scope.result.as<RegExpObject>();
         Q_ASSERT(regExp);
     }
     Scoped<RegExp> re(scope, regExp->value());

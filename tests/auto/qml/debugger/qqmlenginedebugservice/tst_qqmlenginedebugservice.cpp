@@ -1223,16 +1223,15 @@ void tst_QQmlEngineDebugService::queryObjectTree()
 int main(int argc, char *argv[])
 {
     int _argc = argc + 1;
-    char **_argv = new char*[_argc];
+    QScopedArrayPointer<char *>_argv(new char*[_argc]);
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
     char arg[] = "-qmljsdebugger=port:3768,services:QmlDebugger";
     _argv[_argc - 1] = arg;
 
-    QGuiApplication app(_argc, _argv);
+    QGuiApplication app(_argc, _argv.data());
     tst_QQmlEngineDebugService tc;
-    return QTest::qExec(&tc, _argc, _argv);
-    delete _argv;
+    return QTest::qExec(&tc, _argc, _argv.data());
 }
 
 #include "tst_qqmlenginedebugservice.moc"

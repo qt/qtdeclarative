@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 QQmlProxyMetaObject::QQmlProxyMetaObject(QObject *obj, QList<ProxyData> *mList)
 : metaObjects(mList), proxies(0), parent(0), object(obj)
 {
-    *static_cast<QMetaObject *>(this) = *metaObjects->first().metaObject;
+    *static_cast<QMetaObject *>(this) = *metaObjects->constFirst().metaObject;
 
     QObjectPrivate *op = QObjectPrivate::get(obj);
     if (op->metaObject)
@@ -71,7 +71,7 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
 
     if ((c == QMetaObject::ReadProperty ||
         c == QMetaObject::WriteProperty) &&
-            id >= metaObjects->last().propertyOffset) {
+            id >= metaObjects->constLast().propertyOffset) {
 
         for (int ii = 0; ii < metaObjects->count(); ++ii) {
             const ProxyData &data = metaObjects->at(ii);
@@ -107,7 +107,7 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
             }
         }
     } else if (c == QMetaObject::InvokeMetaMethod &&
-               id >= metaObjects->last().methodOffset) {
+               id >= metaObjects->constLast().methodOffset) {
         QMetaMethod m = object->metaObject()->method(id);
         if (m.methodType() == QMetaMethod::Signal) {
             QMetaObject::activate(object, id, a);

@@ -54,17 +54,21 @@
 #include <QtGui/QRegion>
 #include <QtCore/QRect>
 #include <QtGui/QTransform>
+#include <QtQuick/qsgrectanglenode.h>
+#include <QtQuick/qsgimagenode.h>
+#include <QtQuick/qsgninepatchnode.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGNode;
 class QSGSimpleRectNode;
 class QSGSimpleTextureNode;
-class QSGSoftwareImageNode;
+class QSGSoftwareInternalImageNode;
 class QSGSoftwarePainterNode;
-class QSGSoftwareRectangleNode;
+class QSGSoftwareInternalRectangleNode;
 class QSGSoftwareGlyphNode;
 class QSGSoftwareNinePatchNode;
+class QSGSoftwareSpriteNode;
+class QSGRenderNode;
 
 class QSGSoftwareRenderableNode
 {
@@ -77,7 +81,11 @@ public:
         Painter,
         Rectangle,
         Glyph,
-        NinePatch
+        NinePatch,
+        SimpleRectangle,
+        SimpleImage,
+        SpriteNode,
+        RenderNode
     };
 
     QSGSoftwareRenderableNode(NodeType type, QSGNode *node);
@@ -93,7 +101,7 @@ public:
     bool isDirtyRegionEmpty() const;
 
     void setTransform(const QTransform &transform);
-    void setClipRegion(const QRegion &clipRegion);
+    void setClipRegion(const QRegion &clipRegion, bool hasClipRegion = true);
     void setOpacity(float opacity);
     QTransform transform() const { return m_transform; }
     QRegion clipRegion() const { return m_clipRegion; }
@@ -112,11 +120,15 @@ private:
     union RenderableNodeHandle {
         QSGSimpleRectNode *simpleRectNode;
         QSGSimpleTextureNode *simpleTextureNode;
-        QSGSoftwareImageNode *imageNode;
+        QSGSoftwareInternalImageNode *imageNode;
         QSGSoftwarePainterNode *painterNode;
-        QSGSoftwareRectangleNode *rectangleNode;
+        QSGSoftwareInternalRectangleNode *rectangleNode;
         QSGSoftwareGlyphNode *glpyhNode;
         QSGSoftwareNinePatchNode *ninePatchNode;
+        QSGRectangleNode *simpleRectangleNode;
+        QSGImageNode *simpleImageNode;
+        QSGSoftwareSpriteNode *spriteNode;
+        QSGRenderNode *renderNode;
     };
 
     const NodeType m_nodeType;
@@ -130,6 +142,7 @@ private:
 
     QTransform m_transform;
     QRegion m_clipRegion;
+    bool m_hasClipRegion;
     float m_opacity;
 
     QRect m_boundingRect;

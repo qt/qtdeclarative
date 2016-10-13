@@ -76,18 +76,20 @@ public:
     void endVisit(QSGGeometryNode *) override;
     bool visit(QSGOpacityNode *) override;
     void endVisit(QSGOpacityNode *) override;
-    bool visit(QSGImageNode *) override;
-    void endVisit(QSGImageNode *) override;
+    bool visit(QSGInternalImageNode *) override;
+    void endVisit(QSGInternalImageNode *) override;
     bool visit(QSGPainterNode *) override;
     void endVisit(QSGPainterNode *) override;
-    bool visit(QSGRectangleNode *) override;
-    void endVisit(QSGRectangleNode *) override;
+    bool visit(QSGInternalRectangleNode *) override;
+    void endVisit(QSGInternalRectangleNode *) override;
     bool visit(QSGGlyphNode *) override;
     void endVisit(QSGGlyphNode *) override;
-    bool visit(QSGNinePatchNode *) override;
-    void endVisit(QSGNinePatchNode *) override;
     bool visit(QSGRootNode *) override;
     void endVisit(QSGRootNode *) override;
+    bool visit(QSGSpriteNode *) override;
+    void endVisit(QSGSpriteNode *) override;
+    bool visit(QSGRenderNode *) override;
+    void endVisit(QSGRenderNode *) override;
 
     void updateNodes(QSGNode *node, bool isNodeRemoved = false);
 
@@ -95,6 +97,7 @@ private:
     struct NodeState {
         float opacity;
         QRegion clip;
+        bool hasClip;
         QTransform transform;
         QSGNode *parent;
     };
@@ -107,6 +110,7 @@ private:
     QSGAbstractSoftwareRenderer *m_renderer;
     QStack<float> m_opacityState;
     QStack<QRegion> m_clipState;
+    bool m_hasClip;
     QStack<QTransform> m_transformState;
     QHash<QSGNode*,NodeState> m_stateMap;
 };
@@ -124,7 +128,7 @@ bool QSGSoftwareRenderableNodeUpdater::updateRenderableNode(QSGSoftwareRenderabl
     //Update the node
     renderableNode->setTransform(m_transformState.top());
     renderableNode->setOpacity(m_opacityState.top());
-    renderableNode->setClipRegion(m_clipState.top());
+    renderableNode->setClipRegion(m_clipState.top(), m_hasClip);
 
     renderableNode->update();
     m_stateMap[node] = currentState(node);

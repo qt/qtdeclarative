@@ -179,7 +179,7 @@ void QQuickTextDocumentWithImageResources::drawObject(
 {
 }
 
-QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
+QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format) const
 {
     QVariant res = resource(QTextDocument::ImageResource, QUrl(format.name()));
     return res.value<QImage>();
@@ -219,7 +219,7 @@ QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(
 
 void QQuickTextDocumentWithImageResources::clearResources()
 {
-    foreach (QQuickPixmap *pixmap, m_resources)
+    for (QQuickPixmap *pixmap : qAsConst(m_resources))
         pixmap->clear(this);
     qDeleteAll(m_resources);
     m_resources.clear();

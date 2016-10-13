@@ -389,7 +389,7 @@ public Q_SLOTS:
 
 protected:
     //This one only once per frame (effectively)
-    void componentComplete();
+    void componentComplete() override;
 
 private Q_SLOTS:
     void emittersChanged();
@@ -477,12 +477,12 @@ public:
         : QAbstractAnimation(static_cast<QObject*>(system)), m_system(system)
     { }
 protected:
-    virtual void updateCurrentTime( int t )
+    void updateCurrentTime(int t) override
     {
         m_system->updateCurrentTime(t);
     }
 
-    virtual int duration() const
+    int duration() const override
     {
         return -1;
     }

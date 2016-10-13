@@ -122,7 +122,7 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     QV4::ScopedCallData callData(scope, 1);
     callData->thisObject = v4->globalObject->asReturnedValue();
     callData->args[0] = status;
-    f->call(callData);
+    f->call(scope, callData);
     if (scope.hasException())
         scope.engine->catchException();
 }

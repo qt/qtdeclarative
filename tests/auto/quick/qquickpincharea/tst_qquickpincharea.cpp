@@ -286,6 +286,7 @@ void tst_QQuickPinchArea::pan()
     QPoint p1(80, 80);
     QPoint p2(100, 100);
     {
+        const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
         QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, device);
         pinchSequence.press(0, p1, window).commit();
         QQuickTouchUtils::flush(window);
@@ -293,23 +294,63 @@ void tst_QQuickPinchArea::pan()
         // we have to reuse the same pinchSequence object.
         pinchSequence.stationary(0).press(1, p2, window).commit();
         QQuickTouchUtils::flush(window);
-        p1 += QPoint(10,10);
-        p2 += QPoint(10,10);
-        pinchSequence.move(0, p1,window).move(1, p2,window).commit();
-        QQuickTouchUtils::flush(window);
+        QVERIFY(!root->property("pinchActive").toBool());
+        QCOMPARE(root->property("scale").toReal(), -1.0);
 
-        QCOMPARE(root->property("scale").toReal(), 1.0);
+        p1 += QPoint(dragThreshold - 1, 0);
+        p2 += QPoint(dragThreshold - 1, 0);
+        pinchSequence.move(0, p1, window).move(1, p2, window).commit();
+        QQuickTouchUtils::flush(window);
+        // movement < dragThreshold: pinch not yet active
+        QVERIFY(!root->property("pinchActive").toBool());
+        QCOMPARE(root->property("scale").toReal(), -1.0);
+
+        // exactly the dragThreshold: pinch starts
+        p1 += QPoint(1, 0);
+        p2 += QPoint(1, 0);
+        pinchSequence.move(0, p1, window).move(1, p2, window).commit();
+        QQuickTouchUtils::flush(window);
         QVERIFY(root->property("pinchActive").toBool());
+        QCOMPARE(root->property("scale").toReal(), 1.0);
 
-        p1 += QPoint(10,10);
-        p2 += QPoint(10,10);
-        pinchSequence.move(0, p1,window).move(1, p2,window).commit();
+        // Calculation of the center point is tricky at first:
+        // center point of the two touch points in item coordinates:
+        // scene coordinates: (80, 80) + (dragThreshold, 0), (100, 100) + (dragThreshold, 0)
+        //                    = ((180+dT)/2, 180/2) = (90+dT, 90)
+        // item  coordinates: (scene) - (50, 50) = (40+dT, 40)
+        QCOMPARE(root->property("center").toPointF(), QPointF(40 + dragThreshold, 40));
+        // pan started, but no actual movement registered yet:
+        // blackrect starts at 50,50
+        QCOMPARE(blackRect->x(), 50.0);
+        QCOMPARE(blackRect->y(), 50.0);
+
+        p1 += QPoint(10, 0);
+        p2 += QPoint(10, 0);
+        pinchSequence.move(0, p1, window).move(1, p2, window).commit();
         QQuickTouchUtils::flush(window);
-    }
+        QCOMPARE(root->property("center").toPointF(), QPointF(40 + 10 + dragThreshold, 40));
+        QCOMPARE(blackRect->x(), 60.0);
+        QCOMPARE(blackRect->y(), 50.0);
 
-    QCOMPARE(root->property("center").toPointF(), QPointF(60, 60)); // blackrect is at 50,50
-    QCOMPARE(blackRect->x(), 60.0);
-    QCOMPARE(blackRect->y(), 60.0);
+        p1 += QPoint(0, 10);
+        p2 += QPoint(0, 10);
+        pinchSequence.move(0, p1, window).move(1, p2, window).commit();
+        QQuickTouchUtils::flush(window);
+        // next big surprise: the center is in item local coordinates and the item was just
+        // moved 10 to the right... which offsets the center point 10 to the left
+        QCOMPARE(root->property("center").toPointF(), QPointF(40 + 10 - 10 + dragThreshold, 40 + 10));
+        QCOMPARE(blackRect->x(), 60.0);
+        QCOMPARE(blackRect->y(), 60.0);
+
+        p1 += QPoint(10, 10);
+        p2 += QPoint(10, 10);
+        pinchSequence.move(0, p1, window).move(1, p2, window).commit();
+        QQuickTouchUtils::flush(window);
+        // now the item moved again, thus the center point of the touch is moved in total by (10, 10)
+        QCOMPARE(root->property("center").toPointF(), QPointF(50 + dragThreshold, 50));
+        QCOMPARE(blackRect->x(), 70.0);
+        QCOMPARE(blackRect->y(), 70.0);
+    }
 
     // pan x beyond bound
     p1 += QPoint(100,100);
@@ -318,7 +359,7 @@ void tst_QQuickPinchArea::pan()
     QQuickTouchUtils::flush(window);
 
     QCOMPARE(blackRect->x(), 140.0);
-    QCOMPARE(blackRect->y(), 160.0);
+    QCOMPARE(blackRect->y(), 170.0);
 
     QTest::touchEvent(window, device).release(0, p1, window).release(1, p2, window);
     QQuickTouchUtils::flush(window);
@@ -470,6 +511,7 @@ void tst_QQuickPinchArea::cancel()
         QCOMPARE(blackRect->scale(), 1.5);
 
         QTouchEvent cancelEvent(QEvent::TouchCancel);
+        cancelEvent.setDevice(device);
         QCoreApplication::sendEvent(window, &cancelEvent);
         QQuickTouchUtils::flush(window);
 

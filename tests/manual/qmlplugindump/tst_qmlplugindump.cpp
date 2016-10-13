@@ -92,7 +92,7 @@ public:
     {
         QRegularExpression re;
         QRegularExpressionMatch m;
-        Q_FOREACH (const QString &e, m_expected) {
+        for (const QString &e : m_expected) {
             re.setPattern(e);
             m = re.match(QString::fromLatin1(buffer));
             if (!m.hasMatch()) {
@@ -187,7 +187,8 @@ Test createTest(const QString &id, const QJsonObject &def)
         return Test(id);
     }
     QStringList patterns;
-    Q_FOREACH (const QJsonValue &x, expected.toArray()) {
+    const auto expectedArray = expected.toArray();
+    for (const QJsonValue &x : expectedArray) {
         if (!x.isString()) {
             qWarning() << "Wrong definition for test: " << id << ".";
             return Test(id);
@@ -331,7 +332,7 @@ void tst_qmlplugindump::plugin_data()
     QTest::addColumn<QString>("version");
     QTest::addColumn<QStringList>("expected");
 
-    Q_FOREACH (const Test &t, tests) {
+    for (const Test &t : qAsConst(tests)) {
         if (t.isNull())
             QSKIP("Errors in test definition.");
         QTest::newRow(t.id.toLatin1().data()) << t.project << t.version << t.expected;
@@ -357,9 +358,9 @@ void tst_qmlplugindump::plugin()
 void tst_qmlplugindump::cleanupTestCase()
 {
     QSet<const QString> projects;
-    Q_FOREACH (const Test &t, tests)
+    for (const Test &t : qAsConst(tests))
         projects.insert(t.project);
-    Q_FOREACH (const QString &p, projects) {
+    for (const QString &p : qAsConst(projects)) {
         if (!cleanUpSample(p))
             qWarning() << "Error in cleaning up project" << p << ".";
     }

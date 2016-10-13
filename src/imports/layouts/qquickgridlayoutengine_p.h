@@ -67,7 +67,7 @@ public:
         : QGridLayoutItem(row, column, rowSpan, columnSpan, alignment), m_item(item), sizeHintCacheDirty(true), useFallbackToWidthOrHeight(true) {}
 
 
-    QSizeF sizeHint(Qt::SizeHint which, const QSizeF &constraint) const
+    QSizeF sizeHint(Qt::SizeHint which, const QSizeF &constraint) const override
     {
         Q_UNUSED(constraint);   // Quick Layouts does not support constraint atm
         return effectiveSizeHints()[which];
@@ -99,12 +99,12 @@ public:
         sizeHintCacheDirty = true;
     }
 
-    QLayoutPolicy::Policy sizePolicy(Qt::Orientation orientation) const
+    QLayoutPolicy::Policy sizePolicy(Qt::Orientation orientation) const override
     {
         return QQuickLayout::effectiveSizePolicy_helper(m_item, orientation, attachedLayoutObject(m_item, false));
     }
 
-    void setGeometry(const QRectF &rect)
+    void setGeometry(const QRectF &rect) override
     {
         QQuickLayoutAttached *info = attachedLayoutObject(m_item, false);
         const QRectF r = info ? rect.marginsRemoved(info->qMargins()) : rect;

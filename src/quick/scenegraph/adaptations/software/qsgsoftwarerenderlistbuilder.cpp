@@ -41,15 +41,16 @@
 
 #include "qsgsoftwarerenderablenode_p.h"
 #include "qsgabstractsoftwarerenderer_p.h"
-#include "qsgsoftwareimagenode_p.h"
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
-#include <QtQuick/QSGSimpleRectNode>
+#include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/qsgsimpletexturenode.h>
+#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,12 +96,12 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGOpacityNode *)
 {
 }
 
-bool QSGSoftwareRenderListBuilder::visit(QSGImageNode *node)
+bool QSGSoftwareRenderListBuilder::visit(QSGInternalImageNode *node)
 {
     return addRenderableNode(node);
 }
 
-void QSGSoftwareRenderListBuilder::endVisit(QSGImageNode *)
+void QSGSoftwareRenderListBuilder::endVisit(QSGInternalImageNode *)
 {
 }
 
@@ -113,12 +114,12 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGPainterNode *)
 {
 }
 
-bool QSGSoftwareRenderListBuilder::visit(QSGRectangleNode *node)
+bool QSGSoftwareRenderListBuilder::visit(QSGInternalRectangleNode *node)
 {
     return addRenderableNode(node);
 }
 
-void QSGSoftwareRenderListBuilder::endVisit(QSGRectangleNode *)
+void QSGSoftwareRenderListBuilder::endVisit(QSGInternalRectangleNode *)
 {
 }
 
@@ -131,21 +132,31 @@ void QSGSoftwareRenderListBuilder::endVisit(QSGGlyphNode *)
 {
 }
 
-bool QSGSoftwareRenderListBuilder::visit(QSGNinePatchNode *node)
-{
-    return addRenderableNode(node);
-}
-
-void QSGSoftwareRenderListBuilder::endVisit(QSGNinePatchNode *)
-{
-}
-
 bool QSGSoftwareRenderListBuilder::visit(QSGRootNode *)
 {
     return true;
 }
 
 void QSGSoftwareRenderListBuilder::endVisit(QSGRootNode *)
+{
+}
+
+bool QSGSoftwareRenderListBuilder::visit(QSGSpriteNode *node)
+{
+    return addRenderableNode(node);
+}
+
+void QSGSoftwareRenderListBuilder::endVisit(QSGSpriteNode *)
+{
+
+}
+
+bool QSGSoftwareRenderListBuilder::visit(QSGRenderNode *node)
+{
+    return addRenderableNode(node);
+}
+
+void QSGSoftwareRenderListBuilder::endVisit(QSGRenderNode *)
 {
 }
 

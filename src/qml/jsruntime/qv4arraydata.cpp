@@ -99,8 +99,8 @@ Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SparseArrayData));
 
 static Q_ALWAYS_INLINE void storeValue(ReturnedValue *target, uint value)
 {
-    Value v = Value::fromReturnedValue(*target);
-    v.setValue(value);
+    Value v;
+    v.setTagValue(Value::fromReturnedValue(*target).tag(), value);
     *target = v.asReturnedValue();
 }
 
@@ -143,13 +143,13 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     Scoped<ArrayData> newData(scope);
     if (newType < Heap::ArrayData::Sparse) {
         Heap::SimpleArrayData *n = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
-        new (n) Heap::SimpleArrayData;
+        n->init();
         n->offset = 0;
         n->len = d ? d->d()->len : 0;
         newData = n;
     } else {
         Heap::SparseArrayData *n = scope.engine->memoryManager->allocManaged<SparseArrayData>(size);
-        new (n) Heap::SparseArrayData;
+        n->init();
         newData = n;
     }
     newData->setAlloc(alloc);
@@ -195,7 +195,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
                 n->value = i;
             } else {
                 storeValue(lastFree, i);
-                sparse->arrayData[i].setTag(Value::Empty_Type);
+                sparse->arrayData[i].setEmpty();
                 lastFree = &sparse->arrayData[i].rawValueRef();
             }
         }
@@ -204,7 +204,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     if (toCopy < sparse->alloc) {
         for (uint i = toCopy; i < sparse->alloc; ++i) {
             storeValue(lastFree, i);
-            sparse->arrayData[i].setTag(Value::Empty_Type);
+            sparse->arrayData[i].setEmpty();
             lastFree = &sparse->arrayData[i].rawValueRef();
         }
         storeValue(lastFree, UINT_MAX);
@@ -402,7 +402,7 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
                 // found two slots in a row
                 uint idx = Value::fromReturnedValue(*last).uint_32();
                 Value lastV = Value::fromReturnedValue(*last);
-                lastV.setValue(dd->arrayData[lastV.value() + 1].value());
+                lastV.setTagValue(lastV.tag(), dd->arrayData[lastV.value() + 1].value());
                 *last = lastV.rawValue();
                 dd->attrs[idx] = Attr_Accessor;
                 return idx;

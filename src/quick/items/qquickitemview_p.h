@@ -312,7 +312,7 @@ public:
         : QObject(parent), m_isCurrent(false), m_delayRemove(false) {}
     ~QQuickItemViewAttached() {}
 
-    QQuickItemView *view() { return m_view; }
+    QQuickItemView *view() const { return m_view; }
     void setView(QQuickItemView *view) {
         if (view != m_view) {
             m_view = view;

@@ -60,7 +60,7 @@ public:
     QQuickBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
 
-    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 
     QQmlProperty property;
     QVariant targetValue;
@@ -180,7 +180,7 @@ void QQuickBehavior::write(const QVariant &value)
     if (!d->animation || bypass) {
         if (d->animationInstance)
             d->animationInstance->stop();
-        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         d->targetValue = value;
         return;
     }
@@ -206,7 +206,7 @@ void QQuickBehavior::write(const QVariant &value)
     // is needed (value has not changed). If the Behavior was already
     // running, let it continue as normal to ensure correct behavior and state.
     if (!behaviorActive && d->targetValue == currentValue) {
-        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         return;
     }
 
@@ -234,7 +234,7 @@ void QQuickBehavior::write(const QVariant &value)
         d->blockRunningChanged = false;
     }
     if (!after.contains(d->property))
-        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
 }
 
 void QQuickBehavior::setTarget(const QQmlProperty &property)

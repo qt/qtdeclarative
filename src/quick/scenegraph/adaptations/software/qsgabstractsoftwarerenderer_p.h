@@ -75,10 +75,12 @@ public:
 
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
+    void markDirty();
+
 protected:
     QRegion renderNodes(QPainter *painter);
     void buildRenderList();
-    void optimizeRenderList();
+    QRegion optimizeRenderList();
 
     void setBackgroundColor(const QColor &color);
     void setBackgroundSize(const QSize &size);

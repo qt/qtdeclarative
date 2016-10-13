@@ -58,8 +58,41 @@ namespace QV4 {
 
 struct NoThrowEngine;
 
+namespace {
+template <typename T>
+struct ExceptionCheck {
+    enum { NeedsCheck = 1 };
+};
+// push_catch and pop context methods shouldn't check for exceptions
+template <>
+struct ExceptionCheck<void (*)(QV4::ExecutionEngine *)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A>
+struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
+    enum { NeedsCheck = 0 };
+};
+template <>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A, typename B>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A, B)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A, typename B, typename C>
+struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
+    enum { NeedsCheck = 0 };
+};
+} // anonymous namespace
+
 #define RUNTIME_METHOD(returnvalue, name, args) \
     typedef returnvalue (*Method_##name)args; \
+    enum { Method_##name##_NeedsExceptionCheck = ExceptionCheck<Method_##name>::NeedsCheck }; \
     static returnvalue method_##name args; \
     const Method_##name name
 
@@ -167,16 +200,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         , INIT_RUNTIME_METHOD(setQmlScopeObjectProperty)
         , INIT_RUNTIME_METHOD(setQmlContextObjectProperty)
         , INIT_RUNTIME_METHOD(setQmlQObjectProperty)
-        , INIT_RUNTIME_METHOD(accessQObjectQRealProperty)
-        , INIT_RUNTIME_METHOD(accessQObjectQObjectProperty)
-        , INIT_RUNTIME_METHOD(accessQObjectIntProperty)
-        , INIT_RUNTIME_METHOD(accessQObjectBoolProperty)
-        , INIT_RUNTIME_METHOD(accessQObjectQStringProperty)
-        , INIT_RUNTIME_METHOD(accessQmlScopeObjectQRealProperty)
-        , INIT_RUNTIME_METHOD(accessQmlScopeObjectQObjectProperty)
-        , INIT_RUNTIME_METHOD(accessQmlScopeObjectIntProperty)
-        , INIT_RUNTIME_METHOD(accessQmlScopeObjectBoolProperty)
-        , INIT_RUNTIME_METHOD(accessQmlScopeObjectQStringProperty)
     { }
 
     // call
@@ -304,8 +327,8 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     RUNTIME_METHOD(ReturnedValue, getQmlImportedScripts, (NoThrowEngine *engine));
     RUNTIME_METHOD(ReturnedValue, getQmlSingleton, (NoThrowEngine *engine, int nameIndex));
     RUNTIME_METHOD(ReturnedValue, getQmlAttachedProperty, (ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex));
-    RUNTIME_METHOD(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
-    RUNTIME_METHOD(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired));
+    RUNTIME_METHOD(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired));
     RUNTIME_METHOD(ReturnedValue, getQmlQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired));
     RUNTIME_METHOD(ReturnedValue, getQmlSingletonQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired));
     RUNTIME_METHOD(ReturnedValue, getQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index));
@@ -313,17 +336,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     RUNTIME_METHOD(void, setQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value));
     RUNTIME_METHOD(void, setQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value));
     RUNTIME_METHOD(void, setQmlQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value));
-
-    RUNTIME_METHOD(ReturnedValue, accessQObjectQRealProperty, (ExecutionEngine *engine, const Value &object, QQmlAccessors *accessors, int coreIndex, int notifyIndex));
-    RUNTIME_METHOD(ReturnedValue, accessQObjectQObjectProperty, (ExecutionEngine *engine, const Value &object, QQmlAccessors *accessors, int coreIndex, int notifyIndex));
-    RUNTIME_METHOD(ReturnedValue, accessQObjectIntProperty, (ExecutionEngine *engine, const Value &object, QQmlAccessors *accessors, int coreIndex, int notifyIndex));
-    RUNTIME_METHOD(ReturnedValue, accessQObjectBoolProperty, (ExecutionEngine *engine, const Value &object, QQmlAccessors *accessors, int coreIndex, int notifyIndex));
-    RUNTIME_METHOD(ReturnedValue, accessQObjectQStringProperty, (ExecutionEngine *engine, const Value &object, QQmlAccessors *accessors, int coreIndex, int notifyIndex));
-    RUNTIME_METHOD(ReturnedValue, accessQmlScopeObjectQRealProperty, (const Value &context, QQmlAccessors *accessors));
-    RUNTIME_METHOD(ReturnedValue, accessQmlScopeObjectQObjectProperty, (const Value &context, QQmlAccessors *accessors));
-    RUNTIME_METHOD(ReturnedValue, accessQmlScopeObjectIntProperty, (const Value &context, QQmlAccessors *accessors));
-    RUNTIME_METHOD(ReturnedValue, accessQmlScopeObjectBoolProperty, (const Value &context, QQmlAccessors *accessors));
-    RUNTIME_METHOD(ReturnedValue, accessQmlScopeObjectQStringProperty, (ExecutionEngine *engine, const Value &context, QQmlAccessors *accessors));
 };
 
 #undef RUNTIME_METHOD

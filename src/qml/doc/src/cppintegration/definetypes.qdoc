@@ -603,7 +603,7 @@ public:
     RandomNumberGenerator(QObject *parent)
         : QObject(parent), m_maxValue(100)
     {
-        qsrand(QDateTime::currentDateTime().toTime_t());
+        qsrand(QDateTime::currentMSecsSinceEpoch() / 1000);
         QObject::connect(&m_timer, SIGNAL(timeout()), SLOT(updateProperty()));
         m_timer.start(500);
     }

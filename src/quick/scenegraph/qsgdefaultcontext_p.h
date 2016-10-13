@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultContext : public QSGContext, public QSGRendererInterface
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultContext : public QSGContext, public QSGRendererInterface
 {
 public:
     QSGDefaultContext(QObject *parent = 0);
@@ -66,14 +66,17 @@ public:
     void renderContextInitialized(QSGRenderContext *renderContext) override;
     void renderContextInvalidated(QSGRenderContext *) override;
     QSGRenderContext *createRenderContext() override;
-    QSGRectangleNode *createRectangleNode() override;
-    QSGImageNode *createImageNode() override;
+    QSGInternalRectangleNode *createInternalRectangleNode() override;
+    QSGInternalImageNode *createInternalImageNode() override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
-    QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
+    QSGRectangleNode *createRectangleNode() override;
+    QSGImageNode *createImageNode() override;
+    QSGNinePatchNode *createNinePatchNode() override;
+    QSGSpriteNode *createSpriteNode() override;
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;

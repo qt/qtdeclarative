@@ -154,7 +154,7 @@ public:
 
     void clear() {
         Q_Q(QQmlObjectModel);
-        foreach (const Item &child, children)
+        for (const Item &child : qAsConst(children))
             emit q->destroyingItem(child.item);
         remove(0, children.count());
     }

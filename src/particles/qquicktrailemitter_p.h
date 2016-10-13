@@ -71,8 +71,8 @@ public:
     };
     Q_ENUM(EmitSize)
     explicit QQuickTrailEmitter(QQuickItem *parent = 0);
-    virtual void emitWindow(int timeStamp);
-    virtual void reset();
+    void emitWindow(int timeStamp) override;
+    void reset() override;
 
     int particlesPerParticlePerSecond() const
     {

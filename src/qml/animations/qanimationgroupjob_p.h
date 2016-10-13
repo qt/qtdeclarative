@@ -75,7 +75,7 @@ public:
     //called by QAbstractAnimationJob
     virtual void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
 protected:
-    void topLevelAnimationLoopChanged();
+    void topLevelAnimationLoopChanged() override;
 
     virtual void animationInserted(QAbstractAnimationJob*) { }
     virtual void animationRemoved(QAbstractAnimationJob*, QAbstractAnimationJob*, QAbstractAnimationJob*);

@@ -52,6 +52,7 @@
 //
 
 #include <private/qtqmlglobal_p.h>
+#include <private/qqmlpropertyindex_p.h>
 #include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
@@ -68,8 +69,7 @@ public:
 private:
     friend class QQmlInterceptorMetaObject;
 
-    int m_coreIndex;
-    int m_valueTypeCoreIndex;
+    QQmlPropertyIndex m_propertyIndex;
     QQmlPropertyValueInterceptor *m_next;
 };
 

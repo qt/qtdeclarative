@@ -73,6 +73,7 @@ private slots:
     void newQObject();
     void newQObject_ownership();
     void newQObject_deletedEngine();
+    void newQMetaObject();
     void exceptionInSlot();
     void globalObjectProperties();
     void globalObjectEquals();
@@ -187,6 +188,8 @@ private slots:
     void argumentEvaluationOrder();
 
     void v4FunctionWithoutQML();
+
+    void withNoContext();
 
 signals:
     void testSignal();
@@ -710,6 +713,104 @@ void tst_QJSEngine::newQObject_deletedEngine()
         engine.globalObject().setProperty("obj", object);
     }
     QTRY_VERIFY(spy.count());
+}
+
+class TestQMetaObject : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(int called READ called)
+public:
+    enum Enum1 {
+        Zero = 0,
+        One,
+        Two
+    };
+    enum Enum2 {
+        A = 0,
+        B,
+        C
+    };
+    Q_ENUMS(Enum1 Enum2)
+
+    Q_INVOKABLE TestQMetaObject()
+        : m_called(1) {
+    }
+    Q_INVOKABLE TestQMetaObject(int)
+        : m_called(2) {
+    }
+    Q_INVOKABLE TestQMetaObject(QString)
+        : m_called(3) {
+    }
+    Q_INVOKABLE TestQMetaObject(QString, int)
+        : m_called(4) {
+    }
+    int called() const {
+        return m_called;
+    }
+private:
+    int m_called;
+};
+
+void tst_QJSEngine::newQMetaObject() {
+    {
+        QJSEngine engine;
+        QJSValue metaObject = engine.newQMetaObject(&TestQMetaObject::staticMetaObject);
+        QCOMPARE(metaObject.isNull(), false);
+        QCOMPARE(metaObject.isObject(), true);
+        QCOMPARE(metaObject.isQObject(), false);
+        QCOMPARE(metaObject.isCallable(), true);
+        QCOMPARE(metaObject.isQMetaObject(), true);
+
+        QCOMPARE(metaObject.toQMetaObject(), &TestQMetaObject::staticMetaObject);
+
+        QVERIFY(metaObject.strictlyEquals(engine.newQMetaObject<TestQMetaObject>()));
+
+
+        {
+        auto result = metaObject.callAsConstructor();
+        if (result.isError())
+            qDebug() << result.toString();
+        QCOMPARE(result.isError(), false);
+        QCOMPARE(result.isNull(), false);
+        QCOMPARE(result.isObject(), true);
+        QCOMPARE(result.isQObject(), true);
+        QVERIFY(result.property("constructor").strictlyEquals(metaObject));
+        QVERIFY(result.prototype().strictlyEquals(metaObject));
+
+
+        QCOMPARE(result.property("called").toInt(), 1);
+
+        }
+
+        QJSValue integer(42);
+        QJSValue string("foo");
+
+        {
+            auto result = metaObject.callAsConstructor({integer});
+            QCOMPARE(result.property("called").toInt(), 2);
+        }
+
+        {
+            auto result = metaObject.callAsConstructor({string});
+            QCOMPARE(result.property("called").toInt(), 3);
+        }
+
+        {
+            auto result = metaObject.callAsConstructor({string, integer});
+            QCOMPARE(result.property("called").toInt(), 4);
+        }
+    }
+
+    {
+        QJSEngine engine;
+        QJSValue metaObject = engine.newQMetaObject(&TestQMetaObject::staticMetaObject);
+        QCOMPARE(metaObject.property("Zero").toInt(), 0);
+        QCOMPARE(metaObject.property("One").toInt(), 1);
+        QCOMPARE(metaObject.property("Two").toInt(), 2);
+        QCOMPARE(metaObject.property("A").toInt(), 0);
+        QCOMPARE(metaObject.property("B").toInt(), 1);
+        QCOMPARE(metaObject.property("C").toInt(), 2);
+    }
+
 }
 
 void tst_QJSEngine::exceptionInSlot()
@@ -1343,6 +1444,7 @@ void tst_QJSEngine::valueConversion_QVariant()
     QCOMPARE(qjsvalue_cast<QVariant>(QJSValue(123)), QVariant(123));
 
     QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, 0)).isNull());
+    QVERIFY(eng.toScriptValue(QVariant::fromValue(nullptr)).isNull());
 
     {
         QVariantMap map;
@@ -2040,18 +2142,42 @@ void tst_QJSEngine::jsNumberClass()
         QJSValue ret = eng.evaluate("new Number(123).toExponential()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("1.23e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.2e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.23e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(3)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.230e+2"));
     }
     QVERIFY(proto.property("toFixed").isCallable());
     {
         QJSValue ret = eng.evaluate("new Number(123).toFixed()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("123"));
+        ret = eng.evaluate("new Number(123).toFixed(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("123.0"));
+        ret = eng.evaluate("new Number(123).toFixed(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("123.00"));
     }
     QVERIFY(proto.property("toPrecision").isCallable());
     {
         QJSValue ret = eng.evaluate("new Number(123).toPrecision()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("123"));
+        ret = eng.evaluate("new Number(42).toPrecision(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("4e+1"));
+        ret = eng.evaluate("new Number(42).toPrecision(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("42"));
+        ret = eng.evaluate("new Number(42).toPrecision(3)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("42.0"));
     }
 }
 
@@ -3884,6 +4010,13 @@ void tst_QJSEngine::v4FunctionWithoutQML()
     QVERIFY(!obj.called);
     wrapper.property("callMe").call();
     QVERIFY(obj.called);
+}
+
+void tst_QJSEngine::withNoContext()
+{
+    // Don't crash (QTBUG-53794)
+    QJSEngine engine;
+    engine.evaluate("with (noContext) true");
 }
 
 QTEST_MAIN(tst_QJSEngine)

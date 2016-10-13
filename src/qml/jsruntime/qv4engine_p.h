@@ -54,7 +54,6 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
-#include "qv4internalclass_p.h"
 #include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
@@ -85,6 +84,9 @@ class Profiler;
 namespace CompiledData {
 struct CompilationUnit;
 }
+
+struct InternalClass;
+struct InternalClassPool;
 
 struct Q_QML_EXPORT ExecutionEngine
 {
@@ -134,9 +136,6 @@ public:
     }
 
     IdentifierTable *identifierTable;
-
-    QV4::Debugging::Debugger *debugger;
-    QV4::Profiling::Profiler *profiler;
 
     Object *globalObject;
 
@@ -380,8 +379,19 @@ public:
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
+#ifdef QT_NO_QML_DEBUGGER
+    QV4::Debugging::Debugger *debugger() const { return nullptr; }
+    QV4::Profiling::Profiler *profiler() const { return nullptr; }
+
+    void setDebugger(Debugging::Debugger *) {}
+    void setProfiler(Profiling::Profiler *) {}
+#else
+    QV4::Debugging::Debugger *debugger() const { return m_debugger; }
+    QV4::Profiling::Profiler *profiler() const { return m_profiler; }
+
     void setDebugger(Debugging::Debugger *debugger);
-    void enableProfiler();
+    void setProfiler(Profiling::Profiler *profiler);
+#endif // QT_NO_QML_DEBUGGER
 
     ExecutionContext *pushGlobalContext();
     void pushContext(Heap::ExecutionContext *context);
@@ -409,6 +419,7 @@ public:
 
     Heap::DateObject *newDateObject(const Value &value);
     Heap::DateObject *newDateObject(const QDateTime &dt);
+    Heap::DateObject *newDateObjectFromTime(const QTime &t);
 
     Heap::RegExpObject *newRegExpObject(const QString &pattern, int flags);
     Heap::RegExpObject *newRegExpObject(RegExp *re, bool global);
@@ -478,7 +489,15 @@ public:
 
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
 
-    bool checkStackLimits(ReturnedValue &exception);
+    bool checkStackLimits(Scope &scope);
+
+private:
+    void failStackLimitCheck(Scope &scope);
+
+#ifndef QT_NO_QML_DEBUGGER
+    QV4::Debugging::Debugger *m_debugger;
+    QV4::Profiling::Profiler *m_profiler;
+#endif
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't
@@ -571,7 +590,7 @@ inline void Value::mark(ExecutionEngine *e)
         o->mark(e);
 }
 
-#define CHECK_STACK_LIMITS(v4) { ReturnedValue e; if ((v4)->checkStackLimits(e)) return e; } \
+#define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return; \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
 struct ExecutionEngineCallDepthRecorder
@@ -582,10 +601,10 @@ struct ExecutionEngineCallDepthRecorder
     ~ExecutionEngineCallDepthRecorder() { --ee->callDepth; }
 };
 
-inline bool ExecutionEngine::checkStackLimits(ReturnedValue &exception)
+inline bool ExecutionEngine::checkStackLimits(Scope &scope)
 {
     if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= maxCallDepth))) {
-        exception = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
+        failStackLimitCheck(scope);
         return true;
     }
 

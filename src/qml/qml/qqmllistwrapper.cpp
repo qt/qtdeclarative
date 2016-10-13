@@ -54,6 +54,7 @@ DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
 Heap::QmlListWrapper::QmlListWrapper()
 {
+    object.init();
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
@@ -61,6 +62,7 @@ Heap::QmlListWrapper::QmlListWrapper()
 
 Heap::QmlListWrapper::~QmlListWrapper()
 {
+    object.destroy();
 }
 
 ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, int propId, int propType)

@@ -356,16 +356,16 @@ void WindowMultiThreaded::run()
     disconnect(m_qmlComponent, &QQmlComponent::statusChanged, this, &WindowMultiThreaded::run);
 
     if (m_qmlComponent->isError()) {
-        QList<QQmlError> errorList = m_qmlComponent->errors();
-        foreach (const QQmlError &error, errorList)
+        const QList<QQmlError> errorList = m_qmlComponent->errors();
+        for (const QQmlError &error : errorList)
             qWarning() << error.url() << error.line() << error;
         return;
     }
 
     QObject *rootObject = m_qmlComponent->create();
     if (m_qmlComponent->isError()) {
-        QList<QQmlError> errorList = m_qmlComponent->errors();
-        foreach (const QQmlError &error, errorList)
+        const QList<QQmlError> errorList = m_qmlComponent->errors();
+        for (const QQmlError &error : errorList)
             qWarning() << error.url() << error.line() << error;
         return;
     }

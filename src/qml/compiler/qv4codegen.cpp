@@ -1058,6 +1058,8 @@ bool Codegen::visit(ArrayLiteral *ast)
             current->expr = _block->CONST(IR::MissingType, 0);
         }
         Result expr = expression(it->expression);
+        if (hasError)
+            return false;
 
         IR::ExprList *arg = _function->New<IR::ExprList>();
         if (!current) {
@@ -1100,6 +1102,8 @@ bool Codegen::visit(ArrayMemberExpression *ast)
 
     Result base = expression(ast->base);
     Result index = expression(ast->expression);
+    if (hasError)
+        return false;
     _expr.code = subscript(*base, *index);
     return false;
 }
@@ -1139,10 +1143,16 @@ bool Codegen::visit(BinaryExpression *ast)
 
             const unsigned r = _block->newTemp();
 
-            move(_block->TEMP(r), *expression(ast->left));
+            Result lhs = expression(ast->left);
+            if (hasError)
+                return false;
+            move(_block->TEMP(r), *lhs);
             setLocation(cjump(_block->TEMP(r), iftrue, endif), ast->operatorToken);
             _block = iftrue;
-            move(_block->TEMP(r), *expression(ast->right));
+            Result rhs = expression(ast->right);
+            if (hasError)
+                return false;
+            move(_block->TEMP(r), *rhs);
             _block->JUMP(endif);
 
             _expr.code = _block->TEMP(r);
@@ -1160,10 +1170,16 @@ bool Codegen::visit(BinaryExpression *ast)
             IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
 
             const unsigned r = _block->newTemp();
-            move(_block->TEMP(r), *expression(ast->left));
+            Result lhs = expression(ast->left);
+            if (hasError)
+                return false;
+            move(_block->TEMP(r), *lhs);
             setLocation(cjump(_block->TEMP(r), endif, iffalse), ast->operatorToken);
             _block = iffalse;
-            move(_block->TEMP(r), *expression(ast->right));
+            Result rhs = expression(ast->right);
+            if (hasError)
+                return false;
+            move(_block->TEMP(r), *rhs);
             _block->JUMP(endif);
 
             _block = endif;
@@ -1173,6 +1189,8 @@ bool Codegen::visit(BinaryExpression *ast)
     }
 
     IR::Expr* left = *expression(ast->left);
+    if (hasError)
+        return false;
 
     switch (ast->op) {
     case QSOperator::Or:
@@ -1182,17 +1200,19 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Assign: {
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        IR::Expr* right = *expression(ast->right);
+        Result right = expression(ast->right);
+        if (hasError)
+            return false;
         if (!left->isLValue()) {
             throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
             return false;
         }
 
         if (_expr.accept(nx)) {
-            move(left, right);
+            move(left, *right);
         } else {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), right);
+            move(_block->TEMP(t), *right);
             move(left, _block->TEMP(t));
             _expr.code = _block->TEMP(t);
         }
@@ -1212,17 +1232,19 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceXor: {
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        IR::Expr* right = *expression(ast->right);
+        Result right = expression(ast->right);
+        if (hasError)
+            return false;
         if (!left->isLValue()) {
             throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
             return false;
         }
 
         if (_expr.accept(nx)) {
-            move(left, right, baseOp(ast->op));
+            move(left, *right, baseOp(ast->op));
         } else {
             const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), right);
+            move(_block->TEMP(t), *right);
             move(left, _block->TEMP(t), baseOp(ast->op));
             _expr.code = left;
         }
@@ -1245,12 +1267,14 @@ bool Codegen::visit(BinaryExpression *ast)
             left = _block->TEMP(t);
         }
 
-        IR::Expr* right = *expression(ast->right);
+        Result right = expression(ast->right);
+        if (hasError)
+            return false;
 
         if (_expr.accept(cx)) {
-            setLocation(cjump(binop(IR::binaryOperator(ast->op), left, right, ast->operatorToken), _expr.iftrue, _expr.iffalse), ast->operatorToken);
+            setLocation(cjump(binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken), _expr.iftrue, _expr.iffalse), ast->operatorToken);
         } else {
-            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right, ast->operatorToken);
+            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
             if (e->asConst() || e->asString())
                 _expr.code = e;
             else {
@@ -1279,9 +1303,11 @@ bool Codegen::visit(BinaryExpression *ast)
             left = _block->TEMP(t);
         }
 
-        IR::Expr* right = *expression(ast->right);
+        Result right = expression(ast->right);
+        if (hasError)
+            return false;
 
-        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, right, ast->operatorToken);
+        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
         if (e->asConst() || e->asString())
             _expr.code = e;
         else {
@@ -1306,11 +1332,15 @@ bool Codegen::visit(CallExpression *ast)
     IR::ExprList *args = 0, **args_it = &args;
     for (ArgumentList *it = ast->arguments; it; it = it->next) {
         Result arg = expression(it->expression);
+        if (hasError)
+            return false;
         IR::Expr *actual = argument(*arg);
         *args_it = _function->New<IR::ExprList>();
         (*args_it)->init(actual);
         args_it = &(*args_it)->next;
     }
+    if (hasError)
+        return false;
     _expr.code = call(*base, args);
     return false;
 }
@@ -1329,11 +1359,17 @@ bool Codegen::visit(ConditionalExpression *ast)
     condition(ast->expression, iftrue, iffalse);
 
     _block = iftrue;
-    move(_block->TEMP(t), *expression(ast->ok));
+    Result ok = expression(ast->ok);
+    if (hasError)
+        return false;
+    move(_block->TEMP(t), *ok);
     _block->JUMP(endif);
 
     _block = iffalse;
-    move(_block->TEMP(t), *expression(ast->ko));
+    Result ko = expression(ast->ko);
+    if (hasError)
+        return false;
+    move(_block->TEMP(t), *ko);
     _block->JUMP(endif);
 
     _block = endif;
@@ -1349,6 +1385,8 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
 
     IR::Expr* expr = *expression(ast->expression);
+    if (hasError)
+        return false;
     // Temporaries cannot be deleted
     IR::ArgLocal *al = expr->asArgLocal();
     if (al && al->index < static_cast<unsigned>(_env->members.size())) {
@@ -1410,7 +1448,8 @@ bool Codegen::visit(FieldMemberExpression *ast)
         return false;
 
     Result base = expression(ast->base);
-    _expr.code = member(*base, _function->newString(ast->name.toString()));
+    if (!hasError)
+        _expr.code = member(*base, _function->newString(ast->name.toString()));
     return false;
 }
 
@@ -1501,6 +1540,8 @@ bool Codegen::visit(NewExpression *ast)
         return false;
 
     Result base = expression(ast->expression);
+    if (hasError)
+        return false;
     IR::Expr *expr = *base;
     if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
         const unsigned t = _block->newTemp();
@@ -1517,6 +1558,8 @@ bool Codegen::visit(NewMemberExpression *ast)
         return false;
 
     Result base = expression(ast->base);
+    if (hasError)
+        return false;
     IR::Expr *expr = *base;
     if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
         const unsigned t = _block->newTemp();
@@ -1527,6 +1570,8 @@ bool Codegen::visit(NewMemberExpression *ast)
     IR::ExprList *args = 0, **args_it = &args;
     for (ArgumentList *it = ast->arguments; it; it = it->next) {
         Result arg = expression(it->expression);
+        if (hasError)
+            return false;
         IR::Expr *actual = argument(*arg);
         *args_it = _function->New<IR::ExprList>();
         (*args_it)->init(actual);
@@ -1544,6 +1589,8 @@ bool Codegen::visit(NotExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     const unsigned r = _block->newTemp();
     setLocation(move(_block->TEMP(r), unop(IR::OpNot, *expr, ast->notToken)), ast->notToken);
     _expr.code = _block->TEMP(r);
@@ -1601,6 +1648,8 @@ bool Codegen::visit(ObjectLiteral *ast)
         QString name = it->assignment->name->asString();
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
             Result value = expression(nv->value);
+            if (hasError)
+                return false;
             ObjectPropertyValue &v = valueMap[name];
             if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value)) {
                 throwSyntaxError(nv->lastSourceLocation(),
@@ -1731,6 +1780,8 @@ bool Codegen::visit(PostDecrementExpression *ast)
         return false;
 
     Result expr = expression(ast->base);
+    if (hasError)
+        return false;
     if (!expr->isLValue()) {
         throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
@@ -1757,6 +1808,8 @@ bool Codegen::visit(PostIncrementExpression *ast)
         return false;
 
     Result expr = expression(ast->base);
+    if (hasError)
+        return false;
     if (!expr->isLValue()) {
         throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
@@ -1783,6 +1836,8 @@ bool Codegen::visit(PreDecrementExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     if (!expr->isLValue()) {
         throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
         return false;
@@ -1808,6 +1863,8 @@ bool Codegen::visit(PreIncrementExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     if (!expr->isLValue()) {
         throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
         return false;
@@ -1860,6 +1917,8 @@ bool Codegen::visit(TildeExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     const unsigned t = _block->newTemp();
     setLocation(move(_block->TEMP(t), unop(IR::OpCompl, *expr, ast->tildeToken)), ast->tildeToken);
     _expr.code = _block->TEMP(t);
@@ -1885,6 +1944,8 @@ bool Codegen::visit(TypeOfExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(reference(*expr));
     _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
@@ -1897,6 +1958,8 @@ bool Codegen::visit(UnaryMinusExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     const unsigned t = _block->newTemp();
     setLocation(move(_block->TEMP(t), unop(IR::OpUMinus, *expr, ast->minusToken)), ast->minusToken);
     _expr.code = _block->TEMP(t);
@@ -1909,6 +1972,8 @@ bool Codegen::visit(UnaryPlusExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
     const unsigned t = _block->newTemp();
     setLocation(move(_block->TEMP(t), unop(IR::OpUPlus, *expr, ast->plusToken)), ast->plusToken);
     _expr.code = _block->TEMP(t);
@@ -1961,6 +2026,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
     function->isStrict = _env->isStrict;
     function->isNamedExpression = _env->isNamedFunctionExpression;
+    function->isQmlBinding = _env->compilationMode == QmlBinding;
 
     AST::SourceLocation loc = ast->firstSourceLocation();
     function->line = loc.startLine;
@@ -1981,7 +2047,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     } else {
         if (!_env->isStrict) {
-            foreach (const QString &inheritedLocal, inheritedLocals) {
+            for (const QString &inheritedLocal : qAsConst(inheritedLocals)) {
                 function->LOCAL(inheritedLocal);
                 unsigned tempIndex = entryBlock->newTemp();
                 Environment::Member member = { Environment::UndefinedMember,
@@ -2023,7 +2089,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _function->RECEIVE(it->name.toString());
     }
 
-    foreach (const Environment::Member &member, _env->members) {
+    for (const Environment::Member &member : qAsConst(_env->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                 member.function->body ? member.function->body->elements : 0);
@@ -2223,7 +2289,10 @@ bool Codegen::visit(ForEachStatement *ast)
     IR::BasicBlock *foreachend = _function->newBasicBlock(exceptionHandler());
 
     int objectToIterateOn = _block->newTemp();
-    move(_block->TEMP(objectToIterateOn), *expression(ast->expression));
+    Result expr = expression(ast->expression);
+    if (hasError)
+        return false;
+    move(_block->TEMP(objectToIterateOn), *expr);
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(objectToIterateOn));
 
@@ -2235,7 +2304,10 @@ bool Codegen::visit(ForEachStatement *ast)
 
     _block = foreachbody;
     int temp = _block->newTemp();
-    move(*expression(ast->initialiser), _block->TEMP(temp));
+    Result init = expression(ast->initialiser);
+    if (hasError)
+        return false;
+    move(*init, _block->TEMP(temp));
     statement(ast->statement);
     _block->JUMP(foreachin);
 
@@ -2441,6 +2513,13 @@ bool Codegen::visit(ReturnStatement *ast)
         Result expr = expression(ast->expression);
         move(_block->TEMP(_returnAddress), *expr);
     }
+
+    // Since we're leaving, don't let any finally statements we emit as part of the unwinding
+    // jump to exception handlers at run-time if they throw.
+    IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/Q_NULLPTR);
+    _block->JUMP(unwindBlock);
+    _block = unwindBlock;
+
     unwindException(0);
 
     _block->JUMP(_exitBlock);
@@ -2724,6 +2803,12 @@ bool Codegen::visit(WithStatement *ast)
 
     _function->hasWith = true;
 
+    const int withObject = _block->newTemp();
+    Result src = expression(ast->expression);
+    if (hasError)
+        return false;
+    _block->MOVE(_block->TEMP(withObject), *src);
+
     // need an exception handler for with to cleanup the with scope
     IR::BasicBlock *withExceptionHandler = _function->newBasicBlock(exceptionHandler());
     withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
@@ -2738,8 +2823,6 @@ bool Codegen::visit(WithStatement *ast)
 
     _block->JUMP(withBlock);
     _block = withBlock;
-    int withObject = _block->newTemp();
-    _block->MOVE(_block->TEMP(withObject), *expression(ast->expression));
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(_block->TEMP(withObject));
     _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
@@ -2857,7 +2940,7 @@ QList<QQmlError> Codegen::qmlErrors() const
     qmlErrors.reserve(_errors.size());
 
     QUrl url(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
-    foreach (const QQmlJS::DiagnosticMessage &msg, _errors) {
+    for (const QQmlJS::DiagnosticMessage &msg: qAsConst(_errors)) {
         QQmlError e;
         e.setUrl(url);
         e.setLine(msg.loc.startLine);

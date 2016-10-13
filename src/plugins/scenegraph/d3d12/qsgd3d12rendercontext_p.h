@@ -52,30 +52,37 @@
 //
 
 #include <private/qsgcontext_p.h>
+#include <qsgrendererinterface.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSGD3D12Engine;
 
-class QSGD3D12RenderContext : public QSGRenderContext
+class QSGD3D12RenderContext : public QSGRenderContext, public QSGRendererInterface
 {
 public:
     QSGD3D12RenderContext(QSGContext *ctx);
     bool isValid() const override;
+    void initialize(void *context) override;
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer() override;
+    int maxTextureSize() const override;
 
     void setEngine(QSGD3D12Engine *engine);
     QSGD3D12Engine *engine() { return m_engine; }
 
-    void ensureInitializedEmitted();
-    void setInitializedPending() { m_pendingInitialized = true; }
+    // QSGRendererInterface
+    GraphicsApi graphicsApi() const override;
+    void *getResource(QQuickWindow *window, Resource resource) const override;
+    ShaderType shaderType() const override;
+    ShaderCompilationTypes shaderCompilationType() const override;
+    ShaderSourceTypes shaderSourceType() const override;
 
 private:
     QSGD3D12Engine *m_engine = nullptr;
-    bool m_pendingInitialized = false;
+    bool m_initialized = false;
 };
 
 QT_END_NAMESPACE

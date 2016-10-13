@@ -90,6 +90,9 @@ public:
         : bits(size, value)
     {}
 
+    void clear()
+    { bits = std::vector<bool>(bits.size(), false); }
+
     void reserve(int size)
     { bits.reserve(size); }
 
@@ -152,6 +155,9 @@ public:
     BitVector(int size = 0, bool value = false)
         : bits(size, value)
     {}
+
+    void clear()
+    { bits = QBitArray(bits.size(), false); }
 
     void reserve(int size)
     { Q_UNUSED(size); }

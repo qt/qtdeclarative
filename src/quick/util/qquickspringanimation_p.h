@@ -94,10 +94,10 @@ public:
     qreal modulus() const;
     void setModulus(qreal modulus);
 
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 
 Q_SIGNALS:
     void modulusChanged();

@@ -137,9 +137,9 @@ public:
         setPositioningDirty();
     }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE
     {
-        if (newGeometry.size() != oldGeometry.size())
+        if (change.sizeChange())
             setPositioningDirty();
     }
 

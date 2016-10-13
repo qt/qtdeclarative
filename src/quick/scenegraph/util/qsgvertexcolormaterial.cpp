@@ -55,9 +55,10 @@ public:
 
 private:
     virtual void initialize();
-
+#ifndef QT_NO_OPENGL
     int m_matrix_id;
     int m_opacity_id;
+#endif
 };
 
 QSGMaterialType QSGVertexColorMaterialShader::type;

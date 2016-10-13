@@ -160,18 +160,23 @@ public:
     LoadWatcher(QQmlApplicationEngine *e, int expected)
         : QObject(e)
         , earlyExit(false)
+        , returnCode(0)
         , expect(expected)
         , haveOne(false)
     {
         connect(e, SIGNAL(objectCreated(QObject*,QUrl)),
             this, SLOT(checkFinished(QObject*)));
         // QQmlApplicationEngine also connects quit() to QCoreApplication::quit
-        // but if called before exec() then QCoreApplication::quit does nothing
+        // and exit() to QCoreApplication::exit but if called before exec()
+        // then QCoreApplication::quit or QCoreApplication::exit does nothing
         connect(e, SIGNAL(quit()),
             this, SLOT(quit()));
+        connect(e, &QQmlEngine::exit,
+            this, &LoadWatcher::exit);
     }
 
     bool earlyExit;
+    int returnCode;
 
 private:
     void contain(QObject *o, const QUrl &containPath);
@@ -187,7 +192,7 @@ public Q_SLOTS:
             checkForWindow(o);
             haveOne = true;
             if (conf && qae)
-                foreach (PartialScene *ps, conf->completers)
+                for (PartialScene *ps : qAsConst(conf->completers))
                     if (o->inherits(ps->itemType().toUtf8().constData()))
                         contain(o, ps->container());
         }
@@ -196,14 +201,20 @@ public Q_SLOTS:
 
         if (! --expect) {
             printf("qml: Did not load any objects, exiting.\n");
-            exit(2);//Different return code from qFatal
+            std::exit(2);//Different return code from qFatal
         }
     }
 
     void quit() {
         //Will be checked before calling exec()
         earlyExit = true;
+        returnCode = 0;
     }
+    void exit(int retCode) {
+        earlyExit = true;
+        returnCode = retCode;
+    }
+
 #if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
     void onOpenGlContextCreated(QOpenGLContext *context);
 #endif
@@ -402,8 +413,8 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
         QObject *dummyData = comp.create();
 
         if (comp.isError()) {
-            QList<QQmlError> errors = comp.errors();
-            foreach (const QQmlError &error, errors)
+            const QList<QQmlError> errors = comp.errors();
+            for (const QQmlError &error : errors)
                 qWarning() << error;
         }
 
@@ -452,7 +463,7 @@ int main(int argc, char *argv[])
     QString dummyDir;
 
     //Handle main arguments
-    QStringList argList = app->arguments();
+    const QStringList argList = app->arguments();
     for (int i = 1; i < argList.count(); i++) {
         const QString &arg = argList[i];
         if (arg == QLatin1String("-quiet"))
@@ -555,7 +566,7 @@ int main(int argc, char *argv[])
     if (!dummyDir.isEmpty() && QFileInfo (dummyDir).isDir())
         loadDummyDataFiles(e, dummyDir);
 
-    foreach (const QString &path, files) {
+    for (const QString &path : qAsConst(files)) {
         //QUrl::fromUserInput doesn't treat no scheme as relative file paths
 #ifndef QT_NO_REGULAREXPRESSION
         QRegularExpression urlRe("[[:word:]]+://.*");
@@ -582,7 +593,7 @@ int main(int argc, char *argv[])
     }
 
     if (lw->earlyExit)
-        return 0;
+        return lw->returnCode;
 
     return app->exec();
 }

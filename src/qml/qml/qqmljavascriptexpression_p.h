@@ -103,8 +103,7 @@ public:
     virtual QString expressionIdentifier() = 0;
     virtual void expressionChanged() = 0;
 
-    QV4::ReturnedValue evaluate(bool *isUndefined);
-    QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
+    void evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope);
 
     inline bool notifyOnValueChanged() const;
 
@@ -137,7 +136,8 @@ public:
     inline bool hasDelayedError() const;
     QQmlError error(QQmlEngine *) const;
     void clearError();
-    void clearGuards();
+    void clearActiveGuards();
+    void clearPermanentGuards();
     QQmlDelayedError *delayedError();
 
     static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
@@ -145,6 +145,14 @@ public:
                                                      quint16 line);
 protected:
     void createQmlBinding(QQmlContextData *ctxt, QObject *scope, const QString &code, const QString &filename, quint16 line);
+
+    void cancelPermanentGuards() const
+    {
+        if (m_permanentDependenciesRegistered) {
+            for (QQmlJavaScriptExpressionGuard *it = permanentGuards.first(); it; it = permanentGuards.next(it))
+                it->cancelNotify();
+        }
+    }
 
 private:
     friend class QQmlContextData;
@@ -158,10 +166,12 @@ private:
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
+    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> permanentGuards;
 
     QQmlContextData *m_context;
     QQmlJavaScriptExpression **m_prevExpression;
     QQmlJavaScriptExpression  *m_nextExpression;
+    bool m_permanentDependenciesRegistered = false;
 
 protected:
     QV4::PersistentValue m_function;
@@ -178,10 +188,14 @@ public:
         Q_ASSERT(errorString == 0);
     }
 
-    void captureProperty(QQmlNotifier *);
-    void captureProperty(QObject *, int, int);
+    enum Duration {
+        OnlyOnce,
+        Permanently
+    };
 
-    static void registerQmlDependencies(QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
+    static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
+    void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
+    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce);
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;

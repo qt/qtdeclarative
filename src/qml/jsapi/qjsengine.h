@@ -74,6 +74,14 @@ public:
 
     QJSValue newQObject(QObject *object);
 
+    QJSValue newQMetaObject(const QMetaObject* metaObject);
+
+    template <typename T>
+    QJSValue newQMetaObject()
+    {
+        return newQMetaObject(&T::staticMetaObject);
+    }
+
     template <typename T>
     inline QJSValue toScriptValue(const T &value)
     {

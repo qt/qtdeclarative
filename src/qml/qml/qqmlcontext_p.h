@@ -174,7 +174,7 @@ public:
     QString urlString() const;
 
     // List of imports that apply to this context
-    QQmlTypeNameCache *imports;
+    QQmlRefPointer<QQmlTypeNameCache> imports;
 
     // My children
     QQmlContextData *childContexts;

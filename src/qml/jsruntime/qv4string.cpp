@@ -46,59 +46,10 @@
 #include "qv4stringobject_p.h"
 #endif
 #include <QtCore/QHash>
-#include <QtCore/private/qnumeric_p.h>
 
 using namespace QV4;
 
-static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
 #ifndef V4_BOOTSTRAP
-static inline uint toUInt(const char *ch) { return *ch; }
-#endif
-
-template <typename T>
-static inline uint toArrayIndex(const T *ch, const T *end)
-{
-    uint i = toUInt(ch) - '0';
-    if (i > 9)
-        return UINT_MAX;
-    ++ch;
-    // reject "01", "001", ...
-    if (i == 0 && ch != end)
-        return UINT_MAX;
-
-    while (ch < end) {
-        uint x = toUInt(ch) - '0';
-        if (x > 9)
-            return UINT_MAX;
-        if (mul_overflow(i, uint(10), &i) || add_overflow(i, x, &i))
-            return UINT_MAX;
-        ++ch;
-    }
-    return i;
-}
-
-#ifndef V4_BOOTSTRAP
-
-template <typename T>
-static inline uint calculateHashValue(const T *ch, const T* end, uint *subtype)
-{
-    // array indices get their number as hash value
-    uint h = ::toArrayIndex(ch, end);
-    if (h != UINT_MAX) {
-        if (subtype)
-            *subtype = Heap::String::StringType_ArrayIndex;
-        return h;
-    }
-
-    while (ch < end) {
-        h = 31 * h + toUInt(ch);
-        ++ch;
-    }
-
-    if (subtype)
-        *subtype = Heap::String::StringType_Regular;
-    return h;
-}
 
 DEFINE_MANAGED_VTABLE(String);
 
@@ -126,6 +77,8 @@ bool String::isEqualTo(Managed *t, Managed *o)
 Heap::String::String(MemoryManager *mm, const QString &t)
     : mm(mm)
 {
+    Base::init();
+
     subtype = String::StringType_Unknown;
 
     text = const_cast<QString &>(t).data_ptr();
@@ -136,9 +89,11 @@ Heap::String::String(MemoryManager *mm, const QString &t)
     len = text->size;
 }
 
-Heap::String::String(MemoryManager *mm, String *l, String *r)
+Heap::String::String(MemoryManager *mm, String *l, String *r, bool) // TODO: remove the dummy bool when String is trivial
     : mm(mm)
 {
+    Base::init();
+
     subtype = String::StringType_Unknown;
 
     left = l;
@@ -225,19 +180,7 @@ void Heap::String::createHashValue() const
     Q_ASSERT(!largestSubLength);
     const QChar *ch = reinterpret_cast<const QChar *>(text->data());
     const QChar *end = ch + text->size;
-    stringHash = calculateHashValue(ch, end, &subtype);
-}
-
-uint String::createHashValue(const QChar *ch, int length, uint *subtype)
-{
-    const QChar *end = ch + length;
-    return calculateHashValue(ch, end, subtype);
-}
-
-uint String::createHashValue(const char *ch, int length, uint *subtype)
-{
-    const char *end = ch + length;
-    return calculateHashValue(ch, end, subtype);
+    stringHash = QV4::String::calculateHashValue(ch, end, &subtype);
 }
 
 uint String::getLength(const Managed *m)
@@ -249,6 +192,6 @@ uint String::getLength(const Managed *m)
 
 uint String::toArrayIndex(const QString &str)
 {
-    return ::toArrayIndex(str.constData(), str.constData() + str.length());
+    return QV4::String::toArrayIndex(str.constData(), str.constData() + str.length());
 }
 

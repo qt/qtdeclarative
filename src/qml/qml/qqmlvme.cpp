@@ -39,7 +39,6 @@
 
 #include "qqmlvme_p.h"
 
-#include "qqmlcompiler_p.h"
 #include "qqmlboundsignal_p.h"
 #include "qqmlstringconverters_p.h"
 #include <private/qmetaobjectbuilder_p.h>

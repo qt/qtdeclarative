@@ -1033,11 +1033,13 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
         m_rebuild |= FullRebuild;
 
     } else if (node->type() == QSGNode::RenderNodeType) {
-        RenderNodeElement *e = new RenderNodeElement(static_cast<QSGRenderNode *>(node));
+        QSGRenderNode *rn = static_cast<QSGRenderNode *>(node);
+        RenderNodeElement *e = new RenderNodeElement(rn);
         snode->data = e;
-        Q_ASSERT(!m_renderNodeElements.contains(static_cast<QSGRenderNode *>(node)));
+        Q_ASSERT(!m_renderNodeElements.contains(rn));
         m_renderNodeElements.insert(e->renderNode, e);
-        m_useDepthBuffer = false;
+        if (!rn->flags().testFlag(QSGRenderNode::DepthAwareRendering))
+            m_useDepthBuffer = false;
         m_rebuild |= FullRebuild;
     }
 
@@ -2764,15 +2766,16 @@ void Renderer::render()
 struct RenderNodeState : public QSGRenderNode::RenderState
 {
     const QMatrix4x4 *projectionMatrix() const override { return m_projectionMatrix; }
-    QRect scissorRect() const { return m_scissorRect; }
-    bool scissorEnabled() const { return m_scissorEnabled; }
-    int stencilValue() const { return m_stencilValue; }
-    bool stencilEnabled() const { return m_stencilEnabled; }
+    QRect scissorRect() const override { return m_scissorRect; }
+    bool scissorEnabled() const override { return m_scissorEnabled; }
+    int stencilValue() const override { return m_stencilValue; }
+    bool stencilEnabled() const override { return m_stencilEnabled; }
+    const QRegion *clipRegion() const override { return nullptr; }
 
     const QMatrix4x4 *m_projectionMatrix;
     QRect m_scissorRect;
-    bool m_scissorEnabled;
     int m_stencilValue;
+    bool m_scissorEnabled;
     bool m_stencilEnabled;
 };
 

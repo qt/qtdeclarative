@@ -190,8 +190,8 @@ public:
         , incubating(0)
         , vdm(l) {}
 
-    virtual void statusChanged(Status);
-    virtual void setInitialState(QObject *);
+    void statusChanged(Status) override;
+    void setInitialState(QObject *) override;
 
     QQmlDelegateModelItem *incubating;
     QQmlDelegateModelPrivate *vdm;
@@ -353,21 +353,21 @@ public:
     void updateFilterGroup();
     void updateFilterGroup(Compositor::Group group, const QQmlChangeSet &changeSet);
 
-    int count() const;
-    bool isValid() const;
-    QObject *object(int index, bool asynchronous=false);
-    ReleaseFlags release(QObject *item);
-    QString stringValue(int index, const QString &role);
+    int count() const override;
+    bool isValid() const override;
+    QObject *object(int index, bool asynchronous = false) override;
+    ReleaseFlags release(QObject *item) override;
+    QString stringValue(int index, const QString &role) override;
     QList<QByteArray> watchedRoles() const { return m_watchedRoles; }
-    void setWatchedRoles(const QList<QByteArray> &roles);
+    void setWatchedRoles(const QList<QByteArray> &roles) override;
 
-    int indexOf(QObject *item, QObject *objectContext) const;
+    int indexOf(QObject *item, QObject *objectContext) const override;
 
-    void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset);
+    void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) override;
 
-    void createdPackage(int index, QQuickPackage *package);
-    void initPackage(int index, QQuickPackage *package);
-    void destroyingPackage(QQuickPackage *package);
+    void createdPackage(int index, QQuickPackage *package) override;
+    void initPackage(int index, QQuickPackage *package) override;
+    void destroyingPackage(QQuickPackage *package) override;
 
 Q_SIGNALS:
     void filterGroupChanged();
@@ -390,8 +390,8 @@ public:
     QQmlDelegateModelPartsMetaObject(QObject *parent)
     : QQmlOpenMetaObject(parent) {}
 
-    virtual void propertyCreated(int, QMetaPropertyBuilder &);
-    virtual QVariant initialValue(int);
+    void propertyCreated(int, QMetaPropertyBuilder &) override;
+    QVariant initialValue(int) override;
 };
 
 class QQmlDelegateModelParts : public QObject
@@ -411,8 +411,8 @@ public:
             QQmlDelegateModelItemMetaType *metaType, QMetaObject *metaObject);
     ~QQmlDelegateModelAttachedMetaObject();
 
-    void objectDestroyed(QObject *);
-    int metaCall(QObject *, QMetaObject::Call, int _id, void **);
+    void objectDestroyed(QObject *) override;
+    int metaCall(QObject *, QMetaObject::Call, int _id, void **) override;
 
 private:
     QQmlDelegateModelItemMetaType * const metaType;

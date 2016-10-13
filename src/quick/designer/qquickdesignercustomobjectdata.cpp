@@ -145,10 +145,10 @@ void QQuickDesignerCustomObjectData::keepBindingFromGettingDeleted(QObject *obje
 
 void QQuickDesignerCustomObjectData::populateResetHashes()
 {
-    QQuickDesignerSupport::PropertyNameList propertyNameList =
+    const QQuickDesignerSupport::PropertyNameList propertyNameList =
             QQuickDesignerSupportProperties::propertyNameListForWritableProperties(object());
 
-    Q_FOREACH (const QQuickDesignerSupport::PropertyName &propertyName, propertyNameList) {
+    for (const QQuickDesignerSupport::PropertyName &propertyName : propertyNameList) {
         QQmlProperty property(object(), QString::fromUtf8(propertyName), QQmlEngine::contextForObject(object()));
 
         QQmlAbstractBinding::Ptr binding = QQmlAbstractBinding::Ptr(QQmlPropertyPrivate::binding(property));
@@ -194,7 +194,7 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
 #endif
         if (qmlBinding)
             qmlBinding->setTarget(property);
-        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding);
         if (qmlBinding)
             qmlBinding->update();
 
@@ -257,11 +257,12 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
         return;
 
     if (property.isProperty()) {
-        QQmlBinding *binding = new QQmlBinding(expression, object(), context);
+        QQmlBinding *binding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
+                                                   expression, object(), context);
         binding->setTarget(property);
         binding->setNotifyOnValueChanged(true);
 
-        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding);
+        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding);
         //Refcounting is taking take care of deletion
         binding->update();
         if (binding->hasError()) {

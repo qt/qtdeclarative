@@ -46,6 +46,7 @@
 #include <private/qrawfont_p.h>
 #include <QtGui/qguiapplication.h>
 #include <qdir.h>
+#include <qsgrendernode.h>
 
 #include <private/qquickprofiler_p.h>
 #include <QElapsedTimer>
@@ -195,7 +196,7 @@ void QSGDistanceFieldGlyphCache::update()
     storeGlyphs(distanceFields);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
-    foreach (Texture texture, m_textures)
+    for (Texture texture : qAsConst(m_textures))
         saveTexture(texture.textureId, texture.size.width(), texture.size.height());
 #endif
 
@@ -510,6 +511,13 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
         }
         case QSGNode::BasicNodeType: {
             visitChildren(child);
+            break;
+        }
+        case QSGNode::RenderNodeType: {
+            QSGRenderNode *r = static_cast<QSGRenderNode*>(child);
+            if (visit(r))
+                visitChildren(r);
+            endVisit(r);
             break;
         }
         default:

@@ -56,6 +56,7 @@
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <dcomp.h>
 #include <wrl/client.h>
 
 using namespace Microsoft::WRL;
@@ -130,7 +131,7 @@ struct QSGD3D12CPUWaitableFence
 class QSGD3D12EnginePrivate : public QSGD3D12DeviceManager::DeviceLossObserver
 {
 public:
-    void initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples);
+    void initialize(WId w, const QSize &size, float dpr, int surfaceFormatSamples, bool alpha);
     bool isInitialized() const { return initialized; }
     void releaseResources();
     void setWindowSize(const QSize &size, float dpr);
@@ -169,7 +170,8 @@ public:
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, QSGD3D12Engine::TextureCreateFlags flags);
     void queueTextureResize(uint id, const QSize &size);
-    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos,
+                            QSGD3D12Engine::TextureUploadFlags flags);
     void releaseTexture(uint id);
     void useTexture(uint id);
 
@@ -269,6 +271,7 @@ private:
     QSize windowSize;
     float windowDpr;
     uint windowSamples;
+    bool windowAlpha;
     int swapChainBufferCount;
     int frameInFlightCount;
     int waitableSwapChainMaxLatency;
@@ -432,6 +435,12 @@ private:
     };
 
     DeviceLossTester devLossTest;
+
+#ifndef Q_OS_WINRT
+    ComPtr<IDCompositionDevice> dcompDevice;
+    ComPtr<IDCompositionTarget> dcompTarget;
+    ComPtr<IDCompositionVisual> dcompVisual;
+#endif
 };
 
 inline uint qHash(const QSGD3D12EnginePrivate::PersistentFrameData::PendingRelease &pr, uint seed = 0)

@@ -56,6 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 class QPaintDevice;
+class QBackingStore;
 
 class Q_QUICK_PRIVATE_EXPORT QSGSoftwareRenderer : public QSGAbstractSoftwareRenderer
 {
@@ -64,6 +65,8 @@ public:
     virtual ~QSGSoftwareRenderer();
 
     void setCurrentPaintDevice(QPaintDevice *device);
+    QPaintDevice *currentPaintDevice() const;
+    void setBackingStore(QBackingStore *backingStore);
     QRegion flushRegion() const;
 
 protected:
@@ -72,6 +75,7 @@ protected:
 
 private:
     QPaintDevice* m_paintDevice;
+    QBackingStore* m_backingStore;
     QRegion m_flushRegion;
 };
 

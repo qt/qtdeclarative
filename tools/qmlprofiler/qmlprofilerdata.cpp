@@ -248,7 +248,7 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerDefinitions::RangeType type,
         eventHashStr = getHashStringForQmlEvent(eventLocation, type);
     } else {
         const QString filePath = QUrl(eventLocation.filename).path();
-        displayName = filePath.mid(
+        displayName = filePath.midRef(
                     filePath.lastIndexOf(QLatin1Char('/')) + 1) +
                     QLatin1Char(':') + QString::number(eventLocation.line);
         eventHashStr = getHashStringForQmlEvent(eventLocation, type);
@@ -327,8 +327,8 @@ void QmlProfilerData::addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventTy
 
     QString filePath = QUrl(location).path();
 
-    QString eventHashStr = filePath.mid(filePath.lastIndexOf(QLatin1Char('/')) + 1) +
-            QStringLiteral(":") + QString::number(type);
+    const QString eventHashStr = filePath.midRef(filePath.lastIndexOf(QLatin1Char('/')) + 1)
+            + QLatin1Char(':') + QString::number(type);
     QmlRangeEventData *newEvent;
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
@@ -403,23 +403,23 @@ void QmlProfilerData::computeQmlTime()
     int level = minimumLevel;
 
     for (int i = 0; i < d->startInstanceList.count(); i++) {
-        qint64 st = d->startInstanceList[i].startTime;
+        qint64 st = d->startInstanceList.at(i).startTime;
 
-        if (d->startInstanceList[i].data->rangeType == QQmlProfilerDefinitions::Painting) {
+        if (d->startInstanceList.at(i).data->rangeType == QQmlProfilerDefinitions::Painting) {
             continue;
         }
 
         // general level
-        if (endtimesPerLevel[level] > st) {
+        if (endtimesPerLevel.value(level) > st) {
             level++;
         } else {
             while (level > minimumLevel && endtimesPerLevel[level-1] <= st)
                 level--;
         }
-        endtimesPerLevel[level] = st + d->startInstanceList[i].duration;
+        endtimesPerLevel[level] = st + d->startInstanceList.at(i).duration;
 
         if (level == minimumLevel) {
-            d->qmlMeasuredTime += d->startInstanceList[i].duration;
+            d->qmlMeasuredTime += d->startInstanceList.at(i).duration;
         }
     }
 }
@@ -572,7 +572,7 @@ bool QmlProfilerData::save(const QString &filename)
     stream.writeEndElement(); // eventData
 
     stream.writeStartElement(QStringLiteral("profilerDataModel"));
-    foreach (const QmlRangeEventStartInstance &event, d->startInstanceList) {
+    for (const QmlRangeEventStartInstance &event : qAsConst(d->startInstanceList)) {
         stream.writeStartElement(QStringLiteral("range"));
         stream.writeAttribute(QStringLiteral("startTime"), QString::number(event.startTime));
         if (event.duration >= 0)

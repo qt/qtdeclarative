@@ -1,6 +1,6 @@
 TARGET     = QtQuickTest
 
-DEFINES += QT_NO_URL_CAST_FROM_STRING
+DEFINES += QT_NO_URL_CAST_FROM_STRING QT_NO_FOREACH
 QT = core testlib-private
 QT_PRIVATE = quick qml-private  gui core-private
 
@@ -30,6 +30,6 @@ HEADERS += \
     $$PWD/quicktestresult_p.h \
     $$PWD/qtestoptions_p.h
 
-DEFINES += QT_QML_DEBUG_NO_WARNING
+!contains(QT_CONFIG, no-qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
 
 load(qt_module)

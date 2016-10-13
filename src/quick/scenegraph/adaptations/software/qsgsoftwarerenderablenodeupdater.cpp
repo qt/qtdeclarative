@@ -40,15 +40,16 @@
 #include "qsgsoftwarerenderablenodeupdater_p.h"
 
 #include "qsgabstractsoftwarerenderer_p.h"
-#include "qsgsoftwareimagenode_p.h"
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 
-#include <QtQuick/QSGSimpleRectNode>
+#include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/qsgsimpletexturenode.h>
+#include <QtQuick/qsgrendernode.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,6 +59,7 @@ QSGSoftwareRenderableNodeUpdater::QSGSoftwareRenderableNodeUpdater(QSGAbstractSo
     m_opacityState.push(1.0f);
     // Invalid RectF by default for no clip
     m_clipState.push(QRegion());
+    m_hasClip = false;
     m_transformState.push(QTransform());
 }
 
@@ -81,10 +83,13 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGTransformNode *)
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 {
     // Make sure to translate the clip rect into world coordinates
-    if (m_clipState.top().isEmpty()) {
+    if (m_clipState.count() == 1) {
         m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect())));
-    } else
-        m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect()).intersected(m_clipState.top())));
+        m_hasClip = true;
+    } else {
+        const QRegion transformedClipRect = m_transformState.top().map(QRegion(node->clipRect().toRect()));
+        m_clipState.push(transformedClipRect.intersected(m_clipState.top()));
+    }
     m_stateMap[node] = currentState(node);
     return true;
 }
@@ -92,6 +97,8 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 void QSGSoftwareRenderableNodeUpdater::endVisit(QSGClipNode *)
 {
     m_clipState.pop();
+    if (m_clipState.count() == 1)
+        m_hasClip = false;
 }
 
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGGeometryNode *node)
@@ -100,6 +107,12 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGGeometryNode *node)
         return updateRenderableNode(QSGSoftwareRenderableNode::SimpleRect, rectNode);
     } else if (QSGSimpleTextureNode *tn = dynamic_cast<QSGSimpleTextureNode *>(node)) {
         return updateRenderableNode(QSGSoftwareRenderableNode::SimpleTexture, tn);
+    } else if (QSGNinePatchNode *nn = dynamic_cast<QSGNinePatchNode *>(node)) {
+        return updateRenderableNode(QSGSoftwareRenderableNode::NinePatch, nn);
+    } else if (QSGRectangleNode *rn = dynamic_cast<QSGRectangleNode *>(node)) {
+        return updateRenderableNode(QSGSoftwareRenderableNode::SimpleRectangle, rn);
+    } else if (QSGImageNode *n = dynamic_cast<QSGImageNode *>(node)) {
+        return updateRenderableNode(QSGSoftwareRenderableNode::SimpleImage, n);
     } else {
         // We dont know, so skip
         return false;
@@ -122,12 +135,12 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGOpacityNode *)
     m_opacityState.pop();
 }
 
-bool QSGSoftwareRenderableNodeUpdater::visit(QSGImageNode *node)
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGInternalImageNode *node)
 {
     return updateRenderableNode(QSGSoftwareRenderableNode::Image, node);
 }
 
-void QSGSoftwareRenderableNodeUpdater::endVisit(QSGImageNode *)
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGInternalImageNode *)
 {
 }
 
@@ -140,12 +153,12 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGPainterNode *)
 {
 }
 
-bool QSGSoftwareRenderableNodeUpdater::visit(QSGRectangleNode *node)
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGInternalRectangleNode *node)
 {
     return updateRenderableNode(QSGSoftwareRenderableNode::Rectangle, node);
 }
 
-void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRectangleNode *)
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGInternalRectangleNode *)
 {
 }
 
@@ -158,15 +171,6 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGGlyphNode *)
 {
 }
 
-bool QSGSoftwareRenderableNodeUpdater::visit(QSGNinePatchNode *node)
-{
-    return updateRenderableNode(QSGSoftwareRenderableNode::NinePatch, node);
-}
-
-void QSGSoftwareRenderableNodeUpdater::endVisit(QSGNinePatchNode *)
-{
-}
-
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGRootNode *node)
 {
     m_stateMap[node] = currentState(node);
@@ -174,6 +178,25 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGRootNode *node)
 }
 
 void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRootNode *)
+{
+}
+
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGSpriteNode *node)
+{
+    return updateRenderableNode(QSGSoftwareRenderableNode::SpriteNode, node);
+}
+
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGSpriteNode *)
+{
+
+}
+
+bool QSGSoftwareRenderableNodeUpdater::visit(QSGRenderNode *node)
+{
+    return updateRenderableNode(QSGSoftwareRenderableNode::RenderNode, node);
+}
+
+void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRenderNode *)
 {
 }
 
@@ -195,12 +218,13 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
         m_opacityState.push(state.opacity);
         m_transformState.push(state.transform);
         m_clipState.push(state.clip);
-
+        m_hasClip = state.hasClip;
     } else {
         // There is no parent, and no previous parent, so likely a root node
         m_opacityState.push(1.0f);
         m_transformState.push(QTransform());
         m_clipState.push(QRegion());
+        m_hasClip = false;
     }
 
     // If the node is being removed, then cleanup the state data
@@ -256,6 +280,13 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
             visitChildren(node);
         break;
     }
+    case QSGNode::RenderNodeType: {
+        QSGRenderNode *r = static_cast<QSGRenderNode*>(node);
+        if (visit(r))
+            visitChildren(r);
+        endVisit(r);
+        break;
+    }
     default:
         Q_UNREACHABLE();
         break;
@@ -267,6 +298,7 @@ QSGSoftwareRenderableNodeUpdater::NodeState QSGSoftwareRenderableNodeUpdater::cu
     NodeState state;
     state.opacity = m_opacityState.top();
     state.clip = m_clipState.top();
+    state.hasClip = m_hasClip;
     state.transform = m_transformState.top();
     state.parent = node->parent();
     return state;

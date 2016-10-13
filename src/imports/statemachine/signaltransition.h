@@ -48,7 +48,6 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
-#include <private/qqmlcompiler_p.h>
 
 QT_BEGIN_NAMESPACE
 

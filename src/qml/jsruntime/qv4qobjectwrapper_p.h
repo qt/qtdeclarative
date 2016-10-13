@@ -59,7 +59,6 @@
 #include <private/qqmldata_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qintrusivelist_p.h>
-#include <private/qqmlaccessors_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
@@ -80,24 +79,50 @@ struct QQmlValueTypeWrapper;
 
 struct QObjectWrapper : Object {
     QObjectWrapper(QObject *object);
-    QPointer<QObject> object;
+    ~QObjectWrapper() { qObj.destroy(); }
+
+    QObject *object() const { return qObj.data(); }
+
+private:
+    QQmlQPointer<QObject> qObj;
 };
 
 struct QObjectMethod : FunctionObject {
     QObjectMethod(QV4::ExecutionContext *scope);
-    QPointer<QObject> object;
+    ~QObjectMethod() { qObj.destroy(); }
     QQmlRefPointer<QQmlPropertyCache> propertyCache;
     int index;
 
     Pointer<QQmlValueTypeWrapper> valueTypeWrapper;
 
     const QMetaObject *metaObject();
+    QObject *object() const { return qObj.data(); }
+    void setObject(QObject *o) { qObj = o; }
+
+private:
+    QQmlQPointer<QObject> qObj;
+};
+
+struct QMetaObjectWrapper : FunctionObject {
+    const QMetaObject* metaObject;
+    QQmlPropertyData *constructors;
+    int constructorCount;
+
+    QMetaObjectWrapper(const QMetaObject* metaObject);
+    ~QMetaObjectWrapper();
+    void ensureConstructorsCache();
 };
 
 struct QmlSignalHandler : Object {
     QmlSignalHandler(QObject *object, int signalIndex);
-    QPointer<QObject> object;
+    ~QmlSignalHandler() { qObj.destroy(); }
     int signalIndex;
+
+    QObject *object() const { return qObj.data(); }
+    void setObject(QObject *o) { qObj = o; }
+
+private:
+    QQmlQPointer<QObject> qObj;
 };
 
 }
@@ -110,7 +135,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     static void initializeBindings(ExecutionEngine *engine);
 
-    QObject *object() const { return d()->object.data(); }
+    QObject *object() const { return d()->object(); }
 
     ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false) const;
     static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
@@ -180,28 +205,48 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     static ReturnedValue create(QV4::ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index);
 
     int methodIndex() const { return d()->index; }
-    QObject *object() const { return d()->object.data(); }
+    QObject *object() const { return d()->object(); }
 
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx) const;
     QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const;
 
-    static ReturnedValue call(const Managed *, CallData *callData);
+    static void call(const Managed *, Scope &scope, CallData *callData);
 
-    ReturnedValue callInternal(CallData *callData) const;
+    void callInternal(CallData *callData, Scope &scope) const;
 
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };
 
-struct QmlSignalHandler : public QV4::Object
+
+struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
+{
+    V4_OBJECT2(QMetaObjectWrapper, QV4::FunctionObject)
+    V4_NEEDS_DESTROY
+
+    static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
+    static void construct(const Managed *, Scope &scope, CallData *callData);
+    static bool isEqualTo(Managed *a, Managed *b);
+
+    const QMetaObject *metaObject() const { return d()->metaObject; }
+
+private:
+    void init(ExecutionEngine *engine);
+    ReturnedValue constructInternal(CallData *callData) const;
+    ReturnedValue callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
+    ReturnedValue callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
+
+};
+
+struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object
 {
     V4_OBJECT2(QmlSignalHandler, QV4::Object)
     V4_PROTOTYPE(signalHandlerPrototype)
     V4_NEEDS_DESTROY
 
     int signalIndex() const { return d()->signalIndex; }
-    QObject *object() const { return d()->object.data(); }
+    QObject *object() const { return d()->object(); }
 
     static void initProto(ExecutionEngine *v4);
 };

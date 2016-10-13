@@ -64,13 +64,15 @@
 #include <private/qobject_p.h>
 
 #include "qqmlguard_p.h"
-#include "qqmlcompiler_p.h"
 #include "qqmlcontext_p.h"
+#include "qqmlpropertycache_p.h"
 
 #include <private/qv8engine_p.h>
 #include <private/qflagpointer_p.h>
 
+#include <private/qv4object_p.h>
 #include <private/qv4value_p.h>
+#include <private/qqmlpropertyvalueinterceptor_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,7 +97,7 @@ public:
     QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache);
     ~QQmlInterceptorMetaObject();
 
-    void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
+    void registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor);
 
     static QQmlInterceptorMetaObject *get(QObject *obj);
 
@@ -104,13 +106,22 @@ public:
     // Used by auto-tests for inspection
     QQmlPropertyCache *propertyCache() const { return cache; }
 
+    bool intercepts(QQmlPropertyIndex propertyIndex) const
+    {
+        for (auto it = interceptors; it; it = it->m_next) {
+            if (it->m_propertyIndex == propertyIndex)
+                return true;
+        }
+        return false;
+    }
+
 protected:
     int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) Q_DECL_OVERRIDE;
     bool intercept(QMetaObject::Call c, int id, void **a);
 
 public:
     QObject *object;
-    QQmlPropertyCache *cache;
+    QQmlRefPointer<QQmlPropertyCache> cache;
     QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
 
     QQmlPropertyValueInterceptor *interceptors;

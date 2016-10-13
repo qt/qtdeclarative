@@ -205,7 +205,7 @@ void ValueLookupJob::run()
                                 QQmlContextData::get(engine->qmlEngine()->rootContext()),
                                 scopeObject.data()));
     }
-    foreach (const QJsonValue &handle, handles) {
+    for (const QJsonValue &handle : handles) {
         QV4DataCollector::Ref ref = handle.toInt();
         if (!collector->isValidRef(ref)) {
             exception = QString::fromLatin1("Invalid Ref: %1").arg(ref);
@@ -258,7 +258,7 @@ GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine)
 
 void GatherSourcesJob::run()
 {
-    foreach (QV4::CompiledData::CompilationUnit *unit, engine->compilationUnits) {
+    for (QV4::CompiledData::CompilationUnit *unit : qAsConst(engine->compilationUnits)) {
         QString fileName = unit->fileName();
         if (!fileName.isEmpty())
             sources.append(fileName);

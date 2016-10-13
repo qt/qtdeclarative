@@ -101,11 +101,15 @@ Q_GLOBAL_STATIC(QMutex, qQmlTestMessageHandlerMutex)
 
 QQmlTestMessageHandler *QQmlTestMessageHandler::m_instance = 0;
 
-void QQmlTestMessageHandler::messageHandler(QtMsgType, const QMessageLogContext &, const QString &message)
+void QQmlTestMessageHandler::messageHandler(QtMsgType, const QMessageLogContext &context, const QString &message)
 {
     QMutexLocker locker(qQmlTestMessageHandlerMutex());
-    if (QQmlTestMessageHandler::m_instance)
-        QQmlTestMessageHandler::m_instance->m_messages.push_back(message);
+    if (QQmlTestMessageHandler::m_instance) {
+        if (QQmlTestMessageHandler::m_instance->m_includeCategories)
+            QQmlTestMessageHandler::m_instance->m_messages.push_back(QString("%1: %2").arg(context.category, message));
+        else
+            QQmlTestMessageHandler::m_instance->m_messages.push_back(message);
+    }
 }
 
 QQmlTestMessageHandler::QQmlTestMessageHandler()
@@ -114,6 +118,7 @@ QQmlTestMessageHandler::QQmlTestMessageHandler()
     Q_ASSERT(!QQmlTestMessageHandler::m_instance);
     QQmlTestMessageHandler::m_instance = this;
     m_oldHandler = qInstallMessageHandler(messageHandler);
+    m_includeCategories = false;
 }
 
 QQmlTestMessageHandler::~QQmlTestMessageHandler()

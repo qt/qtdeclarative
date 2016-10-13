@@ -132,7 +132,6 @@ public:
 
     int nextId;
 
-private slots:
     void remove(QObject *obj);
 };
 }
@@ -163,7 +162,7 @@ int QQmlDebugService::idForObject(QObject *object)
         int id = hash->nextId++;
         hash->ids.insert(id, object);
         iter = hash->objects.insert(object, id);
-        connect(object, SIGNAL(destroyed(QObject*)), hash, SLOT(remove(QObject*)));
+        connect(object, &QObject::destroyed, hash, &ObjectReferenceHash::remove);
     }
     return iter.value();
 }
@@ -174,36 +173,6 @@ int QQmlDebugService::idForObject(QObject *object)
 const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
 {
     return objectReferenceHash()->ids;
-}
-
-void QQmlDebugService::stateAboutToBeChanged(State)
-{
-}
-
-void QQmlDebugService::stateChanged(State)
-{
-}
-
-void QQmlDebugService::messageReceived(const QByteArray &)
-{
-}
-
-void QQmlDebugService::engineAboutToBeAdded(QJSEngine *engine)
-{
-    emit attachedToEngine(engine);
-}
-
-void QQmlDebugService::engineAboutToBeRemoved(QJSEngine *engine)
-{
-    emit detachedFromEngine(engine);
-}
-
-void QQmlDebugService::engineAdded(QJSEngine *)
-{
-}
-
-void QQmlDebugService::engineRemoved(QJSEngine *)
-{
 }
 
 QT_END_NAMESPACE

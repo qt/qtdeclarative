@@ -58,6 +58,7 @@
 #include "qtextlist.h"
 #include "qtextdocumentwriter.h"
 #include "private/qtextcursor_p.h"
+#include <QtCore/qloggingcategory.h>
 
 #include <qtextformat.h>
 #include <qdatetime.h>
@@ -76,6 +77,7 @@
 const int textCursorWidth = 1;
 
 QT_BEGIN_NAMESPACE
+Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 
 #ifndef QT_NO_CONTEXTMENU
 #endif
@@ -1513,6 +1515,7 @@ void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
         hoveredLink = link;
         emit q->linkHovered(link);
     }
+    qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hoveredLink" << hoveredLink;
 }
 
 bool QQuickTextControl::hasImState() const
@@ -1661,8 +1664,8 @@ void QQuickTextControl::insertFromMimeData(const QMimeData *source)
 #ifndef QT_NO_TEXTHTMLPARSER
     if (source->hasFormat(QLatin1String("application/x-qrichtext")) && d->acceptRichText) {
         // x-qrichtext is always UTF-8 (taken from Qt3 since we don't use it anymore).
-        QString richtext = QString::fromUtf8(source->data(QLatin1String("application/x-qrichtext")));
-        richtext.prepend(QLatin1String("<meta name=\"qrichtext\" content=\"1\" />"));
+        const QString richtext = QLatin1String("<meta name=\"qrichtext\" content=\"1\" />")
+                + QString::fromUtf8(source->data(QLatin1String("application/x-qrichtext")));
         fragment = QTextDocumentFragment::fromHtml(richtext, d->doc);
         hasData = true;
     } else if (source->hasHtml() && d->acceptRichText) {

@@ -359,8 +359,8 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             QQuickStateAction xa(d->target, QLatin1String("x"), x);
             actions << xa;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(d->xString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("x"));
+            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->xString.value, d->target, qmlContext(this));
             newBinding->setTarget(property);
             QQuickStateAction xa;
             xa.property = property;
@@ -378,8 +378,8 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             QQuickStateAction ya(d->target, QLatin1String("y"), y);
             actions << ya;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(d->yString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("y"));
+            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->yString.value, d->target, qmlContext(this));
             newBinding->setTarget(property);
             QQuickStateAction ya;
             ya.property = property;
@@ -397,8 +397,8 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             QQuickStateAction sa(d->target, QLatin1String("scale"), scale);
             actions << sa;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(d->scaleString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("scale"));
+            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->scaleString.value, d->target, qmlContext(this));
             newBinding->setTarget(property);
             QQuickStateAction sa;
             sa.property = property;
@@ -416,8 +416,8 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             QQuickStateAction ra(d->target, QLatin1String("rotation"), rotation);
             actions << ra;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(d->rotationString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("rotation"));
+            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->rotationString.value, d->target, qmlContext(this));
             newBinding->setTarget(property);
             QQuickStateAction ra;
             ra.property = property;
@@ -435,8 +435,8 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             QQuickStateAction wa(d->target, QLatin1String("width"), width);
             actions << wa;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(d->widthString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("width"));
+            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->widthString.value, d->target, qmlContext(this));
             newBinding->setTarget(property);
             QQuickStateAction wa;
             wa.property = property;
@@ -454,8 +454,8 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             QQuickStateAction ha(d->target, QLatin1String("height"), height);
             actions << ha;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(d->heightString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("height"));
+            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->heightString.value, d->target, qmlContext(this));
             newBinding->setTarget(property);
             QQuickStateAction ha;
             ha.property = property;
@@ -866,31 +866,31 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
     d->baselineProp = QQmlProperty(d->target, QLatin1String("anchors.baseline"));
 
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::LeftAnchor) {
-        d->leftBinding = new QQmlBinding(d->anchorSet->d_func()->leftScript, d->target, qmlContext(this));
+        d->leftBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->leftProp)->core, d->anchorSet->d_func()->leftScript, d->target, qmlContext(this));
         d->leftBinding->setTarget(d->leftProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::RightAnchor) {
-        d->rightBinding = new QQmlBinding(d->anchorSet->d_func()->rightScript, d->target, qmlContext(this));
+        d->rightBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->rightProp)->core, d->anchorSet->d_func()->rightScript, d->target, qmlContext(this));
         d->rightBinding->setTarget(d->rightProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::HCenterAnchor) {
-        d->hCenterBinding = new QQmlBinding(d->anchorSet->d_func()->hCenterScript, d->target, qmlContext(this));
+        d->hCenterBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->hCenterProp)->core, d->anchorSet->d_func()->hCenterScript, d->target, qmlContext(this));
         d->hCenterBinding->setTarget(d->hCenterProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::TopAnchor) {
-        d->topBinding = new QQmlBinding(d->anchorSet->d_func()->topScript, d->target, qmlContext(this));
+        d->topBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->topProp)->core, d->anchorSet->d_func()->topScript, d->target, qmlContext(this));
         d->topBinding->setTarget(d->topProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::BottomAnchor) {
-        d->bottomBinding = new QQmlBinding(d->anchorSet->d_func()->bottomScript, d->target, qmlContext(this));
+        d->bottomBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->bottomProp)->core, d->anchorSet->d_func()->bottomScript, d->target, qmlContext(this));
         d->bottomBinding->setTarget(d->bottomProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::VCenterAnchor) {
-        d->vCenterBinding = new QQmlBinding(d->anchorSet->d_func()->vCenterScript, d->target, qmlContext(this));
+        d->vCenterBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->vCenterProp)->core, d->anchorSet->d_func()->vCenterScript, d->target, qmlContext(this));
         d->vCenterBinding->setTarget(d->vCenterProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::BaselineAnchor) {
-        d->baselineBinding = new QQmlBinding(d->anchorSet->d_func()->baselineScript, d->target, qmlContext(this));
+        d->baselineBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(d->baselineProp)->core, d->anchorSet->d_func()->baselineScript, d->target, qmlContext(this));
         d->baselineBinding->setTarget(d->baselineProp);
     }
 
@@ -899,9 +899,9 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
     return ActionList() << a;
 }
 
-QQuickAnchorSet *QQuickAnchorChanges::anchors()
+QQuickAnchorSet *QQuickAnchorChanges::anchors() const
 {
-    Q_D(QQuickAnchorChanges);
+    Q_D(const QQuickAnchorChanges);
     return d->anchorSet;
 }
 
@@ -1134,9 +1134,9 @@ QQuickStateActionEvent::EventType QQuickAnchorChanges::type() const
     return AnchorChanges;
 }
 
-QList<QQuickStateAction> QQuickAnchorChanges::additionalActions()
+QList<QQuickStateAction> QQuickAnchorChanges::additionalActions() const
 {
-    Q_D(QQuickAnchorChanges);
+    Q_D(const QQuickAnchorChanges);
     QList<QQuickStateAction> extra;
 
     QQuickAnchors::Anchors combined = d->anchorSet->d_func()->usedAnchors | d->anchorSet->d_func()->resetAnchors;

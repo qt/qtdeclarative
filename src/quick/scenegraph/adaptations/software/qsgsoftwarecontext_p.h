@@ -75,8 +75,10 @@ public:
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
     QSGRenderer *createRenderer() override;
+    int maxTextureSize() const override;
 
     bool m_initialized;
+    QPainter *m_activePainter;
 };
 
 class QSGSoftwareContext : public QSGContext, public QSGRendererInterface
@@ -86,19 +88,23 @@ public:
     explicit QSGSoftwareContext(QObject *parent = nullptr);
 
     QSGRenderContext *createRenderContext() override { return new QSGSoftwareRenderContext(this); }
-    QSGRectangleNode *createRectangleNode() override;
-    QSGImageNode *createImageNode() override;
+    QSGInternalRectangleNode *createInternalRectangleNode() override;
+    QSGInternalImageNode *createInternalImageNode() override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
-    QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
+    QSGRectangleNode *createRectangleNode() override;
+    QSGImageNode *createImageNode() override;
+    QSGNinePatchNode *createNinePatchNode() override;
+    QSGSpriteNode *createSpriteNode() override;
 
     GraphicsApi graphicsApi() const override;
     ShaderType shaderType() const override;
     ShaderCompilationTypes shaderCompilationType() const override;
     ShaderSourceTypes shaderSourceType() const override;
+    void *getResource(QQuickWindow *window, Resource resource) const override;
 };
 
 QT_END_NAMESPACE

@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_QML_DEBUGGER
+
 class QJSEngine;
 
 class QQmlDebugServicePrivate;
@@ -65,7 +67,6 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDebugService)
-    Q_DISABLE_COPY(QQmlDebugService)
 
 public:
     ~QQmlDebugService();
@@ -77,14 +78,15 @@ public:
     State state() const;
     void setState(State newState);
 
-    virtual void stateAboutToBeChanged(State);
-    virtual void stateChanged(State);
-    virtual void messageReceived(const QByteArray &);
+    virtual void stateAboutToBeChanged(State) {}
+    virtual void stateChanged(State) {}
+    virtual void messageReceived(const QByteArray &) {}
 
-    virtual void engineAboutToBeAdded(QJSEngine *);
-    virtual void engineAboutToBeRemoved(QJSEngine *);
-    virtual void engineAdded(QJSEngine *);
-    virtual void engineRemoved(QJSEngine *);
+    virtual void engineAboutToBeAdded(QJSEngine *engine) { emit attachedToEngine(engine); }
+    virtual void engineAboutToBeRemoved(QJSEngine *engine) { emit detachedFromEngine(engine); }
+
+    virtual void engineAdded(QJSEngine *) {}
+    virtual void engineRemoved(QJSEngine *) {}
 
     static const QHash<int, QObject *> &objectsForIds();
     static int idForObject(QObject *);
@@ -100,6 +102,8 @@ signals:
     void messageToClient(const QString &name, const QByteArray &message);
     void messagesToClient(const QString &name, const QList<QByteArray> &messages);
 };
+
+#endif
 
 QT_END_NAMESPACE
 

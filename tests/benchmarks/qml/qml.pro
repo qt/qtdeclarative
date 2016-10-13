@@ -5,14 +5,14 @@ SUBDIRS += \
            compilation \
            javascript \
            holistic \
+           qqmlchangeset \
            qqmlcomponent \
-           qqmlimage \
            qqmlmetaproperty \
            librarymetrics_performance \
 #            script \ ### FIXME: doesn't build
-           js
+           js \
+           creation
 
 qtHaveModule(opengl): SUBDIRS += painting qquickwindow
-qtHaveModule(widgets): SUBDIRS += creation
 
 include(../trusted-benchmarks.pri)

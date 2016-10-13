@@ -67,10 +67,10 @@ public:
     void reset();
     void clear();
 
-    inline int size() {return commands.size();}
+    inline int size() const { return commands.size(); }
     inline bool isEmpty() const {return commands.isEmpty(); }
     inline bool hasNext() const {return cmdIdx < commands.size(); }
-    inline QQuickContext2D::PaintCommand takeNextCommand() { return commands[cmdIdx++]; }
+    inline QQuickContext2D::PaintCommand takeNextCommand() { return commands.at(cmdIdx++); }
 
     inline qreal takeGlobalAlpha() { return takeReal(); }
     inline QPainter::CompositionMode takeGlobalCompositeOperation(){ return static_cast<QPainter::CompositionMode>(takeInt()); }
@@ -227,25 +227,25 @@ public:
         colors << color;
     }
 
-    inline QTransform takeMatrix() { return matrixes[matrixIdx++]; }
+    inline QTransform takeMatrix() { return matrixes.at(matrixIdx++); }
 
-    inline QRectF takeRect() { return rects[rectIdx++]; }
+    inline QRectF takeRect() { return rects.at(rectIdx++); }
 
-    inline QPainterPath takePath() { return pathes[pathIdx++]; }
+    inline QPainterPath takePath() { return pathes.at(pathIdx++); }
 
-    inline const QImage& takeImage() { return images[imageIdx++]; }
-    inline QQmlRefPointer<QQuickCanvasPixmap> takePixmap() { return pixmaps[pixmapIdx++]; }
+    inline const QImage& takeImage() { return images.at(imageIdx++); }
+    inline QQmlRefPointer<QQuickCanvasPixmap> takePixmap() { return pixmaps.at(pixmapIdx++); }
 
-    inline int takeInt() { return ints[intIdx++]; }
-    inline bool takeBool() {return bools[boolIdx++]; }
-    inline qreal takeReal() { return reals[realIdx++]; }
-    inline QColor takeColor() { return colors[colorIdx++]; }
-    inline QBrush takeBrush() { return brushes[brushIdx++]; }
+    inline int takeInt() { return ints.at(intIdx++); }
+    inline bool takeBool() {return bools.at(boolIdx++); }
+    inline qreal takeReal() { return reals.at(realIdx++); }
+    inline QColor takeColor() { return colors.at(colorIdx++); }
+    inline QBrush takeBrush() { return brushes.at(brushIdx++); }
 
     void replay(QPainter* painter, QQuickContext2D::State& state, const QVector2D &scaleFactor);
 
 private:
-    QPen makePen(const QQuickContext2D::State& state);
+    static QPen makePen(const QQuickContext2D::State& state);
     void setPainterState(QPainter* painter, const QQuickContext2D::State& state, const QPen& pen);
     int cmdIdx;
     int intIdx;

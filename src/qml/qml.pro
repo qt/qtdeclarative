@@ -22,6 +22,15 @@ exists("qqml_enable_gcov") {
     LIBS_PRIVATE += -lgcov
 }
 
+gcc:!intel_icc:greaterThan(QT_GCC_MAJOR_VERSION, 5) {
+    # Our code is bad. Temporary workaround.
+    QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks -fno-lifetime-dse
+}
+
+# QTBUG-55238, disable new optimizer for MSVC 2015/Update 3.
+release:win32-msvc*:equals(QT_CL_MAJOR_VERSION, 19):equals(QT_CL_MINOR_VERSION, 00): \
+        greaterThan(QT_CL_PATCH_VERSION, 24212):QMAKE_CXXFLAGS += -d2SSAOptimizer-
+
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
 
 # 2415: variable "xx" of static storage duration was declared but never referenced

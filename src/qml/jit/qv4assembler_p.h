@@ -58,8 +58,6 @@
 #include "private/qv4lookup_p.h"
 #include "qv4targetplatform_p.h"
 
-#include <QtCore/QHash>
-#include <QtCore/QStack>
 #include <config.h>
 #include <wtf/Vector.h>
 
@@ -81,12 +79,14 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
 
-    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine);
+    void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
+    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
+    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
+    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
 
     // Coderef + execution engine
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
-    QList<QVector<QV4::Primitive> > constantValues;
 };
 
 struct LookupCall {
@@ -102,38 +102,8 @@ struct LookupCall {
 struct RuntimeCall {
     JSC::MacroAssembler::Address addr;
 
-    inline RuntimeCall(uint offset = INT_MIN);
+    inline RuntimeCall(uint offset = uint(INT_MIN));
     bool isValid() const { return addr.offset >= 0; }
-};
-
-template <typename T>
-struct ExceptionCheck {
-    enum { NeedsCheck = 1 };
-};
-// push_catch and pop context methods shouldn't check for exceptions
-template <>
-struct ExceptionCheck<void (*)(QV4::ExecutionEngine *)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A>
-struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
-    enum { NeedsCheck = 0 };
-};
-template <>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A, typename B>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A, B)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A, typename B, typename C>
-struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
-    enum { NeedsCheck = 0 };
 };
 
 class Assembler : public JSC::MacroAssembler, public TargetPlatform
@@ -294,22 +264,6 @@ public:
         int savedRegCount;
     };
 
-    class ConstantTable
-    {
-    public:
-        ConstantTable(Assembler *as): _as(as) {}
-
-        int add(const QV4::Primitive &v);
-        Address loadValueAddress(IR::Const *c, RegisterID baseReg);
-        Address loadValueAddress(const QV4::Primitive &v, RegisterID baseReg);
-        void finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel);
-
-    private:
-        Assembler *_as;
-        QVector<QV4::Primitive> _values;
-        QVector<DataLabelPtr> _toPatch;
-    };
-
     struct VoidType { VoidType() {} };
     static const VoidType Void;
 
@@ -336,11 +290,6 @@ public:
             Q_ASSERT(value->asTemp() || value->asArgLocal());
         }
         IR::Expr *value;
-    };
-
-    struct ReentryBlock {
-        ReentryBlock(IR::BasicBlock *b) : block(b) {}
-        IR::BasicBlock *block;
     };
 
     void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
@@ -384,6 +333,8 @@ public:
     Pointer loadTempAddress(IR::Temp *t);
     Pointer loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
+    Address loadConstant(IR::Const *c, RegisterID baseReg);
+    Address loadConstant(const Primitive &v, RegisterID baseReg);
     void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(IR::Temp *t) const
     {
@@ -431,13 +382,6 @@ public:
         move(source, dest);
     }
 
-    void loadArgumentInRegister(TrustedImmPtr ptr, RegisterID dest, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        move(TrustedImmPtr(ptr), dest);
-    }
-
     void loadArgumentInRegister(const Pointer& ptr, RegisterID dest, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
@@ -447,7 +391,7 @@ public:
     void loadArgumentInRegister(PointerToValue temp, RegisterID dest, int argumentNumber)
     {
         if (!temp.value) {
-            loadArgumentInRegister(TrustedImmPtr(0), dest, argumentNumber);
+            move(TrustedImmPtr(0), dest);
         } else {
             Pointer addr = toAddress(dest, temp.value, argumentNumber);
             loadArgumentInRegister(addr, dest, argumentNumber);
@@ -464,15 +408,6 @@ public:
         Q_ASSERT(temp.value);
         Pointer addr = loadAddress(dest, temp.value);
         loadArgumentInRegister(addr, dest, argumentNumber);
-    }
-
-    void loadArgumentInRegister(ReentryBlock block, RegisterID dest, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        Q_ASSERT(block.block);
-        DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), dest);
-        addPatch(patch, block.block);
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
@@ -533,11 +468,6 @@ public:
         Q_ASSERT(!"unimplemented: expression in loadArgument");
     }
 #endif
-
-    void loadArgumentInRegister(QV4::String* string, RegisterID dest, int argumentNumber)
-    {
-        loadArgumentInRegister(TrustedImmPtr(string), dest, argumentNumber);
-    }
 
     void loadArgumentInRegister(TrustedImm32 imm32, RegisterID dest, int argumentNumber)
     {
@@ -695,34 +625,6 @@ public:
         loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
     }
 
-    template <int StackSlot>
-    void loadArgumentOnStack(ReentryBlock block, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        Q_ASSERT(block.block);
-        DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
-        poke(ScratchRegister, StackSlot);
-        addPatch(patch, block.block);
-    }
-
-    template <int StackSlot>
-    void loadArgumentOnStack(TrustedImmPtr ptr, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        move(TrustedImmPtr(ptr), ScratchRegister);
-        poke(ScratchRegister, StackSlot);
-    }
-
-    template <int StackSlot>
-    void loadArgumentOnStack(QV4::String* name, int argumentNumber)
-    {
-        Q_UNUSED(argumentNumber);
-
-        poke(TrustedImmPtr(name), StackSlot);
-    }
-
     void loadDouble(IR::Expr *source, FPRegisterID dest)
     {
         IR::Temp *sourceTemp = source->asTemp();
@@ -875,7 +777,7 @@ public:
     };
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
         int stackSpaceNeeded =   SizeOnStack<0, Arg1>::Size
                                + SizeOnStack<1, Arg2>::Size
@@ -918,7 +820,7 @@ public:
         if (stackSpaceNeeded)
             addPtr(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
 
-        if (ExceptionCheck<Callable>::NeedsCheck) {
+        if (needsExceptionCheck) {
             checkException();
         }
 
@@ -927,33 +829,33 @@ public:
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, arg5, VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, arg3, arg4, arg5, VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, arg3, arg4, VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1>
-    void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1)
+    void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType(), VoidType());
     }
 
     Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset)
@@ -1080,7 +982,7 @@ public:
             move(TrustedImm64(i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
-            JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+            JSC::MacroAssembler::loadDouble(loadConstant(c, ScratchRegister), target);
 #endif
             return target;
         }
@@ -1144,9 +1046,8 @@ public:
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
-        static const double magic = double(INT_MAX) + 1;
-        move(TrustedImmPtr(&magic), scratchReg);
-        subDouble(Address(scratchReg, 0), FPGpr0);
+        Address inversionAddress = loadConstant(QV4::Primitive::fromDouble(double(INT_MAX) + 1), scratchReg);
+        subDouble(inversionAddress, FPGpr0);
         Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
         canNeverHappen.link(this);
         or32(TrustedImm32(1 << 31), scratchReg);
@@ -1163,17 +1064,15 @@ public:
 
     void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave);
     const StackLayout &stackLayout() const { return *_stackLayout.data(); }
-    ConstantTable &constantTable() { return _constTable; }
 
     Label exceptionReturnLabel;
     IR::BasicBlock * catchBlock;
     QVector<Jump> exceptionPropagationJumps;
 private:
     QScopedPointer<const StackLayout> _stackLayout;
-    ConstantTable _constTable;
     IR::Function *_function;
-    QHash<IR::BasicBlock *, Label> _addrs;
-    QHash<IR::BasicBlock *, QVector<Jump> > _patches;
+    std::vector<Label> _addrs;
+    std::vector<std::vector<Jump>> _patches;
 #ifndef QT_NO_DEBUG
     QVector<CallInfo> _callInfos;
 #endif
@@ -1182,9 +1081,9 @@ private:
         DataLabelPtr dataLabel;
         Label target;
     };
-    QList<DataLabelPatch> _dataLabelPatches;
+    std::vector<DataLabelPatch> _dataLabelPatches;
 
-    QHash<IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
+    std::vector<std::vector<DataLabelPtr>> _labelPatches;
     IR::BasicBlock *_nextBlock;
 
     QV4::ExecutableAllocator *_executableAllocator;

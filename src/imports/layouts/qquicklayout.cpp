@@ -698,6 +698,10 @@ QQuickLayout::QQuickLayout(QQuickLayoutPrivate &dd, QQuickItem *parent)
 QQuickLayout::~QQuickLayout()
 {
     d_func()->m_isReady = false;
+
+    const auto childItems = d_func()->childItems;
+    for (QQuickItem *child : childItems)
+        QQuickItemPrivate::get(child)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder);
 }
 
 QQuickLayoutAttached *QQuickLayout::qmlAttachedProperties(QObject *object)
@@ -754,27 +758,22 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
         d->m_ignoredItems << child;
     return ignoreItem;
 }
-struct QQuickItemPublic : public QQuickItem {
-    static bool isCompleted(QQuickItem *item) {
-        return static_cast<QQuickItemPublic*>(item)->isComponentComplete();
-    }
-};
 
 void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemChildAddedChange) {
         QQuickItem *item = value.item;
-        QObject::connect(item, SIGNAL(implicitWidthChanged()), this, SLOT(invalidateSenderItem()));
-        QObject::connect(item, SIGNAL(implicitHeightChanged()), this, SLOT(invalidateSenderItem()));
-        QObject::connect(item, SIGNAL(baselineOffsetChanged(qreal)), this, SLOT(invalidateSenderItem()));
+        qmlobject_connect(item, QQuickItem, SIGNAL(implicitWidthChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        qmlobject_connect(item, QQuickItem, SIGNAL(implicitHeightChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::SiblingOrder);
         if (isReady())
             updateLayoutItems();
     } else if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
-        QObject::disconnect(item, SIGNAL(implicitWidthChanged()), this, SLOT(invalidateSenderItem()));
-        QObject::disconnect(item, SIGNAL(implicitHeightChanged()), this, SLOT(invalidateSenderItem()));
-        QObject::disconnect(item, SIGNAL(baselineOffsetChanged(qreal)), this, SLOT(invalidateSenderItem()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitWidthChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitHeightChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        qmlobject_disconnect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder);
         if (isReady())
             updateLayoutItems();

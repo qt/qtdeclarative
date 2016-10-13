@@ -42,7 +42,6 @@
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlinfo.h"
-#include "qqmlcompiler_p.h"
 #include "qqmldata_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>
@@ -51,33 +50,36 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4variantobject_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
-QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
-    : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding()
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj, QQmlContext *ctxt)
 {
-    setNotifyOnValueChanged(true);
-    QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
-    setScopeObject(obj);
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
+    b->setScopeObject(obj);
 
-    createQmlBinding(context(), obj, str, QString(), 0);
+    b->createQmlBinding(b->context(), obj, str, QString(), 0);
+
+    return b;
 }
 
-QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
-    : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding()
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
 {
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+
     if (ctxt && !ctxt->isValid())
-        return;
+        return b;
 
     const QQmlScriptStringPrivate *scriptPrivate = script.d.data();
     if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
-        return;
+        return b;
 
     QString url;
     QV4::Function *runtimeFunction = 0;
@@ -90,53 +92,61 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
             runtimeFunction = ctxtdata->typeCompilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
     }
 
-    setNotifyOnValueChanged(true);
-    QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
-    setScopeObject(obj ? obj : scriptPrivate->scope);
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
+    b->setScopeObject(obj ? obj : scriptPrivate->scope);
 
-    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(b->context()->engine)->v4engine();
     if (runtimeFunction) {
-        m_function.set(v4, QV4::FunctionObject::createQmlFunction(ctxtdata, scopeObject(), runtimeFunction));
+        b->m_function.set(v4, QV4::FunctionObject::createQmlFunction(ctxtdata, b->scopeObject(), runtimeFunction));
     } else {
         QString code = scriptPrivate->script;
-        createQmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber);
+        b->createQmlBinding(b->context(), b->scopeObject(), code, url, scriptPrivate->lineNumber);
     }
+
+    return b;
 }
 
-QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
-    : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding()
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj, QQmlContextData *ctxt)
 {
-    setNotifyOnValueChanged(true);
-    QQmlJavaScriptExpression::setContext(ctxt);
-    setScopeObject(obj);
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
 
-    createQmlBinding(ctxt, obj, str, QString(), 0);
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(ctxt);
+    b->setScopeObject(obj);
+
+    b->createQmlBinding(ctxt, obj, str, QString(), 0);
+
+    return b;
 }
 
-QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
-                         QQmlContextData *ctxt,
-                         const QString &url, quint16 lineNumber, quint16 columnNumber)
-    : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding()
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj,
+                                 QQmlContextData *ctxt, const QString &url, quint16 lineNumber,
+                                 quint16 columnNumber)
 {
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+
     Q_UNUSED(columnNumber);
-    setNotifyOnValueChanged(true);
-    QQmlJavaScriptExpression::setContext(ctxt);
-    setScopeObject(obj);
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(ctxt);
+    b->setScopeObject(obj);
 
-    createQmlBinding(ctxt, obj, str, url, lineNumber);
+    b->createQmlBinding(ctxt, obj, str, url, lineNumber);
+
+    return b;
 }
 
-QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
-    : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding()
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
 {
-    setNotifyOnValueChanged(true);
-    QQmlJavaScriptExpression::setContext(ctxt);
-    setScopeObject(obj);
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
 
-    m_function.set(functionPtr.as<QV4::Object>()->engine(), functionPtr);
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(ctxt);
+    b->setScopeObject(obj);
+
+    b->m_function.set(functionPtr.as<QV4::Object>()->engine(), functionPtr);
+
+    return b;
 }
 
 QQmlBinding::~QQmlBinding()
@@ -148,7 +158,7 @@ void QQmlBinding::setNotifyOnValueChanged(bool v)
     QQmlJavaScriptExpression::setNotifyOnValueChanged(v);
 }
 
-void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
+void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 {
     if (!enabledFlag() || !context() || !context()->isValid())
         return;
@@ -157,44 +167,75 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     if (QQmlData::wasDeleted(targetObject()))
         return;
 
+    // Check for a binding update loop
+    if (Q_UNLIKELY(updatingFlag())) {
+        QQmlPropertyData *d = nullptr;
+        QQmlPropertyData vtd;
+        getPropertyData(&d, &vtd);
+        Q_ASSERT(d);
+        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, 0);
+        QQmlAbstractBinding::printBindingLoopError(p);
+        return;
+    }
+    setUpdatingFlag(true);
+
+    DeleteWatcher watcher(this);
+
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
     QV4::Scope scope(ep->v4engine());
     QV4::ScopedFunctionObject f(scope, m_function.value());
     Q_ASSERT(f);
 
-    if (updatingFlag()) {
-        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), getPropertyData(), 0);
-        QQmlAbstractBinding::printBindingLoopError(p);
-        return;
-    }
+    if (canUseAccessor())
+        flags.setFlag(QQmlPropertyData::BypassInterceptor);
 
     QQmlBindingProfiler prof(ep->profiler, this, f);
-    setUpdatingFlag(true);
+    doUpdate(watcher, flags, scope, f);
 
-    QQmlJavaScriptExpression::DeleteWatcher watcher(this);
+    if (!watcher.wasDeleted())
+        setUpdatingFlag(false);
+}
 
-    QQmlPropertyData pd = getPropertyData();
+// QQmlBindingBinding is for target properties which are of type "binding" (instead of, say, int or
+// double). The reason for being is that GenericBinding::fastWrite needs a compile-time constant
+// expression for the switch for the compiler to generate the optimal code, but
+// qMetaTypeId<QQmlBinding *>() needs to be used for the ID. So QQmlBinding::newBinding uses that
+// to instantiate this class.
+class QQmlBindingBinding: public QQmlBinding
+{
+protected:
+    void doUpdate(const DeleteWatcher &,
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &,
+                  const QV4::ScopedFunctionObject &) Q_DECL_OVERRIDE Q_DECL_FINAL
+    {
+        Q_ASSERT(!m_targetIndex.hasValueTypeIndex());
+        QQmlPropertyData *pd = nullptr;
+        getPropertyData(&pd, nullptr);
+        QQmlBinding *thisPtr = this;
+        pd->writeProperty(*m_target, &thisPtr, flags);
+    }
+};
 
-    if (pd.propType == qMetaTypeId<QQmlBinding *>()) {
-
-        int idx = pd.coreIndex;
-        Q_ASSERT(idx != -1);
-
-        QQmlBinding *t = this;
-        int status = -1;
-        void *a[] = { &t, 0, &status, &flags };
-        QMetaObject::metacall(*m_target, QMetaObject::WriteProperty, idx, a);
-
-    } else {
+// For any target that's not a binding, we have a common doUpdate. However, depending on the type
+// of the target property, there is a specialized write method.
+class QQmlNonbindingBinding: public QQmlBinding
+{
+protected:
+    void doUpdate(const DeleteWatcher &watcher,
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
+                  const QV4::ScopedFunctionObject &f) Q_DECL_OVERRIDE Q_DECL_FINAL
+    {
+        auto ep = QQmlEnginePrivate::get(scope.engine);
         ep->referenceScarceResources();
 
         bool isUndefined = false;
 
-        QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
+        QV4::ScopedCallData callData(scope);
+        QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
 
         bool error = false;
         if (!watcher.wasDeleted() && isAddedToObject() && !hasError())
-            error = !write(pd, result, isUndefined, flags);
+            error = !write(scope.result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
 
@@ -211,66 +252,88 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         }
 
+        cancelPermanentGuards();
+
         ep->dereferenceScarceResources();
     }
 
-    if (!watcher.wasDeleted())
-        setUpdatingFlag(false);
-}
+    virtual bool write(const QV4::Value &result, bool isUndefined, QQmlPropertyData::WriteFlags flags) = 0;
+};
 
-// Returns true if successful, false if an error description was set on expression
-bool QQmlBinding::write(const QQmlPropertyData &core,
-                       const QV4::Value &result, bool isUndefined,
-                       QQmlPropertyPrivate::WriteFlags flags)
+template<int StaticPropType>
+class GenericBinding: public QQmlNonbindingBinding
 {
-    Q_ASSERT(m_target.data());
-    Q_ASSERT(core.coreIndex != -1);
+protected:
+    // Returns true if successful, false if an error description was set on expression
+    Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
+                               QQmlPropertyData::WriteFlags flags) Q_DECL_OVERRIDE Q_DECL_FINAL
+    {
+        Q_ASSERT(targetObject());
 
-#define QUICK_STORE(cpptype, conversion) \
-        { \
-            cpptype o = (conversion); \
-            int status = -1; \
-            void *argv[] = { &o, 0, &status, &flags }; \
-            QMetaObject::metacall(m_target.data(), QMetaObject::WriteProperty, core.coreIndex, argv); \
-            return true; \
-        } \
+        QQmlPropertyData *pd;
+        QQmlPropertyData vpd;
+        getPropertyData(&pd, &vpd);
+        Q_ASSERT(pd);
 
+        int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
+        if (propertyType == QMetaType::UnknownType)
+            propertyType = pd->propType();
 
-    if (Q_LIKELY(!isUndefined && !core.isValueTypeVirtual())) {
-        switch (core.propType) {
-        case QMetaType::Int:
-            if (result.isInteger())
-                QUICK_STORE(int, result.integerValue())
-            else if (result.isNumber())
-                QUICK_STORE(int, result.doubleValue())
-            break;
-        case QMetaType::Double:
-            if (result.isNumber())
-                QUICK_STORE(double, result.asDouble())
-            break;
-        case QMetaType::Float:
-            if (result.isNumber())
-                QUICK_STORE(float, result.asDouble())
-            break;
-        case QMetaType::QString:
-            if (result.isString())
-                QUICK_STORE(QString, result.toQStringNoThrow())
-            break;
-        default:
-            if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                if (vtw->d()->valueType->typeId == core.propType) {
-                    return vtw->write(m_target.data(), core.coreIndex);
+        if (Q_LIKELY(!isUndefined && !vpd.isValid())) {
+            switch (propertyType) {
+            case QMetaType::Bool:
+                if (result.isBoolean())
+                    return doStore<bool>(result.booleanValue(), pd, flags);
+                else
+                    return doStore<bool>(result.toBoolean(), pd, flags);
+            case QMetaType::Int:
+                if (result.isInteger())
+                    return doStore<int>(result.integerValue(), pd, flags);
+                else if (result.isNumber())
+                    return doStore<int>(result.doubleValue(), pd, flags);
+                break;
+            case QMetaType::Double:
+                if (result.isNumber())
+                    return doStore<double>(result.asDouble(), pd, flags);
+                break;
+            case QMetaType::Float:
+                if (result.isNumber())
+                    return doStore<float>(result.asDouble(), pd, flags);
+                break;
+            case QMetaType::QString:
+                if (result.isString())
+                    return doStore<QString>(result.toQStringNoThrow(), pd, flags);
+                break;
+            default:
+                if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
+                    if (vtw->d()->valueType->typeId == pd->propType()) {
+                        return vtw->write(m_target.data(), pd->coreIndex());
+                    }
                 }
+                break;
             }
-            break;
         }
-    }
-#undef QUICK_STORE
 
+        return slowWrite(*pd, vpd, result, isUndefined, flags);
+    }
+
+    template <typename T>
+    Q_ALWAYS_INLINE bool doStore(T value, const QQmlPropertyData *pd, QQmlPropertyData::WriteFlags flags) const
+    {
+        void *o = &value;
+        return pd->writeProperty(targetObject(), o, flags);
+    }
+};
+
+Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
+                                           const QQmlPropertyData &valueTypeData,
+                                           const QV4::Value &result,
+                                           bool isUndefined, QQmlPropertyData::WriteFlags flags)
+{
     QQmlEngine *engine = context()->engine;
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
 
-    int type = core.isValueTypeVirtual() ? core.valueTypePropType : core.propType;
+    int type = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
@@ -282,7 +345,7 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
         value = QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
-    } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
+    } else if (core.propType() == qMetaTypeId<QList<QUrl> >()) {
         value = QQmlPropertyPrivate::resolvedUrlSequence(QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
         value = QV8Engine::getV4(v8engine)->toVariant(result, type);
@@ -301,28 +364,27 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
 
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(core.coreIndex, result);
+        vmemo->setVMEProperty(core.coreIndex(), result);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
-        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex, args);
+        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
-        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, QVariant(), context(), flags);
+        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
         const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
         if (f && f->isBinding()) {
             delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
-        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, QVariant::fromValue(
+        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant::fromValue(
                                QJSValue(QV8Engine::getV4(v8engine), result.asReturnedValue())),
                            context(), flags);
     } else if (isUndefined) {
-        QString errorStr = QLatin1String("Unable to assign [undefined] to ");
-        if (!QMetaType::typeName(type))
-            errorStr += QLatin1String("[unknown property type]");
-        else
-            errorStr += QLatin1String(QMetaType::typeName(type));
-        delayedError()->setErrorDescription(errorStr);
+        const QLatin1String typeName(QMetaType::typeName(type)
+                                     ? QMetaType::typeName(type)
+                                     : "[unknown property type]");
+        delayedError()->setErrorDescription(QLatin1String("Unable to assign [undefined] to ")
+                                            + typeName);
         return false;
     } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>()) {
         if (f->isBinding())
@@ -330,7 +392,7 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
         else
             delayedError()->setErrorDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
         return false;
-    } else if (!QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, value, context(), flags)) {
+    } else if (!QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, value, context(), flags)) {
 
         if (watcher.wasDeleted())
             return true;
@@ -338,7 +400,8 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
         const char *valueType = 0;
         const char *propertyType = 0;
 
-        if (value.userType() == QMetaType::QObjectStar) {
+        const int userType = value.userType();
+        if (userType == QMetaType::QObjectStar) {
             if (QObject *o = *(QObject *const *)value.constData()) {
                 valueType = o->metaObject()->className();
 
@@ -346,11 +409,11 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
                 if (!propertyMetaObject.isNull())
                     propertyType = propertyMetaObject.className();
             }
-        } else if (value.userType() != QVariant::Invalid) {
-            if (value.userType() == QMetaType::VoidStar)
+        } else if (userType != QVariant::Invalid) {
+            if (userType == QMetaType::Nullptr || userType == QMetaType::VoidStar)
                 valueType = "null";
             else
-                valueType = QMetaType::typeName(value.userType());
+                valueType = QMetaType::typeName(userType);
         }
 
         if (!valueType)
@@ -378,11 +441,12 @@ QVariant QQmlBinding::evaluate()
     bool isUndefined = false;
 
     QV4::Scope scope(ep->v4engine());
-    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
+    QV4::ScopedCallData callData(scope);
+    QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
 
     ep->dereferenceScarceResources();
 
-    return scope.engine->toVariant(result, qMetaTypeId<QList<QObject*> >());
+    return scope.engine->toVariant(scope.result, qMetaTypeId<QList<QObject*> >());
 }
 
 QString QQmlBinding::expressionIdentifier()
@@ -395,8 +459,7 @@ QString QQmlBinding::expressionIdentifier()
     QString url = function->sourceFile();
     quint16 lineNumber = function->compiledFunction->location.line;
     quint16 columnNumber = function->compiledFunction->location.column;
-
-    return url + QLatin1Char(':') + QString::number(lineNumber) + QLatin1Char(':') + QString::number(columnNumber);
+    return url + QString::asprintf(":%u:%u", uint(lineNumber), uint(columnNumber));
 }
 
 void QQmlBinding::expressionChanged()
@@ -409,10 +472,16 @@ void QQmlBinding::refresh()
     update();
 }
 
-void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
+void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 {
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
+
+    m_nextBinding.setFlag2(); // Always use accessors, only not when:
+    if (auto interceptorMetaObject = QQmlInterceptorMetaObject::get(targetObject())) {
+        if (!m_targetIndex.isValid() || interceptorMetaObject->intercepts(m_targetIndex))
+            m_nextBinding.clearFlag2();
+    }
 
     if (e)
         update(flags);
@@ -427,29 +496,28 @@ QString QQmlBinding::expression() const
 
 void QQmlBinding::setTarget(const QQmlProperty &prop)
 {
-    setTarget(prop.object(), QQmlPropertyPrivate::get(prop)->core);
+    auto pd = QQmlPropertyPrivate::get(prop);
+    setTarget(prop.object(), pd->core, &pd->valueTypeData);
 }
 
-void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
+void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const QQmlPropertyData *valueType)
 {
     m_target = object;
 
     if (!object) {
-        m_targetIndex = -1;
+        m_targetIndex = QQmlPropertyIndex();
         return;
     }
 
-    QQmlPropertyData pd = core;
-
-    while (pd.isAlias()) {
-        int coreIndex = pd.coreIndex;
-        int valueTypeIndex = pd.getValueTypeCoreIndex();
+    int coreIndex = core.coreIndex();
+    int valueTypeIndex = valueType ? valueType->coreIndex() : -1;
+    for (bool isAlias = core.isAlias(); isAlias; ) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
             m_target = 0;
-            m_targetIndex = -1;
+            m_targetIndex = QQmlPropertyIndex();
             return;
         }
         if (valueTypeIndex == -1)
@@ -458,25 +526,17 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
         QQmlData *data = QQmlData::get(object, false);
         if (!data || !data->propertyCache) {
             m_target = 0;
-            m_targetIndex = -1;
+            m_targetIndex = QQmlPropertyIndex();
             return;
         }
         QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
         Q_ASSERT(propertyData);
 
         m_target = object;
-        pd = *propertyData;
-        if (valueTypeIndex != -1) {
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(pd.propType);
-            Q_ASSERT(valueTypeMetaObject);
-            QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
-            pd.setFlags(pd.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
-            pd.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
-            pd.valueTypePropType = vtProp.userType();
-            pd.valueTypeCoreIndex = valueTypeIndex;
-        }
+        isAlias = propertyData->isAlias();
+        coreIndex = propertyData->coreIndex();
     }
-    m_targetIndex = pd.encodedIndex();
+    m_targetIndex = QQmlPropertyIndex(coreIndex, valueTypeIndex);
 
     QQmlData *data = QQmlData::get(*m_target, true);
     if (!data->propertyCache) {
@@ -485,28 +545,110 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
     }
 }
 
-QQmlPropertyData QQmlBinding::getPropertyData() const
+void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const
 {
-    int coreIndex;
-    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(m_targetIndex, &coreIndex);
+    Q_ASSERT(propertyData);
 
     QQmlData *data = QQmlData::get(*m_target, false);
     Q_ASSERT(data && data->propertyCache);
 
-    QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
-    Q_ASSERT(propertyData);
+    *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
+    Q_ASSERT(*propertyData);
 
-    QQmlPropertyData d = *propertyData;
-    if (Q_UNLIKELY(valueTypeIndex != -1)) {
-        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d.propType);
+    if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex() && valueTypeData)) {
+        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType((*propertyData)->propType());
         Q_ASSERT(valueTypeMetaObject);
-        QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
-        d.setFlags(d.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
-        d.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
-        d.valueTypePropType = vtProp.userType();
-        d.valueTypeCoreIndex = valueTypeIndex;
+        QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
+        valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));
+        valueTypeData->setPropType(vtProp.userType());
+        valueTypeData->setCoreIndex(m_targetIndex.valueTypeIndex());
     }
-    return d;
+}
+
+class QObjectPointerBinding: public QQmlNonbindingBinding
+{
+    QQmlMetaObject targetMetaObject;
+
+public:
+    QObjectPointerBinding(QQmlEnginePrivate *engine, int propertyType)
+        : targetMetaObject(QQmlPropertyPrivate::rawMetaObjectForType(engine, propertyType))
+    {}
+
+protected:
+    Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
+                               QQmlPropertyData::WriteFlags flags) Q_DECL_OVERRIDE Q_DECL_FINAL
+    {
+        QQmlPropertyData *pd;
+        QQmlPropertyData vtpd;
+        getPropertyData(&pd, &vtpd);
+        if (Q_UNLIKELY(isUndefined || vtpd.isValid()))
+            return slowWrite(*pd, vtpd, result, isUndefined, flags);
+
+        // Check if the result is a QObject:
+        QObject *resultObject = nullptr;
+        QQmlMetaObject resultMo;
+        if (result.isNull()) {
+            // Special case: we can always write a nullptr. Don't bother checking anything else.
+            return pd->writeProperty(targetObject(), &resultObject, flags);
+        } else if (auto wrapper = result.as<QV4::QObjectWrapper>()) {
+            resultObject = wrapper->object();
+            if (!resultObject)
+                return pd->writeProperty(targetObject(), &resultObject, flags);
+            if (QQmlData *ddata = QQmlData::get(resultObject, false))
+                resultMo = ddata->propertyCache;
+            if (resultMo.isNull()) {
+                resultMo = resultObject->metaObject();
+            }
+        } else if (auto variant = result.as<QV4::VariantObject>()) {
+            QVariant value = variant->d()->data;
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context());
+            resultMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, value.userType());
+            if (resultMo.isNull())
+                return slowWrite(*pd, vtpd, result, isUndefined, flags);
+            resultObject = *static_cast<QObject *const *>(value.constData());
+        } else {
+            return slowWrite(*pd, vtpd, result, isUndefined, flags);
+        }
+
+        // Compare & set:
+        if (QQmlMetaObject::canConvert(resultMo, targetMetaObject)) {
+            return pd->writeProperty(targetObject(), &resultObject, flags);
+        } else if (!resultObject && QQmlMetaObject::canConvert(targetMetaObject, resultMo)) {
+            // In the case of a null QObject, we assign the null if there is
+            // any change that the null variant type could be up or down cast to
+            // the property type.
+            return pd->writeProperty(targetObject(), &resultObject, flags);
+        } else {
+            return slowWrite(*pd, vtpd, result, isUndefined, flags);
+        }
+    }
+};
+
+QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property)
+{
+    if (property && property->isQObject())
+        return new QObjectPointerBinding(engine, property->propType());
+
+    const int type = (property && property->isFullyResolved()) ? property->propType() : QMetaType::UnknownType;
+
+    if (type == qMetaTypeId<QQmlBinding *>()) {
+        return new QQmlBindingBinding;
+    }
+
+    switch (type) {
+    case QMetaType::Bool:
+        return new GenericBinding<QMetaType::Bool>;
+    case QMetaType::Int:
+        return new GenericBinding<QMetaType::Int>;
+    case QMetaType::Double:
+        return new GenericBinding<QMetaType::Double>;
+    case QMetaType::Float:
+        return new GenericBinding<QMetaType::Float>;
+    case QMetaType::QString:
+        return new GenericBinding<QMetaType::QString>;
+    default:
+        return new GenericBinding<QMetaType::UnknownType>;
+    }
 }
 
 QT_END_NAMESPACE

@@ -161,6 +161,43 @@ struct PoolList
         }
         return result;
     }
+
+    struct Iterator {
+        T *ptr;
+
+        explicit Iterator(T *p) : ptr(p) {}
+
+        T *operator->() {
+            return ptr;
+        }
+
+        const T *operator->() const {
+            return ptr;
+        }
+
+        T &operator*() {
+            return *ptr;
+        }
+
+        const T &operator*() const {
+            return *ptr;
+        }
+
+        void operator++() {
+            ptr = ptr->next;
+        }
+
+        bool operator==(const Iterator &rhs) const {
+            return ptr == rhs.ptr;
+        }
+
+        bool operator!=(const Iterator &rhs) const {
+            return ptr != rhs.ptr;
+        }
+    };
+
+    Iterator begin() { return Iterator(first); }
+    Iterator end() { return Iterator(nullptr); }
 };
 
 template <typename T>
@@ -174,6 +211,12 @@ public:
         : data(0)
         , count(0)
     {}
+
+    void allocate(QQmlJS::MemoryPool *pool, int size)
+    {
+        count = size;
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+    }
 
     void allocate(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
     {
@@ -215,6 +258,9 @@ public:
                 return i;
         return -1;
     }
+
+    const T *begin() const { return data; }
+    const T *end() const { return data + count; }
 };
 
 struct Object;
@@ -231,6 +277,10 @@ struct Signal
     PoolList<SignalParameter> *parameters;
 
     QStringList parameterStringList(const QV4::Compiler::StringTableGenerator *stringPool) const;
+
+    int parameterCount() const { return parameters->count; }
+    PoolList<SignalParameter>::Iterator parametersBegin() const { return parameters->begin(); }
+    PoolList<SignalParameter>::Iterator parametersEnd() const { return parameters->end(); }
 
     Signal *next;
 };
@@ -261,6 +311,13 @@ struct Function
     QV4::CompiledData::Location location;
     int nameIndex;
     quint32 index; // index in parsedQML::functions
+    FixedPoolArray<int> formals;
+
+    // --- QQmlPropertyCacheCreator interface
+    const int *formalsBegin() const { return formals.begin(); }
+    const int *formalsEnd() const { return formals.end(); }
+    // ---
+
     Function *next;
 };
 
@@ -293,7 +350,7 @@ public:
     int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
-    int flags;
+    quint32 flags;
 
     QV4::CompiledData::Location location;
     QV4::CompiledData::Location locationOfIdProperty;
@@ -308,6 +365,17 @@ public:
     int bindingCount() const { return bindings->count; }
     const Function *firstFunction() const { return functions->first; }
     int functionCount() const { return functions->count; }
+
+    PoolList<Binding>::Iterator bindingsBegin() const { return bindings->begin(); }
+    PoolList<Binding>::Iterator bindingsEnd() const { return bindings->end(); }
+    PoolList<Property>::Iterator propertiesBegin() const { return properties->begin(); }
+    PoolList<Property>::Iterator propertiesEnd() const { return properties->end(); }
+    PoolList<Alias>::Iterator aliasesBegin() const { return aliases->begin(); }
+    PoolList<Alias>::Iterator aliasesEnd() const { return aliases->end(); }
+    PoolList<Signal>::Iterator signalsBegin() const { return qmlSignals->begin(); }
+    PoolList<Signal>::Iterator signalsEnd() const { return qmlSignals->end(); }
+    PoolList<Function>::Iterator functionsBegin() const { return functions->begin(); }
+    PoolList<Function>::Iterator functionsEnd() const { return functions->end(); }
 
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
@@ -332,6 +400,8 @@ public:
     FixedPoolArray<int> runtimeFunctionIndices;
 
     FixedPoolArray<quint32> namedObjectsInComponent;
+    int namedObjectsInComponentCount() const { return namedObjectsInComponent.count; }
+    const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
 private:
     friend struct IRLoader;
@@ -363,15 +433,10 @@ struct Q_QML_PRIVATE_EXPORT Document
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
     int indexOfRootObject;
-    QList<Object*> objects;
+    QVector<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
-    quint32 unitFlags;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
-    QHash<int, QStringList> extraSignalParameters;
-
-    QV4::CompiledData::TypeReferenceMap typeReferences;
-    void collectTypeReferences();
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
@@ -388,9 +453,9 @@ struct Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directive
     QList<const QV4::CompiledData::Import *> imports;
     bool hasPragmaLibrary;
 
-    virtual void pragmaLibrary();
-    virtual void importFile(const QString &jsfile, const QString &module, int lineNumber, int column);
-    virtual void importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column);
+    void pragmaLibrary() override;
+    void importFile(const QString &jsfile, const QString &module, int lineNumber, int column) override;
+    void importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column) override;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
@@ -405,21 +470,21 @@ public:
     using QQmlJS::AST::Visitor::visit;
     using QQmlJS::AST::Visitor::endVisit;
 
-    virtual bool visit(QQmlJS::AST::UiArrayMemberList *ast);
-    virtual bool visit(QQmlJS::AST::UiImport *ast);
-    virtual bool visit(QQmlJS::AST::UiPragma *ast);
-    virtual bool visit(QQmlJS::AST::UiHeaderItemList *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectInitializer *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectMemberList *ast);
-    virtual bool visit(QQmlJS::AST::UiParameterList *ast);
-    virtual bool visit(QQmlJS::AST::UiProgram *);
-    virtual bool visit(QQmlJS::AST::UiQualifiedId *ast);
-    virtual bool visit(QQmlJS::AST::UiArrayBinding *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectBinding *ast);
-    virtual bool visit(QQmlJS::AST::UiObjectDefinition *ast);
-    virtual bool visit(QQmlJS::AST::UiPublicMember *ast);
-    virtual bool visit(QQmlJS::AST::UiScriptBinding *ast);
-    virtual bool visit(QQmlJS::AST::UiSourceElement *ast);
+    bool visit(QQmlJS::AST::UiArrayMemberList *ast) override;
+    bool visit(QQmlJS::AST::UiImport *ast) override;
+    bool visit(QQmlJS::AST::UiPragma *ast) override;
+    bool visit(QQmlJS::AST::UiHeaderItemList *ast) override;
+    bool visit(QQmlJS::AST::UiObjectInitializer *ast) override;
+    bool visit(QQmlJS::AST::UiObjectMemberList *ast) override;
+    bool visit(QQmlJS::AST::UiParameterList *ast) override;
+    bool visit(QQmlJS::AST::UiProgram *) override;
+    bool visit(QQmlJS::AST::UiQualifiedId *ast) override;
+    bool visit(QQmlJS::AST::UiArrayBinding *ast) override;
+    bool visit(QQmlJS::AST::UiObjectBinding *ast) override;
+    bool visit(QQmlJS::AST::UiObjectDefinition *ast) override;
+    bool visit(QQmlJS::AST::UiPublicMember *ast) override;
+    bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
+    bool visit(QQmlJS::AST::UiSourceElement *ast) override;
 
     void accept(QQmlJS::AST::Node *node);
 
@@ -461,6 +526,7 @@ public:
     QString stringAt(int index) const { return jsGenerator->stringForIndex(index); }
 
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
+    static bool isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement);
 
     QList<QQmlJS::DiagnosticMessage> errors;
 
@@ -468,7 +534,7 @@ public:
 
     QList<const QV4::CompiledData::Import *> _imports;
     QList<Pragma*> _pragmas;
-    QList<Object*> _objects;
+    QVector<Object*> _objects;
 
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
@@ -482,7 +548,7 @@ public:
 
 struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
-    QV4::CompiledData::Unit *generate(Document &output);
+    QV4::CompiledData::Unit *generate(Document &output, QQmlEngine *engine, const QV4::CompiledData::ResolvedTypeReferenceMap &dependentTypes);
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
@@ -492,11 +558,11 @@ private:
 #ifndef V4_BOOTSTRAP
 struct Q_QML_EXPORT PropertyResolver
 {
-    PropertyResolver(QQmlPropertyCache *cache)
+    PropertyResolver(const QQmlPropertyCache *cache)
         : cache(cache)
     {}
 
-    QQmlPropertyData *property(int index)
+    QQmlPropertyData *property(int index) const
     {
         return cache->property(index);
     }
@@ -506,12 +572,12 @@ struct Q_QML_EXPORT PropertyResolver
         IgnoreRevision
     };
 
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0, RevisionCheck check = CheckRevision);
+    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0, RevisionCheck check = CheckRevision) const;
 
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-    QQmlPropertyData *signal(const QString &name, bool *notInRevision);
+    QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
 
-    QQmlPropertyCache *cache;
+    const QQmlPropertyCache *cache;
 };
 #endif
 
@@ -536,8 +602,8 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
 protected:
-    virtual void beginFunctionBodyHook();
-    virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    void beginFunctionBodyHook() override;
+    QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col) override;
 
 private:
     QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);

@@ -50,6 +50,9 @@ class QSGAbstractRenderer;
 class QSGEnginePrivate;
 class QSGTexture;
 class QSGRendererInterface;
+class QSGRectangleNode;
+class QSGImageNode;
+class QSGNinePatchNode;
 
 class Q_QUICK_EXPORT QSGEngine : public QObject
 {
@@ -74,6 +77,9 @@ public:
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
     QSGRendererInterface *rendererInterface() const;
+    QSGRectangleNode *createRectangleNode() const;
+    QSGImageNode *createImageNode() const;
+    QSGNinePatchNode *createNinePatchNode() const;
 };
 
 QT_END_NAMESPACE

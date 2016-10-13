@@ -80,6 +80,7 @@ private:
 class QSGD3D12FlatColorMaterial : public QSGD3D12Material
 {
 public:
+    QSGD3D12FlatColorMaterial();
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
 
@@ -129,7 +130,7 @@ public:
                                  ExtraState *extraState,
                                  quint8 *constantBuffer) override;
 
-    void setTexture(QSGTexture *texture) { m_texture = texture; }
+    void setTexture(QSGTexture *texture);
     QSGTexture *texture() const { return m_texture; }
 
     void setMipmapFiltering(QSGTexture::Filtering filter) { m_mipmap_filtering = filter; }

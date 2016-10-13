@@ -68,7 +68,7 @@ class QColor;
 class QTextDocument;
 class QSGContext;
 class QRawFont;
-class QSGRectangleNode;
+class QSGInternalRectangleNode;
 class QSGClipNode;
 class QSGTexture;
 
@@ -77,15 +77,6 @@ class QQuickTextNodeEngine;
 class Q_QUICK_PRIVATE_EXPORT QQuickTextNode : public QSGTransformNode
 {
 public:
-    enum Decoration {
-        NoDecoration = 0x0,
-        Underline    = 0x1,
-        Overline     = 0x2,
-        StrikeOut    = 0x4,
-        Background   = 0x8
-    };
-    Q_DECLARE_FLAGS(Decorations, Decoration)
-
     QQuickTextNode(QQuickItem *ownerElement);
     ~QQuickTextNode();
 
@@ -106,7 +97,7 @@ public:
 
     void setCursor(const QRectF &rect, const QColor &color);
     void clearCursor();
-    QSGRectangleNode *cursorNode() const { return m_cursorNode; }
+    QSGInternalRectangleNode *cursorNode() const { return m_cursorNode; }
 
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                             QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
@@ -118,7 +109,7 @@ public:
     void setUseNativeRenderer(bool on) { m_useNativeRenderer = on; }
 
 private:
-    QSGRectangleNode *m_cursorNode;
+    QSGInternalRectangleNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;
     bool m_useNativeRenderer;

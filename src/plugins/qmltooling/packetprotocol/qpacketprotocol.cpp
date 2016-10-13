@@ -124,12 +124,9 @@ QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
     Q_ASSERT(4 == sizeof(qint32));
     Q_ASSERT(dev);
 
-    QObject::connect(dev, SIGNAL(readyRead()),
-                     this, SLOT(readyToRead()));
-    QObject::connect(dev, SIGNAL(aboutToClose()),
-                     this, SLOT(aboutToClose()));
-    QObject::connect(dev, SIGNAL(bytesWritten(qint64)),
-                     this, SLOT(bytesWritten(qint64)));
+    QObject::connect(dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
+    QObject::connect(dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
+    QObject::connect(dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
 }
 
 /*!
@@ -247,12 +244,9 @@ void QPacketProtocol::readyToRead()
 
             // Check sizing constraints
             if (d->inProgressSize > MAX_PACKET_SIZE) {
-                QObject::disconnect(d->dev, SIGNAL(readyRead()),
-                                    this, SLOT(readyToRead()));
-                QObject::disconnect(d->dev, SIGNAL(aboutToClose()),
-                                    this, SLOT(aboutToClose()));
-                QObject::disconnect(d->dev, SIGNAL(bytesWritten(qint64)),
-                                    this, SLOT(bytesWritten(qint64)));
+                disconnect(d->dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
+                disconnect(d->dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
+                disconnect(d->dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
                 d->dev = 0;
                 emit invalidPacket();
                 return;

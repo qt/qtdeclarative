@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 // #define QSTRINGHASH_LINK_DEBUG
 
 class QHashedStringRef;
-class Q_AUTOTEST_EXPORT QHashedString : public QString
+class Q_QML_PRIVATE_EXPORT QHashedString : public QString
 {
 public:
     inline QHashedString();
@@ -85,16 +85,20 @@ public:
     static bool compare(const QChar *lhs, const QChar *rhs, int length);
     static inline bool compare(const QChar *lhs, const char *rhs, int length);
     static inline bool compare(const char *lhs, const char *rhs, int length);
+
+    static inline quint32 stringHash(const QChar* data, int length);
+    static inline quint32 stringHash(const char *data, int length);
+
 private:
     friend class QHashedStringRef;
     friend class QStringHashNode;
 
-    void computeHash() const;
+    inline void computeHash() const;
     mutable quint32 m_hash;
 };
 
 class QHashedCStringRef;
-class Q_AUTOTEST_EXPORT QHashedStringRef
+class Q_QML_PRIVATE_EXPORT QHashedStringRef
 {
 public:
     inline QHashedStringRef();
@@ -136,7 +140,7 @@ public:
 private:
     friend class QHashedString;
 
-    void computeHash() const;
+    inline void computeHash() const;
 
     const QChar *m_data;
     int m_length;
@@ -163,7 +167,7 @@ public:
 private:
     friend class QHashedStringRef;
 
-    void computeHash() const;
+    inline void computeHash() const;
 
     const char *m_data;
     int m_length;
@@ -1214,6 +1218,11 @@ bool QHashedStringRef::isLatin1() const
     return true;
 }
 
+void QHashedStringRef::computeHash() const
+{
+    m_hash = QHashedString::stringHash(m_data, m_length);
+}
+
 bool QHashedStringRef::startsWithUpper() const
 {
     if (m_length < 1) return false;
@@ -1280,6 +1289,11 @@ void QHashedCStringRef::writeUtf16(quint16 *output) const
         *output++ = *d++;
 }
 
+void QHashedCStringRef::computeHash() const
+{
+    m_hash = QHashedString::stringHash(m_data, m_length);
+}
+
 bool QHashedString::compare(const QChar *lhs, const char *rhs, int length)
 {
     Q_ASSERT(lhs && rhs);
@@ -1293,6 +1307,21 @@ bool QHashedString::compare(const char *lhs, const char *rhs, int length)
 {
     Q_ASSERT(lhs && rhs);
     return 0 == ::memcmp(lhs, rhs, length);
+}
+
+quint32 QHashedString::stringHash(const QChar *data, int length)
+{
+    return QV4::String::createHashValue(data, length, Q_NULLPTR);
+}
+
+quint32 QHashedString::stringHash(const char *data, int length)
+{
+    return QV4::String::createHashValue(data, length, Q_NULLPTR);
+}
+
+void QHashedString::computeHash() const
+{
+    m_hash = stringHash(constData(), length());
 }
 
 QT_END_NAMESPACE

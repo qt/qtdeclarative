@@ -136,8 +136,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , currentContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
-    , debugger(0)
-    , profiler(0)
     , globalCode(0)
     , v8Engine(0)
     , argumentsAccessors(0)
@@ -145,6 +143,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
+#ifndef QT_NO_QML_DEBUGGER
+    , m_debugger(0)
+    , m_profiler(0)
+#endif
 {
     if (maxCallDepth == -1) {
         bool ok = false;
@@ -188,6 +190,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
+#ifdef V4_USE_VALGRIND
+    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
+#endif
+
     jsStackTop = jsStackBase;
 
     exceptionValue = jsAlloca(1);
@@ -196,10 +202,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typedArrayPrototype = static_cast<Object *>(jsAlloca(NTypedArrayTypes));
     typedArrayCtors = static_cast<FunctionObject *>(jsAlloca(NTypedArrayTypes));
     jsStrings = jsAlloca(NJSStrings);
-
-#ifdef V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
-#endif
 
     // set up stack limits
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
@@ -442,10 +444,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
-    delete debugger;
-    debugger = 0;
-    delete profiler;
-    profiler = 0;
+#ifndef QT_NO_QML_DEBUGGER
+    delete m_debugger;
+    m_debugger = 0;
+    delete m_profiler;
+    m_profiler = 0;
+#endif
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete identifierTable;
@@ -453,7 +457,7 @@ ExecutionEngine::~ExecutionEngine()
 
     QSet<QV4::CompiledData::CompilationUnit*> remainingUnits;
     qSwap(compilationUnits, remainingUnits);
-    foreach (QV4::CompiledData::CompilationUnit *unit, remainingUnits)
+    for (QV4::CompiledData::CompilationUnit *unit : qAsConst(remainingUnits))
         unit->unlink();
 
     emptyClass->destroy();
@@ -467,23 +471,26 @@ ExecutionEngine::~ExecutionEngine()
     delete [] argumentsAccessors;
 }
 
-void ExecutionEngine::setDebugger(Debugging::Debugger *debugger_)
+#ifndef QT_NO_QML_DEBUGGER
+void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
 {
-    Q_ASSERT(!debugger);
-    debugger = debugger_;
+    Q_ASSERT(!m_debugger);
+    m_debugger = debugger;
 }
 
-void ExecutionEngine::enableProfiler()
+void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 {
-    Q_ASSERT(!profiler);
-    profiler = new QV4::Profiling::Profiler(this);
+    Q_ASSERT(!m_profiler);
+    m_profiler = profiler;
 }
+#endif // QT_NO_QML_DEBUGGER
 
 void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
-    Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(sizeof(GlobalContext::Data) + sizeof(CallData)));
-    new (r->d()) GlobalContext::Data(this);
+    Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(
+                                sizeof(GlobalContext::Data) + sizeof(CallData)));
+    r->d_unchecked()->init(this);
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
     r->d()->callData->tag = QV4::Value::Integer_Type_Internal;
     r->d()->callData->argc = 0;
@@ -566,7 +573,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
     if (length) {
         size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
         Heap::SimpleArrayData *d = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
-        new (d) Heap::SimpleArrayData;
+        d->init();
         d->alloc = length;
         d->type = Heap::ArrayData::Simple;
         d->offset = 0;
@@ -612,6 +619,13 @@ Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
     Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(dt));
+    return object->d();
+}
+
+Heap::DateObject *ExecutionEngine::newDateObjectFromTime(const QTime &t)
+{
+    Scope scope(this);
+    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(t));
     return object->d();
 }
 
@@ -910,8 +924,8 @@ ReturnedValue ExecutionEngine::throwError(const Value &value)
     else
         exceptionStackTrace = stackTrace();
 
-    if (debugger)
-        debugger->aboutToThrow();
+    if (QV4::Debugging::Debugger *debug = debugger())
+        debug->aboutToThrow();
 
     return Encode::undefined();
 }
@@ -969,7 +983,7 @@ ReturnedValue ExecutionEngine::throwReferenceError(const Value &value)
 {
     Scope scope(this);
     ScopedString s(scope, value.toString(this));
-    QString msg = s->toQString() + QStringLiteral(" is not defined");
+    QString msg = s->toQString() + QLatin1String(" is not defined");
     ScopedObject error(scope, newReferenceErrorObject(msg));
     return throwError(error);
 }
@@ -993,7 +1007,7 @@ ReturnedValue ExecutionEngine::throwRangeError(const Value &value)
 {
     Scope scope(this);
     ScopedString s(scope, value.toString(this));
-    QString msg = s->toQString() + QStringLiteral(" out of range");
+    QString msg = s->toQString() + QLatin1String(" out of range");
     ScopedObject error(scope, newRangeErrorObject(msg));
     return throwError(error);
 }
@@ -1008,7 +1022,7 @@ ReturnedValue ExecutionEngine::throwURIError(const Value &msg)
 ReturnedValue ExecutionEngine::throwUnimplemented(const QString &message)
 {
     Scope scope(this);
-    ScopedValue v(scope, newString(QStringLiteral("Unimplemented ") + message));
+    ScopedValue v(scope, newString(QLatin1String("Unimplemented ") + message));
     v = newErrorObject(v);
     return throwError(v);
 }
@@ -1124,15 +1138,20 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (value.isUndefined())
         return QVariant();
     if (value.isNull())
-        return QVariant(QMetaType::VoidStar, (void *)0);
+        return QVariant::fromValue(nullptr);
     if (value.isBoolean())
         return value.booleanValue();
     if (value.isInteger())
         return value.integerValue();
     if (value.isNumber())
         return value.asDouble();
-    if (value.isString())
-        return value.stringValue()->toQString();
+    if (value.isString()) {
+        const QString &str = value.toQString();
+        // QChars are stored as a strings
+        if (typeHint == QVariant::Char && str.size() == 1)
+            return str.at(0);
+        return str;
+    }
     if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
         return ld->d()->locale;
     if (const QV4::DateObject *d = value.as<DateObject>())
@@ -1249,6 +1268,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::UnknownType:
             case QMetaType::Void:
                 return QV4::Encode::undefined();
+            case QMetaType::Nullptr:
             case QMetaType::VoidStar:
                 return QV4::Encode::null();
             case QMetaType::Bool:
@@ -1274,9 +1294,9 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::UShort:
                 return QV4::Encode((int)*reinterpret_cast<const unsigned short*>(ptr));
             case QMetaType::Char:
-                return newString(QChar::fromLatin1(*reinterpret_cast<const char *>(ptr)))->asReturnedValue();
+                return QV4::Encode((int)*reinterpret_cast<const char*>(ptr));
             case QMetaType::UChar:
-                return newString(QChar::fromLatin1(*reinterpret_cast<const unsigned char *>(ptr)))->asReturnedValue();
+                return QV4::Encode((int)*reinterpret_cast<const unsigned char*>(ptr));
             case QMetaType::QChar:
                 return newString(*reinterpret_cast<const QChar *>(ptr))->asReturnedValue();
             case QMetaType::QDateTime:
@@ -1284,7 +1304,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::QDate:
                 return QV4::Encode(newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
             case QMetaType::QTime:
-            return QV4::Encode(newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
+                return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
             case QMetaType::QRegExp:
                 return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
@@ -1420,6 +1440,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     case QMetaType::UnknownType:
     case QMetaType::Void:
         return QV4::Encode::undefined();
+    case QMetaType::Nullptr:
     case QMetaType::VoidStar:
         return QV4::Encode::null();
     case QMetaType::Bool:
@@ -1504,6 +1525,11 @@ void ExecutionEngine::assertObjectBelongsToEngine(const Heap::Base &baseObject)
 {
     Q_ASSERT(!baseObject.vtable()->isObject || static_cast<const Heap::Object&>(baseObject).internalClass->engine == this);
     Q_UNUSED(baseObject);
+}
+
+void ExecutionEngine::failStackLimitCheck(Scope &scope)
+{
+    scope.result = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
 }
 
 // Converts a JS value to a meta-type.

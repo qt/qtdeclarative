@@ -176,7 +176,7 @@ public:
     QQuickXmlQueryThreadObject(QQuickXmlQueryEngine *);
 
     void processJobs();
-    virtual bool event(QEvent *e);
+    bool event(QEvent *e) override;
 
 private:
     QQuickXmlQueryEngine *m_queryEngine;
@@ -202,7 +202,7 @@ signals:
     void error(void*, const QString&);
 
 protected:
-    void run();
+    void run() override;
 
 private:
     void processQuery(XmlQueryJob *job);

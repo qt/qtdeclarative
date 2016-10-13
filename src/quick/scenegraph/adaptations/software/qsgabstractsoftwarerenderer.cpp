@@ -67,9 +67,7 @@ QSGAbstractSoftwareRenderer::~QSGAbstractSoftwareRenderer()
     // Cleanup RenderableNodes
     delete m_background;
 
-    for (QSGSoftwareRenderableNode *node : m_nodes.values()) {
-        delete node;
-    }
+    qDeleteAll(m_nodes);
 
     delete m_nodeUpdater;
 }
@@ -149,7 +147,7 @@ void QSGAbstractSoftwareRenderer::buildRenderList()
     QSGSoftwareRenderListBuilder(this).visitChildren(rootNode());
 }
 
-void QSGAbstractSoftwareRenderer::optimizeRenderList()
+QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
 {
     // Iterate through the renderlist from front to back
     // Objective is to update the dirty status and rects.
@@ -212,9 +210,13 @@ void QSGAbstractSoftwareRenderer::optimizeRenderList()
         m_dirtyRegion += node->dirtyRegion();
     }
 
+    QRegion updateRegion = m_dirtyRegion;
+
     // Empty dirtyRegion
     m_dirtyRegion = QRegion();
     m_obscuredRegion = QRegion();
+
+    return updateRegion;
 }
 
 void QSGAbstractSoftwareRenderer::setBackgroundColor(const QColor &color)
@@ -232,7 +234,7 @@ void QSGAbstractSoftwareRenderer::setBackgroundSize(const QSize &size)
     m_background->setRect(0.0f, 0.0f, size.width(), size.height());
     renderableNode(m_background)->markGeometryDirty();
     // Invalidate the whole scene when the background is resized
-    m_dirtyRegion = QRegion(m_background->rect().toRect());
+    markDirty();
 }
 
 QColor QSGAbstractSoftwareRenderer::backgroundColor()
@@ -316,6 +318,11 @@ void QSGAbstractSoftwareRenderer::nodeOpacityUpdated(QSGNode *node)
 
     // Update children nodes
     m_nodeUpdater->updateNodes(node);
+}
+
+void QSGAbstractSoftwareRenderer::markDirty()
+{
+    m_dirtyRegion = QRegion(m_background->rect().toRect());
 }
 
 QT_END_NAMESPACE

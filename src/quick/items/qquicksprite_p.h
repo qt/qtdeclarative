@@ -300,7 +300,7 @@ private Q_SLOTS:
 
 private:
     friend class QQuickImageParticle;
-    friend class QQuickSpriteSequence;
+    //friend class QQuickSpriteSequence;
     friend class QQuickAnimatedSprite;
     friend class QQuickSpriteEngine;
     friend class QQuickStochasticEngine;

@@ -71,7 +71,7 @@ struct QmlContextWrapper : Object {
     bool isNullWrapper;
 
     QQmlGuardedContextData context;
-    QPointer<QObject> scopeObject;
+    QQmlQPointer<QObject> scopeObject;
 };
 
 }

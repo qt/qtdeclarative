@@ -76,12 +76,13 @@ class TextureReference;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 class QOpenGLContext;
-class QSGImageNode;
+class QSGInternalImageNode;
 class QSGPainterNode;
-class QSGRectangleNode;
+class QSGInternalRectangleNode;
 class QSGGlyphNode;
-class QSGNinePatchNode;
 class QSGRootNode;
+class QSGSpriteNode;
+class QSGRenderNode;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -97,18 +98,20 @@ public:
     virtual void endVisit(QSGGeometryNode *) = 0;
     virtual bool visit(QSGOpacityNode *) = 0;
     virtual void endVisit(QSGOpacityNode *) = 0;
-    virtual bool visit(QSGImageNode *) = 0;
-    virtual void endVisit(QSGImageNode *) = 0;
+    virtual bool visit(QSGInternalImageNode *) = 0;
+    virtual void endVisit(QSGInternalImageNode *) = 0;
     virtual bool visit(QSGPainterNode *) = 0;
     virtual void endVisit(QSGPainterNode *) = 0;
-    virtual bool visit(QSGRectangleNode *) = 0;
-    virtual void endVisit(QSGRectangleNode *) = 0;
+    virtual bool visit(QSGInternalRectangleNode *) = 0;
+    virtual void endVisit(QSGInternalRectangleNode *) = 0;
     virtual bool visit(QSGGlyphNode *) = 0;
     virtual void endVisit(QSGGlyphNode *) = 0;
-    virtual bool visit(QSGNinePatchNode *) = 0;
-    virtual void endVisit(QSGNinePatchNode *) = 0;
     virtual bool visit(QSGRootNode *) = 0;
     virtual void endVisit(QSGRootNode *) = 0;
+    virtual bool visit(QSGSpriteNode *) = 0;
+    virtual void endVisit(QSGSpriteNode *) = 0;
+    virtual bool visit(QSGRenderNode *) = 0;
+    virtual void endVisit(QSGRenderNode *) = 0;
 
     void visitChildren(QSGNode *node);
 };
@@ -122,7 +125,7 @@ public:
     virtual void accept(QSGNodeVisitorEx *) = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGVisitableNode
+class Q_QUICK_PRIVATE_EXPORT QSGInternalRectangleNode : public QSGVisitableNode
 {
 public:
     virtual void setRect(const QRectF &rect) = 0;
@@ -140,7 +143,7 @@ public:
 };
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGVisitableNode
+class Q_QUICK_PRIVATE_EXPORT QSGInternalImageNode : public QSGVisitableNode
 {
 public:
     virtual void setTargetRect(const QRectF &rect) = 0;
@@ -186,19 +189,6 @@ public:
     virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGNinePatchNode : public QSGVisitableNode
-{
-public:
-    virtual void setTexture(QSGTexture *texture) = 0;
-    virtual void setBounds(const QRectF &bounds) = 0;
-    virtual void setDevicePixelRatio(qreal ratio) = 0;
-    virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom) = 0;
-
-    virtual void update() = 0;
-
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
-};
-
 class Q_QUICK_EXPORT QSGLayer : public QSGDynamicTexture
 {
     Q_OBJECT
@@ -221,6 +211,23 @@ public:
 Q_SIGNALS:
     void updateRequested();
     void scheduledUpdateCompleted();
+};
+
+class Q_QUICK_PRIVATE_EXPORT QSGSpriteNode : public QSGVisitableNode
+{
+public:
+    virtual void setTexture(QSGTexture *texture) = 0;
+    virtual void setTime(float time) = 0;
+    virtual void setSourceA(const QPoint &source) = 0;
+    virtual void setSourceB(const QPoint &source) = 0;
+    virtual void setSpriteSize(const QSize &size) = 0;
+    virtual void setSheetSize(const QSize &size) = 0;
+    virtual void setSize(const QSizeF &size) = 0;
+    virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
+
+    virtual void update() = 0;
+
+    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
@@ -273,9 +280,10 @@ public:
         uint constantDataSize;
     };
 
-    virtual bool reflect(const QByteArray &src, ShaderInfo *result) = 0;
+    virtual void prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result) = 0;
 
 Q_SIGNALS:
+    void shaderCodePrepared(bool ok, ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result);
     void textureChanged();
     void logAndStatusChanged();
 };
@@ -536,7 +544,8 @@ inline bool QSGDistanceFieldGlyphCache::containsGlyph(glyph_t glyph)
     return glyphData(glyph).texCoord.isValid();
 }
 
-
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QSGGuiThreadShaderEffectManager::ShaderInfo::Type)
 
 #endif

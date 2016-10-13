@@ -57,6 +57,40 @@
 
 #include <QElapsedTimer>
 
+#ifdef QT_NO_QML_DEBUGGER
+
+#define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE(engine, function) (function->code(engine, function->codeData))
+
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+namespace Profiling {
+struct Profiler {};
+}
+}
+
+QT_END_NAMESPACE
+
+#else
+
+#define Q_V4_PROFILE_ALLOC(engine, size, type)\
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackAlloc(size, type) : false)
+
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) \
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackDealloc(size, type) : false)
+
+#define Q_V4_PROFILE(engine, function)\
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
+        Profiling::FunctionCallProfiler::profileCall(engine->profiler(), engine, function) :\
+        function->code(engine, function->codeData))
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -150,25 +184,8 @@ private:
     qint64 m_end;
 };
 
-#define Q_V4_PROFILE_ALLOC(engine, size, type)\
-    (engine->profiler &&\
-            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
-        engine->profiler->trackAlloc(size, type) : size)
-
-#define Q_V4_PROFILE_DEALLOC(engine, pointer, size, type) \
-    (engine->profiler &&\
-            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
-        engine->profiler->trackDealloc(pointer, size, type) : pointer)
-
-#define Q_V4_PROFILE(engine, function)\
-    (engine->profiler &&\
-            (engine->profiler->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
-        Profiling::FunctionCallProfiler::profileCall(engine->profiler, engine, function) :\
-        function->code(engine, function->codeData))
-
 class Q_QML_EXPORT Profiler : public QObject {
     Q_OBJECT
-    Q_DISABLE_COPY(Profiler)
 public:
     struct SentMarker {
         SentMarker() : m_function(nullptr) {}
@@ -212,23 +229,22 @@ public:
 
     Profiler(QV4::ExecutionEngine *engine);
 
-    size_t trackAlloc(size_t size, MemoryType type)
+    bool trackAlloc(size_t size, MemoryType type)
     {
         MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
         m_memory_data.append(allocation);
-        return size;
+        return true;
     }
 
-    void *trackDealloc(void *pointer, size_t size, MemoryType type)
+    bool trackDealloc(size_t size, MemoryType type)
     {
         MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
         m_memory_data.append(allocation);
-        return pointer;
+        return true;
     }
 
     quint64 featuresEnabled;
 
-public slots:
     void stopProfiling();
     void startProfiling(quint64 features);
     void reportData(bool trackLocations);
@@ -289,5 +305,7 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
+
+#endif // QT_NO_QML_DEBUGGER
 
 #endif // QV4PROFILING_H

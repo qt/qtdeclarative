@@ -288,6 +288,7 @@ Item {
         }
 
         function test_asyncLoaderCurrentIndexChange() {
+            skip("more details in QTBUG-53780")
             for (var i = 0; i < 500; i++) {
                 asyncLoaderCurrentIndexListView.currentIndex = 0;
                 asyncLoaderCurrentIndexListView.currentIndex = 1;
@@ -300,6 +301,7 @@ Item {
         }
 
         function test_asyncListViewLoader() {
+            skip("more details in QTBUG-53780")
             for (var i = 0; i < 50; i++) {
                 wait(10);
                 asyncListViewLoaderView.currentIndex = 0;
@@ -318,9 +320,13 @@ Item {
 
         function test_listInteractiveCurrentIndexEnforce() {
             mousePress(listInteractiveCurrentIndexEnforce, 10, 50);
+            wait(1); // because Flickable pays attention to velocity, we need some time between movements
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 40);
+            wait(1);
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 30);
+            wait(1);
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 20);
+            wait(1);
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 10);
             compare(listInteractiveCurrentIndexEnforce.interactive, false);
             mouseRelease(listInteractiveCurrentIndexEnforce, 10, 10);

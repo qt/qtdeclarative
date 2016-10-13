@@ -70,6 +70,9 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
  */
 void QSGDefaultRenderContext::initialize(void *context)
 {
+    if (!m_sg)
+        return;
+
     QOpenGLContext *openglContext = static_cast<QOpenGLContext *>(context);
 
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
@@ -163,7 +166,9 @@ void QSGDefaultRenderContext::invalidate()
         m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
     m_gl = 0;
 
-    QSGRenderContext::invalidate();
+    if (m_sg)
+        m_sg->renderContextInvalidated(this);
+    emit invalidated();
 }
 
 static QBasicMutex qsg_framerender_mutex;
@@ -273,7 +278,7 @@ void QSGDefaultRenderContext::initializeShader(QSGMaterialShader *shader)
     shader->initialize();
 }
 
-void QSGDefaultRenderContext::setAttachToGLContext(bool attach)
+void QSGDefaultRenderContext::setAttachToGraphicsContext(bool attach)
 {
     Q_ASSERT(!isValid());
     m_attachToGLContext = attach;

@@ -478,7 +478,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     qreal colPos = colPosAt(visibleIndex);
     qreal rowPos = rowPosAt(visibleIndex);
     if (visibleItems.count()) {
-        FxGridItemSG *lastItem = static_cast<FxGridItemSG*>(visibleItems.last());
+        FxGridItemSG *lastItem = static_cast<FxGridItemSG*>(visibleItems.constLast());
         rowPos = lastItem->rowPos();
         int colNum = qFloor((lastItem->colPos()+colSize()/2) / colSize());
         if (++colNum >= columns) {
@@ -536,7 +536,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
 
     // Find first column
     if (visibleItems.count()) {
-        FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
+        FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.constFirst());
         rowPos = firstItem->rowPos();
         colNum = qFloor((firstItem->colPos()+colSize()/2) / colSize());
         if (--colNum < 0) {
@@ -586,7 +586,7 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     bool changed = false;
 
     while (visibleItems.count() > 1
-           && (item = static_cast<FxGridItemSG*>(visibleItems.first()))
+           && (item = static_cast<FxGridItemSG*>(visibleItems.constFirst()))
                 && item->rowPos()+rowSize()-1 < bufferFrom - rowSize()*(item->colPos()/colSize()+1)/(columns+1)) {
         if (item->attached->delayRemove())
             break;
@@ -598,7 +598,7 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
         changed = true;
     }
     while (visibleItems.count() > 1
-           && (item = static_cast<FxGridItemSG*>(visibleItems.last()))
+           && (item = static_cast<FxGridItemSG*>(visibleItems.constLast()))
                 && item->rowPos() > bufferTo + rowSize()*(columns - item->colPos()/colSize())/(columns+1)) {
         if (item->attached->delayRemove())
             break;
@@ -623,7 +623,7 @@ void QQuickGridViewPrivate::layoutVisibleItems(int fromModelIndex)
         const qreal from = isContentFlowReversed() ? -position()-displayMarginBeginning-size() : position()-displayMarginBeginning;
         const qreal to = isContentFlowReversed() ? -position()+displayMarginEnd : position()+size()+displayMarginEnd;
 
-        FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
+        FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.constFirst());
         qreal rowPos = firstItem->rowPos();
         qreal colPos = firstItem->colPos();
         int col = visibleIndex % columns;
@@ -679,7 +679,7 @@ void QQuickGridViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
 
 void QQuickGridViewPrivate::resetFirstItemPosition(qreal pos)
 {
-    FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.first());
+    FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.constFirst());
     item->setPosition(0, pos);
 }
 
@@ -692,7 +692,7 @@ void QQuickGridViewPrivate::adjustFirstItem(qreal forwards, qreal backwards, int
     if (moveCount == 0 && changeBeforeVisible != 0)
         moveCount += (changeBeforeVisible % columns) - (columns - 1);
 
-    FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.first());
+    FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.constFirst());
     gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
 }
 
@@ -1549,10 +1549,12 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.
 
-    Setting this value can make scrolling the list smoother at the expense
-    of additional memory usage.  It is not a substitute for creating efficient
-    delegates; the fewer objects and bindings in a delegate, the faster a view may be
-    scrolled.
+    \note Setting this property is not a replacement for creating efficient delegates.
+    It can improve the smoothness of scrolling behavior at the expense of additional
+    memory usage. The fewer objects and bindings in a delegate, the faster a
+    view can be scrolled. It is important to realize that setting a cacheBuffer
+    will only postpone issues caused by slow-loading delegates, it is not a
+    solution for this scenario.
 
     The cacheBuffer operates outside of any display margins specified by
     displayMarginBeginning or displayMarginEnd.
@@ -2515,7 +2517,7 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 
     int markerItemIndex = -1;
     for (int i=0; i<visibleItems.count(); i++) {
-        if (visibleItems[i]->index == afterModelIndex) {
+        if (visibleItems.at(i)->index == afterModelIndex) {
             markerItemIndex = i;
             break;
         }
@@ -2534,7 +2536,7 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     countItemsRemoved -= removalResult.countChangeAfterVisibleItems;
 
     for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
-        FxGridItemSG *gridItem = static_cast<FxGridItemSG *>(visibleItems[i]);
+        FxGridItemSG *gridItem = static_cast<FxGridItemSG *>(visibleItems.at(i));
         if (!gridItem->transitionScheduledOrRunning()) {
             qreal origRowPos = gridItem->colPos();
             qreal origColPos = gridItem->rowPos();
@@ -2610,7 +2612,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod int QtQuick::GridView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::GridView::indexAt(real x, real y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
@@ -2623,7 +2625,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod Item QtQuick::GridView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::GridView::itemAt(real x, real y)
 
     Returns the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is

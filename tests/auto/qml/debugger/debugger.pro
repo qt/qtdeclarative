@@ -20,6 +20,6 @@ PRIVATETESTS += \
 
 SUBDIRS += $$PUBLICTESTS
 
-contains(QT_CONFIG, private_tests) {
+qtConfig(private_tests): \
     SUBDIRS += $$PRIVATETESTS
-}
+

@@ -229,7 +229,7 @@ public:
     };
     QList<Import *> imports;
 
-    Import *findImport(const QString &uri);
+    Import *findImport(const QString &uri) const;
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
                      int *vmajor, int *vminor, QQmlType** type_return,
@@ -399,9 +399,7 @@ bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QSt
 
     if (baseUrl.startsWith(importUrl))
     {
-        QString typeUrl(importUrl);
-        typeUrl.append(fileName);
-        if (typeUrl == baseUrl)
+        if (fileName == baseUrl.midRef(importUrl.size()))
             return false;
     }
 
@@ -455,7 +453,7 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
     for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
         const QQmlImportNamespace::Import *import = set.imports.at(ii);
 
-        foreach (const QQmlDirParser::Script &script, import->qmlDirScripts) {
+        for (const QQmlDirParser::Script &script : import->qmlDirScripts) {
             ScriptReference ref;
             ref.nameSpace = script.nameSpace;
             ref.location = QUrl(import->url).resolved(QUrl(script.fileName));
@@ -469,7 +467,7 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
         for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
             const QQmlImportNamespace::Import *import = set.imports.at(ii);
 
-            foreach (const QQmlDirParser::Script &script, import->qmlDirScripts) {
+            for (const QQmlDirParser::Script &script : import->qmlDirScripts) {
                 ScriptReference ref;
                 ref.nameSpace = script.nameSpace;
                 ref.qualifier = set.prefix;
@@ -540,10 +538,10 @@ QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
 {
     if (version == QQmlImports::FullyVersioned) {
         // extension with fully encoded version number (eg. MyModule.3.2)
-        return QString(QLatin1String(".%1.%2")).arg(vmaj).arg(vmin);
+        return QString::asprintf(".%d.%d", vmaj, vmin);
     } else if (version == QQmlImports::PartiallyVersioned) {
         // extension with encoded version major (eg. MyModule.3)
-        return QString(QLatin1String(".%1")).arg(vmaj);
+        return QString::asprintf(".%d", vmaj);
     } // else extension without version number (eg. MyModule)
     return QString();
 }
@@ -786,14 +784,13 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
     return false;
 }
 
-QQmlImportNamespace::Import *QQmlImportNamespace::findImport(const QString &uri)
+QQmlImportNamespace::Import *QQmlImportNamespace::findImport(const QString &uri) const
 {
-    for (QList<Import *>::iterator it = imports.begin(), end = imports.end(); it != end; ++it) {
-        if ((*it)->uri == uri)
-            return *it;
+    for (Import *import : imports) {
+        if (import->uri == uri)
+            return import;
     }
-
-    return 0;
+    return nullptr;
 }
 
 bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
@@ -900,6 +897,21 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
 }
 
 #ifndef QT_NO_LIBRARY
+static QVector<QStaticPlugin> makePlugins()
+{
+    QVector<QStaticPlugin> plugins;
+    // To avoid traversing all static plugins for all imports, we cut down
+    // the list the first time called to only contain QML plugins:
+    const auto staticPlugins = QPluginLoader::staticPlugins();
+    for (const QStaticPlugin &plugin : staticPlugins) {
+        if (plugin.metaData().value(QLatin1String("IID")).toString()
+                == QLatin1String(QQmlExtensionInterface_iid)) {
+            plugins.append(plugin);
+        }
+    }
+    return plugins;
+}
+
 /*!
     Get all static plugins that are QML plugins and has a meta data URI that matches with one of
     \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
@@ -908,20 +920,11 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
 bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                                       const QString &qmldirPath, QList<QQmlError> *errors)
 {
-    static QVector<QStaticPlugin> plugins;
-    if (plugins.isEmpty()) {
-        // To avoid traversing all static plugins for all imports, we cut down
-        // the list the first time called to only contain QML plugins:
-        foreach (const QStaticPlugin &plugin, QPluginLoader::staticPlugins()) {
-            if (plugin.metaData().value(QStringLiteral("IID")).toString() == QLatin1String(QQmlExtensionInterface_iid))
-                plugins.append(plugin);
-        }
-    }
-
-    foreach (const QStaticPlugin &plugin, plugins) {
+    static const QVector<QStaticPlugin> plugins = makePlugins();
+    for (const QStaticPlugin &plugin : plugins) {
         // Since a module can list more than one plugin, we keep iterating even after we found a match.
         if (QQmlExtensionPlugin *instance = qobject_cast<QQmlExtensionPlugin *>(plugin.instance())) {
-            const QJsonArray metaTagsUriList = plugin.metaData().value(QStringLiteral("uri")).toArray();
+            const QJsonArray metaTagsUriList = plugin.metaData().value(QLatin1String("uri")).toArray();
             if (metaTagsUriList.isEmpty()) {
                 if (errors) {
                     QQmlError error;
@@ -933,7 +936,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
                 return false;
             }
             // A plugin can be set up to handle multiple URIs, so go through the list:
-            foreach (const QJsonValue &metaTagUri, metaTagsUriList) {
+            for (const QJsonValue &metaTagUri : metaTagsUriList) {
                 if (versionUris.contains(metaTagUri.toString())) {
                     result.append(qMakePair(plugin, metaTagsUriList));
                     break;
@@ -1000,7 +1003,8 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         int staticPluginsFound = 0;
 
 #if defined(QT_SHARED)
-        foreach (const QQmlDirParser::Plugin &plugin, qmldir->plugins()) {
+        const auto qmldirPlugins = qmldir->plugins();
+        for (const QQmlDirParser::Plugin &plugin : qmldirPlugins) {
             QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath, plugin.path, plugin.name);
             if (!resolvedFilePath.isEmpty()) {
                 dynamicPluginsFound++;
@@ -1034,8 +1038,8 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
 
             const QString basePath = QFileInfo(qmldirPath).absoluteFilePath();
             for (const QString &versionUri : versionUris) {
-                foreach (const StaticPluginPair &pair, pluginPairs) {
-                    foreach (const QJsonValue &metaTagUri, pair.second) {
+                for (const StaticPluginPair &pair : qAsConst(pluginPairs)) {
+                    for (const QJsonValue &metaTagUri : pair.second) {
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.first.instance();
@@ -1132,7 +1136,7 @@ QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDataba
         std::sort(paths.begin(), paths.end(), I::greaterThan); // Ensure subdirs preceed their parents.
 
     QString stableRelativePath = dir;
-    foreach(const QString &path, paths) {
+    for (const QString &path : qAsConst(paths)) {
         if (dir.startsWith(path)) {
             stableRelativePath = dir.mid(path.length()+1);
             break;
@@ -1395,15 +1399,9 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     // The uri for this import.  For library imports this is the same as uri
     // specified by the user, but it may be different in the case of file imports.
     QString importUri = uri;
-
-    QString qmldirPath = importUri;
-    if (importUri.endsWith(Slash))
-        qmldirPath += String_qmldir;
-    else
-        qmldirPath += Slash_qmldir;
-
-    QString qmldirUrl = resolveLocalUrl(base, qmldirPath);
-
+    QString qmldirUrl = resolveLocalUrl(base, importUri + (importUri.endsWith(Slash)
+                                                           ? String_qmldir
+                                                           : Slash_qmldir));
     QString qmldirIdentifier;
 
     if (QQmlFile::isLocalFile(qmldirUrl)) {
@@ -1679,8 +1677,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
     if (!qmldirPluginPathIsRelative)
         searchPaths.prepend(qmldirPluginPath);
 
-    foreach (const QString &pluginPath, searchPaths) {
-
+    for (const QString &pluginPath : qAsConst(searchPaths)) {
         QString resolvedPath;
         if (pluginPath == QLatin1String(".")) {
             if (qmldirPluginPathIsRelative && !qmldirPluginPath.isEmpty() && qmldirPluginPath != QLatin1String("."))
@@ -1701,10 +1698,9 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
         if (!resolvedPath.endsWith(Slash))
             resolvedPath += Slash;
 
-        foreach (const QString &suffix, suffixes) {
-            QString pluginFileName = prefix + baseName + suffix;
-
-            QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + pluginFileName);
+        resolvedPath += prefix + baseName;
+        for (const QString &suffix : suffixes) {
+            const QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
             if (!absolutePath.isEmpty())
                 return absolutePath;
         }
@@ -1726,7 +1722,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
   \header \li Platform \li Valid suffixes
   \row \li Windows     \li \c .dll
   \row \li Unix/Linux  \li \c .so
-  \row \li OS X    \li \c .dylib, \c .bundle, \c .so
+  \row \li \macos    \li \c .dylib, \c .bundle, \c .so
   \endtable
 
   Version number on unix are ignored.
@@ -1736,29 +1732,32 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                                                   const QString &baseName)
 {
 #if defined(Q_OS_WIN)
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName,
-                         QStringList()
+    static const QString prefix;
+    static const QStringList suffixes = {
 # ifdef QT_DEBUG
-                         << QLatin1String("d.dll") // try a qmake-style debug build first
+        QLatin1String("d.dll"), // try a qmake-style debug build first
 # endif
-                         << QLatin1String(".dll"));
+        QLatin1String(".dll")
+    };
 #elif defined(Q_OS_DARWIN)
-
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName,
-                         QStringList()
+    static const QString prefix = QLatin1String("lib");
+    static const QStringList suffixes = {
 # ifdef QT_DEBUG
-                         << QLatin1String("_debug.dylib") // try a qmake-style debug build first
-                         << QLatin1String(".dylib")
+        QLatin1String("_debug.dylib"), // try a qmake-style debug build first
+        QLatin1String(".dylib"),
 # else
-                         << QLatin1String(".dylib")
-                         << QLatin1String("_debug.dylib") // try a qmake-style debug build after
+        QLatin1String(".dylib"),
+        QLatin1String("_debug.dylib"), // try a qmake-style debug build after
 # endif
-                         << QLatin1String(".so")
-                         << QLatin1String(".bundle"),
-                         QLatin1String("lib"));
+        QLatin1String(".so"),
+        QLatin1String(".bundle")
+    };
 # else  // Unix
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, QStringList() << QLatin1String(".so"), QLatin1String("lib"));
+    static const QString prefix = QLatin1String("lib");
+    static const QStringList suffixes = { QLatin1String(".so") };
 #endif
+
+    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, suffixes, prefix);
 }
 
 /*!
@@ -1817,7 +1816,7 @@ void QQmlImportDatabase::addImportPath(const QString& path)
     } else if (path.startsWith(QLatin1Char(':'))) {
         // qrc directory, e.g. :/foo
         // need to convert to a qrc url, e.g. qrc:/foo
-        cPath = QStringLiteral("qrc") + path;
+        cPath = QLatin1String("qrc") + path;
         cPath.replace(Backslash, Slash);
     } else if (url.isRelative() ||
                (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path
@@ -1842,7 +1841,7 @@ QStringList QQmlImportDatabase::importPathList(PathType type) const
         return fileImportPath;
 
     QStringList list;
-    foreach (const QString &path, fileImportPath) {
+    for (const QString &path : fileImportPath) {
         bool localPath = isPathAbsolute(path) || QQmlFile::isLocalFile(path);
         if (localPath == (type == Local))
             list.append(path);
@@ -1936,7 +1935,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
 
     if (!registrationFailures.isEmpty()) {
         if (errors) {
-            foreach (const QString &failure, registrationFailures) {
+            for (const QString &failure : qAsConst(registrationFailures)) {
                 QQmlError error;
                 error.setDescription(failure);
                 errors->prepend(error);
@@ -1957,7 +1956,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
 #ifndef QT_NO_LIBRARY
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
-    QString uniquePluginID = QString().sprintf("%p", instance);
+    const QString uniquePluginID = QString::asprintf("%p", instance);
     StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
     QMutexLocker lock(&plugins->mutex);
 

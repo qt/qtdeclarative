@@ -73,7 +73,7 @@ public:
     QQuickFlipable(QQuickItem *parent=0);
     ~QQuickFlipable();
 
-    QQuickItem *front();
+    QQuickItem *front() const;
     void setFront(QQuickItem *);
 
     QQuickItem *back();

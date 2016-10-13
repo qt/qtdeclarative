@@ -249,6 +249,18 @@ parameter, the value can be created as a JavaScript \c Date object in QML, and
 is automatically converted to a QDateTime value when it is passed to C++.
 
 
+\section2 QTime to JavaScript Date
+
+The QML engine provides automatic type conversion from QTime values to
+JavaScript \c Date objects. The date component of the resulting Date
+object should not be relied upon, as it is operating system dependent.
+Specifically, the year (and month and day) are set to zero. Conversion
+from a JavaScript \c Date object to QTime is done by converting to a
+QDateTime, and then relying on QVariant to convert it to a QTime. The end
+effect is that the date part of the \c Date object is ignored, but the
+local timezone will be used ignoring any DST complications it may have.
+
+
 \section2 Sequence Type to JavaScript Array
 
 Certain C++ sequence types are supported transparently in QML as JavaScript
@@ -380,6 +392,8 @@ Message {
      }
  }
 \endqml
+
+To use an enum as a \l {QFlags}{flags} type in QML, see \l Q_FLAG().
 
 \note The names of enum values must begin with a capital letter in order to
 be accessible from QML.

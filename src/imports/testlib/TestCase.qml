@@ -394,6 +394,73 @@ Item {
             throw new Error("QtQuickTest::fail")
     }
 
+    /*!
+        \since 5.8
+        \qmlmethod TestCase::tryVerify(function, timeout = 5000, message = "")
+
+        Fails the current test case if \a function does not evaluate to
+        \c true before the specified \a timeout (in milliseconds) has elapsed.
+        The function is evaluated multiple times until the timeout is
+        reached. An optional \a message is displayed upon failure.
+
+        This function is intended for testing applications where a condition
+        changes based on asynchronous events. Use verify() for testing
+        synchronous condition changes, and tryCompare() for testing
+        asynchronous property changes.
+
+        For example, in the code below, it's not possible to use tryCompare(),
+        because the \c currentItem property might be \c null for a short period
+        of time:
+
+        \code
+        tryCompare(listView.currentItem, "text", "Hello");
+        \endcode
+
+        Instead, we can use tryVerify() to first check that \c currentItem
+        isn't \c null, and then use a regular compare afterwards:
+
+        \code
+        tryVerify(function(){ return listView.currentItem })
+        compare(listView.currentItem.text, "Hello")
+        \endcode
+
+        \sa verify(), compare(), tryCompare(), SignalSpy::wait()
+    */
+    function tryVerify(expressionFunction, timeout, msg) {
+        if (!expressionFunction || !(expressionFunction instanceof Function)) {
+            qtest_results.fail("First argument must be a function", util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (timeout && typeof(timeout) !== "number") {
+            qtest_results.fail("timeout argument must be a number", util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (msg && typeof(msg) !== "string") {
+            qtest_results.fail("message argument must be a string", util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (!timeout)
+            timeout = 5000
+
+        if (msg === undefined)
+            msg = "function returned false"
+
+        if (!expressionFunction())
+            wait(0)
+
+        var i = 0
+        while (i < timeout && !expressionFunction()) {
+            wait(50)
+            i += 50
+        }
+
+        if (!qtest_results.verify(expressionFunction(), msg, util.callerFile(), util.callerLine()))
+            throw new Error("QtQuickTest::fail")
+    }
+
     /*! \internal */
     // Determine what is o.
     // Discussions and reference: http://philrathe.com/articles/equiv
@@ -711,6 +778,11 @@ Item {
         \sa compare(), SignalSpy::wait()
     */
     function tryCompare(obj, prop, value, timeout, msg) {
+        if (arguments.length == 1 || (typeof(prop) != "string" && typeof(prop) != "number")) {
+            qtest_results.fail("A property name as string or index is required for tryCompare",
+                        util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
         if (arguments.length == 2) {
             qtest_results.fail("A value is required for tryCompare",
                         util.callerFile(), util.callerLine())
@@ -1053,6 +1125,7 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
+        var moveDelay = Math.max(1, delay === -1 ? qtest_events.defaultMouseDelay : delay)
 
         // Divide dx and dy to have intermediate mouseMove while dragging
         // Fractions of dx/dy need be superior to the dragThreshold
@@ -1066,12 +1139,12 @@ Item {
 
         mousePress(item, x, y, button, modifiers, delay)
         //trigger dragging
-        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, delay, button)
+        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, moveDelay, button)
         if (ddx > 0 || ddy > 0) {
-            mouseMove(item, x + ddx, y + ddy, delay, button)
-            mouseMove(item, x + 2*ddx, y + 2*ddy, delay, button)
+            mouseMove(item, x + ddx, y + ddy, moveDelay, button)
+            mouseMove(item, x + 2*ddx, y + 2*ddy, moveDelay, button)
         }
-        mouseMove(item, x + dx, y + dy, delay, button)
+        mouseMove(item, x + dx, y + dy, moveDelay, button)
         mouseRelease(item, x + dx, y + dy, button, modifiers, delay)
     }
 

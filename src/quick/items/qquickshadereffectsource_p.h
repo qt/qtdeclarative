@@ -55,7 +55,7 @@
 #include <QtQuick/qsgtextureprovider.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qsgdefaultimagenode_p.h>
+#include <private/qsgdefaultinternalimagenode_p.h>
 #include <private/qquickitemchangelistener_p.h>
 
 #include "qpointer.h"
@@ -168,7 +168,7 @@ protected:
     void releaseResources() Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
 
 private:

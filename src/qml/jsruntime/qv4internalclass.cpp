@@ -101,20 +101,6 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
     ++d->size;
 }
 
-uint PropertyHash::lookup(const Identifier *identifier) const
-{
-    Q_ASSERT(d->entries);
-
-    uint idx = identifier->hashValue % d->alloc;
-    while (1) {
-        if (d->entries[idx].identifier == identifier)
-            return d->entries[idx].index;
-        if (!d->entries[idx].identifier)
-            return UINT_MAX;
-        ++idx;
-        idx %= d->alloc;
-    }
-}
 
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
@@ -161,8 +147,8 @@ static void insertHoleIntoPropertyData(Object *object, int idx)
 static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
 {
     int inlineSize = object->d()->inlineMemberSize;
-    int icSize = object->internalClass()->size;
     int delta = (accessor ? 2 : 1);
+    int oldSize = object->internalClass()->size + delta;
     int to = idx;
     int from = to + delta;
     if (from < inlineSize) {
@@ -170,15 +156,15 @@ static void removeFromPropertyData(Object *object, int idx, bool accessor = fals
         to = inlineSize - delta;
         from = inlineSize;
     }
-    if (to < inlineSize && from < icSize) {
+    if (to < inlineSize && from < oldSize) {
         Q_ASSERT(from >= inlineSize);
         memcpy(object->propertyData(to), object->d()->propertyData(from), (inlineSize - to)*sizeof(Value));
         to = inlineSize;
         from = inlineSize + delta;
     }
-    if (from < icSize + delta) {
+    if (from < oldSize) {
         Q_ASSERT(to >= inlineSize && from > to);
-        memmove(object->propertyData(to), object->d()->propertyData(from), (icSize + delta - to)*sizeof(Value));
+        memmove(object->propertyData(to), object->d()->propertyData(from), (oldSize - to)*sizeof(Value));
     }
 }
 
@@ -358,18 +344,6 @@ void InternalClass::removeMember(Object *object, Identifier *id)
 
     t.lookup = object->internalClass();
     Q_ASSERT(t.lookup);
-}
-
-uint InternalClass::find(const String *string)
-{
-    engine->identifierTable->identifier(string);
-    const Identifier *id = string->d()->identifier;
-
-    uint index = propertyTable.lookup(id);
-    if (index < size)
-        return index;
-
-    return UINT_MAX;
 }
 
 uint InternalClass::find(const Identifier *id)

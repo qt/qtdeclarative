@@ -153,7 +153,7 @@ namespace {
             newNode->setFlag(QSGNode::OwnedByParent);
         }
 
-        void resetCursorNode(QSGRectangleNode* newNode)
+        void resetCursorNode(QSGInternalRectangleNode* newNode)
         {
             if (cursorNode)
                 removeChildNode(cursorNode);
@@ -165,7 +165,7 @@ namespace {
             }
         }
 
-        QSGRectangleNode *cursorNode;
+        QSGInternalRectangleNode *cursorNode;
         QQuickTextNode* frameDecorationsNode;
 
     };
@@ -1489,8 +1489,8 @@ void QQuickTextEdit::setSelectByKeyboard(bool on)
 
     If true, the user can use the mouse to select text in some
     platform-specific way. Note that for some platforms this may
-    not be an appropriate interaction (eg. may conflict with how
-    the text needs to behave inside a Flickable.
+    not be an appropriate interaction; it may conflict with how
+    the text needs to behave inside a Flickable, for example.
 */
 bool QQuickTextEdit::selectByMouse() const
 {
@@ -2065,7 +2065,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 // Having nodes spanning across frame boundaries will break the current bookkeeping mechanism. We need to prevent that.
                 QList<int> frameBoundaries;
                 frameBoundaries.reserve(frames.size());
-                Q_FOREACH (QTextFrame *frame, frames)
+                for (QTextFrame *frame : qAsConst(frames))
                     frameBoundaries.append(frame->firstPosition());
                 std::sort(frameBoundaries.begin(), frameBoundaries.end());
 
@@ -2125,9 +2125,9 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     }
 
     if (d->cursorComponent == 0) {
-        QSGRectangleNode* cursor = 0;
+        QSGInternalRectangleNode* cursor = 0;
         if (!isReadOnly() && d->cursorVisible && d->control->cursorOn())
-            cursor = d->sceneGraphContext()->createRectangleNode(d->control->cursorRect(), d->color);
+            cursor = d->sceneGraphContext()->createInternalRectangleNode(d->control->cursorRect(), d->color);
         rootNode->resetCursorNode(cursor);
     }
 
@@ -2499,7 +2499,7 @@ void QQuickTextEdit::updateWholeDocument()
 {
     Q_D(QQuickTextEdit);
     if (!d->textNodeMap.isEmpty()) {
-        Q_FOREACH (TextNode* node, d->textNodeMap)
+        for (TextNode* node : qAsConst(d->textNodeMap))
             node->setDirty();
     }
 

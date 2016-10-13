@@ -154,7 +154,7 @@ void QQuickTimeLinePrivate::add(QQuickTimeLineObject &g, const Op &o)
     }
     if (!iter->ops.isEmpty() &&
        o.type == Op::Pause &&
-       iter->ops.last().type == Op::Pause) {
+       iter->ops.constLast().type == Op::Pause) {
         iter->ops.last().length += o.length;
         iter->length += o.length;
     } else {

@@ -98,6 +98,7 @@ public:
     bool isUndefined() const;
     bool isVariant() const;
     bool isQObject() const;
+    bool isQMetaObject() const;
     bool isObject() const;
     bool isDate() const;
     bool isRegExp() const;
@@ -111,6 +112,7 @@ public:
     bool toBool() const;
     QVariant toVariant() const;
     QObject *toQObject() const;
+    const QMetaObject *toQMetaObject() const;
     QDateTime toDateTime() const;
 
     bool equals(const QJSValue &other) const;

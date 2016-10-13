@@ -54,6 +54,7 @@
 #include "private/qv4jsir_p.h"
 #include "private/qv4isel_p.h"
 #include "private/qv4isel_util_p.h"
+#include "private/qv4util_p.h"
 #include "private/qv4value_p.h"
 #include "private/qv4lookup_p.h"
 
@@ -76,12 +77,11 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
 
-    const void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
     virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> backendCompileStep();
 
@@ -124,8 +124,8 @@ protected:
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName);
     virtual void initClosure(IR::Closure *closure, IR::Expr *target);
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target);
-    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, QQmlPropertyData *property, int index, IR::Expr *target);
-    virtual void getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target);
+    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target);
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target);
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName);
     virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex);
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex);
@@ -245,7 +245,7 @@ private:
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
     #define generateRuntimeCall(t, function, ...) \
-        _as->generateFunctionCallImp(t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
+        _as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
 
     int prepareVariableArguments(IR::ExprList* args);
     int prepareCallData(IR::ExprList* args, IR::Expr *thisObject);
@@ -261,7 +261,7 @@ private:
         // address.
         Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
-         _as->generateFunctionCallImp(retval, "lookup getter/setter",
+         _as->generateFunctionCallImp(true, retval, "lookup getter/setter",
                                       LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
                                       arg1, arg2, arg3);
     }
@@ -273,7 +273,7 @@ private:
     }
 
     IR::BasicBlock *_block;
-    QSet<IR::Jump *> _removableJumps;
+    BitVector _removableJumps;
     Assembler* _as;
 
     QScopedPointer<CompilationUnit> compilationUnit;
@@ -285,11 +285,13 @@ private:
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
+    ISelFactory() : EvalISelFactory(QStringLiteral("jit")) {}
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
-    virtual bool jitCompileRegexps() const
+    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) Q_DECL_OVERRIDE Q_DECL_FINAL
+    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator, this); }
+    bool jitCompileRegexps() const Q_DECL_OVERRIDE Q_DECL_FINAL
     { return true; }
+    QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE Q_DECL_FINAL;
 };
 
 } // end of namespace JIT

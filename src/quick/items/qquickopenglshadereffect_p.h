@@ -61,12 +61,18 @@
 #include "qquickshadereffectmesh_p.h"
 
 #include <QtCore/qpointer.h>
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
 class QSGContext;
 class QSignalMapper;
+class QFileSelector;
 class QQuickOpenGLCustomMaterialShader;
+
+namespace QtPrivate {
+class MappedSlotObject;
+}
 
 // Common class for QQuickOpenGLShaderEffect and QQuickCustomParticle.
 struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
@@ -74,27 +80,35 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
     typedef QQuickOpenGLShaderEffectMaterialKey Key;
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
-    QQuickOpenGLShaderEffectCommon(QObject *host) : host(host) { }
+    QQuickOpenGLShaderEffectCommon(QObject *host, std::function<void(int)> mappedPropertyChanged)
+        : host(host), mappedPropertyChanged(mappedPropertyChanged), fileSelector(nullptr)
+    { }
+
     ~QQuickOpenGLShaderEffectCommon();
+
     void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
-    void connectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
+    void connectPropertySignals(QQuickItem *item, const QMetaObject *itemMetaObject, Key::ShaderType shaderType);
     void updateParseLog(bool ignoreAttributes);
-    void lookThroughShaderCode(QQuickItem *item, Key::ShaderType shaderType, const QByteArray &code);
-    void updateShader(QQuickItem *item, Key::ShaderType shaderType);
+    void lookThroughShaderCode(QQuickItem *item, const QMetaObject *itemMetaObject, Key::ShaderType shaderType, const QByteArray &code);
+    void updateShader(QQuickItem *item, const QMetaObject *itemMetaObject, Key::ShaderType shaderType);
     void updateMaterial(QQuickOpenGLShaderEffectNode *node, QQuickOpenGLShaderEffectMaterial *material,
                         bool updateUniforms, bool updateUniformValues, bool updateTextureProviders);
     void updateWindow(QQuickWindow *window);
 
     // Called by slots in QQuickOpenGLShaderEffect:
     void sourceDestroyed(QObject *object);
-    void propertyChanged(QQuickItem *item, int mappedId, bool *textureProviderChanged);
+    void propertyChanged(QQuickItem *item, const QMetaObject *itemMetaObject, int mappedId, bool *textureProviderChanged);
+
+    void clearSignalMappers(int shader);
 
     QObject *host;
+    std::function<void(int)> mappedPropertyChanged;
     Key source;
     QVector<QByteArray> attributes;
     QVector<UniformData> uniformData[Key::ShaderTypeCount];
-    QVector<QSignalMapper *> signalMappers[Key::ShaderTypeCount];
+    QVector<QtPrivate::MappedSlotObject *> signalMappers[Key::ShaderTypeCount];
     QString parseLog;
+    QFileSelector *fileSelector;
 };
 
 
@@ -132,17 +146,18 @@ public:
     void handleEvent(QEvent *);
     void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);
-    void handleComponentComplete();
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
+    void maybeUpdateShaders(bool force = false);
 
 private Q_SLOTS:
     void updateGeometry();
     void updateGeometryIfAtlased();
     void updateLogAndStatus(const QString &log, int status);
     void sourceDestroyed(QObject *object);
-    void propertyChanged(int mappedId);
 
 private:
+    void propertyChanged(int mappedId);
+
     friend class QQuickCustomMaterialShader;
     friend class QQuickOpenGLShaderEffectNode;
 
@@ -150,6 +165,7 @@ private:
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
     QQuickShaderEffect *m_item;
+    const QMetaObject *m_itemMetaObject;
     QSize m_meshResolution;
     QQuickShaderEffectMesh *m_mesh;
     QQuickGridMesh m_defaultMesh;
@@ -169,6 +185,8 @@ private:
     uint m_dirtyGeometry : 1;
     uint m_customVertexShader : 1;
     uint m_supportsAtlasTextures : 1;
+    uint m_vertNeedsUpdate : 1;
+    uint m_fragNeedsUpdate : 1;
 };
 
 QT_END_NAMESPACE

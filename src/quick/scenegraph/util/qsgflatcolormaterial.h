@@ -49,13 +49,13 @@ class Q_QUICK_EXPORT QSGFlatColorMaterial : public QSGMaterial
 {
 public:
     QSGFlatColorMaterial();
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 
     void setColor(const QColor &color);
     const QColor &color() const { return m_color; }
 
-    int compare(const QSGMaterial *other) const;
+    int compare(const QSGMaterial *other) const override;
 
 private:
     QColor m_color;

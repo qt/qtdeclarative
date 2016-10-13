@@ -59,6 +59,10 @@
 
 //#define DETAILED_MM_STATS
 
+#define QV4_MM_MAXBLOCK_SHIFT "QV4_MM_MAXBLOCK_SHIFT"
+#define QV4_MM_MAX_CHUNK_SIZE "QV4_MM_MAX_CHUNK_SIZE"
+#define QV4_MM_STATS "QV4_MM_STATS"
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -272,7 +276,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2);
+        t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
 
@@ -281,7 +285,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3);
+        t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
 

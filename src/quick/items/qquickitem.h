@@ -148,7 +148,6 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
     Q_CLASSINFO("DefaultProperty", "data")
-    Q_CLASSINFO("qt_HasQmlAccessors", "true")
 
 public:
     enum Flag {
@@ -369,7 +368,6 @@ Q_SIGNALS:
     void clipChanged(bool);
     Q_REVISION(1) void windowChanged(QQuickWindow* window);
 
-    // XXX todo
     void childrenChanged();
     void opacityChanged();
     void enabledChanged();
@@ -454,7 +452,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickItem)
 };
 
-// XXX todo
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItem::Flags)
 
 #ifndef QT_NO_DEBUG_STREAM

@@ -72,7 +72,6 @@ public:
     void setBreakOnThrow(bool onoff);
     void clearAllPauseRequests();
 
-public slots:
     void debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason);
     void handleDebuggerDeleted(QObject *debugger);
 

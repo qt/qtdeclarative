@@ -23,7 +23,7 @@ qmlimportscanner.CONFIG = host_build
         qtHaveModule(widgets): SUBDIRS += qmleasing
     }
     qtHaveModule(qmltest): SUBDIRS += qmltestrunner
-    contains(QT_CONFIG, private_tests): SUBDIRS += qmljs
+    qtConfig(private_tests): SUBDIRS += qmljs
 }
 
 qml.depends = qmlimportscanner

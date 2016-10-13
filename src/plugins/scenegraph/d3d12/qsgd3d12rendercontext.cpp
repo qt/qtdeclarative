@@ -64,8 +64,22 @@ bool QSGD3D12RenderContext::isValid() const
     return m_engine != nullptr;
 }
 
+void QSGD3D12RenderContext::initialize(void *)
+{
+    if (m_initialized)
+        return;
+
+    m_initialized = true;
+    emit initialized();
+}
+
 void QSGD3D12RenderContext::invalidate()
 {
+    if (!m_initialized)
+        return;
+
+    m_initialized = false;
+
     if (Q_UNLIKELY(debug_render()))
         qDebug("rendercontext invalidate engine %p, %d/%d/%d", m_engine,
                m_texturesToDelete.count(), m_textures.count(), m_fontEnginesToClean.count());
@@ -101,6 +115,11 @@ QSGRenderer *QSGD3D12RenderContext::createRenderer()
     return new QSGD3D12Renderer(this);
 }
 
+int QSGD3D12RenderContext::maxTextureSize() const
+{
+    return 16384; // D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION
+}
+
 void QSGD3D12RenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
 {
     static_cast<QSGD3D12Renderer *>(renderer)->renderScene(fbo);
@@ -114,16 +133,37 @@ void QSGD3D12RenderContext::setEngine(QSGD3D12Engine *engine)
     m_engine = engine;
 
     if (m_engine)
-        emit initialized();
+        initialize(nullptr);
 }
 
-void QSGD3D12RenderContext::ensureInitializedEmitted()
+QSGRendererInterface::GraphicsApi QSGD3D12RenderContext::graphicsApi() const
 {
-    if (!m_pendingInitialized)
-        return;
+    return Direct3D12;
+}
 
-    m_pendingInitialized = false;
-    emit initialized();
+void *QSGD3D12RenderContext::getResource(QQuickWindow *window, Resource resource) const
+{
+    if (!m_engine) {
+        qWarning("getResource: No D3D12 engine available yet (window not exposed?)");
+        return nullptr;
+    }
+    // window can be ignored since the rendercontext and engine are both per window
+    return m_engine->getResource(window, resource);
+}
+
+QSGRendererInterface::ShaderType QSGD3D12RenderContext::shaderType() const
+{
+    return HLSL;
+}
+
+QSGRendererInterface::ShaderCompilationTypes QSGD3D12RenderContext::shaderCompilationType() const
+{
+    return RuntimeCompilation | OfflineCompilation;
+}
+
+QSGRendererInterface::ShaderSourceTypes QSGD3D12RenderContext::shaderSourceType() const
+{
+    return ShaderSourceString | ShaderSourceFile | ShaderByteCode;
 }
 
 QT_END_NAMESPACE

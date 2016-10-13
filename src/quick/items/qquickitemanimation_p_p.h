@@ -93,7 +93,7 @@ public:
         entryInterval(0), exitInterval(0) {}
     ~QQuickPathAnimationUpdater() {}
 
-    void setValue(qreal v);
+    void setValue(qreal v) override;
 
     QQuickPath *path;
 
@@ -129,7 +129,7 @@ public:
 
     void clearTemplate() { animationTemplate = 0; }
 
-    QQuickPathAnimationUpdater *pathUpdater() { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
+    QQuickPathAnimationUpdater *pathUpdater() const { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
 private:
     QQuickPathAnimationPrivate *animationTemplate;
 };

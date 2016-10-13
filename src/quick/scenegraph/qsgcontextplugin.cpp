@@ -136,9 +136,7 @@ QSGAdaptationBackendData *contextFactory()
 #endif
 
         if (!requestedBackend.isEmpty()) {
-#ifndef QT_NO_DEBUG
             qCDebug(QSG_LOG_INFO) << "Loading backend" << requestedBackend;
-#endif
 
             // First look for a built-in adaptation.
             for (QSGContextFactoryInterface *builtInBackend : qAsConst(backendData->builtIns)) {
@@ -160,14 +158,12 @@ QSGAdaptationBackendData *contextFactory()
                     backendData->name = requestedBackend;
                     backendData->flags = backendData->factory->flags(requestedBackend);
                 }
-#ifndef QT_NO_DEBUG
                 if (!backendData->factory) {
                     qWarning("Could not create scene graph context for backend '%s'"
                              " - check that plugins are installed correctly in %s",
                              qPrintable(requestedBackend),
                              qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
                 }
-#endif
             }
 #endif // QT_NO_LIBRARY
         }

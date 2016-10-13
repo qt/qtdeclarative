@@ -106,7 +106,7 @@ public:
     QQuickTransitionManager *manager;
 
 protected:
-    virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 };
 
 class QQuickTransitionPrivate : public QObjectPrivate, QAnimationJobChangeListener
@@ -134,7 +134,7 @@ public:
     bool reversible;
     bool enabled;
 protected:
-    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State);
+    void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State) override;
 
     static void append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *a);
     static int animation_count(QQmlListProperty<QQuickAbstractAnimation> *list);

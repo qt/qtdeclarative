@@ -49,7 +49,6 @@
 #include "qv4assembler_p.h"
 #include "qv4unop_p.h"
 #include "qv4binop_p.h"
-#include <private/qqmlpropertycache_p.h>
 
 #include <QtCore/QBuffer>
 #include <QtCore/QCoreApplication>
@@ -114,8 +113,7 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput, const Q
 {
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
          it != end; ++it) {
-        QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
-        ptrString.prepend("0x");
+        const QByteArray ptrString = "0x" + QByteArray::number(quintptr(it.key()), 16);
         int idx = processedOutput.indexOf(ptrString);
         if (idx < 0)
             continue;
@@ -146,13 +144,10 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     Label endOfCode = label();
 
     {
-        QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
-        while (it.hasNext()) {
-            it.next();
-            IR::BasicBlock *block = it.key();
-            Label target = _addrs.value(block);
+        for (size_t i = 0, ei = _patches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
             Q_ASSERT(target.isSet());
-            foreach (Jump jump, it.value())
+            for (Jump jump : qAsConst(_patches.at(i)))
                 jump.linkTo(target, this);
         }
     }
@@ -160,25 +155,21 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     JSC::JSGlobalData dummy(_executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
 
-    foreach (const DataLabelPatch &p, _dataLabelPatches)
+    for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
 
     // link exception handlers
-    foreach(Jump jump, exceptionPropagationJumps)
+    for (Jump jump : qAsConst(exceptionPropagationJumps))
         linkBuffer.link(jump, linkBuffer.locationOf(exceptionReturnLabel));
 
     {
-        QHashIterator<IR::BasicBlock *, QVector<DataLabelPtr> > it(_labelPatches);
-        while (it.hasNext()) {
-            it.next();
-            IR::BasicBlock *block = it.key();
-            Label target = _addrs.value(block);
+        for (size_t i = 0, ei = _labelPatches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
             Q_ASSERT(target.isSet());
-            foreach (DataLabelPtr label, it.value())
+            for (DataLabelPtr label : _labelPatches.at(i))
                 linkBuffer.patch(label, linkBuffer.locationOf(target));
         }
     }
-    _constTable.finalize(linkBuffer, _isel);
 
     *codeSize = linkBuffer.offsetOf(endOfCode);
 
@@ -190,7 +181,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     if (showCode) {
         QHash<void*, const char*> functions;
 #ifndef QT_NO_DEBUG
-        foreach (CallInfo call, _callInfos)
+        for (CallInfo call : qAsConst(_callInfos))
             functions[linkBuffer.locationOf(call.label).dataLocation()] = call.functionName;
 #endif
 
@@ -199,11 +190,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
         name = _function->name->toUtf8();
-        if (name.isEmpty()) {
-            name = QByteArray::number(quintptr(_function), 16);
-            name.prepend("IR::Function(0x");
-            name.append(')');
-        }
+        if (name.isEmpty())
+            name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
         codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
@@ -240,11 +228,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         // this may have been pre-populated, if QV4_SHOW_ASM was on
         if (name.isEmpty()) {
             name = _function->name->toUtf8();
-            if (name.isEmpty()) {
-                name = QByteArray::number(quintptr(_function), 16);
-                name.prepend("IR::Function(0x");
-                name.append(')');
-            }
+            if (name.isEmpty())
+                name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
         }
 
         fprintf(pmap, "%llx %x %.*s\n",
@@ -259,14 +244,15 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     return codeRef;
 }
 
-InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, Compiler::JSUnitGenerator *jsGenerator)
-    : EvalInstructionSelection(execAllocator, module, jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator, iselFactory)
     , _block(0)
     , _as(0)
     , compilationUnit(new CompilationUnit)
     , qmlEngine(qmlEngine)
 {
     compilationUnit->codeRefs.resize(module->functions.size());
+    module->unitFlags |= QV4::CompiledData::Unit::ContainsMachineCode;
 }
 
 InstructionSelection::~InstructionSelection()
@@ -295,7 +281,7 @@ void InstructionSelection::run(int functionIndex)
         IR::Optimizer::showMeTheCode(_function, "After stack slot allocation");
         calculateRegistersToSave(Assembler::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
     }
-    QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    BitVector removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     Assembler* oldAssembler = _as;
@@ -345,7 +331,7 @@ void InstructionSelection::run(int functionIndex)
             continue;
         _as->registerBlock(_block, nextBlock);
 
-        foreach (IR::Stmt *s, _block->statements()) {
+        for (IR::Stmt *s : _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
                     _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
@@ -354,7 +340,7 @@ void InstructionSelection::run(int functionIndex)
                     lastLine = s->location.startLine;
                 }
             }
-            s->accept(this);
+            visit(s);
         }
     }
 
@@ -369,16 +355,6 @@ void InstructionSelection::run(int functionIndex)
     delete _as;
     _as = oldAssembler;
     qSwap(_removableJumps, removableJumps);
-}
-
-const void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
-{
-    compilationUnit->constantValues.append(*values);
-    values->clear();
-
-    QVector<QV4::Primitive> &finalValues = compilationUnit->constantValues.last();
-    finalValues.squeeze();
-    return finalValues.constData();
 }
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backendCompileStep()
@@ -754,94 +730,20 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
     }
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, QQmlPropertyData *property, int index, IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
 {
-    if (property && property->hasAccessors() && property->isFullyResolved()) {
-        if (kind == IR::Member::MemberOfQmlScopeObject) {
-            if (property->propType == QMetaType::QReal) {
-                generateRuntimeCall(target, accessQmlScopeObjectQRealProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->isQObject()) {
-                generateRuntimeCall(target, accessQmlScopeObjectQObjectProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->propType == QMetaType::Int) {
-                generateRuntimeCall(target, accessQmlScopeObjectIntProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->propType == QMetaType::Bool) {
-                generateRuntimeCall(target, accessQmlScopeObjectBoolProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            } else if (property->propType == QMetaType::QString) {
-                generateRuntimeCall(target, accessQmlScopeObjectQStringProperty,
-                                    Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors));
-                return;
-            }
-        }
-    }
-
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index), Assembler::TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(target, getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index), Assembler::TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfIdObjectsArray)
         generateRuntimeCall(target, getQmlIdObject, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else
         Q_ASSERT(false);
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
-    if (property && property->hasAccessors() && property->isFullyResolved()) {
-        if (!attachedPropertiesId && !isSingleton) {
-            const int notifyIndex = captureRequired ? property->notifyIndex : -1;
-            if (property->propType == QMetaType::QReal) {
-                generateRuntimeCall(target, accessQObjectQRealProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->isQObject()) {
-                generateRuntimeCall(target, accessQObjectQObjectProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->propType == QMetaType::Int) {
-                generateRuntimeCall(target, accessQObjectIntProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->propType == QMetaType::Bool) {
-                generateRuntimeCall(target, accessQObjectBoolProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            } else if (property->propType == QMetaType::QString) {
-                generateRuntimeCall(target, accessQObjectQStringProperty,
-                                    Assembler::EngineRegister, Assembler::PointerToValue(base),
-                                    Assembler::TrustedImmPtr(property->accessors),
-                                    Assembler::TrustedImm32(property->coreIndex),
-                                    Assembler::TrustedImm32(notifyIndex));
-                return;
-            }
-        }
-    }
-
-    const int propertyIndex = property->coreIndex;
     if (attachedPropertiesId != 0)
         generateRuntimeCall(target, getQmlAttachedProperty, Assembler::EngineRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
     else if (isSingleton)
@@ -1056,9 +958,15 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 }
 
 #define setOp(op, opName, operation) \
-    do { op = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); } while (0)
+    do { \
+        op = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
+    } while (0)
 #define setOpContext(op, opName, operation) \
-    do { opContext = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); } while (0)
+    do { \
+        opContext = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
+    } while (0)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *target)
 {
@@ -1469,7 +1377,7 @@ void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, I
 
 void InstructionSelection::visitJump(IR::Jump *s)
 {
-    if (!_removableJumps.contains(s))
+    if (!_removableJumps.at(_block->index()))
         _as->jumpToBlock(_block, s->target);
 }
 
@@ -1532,18 +1440,19 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         RuntimeCall op;
         RuntimeCall opContext;
         const char *opName = 0;
+        bool needsExceptionCheck;
         switch (b->op) {
         default: Q_UNREACHABLE(); Q_ASSERT(!"todo"); break;
-        case IR::OpGt: setOp(op, opName, Runtime::compareGreaterThan); break;
-        case IR::OpLt: setOp(op, opName, Runtime::compareLessThan); break;
-        case IR::OpGe: setOp(op, opName, Runtime::compareGreaterEqual); break;
-        case IR::OpLe: setOp(op, opName, Runtime::compareLessEqual); break;
-        case IR::OpEqual: setOp(op, opName, Runtime::compareEqual); break;
-        case IR::OpNotEqual: setOp(op, opName, Runtime::compareNotEqual); break;
-        case IR::OpStrictEqual: setOp(op, opName, Runtime::compareStrictEqual); break;
-        case IR::OpStrictNotEqual: setOp(op, opName, Runtime::compareStrictNotEqual); break;
-        case IR::OpInstanceof: setOpContext(op, opName, Runtime::compareInstanceof); break;
-        case IR::OpIn: setOpContext(op, opName, Runtime::compareIn); break;
+        case IR::OpGt: setOp(op, opName, compareGreaterThan); break;
+        case IR::OpLt: setOp(op, opName, compareLessThan); break;
+        case IR::OpGe: setOp(op, opName, compareGreaterEqual); break;
+        case IR::OpLe: setOp(op, opName, compareLessEqual); break;
+        case IR::OpEqual: setOp(op, opName, compareEqual); break;
+        case IR::OpNotEqual: setOp(op, opName, compareNotEqual); break;
+        case IR::OpStrictEqual: setOp(op, opName, compareStrictEqual); break;
+        case IR::OpStrictNotEqual: setOp(op, opName, compareStrictNotEqual); break;
+        case IR::OpInstanceof: setOpContext(op, opName, compareInstanceof); break;
+        case IR::OpIn: setOpContext(op, opName, compareIn); break;
         } // switch
 
         // TODO: in SSA optimization, do constant expression evaluation.
@@ -1552,12 +1461,14 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         // Of course, after folding the CJUMP to a JUMP, dead-code (dead-basic-block)
         // elimination (which isn't there either) would remove the whole else block.
         if (opContext.isValid())
-            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, opContext,
+            _as->generateFunctionCallImp(needsExceptionCheck,
+                                         Assembler::ReturnValueRegister, opName, opContext,
                                          Assembler::EngineRegister,
                                          Assembler::PointerToValue(b->left),
                                          Assembler::PointerToValue(b->right));
         else
-            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op,
+            _as->generateFunctionCallImp(needsExceptionCheck,
+                                         Assembler::ReturnValueRegister, opName, op,
                                          Assembler::PointerToValue(b->left),
                                          Assembler::PointerToValue(b->right));
 
@@ -1765,7 +1676,7 @@ void InstructionSelection::calculateRegistersToSave(const RegisterInformation &u
     regularRegistersToSave.clear();
     fpRegistersToSave.clear();
 
-    foreach (const RegisterInfo &ri, Assembler::getRegisterInfo()) {
+    for (const RegisterInfo &ri : Assembler::getRegisterInfo()) {
 #if defined(RESTORE_EBX_ON_CALL)
         if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
             regularRegistersToSave.append(ri);
@@ -1793,38 +1704,6 @@ bool operator==(const Primitive &v1, const Primitive &v2)
 }
 } // QV4 namespace
 QT_END_NAMESPACE
-
-int Assembler::ConstantTable::add(const Primitive &v)
-{
-    int idx = _values.indexOf(v);
-    if (idx == -1) {
-        idx = _values.size();
-        _values.append(v);
-    }
-    return idx;
-}
-
-Assembler::Address Assembler::ConstantTable::loadValueAddress(IR::Const *c, RegisterID baseReg)
-{
-    return loadValueAddress(convertToValue(c), baseReg);
-}
-
-Assembler::Address Assembler::ConstantTable::loadValueAddress(const Primitive &v, RegisterID baseReg)
-{
-    _toPatch.append(_as->moveWithPatch(TrustedImmPtr(0), baseReg));
-    Address addr(baseReg);
-    addr.offset = add(v) * sizeof(QV4::Primitive);
-    Q_ASSERT(addr.offset >= 0);
-    return addr;
-}
-
-void Assembler::ConstantTable::finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel)
-{
-    const void *tablePtr = isel->addConstantTable(&_values);
-
-    foreach (DataLabelPtr label, _toPatch)
-        linkBuffer.patch(label, const_cast<void *>(tablePtr));
-}
 
 bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
@@ -2036,5 +1915,11 @@ void InstructionSelection::visitCJumpEqual(IR::Binop *binop, IR::BasicBlock *tru
                                 _block, trueBlock, falseBlock);
 }
 
+QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new JIT::CompilationUnit);
+    return result;
+}
 
 #endif // ENABLE(ASSEMBLER)

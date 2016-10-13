@@ -109,7 +109,8 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
     Scope scope(f->engine());
     ScopedCallData callData(scope);
     callData->thisObject = thisObject;
-    return f->call(callData);
+    f->call(scope, callData);
+    return scope.result.asReturnedValue();
 }
 
 void Object::putValue(uint memberIndex, const Value &value)
@@ -128,7 +129,7 @@ void Object::putValue(uint memberIndex, const Value &value)
             ScopedCallData callData(scope, 1);
             callData->args[0] = value;
             callData->thisObject = this;
-            setter->call(callData);
+            setter->call(scope, callData);
             return;
         }
         goto reject;
@@ -389,14 +390,14 @@ bool Object::hasOwnProperty(uint index) const
     return false;
 }
 
-ReturnedValue Object::construct(const Managed *m, CallData *)
+void Object::construct(const Managed *m, Scope &scope, CallData *)
 {
-    return static_cast<const Object *>(m)->engine()->throwTypeError();
+    scope.result = static_cast<const Object *>(m)->engine()->throwTypeError();
 }
 
-ReturnedValue Object::call(const Managed *m, CallData *)
+void Object::call(const Managed *m, Scope &scope, CallData *)
 {
-    return static_cast<const Object *>(m)->engine()->throwTypeError();
+    scope.result = static_cast<const Object *>(m)->engine()->throwTypeError();
 }
 
 ReturnedValue Object::get(const Managed *m, String *name, bool *hasProperty)
@@ -744,7 +745,7 @@ void Object::internalPut(String *name, const Value &value)
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
-        setter->call(callData);
+        setter->call(scope, callData);
         return;
     }
 
@@ -753,7 +754,7 @@ void Object::internalPut(String *name, const Value &value)
 
   reject:
     if (engine()->current->strictMode) {
-        QString message = QStringLiteral("Cannot assign to read-only property \"") +
+        QString message = QLatin1String("Cannot assign to read-only property \"") +
                 name->toQString() + QLatin1Char('\"');
         engine()->throwTypeError(message);
     }
@@ -814,7 +815,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
-        setter->call(callData);
+        setter->call(scope, callData);
         return;
     }
 

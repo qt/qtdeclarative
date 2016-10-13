@@ -205,8 +205,8 @@ public:
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
     virtual bool releaseItem(FxViewItem *item);
 
-    QQuickItem *createHighlightItem();
-    QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false);
+    QQuickItem *createHighlightItem() const;
+    QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
 
     void updateCurrent(int modelIndex);
     void updateTrackedItem();
@@ -378,7 +378,7 @@ protected:
     virtual void updateSectionCriteria() {}
     virtual void updateSections() {}
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
 };
 
 

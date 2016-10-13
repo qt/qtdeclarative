@@ -73,7 +73,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     quickView.rootContext()->setContextProperty(QLatin1String("spinBox"), ui_properties.spinBox);
 
-    foreach (const QString &name, splineEditor->presetNames())
+    const auto presetNames = splineEditor->presetNames();
+    for (const QString &name : presetNames)
         ui_properties.comboBox->addItem(name);
 
     connect(ui_properties.comboBox, SIGNAL(currentIndexChanged(QString)), splineEditor, SLOT(setPreset(QString)));

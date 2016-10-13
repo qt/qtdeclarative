@@ -156,7 +156,7 @@ void tst_Scenegraph::setupTestSuite(const QByteArray& filter)
     }
 
     std::sort(itemFiles.begin(), itemFiles.end());
-    foreach (const QString &filePath, itemFiles) {
+    for (const QString &filePath : qAsConst(itemFiles)) {
         QByteArray itemName = filePath.mid(testSuitePath.length() + 1).toLatin1();
         QBaselineTest::newRow(itemName, checksumFileOrDir(filePath)) << filePath;
         numItems++;
@@ -238,7 +238,9 @@ quint16 tst_Scenegraph::checksumFileOrDir(const QString &path)
     if (fi.isDir()) {
         static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
         quint16 cs = 0;
-        foreach (QString item, QDir(fi.filePath()).entryList(nameFilters, QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
+        const auto entryList = QDir(fi.filePath()).entryList(nameFilters,
+                                                             QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
+        for (const QString &item : entryList)
             cs ^= checksumFileOrDir(path + QLatin1Char('/') + item);
         return cs;
     }

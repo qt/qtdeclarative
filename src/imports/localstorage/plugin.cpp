@@ -270,6 +270,15 @@ static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)
     return qmlsqldatabase_rows_index(r, scope.engine, ctx->argc() ? ctx->args()[0].toUInt32() : 0);
 }
 
+static QVariant toSqlVariant(QV4::ExecutionEngine *engine, const QV4::ScopedValue &value)
+{
+    // toVariant() maps a null JS value to QVariant(VoidStar), but the SQL module
+    // expects a null variant. (this is because of QTBUG-40880)
+    if (value->isNull())
+        return QVariant();
+    return engine->toVariant(value, /*typehint*/-1);
+}
+
 static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
@@ -300,8 +309,9 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                 ScopedArrayObject array(scope, values);
                 quint32 size = array->getLength();
                 QV4::ScopedValue v(scope);
-                for (quint32 ii = 0; ii < size; ++ii)
-                    query.bindValue(ii, scope.engine->toVariant((v = array->getIndexed(ii)), -1));
+                for (quint32 ii = 0; ii < size; ++ii) {
+                    query.bindValue(ii, toSqlVariant(scope.engine, (v = array->getIndexed(ii))));
+                }
             } else if (values->as<Object>()) {
                 ScopedObject object(scope, values);
                 ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
@@ -311,7 +321,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     key = it.nextPropertyName(val);
                     if (key->isNull())
                         break;
-                    QVariant v = scope.engine->toVariant(val, -1);
+                    QVariant v = toSqlVariant(scope.engine, val);
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);
                     } else {
@@ -320,7 +330,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     }
                 }
             } else {
-                query.bindValue(0, scope.engine->toVariant(values, -1));
+                query.bindValue(0, toSqlVariant(scope.engine, values));
             }
         }
         if (query.exec()) {
@@ -416,7 +426,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
         callData->args[0] = w;
 
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
-        callback->call(callData);
+        callback->call(scope, callData);
         rollbackOnException.clear();
         if (!db.commit()) {
             db.rollback();
@@ -464,7 +474,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool re
         callData->thisObject = scope.engine->globalObject;
         callData->args[0] = w;
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
-        callback->call(callData);
+        callback->call(scope, callData);
         rollbackOnException.clear();
 
         if (!db.commit())
@@ -575,9 +585,9 @@ import QtQuick.LocalStorage 2.0 as Sql
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 \endcode
 The above code returns the database identified by \e identifier. If the database does not already exist, it
-is created, and the function \e callback is called with the database as a parameter. \e description
-and \e estimated_size are written to the INI file (described below), but are otherwise currently
-unused.
+is created, and the function \e callback is called with the database as a parameter. \e identifier is the
+name of the physical file (with or without full path) containing the database.  \e description and
+\e estimated_size are written to the INI file (described below), but are currently unused.
 
 May throw exception with code property SQLException.DATABASE_ERR, or SQLException.VERSION_ERR.
 
@@ -585,7 +595,7 @@ When a database is first created, an INI file is also created specifying its cha
 
 \table
 \header \li \b {Key} \li \b {Value}
-\row \li Name \li The name of the database passed to \c openDatabase()
+\row \li Identifier \li The name of the database passed to \c openDatabase()
 \row \li Version \li The version of the database passed to \c openDatabase()
 \row \li Description \li The description of the database passed to \c openDatabase()
 \row \li EstimatedSize \li The estimated size (in bytes) of the database passed to \c openDatabase()
@@ -605,12 +615,19 @@ you can call \e executeSql on \e tx to upgrade the database.
 
 May throw exception with code property SQLException.DATABASE_ERR or SQLException.UNKNOWN_ERR.
 
+See example below.
+
+\snippet qml/localstorage/dbtransaction.js 2
+
 \section3 db.transaction(callback(tx))
 
 This method creates a read/write transaction and passed to \e callback. In this function,
 you can call \e executeSql on \e tx to read and modify the database.
 
 If the callback throws exceptions, the transaction is rolled back.
+Below you will find an example of a database transaction which catches exceptions.
+
+\snippet qml/localstorage/dbtransaction.js 0
 
 \section3 db.readTransaction(callback(tx))
 
@@ -633,6 +650,9 @@ It returns a results object, with the following properties:
 
 May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or SQLException.UNKNOWN_ERR.
 
+See below for an example:
+
+\snippet qml/localstorage/dbtransaction.js 1
 
 \section1 Method Documentation
 
@@ -735,7 +755,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
         ScopedCallData callData(scope, 1);
         callData->thisObject = scope.engine->globalObject;
         callData->args[0] = db;
-        dbcreationCallback->call(callData);
+        dbcreationCallback->call(scope, callData);
     }
 
     args->setReturnValue(db.asReturnedValue());
@@ -763,7 +783,7 @@ public:
     }
     void registerTypes(const char *uri) Q_DECL_OVERRIDE
     {
-        Q_ASSERT(QLatin1String(uri) == "QtQuick.LocalStorage");
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.LocalStorage"));
         qmlRegisterSingletonType<QQuickLocalStorage>(uri, 2, 0, "LocalStorage", module_api_factory);
     }
 };

@@ -145,7 +145,7 @@ public:
         void init();
 
 #ifndef QT_NO_NETWORK
-        virtual QNetworkAccessManager *networkAccessManager();
+        QNetworkAccessManager *networkAccessManager() override;
 #endif
 
         QQuickWorkerScriptEnginePrivate *p;
@@ -192,7 +192,7 @@ signals:
     void stopThread();
 
 protected:
-    virtual bool event(QEvent *);
+    bool event(QEvent *) override;
 
 private:
     void processMessage(int, const QByteArray &);
@@ -251,7 +251,8 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();
-    createsend.set(scope.engine, createsendconstructor->call(callData));
+    createsendconstructor->call(scope, callData);
+    createsend.set(scope.engine, scope.result.asReturnedValue());
 }
 
 // Requires handle and context scope
@@ -264,14 +265,13 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, createsend.value());
 
-    QV4::ScopedValue v(scope);
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = QV4::Primitive::fromInt32(id);
     callData->thisObject = global();
-    v = f->call(callData);
+    f->call(scope, callData);
     if (scope.hasException())
-        v = scope.engine->catchException();
-    return v->asReturnedValue();
+        scope.result = scope.engine->catchException();
+    return scope.result.asReturnedValue();
 }
 
 #ifndef QT_NO_NETWORK
@@ -380,7 +380,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     callData->thisObject = workerEngine->global();
     callData->args[0] = qmlContext->d()->qml; // ###
     callData->args[1] = value;
-    f->call(callData);
+    f->call(scope, callData);
     if (scope.hasException()) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
         reportScriptException(script, error);

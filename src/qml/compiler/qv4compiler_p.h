@@ -52,6 +52,7 @@
 
 #include <QtCore/qstring.h>
 #include "qv4jsir_p.h"
+#include <private/qjson_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -114,18 +115,20 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
 
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
     // Returns bytes written
-    int writeFunction(char *f, int index, IR::Function *irFunction);
+    void writeFunction(char *f, IR::Function *irFunction) const;
 
     StringTableGenerator stringTable;
+    QString codeGeneratorName;
 private:
+    CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset);
+
     IR::Module *irModule;
 
-    QHash<IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QVector<ReturnedValue> constants;
-    QList<QList<CompiledData::JSClassMember> > jsClasses;
-    uint jsClassDataSize;
+    QByteArray jsClassData;
+    QVector<int> jsClassOffsets;
 };
 
 }

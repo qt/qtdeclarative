@@ -62,6 +62,7 @@
 #include <private/qquicktimeline_p_p.h>
 #include <private/qquickanimation_p_p.h>
 #include <private/qquicktransitionmanager_p_p.h>
+#include <private/qpodvector_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -191,9 +192,9 @@ public:
     void setViewportX(qreal x);
     void setViewportY(qreal y);
 
-    qreal overShootDistance(qreal size);
+    qreal overShootDistance(qreal size) const;
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
 
     void draggingStarting();
     void draggingEnding();
@@ -259,8 +260,8 @@ public:
               const QVector2D &deltas, bool overThreshold, bool momentum,
               bool velocitySensitiveOverBounds, const QVector2D &velocity);
 
-    qint64 computeCurrentTime(QInputEvent *event);
-    qreal devicePixelRatio();
+    qint64 computeCurrentTime(QInputEvent *event) const;
+    qreal devicePixelRatio() const;
 
     // flickableData property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

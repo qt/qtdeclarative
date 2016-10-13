@@ -46,11 +46,13 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_OPENGL
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
+#endif
 
 QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 

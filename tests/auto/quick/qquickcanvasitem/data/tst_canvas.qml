@@ -590,6 +590,7 @@ CanvasTestCase {
         verify(canvas);
         canvas.width = 100;
         canvas.height = 100;
+        waitForRendering(canvas);
 
         var ctx = canvas.getContext("2d");
 

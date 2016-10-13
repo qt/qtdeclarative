@@ -101,7 +101,7 @@ Rectangle {
                         height: 140
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 120
+                        font.pixelSize: 118
                         font.family: "Times"
                         color: "blue"
                         text: "Qt"
@@ -128,17 +128,7 @@ Rectangle {
             property real time: 0
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
             //! [fragment]
-            fragmentShader:
-                "uniform lowp float qt_Opacity;" +
-                "uniform highp float amplitude;" +
-                "uniform highp float frequency;" +
-                "uniform highp float time;" +
-                "uniform sampler2D source;" +
-                "varying highp vec2 qt_TexCoord0;" +
-                "void main() {" +
-                "    highp vec2 p = sin(time + frequency * qt_TexCoord0);" +
-                "    gl_FragColor = texture2D(source, qt_TexCoord0 + amplitude * vec2(p.y, -p.x)) * qt_Opacity;" +
-                "}"
+            fragmentShader: "qrc:shadereffects/content/shaders/wobble.frag"
             //! [fragment]
             Slider {
                 id: wobbleSlider
@@ -163,32 +153,10 @@ Rectangle {
                             height: theItem.height
                             property variant delta: Qt.size(1.0 / width, 0.0)
                             property variant source: theSource
-                            fragmentShader: "
-                                uniform lowp float qt_Opacity;
-                                uniform sampler2D source;
-                                uniform highp vec2 delta;
-                                varying highp vec2 qt_TexCoord0;
-                                void main() {
-                                    gl_FragColor =(0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
-                                                 + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
-                                                 + 0.2466 * texture2D(source, qt_TexCoord0)
-                                                 + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
-                                                 + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta)) * qt_Opacity;
-                                }"
+                            fragmentShader: "qrc:shadereffects/content/shaders/blur.frag"
                         }
                     }
-                    fragmentShader: "
-                        uniform lowp float qt_Opacity;
-                        uniform sampler2D source;
-                        uniform highp vec2 delta;
-                        varying highp vec2 qt_TexCoord0;
-                        void main() {
-                            gl_FragColor =(0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
-                                         + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
-                                         + 0.2466 * texture2D(source, qt_TexCoord0)
-                                         + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
-                                         + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta)) * qt_Opacity;
-                        }"
+                    fragmentShader: "qrc:shadereffects/content/shaders/blur.frag"
                 }
             }
             property real angle: 0
@@ -196,19 +164,7 @@ Rectangle {
             NumberAnimation on angle { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 6000 }
             property variant delta: Qt.size(offset.x / width, offset.y / height)
             property real darkness: shadowSlider.value
-            fragmentShader: "
-                uniform lowp float qt_Opacity;
-                uniform highp vec2 offset;
-                uniform sampler2D source;
-                uniform sampler2D shadow;
-                uniform highp float darkness;
-                uniform highp vec2 delta;
-                varying highp vec2 qt_TexCoord0;
-                void main() {
-                    lowp vec4 fg = texture2D(source, qt_TexCoord0);
-                    lowp vec4 bg = texture2D(shadow, qt_TexCoord0 + delta);
-                    gl_FragColor = (fg + vec4(0., 0., 0., darkness * bg.a) * (1. - fg.a)) * qt_Opacity;
-                }"
+            fragmentShader: "qrc:shadereffects/content/shaders/shadow.frag"
             Slider {
                 id: shadowSlider
                 anchors.left: parent.left
@@ -222,38 +178,14 @@ Rectangle {
             height: 160
             property variant source: theSource
             property variant delta: Qt.size(0.5 / width, 0.5 / height)
-            fragmentShader: "
-                uniform sampler2D source;
-                uniform highp vec2 delta;
-                uniform highp float qt_Opacity;
-                varying highp vec2 qt_TexCoord0;
-                void main() {
-                    lowp vec4 tl = texture2D(source, qt_TexCoord0 - delta);
-                    lowp vec4 tr = texture2D(source, qt_TexCoord0 + vec2(delta.x, -delta.y));
-                    lowp vec4 bl = texture2D(source, qt_TexCoord0 - vec2(delta.x, -delta.y));
-                    lowp vec4 br = texture2D(source, qt_TexCoord0 + delta);
-                    mediump vec4 gx = (tl + bl) - (tr + br);
-                    mediump vec4 gy = (tl + tr) - (bl + br);
-                    gl_FragColor.xyz = vec3(0.);
-                    gl_FragColor.w = clamp(dot(sqrt(gx * gx + gy * gy), vec4(1.)), 0., 1.) * qt_Opacity;
-                }"
+            fragmentShader: "qrc:shadereffects/content/shaders/outline.frag"
         }
         ShaderEffect {
             width: 160
             height: 160
             property variant source: theSource
             property color tint: root.sliderToColor(colorizeSlider.value)
-            fragmentShader: "
-                uniform sampler2D source;
-                uniform lowp vec4 tint;
-                uniform lowp float qt_Opacity;
-                varying highp vec2 qt_TexCoord0;
-                void main() {
-                    lowp vec4 c = texture2D(source, qt_TexCoord0);
-                    lowp float lo = min(min(c.x, c.y), c.z);
-                    lowp float hi = max(max(c.x, c.y), c.z);
-                    gl_FragColor = qt_Opacity * vec4(mix(vec3(lo), vec3(hi), tint.xyz), c.w);
-                }"
+            fragmentShader: "qrc:shadereffects/content/shaders/colorize.frag"
             Slider {
                 id: colorizeSlider
                 anchors.left: parent.left
@@ -288,25 +220,7 @@ Rectangle {
             //! [properties]
             //! [vertex]
             mesh: Qt.size(10, 10)
-            vertexShader: "
-                uniform highp mat4 qt_Matrix;
-                uniform highp float bend;
-                uniform highp float minimize;
-                uniform highp float side;
-                uniform highp float width;
-                uniform highp float height;
-                attribute highp vec4 qt_Vertex;
-                attribute highp vec2 qt_MultiTexCoord0;
-                varying highp vec2 qt_TexCoord0;
-                void main() {
-                    qt_TexCoord0 = qt_MultiTexCoord0;
-                    highp vec4 pos = qt_Vertex;
-                    pos.y = mix(qt_Vertex.y, height, minimize);
-                    highp float t = pos.y / height;
-                    t = (3. - 2. * t) * t * t;
-                    pos.x = mix(qt_Vertex.x, side * width, t * bend);
-                    gl_Position = qt_Matrix * pos;
-                }"
+            vertexShader: "qrc:shadereffects/content/shaders/genie.vert"
             //! [vertex]
             Slider {
                 id: genieSlider

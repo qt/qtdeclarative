@@ -48,9 +48,20 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
+#include <private/qqmlengine_p.h>
+#include "qv4compilationunitmapper_p.h"
+#include <QQmlPropertyMap>
+#include <QDateTime>
+#include <QSaveFile>
+#include <QFile>
+#include <QFileInfo>
+#include <QScopedValueRollback>
+#include <QStandardPaths>
+#include <QDir>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 
 #include <algorithm>
 
@@ -71,13 +82,16 @@ CompilationUnit::CompilationUnit()
     , totalBindingsCount(0)
     , totalParserStatusCount(0)
     , totalObjectCount(0)
+    , metaTypeId(-1)
+    , listMetaTypeId(-1)
+    , isRegisteredWithEngine(false)
 {}
 
 CompilationUnit::~CompilationUnit()
 {
     unlink();
     if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
-        free(data);
+        free(const_cast<Unit *>(data));
     data = 0;
 }
 
@@ -116,7 +130,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup *l = runtimeLookups + i;
 
-            Lookup::Type type = Lookup::Type(compiledLookups[i].type_and_flags);
+            Lookup::Type type = Lookup::Type(uint(compiledLookups[i].type_and_flags));
             if (type == CompiledData::Lookup::Type_Getter)
                 l->getter = QV4::Lookup::getterGeneric;
             else if (type == CompiledData::Lookup::Type_Setter)
@@ -151,13 +165,17 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         }
     }
 
-    linkBackendToEngine(engine);
-
-#if 0
-    runtimeFunctionsSortedByAddress.resize(runtimeFunctions.size());
-    memcpy(runtimeFunctionsSortedByAddress.data(), runtimeFunctions.data(), runtimeFunctions.size() * sizeof(QV4::Function*));
-    std::sort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    Value *bigEndianConstants = new Value[data->constantTableSize];
+    const LEUInt64 *littleEndianConstants = data->constants();
+    for (uint i = 0; i < data->constantTableSize; ++i)
+        bigEndianConstants[i] = Value::fromReturnedValue(littleEndianConstants[i]);
+    constants = bigEndianConstants;
+#else
+    constants = reinterpret_cast<const Value*>(data->constants());
 #endif
+
+    linkBackendToEngine(engine);
 
     if (data->indexOfRootFunction != -1)
         return runtimeFunctions[data->indexOfRootFunction];
@@ -170,9 +188,13 @@ void CompilationUnit::unlink()
     if (engine)
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
 
-    for (int ii = 0; ii < propertyCaches.count(); ++ii)
-        if (propertyCaches.at(ii).data())
-            propertyCaches.at(ii)->release();
+    if (isRegisteredWithEngine) {
+        Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && propertyCaches.at(data->indexOfRootObject));
+        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(propertyCaches.at(data->indexOfRootObject)->engine);
+        qmlEngine->unregisterInternalCompositeType(this);
+        isRegisteredWithEngine = false;
+    }
+
     propertyCaches.clear();
 
     for (int ii = 0; ii < dependentScripts.count(); ++ii)
@@ -180,6 +202,9 @@ void CompilationUnit::unlink()
     dependentScripts.clear();
 
     importCache = nullptr;
+
+    qDeleteAll(resolvedTypes);
+    resolvedTypes.clear();
 
     engine = 0;
     free(runtimeStrings);
@@ -192,6 +217,9 @@ void CompilationUnit::unlink()
     runtimeClasses = 0;
     qDeleteAll(runtimeFunctions);
     runtimeFunctions.clear();
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+    delete [] constants;
+#endif
 }
 
 void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
@@ -205,13 +233,24 @@ void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
     }
 }
 
+void CompilationUnit::destroy()
+{
+    QQmlEngine *qmlEngine = 0;
+    if (engine && engine->v8Engine)
+        qmlEngine = engine->v8Engine->engine();
+    if (qmlEngine)
+        QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
+    else
+        delete this;
+}
+
 IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
 {
     auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
     if (it == namedObjectsPerComponentCache.end()) {
         IdentifierHash<int> namedObjectCache(engine);
         const CompiledData::Object *component = data->objectAt(componentObjectIndex);
-        const quint32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
+        const LEUInt32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
         for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
             const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
             namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
@@ -221,6 +260,192 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
     return *it;
 }
 
+void CompilationUnit::finalize(QQmlEnginePrivate *engine)
+{
+    // Add to type registry of composites
+    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject))
+        engine->registerInternalCompositeType(this);
+    else {
+        const QV4::CompiledData::Object *obj = objectAt(data->indexOfRootObject);
+        auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        Q_ASSERT(typeRef);
+        if (typeRef->compilationUnit) {
+            metaTypeId = typeRef->compilationUnit->metaTypeId;
+            listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
+        } else {
+            metaTypeId = typeRef->type->typeId();
+            listMetaTypeId = typeRef->type->qListTypeId();
+        }
+    }
+
+    // Collect some data for instantiation later.
+    int bindingCount = 0;
+    int parserStatusCount = 0;
+    int objectCount = 0;
+    for (quint32 i = 0; i < data->nObjects; ++i) {
+        const QV4::CompiledData::Object *obj = data->objectAt(i);
+        bindingCount += obj->nBindings;
+        if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+            if (QQmlType *qmlType = typeRef->type) {
+                if (qmlType->parserStatusCast() != -1)
+                    ++parserStatusCount;
+            }
+            ++objectCount;
+            if (typeRef->compilationUnit) {
+                bindingCount += typeRef->compilationUnit->totalBindingsCount;
+                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount;
+                objectCount += typeRef->compilationUnit->totalObjectCount;
+            }
+        }
+    }
+
+    totalBindingsCount = bindingCount;
+    totalParserStatusCount = parserStatusCount;
+    totalObjectCount = objectCount;
+}
+
+bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
+                                     const ResolvedTypeReferenceMap &dependentTypes) const
+{
+    if (dependentTypes.isEmpty()) {
+        for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
+            if (data->dependencyMD5Checksum[i] != 0)
+                return false;
+        }
+        return true;
+    }
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    if (!dependentTypes.addToHash(&hash, engine))
+        return false;
+    QByteArray checksum = hash.result();
+    Q_ASSERT(checksum.size() == sizeof(data->dependencyMD5Checksum));
+    return memcmp(data->dependencyMD5Checksum, checksum.constData(),
+                  sizeof(data->dependencyMD5Checksum)) == 0;
+}
+
+static QString cacheFilePath(const QUrl &url)
+{
+    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
+    const QString localCachePath = localSourcePath + QLatin1Char('c');
+    if (QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
+        return localCachePath;
+    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
+    fileNameHash.addData(localSourcePath.toUtf8());
+    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
+    QDir::root().mkpath(directory);
+    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + QFileInfo(localCachePath).completeSuffix();
+}
+
+bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
+{
+    errorString->clear();
+
+    if (data->sourceTimeStamp == 0) {
+        *errorString = QStringLiteral("Missing time stamp for source file");
+        return false;
+    }
+
+    if (!QQmlFile::isLocalFile(unitUrl)) {
+        *errorString = QStringLiteral("File has to be a local file.");
+        return false;
+    }
+
+    // Foo.qml -> Foo.qmlc
+    QSaveFile cacheFile(cacheFilePath(unitUrl));
+    if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    QByteArray modifiedUnit;
+    modifiedUnit.resize(data->unitSize);
+    memcpy(modifiedUnit.data(), data, data->unitSize);
+    const char *dataPtr = modifiedUnit.data();
+    Unit *unitPtr;
+    memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
+    unitPtr->flags |= Unit::StaticData;
+
+    prepareCodeOffsetsForDiskStorage(unitPtr);
+
+    qint64 headerWritten = cacheFile.write(modifiedUnit);
+    if (headerWritten != modifiedUnit.size()) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    if (!saveCodeToDisk(&cacheFile, unitPtr, errorString))
+        return false;
+
+    if (!cacheFile.commit()) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    return true;
+}
+
+bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
+{
+    if (!QQmlFile::isLocalFile(url)) {
+        *errorString = QStringLiteral("File has to be a local file.");
+        return false;
+    }
+
+    const QString sourcePath = url.toLocalFile();
+    QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
+
+    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
+    if (!mappedUnit)
+        return false;
+
+    const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
+    QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
+
+    {
+        const QString foundArchitecture = stringAt(data->architectureIndex);
+        const QString expectedArchitecture = QSysInfo::buildAbi();
+        if (foundArchitecture != expectedArchitecture) {
+            *errorString = QString::fromUtf8("Architecture mismatch. Found %1 expected %2").arg(foundArchitecture).arg(expectedArchitecture);
+            return false;
+        }
+    }
+
+    {
+        const QString foundCodeGenerator = stringAt(data->codeGeneratorIndex);
+        const QString expectedCodeGenerator = iselFactory->codeGeneratorName;
+        if (foundCodeGenerator != expectedCodeGenerator) {
+            *errorString = QString::fromUtf8("Code generator mismatch. Found code generated by %1 but expected %2").arg(foundCodeGenerator).arg(expectedCodeGenerator);
+            return false;
+        }
+    }
+
+    if (!memoryMapCode(errorString))
+        return false;
+
+    dataPtrChange.commit();
+    free(const_cast<Unit*>(oldDataPtr));
+    backingFile.reset(cacheFile.take());
+    return true;
+}
+
+void CompilationUnit::prepareCodeOffsetsForDiskStorage(Unit *unit)
+{
+    Q_UNUSED(unit);
+}
+
+bool CompilationUnit::saveCodeToDisk(QIODevice *device, const Unit *unit, QString *errorString)
+{
+    Q_UNUSED(device);
+    Q_UNUSED(unit);
+    *errorString = QStringLiteral("Saving code to disk is not supported in this configuration");
+    return false;
+}
+
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    *errorString = QStringLiteral("Missing code mapping backend");
+    return false;
+}
 #endif // V4_BOOTSTRAP
 
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
@@ -237,7 +462,7 @@ QString Binding::valueAsString(const Unit *unit) const
     case Type_Boolean:
         return value.b ? QStringLiteral("true") : QStringLiteral("false");
     case Type_Number:
-        return QString::number(value.d);
+        return QString::number(valueAsNumber());
     case Type_Invalid:
         return QString();
 #ifdef QT_NO_TRANSLATION
@@ -318,6 +543,69 @@ QString Binding::valueAsScriptString(const Unit *unit) const
     else
         return valueAsString(unit);
 }
+
+#ifndef V4_BOOTSTRAP
+/*!
+Returns the property cache, if one alread exists.  The cache is not referenced.
+*/
+QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
+{
+    if (type)
+        return typePropertyCache;
+    else
+        return compilationUnit->rootPropertyCache();
+}
+
+/*!
+Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
+*/
+QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
+{
+    if (typePropertyCache) {
+        return typePropertyCache;
+    } else if (type) {
+        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type->metaObject());
+        return typePropertyCache;
+    } else {
+        return compilationUnit->rootPropertyCache();
+    }
+}
+
+template <typename T>
+bool qtTypeInherits(const QMetaObject *mo) {
+    while (mo) {
+        if (mo == &T::staticMetaObject)
+            return true;
+        mo = mo->superClass();
+    }
+    return false;
+}
+
+void ResolvedTypeReference::doDynamicTypeCheck()
+{
+    const QMetaObject *mo = 0;
+    if (typePropertyCache)
+        mo = typePropertyCache->firstCppMetaObject();
+    else if (type)
+        mo = type->metaObject();
+    else if (compilationUnit)
+        mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
+    isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
+}
+
+bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
+{
+    for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
+        QQmlPropertyCache *pc = it.value()->createPropertyCache(engine);
+        bool ok = false;
+        hash->addData(pc->checksum(&ok));
+        if (!ok)
+            return false;
+    }
+    return true;
+}
+
+#endif
 
 }
 

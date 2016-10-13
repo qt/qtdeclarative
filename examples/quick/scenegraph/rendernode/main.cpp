@@ -49,6 +49,13 @@ int main(int argc, char **argv)
     qmlRegisterType<CustomRenderItem>("SceneGraphRendering", 2, 0, "CustomRenderItem");
 
     QQuickView view;
+
+    if (QCoreApplication::arguments().contains(QStringLiteral("--multisample"))) {
+        QSurfaceFormat fmt;
+        fmt.setSamples(4);
+        view.setFormat(fmt);
+    }
+
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///scenegraph/rendernode/main.qml"));
     view.resize(1024, 768);

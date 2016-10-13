@@ -49,7 +49,8 @@
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
-    foreach (QScreen * screen, QGuiApplication::screens())
+    const auto screens = QGuiApplication::screens();
+    for (QScreen *screen : screens)
         screen->setOrientationUpdateMask(Qt::LandscapeOrientation | Qt::PortraitOrientation |
                                          Qt::InvertedLandscapeOrientation | Qt::InvertedPortraitOrientation);
     QQmlEngine engine;

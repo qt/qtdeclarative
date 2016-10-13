@@ -64,7 +64,7 @@ public:
     {
     }
 
-    QSGTexture *texture() const {
+    QSGTexture *texture() const override {
         sourceTexture->setMipmapFiltering(mipmapFiltering);
         sourceTexture->setFiltering(filtering);
         sourceTexture->setHorizontalWrapMode(horizontalWrap);
@@ -308,11 +308,11 @@ QQuickItem *QQuickShaderEffectSource::sourceItem() const
     return m_sourceItem;
 }
 
-void QQuickShaderEffectSource::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
+void QQuickShaderEffectSource::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &)
 {
     Q_ASSERT(item == m_sourceItem);
     Q_UNUSED(item);
-    if (newRect.size() != oldRect.size())
+    if (change.sizeChange())
         update();
 }
 
@@ -708,9 +708,9 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
         return 0;
     }
 
-    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
+    QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
     if (!node) {
-        node = d->sceneGraphContext()->createImageNode();
+        node = d->sceneGraphContext()->createInternalImageNode();
         node->setFlag(QSGNode::UsePreprocess);
         node->setTexture(m_texture);
         QQuickShaderSourceAttachedNode *attached = new QQuickShaderSourceAttachedNode;

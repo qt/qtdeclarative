@@ -71,6 +71,7 @@ private slots:
     void send_withdata_data();
     void send_options();
     void send_options_data();
+    void send_patch();
     void abort();
     void abort_unsent();
     void abort_opened();
@@ -638,6 +639,26 @@ void tst_qqmlxmlhttprequest::send_options_data()
     QTest::newRow("OPTIONS (no data, with resource)") << "testdocument.html" << "send_data.9.expect" << "send_data.8.qml" << "send_data.2.reply";
     QTest::newRow("OPTIONS (with data)") << "testdocument.html" << "send_data.10.expect" << "send_data.9.qml" << "send_data.2.reply";
 }
+
+void tst_qqmlxmlhttprequest::send_patch()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl("send_patch.expect"),
+                        testFileUrl("send_patch.reply"),
+                        // the content of response file will be ignored due to 204 status code
+                        testFileUrl("testdocument.html")));
+
+    QQmlComponent component(&engine, testFileUrl("send_patch.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QVERIFY(!object.isNull());
+    object->setProperty("url", server.urlString("/qqmlxmlhttprequest.cpp"));
+    component.completeCreate();
+
+    QTRY_VERIFY(object->property("dataOK").toBool());
+    QTRY_VERIFY(object->property("headerOK").toBool());
+}
+
 
 // Test abort() has no effect in unsent state
 void tst_qqmlxmlhttprequest::abort_unsent()

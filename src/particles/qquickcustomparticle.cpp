@@ -94,7 +94,8 @@ struct PlainVertices {
 
 QQuickCustomParticle::QQuickCustomParticle(QQuickItem* parent)
     : QQuickParticlePainter(parent)
-    , m_common(this)
+    , m_common(this, [this](int mappedId){this->propertyChanged(mappedId);})
+    , m_myMetaObject(nullptr)
     , m_dirtyUniforms(true)
     , m_dirtyUniformValues(true)
     , m_dirtyTextureProviders(true)
@@ -114,7 +115,10 @@ QQuickCustomParticle::~QQuickCustomParticle()
 
 void QQuickCustomParticle::componentComplete()
 {
-    m_common.updateShader(this, Key::FragmentShader);
+    if (!m_myMetaObject)
+        m_myMetaObject = metaObject();
+
+    m_common.updateShader(this, m_myMetaObject, Key::FragmentShader);
     updateVertexShader();
     reset();
     QQuickParticlePainter::componentComplete();
@@ -138,7 +142,7 @@ void QQuickCustomParticle::setFragmentShader(const QByteArray &code)
     m_common.source.sourceCode[Key::FragmentShader] = code;
     m_dirtyProgram = true;
     if (isComponentComplete()) {
-        m_common.updateShader(this, Key::FragmentShader);
+        m_common.updateShader(this, m_myMetaObject, Key::FragmentShader);
         reset();
     }
     emit fragmentShaderChanged();
@@ -202,9 +206,8 @@ void QQuickCustomParticle::setVertexShader(const QByteArray &code)
 void QQuickCustomParticle::updateVertexShader()
 {
     m_common.disconnectPropertySignals(this, Key::VertexShader);
-    qDeleteAll(m_common.signalMappers[Key::VertexShader]);
     m_common.uniformData[Key::VertexShader].clear();
-    m_common.signalMappers[Key::VertexShader].clear();
+    m_common.clearSignalMappers(Key::VertexShader);
     m_common.attributes.clear();
     m_common.attributes.append("qt_ParticlePos");
     m_common.attributes.append("qt_ParticleTex");
@@ -225,9 +228,9 @@ void QQuickCustomParticle::updateVertexShader()
 
     const QByteArray &code = m_common.source.sourceCode[Key::VertexShader];
     if (!code.isEmpty())
-        m_common.lookThroughShaderCode(this, Key::VertexShader, code);
+        m_common.lookThroughShaderCode(this, m_myMetaObject, Key::VertexShader, code);
 
-    m_common.connectPropertySignals(this, Key::VertexShader);
+    m_common.connectPropertySignals(this, m_myMetaObject, Key::VertexShader);
 }
 
 void QQuickCustomParticle::reset()
@@ -392,7 +395,7 @@ void QQuickCustomParticle::sourceDestroyed(QObject *object)
 void QQuickCustomParticle::propertyChanged(int mappedId)
 {
     bool textureProviderChanged;
-    m_common.propertyChanged(this, mappedId, &textureProviderChanged);
+    m_common.propertyChanged(this, m_myMetaObject, mappedId, &textureProviderChanged);
     m_dirtyTextureProviders |= textureProviderChanged;
     m_dirtyUniformValues = true;
     update();

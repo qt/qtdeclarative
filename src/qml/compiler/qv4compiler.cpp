@@ -42,6 +42,8 @@
 #include <qv4isel_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4alloca_p.h>
+#include <wtf/MathExtras.h>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {
@@ -75,15 +77,21 @@ void QV4::Compiler::StringTableGenerator::clear()
 void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
     char *dataStart = reinterpret_cast<char *>(unit);
-    uint *stringTable = reinterpret_cast<uint *>(dataStart + unit->offsetToStringTable);
+    CompiledData::LEUInt32 *stringTable = reinterpret_cast<CompiledData::LEUInt32 *>(dataStart + unit->offsetToStringTable);
     char *stringData = dataStart + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     for (int i = 0; i < strings.size(); ++i) {
         stringTable[i] = stringData - dataStart;
         const QString &qstr = strings.at(i);
 
-        QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
+        QV4::CompiledData::String *s = reinterpret_cast<QV4::CompiledData::String *>(stringData);
         s->size = qstr.length();
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
+#else
+        ushort *uc = reinterpret_cast<ushort *>(s + 1);
+        for (int i = 0; i < qstr.length(); ++i)
+            uc[i] = qToLittleEndian<ushort>(qstr.at(i).unicode());
+#endif
 
         stringData += QV4::CompiledData::String::calculateSize(qstr);
     }
@@ -91,7 +99,6 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 
 QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::IR::Module *module)
     : irModule(module)
-    , jsClassDataSize(0)
 {
     // Make sure the empty string always gets index 0
     registerString(QString());
@@ -173,36 +180,38 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
 {
     // ### re-use existing class definitions.
 
-    QList<CompiledData::JSClassMember> members;
-    members.reserve(count);
+    const int size = CompiledData::JSClass::calculateSize(count);
+    jsClassOffsets.append(jsClassData.size());
+    const int oldSize = jsClassData.size();
+    jsClassData.resize(jsClassData.size() + size);
+    memset(jsClassData.data() + oldSize, 0, size);
+
+    CompiledData::JSClass *jsClass = reinterpret_cast<CompiledData::JSClass*>(jsClassData.data() + oldSize);
+    jsClass->nMembers = count;
+    CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
 
     IR::ExprList *it = args;
-    for (int i = 0; i < count; ++i, it = it->next) {
-        CompiledData::JSClassMember member;
-
+    for (int i = 0; i < count; ++i, it = it->next, ++member) {
         QV4::IR::Name *name = it->expr->asName();
         it = it->next;
 
         const bool isData = it->expr->asConst()->value;
         it = it->next;
 
-        member.nameOffset = registerString(*name->id);
-        member.isAccessor = !isData;
-        members << member;
+        member->nameOffset = registerString(*name->id);
+        member->isAccessor = !isData;
 
         if (!isData)
             it = it->next;
     }
 
-    jsClasses << members;
-    jsClassDataSize += CompiledData::JSClass::calculateSize(members.count());
-    return jsClasses.size() - 1;
+    return jsClassOffsets.size() - 1;
 }
 
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(irModule->fileName);
-    foreach (QV4::IR::Function *f, irModule->functions) {
+    for (QV4::IR::Function *f : qAsConst(irModule->functions)) {
         registerString(*f->name);
         for (int i = 0; i < f->formals.size(); ++i)
             registerString(*f->formals.at(i));
@@ -210,94 +219,51 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(irModule->functions.size(), regexps.size(),
-                                                          constants.size(), lookups.size(), jsClasses.count());
+    CompiledData::LEUInt32 *functionOffsets = reinterpret_cast<CompiledData::LEUInt32*>(alloca(irModule->functions.size() * sizeof(CompiledData::LEUInt32)));
+    uint jsClassDataOffset = 0;
 
-    uint functionDataSize = 0;
-    for (int i = 0; i < irModule->functions.size(); ++i) {
-        QV4::IR::Function *f = irModule->functions.at(i);
-        functionOffsets.insert(f, functionDataSize + unitSize);
-
-        const int qmlIdDepsCount = f->idObjectDependencies.count();
-        const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
-        functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), qmlIdDepsCount, qmlPropertyDepsCount);
+    char *dataPtr;
+    CompiledData::Unit *unit;
+    {
+        QV4::CompiledData::Unit tempHeader = generateHeader(option, functionOffsets, &jsClassDataOffset);
+        dataPtr = reinterpret_cast<char *>(malloc(tempHeader.unitSize));
+        memcpy(&unit, &dataPtr, sizeof(CompiledData::Unit*));
+        memcpy(unit, &tempHeader, sizeof(tempHeader));
     }
 
-    const int totalSize = unitSize + functionDataSize + jsClassDataSize + (option == GenerateWithStringTable ? stringTable.sizeOfTableAndData() : 0);
-    char *data = (char *)malloc(totalSize);
-    memset(data, 0, totalSize);
-    QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
+    memcpy(dataPtr + unit->offsetToFunctionTable, functionOffsets, unit->functionTableSize * sizeof(CompiledData::LEUInt32));
 
-    memcpy(unit->magic, QV4::CompiledData::magic_str, sizeof(unit->magic));
-    unit->architecture = 0; // ###
-    unit->flags = QV4::CompiledData::Unit::IsJavascript;
-    unit->version = 1;
-    unit->unitSize = totalSize;
-    unit->functionTableSize = irModule->functions.size();
-    unit->offsetToFunctionTable = sizeof(*unit);
-    unit->lookupTableSize = lookups.count();
-    unit->offsetToLookupTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
-    unit->regexpTableSize = regexps.size();
-    unit->offsetToRegexpTable = unit->offsetToLookupTable + unit->lookupTableSize * CompiledData::Lookup::calculateSize();
-    unit->constantTableSize = constants.size();
-    unit->offsetToConstantTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
-    unit->jsClassTableSize = jsClasses.count();
-    unit->offsetToJSClassTable = unit->offsetToConstantTable + unit->constantTableSize * sizeof(ReturnedValue);
-    if (option == GenerateWithStringTable) {
-        unit->stringTableSize = stringTable.stringCount();
-        unit->offsetToStringTable = unitSize + functionDataSize + jsClassDataSize;
-    } else {
-        unit->stringTableSize = 0;
-        unit->offsetToStringTable = 0;
-    }
-    unit->indexOfRootFunction = -1;
-    unit->sourceFileIndex = getStringId(irModule->fileName);
-    unit->nImports = 0;
-    unit->offsetToImports = 0;
-    unit->nObjects = 0;
-    unit->offsetToObjects = 0;
-    unit->indexOfRootObject = 0;
-
-    uint *functionTable = (uint *)(data + unit->offsetToFunctionTable);
-    for (int i = 0; i < irModule->functions.size(); ++i)
-        functionTable[i] = functionOffsets.value(irModule->functions.at(i));
-
-    char *f = data + unitSize;
     for (int i = 0; i < irModule->functions.size(); ++i) {
         QV4::IR::Function *function = irModule->functions.at(i);
         if (function == irModule->rootFunction)
             unit->indexOfRootFunction = i;
 
-        const int bytes = writeFunction(f, i, function);
-        f += bytes;
+        writeFunction(dataPtr + functionOffsets[i], function);
     }
 
-    CompiledData::Lookup *lookupsToWrite = (CompiledData::Lookup*)(data + unit->offsetToLookupTable);
-    foreach (const CompiledData::Lookup &l, lookups)
+    CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
+    for (const CompiledData::Lookup &l : qAsConst(lookups))
         *lookupsToWrite++ = l;
 
-    CompiledData::RegExp *regexpTable = (CompiledData::RegExp *)(data + unit->offsetToRegexpTable);
+    CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);
     memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
 
-    ReturnedValue *constantTable = (ReturnedValue *)(data + unit->offsetToConstantTable);
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    ReturnedValue *constantTable = reinterpret_cast<ReturnedValue *>(dataPtr + unit->offsetToConstantTable);
     memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
+#else
+    CompiledData::LEUInt64 *constantTable = reinterpret_cast<CompiledData::LEUInt64 *>(dataPtr + unit->offsetToConstantTable);
+    for (int i = 0; i < constants.count(); ++i)
+        constantTable[i] = constants.at(i);
+#endif
 
-    // write js classes and js class lookup table
-    uint *jsClassTable = (uint*)(data + unit->offsetToJSClassTable);
-    char *jsClass = data + unitSize + functionDataSize;
-    for (int i = 0; i < jsClasses.count(); ++i) {
-        jsClassTable[i] = jsClass - data;
+    {
+        memcpy(dataPtr + jsClassDataOffset, jsClassData.constData(), jsClassData.size());
 
-        const QList<CompiledData::JSClassMember> members = jsClasses.at(i);
-
-        CompiledData::JSClass *c = reinterpret_cast<CompiledData::JSClass*>(jsClass);
-        c->nMembers = members.count();
-
-        CompiledData::JSClassMember *memberToWrite = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + sizeof(CompiledData::JSClass));
-        foreach (const CompiledData::JSClassMember &member, members)
-            *memberToWrite++ = member;
-
-        jsClass += CompiledData::JSClass::calculateSize(members.count());
+        // write js classes and js class lookup table
+        CompiledData::LEUInt32 *jsClassOffsetTable = reinterpret_cast<CompiledData::LEUInt32 *>(dataPtr + unit->offsetToJSClassTable);
+        for (int i = 0; i < jsClassOffsets.count(); ++i)
+            jsClassOffsetTable[i] = jsClassDataOffset + jsClassOffsets.at(i);
     }
 
     // write strings and string table
@@ -307,13 +273,13 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     return unit;
 }
 
-int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::Function *irFunction)
+void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *irFunction) const
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
     quint32 currentOffset = sizeof(QV4::CompiledData::Function);
+    currentOffset = (currentOffset + 7) & ~quint32(0x7);
 
-    function->index = index;
     function->nameIndex = getStringId(*irFunction->name);
     function->flags = 0;
     if (irFunction->hasDirectEval)
@@ -335,8 +301,6 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
     currentOffset += function->nLocals * sizeof(quint32);
 
     function->nInnerFunctions = irFunction->nestedFunctions.size();
-    function->innerFunctionsOffset = currentOffset;
-    currentOffset += function->nInnerFunctions * sizeof(quint32);
 
     function->nDependingIdObjects = 0;
     function->nDependingContextProperties = 0;
@@ -363,6 +327,9 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
     function->location.line = irFunction->line;
     function->location.column = irFunction->column;
 
+    function->codeOffset = 0;
+    function->codeSize = 0;
+
     // write formals
     quint32 *formals = (quint32 *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->formals.size(); ++i)
@@ -373,15 +340,12 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(*irFunction->locals.at(i));
 
-    // write inner functions
-    quint32 *innerFunctions = (quint32 *)(f + function->innerFunctionsOffset);
-    for (int i = 0; i < irFunction->nestedFunctions.size(); ++i)
-        innerFunctions[i] = functionOffsets.value(irFunction->nestedFunctions.at(i));
-
     // write QML dependencies
     quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
-    foreach (int id, irFunction->idObjectDependencies)
-        *writtenDeps++ = id;
+    for (int id : irFunction->idObjectDependencies) {
+        Q_ASSERT(id >= 0);
+        *writtenDeps++ = static_cast<quint32>(id);
+    }
 
     writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
     for (auto property : irFunction->contextObjectPropertyDependencies) {
@@ -394,7 +358,75 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QV4::IR::F
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
+}
 
-    return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions,
-                                                 function->nDependingIdObjects, function->nDependingContextProperties + function->nDependingScopeProperties);
+QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset)
+{
+    CompiledData::Unit unit;
+    memcpy(unit.magic, CompiledData::magic_str, sizeof(unit.magic));
+    unit.flags = QV4::CompiledData::Unit::IsJavascript;
+    unit.flags |= irModule->unitFlags;
+    unit.version = QV4_DATA_STRUCTURE_VERSION;
+    unit.qtVersion = QT_VERSION;
+    unit.architectureIndex = registerString(QSysInfo::buildAbi());
+    unit.codeGeneratorIndex = registerString(codeGeneratorName);
+    memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
+
+    quint32 nextOffset = sizeof(CompiledData::Unit);
+
+    unit.functionTableSize = irModule->functions.size();
+    unit.offsetToFunctionTable = nextOffset;
+    nextOffset += unit.functionTableSize * sizeof(uint);
+
+    unit.lookupTableSize = lookups.count();
+    unit.offsetToLookupTable = nextOffset;
+    nextOffset += unit.lookupTableSize * sizeof(CompiledData::Lookup);
+
+    unit.regexpTableSize = regexps.size();
+    unit.offsetToRegexpTable = nextOffset;
+    nextOffset += unit.regexpTableSize * sizeof(CompiledData::RegExp);
+
+    unit.constantTableSize = constants.size();
+
+    // Ensure we load constants from well-aligned addresses into for example SSE registers.
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(16, nextOffset));
+    unit.offsetToConstantTable = nextOffset;
+    nextOffset += unit.constantTableSize * sizeof(ReturnedValue);
+
+    unit.jsClassTableSize = jsClassOffsets.count();
+    unit.offsetToJSClassTable = nextOffset;
+    nextOffset += unit.jsClassTableSize * sizeof(uint);
+
+    *jsClassDataOffset = nextOffset;
+    nextOffset += jsClassData.size();
+
+    for (int i = 0; i < irModule->functions.size(); ++i) {
+        QV4::IR::Function *f = irModule->functions.at(i);
+        functionOffsets[i] = nextOffset;
+
+        const int qmlIdDepsCount = f->idObjectDependencies.count();
+        const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
+        nextOffset += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), qmlIdDepsCount, qmlPropertyDepsCount);
+    }
+
+    if (option == GenerateWithStringTable) {
+        unit.stringTableSize = stringTable.stringCount();
+        unit.offsetToStringTable = nextOffset;
+        nextOffset += stringTable.sizeOfTableAndData();
+    } else {
+        unit.stringTableSize = 0;
+        unit.offsetToStringTable = 0;
+    }
+    unit.indexOfRootFunction = -1;
+    unit.sourceFileIndex = getStringId(irModule->fileName);
+    unit.sourceTimeStamp = irModule->sourceTimeStamp;
+    unit.nImports = 0;
+    unit.offsetToImports = 0;
+    unit.nObjects = 0;
+    unit.offsetToObjects = 0;
+    unit.indexOfRootObject = 0;
+
+    unit.unitSize = nextOffset;
+
+    return unit;
 }

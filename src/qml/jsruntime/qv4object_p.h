@@ -56,6 +56,9 @@
 #include "qv4engine_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4value_p.h"
+#include "qv4internalclass_p.h"
+
+#include <QtCore/qtypetraits.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +68,7 @@ namespace QV4 {
 namespace Heap {
 
 struct Object : Base {
-    inline Object() {}
+    inline Object() { Base::init(); }
 
     const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
     Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
@@ -87,7 +90,12 @@ struct Object : Base {
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        Data *d() const { return static_cast<Data *>(m()); }
+        Data *d_unchecked() const { return static_cast<Data *>(m()); } \
+        Data *d() const { \
+            Data *dptr = d_unchecked(); \
+            if (std::is_trivial<Data>::value) dptr->_checkIsInitialized(); \
+            return dptr; \
+        }
 
 #define V4_OBJECT2(DataClass, superClass) \
     private: \
@@ -100,7 +108,12 @@ struct Object : Base {
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
+        QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
+        QV4::Heap::DataClass *d() const { \
+            QV4::Heap::DataClass *dptr = d_unchecked(); \
+            if (std::is_trivial<QV4::Heap::DataClass>::value) dptr->_checkIsInitialized(); \
+            return dptr; \
+        }
 
 #define V4_INTERNALCLASS(c) \
     static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
@@ -112,8 +125,8 @@ struct Object : Base {
 struct ObjectVTable
 {
     VTable vTable;
-    ReturnedValue (*call)(const Managed *, CallData *data);
-    ReturnedValue (*construct)(const Managed *, CallData *data);
+    void (*call)(const Managed *, Scope &scope, CallData *data);
+    void (*construct)(const Managed *, Scope &scope, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
@@ -131,7 +144,7 @@ struct ObjectVTable
 #define DEFINE_OBJECT_VTABLE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
-    DEFINE_MANAGED_VTABLE_INT(classname, &classname::SuperClass::static_vtbl == &Object::static_vtbl ? 0 : &classname::SuperClass::static_vtbl.vTable), \
+    DEFINE_MANAGED_VTABLE_INT(classname, (QT_PREPEND_NAMESPACE(QtPrivate)::is_same<classname::SuperClass, Object>::value) ? Q_NULLPTR : &classname::SuperClass::static_vtbl.vTable), \
     call,                                       \
     construct,                                  \
     get,                                        \
@@ -324,14 +337,14 @@ public:
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
 
-    inline ReturnedValue construct(CallData *d) const
-    { return vtable()->construct(this, d); }
-    inline ReturnedValue call(CallData *d) const
-    { return vtable()->call(this, d); }
+    inline void construct(Scope &scope, CallData *d) const
+    { return vtable()->construct(this, scope, d); }
+    inline void call(Scope &scope, CallData *d) const
+    { vtable()->call(this, scope, d); }
 protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static ReturnedValue construct(const Managed *m, CallData *);
-    static ReturnedValue call(const Managed *m, CallData *);
+    static void construct(const Managed *m, Scope &scope, CallData *);
+    static void call(const Managed *m, Scope &scope, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);

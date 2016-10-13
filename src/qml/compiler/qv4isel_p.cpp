@@ -52,7 +52,7 @@
 using namespace QV4;
 using namespace QV4::IR;
 
-EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
     : useFastLookups(true)
     , useTypeInference(true)
     , executableAllocator(execAllocator)
@@ -67,6 +67,7 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *exe
     Q_ASSERT(execAllocator);
 #endif
     Q_ASSERT(module);
+    jsGenerator->codeGeneratorName = iselFactory->codeGeneratorName;
 }
 
 EvalInstructionSelection::~EvalInstructionSelection()
@@ -146,25 +147,24 @@ void IRDecoder::visitMove(IR::Move *s)
                 const int attachedPropertiesId = m->attachedPropertiesId;
                 const bool isSingletonProperty = m->kind == IR::Member::MemberOfSingletonObject;
 
-                if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
+                if (_function && attachedPropertiesId == 0 && !m->property->isConstant() && _function->isQmlBinding) {
                     if (m->kind == IR::Member::MemberOfQmlContextObject) {
-                        _function->contextObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
+                        _function->contextObjectPropertyDependencies.insert(m->property->coreIndex(), m->property->notifyIndex());
                         captureRequired = false;
                     } else if (m->kind == IR::Member::MemberOfQmlScopeObject) {
-                        _function->scopeObjectPropertyDependencies.insert(m->property->coreIndex, m->property->notifyIndex);
+                        _function->scopeObjectPropertyDependencies.insert(m->property->coreIndex(), m->property->notifyIndex());
                         captureRequired = false;
                     }
                 }
                 if (m->kind == IR::Member::MemberOfQmlScopeObject || m->kind == IR::Member::MemberOfQmlContextObject) {
-                    getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property,
-                                          m->property->coreIndex, s->target);
+                    getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex(), captureRequired, s->target);
                     return;
                 }
-                getQObjectProperty(m->base, m->property, captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
+                getQObjectProperty(m->base, m->property->coreIndex(), captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
 #endif // V4_BOOTSTRAP
                 return;
             } else if (m->kind == IR::Member::MemberOfIdObjectsArray) {
-                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, nullptr, m->idIndex, s->target);
+                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->idIndex, /*captureRequired*/false, s->target);
                 return;
             } else if (m->base->asTemp() || m->base->asConst() || m->base->asArgLocal()) {
                 getProperty(m->base, *m->name, s->target);
@@ -187,7 +187,7 @@ void IRDecoder::visitMove(IR::Move *s)
 #ifndef V4_BOOTSTRAP
                 Q_ASSERT(member->kind != IR::Member::MemberOfIdObjectsArray);
                 if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
-                    callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex, c->args, s->target);
+                    callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex(), c->args, s->target);
                     return;
                 }
 #endif
@@ -216,10 +216,10 @@ void IRDecoder::visitMove(IR::Move *s)
                     Q_UNIMPLEMENTED();
 #else
                     if (m->kind == IR::Member::MemberOfQmlScopeObject || m->kind == IR::Member::MemberOfQmlContextObject) {
-                        setQmlContextProperty(s->source, m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex);
+                        setQmlContextProperty(s->source, m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex());
                         return;
                     }
-                    setQObjectProperty(s->source, m->base, m->property->coreIndex);
+                    setQObjectProperty(s->source, m->base, m->property->coreIndex());
 #endif
                     return;
                 } else {
@@ -263,7 +263,7 @@ void IRDecoder::visitExp(IR::Exp *s)
 #ifndef V4_BOOTSTRAP
             Q_ASSERT(member->kind != IR::Member::MemberOfIdObjectsArray);
             if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
-                callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex, c->args, 0);
+                callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex(), c->args, 0);
                 return;
             }
 #endif
@@ -295,7 +295,7 @@ void IRDecoder::callBuiltin(IR::Call *call, Expr *result)
             if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
                 callBuiltinTypeofQmlContextProperty(member->base,
                                                     IR::Member::MemberKind(member->kind),
-                                                    member->property->coreIndex, result);
+                                                    member->property->coreIndex(), result);
                 return;
             }
 #endif

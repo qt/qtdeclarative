@@ -100,7 +100,7 @@ void QSGRenderLoop::cleanup()
 {
     if (!s_instance)
         return;
-    foreach (QQuickWindow *w, s_instance->windows()) {
+    for (QQuickWindow *w : s_instance->windows()) {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(w);
         if (wd->windowManager == s_instance) {
            s_instance->windowDestroyed(w);
@@ -209,11 +209,11 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
             if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_RENDER_LOOP"))) {
                 const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
-                if (loopName == QByteArrayLiteral("windows"))
+                if (loopName == "windows")
                     loopType = WindowsRenderLoop;
-                else if (loopName == QByteArrayLiteral("basic"))
+                else if (loopName == "basic")
                     loopType = BasicRenderLoop;
-                else if (loopName == QByteArrayLiteral("threaded"))
+                else if (loopName == "threaded")
                     loopType = ThreadedRenderLoop;
             }
 

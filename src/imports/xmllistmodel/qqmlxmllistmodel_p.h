@@ -95,10 +95,10 @@ public:
     QQuickXmlListModel(QObject *parent = 0);
     ~QQuickXmlListModel();
 
-    QModelIndex index(int row, int column, const QModelIndex &parent) const;
-    int rowCount(const QModelIndex &parent) const;
-    QVariant data(const QModelIndex &index, int role) const;
-    QHash<int, QByteArray> roleNames() const;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
     int count() const;
 
@@ -124,8 +124,8 @@ public:
 
     Q_INVOKABLE QString errorString() const;
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
 Q_SIGNALS:
     void statusChanged(QQuickXmlListModel::Status);

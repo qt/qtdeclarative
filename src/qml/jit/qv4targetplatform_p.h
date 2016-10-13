@@ -152,7 +152,7 @@ public:
 
 #endif // Windows on x86
 
-#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD) || defined(Q_OS_IOS))
+#if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD) || OS(QNX) || defined(Q_OS_IOS))
     enum { RegAllocIsSupported = 1 };
 
     static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
@@ -563,7 +563,7 @@ public:
 #endif // Linux on MIPS (32 bit)
 
 public: // utility functions
-    static RegisterInformation getRegisterInfo()
+    static const RegisterInformation getRegisterInfo()
     {
         static const RegisterInformation info = getPlatformRegisterInfo();
 

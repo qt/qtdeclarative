@@ -1,10 +1,12 @@
 QT += qml quick
 
 HEADERS += customrenderitem.h \
-           openglrenderer.h
+           openglrenderer.h \
+           softwarerenderer.h
 
 SOURCES += customrenderitem.cpp \
            openglrenderer.cpp \
+           softwarerenderer.cpp \
            main.cpp
 
 RESOURCES += rendernode.qrc

@@ -156,11 +156,9 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     //Tell the renderer about the windows backing store
     auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
     if (softwareRenderer)
-        softwareRenderer->setCurrentPaintDevice(m_backingStores[window]->paintDevice());
+        softwareRenderer->setBackingStore(m_backingStores[window]);
 
-    m_backingStores[window]->beginPaint(QRect(0, 0, window->width(), window->height()));
     cd->renderSceneGraph(window->size());
-    m_backingStores[window]->endPaint();
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
@@ -185,7 +183,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window)
     if (QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
         static QTime lastFrameTime = QTime::currentTime();
         qCDebug(QSG_RASTER_LOG_TIME_RENDERLOOP,
-                "Frame rendered with 'basic' renderloop in %dms, polish=%d, sync=%d, render=%d, swap=%d, frameDelta=%d",
+                "Frame rendered with 'software' renderloop in %dms, polish=%d, sync=%d, render=%d, swap=%d, frameDelta=%d",
                 int(swapTime / 1000000),
                 int(polishTime / 1000000),
                 int((syncTime - polishTime) / 1000000),

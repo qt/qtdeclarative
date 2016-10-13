@@ -93,7 +93,7 @@ void QQuickDefaultClipNode::updateGeometry()
 
         int segments = qMin(30, qCeil(radius)); // Number of segments per corner.
 
-        g->allocate((segments + 1) * 2);
+        g->allocate((segments + 1) * 4);
 
         QVector2D *vertices = (QVector2D *)g->vertexData();
 
@@ -113,7 +113,7 @@ void QQuickDefaultClipNode::updateGeometry()
         }
 
     }
-    markDirty(DirtyGeometry);
     setClipRect(m_rect);
+    markDirty(DirtyGeometry);
 }
 

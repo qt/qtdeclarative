@@ -131,7 +131,7 @@ public:
 
     void updateAverage();
 
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) Q_DECL_OVERRIDE;
     void fixupPosition() Q_DECL_OVERRIDE;
     void fixup(AxisData &data, qreal minExtent, qreal maxExtent) Q_DECL_OVERRIDE;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
@@ -400,7 +400,7 @@ FxViewItem *QQuickListViewPrivate::itemBefore(int modelIndex) const
         ++idx;
     }
     if (lastIndex == modelIndex-1)
-        return visibleItems.last();
+        return visibleItems.constLast();
     return 0;
 }
 
@@ -752,7 +752,7 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
         }
     }
 
-    while (visibleItems.count() > 1 && (item = visibleItems.last()) && item->position() > bufferTo) {
+    while (visibleItems.count() > 1 && (item = visibleItems.constLast()) && item->position() > bufferTo) {
         if (item->attached->delayRemove())
             break;
         qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position() << (QObject *)(item->item);
@@ -839,7 +839,7 @@ void QQuickListViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
 
 void QQuickListViewPrivate::resetFirstItemPosition(qreal pos)
 {
-    FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.first());
+    FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.constFirst());
     item->setPosition(pos);
 }
 
@@ -848,12 +848,12 @@ void QQuickListViewPrivate::adjustFirstItem(qreal forwards, qreal backwards, int
     if (!visibleItems.count())
         return;
     qreal diff = forwards - backwards;
-    static_cast<FxListItemSG*>(visibleItems.first())->setPosition(visibleItems.first()->position() + diff);
+    static_cast<FxListItemSG*>(visibleItems.constFirst())->setPosition(visibleItems.constFirst()->position() + diff);
 }
 
 void QQuickListViewPrivate::updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult)
 {
-    if (item != visibleItems.first())
+    if (item != visibleItems.constFirst())
         QQuickItemViewPrivate::updateSizeChangesBeforeVisiblePos(item, removeResult);
 }
 
@@ -1270,7 +1270,7 @@ void QQuickListViewPrivate::initializeCurrentItem()
         if (!actualItem) {
             if (currentIndex == visibleIndex - 1 && visibleItems.count()) {
                 // We can calculate exact postion in this case
-                listItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
+                listItem->setPosition(visibleItems.constFirst()->position() - currentItem->size() - spacing);
             } else {
                 // Create current item now and position as best we can.
                 // Its position will be corrected when it becomes visible.
@@ -1400,10 +1400,12 @@ bool QQuickListViewPrivate::hasStickyFooter() const
     return footer && footerPositioning != QQuickListView::InlineFooter;
 }
 
-void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change,
+                                                const QRectF &diff)
 {
     Q_Q(QQuickListView);
-    QQuickItemViewPrivate::itemGeometryChanged(item, newGeometry, oldGeometry);
+
+    QQuickItemViewPrivate::itemGeometryChanged(item, change, diff);
     if (!q->isComponentComplete())
         return;
 
@@ -1417,29 +1419,31 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
     }
 
     if (item != contentItem && (!highlight || item != highlight->item)) {
-        if ((orient == QQuickListView::Vertical && newGeometry.height() != oldGeometry.height())
-            || (orient == QQuickListView::Horizontal && newGeometry.width() != oldGeometry.width())) {
+        if ((orient == QQuickListView::Vertical && change.heightChange())
+            || (orient == QQuickListView::Horizontal && change.widthChange())) {
 
             // if visibleItems.first() has resized, adjust its pos since it is used to
             // position all subsequent items
-            if (visibleItems.count() && item == visibleItems.first()->item) {
-                FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.first());
+            if (visibleItems.count() && item == visibleItems.constFirst()->item) {
+                FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.constFirst());
+                const QRectF oldGeometry(item->x() - diff.x(),
+                                         item->y() - diff.y(),
+                                         item->width() - diff.width(),
+                                         item->height() - diff.height());
                 if (listItem->transitionScheduledOrRunning())
                     return;
                 if (orient == QQuickListView::Vertical) {
                     const qreal oldItemEndPosition = verticalLayoutDirection == QQuickItemView::BottomToTop ? -oldGeometry.y() : oldGeometry.y() + oldGeometry.height();
-                    qreal diff = newGeometry.height() - oldGeometry.height();
                     if (verticalLayoutDirection == QQuickListView::TopToBottom && oldItemEndPosition < q->contentY())
-                        listItem->setPosition(listItem->position() - diff, true);
+                        listItem->setPosition(listItem->position() - diff.height(), true);
                     else if (verticalLayoutDirection == QQuickListView::BottomToTop && oldItemEndPosition > q->contentY())
-                        listItem->setPosition(listItem->position() + diff, true);
+                        listItem->setPosition(listItem->position() + diff.height(), true);
                 } else {
                     const qreal oldItemEndPosition = q->effectiveLayoutDirection() == Qt::RightToLeft ? -oldGeometry.x() : oldGeometry.x() + oldGeometry.width();
-                    qreal diff = newGeometry.width() - oldGeometry.width();
                     if (q->effectiveLayoutDirection() == Qt::LeftToRight && oldItemEndPosition < q->contentX())
-                        listItem->setPosition(listItem->position() - diff, true);
+                        listItem->setPosition(listItem->position() - diff.width(), true);
                     else if (q->effectiveLayoutDirection() == Qt::RightToLeft && oldItemEndPosition > q->contentX())
-                        listItem->setPosition(listItem->position() + diff, true);
+                        listItem->setPosition(listItem->position() + diff.width(), true);
                 }
             }
             forceLayoutPolish();
@@ -2219,10 +2223,12 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.
 
-    Setting this value can improve the smoothness of scrolling behavior at the expense
-    of additional memory usage.  It is not a substitute for creating efficient
-    delegates; the fewer objects and bindings in a delegate, the faster a view can be
-    scrolled.
+    \note Setting this property is not a replacement for creating efficient delegates.
+    It can improve the smoothness of scrolling behavior at the expense of additional
+    memory usage. The fewer objects and bindings in a delegate, the faster a
+    view can be scrolled. It is important to realize that setting a cacheBuffer
+    will only postpone issues caused by slow-loading delegates, it is not a
+    solution for this scenario.
 
     The cacheBuffer operates outside of any display margins specified by
     displayMarginBeginning or displayMarginEnd.
@@ -3105,7 +3111,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         int i = visibleItems.count() - 1;
         while (i > 0 && visibleItems.at(i)->index == -1)
             --i;
-        if (i == 0 && visibleItems.first()->index == -1) {
+        if (i == 0 && visibleItems.constFirst()->index == -1) {
             // there are no visible items except items marked for removal
             index = visibleItems.count();
         } else if (visibleItems.at(i)->index + 1 == modelIndex
@@ -3130,7 +3136,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     qreal pos = 0;
     if (visibleItems.count()) {
         pos = index < visibleItems.count() ? visibleItems.at(index)->position()
-                                                : visibleItems.last()->endPosition()+spacing;
+                                                : visibleItems.constLast()->endPosition() + spacing;
     }
 
     // Update the indexes of the following visible items.
@@ -3145,7 +3151,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         }
     }
 
-    int prevVisibleCount = visibleItems.count();
+    bool visibleAffected = false;
     if (insertResult->visiblePos.isValid() && pos < insertResult->visiblePos) {
         // Insert items before the visible item.
         int insertionIdx = index;
@@ -3168,6 +3174,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 if (!item)
                     return false;
 
+                visibleAffected = true;
                 visibleItems.insert(insertionIdx, item);
                 if (insertionIdx == 0)
                     insertResult->changedFirstItem = true;
@@ -3199,6 +3206,9 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
 
     } else {
         qreal to = buffer + displayMarginEnd + tempPos + size();
+
+        visibleAffected = count > 0 && pos < to;
+
         for (int i = 0; i < count && pos <= to; ++i) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
@@ -3249,7 +3259,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
 
     updateVisibleIndex();
 
-    return visibleItems.count() > prevVisibleCount;
+    return visibleAffected;
 }
 
 void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
@@ -3261,7 +3271,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 
     int markerItemIndex = -1;
     for (int i=0; i<visibleItems.count(); i++) {
-        if (visibleItems[i]->index == afterModelIndex) {
+        if (visibleItems.at(i)->index == afterModelIndex) {
             markerItemIndex = i;
             break;
         }
@@ -3274,7 +3284,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
             - (removalResult.countChangeAfterVisibleItems * (averageSize + spacing));
 
     for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
-        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems[i]);
+        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
         if (!listItem->transitionScheduledOrRunning()) {
             qreal pos = listItem->position();
             listItem->setPosition(pos - sizeRemoved);
@@ -3342,7 +3352,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 */
 
 /*!
-    \qmlmethod int QtQuick::ListView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::ListView::indexAt(real x, real y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
@@ -3355,7 +3365,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 */
 
 /*!
-    \qmlmethod Item QtQuick::ListView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::ListView::itemAt(real x, real y)
 
     Returns the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is

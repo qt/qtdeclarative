@@ -44,7 +44,6 @@
 #include <private/qqmlboundsignal_p.h>
 #include <qqmlcontext.h>
 #include <private/qqmlcontext_p.h>
-#include <private/qqmlcompiler_p.h>
 #include <qqmlinfo.h>
 
 #include <QtCore/qdebug.h>
@@ -205,7 +204,7 @@ void QQmlConnections::setEnabled(bool enabled)
 
     d->enabled = enabled;
 
-    foreach (QQmlBoundSignal *s, d->boundsignals)
+    for (QQmlBoundSignal *s : qAsConst(d->boundsignals))
         s->setEnabled(d->enabled);
 
     emit enabledChanged();

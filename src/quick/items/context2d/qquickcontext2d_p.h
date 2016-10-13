@@ -126,8 +126,8 @@ public:
 
     struct State {
         State()
-            : strokeStyle(QColor("#000000"))
-            , fillStyle(QColor("#000000"))
+            : strokeStyle(QColor(Qt::black))
+            , fillStyle(QColor(Qt::black))
             , fillPatternRepeatX(false)
             , fillPatternRepeatY(false)
             , strokePatternRepeatX(false)
@@ -181,17 +181,17 @@ public:
     QQuickContext2D(QObject *parent = 0);
     ~QQuickContext2D();
 
-    QStringList contextNames() const;
-    void init(QQuickCanvasItem *canvasItem, const QVariantMap &args);
-    void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
-    void flush();
+    QStringList contextNames() const override;
+    void init(QQuickCanvasItem *canvasItem, const QVariantMap &args) override;
+    void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing) override;
+    void flush() override;
     void sync();
     QThread *thread() const { return m_thread; }
     QQuickContext2DTexture *texture() const;
-    QImage toImage(const QRectF& bounds);
+    QImage toImage(const QRectF& bounds) override;
 
-    QV4::ReturnedValue v4value() const;
-    void setV4Engine(QV4::ExecutionEngine *eng);
+    QV4::ReturnedValue v4value() const override;
+    void setV4Engine(QV4::ExecutionEngine *eng) override;
 
     QQuickCanvasItem* canvas() const { return m_canvas; }
     QQuickContext2DCommandBuffer* buffer() const { return m_buffer; }
@@ -240,8 +240,8 @@ public:
     QPainterPath createTextGlyphs(qreal x, qreal y, const QString& text);
     QQmlRefPointer<QQuickCanvasPixmap> createPixmap(const QUrl& url);
 
-    QOpenGLContext *glContext() { return m_glContext; }
-    QSurface *surface() { return m_surface.data(); }
+    QOpenGLContext *glContext() const { return m_glContext; }
+    QSurface *surface() const { return m_surface.data(); }
     void setGrabbedImage(const QImage& grab);
 
     State state;

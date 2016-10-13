@@ -44,7 +44,6 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlimport_p.h>
-#include <private/qqmlcompiler_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
@@ -490,11 +489,11 @@ QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
     Q_ASSERT(isComposite());
     if (!engine)
         return 0;
-    QQmlTypeData *td = engine->typeLoader.getType(sourceUrl());
-    if (!td || !td->isComplete())
+    QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()), QQmlRefPointer<QQmlTypeData>::Adopt);
+    if (td.isNull() || !td->isComplete())
         return 0;
-    QQmlCompiledData *cd = td->compiledData();
-    const QMetaObject *mo = cd->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+    QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
+    const QMetaObject *mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     return QQmlMetaType::qmlType(mo);
 }
 
@@ -635,7 +634,7 @@ void QQmlTypePrivate::init() const
                     QMetaObject *mmo = builder.toMetaObject();
                     mmo->d.superdata = baseMetaObject;
                     if (!metaObjects.isEmpty())
-                        metaObjects.last().metaObject->d.superdata = mmo;
+                        metaObjects.constLast().metaObject->d.superdata = mmo;
                     QQmlProxyMetaObject::ProxyData data = { mmo, t->d->extraData.cd->extFunc, 0, 0 };
                     metaObjects << data;
                 }
@@ -657,7 +656,7 @@ void QQmlTypePrivate::init() const
         if (metaObjects.isEmpty())
             mo = baseMetaObject;
         else
-            mo = metaObjects.first().metaObject;
+            mo = metaObjects.constFirst().metaObject;
 
         for (int ii = 0; !containsRevisionedAttributes && ii < mo->propertyCount(); ++ii) {
             if (isPropertyRevisioned(mo, ii))
@@ -852,7 +851,7 @@ const QMetaObject *QQmlType::metaObject() const
     if (d->metaObjects.isEmpty())
         return d->baseMetaObject;
     else
-        return d->metaObjects.first().metaObject;
+        return d->metaObjects.constFirst().metaObject;
 
 }
 
@@ -1445,11 +1444,11 @@ bool qmlProtectModule(const char *uri, int majVersion)
 
 bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri, int majorVersion)
 {
-    QQmlMetaTypeData *data = metaTypeData();
+    const QQmlMetaTypeData *data = metaTypeData();
 
     // Has any type previously been installed to this namespace?
     QHashedString nameSpace(uri);
-    foreach (const QQmlType *type, data->types)
+    for (const QQmlType *type : data->types)
         if (type->module() == nameSpace && type->majorVersion() == majorVersion)
             return true;
 
@@ -1862,7 +1861,7 @@ QQmlType *QQmlMetaType::qmlTypeFromIndex(int idx)
 
     if (idx < 0 || idx >= data->types.count())
             return 0;
-    return data->types[idx];
+    return data->types.at(idx);
 }
 
 /*!

@@ -175,10 +175,10 @@ QFileInfoList findQmlFiles(const QString &dirName)
 
     QFileInfoList ret;
     if (dir.exists()) {
-        QFileInfoList fileInfos = dir.entryInfoList(QStringList() << "*.qml",
-                                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
+        const QFileInfoList fileInfos = dir.entryInfoList(QStringList() << "*.qml",
+                                                          QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
 
-        foreach (QFileInfo fileInfo, fileInfos) {
+        for (const QFileInfo &fileInfo : fileInfos) {
             if (fileInfo.isDir())
                 ret += findQmlFiles(fileInfo.filePath());
             else if (fileInfo.fileName().length() > 0 && fileInfo.fileName().at(0).isLower())
@@ -196,9 +196,9 @@ static int displayOptionsDialog(Options *options)
     QFormLayout *layout = new QFormLayout(&dialog);
 
     QComboBox *qmlFileComboBox = new QComboBox(&dialog);
-    QFileInfoList fileInfos = findQmlFiles(":/bundle") + findQmlFiles("./qmlscene-resources");
+    const QFileInfoList fileInfos = findQmlFiles(":/bundle") + findQmlFiles("./qmlscene-resources");
 
-    foreach (QFileInfo fileInfo, fileInfos)
+    for (const QFileInfo &fileInfo : fileInfos)
         qmlFileComboBox->addItem(fileInfo.dir().dirName() + QLatin1Char('/') + fileInfo.fileName(), QVariant::fromValue(fileInfo));
 
     QCheckBox *originalCheckBox = new QCheckBox(&dialog);
@@ -319,8 +319,8 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
         QObject *dummyData = comp.create();
 
         if(comp.isError()) {
-            QList<QQmlError> errors = comp.errors();
-            foreach (const QQmlError &error, errors)
+            const QList<QQmlError> errors = comp.errors();
+            for (const QQmlError &error : errors)
                 fprintf(stderr, "%s\n", qPrintable(error.toString()));
         }
 
@@ -457,7 +457,7 @@ int main(int argc, char ** argv)
             options.applicationAttributes.append(Qt::AA_DisableHighDpiScaling);
     }
 
-    foreach (Qt::ApplicationAttribute a, options.applicationAttributes)
+    for (Qt::ApplicationAttribute a : qAsConst(options.applicationAttributes))
         QCoreApplication::setAttribute(a);
 #ifdef QT_WIDGETS_LIB
     QApplication app(argc, argv);
@@ -564,6 +564,7 @@ int main(int argc, char ** argv)
                 loadDummyDataFiles(engine, fi.path());
             }
             QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
+            QObject::connect(&engine, &QQmlEngine::exit, QCoreApplication::instance(), &QCoreApplication::exit);
             component->loadUrl(options.url);
             while (component->isLoading())
                 QCoreApplication::processEvents();

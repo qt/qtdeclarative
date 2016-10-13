@@ -59,7 +59,8 @@ static bool lint_file(const QString &filename, bool silent)
     bool success = isJavaScript ? parser.parseProgram() : parser.parse();
 
     if (!success && !silent) {
-        foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+        const auto diagnosticMessages = parser.diagnosticMessages();
+        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             qWarning("%s:%d : %s", qPrintable(filename), m.loc.startLine, qPrintable(m.message));
         }
     }
@@ -82,15 +83,15 @@ int main(int argv, char *argc[])
 
     parser.process(app);
 
-    if (parser.positionalArguments().isEmpty()) {
+    const auto positionalArguments = parser.positionalArguments();
+    if (positionalArguments.isEmpty()) {
         parser.showHelp(-1);
     }
 
     bool silent = parser.isSet(silentOption);
     bool success = true;
-    foreach (const QString &filename, parser.positionalArguments()) {
+    for (const QString &filename : positionalArguments)
         success &= lint_file(filename, silent);
-    }
 
     return success ? 0 : -1;
 }

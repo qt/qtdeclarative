@@ -27,8 +27,6 @@
 ****************************************************************************/
 #include "testtypes.h"
 
-#include <private/qqmlcompiler_p.h>
-
 static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
@@ -47,6 +45,7 @@ void registerTypes()
     qmlRegisterType<MyDotPropertyObject>("Test",1,0,"MyDotPropertyObject");
     qmlRegisterType<MyNamespace::MyNamespacedType>("Test",1,0,"MyNamespacedType");
     qmlRegisterType<MyNamespace::MySecondNamespacedType>("Test",1,0,"MySecondNamespacedType");
+    qmlRegisterUncreatableMetaObject(MyNamespace::staticMetaObject, "Test", 1, 0, "MyNamespace", "Access to enums & flags only");
     qmlRegisterType<MyParserStatus>("Test",1,0,"MyParserStatus");
     qmlRegisterType<MyGroupedObject>();
     qmlRegisterType<MyRevisionedClass>("Test",1,0,"MyRevisionedClass");
@@ -131,9 +130,10 @@ void CustomBinding::componentComplete()
 
         QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
         QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, m_target, compilationUnit->runtimeFunctions[bindingId]));
-        QQmlBinding *qmlBinding = new QQmlBinding(function, m_target, context);
 
         QQmlProperty property(m_target, name, qmlContext(this));
+        QQmlBinding *qmlBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
+                                                      function, m_target, context);
         qmlBinding->setTarget(property);
         QQmlPropertyPrivate::setBinding(property, qmlBinding);
     }

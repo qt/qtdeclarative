@@ -90,19 +90,22 @@ public:
     bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
     void setSupportsAtlasTextures(bool supports);
 
+    QString parseLog();
+
     void handleEvent(QEvent *);
     void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);
     void handleComponentComplete();
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
+    void maybeUpdateShaders();
 
 private slots:
     void propertyChanged(int mappedId);
     void sourceDestroyed(QObject *object);
     void markGeometryDirtyAndUpdate();
     void markGeometryDirtyAndUpdateIfSupportsAtlas();
-    void itemWindowChanged(QQuickWindow *w);
-    void backendChanged();
+    void shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
+                            const QByteArray &src, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
 
 private:
     QSGGuiThreadShaderEffectManager *shaderEffectManager() const;
@@ -113,8 +116,9 @@ private:
 
         NShader
     };
-    void updateShader(Shader which, const QByteArray &src);
-    void disconnectSignals(Shader which);
+    bool updateShader(Shader shaderType, const QByteArray &src);
+    void updateShaderVars(Shader shaderType);
+    void disconnectSignals(Shader shaderType);
     bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
 
     QQuickShaderEffect *m_item;
@@ -126,12 +130,15 @@ private:
     bool m_supportsAtlasTextures;
     mutable QSGGuiThreadShaderEffectManager *m_mgr;
     QByteArray m_fragShader;
+    bool m_fragNeedsUpdate;
     QByteArray m_vertShader;
+    bool m_vertNeedsUpdate;
 
     QSGShaderEffectNode::ShaderData m_shaders[NShader];
     QSGShaderEffectNode::DirtyShaderFlags m_dirty;
     QSet<int> m_dirtyConstants[NShader];
     QSet<int> m_dirtyTextures[NShader];
+    QSGGuiThreadShaderEffectManager::ShaderInfo *m_inProgress[NShader];
 
     struct SignalMapper {
         SignalMapper() : mapper(nullptr), active(false) { }

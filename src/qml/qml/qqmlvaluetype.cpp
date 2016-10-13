@@ -88,6 +88,7 @@ bool QQmlValueTypeFactoryImpl::isValueType(int idx)
             && idx != QVariant::StringList
             && idx != QMetaType::QObjectStar
             && idx != QMetaType::VoidStar
+            && idx != QMetaType::Nullptr
             && idx != QMetaType::QVariant
             && idx != QMetaType::QLocale) {
         return true;
@@ -219,7 +220,7 @@ void QQmlValueType::read(QObject *obj, int idx)
     QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
-void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags)
+void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags)
 {
     Q_ASSERT(gadgetPtr);
     int status = -1;
@@ -259,7 +260,7 @@ int QQmlValueType::metaCall(QObject *, QMetaObject::Call type, int _id, void **a
 
 QString QQmlPointFValueType::toString() const
 {
-    return QString(QLatin1String("QPointF(%1, %2)")).arg(v.x()).arg(v.y());
+    return QString::asprintf("QPointF(%g, %g)", v.x(), v.y());
 }
 
 qreal QQmlPointFValueType::x() const
@@ -306,7 +307,7 @@ void QQmlPointValueType::setY(int y)
 
 QString QQmlSizeFValueType::toString() const
 {
-    return QString(QLatin1String("QSizeF(%1, %2)")).arg(v.width()).arg(v.height());
+    return QString::asprintf("QSizeF(%g, %g)", v.width(), v.height());
 }
 
 qreal QQmlSizeFValueType::width() const
@@ -352,7 +353,7 @@ void QQmlSizeValueType::setHeight(int h)
 
 QString QQmlRectFValueType::toString() const
 {
-    return QString(QLatin1String("QRectF(%1, %2, %3, %4)")).arg(v.x()).arg(v.y()).arg(v.width()).arg(v.height());
+    return QString::asprintf("QRectF(%g, %g, %g, %g)", v.x(), v.y(), v.width(), v.height());
 }
 
 qreal QQmlRectFValueType::x() const

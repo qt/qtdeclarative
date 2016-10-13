@@ -55,6 +55,7 @@
 
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qbezier_p.h>
+#include <private/qtquickglobal_p.h>
 
 #include <QtCore/QObject>
 #include <QtGui/QPainterPath>
@@ -69,7 +70,7 @@ struct QQuickPathData
     QList<QQuickCurve*> curves;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathElement : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPathElement : public QObject
 {
     Q_OBJECT
 public:
@@ -78,7 +79,7 @@ Q_SIGNALS:
     void changed();
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathAttribute : public QQuickPathElement
+class Q_QUICK_PRIVATE_EXPORT QQuickPathAttribute : public QQuickPathElement
 {
     Q_OBJECT
 
@@ -103,7 +104,7 @@ private:
     qreal _value;
 };
 
-class Q_AUTOTEST_EXPORT QQuickCurve : public QQuickPathElement
+class Q_QUICK_PRIVATE_EXPORT QQuickCurve : public QQuickPathElement
 {
     Q_OBJECT
 
@@ -145,16 +146,16 @@ private:
     QQmlNullableValue<qreal> _relativeY;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathLine : public QQuickCurve
+class Q_QUICK_PRIVATE_EXPORT QQuickPathLine : public QQuickCurve
 {
     Q_OBJECT
 public:
     QQuickPathLine(QObject *parent=0) : QQuickCurve(parent) {}
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathQuad : public QQuickCurve
+class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
 {
     Q_OBJECT
 
@@ -179,7 +180,7 @@ public:
     void setRelativeControlY(qreal y);
     bool hasRelativeControlY();
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void controlXChanged();
@@ -194,7 +195,7 @@ private:
     QQmlNullableValue<qreal> _relativeControlY;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathCubic : public QQuickCurve
+class Q_QUICK_PRIVATE_EXPORT QQuickPathCubic : public QQuickCurve
 {
     Q_OBJECT
 
@@ -237,7 +238,7 @@ public:
     void setRelativeControl2Y(qreal y);
     bool hasRelativeControl2Y();
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void control1XChanged();
@@ -260,16 +261,16 @@ private:
     QQmlNullableValue<qreal> _relativeControl2Y;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathCatmullRomCurve : public QQuickCurve
+class Q_QUICK_PRIVATE_EXPORT QQuickPathCatmullRomCurve : public QQuickCurve
 {
     Q_OBJECT
 public:
     QQuickPathCatmullRomCurve(QObject *parent=0) : QQuickCurve(parent) {}
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathArc : public QQuickCurve
+class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged)
@@ -296,7 +297,7 @@ public:
     ArcDirection direction() const;
     void setDirection(ArcDirection direction);
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void radiusXChanged();
@@ -311,7 +312,7 @@ private:
     ArcDirection _direction;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathSvg : public QQuickCurve
+class Q_QUICK_PRIVATE_EXPORT QQuickPathSvg : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
@@ -321,7 +322,7 @@ public:
     QString path() const;
     void setPath(const QString &path);
 
-    void addToPath(QPainterPath &path, const QQuickPathData &);
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
     void pathChanged();
@@ -330,7 +331,7 @@ private:
     QString _path;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPathPercent : public QQuickPathElement
+class Q_QUICK_PRIVATE_EXPORT QQuickPathPercent : public QQuickPathElement
 {
     Q_OBJECT
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
@@ -359,7 +360,7 @@ struct QQuickCachedBezier
 };
 
 class QQuickPathPrivate;
-class Q_AUTOTEST_EXPORT QQuickPath : public QObject, public QQmlParserStatus
+class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
@@ -400,8 +401,8 @@ Q_SIGNALS:
     void startYChanged();
 
 protected:
-    virtual void componentComplete();
-    virtual void classBegin();
+    void componentComplete() override;
+    void classBegin() override;
     void disconnectPathElements();
     void connectPathElements();
     void gatherAttributes();

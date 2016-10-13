@@ -142,6 +142,7 @@ Q_QML_EXPORT int qt_v4DebuggerHook(const char *json);
 
 } // extern "C"
 
+#ifndef QT_NO_QML_DEBUGGER
 static int qt_v4BreakpointCount = 0;
 static bool qt_v4IsDebugging = true;
 static bool qt_v4IsStepping = false;
@@ -203,7 +204,7 @@ int qt_v4DebuggerHook(const char *json)
 
     QJsonDocument doc = QJsonDocument::fromJson(json);
     QJsonObject ob = doc.object();
-    QByteArray command = ob.value(QStringLiteral("command")).toString().toUtf8();
+    QByteArray command = ob.value(QLatin1String("command")).toString().toUtf8();
 
     if (command == "protocolVersion") {
         return ProtocolVersion; // Version number.
@@ -217,17 +218,17 @@ int qt_v4DebuggerHook(const char *json)
     if (command == "insertBreakpoint") {
         Breakpoint bp;
         bp.bpNumber = ++qt_v4BreakpointCount;
-        bp.lineNumber = ob.value(QStringLiteral("lineNumber")).toString().toInt();
-        bp.engineName = ob.value(QStringLiteral("engineName")).toString();
-        bp.fullName = ob.value(QStringLiteral("fullName")).toString();
-        bp.condition = ob.value(QStringLiteral("condition")).toString();
+        bp.lineNumber = ob.value(QLatin1String("lineNumber")).toString().toInt();
+        bp.engineName = ob.value(QLatin1String("engineName")).toString();
+        bp.fullName = ob.value(QLatin1String("fullName")).toString();
+        bp.condition = ob.value(QLatin1String("condition")).toString();
         qt_v4Breakpoints.append(bp);
         return bp.bpNumber;
     }
 
     if (command == "removeBreakpoint") {
-        int lineNumber = ob.value(QStringLiteral("lineNumber")).toString().toInt();
-        QString fullName = ob.value(QStringLiteral("fullName")).toString();
+        int lineNumber = ob.value(QLatin1String("lineNumber")).toString().toInt();
+        QString fullName = ob.value(QLatin1String("fullName")).toString();
         if (qt_v4Breakpoints.last().matches(fullName, lineNumber)) {
             qt_v4Breakpoints.removeLast();
             return Success;
@@ -285,6 +286,7 @@ static void qt_v4CheckForBreak(QV4::ExecutionContext *context, QV4::Value **scop
     }
 }
 
+#endif // QT_NO_QML_DEBUGGER
 // End of debugger interface
 
 using namespace QV4;
@@ -400,7 +402,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     QV4::Value **scopes = static_cast<QV4::Value **>(alloca(sizeof(QV4::Value *)*(2 + 2*scopeDepth)));
     {
-        scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->data->constants());
+        scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->constants);
         // stack gets setup in push instruction
         scopes[1] = 0;
         QV4::Heap::ExecutionContext *scope = context->d();
@@ -519,54 +521,14 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         STOREVALUE(instr.result, engine->runtime.getQmlQObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadQObjectProperty)
 
-    MOTH_BEGIN_INSTR(LoadQRealQObjectPropertyDirectly)
-            STOREVALUE(instr.result, engine->runtime.accessQObjectQRealProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
-    MOTH_END_INSTR(LoadQRealQObjectPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadQObjectQObjectPropertyDirectly)
-            STOREVALUE(instr.result, engine->runtime.accessQObjectQObjectProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
-    MOTH_END_INSTR(LoadQObjectQObjectPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadIntQObjectPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQObjectIntProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
-    MOTH_END_INSTR(LoadIntQObjectPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadBoolQObjectPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQObjectBoolProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
-    MOTH_END_INSTR(LoadQRealQObjectPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadQStringQObjectPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQObjectQStringProperty(engine, VALUE(instr.base), instr.accessors, instr.coreIndex, instr.notifyIndex));
-    MOTH_END_INSTR(LoadQStringQObjectPropertyDirectly)
-
     MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
         engine->runtime.setQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-        STOREVALUE(instr.result, engine->runtime.getQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
+        STOREVALUE(instr.result, engine->runtime.getQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectQRealPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectQRealProperty(VALUE(instr.base), instr.accessors));
-    MOTH_END_INSTR(LoadScopeObjectQRealPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectQObjectPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectQObjectProperty(VALUE(instr.base), instr.accessors));
-    MOTH_END_INSTR(LoadScopeObjectQObjectPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectIntPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectIntProperty(VALUE(instr.base), instr.accessors));
-    MOTH_END_INSTR(LoadScopeObjectIntPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectBoolPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectBoolProperty(VALUE(instr.base), instr.accessors));
-    MOTH_END_INSTR(LoadScopeObjectBoolPropertyDirectly)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectQStringPropertyDirectly)
-        STOREVALUE(instr.result, engine->runtime.accessQmlScopeObjectQStringProperty(engine, VALUE(instr.base), instr.accessors));
-    MOTH_END_INSTR(LoadScopeObjectQStringPropertyDirectly)
 
     MOTH_BEGIN_INSTR(StoreContextObjectProperty)
         engine->runtime.setQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));
@@ -574,7 +536,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(StoreContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-        STOREVALUE(instr.result, engine->runtime.getQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
+        STOREVALUE(instr.result, engine->runtime.getQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadIdObject)
@@ -944,9 +906,10 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         return VALUE(instr.result).asReturnedValue();
     MOTH_END_INSTR(Ret)
 
+#ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
         engine->current->lineNumber = instr.lineNumber;
-        QV4::Debugging::Debugger *debugger = context->engine()->debugger;
+        QV4::Debugging::Debugger *debugger = context->engine()->debugger();
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
         if (qt_v4IsDebugging)
@@ -958,6 +921,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         if (qt_v4IsDebugging)
             qt_v4CheckForBreak(context, scopes, scopeDepth);
     MOTH_END_INSTR(Line)
+#endif // QT_NO_QML_DEBUGGER
 
     MOTH_BEGIN_INSTR(LoadThis)
         VALUE(instr.result) = context->thisObject();
@@ -1010,7 +974,7 @@ void **VME::instructionJumpTable()
 QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {
     VME vme;
-    QV4::Debugging::Debugger *debugger = engine->debugger;
+    QV4::Debugging::Debugger *debugger = engine->debugger();
     if (debugger)
         debugger->enteringFunction();
     QV4::ReturnedValue retVal = vme.run(engine, code);

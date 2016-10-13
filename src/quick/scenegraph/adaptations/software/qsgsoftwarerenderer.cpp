@@ -45,6 +45,7 @@
 #include "qsgsoftwarerenderablenode_p.h"
 
 #include <QtGui/QPaintDevice>
+#include <QtGui/QBackingStore>
 #include <QElapsedTimer>
 
 Q_LOGGING_CATEGORY(lcRenderer, "qt.scenegraph.softwarecontext.renderer")
@@ -53,6 +54,8 @@ QT_BEGIN_NAMESPACE
 
 QSGSoftwareRenderer::QSGSoftwareRenderer(QSGRenderContext *context)
     : QSGAbstractSoftwareRenderer(context)
+    , m_paintDevice(nullptr)
+    , m_backingStore(nullptr)
 {
 }
 
@@ -63,6 +66,18 @@ QSGSoftwareRenderer::~QSGSoftwareRenderer()
 void QSGSoftwareRenderer::setCurrentPaintDevice(QPaintDevice *device)
 {
     m_paintDevice = device;
+    m_backingStore = nullptr;
+}
+
+QPaintDevice *QSGSoftwareRenderer::currentPaintDevice() const
+{
+    return m_paintDevice;
+}
+
+void QSGSoftwareRenderer::setBackingStore(QBackingStore *backingStore)
+{
+    m_backingStore = backingStore;
+    m_paintDevice = nullptr;
 }
 
 QRegion QSGSoftwareRenderer::flushRegion() const
@@ -82,17 +97,23 @@ void QSGSoftwareRenderer::renderScene(uint)
 
 void QSGSoftwareRenderer::render()
 {
-    if (!m_paintDevice)
+    if (!m_paintDevice && !m_backingStore)
         return;
+
+    // If there is a backingstore, set the current paint device
+    if (m_backingStore) {
+        // For HiDPI QBackingStores, the paint device is not valid
+        // until begin() has been called. See: QTBUG-55875
+        m_backingStore->beginPaint(QRegion());
+        m_paintDevice = m_backingStore->paintDevice();
+        m_backingStore->endPaint();
+    }
 
     QElapsedTimer renderTimer;
 
     setBackgroundColor(clearColor());
     setBackgroundSize(QSize(m_paintDevice->width() / m_paintDevice->devicePixelRatio(),
                             m_paintDevice->height() / m_paintDevice->devicePixelRatio()));
-
-    QPainter painter(m_paintDevice);
-    painter.setRenderHint(QPainter::Antialiasing);
 
     // Build Renderlist
     // The renderlist is created by visiting each node in the tree and when a
@@ -113,13 +134,31 @@ void QSGSoftwareRenderer::render()
     // side effect of this is that additional nodes may need to be marked dirty to
     // force a repaint.  It is also important that any item that needs to be
     // repainted only paints what is needed, via the use of clip regions.
-    optimizeRenderList();
+    const QRegion updateRegion = optimizeRenderList();
     qint64 optimizeRenderListTime = renderTimer.restart();
+
+    // If Rendering to a backingstore, prepare it to be updated
+    if (m_backingStore != nullptr) {
+        m_backingStore->beginPaint(updateRegion);
+        // It is possible that a QBackingStore's paintDevice() will change
+        // when begin() is called.
+        m_paintDevice = m_backingStore->paintDevice();
+    }
+
+    QPainter painter(m_paintDevice);
+    painter.setRenderHint(QPainter::Antialiasing);
+    auto rc = static_cast<QSGSoftwareRenderContext *>(context());
+    QPainter *prevPainter = rc->m_activePainter;
+    rc->m_activePainter = &painter;
 
     // Render the contents Renderlist
     m_flushRegion = renderNodes(&painter);
     qint64 renderTime = renderTimer.elapsed();
 
+    if (m_backingStore != nullptr)
+        m_backingStore->endPaint();
+
+    rc->m_activePainter = prevPainter;
     qCDebug(lcRenderer) << "render" << m_flushRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
 }
 

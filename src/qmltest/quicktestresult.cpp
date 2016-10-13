@@ -248,7 +248,7 @@ void QuickTestResult::setDataTag(const QString &tag)
     if (!tag.isEmpty()) {
         QTestData *data = &(QTest::newRow(tag.toUtf8().constData()));
         QTestResult::setCurrentTestData(data);
-        QTestPrivate::checkBlackLists((testCaseName() + QStringLiteral("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
+        QTestPrivate::checkBlackLists((testCaseName() + QLatin1String("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
         emit dataTagChanged();
     } else {
         QTestResult::setCurrentTestData(0);
@@ -519,7 +519,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     if (result.isEmpty()) {
         QString tmp = value->toQStringNoThrow();
         if (value->as<QV4::ArrayObject>())
-            result.append(QString::fromLatin1("[%1]").arg(tmp));
+            result += QLatin1Char('[') + tmp + QLatin1Char(']');
         else
             result.append(tmp);
     }

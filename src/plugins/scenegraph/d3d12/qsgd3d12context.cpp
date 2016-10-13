@@ -39,12 +39,15 @@
 
 #include "qsgd3d12context_p.h"
 #include "qsgd3d12rendercontext_p.h"
-#include "qsgd3d12rectanglenode_p.h"
-#include "qsgd3d12imagenode_p.h"
+#include "qsgd3d12internalrectanglenode_p.h"
+#include "qsgd3d12internalimagenode_p.h"
 #include "qsgd3d12glyphnode_p.h"
 #include "qsgd3d12layer_p.h"
 #include "qsgd3d12shadereffectnode_p.h"
 #include "qsgd3d12painternode_p.h"
+#include "qsgd3d12publicnodes_p.h"
+#include "qsgd3d12spritenode_p.h"
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -53,14 +56,14 @@ QSGRenderContext *QSGD3D12Context::createRenderContext()
     return new QSGD3D12RenderContext(this);
 }
 
-QSGRectangleNode *QSGD3D12Context::createRectangleNode()
+QSGInternalRectangleNode *QSGD3D12Context::createInternalRectangleNode()
 {
-    return new QSGD3D12RectangleNode;
+    return new QSGD3D12InternalRectangleNode;
 }
 
-QSGImageNode *QSGD3D12Context::createImageNode()
+QSGInternalImageNode *QSGD3D12Context::createInternalImageNode()
 {
-    return new QSGD3D12ImageNode;
+    return new QSGD3D12InternalImageNode;
 }
 
 QSGPainterNode *QSGD3D12Context::createPainterNode(QQuickPaintedItem *item)
@@ -75,11 +78,6 @@ QSGGlyphNode *QSGD3D12Context::createGlyphNode(QSGRenderContext *renderContext, 
 
     QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(renderContext);
     return new QSGD3D12GlyphNode(rc);
-}
-
-QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
-{
-    return nullptr;
 }
 
 QSGLayer *QSGD3D12Context::createLayer(QSGRenderContext *renderContext)
@@ -108,17 +106,37 @@ QSize QSGD3D12Context::minimumFBOSize() const
 
 QSurfaceFormat QSGD3D12Context::defaultSurfaceFormat() const
 {
-    return QSurfaceFormat::defaultFormat();
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+
+    if (QQuickWindow::hasDefaultAlphaBuffer())
+        format.setAlphaBufferSize(8);
+
+    return format;
 }
 
 QSGRendererInterface *QSGD3D12Context::rendererInterface(QSGRenderContext *renderContext)
 {
-    QSGD3D12RenderContext *rc = static_cast<QSGD3D12RenderContext *>(renderContext);
-    if (!rc->engine()) {
-        qWarning("No D3D12 engine available yet (no render thread due to window not exposed?)");
-        return nullptr;
-    }
-    return rc->engine();
+    return static_cast<QSGD3D12RenderContext *>(renderContext);
+}
+
+QSGRectangleNode *QSGD3D12Context::createRectangleNode()
+{
+    return new QSGD3D12RectangleNode;
+}
+
+QSGImageNode *QSGD3D12Context::createImageNode()
+{
+    return new QSGD3D12ImageNode;
+}
+
+QSGNinePatchNode *QSGD3D12Context::createNinePatchNode()
+{
+    return new QSGD3D12NinePatchNode;
+}
+
+QSGSpriteNode *QSGD3D12Context::createSpriteNode()
+{
+    return new QSGD3D12SpriteNode;
 }
 
 QT_END_NAMESPACE

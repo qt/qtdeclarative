@@ -52,7 +52,7 @@ class QQuickPaintedItemTextureProvider : public QSGTextureProvider
 {
 public:
     QSGPainterNode *node;
-    QSGTexture *texture() const { return node ? node->texture() : 0; }
+    QSGTexture *texture() const override { return node ? node->texture() : 0; }
     void fireTextureChanged() { emit textureChanged(); }
 };
 

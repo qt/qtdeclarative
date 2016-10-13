@@ -74,7 +74,7 @@ Q_SIGNALS:
     void readyRead();
     void invalidPacket();
 
-private Q_SLOTS:
+private:
     void aboutToClose();
     void bytesWritten(qint64 bytes);
     void readyToRead();

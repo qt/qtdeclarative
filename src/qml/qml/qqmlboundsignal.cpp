@@ -51,9 +51,9 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qqmlcompiler_p.h>
 #include "qqmlinfo.h"
 
+#include <private/qjsvalue_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
@@ -80,8 +80,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 
     // Add some leading whitespace to account for the binding's column offset.
     // It's 2 off because a, we start counting at 1 and b, the '(' below is not counted.
-    function.fill(QChar(QChar::Space), qMax(column, (quint16)2) - 2);
-    function += QStringLiteral("(function ") + handlerName + QLatin1Char('(');
+    function += QString(qMax(column, (quint16)2) - 2, QChar(QChar::Space))
+              + QLatin1String("(function ") + handlerName + QLatin1Char('(');
 
     if (parameterString.isEmpty()) {
         QString error;
@@ -97,7 +97,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     } else
         function += parameterString;
 
-    function += QStringLiteral(") { ") + expression + QStringLiteral(" })");
+    function += QLatin1String(") { ") + expression + QLatin1String(" })");
     m_function.set(v4, evalFunction(context(), scopeObject(), function, fileName, line));
 
     if (m_function.isNullOrUndefined())
@@ -206,10 +206,10 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-    QVarLengthArray<int, 9> dummy;
+    QQmlMetaObject::ArgTypeStorage storage;
     //TODO: lookup via signal index rather than method index as an optimization
     int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, dummy, 0);
+    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, 0);
     int argCount = argsTypes ? *argsTypes : 0;
 
     QV4::ScopedCallData callData(scope, argCount);
@@ -218,7 +218,9 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         //### ideally we would use metaTypeToJS, however it currently gives different results
         //    for several cases (such as QVariant type and QObject-derived types)
         //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
-        if (type == QMetaType::QVariant) {
+        if (type == qMetaTypeId<QJSValue>()) {
+            callData->args[ii] = *QJSValuePrivate::getValue(reinterpret_cast<QJSValue *>(a[ii + 1]));
+        } else if (type == QMetaType::QVariant) {
             callData->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
         } else if (type == QMetaType::Int) {
             //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
@@ -235,7 +237,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         }
     }
 
-    QQmlJavaScriptExpression::evaluate(callData, 0);
+    QQmlJavaScriptExpression::evaluate(callData, 0, scope);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -257,7 +259,7 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
         callData->args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
-    QQmlJavaScriptExpression::evaluate(callData, 0);
+    QQmlJavaScriptExpression::evaluate(callData, 0, scope);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

@@ -53,11 +53,13 @@
 
 #include "qquickitemview_p.h"
 
+#include <private/qtquickglobal_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickListView;
 class QQuickListViewPrivate;
-class Q_AUTOTEST_EXPORT QQuickViewSection : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickViewSection : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
@@ -82,7 +84,7 @@ public:
 
     enum LabelPositioning { InlineLabels = 0x01, CurrentLabelAtStart = 0x02, NextLabelAtEnd = 0x04 };
     Q_ENUM(LabelPositioning)
-    int labelPositioning() { return m_labelPositioning; }
+    int labelPositioning() const { return m_labelPositioning; }
     void setLabelPositioning(int pos);
 
 Q_SIGNALS:
@@ -103,7 +105,7 @@ private:
 
 class QQmlInstanceModel;
 class QQuickListViewAttached;
-class Q_AUTOTEST_EXPORT QQuickListView : public QQuickItemView
+class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickListView)

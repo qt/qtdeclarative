@@ -90,9 +90,19 @@ public:
 
         QByteArray name;
         QVariant value;
+        int propertyIndex = -1;
         SpecialType specialType;
 
         bool operator == (const UniformData &other) const;
+
+        void setValueFromProperty(QObject *item, const QMetaObject *itemMetaObject)
+        {
+            if (propertyIndex == -1) {
+                value = item->property(name);
+            } else {
+                value = itemMetaObject->property(propertyIndex).read(item);
+            }
+        }
     };
 
     explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = 0);

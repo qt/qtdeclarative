@@ -39,28 +39,21 @@
 
 #include "qsgsoftwarecontext_p.h"
 
-#include "qsgsoftwarerectanglenode_p.h"
-#include "qsgsoftwareimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarerenderer_p.h"
+#include "qsgsoftwarespritenode_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
 
 #include <QtGui/QWindow>
-
-#include <QtQuick/QSGFlatColorMaterial>
-#include <QtQuick/QSGVertexColorMaterial>
-#include <QtQuick/QSGOpaqueTextureMaterial>
-#include <QtQuick/QSGTextureMaterial>
-
-#ifndef QSG_NO_RENDERER_TIMING
-static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
-#endif
+#include <QtQuick/private/qquickwindow_p.h>
 
 // Used for very high-level info about the renderering and gl context
 // Includes GL_VERSION, type of render loop, atlas size, etc.
@@ -90,21 +83,23 @@ QT_BEGIN_NAMESPACE
 QSGSoftwareRenderContext::QSGSoftwareRenderContext(QSGContext *ctx)
     : QSGRenderContext(ctx)
     , m_initialized(false)
+    , m_activePainter(nullptr)
 {
 }
+
 QSGSoftwareContext::QSGSoftwareContext(QObject *parent)
     : QSGContext(parent)
 {
 }
 
-QSGRectangleNode *QSGSoftwareContext::createRectangleNode()
+QSGInternalRectangleNode *QSGSoftwareContext::createInternalRectangleNode()
 {
-    return new QSGSoftwareRectangleNode();
+    return new QSGSoftwareInternalRectangleNode();
 }
 
-QSGImageNode *QSGSoftwareContext::createImageNode()
+QSGInternalImageNode *QSGSoftwareContext::createInternalImageNode()
 {
-    return new QSGSoftwareImageNode();
+    return new QSGSoftwareInternalImageNode();
 }
 
 QSGPainterNode *QSGSoftwareContext::createPainterNode(QQuickPaintedItem *item)
@@ -117,11 +112,6 @@ QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, bool pre
     Q_UNUSED(rc);
     Q_UNUSED(preferNativeGlyphNode);
     return new QSGSoftwareGlyphNode();
-}
-
-QSGNinePatchNode *QSGSoftwareContext::createNinePatchNode()
-{
-    return new QSGSoftwareNinePatchNode();
 }
 
 QSGLayer *QSGSoftwareContext::createLayer(QSGRenderContext *renderContext)
@@ -148,7 +138,8 @@ void QSGSoftwareRenderContext::initializeIfNeeded()
 
 void QSGSoftwareRenderContext::invalidate()
 {
-    QSGRenderContext::invalidate();
+    m_sg->renderContextInvalidated(this);
+    emit invalidated();
 }
 
 QSGTexture *QSGSoftwareRenderContext::createTexture(const QImage &image, uint flags) const
@@ -167,10 +158,35 @@ void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
     renderer->renderScene(fbo);
 }
 
+int QSGSoftwareRenderContext::maxTextureSize() const
+{
+    return 2048;
+}
+
 QSGRendererInterface *QSGSoftwareContext::rendererInterface(QSGRenderContext *renderContext)
 {
     Q_UNUSED(renderContext);
     return this;
+}
+
+QSGRectangleNode *QSGSoftwareContext::createRectangleNode()
+{
+    return new QSGSoftwareRectangleNode;
+}
+
+QSGImageNode *QSGSoftwareContext::createImageNode()
+{
+    return new QSGSoftwareImageNode;
+}
+
+QSGNinePatchNode *QSGSoftwareContext::createNinePatchNode()
+{
+    return new QSGSoftwareNinePatchNode;
+}
+
+QSGSpriteNode *QSGSoftwareContext::createSpriteNode()
+{
+    return new QSGSoftwareSpriteNode;
 }
 
 QSGRendererInterface::GraphicsApi QSGSoftwareContext::graphicsApi() const
@@ -191,6 +207,14 @@ QSGRendererInterface::ShaderCompilationTypes QSGSoftwareContext::shaderCompilati
 QSGRendererInterface::ShaderSourceTypes QSGSoftwareContext::shaderSourceType() const
 {
     return 0;
+}
+
+void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) const
+{
+    if (resource == Painter && window && window->isSceneGraphInitialized())
+        return static_cast<QSGSoftwareRenderContext *>(QQuickWindowPrivate::get(window)->context)->m_activePainter;
+
+    return nullptr;
 }
 
 QT_END_NAMESPACE

@@ -56,7 +56,6 @@
 #include <private/qqmlengine_p.h>
 #include <private/qfieldlist_p.h>
 #include <private/qflagpointer_p.h>
-#include <private/qdeletewatcher_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -76,7 +75,7 @@ public:
 
     QVariant value(bool *isUndefined = 0);
 
-    QV4::ReturnedValue v4value(bool *isUndefined = 0);
+    void v4value(bool *isUndefined, QV4::Scope &scope);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);
@@ -86,8 +85,8 @@ public:
     bool expressionFunctionValid:1;
 
     // Inherited from QQmlJavaScriptExpression
-    virtual QString expressionIdentifier();
-    virtual void expressionChanged();
+    QString expressionIdentifier() override;
+    void expressionChanged() override;
 
     QString expression;
 

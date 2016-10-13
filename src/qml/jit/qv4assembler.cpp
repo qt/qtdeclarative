@@ -79,20 +79,87 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     }
 }
 
+void CompilationUnit::prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit)
+{
+    const int codeAlignment = 16;
+    quint64 offset = WTF::roundUpToMultipleOf(codeAlignment, unit->unitSize);
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        CompiledData::Function *compiledFunction = const_cast<CompiledData::Function *>(unit->functionAt(i));
+        compiledFunction->codeOffset = offset;
+        compiledFunction->codeSize = codeRefs.at(i).size();
+        offset = WTF::roundUpToMultipleOf(codeAlignment, offset + compiledFunction->codeSize);
+    }
+}
+
+bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString)
+{
+    Q_ASSERT(device->pos() == unit->unitSize);
+    Q_ASSERT(device->atEnd());
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+
+    QByteArray padding;
+
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        const CompiledData::Function *compiledFunction = unit->functionAt(i);
+
+        if (device->pos() > qint64(compiledFunction->codeOffset)) {
+            *errorString = QStringLiteral("Invalid state of cache file to write.");
+            return false;
+        }
+
+        const quint64 paddingSize = compiledFunction->codeOffset - device->pos();
+        padding.fill(0, paddingSize);
+        qint64 written = device->write(padding);
+        if (written != padding.size()) {
+            *errorString = device->errorString();
+            return false;
+        }
+
+        const void *undecoratedCodePtr = codeRefs.at(i).code().dataLocation();
+        written = device->write(reinterpret_cast<const char *>(undecoratedCodePtr), compiledFunction->codeSize);
+        if (written != qint64(compiledFunction->codeSize)) {
+            *errorString = device->errorString();
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    Q_UNUSED(errorString);
+    codeRefs.resize(data->functionTableSize);
+
+    const char *basePtr = reinterpret_cast<const char *>(data);
+
+    for (uint i = 0; i < data->functionTableSize; ++i) {
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+        void *codePtr = const_cast<void *>(reinterpret_cast<const void *>(basePtr + compiledFunction->codeOffset));
+        JSC::MacroAssemblerCodeRef codeRef = JSC::MacroAssemblerCodeRef::createSelfManagedCodeRef(JSC::MacroAssemblerCodePtr(codePtr));
+        JSC::ExecutableAllocator::makeExecutable(codePtr, compiledFunction->codeSize);
+        codeRefs[i] = codeRef;
+    }
+
+    return true;
+}
+
 const Assembler::VoidType Assembler::Void;
 
 Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
-    : _constTable(this)
-    , _function(function)
+    : _function(function)
     , _nextBlock(0)
     , _executableAllocator(executableAllocator)
     , _isel(isel)
 {
+    _addrs.resize(_function->basicBlockCount());
+    _patches.resize(_function->basicBlockCount());
+    _labelPatches.resize(_function->basicBlockCount());
 }
 
 void Assembler::registerBlock(IR::BasicBlock* block, IR::BasicBlock *nextBlock)
 {
-    _addrs[block] = label();
+    _addrs[block->index()] = label();
     catchBlock = block->catchBlock;
     _nextBlock = nextBlock;
 }
@@ -102,12 +169,12 @@ void Assembler::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
     Q_UNUSED(current);
 
     if (target != _nextBlock)
-        _patches[target].append(jump());
+        _patches[target->index()].push_back(jump());
 }
 
 void Assembler::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
 {
-    _patches[targetBlock].append(targetJump);
+    _patches[targetBlock->index()].push_back(targetJump);
 }
 
 void Assembler::addPatch(DataLabelPtr patch, Label target)
@@ -115,12 +182,12 @@ void Assembler::addPatch(DataLabelPtr patch, Label target)
     DataLabelPatch p;
     p.dataLabel = patch;
     p.target = target;
-    _dataLabelPatches.append(p);
+    _dataLabelPatches.push_back(p);
 }
 
 void Assembler::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
 {
-    _labelPatches[target].append(patch);
+    _labelPatches[target->index()].push_back(patch);
 }
 
 void Assembler::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
@@ -211,6 +278,19 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
+}
+
+Assembler::Address Assembler::loadConstant(IR::Const *c, RegisterID baseReg)
+{
+    return loadConstant(convertToValue(c), baseReg);
+}
+
+Assembler::Address Assembler::loadConstant(const Primitive &v, RegisterID baseReg)
+{
+    loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), baseReg);
+    loadPtr(Address(baseReg, qOffsetOf(QV4::Heap::ExecutionContext, constantTable)), baseReg);
+    const int index = _isel->jsUnitGenerator()->registerConstant(v.asReturnedValue());
+    return Address(baseReg, index * sizeof(QV4::Value));
 }
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)

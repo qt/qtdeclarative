@@ -53,6 +53,7 @@
 
 #include "qquickitem.h"
 
+#include <private/qtquickglobal_p.h>
 #include <private/qquickpath_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +62,7 @@ class QQmlChangeSet;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;
-class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
 {
     Q_OBJECT
 
@@ -97,7 +98,7 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
 
 public:
-    QQuickPathView(QQuickItem *parent=0);
+    QQuickPathView(QQuickItem *parent = nullptr);
     virtual ~QQuickPathView();
 
     QVariant model() const;
@@ -116,7 +117,7 @@ public:
 
     QQmlComponent *highlight() const;
     void setHighlight(QQmlComponent *highlight);
-    QQuickItem *highlightItem();
+    QQuickItem *highlightItem() const;
 
     enum HighlightRangeMode { NoHighlightRange, ApplyRange, StrictlyEnforceRange };
     Q_ENUM(HighlightRangeMode)
@@ -254,7 +255,7 @@ public:
     QQuickPathViewAttached(QObject *parent);
     ~QQuickPathViewAttached();
 
-    QQuickPathView *view() { return m_view; }
+    QQuickPathView *view() const { return m_view; }
 
     bool isCurrentItem() const { return m_isCurrent; }
     void setIsCurrentItem(bool c) {

@@ -68,8 +68,15 @@ QT_BEGIN_NAMESPACE
 // number of nodes, and join decorations in neighbouring items
 
 class QQuickTextNodeEngine {
-
 public:
+    enum Decoration {
+        NoDecoration = 0x0,
+        Underline    = 0x1,
+        Overline     = 0x2,
+        StrikeOut    = 0x4,
+        Background   = 0x8
+    };
+    Q_DECLARE_FLAGS(Decorations, Decoration)
 
     enum SelectionState {
         Unselected,
@@ -79,26 +86,26 @@ public:
     struct BinaryTreeNode {
 
         BinaryTreeNode()
-            : selectionState(Unselected), clipNode(0), decorations(QQuickTextNode::NoDecoration)
+            : selectionState(Unselected), clipNode(0), decorations(Decoration::NoDecoration)
             , ascent(0.0), leftChildIndex(-1), rightChildIndex(-1)
         {
         }
 
         BinaryTreeNode(const QRectF &brect, const QImage &i, SelectionState selState, qreal a)
-            : boundingRect(brect), selectionState(selState), clipNode(0), decorations(QQuickTextNode::NoDecoration)
+            : boundingRect(brect), selectionState(selState), clipNode(0), decorations(Decoration::NoDecoration)
             , image(i), ascent(a), leftChildIndex(-1), rightChildIndex(-1)
         {
         }
 
         BinaryTreeNode(const QGlyphRun &g, SelectionState selState, const QRectF &brect,
-                       const QQuickTextNode::Decorations &decs, const QColor &c, const QColor &bc,
+                       const Decorations &decs, const QColor &c, const QColor &bc,
                        const QPointF &pos, qreal a);
 
         QGlyphRun glyphRun;
         QRectF boundingRect;
         SelectionState selectionState;
         QQuickDefaultClipNode *clipNode;
-        QQuickTextNode::Decorations decorations;
+        Decorations decorations;
         QColor color;
         QColor backgroundColor;
         QPointF position;
@@ -114,7 +121,7 @@ public:
         { insert(binaryTree, BinaryTreeNode(rect, image, selectionState, ascent)); }
 
         static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
-                           QQuickTextNode::Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QPointF &position);
+                           Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QPointF &position);
         static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const BinaryTreeNode &binaryTreeNode);
         static void inOrder(const QVarLengthArray<BinaryTreeNode, 16> &binaryTree, QVarLengthArray<int> *sortedIndexes, int currentIndex = 0);
     };

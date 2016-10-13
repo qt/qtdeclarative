@@ -61,18 +61,18 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlAccessors;
 class QQmlEnginePrivate;
 
 namespace QV4 {
 
+class EvalISelFactory;
 class ExecutableAllocator;
 struct Function;
 
 class Q_QML_PRIVATE_EXPORT EvalInstructionSelection
 {
 public:
-    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory);
     virtual ~EvalInstructionSelection() = 0;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile(bool generateUnitData = true);
@@ -105,23 +105,44 @@ protected:
 class Q_QML_PRIVATE_EXPORT EvalISelFactory
 {
 public:
+    EvalISelFactory(const QString &codeGeneratorName) : codeGeneratorName(codeGeneratorName) {}
     virtual ~EvalISelFactory() = 0;
     virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
     virtual bool jitCompileRegexps() const = 0;
+    virtual QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() = 0;
+
+    const QString codeGeneratorName;
 };
 
 namespace IR {
-class Q_QML_PRIVATE_EXPORT IRDecoder: protected IR::StmtVisitor
+class Q_QML_PRIVATE_EXPORT IRDecoder
 {
 public:
     IRDecoder() : _function(0) {}
     virtual ~IRDecoder() = 0;
 
-    virtual void visitPhi(IR::Phi *) {}
+    void visit(Stmt *s)
+    {
+        if (auto e = s->asExp()) {
+            visitExp(e);
+        } else if (auto m = s->asMove()) {
+            visitMove(m);
+        } else if (auto j = s->asJump()) {
+            visitJump(j);
+        } else if (auto c = s->asCJump()) {
+            visitCJump(c);
+        } else if (auto r = s->asRet()) {
+            visitRet(r);
+        } else if (auto p = s->asPhi()) {
+            visitPhi(p);
+        } else {
+            Q_UNREACHABLE();
+        }
+    }
 
-public: // visitor methods for StmtVisitor:
-    virtual void visitMove(IR::Move *s);
-    virtual void visitExp(IR::Exp *s);
+private: // visitor methods for StmtVisitor:
+    void visitMove(IR::Move *s);
+    void visitExp(IR::Exp *s);
 
 public: // to implement by subclasses:
     virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result) = 0;
@@ -166,8 +187,8 @@ public: // to implement by subclasses:
     virtual void setActivationProperty(IR::Expr *source, const QString &targetName) = 0;
     virtual void initClosure(IR::Closure *closure, IR::Expr *target) = 0;
     virtual void getProperty(IR::Expr *base, const QString &name, IR::Expr *target) = 0;
-    virtual void getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target) = 0;
-    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, QQmlPropertyData *property, int index, IR::Expr *target) = 0;
+    virtual void getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target) = 0;
+    virtual void getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target) = 0;
     virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &targetName) = 0;
     virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex) = 0;
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex) = 0;
@@ -179,6 +200,11 @@ public: // to implement by subclasses:
     virtual void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target) = 0;
 
 protected:
+    virtual void visitJump(IR::Jump *) = 0;
+    virtual void visitCJump(IR::CJump *) = 0;
+    virtual void visitRet(IR::Ret *) = 0;
+    virtual void visitPhi(IR::Phi *) {}
+
     virtual void callBuiltin(IR::Call *c, IR::Expr *result);
 
     IR::Function *_function; // subclass needs to set

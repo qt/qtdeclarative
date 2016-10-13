@@ -43,7 +43,7 @@
 #include <machine/ieee.h>
 #endif
 
-#if OS(QNX)
+#if OS(QNX) && defined(_CPPLIB_VER)
 // FIXME: Look into a way to have cmath import its functions into both the standard and global
 // namespace. For now, we include math.h since the QNX cmath header only imports its functions
 // into the standard namespace.
@@ -106,7 +106,7 @@ inline bool isinf(double x) { return !finite(x) && !isnand(x); }
 
 #endif
 
-#if OS(OPENBSD)
+#if OS(OPENBSD) && __cplusplus < 201103L
 
 namespace std {
 

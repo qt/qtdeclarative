@@ -80,7 +80,10 @@ Note that QML makes the following modifications to native objects:
 QML implements the following restrictions for JavaScript code:
 
 \list
-\li JavaScript code cannot modify the global object.
+\li JavaScript code written in a \c .qml file cannot modify the global object.
+    JavaScript code in a .js file can modify the global object,
+    and those modifications will be visible to the .qml file when
+    \l {Importing a JavaScript Resource from a QML Document}{imported}.
 
 In QML, the global object is constant - existing properties cannot be modified
 or deleted, and no new properties may be created.
@@ -110,7 +113,7 @@ console.log("Result: " + a);
 \endcode
 
 Any attempt to modify the global object - either implicitly or explicitly - will
-cause an exception.  If uncaught, this will result in an warning being printed,
+cause an exception.  If uncaught, this will result in a warning being printed,
 that includes the file and line number of the offending code.
 
 \li Global code is run in a reduced scope.
@@ -120,7 +123,7 @@ code, it is executed in a scope that contains only the external file itself and
 the global object.  That is, it will not have access to the QML objects and
 properties it \l {Scope and Naming Resolution}{normally would}.
 
-Global code that only accesses script local variable is permitted.  This is an
+Global code that only accesses script local variables is permitted.  This is an
 example of valid global code.
 
 \code

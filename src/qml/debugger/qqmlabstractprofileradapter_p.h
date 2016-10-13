@@ -59,6 +59,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_QML_DEBUGGER
+
 class QQmlProfilerService;
 class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
@@ -113,6 +115,8 @@ public:
 };
 
 #define QQmlAbstractProfilerAdapterFactory_iid "org.qt-project.Qt.QQmlAbstractProfilerAdapterFactory"
+
+#endif // QT_NO_QML_DEBUGGER
 
 QT_END_NAMESPACE
 

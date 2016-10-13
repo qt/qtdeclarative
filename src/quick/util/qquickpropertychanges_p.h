@@ -78,7 +78,7 @@ public:
     bool isExplicit() const;
     void setIsExplicit(bool);
 
-    virtual ActionList actions();
+    ActionList actions() override;
 
     bool containsProperty(const QString &name) const;
     bool containsValue(const QString &name) const;
@@ -103,8 +103,8 @@ public:
 
     void verifyList(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding);
 
-    virtual void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props);
-    virtual void applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
 

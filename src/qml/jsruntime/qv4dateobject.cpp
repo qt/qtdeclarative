@@ -565,7 +565,7 @@ static inline QString ToString(double t)
 {
     if (std::isnan(t))
         return QStringLiteral("Invalid Date");
-    QString str = ToDateTime(t, Qt::LocalTime).toString() + QStringLiteral(" GMT");
+    QString str = ToDateTime(t, Qt::LocalTime).toString() + QLatin1String(" GMT");
     double tzoffset = LocalTZA + DaylightSavingTA(t);
     if (tzoffset) {
         int hours = static_cast<int>(::fabs(tzoffset) / 1000 / 60 / 60);
@@ -639,6 +639,28 @@ Heap::DateObject::DateObject(const QDateTime &date)
     this->date = date.isValid() ? date.toMSecsSinceEpoch() : qt_qnan();
 }
 
+Heap::DateObject::DateObject(const QTime &time)
+{
+    if (!time.isValid()) {
+        date = qt_qnan();
+        return;
+    }
+
+    /* All programmers know that stuff starts at 0. Whatever that may mean in this context (and
+     * local timezone), it's before the epoch, so there is defenitely no DST problem. Specifically:
+     * you can't start with a date before the epoch, add some[*] hours, and end up with a date
+     * after. That's a problem for timezones where new year happens during DST, like
+     * Australia/Hobart, because we have to ignore DST before the epoch (but honor it after the
+     * epoch).
+     *
+     * [*] Well, when "some" is in the range 0-24. If you add something like 1M then this might
+     *     still happen.
+     */
+    static const double d = MakeDay(0, 0, 0);
+    double t = MakeTime(time.hour(), time.minute(), time.second(), time.msec());
+    date = TimeClip(UTC(MakeDate(d, t)));
+}
+
 QDateTime DateObject::toQDateTime() const
 {
     return ToDateTime(date(), Qt::LocalTime);
@@ -651,9 +673,8 @@ Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue DateCtor::construct(const Managed *m, CallData *callData)
+void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const DateCtor *>(m)->engine());
     double t = 0;
 
     if (callData->argc == 0)
@@ -687,13 +708,13 @@ ReturnedValue DateCtor::construct(const Managed *m, CallData *callData)
         t = TimeClip(UTC(t));
     }
 
-    return Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
+    scope.result = Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
 }
 
-ReturnedValue DateCtor::call(const Managed *m, CallData *)
+void DateCtor::call(const Managed *m, Scope &scope, CallData *)
 {
     double t = currentTime();
-    return static_cast<const DateCtor *>(m)->engine()->newString(ToString(t))->asReturnedValue();
+    scope.result = static_cast<const DateCtor *>(m)->engine()->newString(ToString(t));
 }
 
 void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -1311,7 +1332,8 @@ ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 
     ScopedCallData callData(scope);
     callData->thisObject = ctx->thisObject();
-    return toIso->call(callData);
+    toIso->call(scope, callData);
+    return scope.result.asReturnedValue();
 }
 
 void DatePrototype::timezoneUpdated()

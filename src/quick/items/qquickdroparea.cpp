@@ -235,7 +235,7 @@ bool QQuickDropAreaPrivate::hasMatchingKey(const QStringList &keys) const
         return true;
 
     QRegExp copy = keyRegExp;
-    foreach (const QString &key, keys) {
+    for (const QString &key : keys) {
         if (copy.exactMatch(key))
             return true;
     }
@@ -513,7 +513,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     easily be translated into a QByteArray. \a format should be one contained in the \l formats property.
 */
 
-QObject *QQuickDropEvent::source()
+QObject *QQuickDropEvent::source() const
 {
     if (const QQuickDragMimeData *dragMime = qobject_cast<const QQuickDragMimeData *>(event->mimeData()))
         return dragMime->source();

@@ -277,6 +277,7 @@ Item {
         }
 
         function test_doublevalidators(row) {
+            txtdoublevalidator.validator.locale = "C"
             compare(txtdoublevalidator.validator.top, 2.0)
             compare(txtdoublevalidator.validator.bottom, 1.0)
             txtdoublevalidator.text = row.testnumber;

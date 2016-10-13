@@ -6,7 +6,6 @@ SOURCES += \
     $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
     $$PWD/qv4persistent.cpp \
-    $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
     $$PWD/qv4identifier.cpp \
     $$PWD/qv4identifiertable.cpp \
@@ -40,10 +39,11 @@ SOURCES += \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4vme_moth.cpp \
-    $$PWD/qv4profiling.cpp \
     $$PWD/qv4arraybuffer.cpp \
     $$PWD/qv4typedarray.cpp \
     $$PWD/qv4dataview.cpp
+
+!contains(QT_CONFIG, no-qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \
@@ -83,7 +83,6 @@ HEADERS += \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4scopedvalue_p.h \
-    $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4sequenceobject_p.h \
     $$PWD/qv4include_p.h \
@@ -102,6 +101,7 @@ HEADERS += \
     $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4string_p.h \
+    $$PWD/qv4util_p.h \
     $$PWD/qv4value_p.h
 
 SOURCES += \
@@ -111,4 +111,8 @@ SOURCES += \
 
 valgrind {
     DEFINES += V4_USE_VALGRIND
+}
+
+heaptrack {
+    DEFINES += V4_USE_HEAPTRACK
 }

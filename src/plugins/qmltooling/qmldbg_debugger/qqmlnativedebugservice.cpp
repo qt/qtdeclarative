@@ -143,15 +143,15 @@ public:
 void BreakPointHandler::handleSetBreakpoint(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("SET BREAKPOINT" << arguments);
-    QString type = arguments.value(QStringLiteral("type")).toString();
+    QString type = arguments.value(QLatin1String("type")).toString();
 
-    QString fileName = arguments.value(QStringLiteral("file")).toString();
+    QString fileName = arguments.value(QLatin1String("file")).toString();
     if (fileName.isEmpty()) {
         setError(response, QStringLiteral("breakpoint has no file name"));
         return;
     }
 
-    int line = arguments.value(QStringLiteral("line")).toInt(-1);
+    int line = arguments.value(QLatin1String("line")).toInt(-1);
     if (line < 0) {
         setError(response, QStringLiteral("breakpoint has an invalid line number"));
         return;
@@ -161,9 +161,9 @@ void BreakPointHandler::handleSetBreakpoint(QJsonObject *response, const QJsonOb
     bp.id = m_lastBreakpoint++;
     bp.fileName = fileName.mid(fileName.lastIndexOf('/') + 1);
     bp.lineNumber = line;
-    bp.enabled  = arguments.value(QStringLiteral("enabled")).toBool(true);
-    bp.condition = arguments.value(QStringLiteral("condition")).toString();
-    bp.ignoreCount = arguments.value(QStringLiteral("ignorecount")).toInt();
+    bp.enabled  = arguments.value(QLatin1String("enabled")).toBool(true);
+    bp.condition = arguments.value(QLatin1String("condition")).toString();
+    bp.ignoreCount = arguments.value(QLatin1String("ignorecount")).toInt();
     m_breakPoints.append(bp);
 
     m_haveBreakPoints = true;
@@ -174,7 +174,7 @@ void BreakPointHandler::handleSetBreakpoint(QJsonObject *response, const QJsonOb
 
 void BreakPointHandler::handleRemoveBreakpoint(QJsonObject *response, const QJsonObject &arguments)
 {
-    int id = arguments.value(QStringLiteral("id")).toInt();
+    int id = arguments.value(QLatin1String("id")).toInt();
     removeBreakPoint(id);
     response->insert(QStringLiteral("id"), id);
 }
@@ -208,7 +208,7 @@ private:
 
     void handleDebuggerDeleted(QObject *debugger);
 
-    QV4::ReturnedValue evaluateExpression(QV4::Scope &scope, const QString &expression);
+    void evaluateExpression(QV4::Scope &scope, const QString &expression);
     bool checkCondition(const QString &expression);
 
     QStringList breakOnSignals;
@@ -241,12 +241,11 @@ private:
 bool NativeDebugger::checkCondition(const QString &expression)
 {
     QV4::Scope scope(m_engine);
-    QV4::ReturnedValue result = evaluateExpression(scope, expression);
-    QV4::ScopedValue val(scope, result);
-    return val->booleanValue();
+    evaluateExpression(scope, expression);
+    return scope.result.booleanValue();
 }
 
-QV4::ReturnedValue NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expression)
+void NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expression)
 {
     m_runningJob = true;
 
@@ -261,12 +260,10 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(QV4::Scope &scope, const Q
     // That is a side-effect of inheritContext.
     script.inheritContext = true;
     script.parse();
-    QV4::ScopedValue result(scope);
     if (!m_engine->hasException)
-        result = script.run();
+        scope.result = script.run();
 
     m_runningJob = false;
-    return result->asReturnedValue();
 }
 
 NativeDebugger::NativeDebugger(QQmlNativeDebugServiceImpl *service, QV4::ExecutionEngine *engine)
@@ -290,7 +287,7 @@ void NativeDebugger::signalEmitted(const QString &signal)
     //Normalize to Lower case.
     QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
 
-    foreach (const QString &signal, breakOnSignals) {
+    for (const QString &signal : qAsConst(breakOnSignals)) {
         if (signal == signalName) {
             // TODO: pause debugger
             break;
@@ -301,19 +298,19 @@ void NativeDebugger::signalEmitted(const QString &signal)
 void NativeDebugger::handleCommand(QJsonObject *response, const QString &cmd,
                                    const QJsonObject &arguments)
 {
-    if (cmd == QStringLiteral("backtrace"))
+    if (cmd == QLatin1String("backtrace"))
         handleBacktrace(response, arguments);
-    else if (cmd == QStringLiteral("variables"))
+    else if (cmd == QLatin1String("variables"))
         handleVariables(response, arguments);
-    else if (cmd == QStringLiteral("expressions"))
+    else if (cmd == QLatin1String("expressions"))
         handleExpressions(response, arguments);
-    else if (cmd == QStringLiteral("stepin"))
+    else if (cmd == QLatin1String("stepin"))
         handleContinue(response, StepIn);
-    else if (cmd == QStringLiteral("stepout"))
+    else if (cmd == QLatin1String("stepout"))
         handleContinue(response, StepOut);
-    else if (cmd == QStringLiteral("stepover"))
+    else if (cmd == QLatin1String("stepover"))
         handleContinue(response, StepOver);
-    else if (cmd == QStringLiteral("continue"))
+    else if (cmd == QLatin1String("continue"))
         handleContinue(response, NotStepping);
 }
 
@@ -334,7 +331,7 @@ static void decodeContext(const QString &context, QV4::ExecutionContext **execut
 
 void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &arguments)
 {
-    int limit = arguments.value(QStringLiteral("limit")).toInt(0);
+    int limit = arguments.value(QLatin1String("limit")).toInt(0);
 
     QJsonArray frameArray;
     QV4::ExecutionContext *executionContext = m_engine->currentContext;
@@ -343,16 +340,16 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
         if (heapFunctionObject) {
 
             QJsonObject frame;
-            frame[QStringLiteral("language")] = QStringLiteral("js");
-            frame[QStringLiteral("context")] = encodeContext(executionContext);
+            frame.insert(QStringLiteral("language"), QStringLiteral("js"));
+            frame.insert(QStringLiteral("context"), encodeContext(executionContext));
 
             if (QV4::Function *function = heapFunctionObject->function) {
                 if (QV4::Heap::String *functionName = function->name())
-                    frame[QStringLiteral("function")] = functionName->toQString();
-                frame[QStringLiteral("file")] = function->sourceFile();
+                    frame.insert(QStringLiteral("function"), functionName->toQString());
+                frame.insert(QStringLiteral("file"), function->sourceFile());
             }
             int line = executionContext->d()->lineNumber;
-            frame[QStringLiteral("line")] = (line < 0 ? -line : line);
+            frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
 
             frameArray.push_back(frame);
         }
@@ -463,7 +460,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
 {
     TRACE_PROTOCOL("Build variables");
     QV4::ExecutionContext *executionContext = 0;
-    decodeContext(arguments.value(QStringLiteral("context")).toString(), &executionContext);
+    decodeContext(arguments.value(QLatin1String("context")).toString(), &executionContext);
     if (!executionContext) {
         setError(response, QStringLiteral("No execution context passed"));
         return;
@@ -478,8 +475,8 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     TRACE_PROTOCOL("Engine: " << engine);
 
     Collector collector(engine);
-    QJsonArray expanded = arguments.value(QStringLiteral("expanded")).toArray();
-    foreach (const QJsonValue &ex, expanded)
+    const QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
+    for (const QJsonValue &ex : expanded)
         collector.m_expanded.append(ex.toString());
     TRACE_PROTOCOL("Expanded: " << collector.m_expanded);
 
@@ -515,7 +512,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
 {
     TRACE_PROTOCOL("Evaluate expressions");
     QV4::ExecutionContext *executionContext = 0;
-    decodeContext(arguments.value(QStringLiteral("context")).toString(), &executionContext);
+    decodeContext(arguments.value(QLatin1String("context")).toString(), &executionContext);
     if (!executionContext) {
         setError(response, QStringLiteral("No execution context passed"));
         return;
@@ -530,36 +527,36 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
     TRACE_PROTOCOL("Engines: " << engine << m_engine);
 
     Collector collector(engine);
-    QJsonArray expanded = arguments.value(QStringLiteral("expanded")).toArray();
-    foreach (const QJsonValue &ex, expanded)
+    const QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
+    for (const QJsonValue &ex : expanded)
         collector.m_expanded.append(ex.toString());
     TRACE_PROTOCOL("Expanded: " << collector.m_expanded);
 
     QJsonArray output;
     QV4::Scope scope(engine);
 
-    QJsonArray expressions = arguments.value(QStringLiteral("expressions")).toArray();
-    foreach (const QJsonValue &expr, expressions) {
-        QString expression = expr.toObject().value(QStringLiteral("expression")).toString();
-        QString name = expr.toObject().value(QStringLiteral("name")).toString();
+    const QJsonArray expressions = arguments.value(QLatin1String("expressions")).toArray();
+    for (const QJsonValue &expr : expressions) {
+        QString expression = expr.toObject().value(QLatin1String("expression")).toString();
+        QString name = expr.toObject().value(QLatin1String("name")).toString();
         TRACE_PROTOCOL("Evaluate expression: " << expression);
         m_runningJob = true;
 
-        QV4::ReturnedValue eval = evaluateExpression(scope, expression);
-        QV4::ScopedValue result(scope, eval);
+        evaluateExpression(scope, expression);
+        QV4::ScopedValue result(scope, scope.result);
 
         m_runningJob = false;
         if (result->isUndefined()) {
             QJsonObject dict;
-            dict[QStringLiteral("name")] = name;
-            dict[QStringLiteral("valueencoded")] = QStringLiteral("undefined");
+            dict.insert(QStringLiteral("name"), name);
+            dict.insert(QStringLiteral("valueencoded"), QStringLiteral("undefined"));
             output.append(dict);
-        } else if (result.ptr && result.ptr->_val) {
+        } else if (result.ptr && result.ptr->rawValue()) {
             collector.collect(&output, QString(), name, *result);
         } else {
             QJsonObject dict;
-            dict[QStringLiteral("name")] = name;
-            dict[QStringLiteral("valueencoded")] = QStringLiteral("notaccessible");
+            dict.insert(QStringLiteral("name"), name);
+            dict.insert(QStringLiteral("valueencoded"), QStringLiteral("notaccessible"));
             output.append(dict);
         }
         TRACE_PROTOCOL("EXCEPTION: " << engine->hasException);
@@ -751,7 +748,8 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
     TRACE_PROTOCOL("Removing engine" << engine);
     if (engine) {
         QV4::ExecutionEngine *executionEngine = QV8Engine::getV4(engine->handle());
-        foreach (NativeDebugger *debugger, m_debuggers) {
+        const auto debuggersCopy = m_debuggers;
+        for (NativeDebugger *debugger : debuggersCopy) {
             if (debugger->engine() == executionEngine)
                 m_debuggers.removeAll(debugger);
         }
@@ -762,9 +760,9 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 void QQmlNativeDebugServiceImpl::stateAboutToBeChanged(QQmlDebugService::State state)
 {
     if (state == Enabled) {
-        foreach (NativeDebugger *debugger, m_debuggers) {
+        for (NativeDebugger *debugger : qAsConst(m_debuggers)) {
             QV4::ExecutionEngine *engine = debugger->engine();
-            if (!engine->debugger)
+            if (!engine->debugger())
                 engine->setDebugger(debugger);
         }
     }
@@ -776,17 +774,17 @@ void QQmlNativeDebugServiceImpl::messageReceived(const QByteArray &message)
     TRACE_PROTOCOL("Native message received: " << message);
     QJsonObject request = QJsonDocument::fromJson(message).object();
     QJsonObject response;
-    QJsonObject arguments = request.value(QStringLiteral("arguments")).toObject();
-    QString cmd = request.value(QStringLiteral("command")).toString();
+    QJsonObject arguments = request.value(QLatin1String("arguments")).toObject();
+    QString cmd = request.value(QLatin1String("command")).toString();
 
-    if (cmd == QStringLiteral("setbreakpoint")) {
+    if (cmd == QLatin1String("setbreakpoint")) {
         m_breakHandler->handleSetBreakpoint(&response, arguments);
-    } else if (cmd == QStringLiteral("removebreakpoint")) {
+    } else if (cmd == QLatin1String("removebreakpoint")) {
         m_breakHandler->handleRemoveBreakpoint(&response, arguments);
-    } else if (cmd == QStringLiteral("echo")) {
+    } else if (cmd == QLatin1String("echo")) {
         response.insert(QStringLiteral("result"), arguments);
     } else {
-        foreach (NativeDebugger *debugger, m_debuggers)
+        for (NativeDebugger *debugger : qAsConst(m_debuggers))
             if (debugger)
                 debugger->handleCommand(&response, cmd, arguments);
     }

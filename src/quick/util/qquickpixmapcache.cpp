@@ -177,7 +177,7 @@ class QQuickPixmapReaderThreadObject : public QObject {
 public:
     QQuickPixmapReaderThreadObject(QQuickPixmapReader *);
     void processJobs();
-    virtual bool event(QEvent *e);
+    bool event(QEvent *e) override;
 private slots:
     void networkRequestDone();
     void asyncResponseFinished();
@@ -448,7 +448,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
 
     mutex.lock();
     // manually cancel all outstanding jobs.
-    foreach (QQuickPixmapReply *reply, jobs) {
+    for (QQuickPixmapReply *reply : qAsConst(jobs)) {
         if (reply->data && reply->data->reply == reply)
             reply->data->reply = 0;
         delete reply;
@@ -629,7 +629,7 @@ void QQuickPixmapReader::processJobs()
             // Find a job we can use
             bool usableJob = false;
             for (int i = jobs.count() - 1; !usableJob && i >= 0; i--) {
-                QQuickPixmapReply *job = jobs[i];
+                QQuickPixmapReply *job = jobs.at(i);
                 const QUrl url = job->url;
                 QString localFile;
                 QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
@@ -892,7 +892,7 @@ public:
     void purgeCache();
 
 protected:
-    virtual void timerEvent(QTimerEvent *);
+    void timerEvent(QTimerEvent *) override;
 
 public:
     QHash<QQuickPixmapKey, QQuickPixmapData *> m_cache;

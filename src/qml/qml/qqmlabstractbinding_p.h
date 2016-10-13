@@ -76,13 +76,13 @@ public:
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
     // Encoding is:  coreIndex | (valueTypeIndex << 16)
-    int targetPropertyIndex() const { return m_targetIndex; }
+    QQmlPropertyIndex targetPropertyIndex() const { return m_targetIndex; }
 
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
     QObject *targetObject() const { return m_target.data(); }
 
-    virtual void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f = QQmlPropertyPrivate::DontRemoveBinding) = 0;
+    virtual void setEnabled(bool e, QQmlPropertyData::WriteFlags f = QQmlPropertyData::DontRemoveBinding) = 0;
 
     void addToObject();
     void removeFromObject();
@@ -91,6 +91,8 @@ public:
 
     inline QQmlAbstractBinding *nextBinding() const;
 
+    inline bool canUseAccessor() const
+    { return m_nextBinding.flag2(); }
 
     struct RefCount {
         RefCount() : refCount(0) {}
@@ -111,9 +113,16 @@ protected:
 
     inline void setNextBinding(QQmlAbstractBinding *);
 
-    int m_targetIndex;
+    QQmlPropertyIndex m_targetIndex;
+
+    // Pointer is the target object to which the binding binds
+    // flag1 is the updating flag
+    // flag2 is the enabled flag
     QFlagPointer<QObject> m_target;
+
     // Pointer to the next binding in the linked list of bindings.
+    // flag1 is used for addedToObject
+    // flag2 indicates if an accessor is can be used (i.e. there is no interceptor on the target)
     QFlagPointer<QQmlAbstractBinding> m_nextBinding;
 };
 

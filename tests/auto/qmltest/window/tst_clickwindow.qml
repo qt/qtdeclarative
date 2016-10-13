@@ -75,6 +75,8 @@ Item {
         when: windowShown
 
         function test_clickBothWindows() {
+            if (Qt.platform.os === "linux" || Qt.platform.os === "windows")
+                skip("more details in QTBUG-53785")
             mouseClick(ma, 20, 20);
             verify(ma.everClicked);
             mouseClick(ma2, 20, 20);

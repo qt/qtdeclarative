@@ -65,6 +65,7 @@ public:
     QSGD3D12PainterTexture(QSGD3D12Engine *engine);
 
     void bind() override;
+    bool hasAlphaChannel() const override { return true; }
 
     QImage *image() { return &m_image; }
 

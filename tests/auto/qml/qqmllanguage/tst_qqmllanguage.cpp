@@ -494,6 +494,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("invalidAlias.8") << "invalidAlias.8.qml" << "invalidAlias.8.errors.txt" << false;
     QTest::newRow("invalidAlias.9") << "invalidAlias.9.qml" << "invalidAlias.9.errors.txt" << false;
     QTest::newRow("invalidAlias.10") << "invalidAlias.10.qml" << "invalidAlias.10.errors.txt" << false;
+    QTest::newRow("invalidAlias.11") << "invalidAlias.11.qml" << "invalidAlias.11.errors.txt" << false;
 
     QTest::newRow("invalidAttachedProperty.1") << "invalidAttachedProperty.1.qml" << "invalidAttachedProperty.1.errors.txt" << false;
     QTest::newRow("invalidAttachedProperty.2") << "invalidAttachedProperty.2.qml" << "invalidAttachedProperty.2.errors.txt" << false;
@@ -681,6 +682,7 @@ void tst_qqmllanguage::assignBasicTypes()
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
+    QCOMPARE(object->vector2Property(), QVector2D(2, 3));
     QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2f, 2.3f));
     const QUrl encoded = QUrl::fromEncoded("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
     QCOMPARE(object->urlProperty(), component.url().resolved(encoded));
@@ -1803,6 +1805,48 @@ void tst_qqmllanguage::aliasProperties()
 
         delete object;
     }
+
+    // Nested aliases with a qml file
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.12.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+    }
+
+    // Nested aliases with a qml file with reverse ordering
+    {
+        // This is known to fail at the moment.
+        QQmlComponent component(&engine, testFileUrl("alias.13.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+    }
+
+    // "Nested" aliases within an object that require iterative resolution
+    {
+        // This is known to fail at the moment.
+        QQmlComponent component(&engine, testFileUrl("alias.14.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subObject = qvariant_cast<QObject*>(object->property("referencingSubObject"));
+        QVERIFY(!subObject.isNull());
+
+        QVERIFY(subObject->property("success").toBool());
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist
@@ -2074,8 +2118,13 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlTypeData *td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        QV4::CompiledData::Unit *qmlUnit = td->compiledData()->compilationUnit->data;
-        Q_ASSERT(qmlUnit);
+        const QV4::CompiledData::Unit *readOnlyQmlUnit = td->compilationUnit()->data;
+        Q_ASSERT(readOnlyQmlUnit);
+        QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
+        memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
+        qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
+        td->compilationUnit()->data = qmlUnit;
+
         const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
         QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
@@ -2552,7 +2601,7 @@ void tst_qqmllanguage::basicRemote_data()
 
     QTest::newRow("no need for qmldir") << QUrl(serverdir+"Test.qml") << "" << "";
     QTest::newRow("absent qmldir") << QUrl(serverdir+"/noqmldir/Test.qml") << "" << "";
-    QTest::newRow("need qmldir") << QUrl(serverdir+"TestLocal.qml") << "" << "";
+    QTest::newRow("need qmldir") << QUrl(serverdir+"TestNamed.qml") << "" << "";
 }
 
 void tst_qqmllanguage::basicRemote()
@@ -2591,6 +2640,8 @@ void tst_qqmllanguage::importsRemote_data()
     QTest::newRow("remote import with subdir") << "import \""+serverdir+"\"\nTestSubDir {}" << "QQuickText"
         << "";
     QTest::newRow("remote import with local") << "import \""+serverdir+"\"\nTestLocal {}" << "QQuickImage"
+        << "";
+    QTest::newRow("remote import with qualifier") << "import \""+serverdir+"\" as NS\nNS.NamedLocal {}" << "QQuickImage"
         << "";
     QTest::newRow("wrong remote import with undeclared local") << "import \""+serverdir+"\"\nWrongTestLocal {}" << ""
         << "WrongTestLocal is not a type";
@@ -2898,7 +2949,7 @@ void tst_qqmllanguage::importIncorrectCase()
     QCOMPARE(errors.count(), 1);
 
     const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
-        QStringLiteral("File not found") :
+        QStringLiteral("No such file or directory") :
         QStringLiteral("File name case mismatch");
     QCOMPARE(errors.at(0).description(), expectedError);
 
@@ -4077,7 +4128,7 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
     QVERIFY(subCache);
     QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/0, /*context*/0);
     QVERIFY(pd);
-    QCOMPARE(pd->propType, qMetaTypeId<int>());
+    QCOMPARE(pd->propType(), qMetaTypeId<int>());
 }
 
 void tst_qqmllanguage::propertyCacheInSync()

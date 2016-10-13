@@ -221,50 +221,50 @@ struct ErrorCtor: FunctionObject
 {
     V4_OBJECT2(ErrorCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *, CallData *callData);
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static void construct(const Managed *, Scope &scope, CallData *callData);
+    static void call(const Managed *that, Scope &scope, CallData *callData);
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
     V4_OBJECT2(EvalErrorCtor, ErrorCtor)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
     V4_OBJECT2(RangeErrorCtor, ErrorCtor)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static void construct(const Managed *, Scope &scope, CallData *callData);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
     V4_OBJECT2(ReferenceErrorCtor, ErrorCtor)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
     V4_OBJECT2(SyntaxErrorCtor, ErrorCtor)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
     V4_OBJECT2(TypeErrorCtor, ErrorCtor)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
     V4_OBJECT2(URIErrorCtor, ErrorCtor)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static void construct(const Managed *m, Scope &scope, CallData *callData);
 };
 
 

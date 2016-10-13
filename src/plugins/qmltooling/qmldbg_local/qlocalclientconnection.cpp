@@ -65,10 +65,8 @@ public:
     void waitForConnection();
     void flush();
 
-private slots:
-    void connectionEstablished();
-
 private:
+    void connectionEstablished();
     bool connectToServer();
 
     bool m_block;
@@ -135,7 +133,8 @@ bool QLocalClientConnection::connectToServer()
 {
     m_socket = new QLocalSocket;
     m_socket->setParent(this);
-    QObject::connect(m_socket, SIGNAL(connected()), this, SLOT(connectionEstablished()));
+    QObject::connect(m_socket, &QLocalSocket::connected,
+                     this, &QLocalClientConnection::connectionEstablished);
     m_socket->connectToServer(m_filename);
     qDebug("QML Debugger: Connecting to socket %s...", m_filename.toLatin1().constData());
     return true;

@@ -643,34 +643,37 @@ struct Stringify
 
 static QString quote(const QString &str)
 {
-    QString product = QStringLiteral("\"");
-    for (int i = 0; i < str.length(); ++i) {
+    QString product;
+    const int length = str.length();
+    product.reserve(length + 2);
+    product += QLatin1Char('"');
+    for (int i = 0; i < length; ++i) {
         QChar c = str.at(i);
         switch (c.unicode()) {
         case '"':
-            product += QStringLiteral("\\\"");
+            product += QLatin1String("\\\"");
             break;
         case '\\':
-            product += QStringLiteral("\\\\");
+            product += QLatin1String("\\\\");
             break;
         case '\b':
-            product += QStringLiteral("\\b");
+            product += QLatin1String("\\b");
             break;
         case '\f':
-            product += QStringLiteral("\\f");
+            product += QLatin1String("\\f");
             break;
         case '\n':
-            product += QStringLiteral("\\n");
+            product += QLatin1String("\\n");
             break;
         case '\r':
-            product += QStringLiteral("\\r");
+            product += QLatin1String("\\r");
             break;
         case '\t':
-            product += QStringLiteral("\\t");
+            product += QLatin1String("\\t");
             break;
         default:
             if (c.unicode() <= 0x1f) {
-                product += QStringLiteral("\\u00");
+                product += QLatin1String("\\u00");
                 product += (c.unicode() > 0xf ? QLatin1Char('1') : QLatin1Char('0')) +
                         QLatin1Char("0123456789abcdef"[c.unicode() & 0xf]);
             } else {
@@ -685,53 +688,53 @@ static QString quote(const QString &str)
 QString Stringify::Str(const QString &key, const Value &v)
 {
     Scope scope(v4);
+    scope.result = v;
 
-    ScopedValue value(scope, v);
-    ScopedObject o(scope, value);
+    ScopedObject o(scope, scope.result);
     if (o) {
         ScopedString s(scope, v4->newString(QStringLiteral("toJSON")));
         ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
-            callData->thisObject = value;
+            callData->thisObject = scope.result;
             callData->args[0] = v4->newString(key);
-            value = toJSON->call(callData);
+            toJSON->call(scope, callData);
         }
     }
 
     if (replacerFunction) {
         ScopedObject holder(scope, v4->newObject());
-        holder->put(scope.engine, QString(), value);
+        holder->put(scope.engine, QString(), scope.result);
         ScopedCallData callData(scope, 2);
         callData->args[0] = v4->newString(key);
-        callData->args[1] = value;
+        callData->args[1] = scope.result;
         callData->thisObject = holder;
-        value = replacerFunction->call(callData);
+        replacerFunction->call(scope, callData);
     }
 
-    o = value->asReturnedValue();
+    o = scope.result.asReturnedValue();
     if (o) {
         if (NumberObject *n = o->as<NumberObject>())
-            value = Encode(n->value());
+            scope.result = Encode(n->value());
         else if (StringObject *so = o->as<StringObject>())
-            value = so->d()->string;
+            scope.result = so->d()->string;
         else if (BooleanObject *b = o->as<BooleanObject>())
-            value = Encode(b->value());
+            scope.result = Encode(b->value());
     }
 
-    if (value->isNull())
+    if (scope.result.isNull())
         return QStringLiteral("null");
-    if (value->isBoolean())
-        return value->booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
-    if (value->isString())
-        return quote(value->stringValue()->toQString());
+    if (scope.result.isBoolean())
+        return scope.result.booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
+    if (scope.result.isString())
+        return quote(scope.result.stringValue()->toQString());
 
-    if (value->isNumber()) {
-        double d = value->toNumber();
-        return std::isfinite(d) ? value->toQString() : QStringLiteral("null");
+    if (scope.result.isNumber()) {
+        double d = scope.result.toNumber();
+        return std::isfinite(d) ? scope.result.toQString() : QStringLiteral("null");
     }
 
-    o = value->asReturnedValue();
+    o = scope.result.asReturnedValue();
     if (o) {
         if (!o->as<FunctionObject>()) {
             if (o->as<ArrayObject>()) {
@@ -806,10 +809,10 @@ QString Stringify::JO(Object *o)
     if (partial.isEmpty()) {
         result = QStringLiteral("{}");
     } else if (gap.isEmpty()) {
-        result = QStringLiteral("{") + partial.join(QLatin1Char(',')) + QLatin1Char('}');
+        result = QLatin1Char('{') + partial.join(QLatin1Char(',')) + QLatin1Char('}');
     } else {
-        QString separator = QStringLiteral(",\n") + indent;
-        result = QStringLiteral("{\n") + indent + partial.join(separator) + QLatin1Char('\n')
+        QString separator = QLatin1String(",\n") + indent;
+        result = QLatin1String("{\n") + indent + partial.join(separator) + QLatin1Char('\n')
                  + stepback + QLatin1Char('}');
     }
 
@@ -852,10 +855,10 @@ QString Stringify::JA(ArrayObject *a)
     if (partial.isEmpty()) {
         result = QStringLiteral("[]");
     } else if (gap.isEmpty()) {
-        result = QStringLiteral("[") + partial.join(QLatin1Char(',')) + QStringLiteral("]");
+        result = QLatin1Char('[') + partial.join(QLatin1Char(',')) + QLatin1Char(']');
     } else {
-        QString separator = QStringLiteral(",\n") + indent;
-        result = QStringLiteral("[\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("]");
+        QString separator = QLatin1String(",\n") + indent;
+        result = QLatin1String("[\n") + indent + partial.join(separator) + QLatin1Char('\n') + stepback + QLatin1Char(']');
     }
 
     indent = stepback;

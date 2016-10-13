@@ -70,18 +70,20 @@ public:
     void endVisit(QSGGeometryNode *) override;
     bool visit(QSGOpacityNode *) override;
     void endVisit(QSGOpacityNode *) override;
-    bool visit(QSGImageNode *) override;
-    void endVisit(QSGImageNode *) override;
+    bool visit(QSGInternalImageNode *) override;
+    void endVisit(QSGInternalImageNode *) override;
     bool visit(QSGPainterNode *) override;
     void endVisit(QSGPainterNode *) override;
-    bool visit(QSGRectangleNode *) override;
-    void endVisit(QSGRectangleNode *) override;
+    bool visit(QSGInternalRectangleNode *) override;
+    void endVisit(QSGInternalRectangleNode *) override;
     bool visit(QSGGlyphNode *) override;
     void endVisit(QSGGlyphNode *) override;
-    bool visit(QSGNinePatchNode *) override;
-    void endVisit(QSGNinePatchNode *) override;
     bool visit(QSGRootNode *) override;
     void endVisit(QSGRootNode *) override;
+    bool visit(QSGSpriteNode *) override;
+    void endVisit(QSGSpriteNode *) override;
+    bool visit(QSGRenderNode *) override;
+    void endVisit(QSGRenderNode *) override;
 
 private:
     bool addRenderableNode(QSGNode *node);

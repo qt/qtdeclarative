@@ -59,28 +59,30 @@ Heap::ObjectCtor::ObjectCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue ObjectCtor::construct(const Managed *that, CallData *callData)
+void ObjectCtor::construct(const Managed *that, Scope &scope, CallData *callData)
 {
     const ObjectCtor *ctor = static_cast<const ObjectCtor *>(that);
     ExecutionEngine *v4 = ctor->engine();
-    Scope scope(v4);
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         ScopedObject obj(scope, v4->newObject());
         ScopedObject proto(scope, ctor->get(v4->id_prototype()));
         if (!!proto)
             obj->setPrototype(proto);
-        return obj.asReturnedValue();
+        scope.result = obj.asReturnedValue();
+    } else {
+        scope.result = RuntimeHelpers::toObject(scope.engine, callData->args[0]);
     }
-    return RuntimeHelpers::toObject(scope.engine, callData->args[0]);
 }
 
-ReturnedValue ObjectCtor::call(const Managed *m, CallData *callData)
+void ObjectCtor::call(const Managed *m, Scope &scope, CallData *callData)
 {
     const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);
     ExecutionEngine *v4 = ctor->engine();
-    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
-        return v4->newObject()->asReturnedValue();
-    return RuntimeHelpers::toObject(v4, callData->args[0]);
+    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
+        scope.result = v4->newObject()->asReturnedValue();
+    } else {
+        scope.result = RuntimeHelpers::toObject(v4, callData->args[0]);
+    }
 }
 
 void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
@@ -413,7 +415,8 @@ ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
         return ctx->engine()->throwTypeError();
     ScopedCallData callData(scope);
     callData->thisObject = o;
-    return f->call(callData);
+    f->call(scope, callData);
+    return scope.result.asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)

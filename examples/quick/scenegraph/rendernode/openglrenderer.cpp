@@ -97,8 +97,6 @@ void OpenGLRenderNode::init()
 
     const int VERTEX_SIZE = 6 * sizeof(GLfloat);
 
-    // A fully featured renderer should also take inheritedOpacity() into account
-    // and blend, but ignore that for now.
     static GLfloat colors[] = {
         1.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f,
@@ -140,6 +138,8 @@ void OpenGLRenderNode::render(const RenderState *state)
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
 
+    // Note that clipping (scissor or stencil) is ignored in this example.
+
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -149,6 +149,16 @@ void OpenGLRenderNode::render(const RenderState *state)
 QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
 {
     return BlendState;
+}
+
+QSGRenderNode::RenderingFlags OpenGLRenderNode::flags() const
+{
+    return BoundedRectRendering | DepthAwareRendering;
+}
+
+QRectF OpenGLRenderNode::rect() const
+{
+    return QRect(0, 0, m_item->width(), m_item->height());
 }
 
 #endif // QT_NO_OPENGL

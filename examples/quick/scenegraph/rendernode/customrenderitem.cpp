@@ -44,6 +44,7 @@
 
 #include "openglrenderer.h"
 #include "d3d12renderer.h"
+#include "softwarerenderer.h"
 
 CustomRenderItem::CustomRenderItem(QQuickItem *parent)
     : QQuickItem(parent)
@@ -70,6 +71,10 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
                 n = new D3D12RenderNode(this);
                 break;
 #endif
+            case QSGRendererInterface::Software:
+                n = new SoftwareRenderNode(this);
+                break;
+
             default:
                 return nullptr;
         }

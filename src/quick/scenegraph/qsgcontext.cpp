@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 
 // Used for very high-level info about the renderering and gl context
 // Includes GL_VERSION, type of render loop, atlas size, etc.
-Q_LOGGING_CATEGORY(QSG_LOG_INFO,                "qt.scenegraph.info")
+Q_LOGGING_CATEGORY(QSG_LOG_INFO,                "qt.scenegraph.general")
 
 // Used to debug the renderloop logic. Primarily useful for platform integrators
 // and when investigating the render loop logic.
@@ -268,9 +268,9 @@ void QSGContext::renderContextInvalidated(QSGRenderContext *)
 /*!
     Convenience factory function for creating a colored rectangle with the given geometry.
  */
-QSGRectangleNode *QSGContext::createRectangleNode(const QRectF &rect, const QColor &c)
+QSGInternalRectangleNode *QSGContext::createInternalRectangleNode(const QRectF &rect, const QColor &c)
 {
-    QSGRectangleNode *node = createRectangleNode();
+    QSGInternalRectangleNode *node = createInternalRectangleNode();
     node->setRect(rect);
     node->setColor(c);
     node->update();
@@ -318,7 +318,15 @@ QSize QSGContext::minimumFBOSize() const
     Returns a pointer to the (presumably) global renderer interface.
 
     \note This function may be called on the gui thread in order to get access
-    to QSGRendererInterface::graphicsApi().
+    to QSGRendererInterface::graphicsApi() and other getters.
+
+    \note it is expected that the simple queries (graphicsApi, shaderType,
+    etc.) are available regardless of the render context validity (i.e.
+    scenegraph status). This does not apply to engine-specific getters like
+    getResource(). In the end this means that this function must always return
+    a valid object in subclasses, even when renderContext->isValid() is false.
+    The typical pattern is to implement the QSGRendererInterface in the
+    QSGContext or QSGRenderContext subclass itself, whichever is more suitable.
  */
 QSGRendererInterface *QSGContext::rendererInterface(QSGRenderContext *renderContext)
 {
@@ -335,7 +343,6 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
 
 QSGRenderContext::~QSGRenderContext()
 {
-    invalidate();
 }
 
 void QSGRenderContext::initialize(void *context)
@@ -345,8 +352,6 @@ void QSGRenderContext::initialize(void *context)
 
 void QSGRenderContext::invalidate()
 {
-    m_sg->renderContextInvalidated(this);
-    emit invalidated();
 }
 
 void QSGRenderContext::endSync()

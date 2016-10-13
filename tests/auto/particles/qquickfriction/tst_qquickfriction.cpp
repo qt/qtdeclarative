@@ -59,7 +59,7 @@ void tst_qquickfriction::test_basic()
 
     //Default is just slowed a little
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -76,7 +76,7 @@ void tst_qquickfriction::test_basic()
 
     //Nondefault comes to a complete stop within the first half of its life
     QCOMPARE(system->groupData[1]->size(), 500);
-    foreach (QQuickParticleData *d, system->groupData[1]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[1]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -103,7 +103,7 @@ void tst_qquickfriction::test_threshold()
 
     //Velocity capped at 50, but it might take a frame or two to get there
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
         if (d->t == -1.0f)
             continue; //Particle data unused
         if (myFuzzyGEQ(d->t, ((qreal)system->timeInt/1000.0) - 0.1))

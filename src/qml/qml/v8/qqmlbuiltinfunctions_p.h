@@ -122,6 +122,7 @@ struct QtObject : Object
     static ReturnedValue method_btoa(CallContext *ctx);
     static ReturnedValue method_atob(CallContext *ctx);
     static ReturnedValue method_quit(CallContext *ctx);
+    static ReturnedValue method_exit(CallContext *ctx);
     static ReturnedValue method_resolvedUrl(CallContext *ctx);
     static ReturnedValue method_createQmlObject(CallContext *ctx);
     static ReturnedValue method_createComponent(CallContext *ctx);
@@ -188,7 +189,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
 
     void initBindingLocation(); // from caller stack trace
 
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static void call(const Managed *that, Scope &scope, CallData *callData);
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

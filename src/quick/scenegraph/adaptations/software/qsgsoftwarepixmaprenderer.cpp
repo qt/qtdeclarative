@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qsgsoftwarepixmaprenderer_p.h"
+#include "qsgsoftwarecontext_p.h"
 
 #include <QtQuick/QSGSimpleRectNode>
 
@@ -84,6 +85,9 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     QPainter painter(target);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setWindow(m_projectionRect);
+    auto rc = static_cast<QSGSoftwareRenderContext *>(context());
+    QPainter *prevPainter = rc->m_activePainter;
+    rc->m_activePainter = &painter;
 
     renderTimer.start();
     buildRenderList();
@@ -100,6 +104,7 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     QRegion paintedRegion = renderNodes(&painter);
     qint64 renderTime = renderTimer.elapsed();
 
+    rc->m_activePainter = prevPainter;
     qCDebug(lcPixmapRenderer) << "pixmapRender" << paintedRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
 }
 

@@ -186,8 +186,8 @@ dedicated thread. Qt attempts to choose a suitable loop based on the
 platform and possibly the graphics drivers in use. When this is not
 satisfactory, or for testing purposes, the environment variable
 \c QSG_RENDER_LOOP can be used to force the usage of a given loop. To
-verify which render loop is in use, launch the application with
-\c QSG_INFO set to \c 1.
+verify which render loop is in use, enable the \c qt.scenegraph.general
+\l {QLoggingCategory}{logging category}.
 
 \note The \c threaded and \c windows render loops rely on the OpenGL
 implementation for throttling by requesting a swap interval of 1. Some
@@ -220,7 +220,7 @@ user input. An event is posted to the render thread to initiate a new
 frame.
 
 \li The render thread prepares to draw a new frame and makes the
-OpenGL context current and initiates a blocks on the GUI thread.
+OpenGL context current and initiates a block on the GUI thread.
 
 \li While the render thread is preparing the new frame, the GUI thread
 calls QQuickItem::updatePolish() to do final touch-up of items before
@@ -269,7 +269,7 @@ animations, process events, etc.
 \endlist
 
 The threaded renderer is currently used by default on Windows with
-opengl32.dll, Linux with non-Mesa based drivers, OS X, mobile
+opengl32.dll, Linux with non-Mesa based drivers, \macos, mobile
 platforms, and Embedded Linux with EGLFS but this is subject to
 change. It is possible to force use of the threaded renderer by
 setting \c {QSG_RENDER_LOOP=threaded} in the environment.
@@ -374,7 +374,7 @@ addition to being helpful to Qt contributors.
 
 \li \c {qt.scenegraph.time.glyph} - logs the time spent preparing distance field glyphs
 
-\li \c {qt.scenegraph.info} - logs general information about various parts of the scene graph and the graphics stack
+\li \c {qt.scenegraph.general} - logs general information about various parts of the scene graph and the graphics stack
 
 \li \c {qt.scenegraph.renderloop} - creates a detailed log of the various stages involved in rendering. This log mode is primarily useful for developers working on Qt.
 

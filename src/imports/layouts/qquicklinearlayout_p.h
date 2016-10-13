@@ -158,7 +158,7 @@ public:
     Flow flow() const;
     void setFlow(Flow flow);
 
-    void insertLayoutItems();
+    void insertLayoutItems() override;
 
 signals:
     void columnSpacingChanged();
@@ -200,7 +200,7 @@ public:
     qreal spacing() const;
     void setSpacing(qreal spacing);
 
-    void insertLayoutItems();
+    void insertLayoutItems() override;
 
 signals:
     void spacingChanged();

@@ -69,6 +69,7 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
@@ -321,7 +322,7 @@ void QQuickText::imageDownloadFinished()
 
     if (d->extra.isAllocated() && d->extra->nbActiveDownloads == 0) {
         bool needToUpdateLayout = false;
-        foreach (QQuickStyledTextImgTag *img, d->extra->visibleImgTags) {
+        for (QQuickStyledTextImgTag *img : qAsConst(d->extra->visibleImgTags)) {
             if (!img->size.isValid()) {
                 img->size = img->pix->implicitSize();
                 needToUpdateLayout = true;
@@ -1114,7 +1115,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
     QList<QQuickStyledTextImgTag *> imagesInLine;
 
     if (extra.isAllocated()) {
-        foreach (QQuickStyledTextImgTag *image, extra->imgTags) {
+        for (QQuickStyledTextImgTag *image : qAsConst(extra->imgTags)) {
             if (image->position >= line.textStart() &&
                 image->position < line.textStart() + line.textLength()) {
 
@@ -1151,9 +1152,12 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
         }
     }
 
-    foreach (QQuickStyledTextImgTag *image, imagesInLine) {
+    for (QQuickStyledTextImgTag *image : qAsConst(imagesInLine)) {
         totalLineHeight = qMax(totalLineHeight, textTop + image->pos.y() + image->size.height());
-        image->pos.setX(line.cursorToX(image->position));
+        const int leadX = line.cursorToX(image->position);
+        const int trailX = line.cursorToX(image->position, QTextLine::Trailing);
+        const bool rtl = trailX < leadX;
+        image->pos.setX(leadX + (rtl ? (-image->offset - image->size.width()) : image->offset));
         image->pos.setY(image->pos.y() + height + textTop);
         extra->visibleImgTags << image;
     }
@@ -2058,6 +2062,7 @@ void QQuickText::setTextFormat(TextFormat format)
     }
     d->updateLayout();
     setAcceptHoverEvents(d->richText || d->styledText);
+    setAcceptedMouseButtons(d->richText || d->styledText ? Qt::LeftButton : Qt::NoButton);
 
     emit textFormatChanged(d->format);
 }
@@ -2337,7 +2342,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             node->addTextLayout(QPointF(dx, dy), d->elideLayout, color, d->style, styleColor, linkColor);
 
         if (d->extra.isAllocated()) {
-            foreach (QQuickStyledTextImgTag *img, d->extra->visibleImgTags) {
+            for (QQuickStyledTextImgTag *img : qAsConst(d->extra->visibleImgTags)) {
                 QQuickPixmap *pix = img->pix;
                 if (pix && pix->isReady())
                     node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, pix->width(), pix->height()), pix->image());
@@ -2591,7 +2596,8 @@ QString QQuickTextPrivate::anchorAt(const QTextLayout *layout, const QPointF &mo
         QTextLine line = layout->lineAt(i);
         if (line.naturalTextRect().contains(mousePos)) {
             int charPos = line.xToCursor(mousePos.x(), QTextLine::CursorOnCharacter);
-            foreach (const QTextLayout::FormatRange &formatRange, layout->formats()) {
+            const auto formats = layout->formats();
+            for (const QTextLayout::FormatRange &formatRange : formats) {
                 if (formatRange.format.isAnchor()
                         && charPos >= formatRange.start
                         && charPos < formatRange.start + formatRange.length) {
@@ -2720,6 +2726,7 @@ QString QQuickText::hoveredLink() const
 void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
 {
     Q_Q(QQuickText);
+    qCDebug(DBG_HOVER_TRACE) << q;
     QString link;
     if (isLinkHoveredConnected()) {
         if (event->type() != QEvent::HoverLeave)

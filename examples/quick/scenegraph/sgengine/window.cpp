@@ -187,7 +187,7 @@ void Window::update()
 void Window::sync()
 {
     QList<QSharedPointer<Item> > validItems;
-    foreach (QSharedPointer<Item> item, m_items) {
+    for (QSharedPointer<Item> item : qAsConst(m_items)) {
         if (!item->isDone()) {
             validItems.append(item);
             item->sync();

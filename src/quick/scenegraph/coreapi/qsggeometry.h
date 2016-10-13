@@ -182,6 +182,7 @@ public:
 
     static void updateRectGeometry(QSGGeometry *g, const QRectF &rect);
     static void updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &sourceRect);
+    static void updateColoredRectGeometry(QSGGeometry *g, const QRectF &rect);
 
     void setIndexDataPattern(DataPattern p);
     DataPattern indexDataPattern() const { return DataPattern(m_index_usage_pattern); }

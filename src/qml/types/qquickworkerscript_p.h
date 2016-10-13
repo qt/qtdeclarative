@@ -68,7 +68,7 @@ class QQuickWorkerScriptEngine : public QThread
 Q_OBJECT
 public:
     QQuickWorkerScriptEngine(QQmlEngine *parent = 0);
-    virtual ~QQuickWorkerScriptEngine();
+    ~QQuickWorkerScriptEngine();
 
     int registerWorkerScript(QQuickWorkerScript *);
     void removeWorkerScript(int);
@@ -76,7 +76,7 @@ public:
     void sendMessage(int, const QByteArray &);
 
 protected:
-    virtual void run();
+    void run() override;
 
 private:
     QQuickWorkerScriptEnginePrivate *d;
@@ -92,7 +92,7 @@ class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserSt
     Q_INTERFACES(QQmlParserStatus)
 public:
     QQuickWorkerScript(QObject *parent = 0);
-    virtual ~QQuickWorkerScript();
+    ~QQuickWorkerScript();
 
     QUrl source() const;
     void setSource(const QUrl &);
@@ -105,9 +105,9 @@ Q_SIGNALS:
     void message(const QQmlV4Handle &messageObject);
 
 protected:
-    virtual void classBegin();
-    virtual void componentComplete();
-    virtual bool event(QEvent *);
+    void classBegin() override;
+    void componentComplete() override;
+    bool event(QEvent *) override;
 
 private:
     QQuickWorkerScriptEngine *engine();

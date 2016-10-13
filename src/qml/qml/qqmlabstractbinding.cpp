@@ -78,24 +78,26 @@ void QQmlAbstractBinding::addToObject()
 
     QQmlData *data = QQmlData::get(obj, true);
 
-    int coreIndex;
-    if (QQmlPropertyData::decodeValueTypePropertyIndex(targetPropertyIndex(), &coreIndex) != -1) {
+    int coreIndex = targetPropertyIndex().coreIndex();
+    if (targetPropertyIndex().hasValueTypeIndex()) {
         // Value type
 
         // Find the value type proxy (if there is one)
         QQmlValueTypeProxyBinding *proxy = 0;
         if (data->hasBindingBit(coreIndex)) {
             QQmlAbstractBinding *b = data->bindings;
-            while (b && b->targetPropertyIndex() != coreIndex)
+            while (b && (b->targetPropertyIndex().coreIndex() != coreIndex ||
+                         b->targetPropertyIndex().hasValueTypeIndex()))
                 b = b->nextBinding();
             Q_ASSERT(b && b->isValueTypeProxy());
             proxy = static_cast<QQmlValueTypeProxyBinding *>(b);
         }
 
         if (!proxy) {
-            proxy = new QQmlValueTypeProxyBinding(obj, coreIndex);
+            proxy = new QQmlValueTypeProxyBinding(obj, QQmlPropertyIndex(coreIndex));
 
-            Q_ASSERT(proxy->targetPropertyIndex() == coreIndex);
+            Q_ASSERT(proxy->targetPropertyIndex().coreIndex() == coreIndex);
+            Q_ASSERT(!proxy->targetPropertyIndex().hasValueTypeIndex());
             Q_ASSERT(proxy->targetObject() == obj);
 
             proxy->addToObject();
@@ -137,12 +139,13 @@ void QQmlAbstractBinding::removeFromObject()
     next = nextBinding();
     setNextBinding(0);
 
-    int coreIndex;
-    if (QQmlPropertyData::decodeValueTypePropertyIndex(targetPropertyIndex(), &coreIndex) != -1) {
+    int coreIndex = targetPropertyIndex().coreIndex();
+    if (targetPropertyIndex().hasValueTypeIndex()) {
 
         // Find the value type binding
         QQmlAbstractBinding *vtbinding = data->bindings;
-        while (vtbinding->targetPropertyIndex() != coreIndex) {
+        while (vtbinding && (vtbinding->targetPropertyIndex().coreIndex() != coreIndex ||
+                             vtbinding->targetPropertyIndex().hasValueTypeIndex())) {
             vtbinding = vtbinding->nextBinding();
             Q_ASSERT(vtbinding);
         }

@@ -70,7 +70,9 @@
 #include <QHash>
 #endif
 
+#ifndef QT_NO_OPENGL
 static QElapsedTimer qsg_renderer_timer;
+#endif
 
 #ifndef QT_NO_DEBUG
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
@@ -84,11 +86,13 @@ static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK"
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_OPENGL
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
+#endif
 
 QSGTexturePrivate::QSGTexturePrivate()
     : wrapChanged(false)

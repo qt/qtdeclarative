@@ -39,6 +39,7 @@
 
 #include <private/qquickshadereffect_p.h>
 #include <private/qsgcontextplugin_p.h>
+#include <private/qquickitem_p.h>
 #ifndef QT_NO_OPENGL
 #include <private/qquickopenglshadereffect_p.h>
 #endif
@@ -168,7 +169,12 @@ QT_BEGIN_NAMESPACE
     \note Scene Graph textures have origin in the top-left corner rather than
     bottom-left which is common in OpenGL.
 
-    For information about the GLSL version being used, see \l QtQuick::OpenGLInfo.
+    For information about the GLSL version being used, see \l QtQuick::GraphicsInfo.
+
+    Starting from Qt 5.8 ShaderEffect also supports reading the GLSL source
+    code from files. Whenever the fragmentShader or vertexShader property value
+    is a URL with the \c file or \c qrc schema, it is treated as a file
+    reference and the source code is read from the specified file.
 
     \section1 Direct3D and HLSL
 
@@ -209,17 +215,43 @@ QT_BEGIN_NAMESPACE
     it is the textures that map to properties referencing \l Image or
     \l ShaderEffectSource items.
 
-    Unlike with OpenGL, runtime compilation of shader source code may not be
-    supported. Backends for modern APIs are likely to prefer offline
+    Unlike OpenGL, backends for modern APIs will typically prefer offline
     compilation and shipping pre-compiled bytecode with applications instead of
-    inlined shader source strings. To check what is expected at runtime, use the
-    GraphicsInfo.shaderSourceType and GraphicsInfo.shaderCompilationType properties.
+    inlined shader source strings. In this case the string properties for
+    vertex and fragment shaders are treated as URLs referring to local files or
+    files shipped via the Qt resource system.
+
+    To check at runtime what is supported, use the
+    GraphicsInfo.shaderSourceType and GraphicsInfo.shaderCompilationType
+    properties. Note that these are bitmasks, because some backends may support
+    multiple approaches.
+
+    In case of Direct3D 12, all combinations are supported. If the vertexShader
+    and fragmentShader properties form a valid URL with the \c file or \c qrc
+    schema, the bytecode or HLSL source code is read from the specified file.
+    The type of the file contents is detected automatically. Otherwise, the
+    string is treated as HLSL source code and is compiled at runtime, assuming
+    Shader Model 5.0 and an entry point of \c{"main"}. This allows dynamically
+    constructing shader strings. However, whenever the shader source code is
+    static, it is strongly recommended to pre-compile to bytecode using the
+    \c fxc tool and refer to these files from QML. This will be a lot more
+    efficient at runtime and allows catching syntax errors in the shaders at
+    compile time.
+
+    Unlike OpenGL, the Direct3D backend is able to perform runtime shader
+    compilation on dedicated threads. This is managed transparently to the
+    applications, and means that ShaderEffect items that contain HLSL source
+    strings do not block the rendering or other parts of the application until
+    the bytecode is ready.
+
+    Using files with bytecode is more flexible also when it comes to the entry
+    point name (it can be anything, not limited to \c main) and the shader
+    model (it can be something newer than 5.0, for instance 5.1).
 
     \table 70%
     \row
-    \li \image declarative-shadereffectitem.png
     \li \qml
-        import QtQuick 2.8
+        import QtQuick 2.0
 
         Rectangle {
             width: 200; height: 100
@@ -259,6 +291,14 @@ QT_BEGIN_NAMESPACE
     in the constant buffer at offset 0, even though the pixel shader does not
     use the value.
 
+    If desired, the HLSL source code can be placed directly into the QML
+    source, similarly to how its done with GLSL. The only difference in this
+    case is the entry point name, which must be \c main when using inline
+    source strings.
+
+    Alternatively, we could also have referred to a file containing the source
+    of the effect instead of the compiled bytecode version.
+
     Some effects will want to provide a vertex shader as well. Below is a
     similar effect with both the vertex and fragment shader provided by the
     application. This time the colorization factor is provided by the QML item
@@ -267,9 +307,8 @@ QT_BEGIN_NAMESPACE
 
     \table 70%
     \row
-    \li \image declarative-shadereffectitem.png
     \li \qml
-        import QtQuick 2.8
+        import QtQuick 2.0
 
         Rectangle {
             width: 200; height: 100
@@ -327,6 +366,94 @@ QT_BEGIN_NAMESPACE
     appropriate, meaning texture coordinates in HLSL version of the shaders
     will not need any adjustments compared to the equivalent GLSL code.
 
+    \section1 Cross-platform, Cross-API ShaderEffect Items
+
+    Some applications will want to be functional with multiple accelerated
+    graphics backends. This has consequences for ShaderEffect items because the
+    supported shading languages may vary from backend to backend.
+
+    There are two approaches to handle this: either write conditional property
+    values based on GraphicsInfo.shaderType, or use file selectors. In practice
+    the latter is strongly recommended as it leads to more concise and cleaner
+    application code. The only case it is not suitable is when the source
+    strings are constructed dynamically.
+
+    \table 70%
+    \row
+    \li \qml
+        import QtQuick 2.8 // for GraphicsInfo
+
+        Rectangle {
+            width: 200; height: 100
+            Row {
+                Image { id: img;
+                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                ShaderEffect {
+                    width: 100; height: 100
+                    property variant src: img
+                    property variant color: Qt.vector3d(0.344, 0.5, 0.156)
+                    fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.GLSL ?
+                        "varying highp vec2 coord;
+                        uniform sampler2D src;
+                        uniform lowp float qt_Opacity;
+                        void main() {
+                            lowp vec4 tex = texture2D(src, coord);
+                            gl_FragColor = vec4(vec3(dot(tex.rgb,
+                                                vec3(0.344, 0.5, 0.156))),
+                                                     tex.a) * qt_Opacity;"
+                    : GraphicsInfo.shaderType === GraphicsInfo.HLSL ?
+                        "cbuffer ConstantBuffer : register(b0)
+                        {
+                            float4x4 qt_Matrix;
+                            float qt_Opacity;
+                        };
+                        Texture2D src : register(t0);
+                        SamplerState srcSampler : register(s0);
+                        float4 ExamplePixelShader(float4 position : SV_POSITION, float2 coord : TEXCOORD0) : SV_TARGET
+                        {
+                            float4 tex = src.Sample(srcSampler, coord);
+                            float3 col = dot(tex.rgb, float3(0.344, 0.5, 0.156));
+                            return float4(col, tex.a) * qt_Opacity;
+                        }"
+                    : ""
+                }
+            }
+        }
+        \endqml
+    \row
+
+    \li This is the first approach based on GraphicsInfo. Note that the value
+    reported by GraphicsInfo is not up-to-date until the ShaderEffect item gets
+    associated with a QQuickWindow. Before that, the reported value is
+    GraphicsInfo.UnknownShadingLanguage. The alternative is to place the GLSL
+    source code and the compiled D3D bytecode into the files
+    \c{shaders/effect.frag} and \c{shaders/+hlsl/effect.frag}, include them in
+    the Qt resource system, and let the ShaderEffect's internal QFileSelector
+    do its job. The selector-less version is the GLSL source, while the \c hlsl
+    selector is used when running on the D3D12 backend. The file under
+    \c{+hlsl} can then contain either HLSL source code or compiled bytecode
+    from the \c fxc tool. Additionally, when using a version 3.2 or newer core
+    profile context with OpenGL, GLSL sources with a core profile compatible
+    syntax can be placed under \c{+glslcore}.
+        \qml
+        import QtQuick 2.8 // for GraphicsInfo
+
+        Rectangle {
+            width: 200; height: 100
+            Row {
+                Image { id: img;
+                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                ShaderEffect {
+                    width: 100; height: 100
+                    property variant src: img
+                    property variant color: Qt.vector3d(0.344, 0.5, 0.156)
+                    fragmentShader: "qrc:shaders/effect.frag" // selects the correct variant automatically
+                }
+            }
+        }
+        \endqml
+    \endtable
+
     \section1 ShaderEffect and Item Layers
 
     The ShaderEffect type can be combined with \l {Item Layers} {layered items}.
@@ -360,10 +487,18 @@ QT_BEGIN_NAMESPACE
     \sa {Item Layers}
 */
 
+class QQuickShaderEffectPrivate : public QQuickItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickShaderEffect)
+
+public:
+    void updatePolish() override;
+};
+
 QSGContextFactoryInterface::Flags qsg_backend_flags();
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
-    : QQuickItem(parent),
+    : QQuickItem(*new QQuickShaderEffectPrivate, parent),
 #ifndef QT_NO_OPENGL
       m_glImpl(nullptr),
 #endif
@@ -690,12 +825,12 @@ void QQuickShaderEffect::componentComplete()
 {
 #ifndef QT_NO_OPENGL
     if (m_glImpl) {
-        m_glImpl->handleComponentComplete();
+        m_glImpl->maybeUpdateShaders();
         QQuickItem::componentComplete();
         return;
     }
 #endif
-    m_impl->handleComponentComplete();
+    m_impl->maybeUpdateShaders();
     QQuickItem::componentComplete();
 }
 
@@ -723,7 +858,19 @@ QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
     if (m_glImpl)
         return m_glImpl->parseLog();
 #endif
-    return QString();
+    return m_impl->parseLog();
+}
+
+void QQuickShaderEffectPrivate::updatePolish()
+{
+    Q_Q(QQuickShaderEffect);
+#ifndef QT_NO_OPENGL
+    if (q->m_glImpl) {
+        q->m_glImpl->maybeUpdateShaders();
+        return;
+    }
+#endif
+    q->m_impl->maybeUpdateShaders();
 }
 
 QT_END_NAMESPACE

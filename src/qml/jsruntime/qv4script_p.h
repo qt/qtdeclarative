@@ -71,22 +71,25 @@ struct ContextStateSaver {
     Value *savedContext;
     bool strictMode;
     Lookup *lookups;
+    const QV4::Value *constantTable;
     CompiledData::CompilationUnit *compilationUnit;
     int lineNumber;
 
-    ContextStateSaver(Scope &scope, ExecutionContext *context)
+    ContextStateSaver(const Scope &scope, ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->d()->strictMode)
         , lookups(context->d()->lookups)
+        , constantTable(context->d()->constantTable)
         , compilationUnit(context->d()->compilationUnit)
         , lineNumber(context->d()->lineNumber)
     {
         savedContext->setM(context->d());
     }
-    ContextStateSaver(Scope &scope, Heap::ExecutionContext *context)
+    ContextStateSaver(const Scope &scope, Heap::ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->strictMode)
         , lookups(context->lookups)
+        , constantTable(context->constantTable)
         , compilationUnit(context->compilationUnit)
         , lineNumber(context->lineNumber)
     {
@@ -98,6 +101,7 @@ struct ContextStateSaver {
         Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
         ctx->strictMode = strictMode;
         ctx->lookups = lookups;
+        ctx->constantTable = constantTable;
         ctx->compilationUnit = compilationUnit;
         ctx->lineNumber = lineNumber;
     }
@@ -126,7 +130,7 @@ struct Q_QML_EXPORT Script {
     bool inheritContext;
     bool parsed;
     QV4::PersistentValue qmlContext;
-    QV4::PersistentValue compilationUnitHolder;
+    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit;
     Function *vmFunction;
     bool parseAsBinding;
 

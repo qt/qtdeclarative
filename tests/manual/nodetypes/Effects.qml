@@ -69,6 +69,7 @@ Item {
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
 
             property bool customVertexShader: false // the effect is fine with the default vs, but toggle this to test
+            property bool useHLSLSourceString: false // toggle to provide HLSL shaders as strings instead of bytecode in files
 
             property string glslVertexShader:
                 "uniform highp mat4 qt_Matrix;" +
@@ -92,12 +93,43 @@ Item {
                 "    gl_FragColor = texture2D(source, qt_TexCoord0 + amplitude * vec2(p.y, -p.x)) * qt_Opacity;" +
                 "}"
 
+            property string hlslVertexShader: "cbuffer ConstantBuffer : register(b0) {" +
+                                              "    float4x4 qt_Matrix;" +
+                                              "    float qt_Opacity; }" +
+                                              "struct PSInput {" +
+                                              "    float4 position : SV_POSITION;" +
+                                              "    float2 coord : TEXCOORD0; };" +
+                                              "PSInput main(float4 position : POSITION, float2 coord : TEXCOORD0) {" +
+                                              "    PSInput result;" +
+                                              "    result.position = mul(qt_Matrix, position);" +
+                                              "    result.coord = coord;" +
+                                              "    return result;" +
+                                              "}";
+
+            property string hlslPixelShader:"cbuffer ConstantBuffer : register(b0) {" +
+                                            "    float4x4 qt_Matrix;" +
+                                            "    float qt_Opacity;" +
+                                            "    float amplitude;" +
+                                            "    float frequency;" +
+                                            "    float time; }" +
+                                            "Texture2D source : register(t0);" +
+                                            "SamplerState sourceSampler : register(s0);" +
+                                            "float4 main(float4 position : SV_POSITION, float2 coord : TEXCOORD0) : SV_TARGET" +
+                                            "{" +
+                                            "    float2 p = sin(time + frequency * coord);" +
+                                            "    return source.Sample(sourceSampler, coord + amplitude * float2(p.y, -p.x)) * qt_Opacity;" +
+                                            "}";
+
             property string hlslVertexShaderByteCode: "qrc:/vs_wobble.cso"
             property string hlslPixelShaderByteCode: "qrc:/ps_wobble.cso"
 
-            vertexShader: customVertexShader ? (GraphicsInfo.shaderType === GraphicsInfo.HLSL ? hlslVertexShaderByteCode : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslVertexShader : "")) : ""
+            vertexShader: customVertexShader ? (GraphicsInfo.shaderType === GraphicsInfo.HLSL
+                                                ? (useHLSLSourceString ? hlslVertexShader : hlslVertexShaderByteCode)
+                                                : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslVertexShader : "")) : ""
 
-            fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.HLSL ? hlslPixelShaderByteCode : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslFragmentShader : "")
+            fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.HLSL
+                            ? (useHLSLSourceString ? hlslPixelShader : hlslPixelShaderByteCode)
+                            : (GraphicsInfo.shaderType === GraphicsInfo.GLSL ? glslFragmentShader : "")
         }
 
         Image {
@@ -180,6 +212,9 @@ Item {
             }
             Text {
                 text: GraphicsInfo.shaderType + " " + GraphicsInfo.shaderCompilationType + " " + GraphicsInfo.shaderSourceType
+            }
+            Text {
+                text: eff.status + " " + eff.log
             }
         }
     }

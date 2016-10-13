@@ -40,6 +40,7 @@
 
 #include "mainwindow.h"
 #include "fbitem.h"
+#include <QCoreApplication>
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QRadioButton>

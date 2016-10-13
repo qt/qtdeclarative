@@ -166,7 +166,7 @@ template<typename T> char (&ArrayLengthHelperFunction(T (&)[0]))[0];
 // Efficient implementation that takes advantage of powers of two.
 inline size_t roundUpToMultipleOf(size_t divisor, size_t x)
 {
-    ASSERT(divisor && !(divisor & (divisor - 1)));
+    Q_ASSERT(divisor && !(divisor & (divisor - 1)));
     size_t remainderMask = divisor - 1;
     return (x + remainderMask) & ~remainderMask;
 }

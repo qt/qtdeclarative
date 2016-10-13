@@ -53,13 +53,12 @@
 #include <qglobal.h>
 #include <qqmlerror.h>
 #include <qhash.h>
-#include <private/qqmlcompiler_p.h>
+#include <private/qqmltypeloader_p.h>
 #include <private/qqmlirbuilder_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlEnginePrivate;
-class QQmlCompiledData;
 class QQmlError;
 class QQmlTypeData;
 class QQmlImports;
@@ -75,18 +74,40 @@ struct Location;
 }
 }
 
+struct QQmlCompileError
+{
+    QQmlCompileError() {}
+    QQmlCompileError(const QV4::CompiledData::Location &location, const QString &description)
+        : location(location), description(description) {}
+    QV4::CompiledData::Location location;
+    QString description;
+
+    bool isSet() const { return !description.isEmpty(); }
+};
+
 struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlCompiledData *compiledData, QQmlTypeData *typeData, QmlIR::Document *document);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
 
-    bool compile();
+    // --- interface used by QQmlPropertyCacheCreator
+    typedef QmlIR::Object CompiledObject;
+    const QmlIR::Object *objectAt(int index) const { return document->objects.at(index); }
+    int objectCount() const { return document->objects.count(); }
+    QString stringAt(int idx) const;
+    QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
+    QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
+    QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypes;
+    // ---
+
+    QV4::CompiledData::CompilationUnit *compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
-    void recordError(const QQmlError &error);
+    void recordError(QQmlError error);
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+    void recordError(const QQmlCompileError &error);
 
-    QString stringAt(int idx) const;
     int registerString(const QString &str);
 
     QV4::IR::Module *jsIRModule() const;
@@ -96,11 +117,11 @@ public:
     QUrl url() const { return typeData->finalUrl(); }
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
-    QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes();
-    QList<QmlIR::Object*> *qmlObjects();
+    QVector<QmlIR::Object *> *qmlObjects() const;
     int rootObjectIndex() const;
-    void setPropertyCaches(const QQmlPropertyCacheVector &caches);
-    const QQmlPropertyCacheVector &propertyCaches() const;
+    void setPropertyCaches(QQmlPropertyCacheVector &&caches);
+    const QQmlPropertyCacheVector *propertyCaches() const;
+    QQmlPropertyCacheVector &&takePropertyCaches();
     void setComponentRoots(const QVector<quint32> &roots) { m_componentRoots = roots; }
     const QVector<quint32> &componentRoots() const { return m_componentRoots; }
     QQmlJS::MemoryPool *memoryPool();
@@ -112,10 +133,11 @@ public:
 
     QString bindingAsString(const QmlIR::Object *object, int scriptIndex) const;
 
+    void addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion);
+
 private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
-    QQmlCompiledData *compiledData;
     QQmlTypeData *typeData;
     QQmlRefPointer<QQmlTypeNameCache> importCache;
     QmlIR::Document *document;
@@ -129,35 +151,16 @@ private:
 
 struct QQmlCompilePass
 {
-    virtual ~QQmlCompilePass() {}
-
     QQmlCompilePass(QQmlTypeCompiler *typeCompiler);
 
     QString stringAt(int idx) const { return compiler->stringAt(idx); }
 protected:
-    void recordError(const QV4::CompiledData::Location &location, const QString &description) const;
+    void recordError(const QV4::CompiledData::Location &location, const QString &description) const
+    { compiler->recordError(location, description); }
+    void recordError(const QQmlCompileError &error)
+    { compiler->recordError(error); }
 
     QQmlTypeCompiler *compiler;
-};
-
-class QQmlPropertyCacheCreator : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
-public:
-    QQmlPropertyCacheCreator(QQmlTypeCompiler *typeCompiler);
-    ~QQmlPropertyCacheCreator();
-
-    bool buildMetaObjects();
-protected:
-    bool buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
-    bool ensureVMEMetaObject(int objectIndex);
-    bool createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache);
-
-    QQmlEnginePrivate *enginePrivate;
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlImports *imports;
-    QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
-    QQmlPropertyCacheVector propertyCaches;
 };
 
 // "Converts" signal expressions to full-fleged function declarations with
@@ -176,12 +179,12 @@ private:
     bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlIR::Object *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
 
     QQmlEnginePrivate *enginePrivate;
-    const QList<QmlIR::Object*> &qmlObjects;
+    const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlImports *imports;
     const QHash<int, QQmlCustomParser*> &customParsers;
-    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QSet<QString> &illegalNames;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 // ### This will go away when the codegen resolves all enums to constant expressions
@@ -207,10 +210,10 @@ private:
     int evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const;
 
 
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector propertyCaches;
+    const QVector<QmlIR::Object*> &qmlObjects;
+    const QQmlPropertyCacheVector * const propertyCaches;
     const QQmlImports *imports;
-    QHash<int, QQmlCompiledData::TypeReference *> *resolvedTypes;
+    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes;
 };
 
 class QQmlCustomParserScriptIndexer: public QQmlCompilePass
@@ -223,7 +226,7 @@ public:
 private:
     void scanObjectRecursively(int objectIndex, bool annotateScriptBindings = false);
 
-    const QList<QmlIR::Object*> &qmlObjects;
+    const QVector<QmlIR::Object*> &qmlObjects;
     const QHash<int, QQmlCustomParser*> &customParsers;
 };
 
@@ -235,8 +238,8 @@ public:
 
     void annotateBindingsToAliases();
 private:
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector propertyCaches;
+    const QVector<QmlIR::Object*> &qmlObjects;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 class QQmlScriptStringScanner : public QQmlCompilePass
@@ -247,8 +250,8 @@ public:
     void scan();
 
 private:
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector propertyCaches;
+    const QVector<QmlIR::Object*> &qmlObjects;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 class QQmlComponentAndAliasResolver : public QQmlCompilePass
@@ -262,22 +265,30 @@ public:
 protected:
     void findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache);
     bool collectIdsAndAliases(int objectIndex);
-    bool resolveAliases();
+    bool resolveAliases(int componentIndex);
+    void propertyDataForAlias(QmlIR::Alias *alias, int *type, quint32 *propertyFlags);
+
+    enum AliasResolutionResult {
+        NoAliasResolved,
+        SomeAliasesResolved,
+        AllAliasesResolved
+    };
+
+    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlCompileError *error);
 
     QQmlEnginePrivate *enginePrivate;
     QQmlJS::MemoryPool *pool;
 
-    QList<QmlIR::Object*> *qmlObjects;
+    QVector<QmlIR::Object*> *qmlObjects;
     const int indexOfRootObject;
 
     // indices of the objects that are actually Component {}
     QVector<quint32> componentRoots;
 
-    int _componentIndex;
     QHash<int, int> _idToObjectIndex;
-    QList<int> _objectsWithAliases;
+    QVector<int> _objectsWithAliases;
 
-    QHash<int, QQmlCompiledData::TypeReference*> *resolvedTypes;
+    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes;
     QQmlPropertyCacheVector propertyCaches;
 };
 
@@ -291,39 +302,11 @@ public:
 private:
     bool scanObject(int objectIndex);
 
-    QList<QmlIR::Object*> *qmlObjects;
-    QQmlPropertyCacheVector propertyCaches;
+    QVector<QmlIR::Object*> *qmlObjects;
+    const QQmlPropertyCacheVector * const propertyCaches;
     const QHash<int, QQmlCustomParser*> &customParsers;
 
     bool _seenObjectWithId;
-};
-
-class QQmlPropertyValidator : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
-public:
-    QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler);
-
-    bool validate();
-
-    const QQmlImports &imports() const;
-    QQmlEnginePrivate *engine() const { return enginePrivate; }
-
-private:
-    bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false) const;
-    bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
-    bool validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const;
-
-    bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
-
-    QQmlEnginePrivate *enginePrivate;
-    const QV4::CompiledData::Unit *qmlUnit;
-    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
-    const QHash<int, QQmlCustomParser*> &customParsers;
-    const QQmlPropertyCacheVector &propertyCaches;
-
-    // collected state variables, essentially write-only
-    mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
 };
 
 // ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.
@@ -338,10 +321,10 @@ private:
     bool compileComponent(int componentRoot);
     bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
 
-    const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
+    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QHash<int, QQmlCustomParser*> &customParsers;
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QVector<QmlIR::Object*> &qmlObjects;
+    const QQmlPropertyCacheVector * const propertyCaches;
     QmlIR::JSCodeGen * const v4CodeGen;
 };
 
@@ -355,11 +338,11 @@ public:
 private:
     void mergeDefaultProperties(int objectIndex);
 
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector &propertyCaches;
+    const QVector<QmlIR::Object*> &qmlObjects;
+    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
-class QQmlJavaScriptBindingExpressionSimplificationPass : public QQmlCompilePass, public QV4::IR::StmtVisitor
+class QQmlJavaScriptBindingExpressionSimplificationPass : public QQmlCompilePass
 {
 public:
     QQmlJavaScriptBindingExpressionSimplificationPass(QQmlTypeCompiler *typeCompiler);
@@ -369,12 +352,30 @@ public:
 private:
     void reduceTranslationBindings(int objectIndex);
 
-    virtual void visitMove(QV4::IR::Move *move);
-    virtual void visitJump(QV4::IR::Jump *) {}
-    virtual void visitCJump(QV4::IR::CJump *) { discard(); }
-    virtual void visitExp(QV4::IR::Exp *) { discard(); }
-    virtual void visitPhi(QV4::IR::Phi *) {}
-    virtual void visitRet(QV4::IR::Ret *ret);
+    void visit(QV4::IR::Stmt *s)
+    {
+        switch (s->stmtKind) {
+        case QV4::IR::Stmt::MoveStmt:
+            visitMove(s->asMove());
+            break;
+        case QV4::IR::Stmt::RetStmt:
+            visitRet(s->asRet());
+            break;
+        case QV4::IR::Stmt::CJumpStmt:
+            discard();
+            break;
+        case QV4::IR::Stmt::ExpStmt:
+            discard();
+            break;
+        case QV4::IR::Stmt::JumpStmt:
+            break;
+        case QV4::IR::Stmt::PhiStmt:
+            break;
+        }
+    }
+
+    void visitMove(QV4::IR::Move *move);
+    void visitRet(QV4::IR::Ret *ret);
 
     void visitFunctionCall(const QString *name, QV4::IR::ExprList *args, QV4::IR::Temp *target);
 
@@ -383,7 +384,7 @@ private:
     bool simplifyBinding(QV4::IR::Function *function, QmlIR::Binding *binding);
     bool detectTranslationCallAndConvertBinding(QmlIR::Binding *binding);
 
-    const QList<QmlIR::Object*> &qmlObjects;
+    const QVector<QmlIR::Object*> &qmlObjects;
     QV4::IR::Module *jsModule;
 
     bool _canSimplify;
@@ -398,8 +399,7 @@ private:
     QVector<int> irFunctionsToRemove;
 };
 
-class QQmlIRFunctionCleanser : public QQmlCompilePass, public QV4::IR::StmtVisitor,
-                               public QV4::IR::ExprVisitor
+class QQmlIRFunctionCleanser : public QQmlCompilePass
 {
 public:
     QQmlIRFunctionCleanser(QQmlTypeCompiler *typeCompiler, const QVector<int> &functionsToRemove);
@@ -407,51 +407,13 @@ public:
     void clean();
 
 private:
-    virtual void visitClosure(QV4::IR::Closure *closure);
-
-    virtual void visitTemp(QV4::IR::Temp *) {}
-    virtual void visitArgLocal(QV4::IR::ArgLocal *) {}
-
     virtual void visitMove(QV4::IR::Move *s) {
-        s->source->accept(this);
-        s->target->accept(this);
+        visit(s->source);
+        visit(s->target);
     }
 
-    virtual void visitConvert(QV4::IR::Convert *e) { e->expr->accept(this); }
-    virtual void visitPhi(QV4::IR::Phi *) { }
-
-    virtual void visitExp(QV4::IR::Exp *s) { s->expr->accept(this); }
-
-    virtual void visitJump(QV4::IR::Jump *) {}
-    virtual void visitCJump(QV4::IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(QV4::IR::Ret *s) { s->expr->accept(this); }
-
-    virtual void visitConst(QV4::IR::Const *) {}
-    virtual void visitString(QV4::IR::String *) {}
-    virtual void visitRegExp(QV4::IR::RegExp *) {}
-    virtual void visitName(QV4::IR::Name *) {}
-    virtual void visitUnop(QV4::IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(QV4::IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(QV4::IR::Call *e) {
-        e->base->accept(this);
-        for (QV4::IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(QV4::IR::New *e) {
-        e->base->accept(this);
-        for (QV4::IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitSubscript(QV4::IR::Subscript *e) {
-        e->base->accept(this);
-        e->index->accept(this);
-    }
-
-    virtual void visitMember(QV4::IR::Member *e) {
-        e->base->accept(this);
-    }
+    void visit(QV4::IR::Stmt *s);
+    void visit(QV4::IR::Expr *e);
 
 private:
     QV4::IR::Module *module;

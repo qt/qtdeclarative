@@ -4,8 +4,9 @@ PUBLICTESTS += \
     geometry \
     qquickpixmapcache
 
-contains(QT_CONFIG, opengl(es1|es2)?) {
+qtConfig(opengl(es1|es2)?) {
     PUBLICTESTS += \
+        drawingmodes \
         rendernode
     qtHaveModule(widgets): PUBLICTESTS += nodes
 
@@ -88,9 +89,9 @@ QUICKTESTS =  \
 
 SUBDIRS += $$PUBLICTESTS
 
-!contains(QT_CONFIG, accessibility):QUICKTESTS -= qquickaccessible
+!qtConfig(accessibility):QUICKTESTS -= qquickaccessible
 
-contains(QT_CONFIG, private_tests) {
+qtConfig(private_tests) {
     SUBDIRS += $$PRIVATETESTS
     SUBDIRS += $$QUICKTESTS
 }

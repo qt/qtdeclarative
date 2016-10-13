@@ -73,7 +73,7 @@ convert them as appropriately when used from QML. Additionally, C++ classes
 that are \l{Registering C++ types with the QML type system}{registered} with
 the QML type system can be can be used as data types, as can their enums if
 appropriately registered. See \l{qtqml-cppintegration-data.html}{Data Type
-Conversion Between QML and C++} for details for further information.
+Conversion Between QML and C++} for further information.
 
 Additionally, data ownership rules are taken into consideration when data is
 transferred from C++ to QML. See \l {Data Ownership} for more details.
@@ -119,13 +119,13 @@ from C++:
 
 \code
  int main(int argc, char *argv[]) {
-     QCoreApplication app(argc, argv);
+     QGuiApplication app(argc, argv);
 
-     QQmlEngine engine;
+     QQuickView view;
      Message msg;
-     engine.rootContext()->setContextProperty("msg", &msg);
-     QQmlComponent component(&engine, QUrl::fromLocalFile("MyItem.qml"));
-     component.create();
+     view.engine()->rootContext()->setContextProperty("msg", &msg);
+     view.setSource(QUrl::fromLocalFile("MyItem.qml"));
+     view.show();
 
      return app.exec();
  }

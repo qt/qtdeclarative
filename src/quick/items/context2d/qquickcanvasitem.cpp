@@ -174,7 +174,7 @@ public:
     QUrl baseUrl;
     QMap<int, QV4::PersistentValue> animationCallbacks;
     mutable QQuickCanvasTextureProvider *textureProvider;
-    QSGImageNode *node;
+    QSGInternalImageNode *node;
     QSGTexture *nodeTexture;
 };
 
@@ -679,10 +679,14 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
     QSGRenderContext *context = QQuickWindowPrivate::get(d->window)->context;
 
     // Rendering to FramebufferObject needs a valid OpenGL context.
-    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid()))
-        sceneGraphInitialized();
-    else
+    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid())) {
+        // Defer the call. In some (arguably incorrect) cases we get here due
+        // to ItemSceneChange with the user-supplied property values not yet
+        // set. Work this around by a deferred invoke. (QTBUG-49692)
+        QMetaObject::invokeMethod(this, "sceneGraphInitialized", Qt::QueuedConnection);
+    } else {
         connect(d->window, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
+    }
 }
 
 void QQuickCanvasItem::updatePolish()
@@ -704,8 +708,8 @@ void QQuickCanvasItem::updatePolish()
 
         for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {
             QV4::ScopedFunctionObject f(scope, it.value().value());
-            callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
-            f->call(callData);
+            callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentMSecsSinceEpoch() / 1000);
+            f->call(scope, callData);
         }
     }
     else {
@@ -739,9 +743,9 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         return 0;
     }
 
-    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
+    QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
     if (!node) {
-        node = QQuickWindowPrivate::get(window())->context->sceneGraphContext()->createImageNode();
+        node = QQuickWindowPrivate::get(window())->context->sceneGraphContext()->createInternalImageNode();
         d->node = node;
     }
 
@@ -1091,6 +1095,23 @@ QImage QQuickCanvasItem::toImage(const QRectF& rect) const
     return QImage();
 }
 
+static const char* mimeToType(const QString &mime)
+{
+    if (mime == QLatin1String("image/png"))
+        return "PNG";
+    else if (mime == QLatin1String("image/bmp"))
+        return "BMP";
+    else if (mime == QLatin1String("image/jpeg"))
+        return "JPEG";
+    else if (mime == QLatin1String("image/x-portable-pixmap"))
+        return "PPM";
+    else if (mime == QLatin1String("image/tiff"))
+        return "TIFF";
+    else if (mime == QLatin1String("image/xpm"))
+        return "XPM";
+    return nullptr;
+}
+
 /*!
   \qmlmethod string QtQuick::Canvas::toDataURL(string mimeType)
 
@@ -1108,27 +1129,14 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
         QByteArray ba;
         QBuffer buffer(&ba);
         buffer.open(QIODevice::WriteOnly);
-        QString mime = mimeType.toLower();
-        QString type;
-        if (mime == QLatin1String("image/png")) {
-            type = QStringLiteral("PNG");
-        } else if (mime == QLatin1String("image/bmp"))
-            type = QStringLiteral("BMP");
-        else if (mime == QLatin1String("image/jpeg"))
-            type = QStringLiteral("JPEG");
-        else if (mime == QLatin1String("image/x-portable-pixmap"))
-            type = QStringLiteral("PPM");
-        else if (mime == QLatin1String("image/tiff"))
-            type = QStringLiteral("TIFF");
-        else if (mime == QLatin1String("image/xpm"))
-            type = QStringLiteral("XPM");
-        else
+        const QString mime = mimeType.toLower();
+        const char* type = mimeToType(mime);
+        if (!type)
             return QStringLiteral("data:,");
 
-        image.save(&buffer, type.toLatin1());
+        image.save(&buffer, type);
         buffer.close();
-        QString dataUrl = QStringLiteral("data:%1;base64,%2");
-        return dataUrl.arg(mime).arg(QLatin1String(ba.toBase64().constData()));
+        return QLatin1String("data:") + mime + QLatin1String(";base64,") + QLatin1String(ba.toBase64().constData());
     }
     return QStringLiteral("data:,");
 }

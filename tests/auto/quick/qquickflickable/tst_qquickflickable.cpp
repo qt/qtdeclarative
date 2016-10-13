@@ -90,6 +90,8 @@ private slots:
     void movementFromProgrammaticFlick();
     void cleanup();
     void contentSize();
+    void ratios_smallContent();
+    void contentXYNotTruncatedToInt();
 
 private:
     void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
@@ -1812,6 +1814,53 @@ void tst_qquickflickable::contentSize()
     QCOMPARE(flickable.height(), qreal(100));
     QCOMPARE(flickable.contentHeight(), qreal(10));
     QCOMPARE(chspy.count(), 1);
+}
+
+// QTBUG-53726
+void tst_qquickflickable::ratios_smallContent()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("ratios_smallContent.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+    QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(root);
+    QVERIFY(obj != 0);
+
+    //doublecheck the item, as specified by contentWidth/Height, fits in the view
+    //use tryCompare to allow a bit of stabilization in component's properties
+    QTRY_COMPARE(obj->leftMargin() + obj->contentWidth() + obj->rightMargin() <= obj->width(), true);
+    QTRY_COMPARE(obj->topMargin() + obj->contentHeight() + obj->bottomMargin() <= obj->height(), true);
+
+    //the whole item fits in the flickable, heightRatio should be 1
+    QCOMPARE(obj->property("heightRatioIs").toDouble(), 1.);
+    QCOMPARE(obj->property("widthRatioIs").toDouble(), 1.);
+}
+
+// QTBUG-48018
+void tst_qquickflickable::contentXYNotTruncatedToInt()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("contentXY.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+
+    flickable->setContentX(1e10);
+    flick(window.data(), QPoint(200, 100), QPoint(100, 100), 50);
+
+    // make sure we are not clipped at 2^31
+    QVERIFY(flickable->contentX() > qreal(1e10));
 }
 
 QTEST_MAIN(tst_qquickflickable)

@@ -64,7 +64,7 @@ namespace QSGAtlasTexture {
     class Manager;
 }
 
-class QSGDefaultRenderContext : public QSGRenderContext
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
 {
     Q_OBJECT
 public:
@@ -88,12 +88,12 @@ public:
     virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
     virtual void initializeShader(QSGMaterialShader *shader);
 
-    void setAttachToGLContext(bool attach);
+    void setAttachToGraphicsContext(bool attach) override;
 
     static QSGDefaultRenderContext *from(QOpenGLContext *context);
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
-    int maxTextureSize() const { return m_maxTextureSize; }
+    int maxTextureSize() const override { return m_maxTextureSize; }
 
 protected:
     QOpenGLContext *m_gl;

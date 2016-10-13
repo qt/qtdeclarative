@@ -63,7 +63,9 @@ NumberLocale::NumberLocale() : QLocale(QLocale::C),
     // -128 means shortest string that can accurately represent the number.
     defaultDoublePrecision(0xffffff80)
 {
-    setNumberOptions(QLocale::OmitGroupSeparator | QLocale::OmitLeadingZeroInExponent);
+    setNumberOptions(QLocale::OmitGroupSeparator |
+                     QLocale::OmitLeadingZeroInExponent |
+                     QLocale::IncludeTrailingZeroesAfterDot);
 }
 
 const NumberLocale *NumberLocale::instance()
@@ -76,17 +78,16 @@ Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue NumberCtor::construct(const Managed *m, CallData *callData)
+void NumberCtor::construct(const Managed *, Scope &scope, CallData *callData)
 {
-    Scope scope(m->cast<NumberCtor>()->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Encode(scope.engine->newNumberObject(dbl));
+    scope.result = Encode(scope.engine->newNumberObject(dbl));
 }
 
-ReturnedValue NumberCtor::call(const Managed *, CallData *callData)
+void NumberCtor::call(const Managed *, Scope &scope, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Encode(dbl);
+    scope.result = Encode(dbl);
 }
 
 void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -286,7 +287,7 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
     if (!ctx->argc() || ctx->args()[0].isUndefined())
         return RuntimeHelpers::toString(scope.engine, v);
 
-    double precision = ctx->args()[0].toInt32();
+    int precision = ctx->args()[0].toInt32();
     if (precision < 1 || precision > 21) {
         ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
         return ctx->engine()->throwRangeError(error);

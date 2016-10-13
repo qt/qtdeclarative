@@ -56,6 +56,7 @@ public slots:
     }
 
 private slots:
+    void initTestCase();
     void basicProperties();
     void showFiles();
     void resetFiltering();
@@ -95,6 +96,15 @@ void tst_qquickfolderlistmodel::checkNoErrors(const QQmlComponent& component)
         }
     }
     QVERIFY(!component.isError());
+}
+
+void tst_qquickfolderlistmodel::initTestCase()
+{
+    // The tests rely on a fixed number of files in the directory with the qml files
+    // (the data dir), so disable the disk cache to avoid creating .qmlc files and
+    // confusing the test.
+    qputenv("QML_DISABLE_DISK_CACHE", "1");
+    QQmlDataTest::initTestCase();
 }
 
 void tst_qquickfolderlistmodel::basicProperties()

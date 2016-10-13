@@ -218,9 +218,10 @@ template <typename Container>
 struct QQmlSequence : Object {
     QQmlSequence(const Container &container);
     QQmlSequence(QObject *object, int propertyIndex);
+    ~QQmlSequence() { object.destroy(); }
 
     mutable Container container;
-    QPointer<QObject> object;
+    QQmlQPointer<QObject> object;
     int propertyIndex;
     bool isReference;
 };
@@ -411,8 +412,8 @@ public:
             callData->args[0] = convertElementToValue(this->m_ctx->d()->engine, lhs);
             callData->args[1] = convertElementToValue(this->m_ctx->d()->engine, rhs);
             callData->thisObject = this->m_ctx->d()->engine->globalObject;
-            QV4::ScopedValue result(scope, compare->call(callData));
-            return result->toNumber() < 0;
+            compare->call(scope, callData);
+            return scope.result.toNumber() < 0;
         }
 
     private:
@@ -531,7 +532,7 @@ public:
         Q_ASSERT(d()->object);
         Q_ASSERT(d()->isReference);
         int status = -1;
-        QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding;
+        QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding;
         void *a[] = { &d()->container, 0, &status, &flags };
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
@@ -558,6 +559,8 @@ Heap::QQmlSequence<Container>::QQmlSequence(const Container &container)
     , propertyIndex(-1)
     , isReference(false)
 {
+    object.init();
+
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
@@ -566,10 +569,10 @@ Heap::QQmlSequence<Container>::QQmlSequence(const Container &container)
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QObject *object, int propertyIndex)
-    : object(object)
-    , propertyIndex(propertyIndex)
+    : propertyIndex(propertyIndex)
     , isReference(true)
 {
+    this->object.init(object);
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);

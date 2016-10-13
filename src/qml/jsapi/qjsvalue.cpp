@@ -178,7 +178,7 @@ QJSValue::QJSValue(SpecialValue value)
     : d(0)
 {
     if (value == NullValue)
-        QJSValuePrivate::setVariant(this, QVariant(QMetaType::VoidStar, (void *)0));
+        QJSValuePrivate::setVariant(this, QVariant::fromValue(nullptr));
 }
 
 /*!
@@ -293,7 +293,10 @@ bool QJSValue::isNull() const
     if (val)
         return val->isNull();
     QVariant *variant = QJSValuePrivate::getVariant(this);
-    return variant && variant->userType() == QMetaType::VoidStar;
+    if (!variant)
+        return false;
+    const int type = variant->userType();
+    return type == QMetaType::Nullptr || type == QMetaType::VoidStar;
 }
 
 /*!
@@ -582,7 +585,7 @@ quint32 QJSValue::toUInt() const
     \table
     \header \li Input Type \li Result
     \row    \li Undefined  \li An invalid QVariant.
-    \row    \li Null       \li A QVariant containing a null pointer (QMetaType::VoidStar).
+    \row    \li Null       \li A QVariant containing a null pointer (QMetaType::Nullptr).
     \row    \li Boolean    \li A QVariant containing the value of the boolean.
     \row    \li Number     \li A QVariant containing the value of the number.
     \row    \li String     \li A QVariant containing the value of the string.
@@ -619,7 +622,7 @@ QVariant QJSValue::toVariant() const
         return QVariant(val->asDouble());
     }
     if (val->isNull())
-        return QVariant(QMetaType::VoidStar, 0);
+        return QVariant(QMetaType::Nullptr, 0);
     Q_ASSERT(val->isUndefined());
     return QVariant();
 }
@@ -663,11 +666,11 @@ QJSValue QJSValue::call(const QJSValueList &args)
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->call(callData));
+    f->call(scope, callData);
     if (engine->hasException)
-        result = engine->catchException();
+        scope.result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValue(engine, scope.result.asReturnedValue());
 }
 
 /*!
@@ -719,11 +722,11 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->call(callData));
+    f->call(scope, callData);
     if (engine->hasException)
-        result = engine->catchException();
+        scope.result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValue(engine, scope.result.asReturnedValue());
 }
 
 /*!
@@ -767,11 +770,11 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->construct(callData));
+    f->construct(scope, callData);
     if (engine->hasException)
-        result = engine->catchException();
+        scope.result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValue(engine, scope.result.asReturnedValue());
 }
 
 #ifdef QT_DEPRECATED
@@ -1234,6 +1237,28 @@ QObject *QJSValue::toQObject() const
 }
 
 /*!
+  \since 5.8
+
+ * If this QJSValue is a QMetaObject, returns the QMetaObject pointer
+ * that the QJSValue represents; otherwise, returns 0.
+ *
+ * \sa isQMetaObject()
+ */
+const QMetaObject *QJSValue::toQMetaObject() const
+{
+    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
+    if (!engine)
+        return 0;
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QMetaObjectWrapper> wrapper(scope, QJSValuePrivate::getValue(this));
+    if (!wrapper)
+        return 0;
+
+    return wrapper->metaObject();
+}
+
+
+/*!
   Returns a QDateTime representation of this value, in local time.
   If this QJSValue is not a date, or the value of the date is NaN
   (Not-a-Number), an invalid QDateTime is returned.
@@ -1284,6 +1309,20 @@ bool QJSValue::isQObject() const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
     return val && val->as<QV4::QObjectWrapper>() != 0;
+}
+
+/*!
+  \since 5.8
+
+  Returns true if this QJSValue is a QMetaObject; otherwise returns
+  false.
+
+  \sa toQMetaObject(), QJSEngine::newQMetaObject()
+*/
+bool QJSValue::isQMetaObject() const
+{
+    QV4::Value *val = QJSValuePrivate::getValue(this);
+    return val && val->as<QV4::QMetaObjectWrapper>() != 0;
 }
 
 QT_END_NAMESPACE

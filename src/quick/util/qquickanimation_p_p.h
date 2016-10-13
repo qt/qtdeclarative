@@ -88,8 +88,8 @@ class QAnimationActionProxy : public QAbstractAnimationAction
 {
 public:
     QAnimationActionProxy(T *instance) : m_instance(instance) {}
-    virtual void doAction() { (m_instance->*method)(); }
-    virtual void debugAction(QDebug d, int indentLevel) const { (m_instance->*debugMethod)(d, indentLevel); }
+    void doAction() override { (m_instance->*method)(); }
+    void debugAction(QDebug d, int indentLevel) const override { (m_instance->*debugMethod)(d, indentLevel); }
 private:
     T *m_instance;
 };
@@ -104,13 +104,13 @@ public:
     QActionAnimation(QAbstractAnimationAction *action);
     ~QActionAnimation();
 
-    virtual int duration() const;
+    int duration() const override;
     void setAnimAction(QAbstractAnimationAction *action);
 
 protected:
-    virtual void updateCurrentTime(int);
-    virtual void updateState(State newState, State oldState);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int) override;
+    void updateState(State newState, State oldState) override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     QAbstractAnimationAction *animAction;
@@ -137,16 +137,16 @@ public:
 
     void setFromSourcedValue(bool *value) { fromSourced = value; }
 
-    int duration() const { return m_duration; }
+    int duration() const override { return m_duration; }
     void setDuration(int msecs) { m_duration = msecs; }
 
     QEasingCurve easingCurve() const { return easing; }
     void setEasingCurve(const QEasingCurve &curve) { easing = curve; }
 
 protected:
-    void updateCurrentTime(int currentTime);
-    void topLevelAnimationLoopChanged();
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int currentTime) override;
+    void topLevelAnimationLoopChanged() override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     QQuickBulkValueUpdater *animValue;
@@ -162,9 +162,9 @@ class QTickAnimationProxy : public QAbstractAnimationJob
     Q_DISABLE_COPY(QTickAnimationProxy)
 public:
     QTickAnimationProxy(T *instance) : QAbstractAnimationJob(), m_instance(instance) {}
-    virtual int duration() const { return -1; }
+    int duration() const override { return -1; }
 protected:
-    virtual void updateCurrentTime(int msec) { (m_instance->*method)(msec); }
+    void updateCurrentTime(int msec) override { (m_instance->*method)(msec); }
 
 private:
     T *m_instance;
@@ -192,7 +192,7 @@ public:
     int loopCount;
 
     void commence();
-    virtual void animationFinished(QAbstractAnimationJob *);
+    void animationFinished(QAbstractAnimationJob *) override;
 
     QQmlProperty defaultProperty;
 
@@ -309,9 +309,9 @@ public:
     QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(0), prevInterpolatorType(0), reverse(false), fromSourced(false), fromDefined(false), wasDeleted(0) {}
     ~QQuickAnimationPropertyUpdater();
 
-    void setValue(qreal v);
+    void setValue(qreal v) override;
 
-    void debugUpdater(QDebug d, int indentLevel) const;
+    void debugUpdater(QDebug d, int indentLevel) const override;
 
     QQuickStateActions actions;
     int interpolatorType;       //for Number/ColorAnimation

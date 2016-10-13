@@ -42,6 +42,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlloggingcategory_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmllocale_p.h>
 #include <private/qv8engine_p.h>
@@ -75,6 +76,8 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qloggingcategory.h>
+
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -137,6 +140,7 @@ Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
         o->defineDefaultProperty(QStringLiteral("darker"), QV4::QtObject::method_darker);
         o->defineDefaultProperty(QStringLiteral("tint"), QV4::QtObject::method_tint);
         o->defineDefaultProperty(QStringLiteral("quit"), QV4::QtObject::method_quit);
+        o->defineDefaultProperty(QStringLiteral("exit"), QV4::QtObject::method_exit);
         o->defineDefaultProperty(QStringLiteral("createQmlObject"), QV4::QtObject::method_createQmlObject);
         o->defineDefaultProperty(QStringLiteral("createComponent"), QV4::QtObject::method_createComponent);
     }
@@ -992,10 +996,34 @@ This function causes the QQmlEngine::quit() signal to be emitted.
 Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit;
 to quit a C++ application when this method is called, connect the
 QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
+
+\sa exit()
 */
 ReturnedValue QtObject::method_quit(CallContext *ctx)
 {
     QQmlEnginePrivate::get(ctx->engine()->qmlEngine())->sendQuit();
+    return QV4::Encode::undefined();
+}
+
+/*!
+    \qmlmethod Qt::exit(int retCode)
+
+    This function causes the QQmlEngine::exit(int) signal to be emitted.
+    Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit
+    the specified return code. To exit from the event loop with a specified return code when this
+    method is called, a C++ application can connect the QQmlEngine::exit(int) signal
+    to the QCoreApplication::exit(int) slot.
+
+    \sa quit()
+*/
+ReturnedValue QtObject::method_exit(CallContext *ctx)
+{
+    if (ctx->argc() != 1)
+        V4THROW_ERROR("Qt.exit(): Invalid arguments");
+
+    int retCode = ctx->args()[0].toNumber();
+
+    QQmlEnginePrivate::get(ctx->engine()->qmlEngine())->sendExit(retCode);
     return QV4::Encode::undefined();
 }
 
@@ -1032,7 +1060,9 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
     struct Error {
         static ReturnedValue create(QV4::ExecutionEngine *v4, const QList<QQmlError> &errors) {
             Scope scope(v4);
-            QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
+            QString errorstr;
+            // '+=' reserves extra capacity. Follow-up appending will be probably free.
+            errorstr += QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
             QV4::ScopedArrayObject qmlerrors(scope, v4->newArrayObject());
             QV4::ScopedObject qmlerror(scope);
@@ -1274,8 +1304,8 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 
 Heap::QQmlBindingFunction::QQmlBindingFunction(const QV4::FunctionObject *originalFunction)
     : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
-    , originalFunction(originalFunction->d())
 {
+    this->originalFunction = originalFunction->d();
 }
 
 void QQmlBindingFunction::initBindingLocation()
@@ -1285,11 +1315,10 @@ void QQmlBindingFunction::initBindingLocation()
     d()->bindingLocation.line = frame.line;
 }
 
-ReturnedValue QQmlBindingFunction::call(const Managed *that, CallData *callData)
+void QQmlBindingFunction::call(const Managed *that, Scope &scope, CallData *callData)
 {
-    Scope scope(static_cast<const QQmlBindingFunction*>(that)->engine());
     ScopedFunctionObject function(scope, static_cast<const QQmlBindingFunction*>(that)->d()->originalFunction);
-    return function->call(callData);
+    function->call(scope, callData);
 }
 
 void QQmlBindingFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
@@ -1465,28 +1494,42 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
 static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *ctx,
                                          bool printStack = false)
 {
+    QLoggingCategory *loggingCategory = 0;
     QString result;
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
 
-    for (int i = 0; i < ctx->argc(); ++i) {
-        if (i != 0)
+    int start = 0;
+    if (ctx->argc() > 0) {
+        if (const QObjectWrapper* wrapper = ctx->args()[0].as<QObjectWrapper>()) {
+            if (QQmlLoggingCategory* category = qobject_cast<QQmlLoggingCategory*>(wrapper->object())) {
+                if (category->category())
+                    loggingCategory = category->category();
+                else
+                    V4THROW_ERROR("A QmlLoggingCatgory was provided without a valid name");
+                start = 1;
+            }
+        }
+    }
+
+
+    for (int i = start; i < ctx->argc(); ++i) {
+        if (i != start)
             result.append(QLatin1Char(' '));
 
         if (ctx->args()[i].as<ArrayObject>())
-            result.append(QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']'));
+            result += QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']');
         else
             result.append(ctx->args()[i].toQStringNoThrow());
     }
 
-    if (printStack) {
-        result.append(QLatin1Char('\n'));
-        result.append(jsStack(v4));
-    }
+    if (printStack)
+        result += QLatin1Char('\n') + jsStack(v4);
 
     static QLoggingCategory qmlLoggingCategory("qml");
     static QLoggingCategory jsLoggingCategory("js");
 
-    QLoggingCategory *loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
+    if (!loggingCategory)
+        loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
@@ -2001,18 +2044,19 @@ ReturnedValue GlobalExtensions::method_string_arg(CallContext *ctx)
 /*!
 \qmlmethod Qt::callLater(function)
 \qmlmethod Qt::callLater(function, argument1, argument2, ...)
+\since 5.8
 Use this function to eliminate redundant calls to a function or signal.
 
-The function passed as the first argument to \l{QML:Qt::callLater()}{Qt.callLater()}
+The function passed as the first argument to Qt.callLater()
 will be called later, once the QML engine returns to the event loop.
 
 When this function is called multiple times in quick succession with the
 same function as its first argument, that function will be called only once.
 
 For example:
-\snippet doc/src/snippets/qml/qtLater.qml 0
+\snippet qml/qtLater.qml 0
 
-Any additional arguments passed to \l{QML:Qt::callLater()}{Qt.callLater()} will
+Any additional arguments passed to Qt.callLater() will
 be passed on to the function invoked. Note that if redundant calls
 are eliminated, then only the last set of arguments will be passed to the
 function.

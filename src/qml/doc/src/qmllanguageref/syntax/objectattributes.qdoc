@@ -729,7 +729,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onPressed: root.activated(mouse.x, mouse.y)
-        onRelased: root.deactivated()
+        onReleased: root.deactivated()
     }
 }
 \endqml
@@ -855,7 +855,8 @@ are otherwise unavailable to the object. In particular, they allow objects to
 access properties or signals that are specifically relevant to the individual
 object.
 
-A QML type implementation may choose to create an \e {attaching type} with
+A QML type implementation may choose to \l {Providing Attached Objects for
+Data Annotations}{create an \e {attaching type} in C++} with
 particular properties and signals. Instances of this type can then be created
 and \e attached to specific objects at run time, allowing those objects to
 access the properties and signals of the attaching type. These are accessed by

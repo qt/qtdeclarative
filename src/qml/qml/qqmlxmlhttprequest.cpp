@@ -502,7 +502,7 @@ ReturnedValue NodePrototype::method_get_firstChild(CallContext *ctx)
     if (r->d()->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(scope.engine, r->d()->d->children.first());
+        return Node::create(scope.engine, r->d()->d->children.constFirst());
 }
 
 ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
@@ -515,7 +515,7 @@ ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
     if (r->d()->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(scope.engine, r->d()->d->children.last());
+        return Node::create(scope.engine, r->d()->d->children.constLast());
 }
 
 ReturnedValue NodePrototype::method_get_previousSibling(CallContext *ctx)
@@ -715,7 +715,7 @@ ReturnedValue Text::method_isElementContentWhitespace(CallContext *ctx)
     Scoped<Node> r(scope, ctx->thisObject().as<Node>());
     if (!r) return Encode::undefined();
 
-    return Encode(r->d()->d->data.trimmed().isEmpty());
+    return Encode(QStringRef(&r->d()->d->data).trimmed().isEmpty());
 }
 
 ReturnedValue Text::method_wholeText(CallContext *ctx)
@@ -817,7 +817,8 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
             }
             nodeStack.append(node);
 
-            foreach (const QXmlStreamAttribute &a, reader.attributes()) {
+            const auto attributes = reader.attributes();
+            for (const QXmlStreamAttribute &a : attributes) {
                 NodeImpl *attr = new NodeImpl;
                 attr->document = document;
                 attr->type = NodeImpl::Attr;
@@ -1016,8 +1017,8 @@ public:
     ReturnedValue abort(Object *thisObject, QQmlContextData *context);
 
     void addHeader(const QString &, const QString &);
-    QString header(const QString &name);
-    QString headers();
+    QString header(const QString &name) const;
+    QString headers() const;
 
     QString responseBody();
     const QByteArray & rawResponseBody() const;
@@ -1144,36 +1145,37 @@ void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
     }
 }
 
-QString QQmlXMLHttpRequest::header(const QString &name)
+QString QQmlXMLHttpRequest::header(const QString &name) const
 {
-    QByteArray utfname = name.toLower().toUtf8();
-
-    foreach (const HeaderPair &header, m_headersList) {
-        if (header.first == utfname)
-            return QString::fromUtf8(header.second);
+    if (!m_headersList.isEmpty()) {
+        const QByteArray utfname = name.toLower().toUtf8();
+        for (const HeaderPair &header : m_headersList) {
+            if (header.first == utfname)
+                return QString::fromUtf8(header.second);
+        }
     }
     return QString();
 }
 
-QString QQmlXMLHttpRequest::headers()
+QString QQmlXMLHttpRequest::headers() const
 {
     QString ret;
 
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : m_headersList) {
         if (ret.length())
             ret.append(QLatin1String("\r\n"));
-        ret = ret % QString::fromUtf8(header.first) % QLatin1String(": ")
-                % QString::fromUtf8(header.second);
+        ret += QString::fromUtf8(header.first) + QLatin1String(": ")
+             + QString::fromUtf8(header.second);
     }
     return ret;
 }
 
 void QQmlXMLHttpRequest::fillHeadersList()
 {
-    QList<QByteArray> headerList = m_network->rawHeaderList();
+    const QList<QByteArray> headerList = m_network->rawHeaderList();
 
     m_headersList.clear();
-    foreach (const QByteArray &header, headerList) {
+    for (const QByteArray &header : headerList) {
         HeaderPair pair (header.toLower(), m_network->rawHeader(header));
         if (pair.first == "set-cookie" ||
             pair.first == "set-cookie2")
@@ -1235,7 +1237,8 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     } else if (m_method == QLatin1String("DELETE")) {
         m_network = networkAccessManager()->deleteResource(request);
     } else if ((m_method == QLatin1String("OPTIONS")) ||
-            m_method == QLatin1String("PROPFIND")) {
+               m_method == QLatin1String("PROPFIND") ||
+               m_method == QLatin1String("PATCH")) {
         QBuffer *buffer = new QBuffer;
         buffer->setData(m_data);
         buffer->open(QIODevice::ReadOnly);
@@ -1430,7 +1433,7 @@ void QQmlXMLHttpRequest::finished()
 
 void QQmlXMLHttpRequest::readEncoding()
 {
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : qAsConst(m_headersList)) {
         if (header.first == "content-type") {
             int separatorIdx = header.second.indexOf(';');
             if (separatorIdx == -1) {
@@ -1559,7 +1562,7 @@ void QQmlXMLHttpRequest::dispatchCallback(Object *thisObj, QQmlContextData *cont
 
     QV4::ScopedCallData callData(scope);
     callData->thisObject = Encode::undefined();
-    callback->call(callData);
+    callback->call(scope, callData);
 
     if (scope.engine->hasException) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
@@ -1620,22 +1623,23 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
             c->proto->mark(e);
         FunctionObject::markObjects(that, e);
     }
-    static ReturnedValue construct(const Managed *that, QV4::CallData *)
+    static void construct(const Managed *that, Scope &scope, QV4::CallData *)
     {
-        Scope scope(static_cast<const QQmlXMLHttpRequestCtor *>(that)->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
-        if (!ctor)
-            return scope.engine->throwTypeError();
+        if (!ctor) {
+            scope.result = scope.engine->throwTypeError();
+            return;
+        }
 
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager());
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocObject<QQmlXMLHttpRequestWrapper>(r));
         ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
-        return w.asReturnedValue();
+        scope.result = w.asReturnedValue();
     }
 
-    static ReturnedValue call(const Managed *, QV4::CallData *) {
-        return Primitive::undefinedValue().asReturnedValue();
+    static void call(const Managed *, Scope &scope, QV4::CallData *) {
+        scope.result = Primitive::undefinedValue();
     }
 
     void setupProto();
@@ -1735,7 +1739,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
         method != QLatin1String("POST") &&
         method != QLatin1String("DELETE") &&
         method != QLatin1String("OPTIONS") &&
-        method != QLatin1String("PROPFIND"))
+        method != QLatin1String("PROPFIND") &&
+        method != QLatin1String("PATCH"))
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL

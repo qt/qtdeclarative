@@ -69,14 +69,14 @@ public:
     QQmlValueType(int userType, const QMetaObject *metaObject);
     ~QQmlValueType();
     void read(QObject *, int);
-    void write(QObject *, int, QQmlPropertyPrivate::WriteFlags flags);
+    void write(QObject *, int, QQmlPropertyData::WriteFlags flags);
     QVariant value();
     void setValue(const QVariant &);
 
     // ---- dynamic meta object data interface
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *);
-    virtual void objectDestroyed(QObject *);
-    virtual int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv);
+    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *) override;
+    void objectDestroyed(QObject *) override;
+    int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv) override;
     // ----
 
 private:

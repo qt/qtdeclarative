@@ -84,7 +84,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
     and setting \l echoMode to an appropriate value enables TextInput to be used for
     a password input field.
 
-    On OS X, the Up/Down key bindings for Home/End are explicitly disabled.
+    On \macos, the Up/Down key bindings for Home/End are explicitly disabled.
     If you want such bindings (on any platform), you will need to construct them in QML.
 
     \sa TextEdit, Text
@@ -1042,6 +1042,7 @@ void QQuickTextInput::q_validatorChanged()
 
 QRectF QQuickTextInputPrivate::anchorRectangle() const
 {
+    Q_Q(const QQuickTextInput);
     QRectF rect;
     int a;
     // Unfortunately we cannot use selectionStart() and selectionEnd()
@@ -1062,8 +1063,8 @@ QRectF QQuickTextInputPrivate::anchorRectangle() const
             a = 0;
         QTextLine l = m_textLayout.lineForTextPosition(a);
         if (l.isValid()) {
-            qreal x = l.cursorToX(a) - hscroll;
-            qreal y = l.y() - vscroll;
+            qreal x = l.cursorToX(a) - hscroll + q->leftPadding();
+            qreal y = l.y() - vscroll + q->topPadding();
             rect.setRect(x, y, 1, l.height());
         }
     }
@@ -2681,8 +2682,8 @@ void QQuickTextInputPrivate::init()
 #endif
     q->setFlag(QQuickItem::ItemHasContents);
 #ifndef QT_NO_CLIPBOARD
-    q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
-            q, SLOT(q_canPasteChanged()));
+    qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()),
+            q, QQuickTextInput, SLOT(q_canPasteChanged()));
 #endif // QT_NO_CLIPBOARD
 
     lastSelectionStart = 0;
@@ -2842,7 +2843,7 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     // drawing boxes when using fonts that don't have glyphs for such
     // characters)
     QChar* uc = str.data();
-    for (int i = 0; i < (int)str.length(); ++i) {
+    for (int i = 0; i < str.length(); ++i) {
         if ((uc[i].unicode() < 0x20 && uc[i] != QChar::Tabulation)
             || uc[i] == QChar::LineSeparator
             || uc[i] == QChar::ParagraphSeparator
@@ -2991,7 +2992,7 @@ void QQuickTextInputPrivate::updateLayout()
         if (inLayout)       // probably the result of a binding loop, but by letting it
             return;         // get this far we'll get a warning to that effect.
     }
-    qreal lineWidth = q->widthValid() ? q->width() - q->leftPadding() - q->rightPadding() : INT_MAX;
+    qreal lineWidth = q->widthValid() || !isImplicitResizeEnabled() ? q->width() - q->leftPadding() - q->rightPadding() : INT_MAX;
     qreal height = 0;
     qreal width = 0;
     do {
@@ -3228,7 +3229,7 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
     commitPreedit();
 #endif
 
-    if (start < 0 || start > (int)m_text.length()){
+    if (start < 0 || start > m_text.length()) {
         qWarning("QQuickTextInputPrivate::setSelection: Invalid start position");
         return;
     }
@@ -3237,7 +3238,7 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
         if (start == m_selstart && start + length == m_selend && m_cursor == m_selend)
             return;
         m_selstart = start;
-        m_selend = qMin(start + length, (int)m_text.length());
+        m_selend = qMin(start + length, m_text.length());
         m_cursor = m_selend;
     } else if (length < 0){
         if (start == m_selend && start + length == m_selstart && m_cursor == m_selstart)
@@ -3675,7 +3676,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
     Q_ASSERT(!hasSelectedText());   // insert(), processInputMethodEvent() call removeSelectedText() first.
     if (m_maskData) {
         QString ms = maskString(m_cursor, s);
-        for (int i = 0; i < (int) ms.length(); ++i) {
+        for (int i = 0; i < ms.length(); ++i) {
             addCommand (Command(DeleteSelection, m_cursor + i, m_text.at(m_cursor + i), -1, -1));
             addCommand(Command(Insert, m_cursor + i, ms.at(i), -1, -1));
         }
@@ -3687,7 +3688,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
         int remaining = m_maxLength - m_text.length();
         if (remaining != 0) {
             m_text.insert(m_cursor, s.left(remaining));
-            for (int i = 0; i < (int) s.leftRef(remaining).length(); ++i)
+            for (int i = 0; i < s.leftRef(remaining).length(); ++i)
                addCommand(Command(Insert, m_cursor++, s.at(i), -1, -1));
             m_textDirty = true;
         }
@@ -3707,7 +3708,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
 */
 void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 {
-    if (m_cursor < (int) m_text.length()) {
+    if (m_cursor < m_text.length()) {
         cancelPasswordEchoTimer();
         Q_ASSERT(!hasSelectedText());   // del(), backspace() call removeSelectedText() first.
         addCommand(Command((CommandType)((m_maskData ? 2 : 0) + (wasBackspace ? Remove : Delete)),
@@ -3733,7 +3734,7 @@ void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 */
 void QQuickTextInputPrivate::removeSelectedText()
 {
-    if (m_selstart < m_selend && m_selend <= (int) m_text.length()) {
+    if (m_selstart < m_selend && m_selend <= m_text.length()) {
         cancelPasswordEchoTimer();
         int i ;
         if (m_selstart <= m_cursor && m_cursor < m_selend) {
@@ -4019,44 +4020,44 @@ QString QQuickTextInputPrivate::maskString(uint pos, const QString &str, bool cl
         if (strIndex < str.length()) {
             if (m_maskData[i].separator) {
                 s += m_maskData[i].maskChar;
-                if (str[(int)strIndex] == m_maskData[i].maskChar)
+                if (str[strIndex] == m_maskData[i].maskChar)
                     strIndex++;
                 ++i;
             } else {
-                if (isValidInput(str[(int)strIndex], m_maskData[i].maskChar)) {
+                if (isValidInput(str[strIndex], m_maskData[i].maskChar)) {
                     switch (m_maskData[i].caseMode) {
                     case MaskInputData::Upper:
-                        s += str[(int)strIndex].toUpper();
+                        s += str[strIndex].toUpper();
                         break;
                     case MaskInputData::Lower:
-                        s += str[(int)strIndex].toLower();
+                        s += str[strIndex].toLower();
                         break;
                     default:
-                        s += str[(int)strIndex];
+                        s += str[strIndex];
                     }
                     ++i;
                 } else {
                     // search for separator first
-                    int n = findInMask(i, true, true, str[(int)strIndex]);
+                    int n = findInMask(i, true, true, str[strIndex]);
                     if (n != -1) {
-                        if (str.length() != 1 || i == 0 || (i > 0 && (!m_maskData[i-1].separator || m_maskData[i-1].maskChar != str[(int)strIndex]))) {
+                        if (str.length() != 1 || i == 0 || (i > 0 && (!m_maskData[i-1].separator || m_maskData[i-1].maskChar != str[strIndex]))) {
                             s += fill.midRef(i, n-i+1);
                             i = n + 1; // update i to find + 1
                         }
                     } else {
                         // search for valid m_blank if not
-                        n = findInMask(i, true, false, str[(int)strIndex]);
+                        n = findInMask(i, true, false, str[strIndex]);
                         if (n != -1) {
                             s += fill.midRef(i, n-i);
                             switch (m_maskData[n].caseMode) {
                             case MaskInputData::Upper:
-                                s += str[(int)strIndex].toUpper();
+                                s += str[strIndex].toUpper();
                                 break;
                             case MaskInputData::Lower:
-                                s += str[(int)strIndex].toLower();
+                                s += str[strIndex].toLower();
                                 break;
                             default:
-                                s += str[(int)strIndex];
+                                s += str[strIndex];
                             }
                             i = n + 1; // updates i to find + 1
                         }
@@ -4107,7 +4108,7 @@ QString QQuickTextInputPrivate::stripString(const QString &str) const
         return str;
 
     QString s;
-    int end = qMin(m_maxLength, (int)str.length());
+    int end = qMin(m_maxLength, str.length());
     for (int i = 0; i < end; ++i) {
         if (m_maskData[i].separator)
             s += m_maskData[i].maskChar;
@@ -4197,7 +4198,7 @@ void QQuickTextInputPrivate::internalRedo()
     if (!isRedoAvailable())
         return;
     internalDeselect();
-    while (m_undoState < (int)m_history.size()) {
+    while (m_undoState < m_history.size()) {
         Command& cmd = m_history[m_undoState++];
         switch (cmd.type) {
         case Insert:
@@ -4224,7 +4225,7 @@ void QQuickTextInputPrivate::internalRedo()
             m_cursor = cmd.pos;
             break;
         }
-        if (m_undoState < (int)m_history.size()) {
+        if (m_undoState < m_history.size()) {
             Command& next = m_history[m_undoState];
             if (next.type != cmd.type
                     && cmd.type < RemoveSelection
@@ -4355,8 +4356,13 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
             if (!(q->inputMethodHints() & Qt::ImhMultiLine))
                 inputMethod->hide();
 
+            if (activeFocus) {
+                // If we lost focus after hiding the virtual keyboard, we've already emitted
+                // editingFinished from handleFocusEvent. Otherwise we emit it now.
+                emit q->editingFinished();
+            }
+
             emit q->accepted();
-            emit q->editingFinished();
         }
         event->ignore();
         return;

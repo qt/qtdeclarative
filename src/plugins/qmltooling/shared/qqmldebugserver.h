@@ -58,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlDebugServer : protected QQmlDebugConnector
+class QQmlDebugServer : public QQmlDebugConnector
 {
     Q_OBJECT
 public:

@@ -46,8 +46,7 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlengine_p.h>
-#include "qml/qqmlaccessors_p.h"
-#include "qml/qqmlpropertycache_p.h"
+#include <wtf/MathExtras.h>
 
 #undef USE_TYPE_INFO
 
@@ -151,171 +150,10 @@ inline bool isBoolType(IR::Expr *e)
     return (e->type == IR::BoolType);
 }
 
-/*
- * stack slot allocation:
- *
- * foreach bb do
- *   foreach stmt do
- *     if the current statement is not a phi-node:
- *       purge ranges that end before the current statement
- *       check for life ranges to activate, and if they don't have a stackslot associated then allocate one
- *       renumber temps to stack
- *     for phi nodes: check if all temps (src+dst) are assigned stack slots and marked as allocated
- *     if it's a jump:
- *       foreach phi node in the successor:
- *         allocate slots for each temp (both sources and targets) if they don't have one allocated already
- *         insert moves before the jump
- */
-class AllocateStackSlots: protected ConvertTemps
-{
-    IR::LifeTimeIntervals::Ptr _intervals;
-    QVector<IR::LifeTimeInterval *> _unhandled;
-    QVector<IR::LifeTimeInterval *> _live;
-    QBitArray _slotIsInUse;
-    IR::Function *_function;
-
-    int defPosition(IR::Stmt *s) const
-    {
-        return usePosition(s) + 1;
-    }
-
-    int usePosition(IR::Stmt *s) const
-    {
-        return _intervals->positionForStatement(s);
-    }
-
-public:
-    AllocateStackSlots(const IR::LifeTimeIntervals::Ptr &intervals)
-        : _intervals(intervals)
-        , _slotIsInUse(intervals->size(), false)
-        , _function(0)
-    {
-        _live.reserve(8);
-        _unhandled = _intervals->intervals();
-    }
-
-    void forFunction(IR::Function *function)
-    {
-        IR::Optimizer::showMeTheCode(function, "Before stack slot allocation");
-        _function = function;
-        toStackSlots(function);
-    }
-
-protected:
-    virtual int allocateFreeSlot()
-    {
-        for (int i = 0, ei = _slotIsInUse.size(); i != ei; ++i) {
-            if (!_slotIsInUse[i]) {
-                if (_nextUnusedStackSlot <= i) {
-                    Q_ASSERT(_nextUnusedStackSlot == i);
-                    _nextUnusedStackSlot = i + 1;
-                }
-                _slotIsInUse[i] = true;
-                return i;
-            }
-        }
-
-        Q_UNREACHABLE();
-        return -1;
-    }
-
-    virtual void process(IR::Stmt *s)
-    {
-//        qDebug("L%d statement %d:", _currentBasicBlock->index, s->id);
-
-        if (IR::Phi *phi = s->asPhi()) {
-            visitPhi(phi);
-        } else {
-            // purge ranges no longer alive:
-            for (int i = 0; i < _live.size(); ) {
-                const IR::LifeTimeInterval *lti = _live.at(i);
-                if (lti->end() < usePosition(s)) {
-//                    qDebug() << "\t - moving temp" << lti->temp().index << "to handled, freeing slot" << _stackSlotForTemp[lti->temp().index];
-                    _live.remove(i);
-                    Q_ASSERT(_slotIsInUse[_stackSlotForTemp[lti->temp().index]]);
-                    _slotIsInUse[_stackSlotForTemp[lti->temp().index]] = false;
-                    continue;
-                } else {
-                    ++i;
-                }
-            }
-
-            // active new ranges:
-            while (!_unhandled.isEmpty()) {
-                IR::LifeTimeInterval *lti = _unhandled.last();
-                if (lti->start() > defPosition(s))
-                    break; // we're done
-                Q_ASSERT(!_stackSlotForTemp.contains(lti->temp().index));
-                _stackSlotForTemp[lti->temp().index] = allocateFreeSlot();
-//                qDebug() << "\t - activating temp" << lti->temp().index << "on slot" << _stackSlotForTemp[lti->temp().index];
-                _live.append(lti);
-                _unhandled.removeLast();
-            }
-
-            s->accept(this);
-        }
-
-        if (IR::Jump *jump = s->asJump()) {
-            IR::MoveMapping moves;
-            for (IR::Stmt *succStmt : jump->target->statements()) {
-                if (IR::Phi *phi = succStmt->asPhi()) {
-                    forceActivation(*phi->targetTemp);
-                    for (int i = 0, ei = phi->incoming.size(); i != ei; ++i) {
-                        IR::Expr *e = phi->incoming[i];
-                        if (IR::Temp *t = e->asTemp()) {
-                            forceActivation(*t);
-                        }
-                        if (jump->target->in[i] == _currentBasicBlock)
-                            moves.add(phi->incoming[i], phi->targetTemp);
-                    }
-                } else {
-                    break;
-                }
-            }
-            moves.order();
-            QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
-            foreach (IR::Move *move, newMoves)
-                move->accept(this);
-        }
-    }
-
-    void forceActivation(const IR::Temp &t)
-    {
-        if (_stackSlotForTemp.contains(t.index))
-            return;
-
-        int i = _unhandled.size() - 1;
-        for (; i >= 0; --i) {
-            IR::LifeTimeInterval *lti = _unhandled[i];
-            if (lti->temp() == t) {
-                _live.append(lti);
-                _unhandled.remove(i);
-                break;
-            }
-        }
-        Q_ASSERT(i >= 0); // check that we always found the entry
-
-        _stackSlotForTemp[t.index] = allocateFreeSlot();
-//        qDebug() << "\t - force activating temp" << t.index << "on slot" << _stackSlotForTemp[t.index];
-    }
-
-    virtual void visitPhi(IR::Phi *phi)
-    {
-        Q_UNUSED(phi);
-#if !defined(QT_NO_DEBUG)
-        Q_ASSERT(_stackSlotForTemp.contains(phi->targetTemp->index));
-        Q_ASSERT(_slotIsInUse[_stackSlotForTemp[phi->targetTemp->index]]);
-        foreach (IR::Expr *e, phi->incoming) {
-            if (IR::Temp *t = e->asTemp())
-                Q_ASSERT(_stackSlotForTemp.contains(t->index));
-        }
-#endif // defined(QT_NO_DEBUG)
-    }
-};
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    : EvalInstructionSelection(execAllocator, module, jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator, EvalISelFactory *iselFactory)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator, iselFactory)
     , qmlEngine(qmlEngine)
     , _block(0)
     , _codeStart(0)
@@ -361,7 +199,7 @@ void InstructionSelection::run(int functionIndex)
                 qEnvironmentVariableIsEmpty("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION");
 
         if (doStackSlotAllocation) {
-            AllocateStackSlots(opt.lifeTimeIntervals()).forFunction(_function);
+            IR::AllocateStackSlots(opt.lifeTimeIntervals()).forFunction(_function);
         } else {
             opt.convertOutOfSSA();
             ConvertTemps().toStackSlots(_function);
@@ -371,7 +209,7 @@ void InstructionSelection::run(int functionIndex)
         ConvertTemps().toStackSlots(_function);
     }
 
-    QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    BitVector removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     IR::Stmt *cs = 0;
@@ -413,6 +251,7 @@ void InstructionSelection::run(int functionIndex)
                 if (s->location.startLine != currentLine) {
                     blockNeedsDebugInstruction = false;
                     currentLine = s->location.startLine;
+#ifndef QT_NO_QML_DEBUGGER
                     if (irModule->debugMode) {
                         Instruction::Debug debug;
                         debug.lineNumber = currentLine;
@@ -422,10 +261,11 @@ void InstructionSelection::run(int functionIndex)
                         line.lineNumber = currentLine;
                         addInstruction(line);
                     }
+#endif
                 }
             }
 
-            s->accept(this);
+            visit(s);
         }
     }
 
@@ -452,7 +292,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backend
 {
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
-    foreach (IR::Function *irFunction, irModule->functions)
+    for (IR::Function *irFunction : qAsConst(irModule->functions))
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
     result.adopt(compilationUnit.take());
@@ -739,61 +579,20 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
     addInstruction(store);
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind,
-                                                 QQmlPropertyData *property, int index,
-                                                 IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
 {
-    if (property && property->hasAccessors() && property->isFullyResolved()) {
-        if (kind == IR::Member::MemberOfQmlScopeObject) {
-            if (property->propType == QMetaType::QReal) {
-                Instruction::LoadScopeObjectQRealPropertyDirectly load;
-                load.base = getParam(source);
-                load.accessors = property->accessors;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->isQObject()) {
-                Instruction::LoadScopeObjectQObjectPropertyDirectly load;
-                load.base = getParam(source);
-                load.accessors = property->accessors;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->propType == QMetaType::Int) {
-                Instruction::LoadScopeObjectIntPropertyDirectly load;
-                load.base = getParam(source);
-                load.accessors = property->accessors;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->propType == QMetaType::Bool) {
-                Instruction::LoadScopeObjectBoolPropertyDirectly load;
-                load.base = getParam(source);
-                load.accessors = property->accessors;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->propType == QMetaType::QString) {
-                Instruction::LoadScopeObjectQStringPropertyDirectly load;
-                load.base = getParam(source);
-                load.accessors = property->accessors;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            }
-        }
-    }
-
     if (kind == IR::Member::MemberOfQmlScopeObject) {
         Instruction::LoadScopeObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
+        load.captureRequired = captureRequired;
         load.result = getResultParam(target);
         addInstruction(load);
     } else if (kind == IR::Member::MemberOfQmlContextObject) {
         Instruction::LoadContextObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
+        load.captureRequired = captureRequired;
         load.result = getResultParam(target);
         addInstruction(load);
     } else if (kind == IR::Member::MemberOfIdObjectsArray) {
@@ -807,59 +606,8 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::M
     }
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, QQmlPropertyData *property, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
 {
-    if (property && property->hasAccessors() && property->isFullyResolved()) {
-        if (!attachedPropertiesId && !isSingletonProperty) {
-            if (property->propType == QMetaType::QReal) {
-                Instruction::LoadQRealQObjectPropertyDirectly load;
-                load.base = getParam(base);
-                load.accessors = property->accessors;
-                load.coreIndex = property->coreIndex;
-                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->isQObject()) {
-                Instruction::LoadQObjectQObjectPropertyDirectly load;
-                load.base = getParam(base);
-                load.accessors = property->accessors;
-                load.coreIndex = property->coreIndex;
-                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->propType == QMetaType::Int) {
-                Instruction::LoadIntQObjectPropertyDirectly load;
-                load.base = getParam(base);
-                load.accessors = property->accessors;
-                load.coreIndex = property->coreIndex;
-                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->propType == QMetaType::Bool) {
-                Instruction::LoadBoolQObjectPropertyDirectly load;
-                load.base = getParam(base);
-                load.accessors = property->accessors;
-                load.coreIndex = property->coreIndex;
-                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            } else if (property->propType == QMetaType::QString) {
-                Instruction::LoadQStringQObjectPropertyDirectly load;
-                load.base = getParam(base);
-                load.accessors = property->accessors;
-                load.coreIndex = property->coreIndex;
-                load.notifyIndex = captureRequired ? property->notifyIndex : -1;
-                load.result = getResultParam(target);
-                addInstruction(load);
-                return;
-            }
-        }
-    }
-    const int propertyIndex = property->coreIndex;
     if (attachedPropertiesId != 0) {
         Instruction::LoadAttachedQObjectProperty load;
         load.propertyIndex = propertyIndex;
@@ -1187,18 +935,25 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
     }
 }
 
-void InstructionSelection::visitJump(IR::Jump *s)
+void InstructionSelection::addDebugInstruction()
 {
-    if (s->target == _nextBlock)
-        return;
-    if (_removableJumps.contains(s))
-        return;
-
+#ifndef QT_NO_QML_DEBUGGER
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
         debug.lineNumber = -int(currentLine);
         addInstruction(debug);
     }
+#endif
+}
+
+void InstructionSelection::visitJump(IR::Jump *s)
+{
+    if (s->target == _nextBlock)
+        return;
+    if (_removableJumps.at(_block->index()))
+        return;
+
+    addDebugInstruction();
 
     Instruction::Jump jump;
     jump.offset = 0;
@@ -1209,11 +964,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
-    if (blockNeedsDebugInstruction) {
-        Instruction::Debug debug;
-        debug.lineNumber = -int(currentLine);
-        addInstruction(debug);
-    }
+    addDebugInstruction();
 
     Param condition;
     if (IR::Temp *t = s->cond->asTemp()) {
@@ -1248,12 +999,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
-    if (blockNeedsDebugInstruction) {
-        // this is required so stepOut will always be guaranteed to stop in every stack frame
-        Instruction::Debug debug;
-        debug.lineNumber = -int(currentLine);
-        addInstruction(debug);
-    }
+    // this is required so stepOut will always be guaranteed to stop in every stack frame
+    addDebugInstruction();
 
     Instruction::Ret ret;
     ret.result = getParam(s->expr);
@@ -1589,12 +1336,7 @@ void QV4::Moth::InstructionSelection::callBuiltinConvertThisToObject()
 
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)
 {
-
-#ifdef MOTH_THREADED_INTERPRETER
-    instr.common.code = VME::instructionJumpTable()[static_cast<int>(type)];
-#else
     instr.common.instructionType = type;
-#endif
 
     int instructionSize = Instr::size(type);
     if (_codeEnd - _codeNext < instructionSize) {
@@ -1680,6 +1422,29 @@ CompilationUnit::~CompilationUnit()
 
 void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
 {
+#ifdef MOTH_THREADED_INTERPRETER
+    // link byte code against addresses of instructions
+    for (int i = 0; i < codeRefs.count(); ++i) {
+        QByteArray &codeRef = codeRefs[i];
+        char *code = codeRef.data();
+        int index = 0;
+        while (index < codeRef.size()) {
+            Instr *genericInstr = reinterpret_cast<Instr *>(code + index);
+
+            switch (genericInstr->common.instructionType) {
+#define LINK_INSTRUCTION(InstructionType, Member) \
+            case Instr::InstructionType: \
+                genericInstr->common.code = VME::instructionJumpTable()[static_cast<int>(genericInstr->common.instructionType)]; \
+                index += InstrMeta<(int)Instr::InstructionType>::Size; \
+            break;
+
+            FOR_EACH_MOTH_INSTR(LINK_INSTRUCTION)
+
+            }
+        }
+    }
+#endif
+
     runtimeFunctions.resize(data->functionTableSize);
     runtimeFunctions.fill(0);
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
@@ -1689,4 +1454,81 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
         runtimeFunctions[i] = runtimeFunction;
     }
+}
+
+void CompilationUnit::prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit)
+{
+    const int codeAlignment = 16;
+    quint64 offset = WTF::roundUpToMultipleOf(codeAlignment, unit->unitSize);
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        CompiledData::Function *compiledFunction = const_cast<CompiledData::Function *>(unit->functionAt(i));
+        compiledFunction->codeOffset = offset;
+        compiledFunction->codeSize = codeRefs.at(i).size();
+        offset = WTF::roundUpToMultipleOf(codeAlignment, offset + compiledFunction->codeSize);
+    }
+}
+
+bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString)
+{
+    Q_ASSERT(device->pos() == unit->unitSize);
+    Q_ASSERT(device->atEnd());
+    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+
+    QByteArray padding;
+
+    for (int i = 0; i < codeRefs.size(); ++i) {
+        const CompiledData::Function *compiledFunction = unit->functionAt(i);
+
+        if (device->pos() > qint64(compiledFunction->codeOffset)) {
+            *errorString = QStringLiteral("Invalid state of cache file to write.");
+            return false;
+        }
+
+        const quint64 paddingSize = compiledFunction->codeOffset - device->pos();
+        padding.fill(0, paddingSize);
+        qint64 written = device->write(padding);
+        if (written != padding.size()) {
+            *errorString = device->errorString();
+            return false;
+        }
+
+        const void *codePtr = codeRefs.at(i).constData();
+        written = device->write(reinterpret_cast<const char *>(codePtr), compiledFunction->codeSize);
+        if (written != qint64(compiledFunction->codeSize)) {
+            *errorString = device->errorString();
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    Q_UNUSED(errorString);
+    codeRefs.resize(data->functionTableSize);
+
+    const char *basePtr = reinterpret_cast<const char *>(data);
+
+    for (uint i = 0; i < data->functionTableSize; ++i) {
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+        const char *codePtr = const_cast<const char *>(reinterpret_cast<const char *>(basePtr + compiledFunction->codeOffset));
+#ifdef MOTH_THREADED_INTERPRETER
+        // for the threaded interpreter we need to make a copy of the data because it needs to be
+        // modified for the instruction handler addresses.
+        QByteArray code(codePtr, compiledFunction->codeSize);
+#else
+        QByteArray code = QByteArray::fromRawData(codePtr, compiledFunction->codeSize);
+#endif
+        codeRefs[i] = code;
+    }
+
+    return true;
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new Moth::CompilationUnit);
+    return result;
 }

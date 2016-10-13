@@ -45,7 +45,7 @@
 #include <qquickimageprovider.h>
 #include <QImage>
 #include <QPainter>
-#include <qDebug.h>
+#include <QDebug>
 
 class ColorImageProvider : public QQuickImageProvider
 {

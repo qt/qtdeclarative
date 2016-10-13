@@ -69,6 +69,7 @@ private slots:
     void transformedTouchArea();
     void mouseInteraction();
     void mouseInteraction_data();
+    void cancel();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -914,13 +915,13 @@ void tst_QQuickMultiPointTouchArea::mouseAsTouchpoint()
         // Touch both, release one, manipulate other touchpoint with mouse
         QTest::touchEvent(window.data(), device).press(1, touch1);
         QQuickTouchUtils::flush(window.data());
-        QTest::touchEvent(window.data(), device).press(2, touch2);
+        QTest::touchEvent(window.data(), device).move(1, touch1).press(2, touch2);
         QQuickTouchUtils::flush(window.data());
         QCOMPARE(touch1rect->property("x").toInt(), touch1.x());
         QCOMPARE(touch1rect->property("y").toInt(), touch1.y());
         QCOMPARE(touch2rect->property("x").toInt(), touch2.x());
         QCOMPARE(touch2rect->property("y").toInt(), touch2.y());
-        QTest::touchEvent(window.data(), device).release(1, touch1);
+        QTest::touchEvent(window.data(), device).release(1, touch1).move(2, touch2);
         touch1.setY(20);
         QTest::mousePress(window.data(), Qt::LeftButton, 0, touch1);
         QQuickTouchUtils::flush(window.data());
@@ -1193,6 +1194,60 @@ void tst_QQuickMultiPointTouchArea::mouseInteraction()
     QTest::mouseRelease(view.data(), (Qt::MouseButton) buttons);
     QCOMPARE(point1->pressed(), false);
     QCOMPARE(area->property("touchCount").toInt(), 0);
+}
+
+void tst_QQuickMultiPointTouchArea::cancel()
+{
+    QScopedPointer<QQuickView> window(createAndShowView("cancel.qml"));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickMultiPointTouchArea *area = qobject_cast<QQuickMultiPointTouchArea *>(window->rootObject());
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(window.data(), device);
+    QQuickTouchPoint *point1 = area->findChild<QQuickTouchPoint*>("point1");
+
+    QPoint p1(20,100);
+    sequence.press(0, p1).commit();
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 1);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 0);
+    QCOMPARE(area->property("touchCount").toInt(), 1);
+    QMetaObject::invokeMethod(area, "clearCounts");
+
+    area->setVisible(false);
+    // we should get a onCancel signal
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 1);
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+    QMetaObject::invokeMethod(area, "clearCounts");
+    area->setVisible(true);
+
+
+    sequence.press(0, p1).commit();
+    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 1);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 0);
+    QCOMPARE(area->property("touchCount").toInt(), 1);
+    QMetaObject::invokeMethod(area, "clearCounts");
+
+    area->setEnabled(false);
+    // we should get a onCancel signal
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointCancelCount").toInt(), 1);
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+    QMetaObject::invokeMethod(area, "clearCounts");
+
 }
 
 

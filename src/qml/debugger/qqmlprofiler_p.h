@@ -55,7 +55,6 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qfinitestack_p.h>
 #include <private/qqmlbinding_p.h>
-#include <private/qqmlcompiler_p.h>
 #include "qqmlprofilerdefinitions_p.h"
 #include "qqmlabstractprofileradapter_p.h"
 
@@ -63,6 +62,54 @@
 #include <QString>
 
 QT_BEGIN_NAMESPACE
+
+#ifdef QT_NO_QML_DEBUGGER
+
+#define Q_QML_PROFILE_IF_ENABLED(feature, profiler, Code)
+#define Q_QML_PROFILE(feature, profiler, Method)
+#define Q_QML_OC_PROFILE(member, Code)
+
+struct QQmlProfiler {};
+
+struct QQmlBindingProfiler
+{
+    QQmlBindingProfiler(quintptr, QQmlBinding *, QV4::FunctionObject *) {}
+};
+
+struct QQmlHandlingSignalProfiler
+{
+    QQmlHandlingSignalProfiler(quintptr, QQmlBoundSignalExpression *) {}
+};
+
+struct QQmlCompilingProfiler
+{
+    QQmlCompilingProfiler(quintptr, QQmlDataBlob *) {}
+};
+
+struct QQmlVmeProfiler {
+    QQmlVmeProfiler() {}
+
+    void init(quintptr, int) {}
+
+    const QV4::CompiledData::Object *pop() { return nullptr; }
+    void push(const QV4::CompiledData::Object *) {}
+
+    static const quintptr profiler = 0;
+};
+
+struct QQmlObjectCreationProfiler
+{
+    QQmlObjectCreationProfiler(quintptr, const QV4::CompiledData::Object *) {}
+    void update(QV4::CompiledData::CompilationUnit *, const QV4::CompiledData::Object *,
+                const QString &, const QUrl &) {}
+};
+
+struct QQmlObjectCompletionProfiler
+{
+    QQmlObjectCompletionProfiler(QQmlVmeProfiler *) {}
+};
+
+#else
 
 #define Q_QML_PROFILE_IF_ENABLED(feature, profiler, Code)\
     if (profiler && (profiler->featuresEnabled & (1 << feature))) {\
@@ -72,6 +119,9 @@ QT_BEGIN_NAMESPACE
 
 #define Q_QML_PROFILE(feature, profiler, Method)\
     Q_QML_PROFILE_IF_ENABLED(feature, profiler, profiler->Method)
+
+#define Q_QML_OC_PROFILE(member, Code)\
+    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, member.profiler, Code)
 
 // This struct is somewhat dangerous to use:
 // The messageType is a bit field. You can pack multiple messages into
@@ -95,7 +145,7 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData : public QQmlProfilerDefinitions
 
 Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
 
-class QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
+class Q_QML_PRIVATE_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
 
@@ -154,7 +204,7 @@ public:
             ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
         {}
 
-        RefLocation(QQmlCompiledData *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
+        RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
                     const QString &type) :
             Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
             locationType(Creating), ref(ref), sent(false)
@@ -226,7 +276,7 @@ public:
                                        Creating, id(obj)));
     }
 
-    void updateCreating(const QV4::CompiledData::Object *obj, QQmlCompiledData *ref,
+    void updateCreating(const QV4::CompiledData::Object *obj, QV4::CompiledData::CompilationUnit *ref,
                         const QUrl &url, const QString &type)
     {
         quintptr locationId(id(obj));
@@ -251,7 +301,6 @@ public:
         return reinterpret_cast<quintptr>(pointer);
     }
 
-public slots:
     void startProfiling(quint64 features);
     void stopProfiling();
     void reportData(bool trackLocations);
@@ -350,9 +399,6 @@ private:
     QFiniteStack<const QV4::CompiledData::Object *> ranges;
 };
 
-#define Q_QML_OC_PROFILE(member, Code)\
-    Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, member.profiler, Code)
-
 class QQmlObjectCreationProfiler {
 public:
 
@@ -367,7 +413,7 @@ public:
         Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, endRange<QQmlProfilerDefinitions::Creating>());
     }
 
-    void update(QQmlCompiledData *ref, const QV4::CompiledData::Object *obj,
+    void update(QV4::CompiledData::CompilationUnit *ref, const QV4::CompiledData::Object *obj,
                 const QString &typeName, const QUrl &url)
     {
         profiler->updateCreating(obj, ref, url, typeName);
@@ -399,5 +445,7 @@ private:
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
+
+#endif // QT_NO_QML_DEBUGGER
 
 #endif // QQMLPROFILER_P_H

@@ -154,6 +154,7 @@ private slots:
 #endif
     void readOnly();
     void focusOnPress();
+    void focusOnPressOnlyOneItem();
 
     void openInputPanel();
     void setHAlignClearCache();
@@ -200,6 +201,8 @@ private slots:
     void implicitSize();
     void implicitSizeBinding_data();
     void implicitSizeBinding();
+    void implicitResize_data();
+    void implicitResize();
 
     void negativeDimensions();
 
@@ -3511,6 +3514,46 @@ void tst_qquicktextinput::focusOnPress()
     QTest::mouseRelease(&window, Qt::LeftButton, noModifiers);
 }
 
+void tst_qquicktextinput::focusOnPressOnlyOneItem()
+{
+    QQuickView window(testFileUrl("focusOnlyOneOnPress.qml"));
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QQuickTextInput *first = window.rootObject()->findChild<QQuickTextInput*>("first");
+    QQuickTextInput *second = window.rootObject()->findChild<QQuickTextInput*>("second");
+    QQuickTextInput *third = window.rootObject()->findChild<QQuickTextInput*>("third");
+
+    // second is focused onComplete
+    QVERIFY(second->hasActiveFocus());
+
+    // and first will try focus when we press it
+    QVERIFY(first->focusOnPress());
+
+    // write some text to start editing
+    QTest::keyClick(&window, Qt::Key_A);
+
+    // click the first input. naturally, we are giving focus on press, but
+    // second's editingFinished also attempts to assign focus. lastly, focus
+    // should bounce back to second from first's editingFinished signal.
+    //
+    // this is a contrived example to be sure, but at the end of this, the
+    // important thing is that only one thing should have activeFocus.
+    Qt::KeyboardModifiers noModifiers = 0;
+    QTest::mousePress(&window, Qt::LeftButton, noModifiers, QPoint(10, 10));
+
+    // make sure the press is processed.
+    QGuiApplication::processEvents();
+
+    QVERIFY(second->hasActiveFocus()); // make sure it's still there
+    QVERIFY(!third->hasActiveFocus()); // make sure it didn't end up anywhere else
+    QVERIFY(!first->hasActiveFocus()); // make sure it didn't end up anywhere else
+
+    // reset state
+    QTest::mouseRelease(&window, Qt::LeftButton, noModifiers, QPoint(10, 10));
+}
+
 void tst_qquicktextinput::openInputPanel()
 {
     PlatformInputContext platformInputContext;
@@ -5969,6 +6012,39 @@ void tst_qquicktextinput::implicitSizeBinding()
     QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
+void tst_qquicktextinput::implicitResize_data()
+{
+    QTest::addColumn<int>("alignment");
+    QTest::newRow("left") << int(Qt::AlignLeft);
+    QTest::newRow("center") << int(Qt::AlignHCenter);
+    QTest::newRow("right") << int(Qt::AlignRight);
+}
+
+void tst_qquicktextinput::implicitResize()
+{
+    QFETCH(int, alignment);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nTextInput { }", QUrl::fromLocalFile(""));
+
+    QScopedPointer<QQuickTextInput> textInput(qobject_cast<QQuickTextInput *>(component.create()));
+    QVERIFY(!textInput.isNull());
+
+    QScopedPointer<QQuickTextInput> textField(qobject_cast<QQuickTextInput *>(component.create()));
+    QVERIFY(!textField.isNull());
+    QQuickTextInputPrivate::get(textField.data())->setImplicitResizeEnabled(false);
+
+    textInput->setWidth(200);
+    textField->setImplicitWidth(200);
+
+    textInput->setHAlign(QQuickTextInput::HAlignment(alignment));
+    textField->setHAlign(QQuickTextInput::HAlignment(alignment));
+
+    textInput->setText("Qt");
+    textField->setText("Qt");
+
+    QCOMPARE(textField->positionToRectangle(0), textInput->positionToRectangle(0));
+}
 
 void tst_qquicktextinput::negativeDimensions()
 {

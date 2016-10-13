@@ -159,14 +159,13 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             QQmlData *targetDData = QQmlData::get(target, /*create*/false);
             if (!targetDData)
                 return;
-            int coreIndex;
-            QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, &coreIndex);
+            int coreIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex).coreIndex();
             const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
             if (!pd)
                 return;
 
-            if (pd->notifyIndex != -1)
-                connect(target, pd->notifyIndex, ctxt->engine);
+            if (pd->notifyIndex() != -1)
+                connect(target, pd->notifyIndex(), ctxt->engine);
         }
 
         metaObject.setFlag();
@@ -199,10 +198,9 @@ QQmlInterceptorMetaObject::~QQmlInterceptorMetaObject()
 
 }
 
-void QQmlInterceptorMetaObject::registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor)
+void QQmlInterceptorMetaObject::registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor)
 {
-    interceptor->m_coreIndex = index;
-    interceptor->m_valueTypeCoreIndex = valueIndex;
+    interceptor->m_propertyIndex = index;
     interceptor->m_next = interceptors;
     interceptors = interceptor;
 }
@@ -220,14 +218,14 @@ int QQmlInterceptorMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id,
 bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 {
     if (c == QMetaObject::WriteProperty && interceptors &&
-       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyPrivate::BypassInterceptor)) {
+       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyData::BypassInterceptor)) {
 
         for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
-            if (vi->m_coreIndex != id)
+            if (vi->m_propertyIndex.coreIndex() != id)
                 continue;
 
-            int valueIndex = vi->m_valueTypeCoreIndex;
-            int type = QQmlData::get(object)->propertyCache->property(id)->propType;
+            const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
+            int type = QQmlData::get(object)->propertyCache->property(id)->propType();
 
             if (type != QVariant::Invalid) {
                 if (valueIndex != -1) {
@@ -278,7 +276,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     bool updated = false;
                     if (newComponentValue != prevComponentValue) {
                         valueProp.write(valueType, prevComponentValue);
-                        valueType->write(object, id, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                        valueType->write(object, id, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
                         vi->write(newComponentValue);
                         updated = true;
@@ -319,8 +317,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
       ctxt(QQmlData::get(obj, true)->outerContext),
       aliasEndpoints(0), compilationUnit(qmlCompilationUnit), compiledObject(0)
 {
-    cache->addref();
-
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
     if (compilationUnit && qmlObjectId >= 0) {
@@ -345,8 +341,6 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     delete [] aliasEndpoints;
 
     qDeleteAll(varObjectGuards);
-
-    cache->release();
 }
 
 QV4::MemberData *QQmlVMEMetaObject::propertyAndMethodStorageAsMemberData()
@@ -614,6 +608,9 @@ QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id)
     return v->d()->data.value<QRectF>();
 }
 
+#if defined(Q_OS_WINRT) && defined(_M_ARM)
+#pragma optimize("", off)
+#endif
 int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void **a)
 {
     Q_ASSERT(o == object);
@@ -634,7 +631,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= propOffset();
 
             if (id < propertyCount) {
-                const QV4::CompiledData::Property::Type t = static_cast<QV4::CompiledData::Property::Type>(compiledObject->propertyTable()[id].type);
+                const QV4::CompiledData::Property::Type t = static_cast<QV4::CompiledData::Property::Type>(qint32(compiledObject->propertyTable()[id].type));
                 bool needActivate = false;
 
                 if (t == QV4::CompiledData::Property::Var) {
@@ -849,6 +846,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
                 if (!ctxt) return -1;
 
+                while (aliasData->aliasToLocalAlias)
+                    aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
+
                 QQmlContext *context = ctxt->asQQmlContext();
                 QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
 
@@ -867,16 +867,17 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 if (!targetDData)
                     return -1;
 
-                int coreIndex;
-                const int valueTypePropertyIndex = QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, &coreIndex);
+                QQmlPropertyIndex encodedIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex);
+                int coreIndex = encodedIndex.coreIndex();
+                const int valueTypePropertyIndex = encodedIndex.valueTypeIndex();
 
                 // Remove binding (if any) on write
                 if(c == QMetaObject::WriteProperty) {
                     int flags = *reinterpret_cast<int*>(a[3]);
-                    if (flags & QQmlPropertyPrivate::RemoveBindingOnAliasWrite) {
+                    if (flags & QQmlPropertyData::RemoveBindingOnAliasWrite) {
                         QQmlData *targetData = QQmlData::get(target);
                         if (targetData && targetData->hasBindingBit(coreIndex))
-                            QQmlPropertyPrivate::removeBinding(target, aliasData->encodedMetaPropertyIndex);
+                            QQmlPropertyPrivate::removeBinding(target, encodedIndex);
                     }
                 }
 
@@ -885,7 +886,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         return -1;
                     const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
                     // Value type property
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType);
+                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType());
                     Q_ASSERT(valueType);
 
                     valueType->read(target, coreIndex);
@@ -934,10 +935,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     // are not rewritten correctly but this bug is deemed out-of-scope to fix for
                     // performance reasons; see QTBUG-24064) and thus compilation will have failed.
                     QQmlError e;
-                    e.setDescription(QString::fromLatin1("Exception occurred during compilation of "
-                                                         "function: %1")
-                                     .arg(QString::fromUtf8(QMetaObject::method(_id)
-                                                            .methodSignature())));
+                    e.setDescription(QLatin1String("Exception occurred during compilation of "
+                                                         "function: ")
+                                     + QString::fromUtf8(QMetaObject::method(_id)
+                                                         .methodSignature()));
                     ep->warning(e);
                     return -1; // The dynamic method with that id is not available.
                 }
@@ -949,15 +950,14 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 for (uint ii = 0; ii < parameterCount; ++ii)
                     callData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
-                QV4::ScopedValue result(scope);
-                result = function->call(callData);
+                function->call(scope, callData);
                 if (scope.hasException()) {
                     QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
+                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(scope.result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -972,6 +972,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
     else
         return object->qt_metacall(c, _id, a);
 }
+#if defined(Q_OS_WINRT) && defined(_M_ARM)
+#pragma optimize("", on)
+#endif
 
 QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
@@ -1191,8 +1194,11 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
     if (!*target)
         return false;
 
-    if (!aliasData->isObjectAlias())
-        *valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(aliasData->encodedMetaPropertyIndex, coreIndex);
+    if (!aliasData->isObjectAlias()) {
+        QQmlPropertyIndex encodedIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex);
+        *coreIndex = encodedIndex.coreIndex();
+        *valueTypeIndex = encodedIndex.valueTypeIndex();
+    }
     return true;
 }
 

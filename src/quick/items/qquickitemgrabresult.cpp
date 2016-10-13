@@ -180,12 +180,25 @@ QQuickItemGrabResult::QQuickItemGrabResult(QObject *parent)
 /*!
  * Saves the grab result as an image to \a fileName. Returns true
  * if successful; otherwise returns false.
+ *
+ * \note In Qt versions prior to 5.9, this function is marked as non-\c{const}.
+ */
+bool QQuickItemGrabResult::saveToFile(const QString &fileName) const
+{
+    Q_D(const QQuickItemGrabResult);
+    return d->image.save(fileName);
+}
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+/*!
+ * \overload
+ * \internal
  */
 bool QQuickItemGrabResult::saveToFile(const QString &fileName)
 {
-    Q_D(QQuickItemGrabResult);
-    return d->image.save(fileName);
+    return qAsConst(*this).saveToFile(fileName);
 }
+#endif // < Qt 6
 
 QUrl QQuickItemGrabResult::url() const
 {
@@ -299,7 +312,7 @@ QQuickItemGrabResult *QQuickItemGrabResultPrivate::create(QQuickItem *item, cons
  * Use \a targetSize to specify the size of the target image. By default, the
  * result will have the same size as item.
  *
- * If the grab could not be initiated, the function returns a \c null.
+ * If the grab could not be initiated, the function returns \c null.
  *
  * \note This function will render the item to an offscreen surface and
  * copy that surface from the GPU's memory into the CPU's memory, which can
@@ -326,7 +339,8 @@ QSharedPointer<QQuickItemGrabResult> QQuickItem::grabToImage(const QSize &target
  * Grabs the item into an in-memory image.
  *
  * The grab happens asynchronously and the JavaScript function \a callback is
- * invoked when the grab is completed.
+ * invoked when the grab is completed. The callback takes one argument, which
+ * is the result of the grab operation; an \l ItemGrabResult object.
  *
  * Use \a targetSize to specify the size of the target image. By default, the result
  * will have the same size as the item.

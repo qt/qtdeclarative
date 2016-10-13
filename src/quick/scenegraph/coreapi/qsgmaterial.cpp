@@ -67,9 +67,9 @@ void qsg_set_material_failure()
 #ifndef QT_NO_OPENGL
 const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType type) const
 {
-    QStringList files = m_sourceFiles[type];
+    const QStringList files = m_sourceFiles[type];
     QSGShaderSourceBuilder builder;
-    Q_FOREACH (const QString &file, files)
+    for (const QString &file : files)
         builder.appendSourceFile(file);
     m_sources[type] = builder.source();
     return m_sources[type].constData();
@@ -681,7 +681,6 @@ QSGMaterial::~QSGMaterial()
     the full matrix of the geometry nodes for rendering.
 
     \value CustomCompileStep Starting with Qt 5.2, the scene graph will not always call
-
     QSGMaterialShader::compile() when its shader program is compiled and linked.
     Set this flag to enforce that the function is called.
 

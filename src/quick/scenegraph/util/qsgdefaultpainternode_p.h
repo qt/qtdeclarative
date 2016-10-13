@@ -72,7 +72,7 @@ public:
 
     void setDirtyRect(const QRect &rect) { m_dirty_rect = rect; }
 
-    void bind();
+    void bind() override;
 
 private:
     QRect m_dirty_rect;
@@ -84,43 +84,43 @@ public:
     QSGDefaultPainterNode(QQuickPaintedItem *item);
     virtual ~QSGDefaultPainterNode();
 
-    void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target);
+    void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target) override;
 
-    void setSize(const QSize &size);
+    void setSize(const QSize &size) override;
     QSize size() const { return m_size; }
 
-    void setDirty(const QRect &dirtyRect = QRect());
+    void setDirty(const QRect &dirtyRect = QRect()) override;
 
-    void setOpaquePainting(bool opaque);
+    void setOpaquePainting(bool opaque) override;
     bool opaquePainting() const { return m_opaquePainting; }
 
-    void setLinearFiltering(bool linearFiltering);
+    void setLinearFiltering(bool linearFiltering) override;
     bool linearFiltering() const { return m_linear_filtering; }
 
-    void setMipmapping(bool mipmapping);
+    void setMipmapping(bool mipmapping) override;
     bool mipmapping() const { return m_mipmapping; }
 
-    void setSmoothPainting(bool s);
+    void setSmoothPainting(bool s) override;
     bool smoothPainting() const { return m_smoothPainting; }
 
-    void setFillColor(const QColor &c);
+    void setFillColor(const QColor &c) override;
     QColor fillColor() const { return m_fillColor; }
 
-    void setContentsScale(qreal s);
+    void setContentsScale(qreal s) override;
     qreal contentsScale() const { return m_contentsScale; }
 
-    void setFastFBOResizing(bool dynamic);
+    void setFastFBOResizing(bool dynamic) override;
     bool fastFBOResizing() const { return m_fastFBOResizing; }
 
-    void setTextureSize(const QSize &textureSize);
+    void setTextureSize(const QSize &textureSize) override;
     QSize textureSize() const { return m_textureSize; }
 
-    QImage toImage() const;
-    void update();
+    QImage toImage() const override;
+    void update() override;
 
     void paint();
 
-    QSGTexture *texture() const { return m_texture; }
+    QSGTexture *texture() const override { return m_texture; }
 
 private:
     void updateTexture();

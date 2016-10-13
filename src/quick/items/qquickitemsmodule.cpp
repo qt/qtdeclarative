@@ -73,11 +73,11 @@
 //#include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickcanvasitem_p.h>
 #include <QtQuick/private/qquickcontext2d_p.h>
-# include "qquickitemgrabresult.h"
+#include "qquickitemgrabresult.h"
+#include "qquicksprite_p.h"
+#include "qquickspritesequence_p.h"
+#include "qquickanimatedsprite_p.h"
 #ifndef QT_NO_OPENGL
-# include "qquicksprite_p.h"
-# include "qquickspritesequence_p.h"
-# include "qquickanimatedsprite_p.h"
 # include "qquickopenglinfo_p.h"
 #endif
 #include "qquickgraphicsinfo_p.h"
@@ -133,7 +133,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 {
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
-    QQuickItemPrivate::registerAccessorProperties();
 
 #ifdef QT_NO_MOVIE
     qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", QCoreApplication::translate("QQuickAnimatedImage","Qt was built without support for QMovie"));
@@ -218,11 +217,11 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
-#ifndef QT_NO_OPENGL
+
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
     qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
     qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteSequence");
-#endif
+
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");
     qmlRegisterType<QQuickAnchorSet>();

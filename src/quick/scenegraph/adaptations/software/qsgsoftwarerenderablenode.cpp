@@ -39,15 +39,17 @@
 
 #include "qsgsoftwarerenderablenode_p.h"
 
-#include "qsgsoftwareimagenode_p.h"
-#include "qsgsoftwarerectanglenode_p.h"
+#include "qsgsoftwareinternalimagenode_p.h"
+#include "qsgsoftwareinternalrectanglenode_p.h"
 #include "qsgsoftwareglyphnode_p.h"
-#include "qsgsoftwareninepatchnode_p.h"
+#include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
+#include "qsgsoftwarespritenode_p.h"
 
-#include <QtQuick/QSGSimpleRectNode>
-#include <QtQuick/qsgsimpletexturenode.h>
+#include <qsgsimplerectnode.h>
+#include <qsgsimpletexturenode.h>
+#include <private/qsgrendernode_p.h>
 #include <private/qsgtexture_p.h>
 
 Q_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
@@ -58,6 +60,7 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
     : m_nodeType(type)
     , m_isOpaque(true)
     , m_isDirty(true)
+    , m_hasClipRegion(false)
     , m_opacity(1.0f)
 {
     switch (m_nodeType) {
@@ -68,19 +71,31 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
         m_handle.simpleTextureNode = static_cast<QSGSimpleTextureNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Image:
-        m_handle.imageNode = static_cast<QSGSoftwareImageNode*>(node);
+        m_handle.imageNode = static_cast<QSGSoftwareInternalImageNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Painter:
         m_handle.painterNode = static_cast<QSGSoftwarePainterNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Rectangle:
-        m_handle.rectangleNode = static_cast<QSGSoftwareRectangleNode*>(node);
+        m_handle.rectangleNode = static_cast<QSGSoftwareInternalRectangleNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Glyph:
         m_handle.glpyhNode = static_cast<QSGSoftwareGlyphNode*>(node);
         break;
     case QSGSoftwareRenderableNode::NinePatch:
         m_handle.ninePatchNode = static_cast<QSGSoftwareNinePatchNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::SimpleRectangle:
+        m_handle.simpleRectangleNode = static_cast<QSGRectangleNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::SimpleImage:
+        m_handle.simpleImageNode = static_cast<QSGImageNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::SpriteNode:
+        m_handle.spriteNode = static_cast<QSGSoftwareSpriteNode*>(node);
+        break;
+    case QSGSoftwareRenderableNode::RenderNode:
+        m_handle.renderNode = static_cast<QSGRenderNode*>(node);
         break;
     case QSGSoftwareRenderableNode::Invalid:
         m_handle.simpleRectNode = nullptr;
@@ -151,14 +166,46 @@ void QSGSoftwareRenderableNode::update()
 
         boundingRect = m_handle.ninePatchNode->bounds().toRect();
         break;
+    case QSGSoftwareRenderableNode::SimpleRectangle:
+        if (m_handle.simpleRectangleNode->color().alpha() == 255 && !m_transform.isRotating())
+            m_isOpaque = true;
+        else
+            m_isOpaque = false;
+
+        boundingRect = m_handle.simpleRectangleNode->rect().toRect();
+        break;
+    case QSGSoftwareRenderableNode::SimpleImage:
+        if (!m_handle.simpleImageNode->texture()->hasAlphaChannel() && !m_transform.isRotating())
+            m_isOpaque = true;
+        else
+            m_isOpaque = false;
+
+        boundingRect = m_handle.simpleImageNode->rect().toRect();
+        break;
+    case QSGSoftwareRenderableNode::SpriteNode:
+        m_isOpaque = m_handle.spriteNode->isOpaque();
+        boundingRect = m_handle.spriteNode->rect().toRect();
+        break;
+    case QSGSoftwareRenderableNode::RenderNode:
+        if (m_handle.renderNode->flags().testFlag(QSGRenderNode::OpaqueRendering) && !m_transform.isRotating())
+            m_isOpaque = true;
+        else
+            m_isOpaque = false;
+
+        boundingRect = m_handle.renderNode->rect().toRect();
+        break;
     default:
         break;
     }
 
     m_boundingRect = m_transform.mapRect(boundingRect);
 
-    if (m_clipRegion.rectCount() == 1) {
-        m_boundingRect = m_boundingRect.intersected(m_clipRegion.rects().first());
+    if (m_hasClipRegion && m_clipRegion.rectCount() <= 1) {
+        // If there is a clipRegion, and it is empty, the item wont be rendered
+        if (m_clipRegion.isEmpty())
+            m_boundingRect = QRect();
+        else
+            m_boundingRect = m_boundingRect.intersected(m_clipRegion.rects().first());
     }
 
     // Overrides
@@ -168,15 +215,56 @@ void QSGSoftwareRenderableNode::update()
     m_dirtyRegion = QRegion(m_boundingRect);
 }
 
+struct RenderNodeState : public QSGRenderNode::RenderState
+{
+    const QMatrix4x4 *projectionMatrix() const override { return &ident; }
+    QRect scissorRect() const override { return QRect(); }
+    bool scissorEnabled() const override { return false; }
+    int stencilValue() const override { return 0; }
+    bool stencilEnabled() const override { return false; }
+    const QRegion *clipRegion() const override { return &cr; }
+    QMatrix4x4 ident;
+    QRegion cr;
+};
+
 QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaquePainting)
 {
     Q_ASSERT(painter);
 
     // Check for don't paint conditions
-    if (!m_isDirty || qFuzzyIsNull(m_opacity) || m_dirtyRegion.isEmpty()) {
-        m_isDirty = false;
-        m_dirtyRegion = QRegion();
-        return QRegion();
+    if (m_nodeType != RenderNode) {
+        if (!m_isDirty || qFuzzyIsNull(m_opacity) || m_dirtyRegion.isEmpty()) {
+            m_isDirty = false;
+            m_dirtyRegion = QRegion();
+            return QRegion();
+        }
+    } else {
+        if (!m_isDirty || qFuzzyIsNull(m_opacity)) {
+            m_isDirty = false;
+            m_dirtyRegion = QRegion();
+            return QRegion();
+        } else {
+            QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(m_handle.renderNode);
+            QMatrix4x4 m = m_transform;
+            rd->m_matrix = &m;
+            rd->m_opacity = m_opacity;
+            RenderNodeState rs;
+            rs.cr = m_clipRegion;
+
+            const QRect br = m_handle.renderNode->flags().testFlag(QSGRenderNode::BoundedRectRendering)
+                ? m_boundingRect :
+                QRect(0, 0, painter->device()->width(), painter->device()->height());
+
+            painter->save();
+            painter->setClipRegion(br, Qt::ReplaceClip);
+            m_handle.renderNode->render(&rs);
+            painter->restore();
+
+            m_previousDirtyRegion = QRegion(br);
+            m_isDirty = false;
+            m_dirtyRegion = QRegion();
+            return br;
+        }
     }
 
     painter->save();
@@ -201,10 +289,10 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
         QSGTexture *texture = m_handle.simpleTextureNode->texture();
         if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(texture)) {
             const QPixmap &pm = pt->pixmap();
-            painter->drawPixmap(m_handle.simpleTextureNode->rect(), pm, QRectF(0, 0, pm.width(), pm.height()));
+            painter->drawPixmap(m_handle.simpleTextureNode->rect(), pm, m_handle.simpleTextureNode->sourceRect());
         } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(texture)) {
             const QImage &im = pt->image();
-            painter->drawImage(m_handle.simpleTextureNode->rect(), im, QRectF(0, 0, im.width(), im.height()));
+            painter->drawImage(m_handle.simpleTextureNode->rect(), im, m_handle.simpleTextureNode->sourceRect());
         }
     }
         break;
@@ -222,6 +310,15 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
         break;
     case QSGSoftwareRenderableNode::NinePatch:
         m_handle.ninePatchNode->paint(painter);
+        break;
+    case QSGSoftwareRenderableNode::SimpleRectangle:
+        static_cast<QSGSoftwareRectangleNode *>(m_handle.simpleRectangleNode)->paint(painter);
+        break;
+    case QSGSoftwareRenderableNode::SimpleImage:
+        static_cast<QSGSoftwareImageNode *>(m_handle.simpleImageNode)->paint(painter);
+        break;
+    case QSGSoftwareRenderableNode::SpriteNode:
+        static_cast<QSGSoftwareSpriteNode *>(m_handle.spriteNode)->paint(painter);
         break;
     default:
         break;
@@ -256,12 +353,13 @@ void QSGSoftwareRenderableNode::setTransform(const QTransform &transform)
     update();
 }
 
-void QSGSoftwareRenderableNode::setClipRegion(const QRegion &clipRect)
+void QSGSoftwareRenderableNode::setClipRegion(const QRegion &clipRect, bool hasClipRegion)
 {
-    if (m_clipRegion == clipRect)
+    if (m_clipRegion == clipRect && m_hasClipRegion == hasClipRegion)
         return;
 
     m_clipRegion = clipRect;
+    m_hasClipRegion = hasClipRegion;
     update();
 }
 

@@ -52,6 +52,11 @@
 
 #include <QtCore/QString>
 #include <private/qv4global_p.h>
+#include <QSharedPointer>
+
+// To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
+// parent's init all up the inheritance chain), define QML_CHECK_INIT_DESTROY_CALLS below.
+#undef QML_CHECK_INIT_DESTROY_CALLS
 
 QT_BEGIN_NAMESPACE
 
@@ -119,13 +124,20 @@ struct Q_QML_EXPORT Base {
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }
     void operator delete(void *, Heap::Base *) {}
+
+    void init() { setInitialized(); }
+#ifdef QML_CHECK_INIT_DESTROY_CALLS
+    bool _isInitialized;
+    void _checkIsInitialized() { Q_ASSERT(_isInitialized); }
+    void setInitialized() { Q_ASSERT(!_isInitialized); _isInitialized = true; }
+#else
+    Q_ALWAYS_INLINE void _checkIsInitialized() {}
+    Q_ALWAYS_INLINE void setInitialized() {}
+#endif
 };
 
 template <typename T>
 struct Pointer {
-    Pointer() {}
-    Pointer(T *t) : ptr(t) {}
-
     T *operator->() const { return ptr; }
     operator T *() const { return ptr; }
 
@@ -136,8 +148,64 @@ struct Pointer {
 
     T *ptr;
 };
+Q_STATIC_ASSERT(std::is_trivial<Pointer<void>>::value);
 
 }
+
+#ifdef QT_NO_QOBJECT
+template <class T>
+struct QQmlQPointer {
+};
+#else
+template <class T>
+struct QQmlQPointer {
+    void init()
+    {
+        d = nullptr;
+        qObject = nullptr;
+    }
+
+    void init(T *o)
+    {
+        Q_ASSERT(d == nullptr);
+        Q_ASSERT(qObject == nullptr);
+        if (o) {
+            d = QtSharedPointer::ExternalRefCountData::getAndRef(o);
+            qObject = o;
+        }
+    }
+
+    void destroy()
+    {
+        if (d && !d->weakref.deref())
+            delete d;
+        d = nullptr;
+        qObject = nullptr;
+    }
+
+    T *data() const {
+        return d == nullptr || d->strongref.load() == 0 ? nullptr : qObject;
+    }
+    operator T*() const { return data(); }
+    inline T* operator->() const { return data(); }
+    QQmlQPointer &operator=(T *o)
+    {
+        if (d)
+            destroy();
+        init(o);
+        return *this;
+    }
+    bool isNull() const Q_DECL_NOTHROW
+    {
+        return d == nullptr || qObject == nullptr || d->strongref.load() == 0;
+    }
+
+private:
+    QtSharedPointer::ExternalRefCountData *d;
+    QObject *qObject;
+};
+Q_STATIC_ASSERT(std::is_trivial<QQmlQPointer<QObject>>::value);
+#endif
 
 }
 

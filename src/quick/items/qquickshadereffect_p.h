@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickOpenGLShaderEffect;
 class QQuickGenericShaderEffect;
+class QQuickShaderEffectPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
 {
@@ -134,6 +135,8 @@ private:
     QQuickOpenGLShaderEffect *m_glImpl;
 #endif
     QQuickGenericShaderEffect *m_impl;
+
+    Q_DECLARE_PRIVATE(QQuickShaderEffect)
 };
 
 QT_END_NAMESPACE

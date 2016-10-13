@@ -198,9 +198,7 @@ Module {
                 "MacWindowToolBarButtonHint": 268435456,
                 "BypassGraphicsProxyWidget": 536870912,
                 "NoDropShadowWindowHint": 1073741824,
-                "WindowFullscreenButtonHint": -2147483648,
-                "WindowOkButtonHint": 524288,
-                "WindowCancelButtonHint": 1048576
+                "WindowFullscreenButtonHint": -2147483648
             }
         }
         Enum {
@@ -243,9 +241,7 @@ Module {
                 "MacWindowToolBarButtonHint": 268435456,
                 "BypassGraphicsProxyWidget": 536870912,
                 "NoDropShadowWindowHint": 1073741824,
-                "WindowFullscreenButtonHint": -2147483648,
-                "WindowOkButtonHint": 524288,
-                "WindowCancelButtonHint": 1048576
+                "WindowFullscreenButtonHint": -2147483648
             }
         }
         Enum {
@@ -422,6 +418,7 @@ Module {
                 "AA_DontShowIconsInMenus": 2,
                 "AA_NativeWindows": 3,
                 "AA_DontCreateNativeWidgetSiblings": 4,
+                "AA_PluginApplication": 5,
                 "AA_MacPluginApplication": 5,
                 "AA_DontUseNativeMenuBar": 6,
                 "AA_MacDontSwapCtrlAndMeta": 7,
@@ -438,7 +435,12 @@ Module {
                 "AA_SetPalette": 19,
                 "AA_EnableHighDpiScaling": 20,
                 "AA_DisableHighDpiScaling": 21,
-                "AA_AttributeCount": 22
+                "AA_UseStyleSheetPropagationInWidgetStyles": 22,
+                "AA_DontUseNativeDialogs": 23,
+                "AA_SynthesizeMouseForUnhandledTabletEvents": 24,
+                "AA_CompressHighFrequencyEvents": 25,
+                "AA_DontCheckOpenGLContextThreadAffinity": 26,
+                "AA_AttributeCount": 27
             }
         }
         Enum {
@@ -1274,8 +1276,10 @@ Module {
                 "ImTextBeforeCursor": 2048,
                 "ImTextAfterCursor": 4096,
                 "ImEnterKeyType": 8192,
+                "ImAnchorRectangle": 16384,
+                "ImInputItemClipRectangle": 32768,
                 "ImPlatformData": -2147483648,
-                "ImQueryInput": 186,
+                "ImQueryInput": 16570,
                 "ImQueryAll": -1
             }
         }
@@ -1297,8 +1301,10 @@ Module {
                 "ImTextBeforeCursor": 2048,
                 "ImTextAfterCursor": 4096,
                 "ImEnterKeyType": 8192,
+                "ImAnchorRectangle": 16384,
+                "ImInputItemClipRectangle": 32768,
                 "ImPlatformData": -2147483648,
-                "ImQueryInput": 186,
+                "ImQueryInput": 16570,
                 "ImQueryAll": -1
             }
         }
@@ -1579,6 +1585,7 @@ Module {
         Enum {
             name: "ScrollPhase"
             values: {
+                "NoScrollPhase": 0,
                 "ScrollBegin": 1,
                 "ScrollUpdate": 2,
                 "ScrollEnd": 3

@@ -794,7 +794,7 @@ static QPainter::CompositionMode qt_composite_mode_from_string(const QString &co
     } else if (compositeOperator == QLatin1String("destination-over")) {
         return QPainter::CompositionMode_DestinationOver;
     } else if (compositeOperator == QLatin1String("lighter")) {
-        return QPainter::CompositionMode_Lighten;
+        return QPainter::CompositionMode_Plus;
     } else if (compositeOperator == QLatin1String("copy")) {
         return QPainter::CompositionMode_Source;
     } else if (compositeOperator == QLatin1String("xor")) {
@@ -857,7 +857,7 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
     case QPainter::CompositionMode_Xor:
         return QStringLiteral("xor");
     case QPainter::CompositionMode_Plus:
-        return QStringLiteral("plus");
+        return QStringLiteral("lighter");
     case QPainter::CompositionMode_Multiply:
         return QStringLiteral("qt-multiply");
     case QPainter::CompositionMode_Screen:
@@ -2674,15 +2674,15 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(QV4::CallContext *ctx
     QString textAlign = s->toQString();
 
     QQuickContext2D::TextAlignType ta;
-    if (textAlign == QStringLiteral("start"))
+    if (textAlign == QLatin1String("start"))
         ta = QQuickContext2D::Start;
-    else if (textAlign == QStringLiteral("end"))
+    else if (textAlign == QLatin1String("end"))
         ta = QQuickContext2D::End;
-    else if (textAlign == QStringLiteral("left"))
+    else if (textAlign == QLatin1String("left"))
         ta = QQuickContext2D::Left;
-    else if (textAlign == QStringLiteral("right"))
+    else if (textAlign == QLatin1String("right"))
         ta = QQuickContext2D::Right;
-    else if (textAlign == QStringLiteral("center"))
+    else if (textAlign == QLatin1String("center"))
         ta = QQuickContext2D::Center;
     else
         return QV4::Encode::undefined();

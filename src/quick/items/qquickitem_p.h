@@ -63,7 +63,6 @@
 #include <QtQuick/qsgnode.h>
 #include "qquickclipnode_p.h"
 
-#include <private/qpodvector_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlnotifier_p.h>
@@ -99,7 +98,7 @@ public:
     void complete();
 
 protected:
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
     void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
     void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
@@ -189,7 +188,7 @@ public:
 
     QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
 
-    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
     void itemOpacityChanged(QQuickItem *) Q_DECL_OVERRIDE;
     void itemParentChanged(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
     void itemSiblingOrderChanged(QQuickItem *) Q_DECL_OVERRIDE;
@@ -244,8 +243,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate : public QObjectPrivate
 public:
     static QQuickItemPrivate* get(QQuickItem *item) { return item->d_func(); }
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
-
-    static void registerAccessorProperties();
 
     QQuickItemPrivate();
     ~QQuickItemPrivate();
@@ -319,24 +316,12 @@ public:
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
-    enum GeometryChangeType {
-        NoChange = 0,
-        XChange = 0x01,
-        YChange = 0x02,
-        WidthChange = 0x04,
-        HeightChange = 0x08,
-        SizeChange = WidthChange | HeightChange,
-        GeometryChange = XChange | YChange | SizeChange
-    };
-
-    Q_DECLARE_FLAGS(GeometryChangeTypes, GeometryChangeType)
-
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::ChangeTypes t) : listener(l), types(t), gTypes(GeometryChange) {}
-        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::GeometryChangeTypes gt) : listener(l), types(Geometry), gTypes(gt) {}
+        ChangeListener(QQuickItemChangeListener *l = nullptr, QQuickItemPrivate::ChangeTypes t = 0) : listener(l), types(t), gTypes(QQuickGeometryChange::All) {}
+        ChangeListener(QQuickItemChangeListener *l, QQuickGeometryChange gt) : listener(l), types(Geometry), gTypes(gt) {}
         QQuickItemChangeListener *listener;
         QQuickItemPrivate::ChangeTypes types;
-        QQuickItemPrivate::GeometryChangeTypes gTypes;  //NOTE: not used for ==
+        QQuickGeometryChange gTypes;  //NOTE: not used for ==
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
 
@@ -386,12 +371,12 @@ public:
 
     inline Qt::MouseButtons acceptedMouseButtons() const;
 
-    QPODVector<QQuickItemPrivate::ChangeListener,4> changeListeners;
+    QVector<QQuickItemPrivate::ChangeListener> changeListeners;
 
     void addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types);
     void removeItemChangeListener(QQuickItemChangeListener *, ChangeTypes types);
-    void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
-    void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
+    void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, QQuickGeometryChange types);
+    void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, QQuickGeometryChange types);
 
     QQuickStateGroup *_states();
     QQuickStateGroup *_stateGroup;
@@ -427,9 +412,9 @@ public:
     bool isAccessible:1;
     bool culled:1;
     bool hasCursor:1;
-    bool hasCursorInChild:1;
+    bool subtreeCursorEnabled:1;
     // Bit 32
-    bool hasHoverInChild:1;
+    bool subtreeHoverEnabled:1;
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;
@@ -489,7 +474,6 @@ public:
     inline QSGRenderContext *sceneGraphRenderContext() const;
 
     QQuickItem *parentItem;
-    QQmlNotifier parentNotifier;
 
     QList<QQuickItem *> childItems;
     mutable QList<QQuickItem *> *sortedChildItems;
@@ -611,6 +595,8 @@ public:
 
     // recursive helper to let a visual parent mark its visual children
     void markObjects(QV4::ExecutionEngine *e);
+
+    virtual void updatePolish() { }
 };
 
 /*
@@ -870,9 +856,9 @@ private:
     void inputMethodEvent(QInputMethodEvent *, bool post) Q_DECL_OVERRIDE;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const Q_DECL_OVERRIDE;
 #endif
-    const QByteArray keyToSignal(int key);
+    static QByteArray keyToSignal(int key);
 
-    bool isConnected(const char *signalName);
+    bool isConnected(const char *signalName) const;
 };
 
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
@@ -935,6 +921,7 @@ QSGNode *QQuickItemPrivate::childContainerNode()
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes)
+Q_DECLARE_TYPEINFO(QQuickItemPrivate::ChangeListener, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

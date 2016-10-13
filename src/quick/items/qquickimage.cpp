@@ -69,7 +69,7 @@ public:
         emit textureChanged();
     }
 
-    QSGTexture *texture() const {
+    QSGTexture *texture() const override {
         if (m_texture) {
             m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
             m_texture->setMipmapFiltering(m_mipmap ? QSGTexture::Linear : QSGTexture::None);
@@ -614,10 +614,10 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         return 0;
     }
 
-    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
+    QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
     if (!node) {
         d->pixmapChanged = true;
-        node = d->sceneGraphContext()->createImageNode();
+        node = d->sceneGraphContext()->createInternalImageNode();
     }
 
     QRectF targetRect;

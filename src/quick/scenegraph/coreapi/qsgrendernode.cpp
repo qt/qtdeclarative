@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QSGRenderNode
-    \brief The QSGMaterialShader class represents a set of custom rendering commands
+    \brief The QSGRenderNode class represents a set of custom rendering commands
     targeting the graphics API that is in use by the scenegraph.
     \inmodule QtQuick
     \since 5.8
@@ -111,6 +111,10 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
     call related settings (root signature, descriptor heaps, etc.) are always
     set again by the scenegraph so render() can freely change them.
 
+    The software backend exposes its QPainter and saves and restores before and
+    after invoking render(). Therefore reporting any changed states from here
+    is not necessary.
+
     \note This function may be called before render().
   */
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
@@ -124,17 +128,6 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     This function is called by the renderer and should paint this node with
     directly invoking commands in the graphics API (OpenGL, Direct3D, etc.)
     currently in use.
-
-    The states necessary for clipping has already been set before the function
-    is called. The clip is a combination of a stencil clip and scissor clip.
-    Information about the clip is found in \a state.
-
-    \note This means that setting viewport, scissor rectangle, stencil
-    reference value, and similar is not necessary in render() since the
-    corresponding commands are on the command list (or, in case of OpenGL, the
-    context) already. However, for APIs other than OpenGL stencil-based
-    clipping will need enabling stencil testing in the pipeline state that is
-    used by render().
 
     The effective opacity can be retrieved with \l inheritedOpacity().
 
@@ -155,6 +148,12 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     Qt Quick scene. That use case is better supported by
     QQuickFramebufferObject, QQuickWindow::beforeRendering(), or the
     equivalents of those for APIs other than OpenGL.
+
+    Clip information is calculated before the function is called, it is however
+    not enabled. Implementations wishing to take clipping into account can set
+    up scissoring or stencil based on the information in \a state. Some
+    scenegraph backends, software in particular, use no scissor or stencil.
+    There the clip region is provided as an ordinary QRegion.
 
     For OpenGL the following states are set on the render thread's context
     before this function is called:
@@ -179,6 +178,11 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     state is not covered by \l StateFlags, the state should be set to the
     default value according to the OpenGL specification. For other APIs, see
     the documentation for changedStates() for more information.
+
+    \note Depth writes are disabled when this function is called (for example,
+    glDepthMask(false) in case of OpenGL). Enabling depth writes can lead to
+    unexpected results, depending on the scenegraph backend in use, so nodes
+    should avoid this.
 
     For APIs other than OpenGL, it will likely be necessary to query certain
     API-specific resources (for example, the graphics device or the command
@@ -209,6 +213,68 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
  */
 void QSGRenderNode::releaseResources()
 {
+}
+
+/*!
+    \enum QSGRenderNode::RenderingFlag
+
+    Possible values for the bitmask returned from flags().
+
+    \value BoundedRectRendering Indicates that the implementation of render()
+    does not render outside the area reported from rect() in item
+    coordinates. Such node implementations can lead to more efficient rendering,
+    depending on the scenegraph backend. For example, the software backend can
+    continue to use the more optimal partial update path when all render nodes
+    in the scene have this flag set.
+
+    \value DepthAwareRendering Indicates that the implementations of render()
+    conforms to scenegraph expectations by only generating a Z value of 0 in
+    scene coordinates which is then transformed by the matrices retrieved from
+    RenderState::projectionMatrix() and matrix(), as described in the notes for
+    render(). Such node implementations can lead to more efficient rendering,
+    depending on the scenegraph backend. For example, the batching OpenGL
+    renderer can continue to use a more optimal path when all render nodes in
+    the scene have this flag set.
+
+    \value OpaqueRendering Indicates that the implementation of render() writes
+    out opaque pixels for the entire area reported from rect(). By default the
+    renderers must assume that render() can also output semi or fully
+    transparent pixels. Setting this flag can improve performance in some
+    cases.
+
+    \sa render(), rect()
+ */
+
+/*!
+    \return flags describing the behavior of this render node.
+
+    The default implementation returns 0.
+
+    \sa RenderingFlag, rect()
+ */
+QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
+{
+    return 0;
+}
+
+/*!
+    \return the bounding rectangle in item coordinates for the area render()
+    touches. The value is only in use when flags() includes
+    BoundedRectRendering, ignored otherwise.
+
+    Reporting the rectangle in combination with BoundedRectRendering is
+    particularly important with the \c software backend because otherwise
+    having a rendernode in the scene would trigger fullscreen updates, skipping
+    all partial update optimizations.
+
+    For rendernodes covering the entire area of a corresponding QQuickItem the
+    return value will be (0, 0, item->width(), item->height()).
+
+    \sa flags()
+*/
+QRectF QSGRenderNode::rect() const
+{
+    return QRectF();
 }
 
 /*!
@@ -284,6 +350,19 @@ QSGRenderNode::RenderState::~RenderState()
     objects, instead of individual state-setting commands, it is up to the
     implementation of render() to enable stencil testing with operations
     \c KEEP, comparison function \c EQUAL, and a read and write mask of \c 0xFF.
+ */
+
+/*!
+    \fn const QRegion *QSGRenderNode::clipRegion() const
+
+    \return the current clip region or null for backends where clipping is
+    implemented via stencil or scissoring.
+
+    The software backend uses no projection, scissor or stencil, meaning most
+    of the render state is not in use. However, the clip region that can be set
+    on the QPainter still has to be communicated since reconstructing this
+    manually in render() is not reasonable. It can therefore be queried via
+    this function.
  */
 
 /*!

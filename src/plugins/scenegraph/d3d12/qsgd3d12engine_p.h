@@ -281,13 +281,13 @@ inline uint qHash(const QSGD3D12PipelineState &key, uint seed = 0)
             + key.topologyType;
 }
 
-class QSGD3D12Engine : public QSGRendererInterface
+class QSGD3D12Engine
 {
 public:
     QSGD3D12Engine();
     ~QSGD3D12Engine();
 
-    bool attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples);
+    bool attachToWindow(WId window, const QSize &size, float dpr, int surfaceFormatSamples, bool alpha);
     void releaseResources();
     bool hasResources() const;
     void setWindowSize(const QSize &size, float dpr);
@@ -349,16 +349,22 @@ public:
     static QSize mipMapAdjustedSourceSize(const QSize &size);
 
     enum TextureCreateFlag {
-        TextureWithAlpha = 0x1,
-        TextureWithMipMaps = 0x2
+        TextureWithAlpha = 0x01,
+        TextureWithMipMaps = 0x02,
+        TextureAlways32Bit = 0x04
     };
     Q_DECLARE_FLAGS(TextureCreateFlags, TextureCreateFlag)
+
+    enum TextureUploadFlag {
+        TextureUploadAlways32Bit = 0x01
+    };
+    Q_DECLARE_FLAGS(TextureUploadFlags, TextureUploadFlag)
 
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, TextureCreateFlags flags);
     void queueTextureResize(uint id, const QSize &size);
-    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint());
-    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos);
+    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint(), TextureUploadFlags flags = 0);
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos, TextureUploadFlags flags = 0);
     void releaseTexture(uint id);
     void useTexture(uint id);
 
@@ -372,12 +378,7 @@ public:
 
     void simulateDeviceLoss();
 
-    // QSGRendererInterface
-    GraphicsApi graphicsApi() const override;
-    void *getResource(Resource resource) const override;
-    ShaderType shaderType() const override;
-    ShaderCompilationTypes shaderCompilationType() const override;
-    ShaderSourceTypes shaderSourceType() const override;
+    void *getResource(QQuickWindow *window, QSGRendererInterface::Resource resource) const;
 
 private:
     QSGD3D12EnginePrivate *d;
@@ -386,6 +387,7 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::ClearFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureCreateFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGD3D12Engine::TextureUploadFlags)
 
 QT_END_NAMESPACE
 

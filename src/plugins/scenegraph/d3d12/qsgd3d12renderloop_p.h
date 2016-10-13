@@ -58,7 +58,6 @@ QT_BEGIN_NAMESPACE
 class QSGD3D12Engine;
 class QSGD3D12Context;
 class QSGD3D12RenderContext;
-class QSGD3D12RenderThread;
 
 class QSGD3D12RenderLoop : public QSGRenderLoop
 {
@@ -80,7 +79,6 @@ public:
 
     void update(QQuickWindow *window) override;
     void maybeUpdate(QQuickWindow *window) override;
-    void handleUpdateRequest(QQuickWindow *window) override;
 
     QAnimationDriver *animationDriver() const override;
 
@@ -94,34 +92,37 @@ public:
     bool interleaveIncubation() const override;
     int flags() const override;
 
-    bool event(QEvent *e) override;
+    bool event(QEvent *event) override;
 
 public Q_SLOTS:
     void onAnimationStarted();
     void onAnimationStopped();
 
 private:
-    struct WindowData {
-        QQuickWindow *window;
-        QSGD3D12RenderThread *thread;
-        uint updateDuringSync : 1;
-        uint forceRenderPass : 1;
-    };
-
-    void startOrStopAnimationTimer();
-    void handleExposure(QQuickWindow *window);
-    void handleObscurity(WindowData *w);
-    void scheduleUpdate(WindowData *w);
-    void handleResourceRelease(WindowData *w, bool destroying);
-    void polishAndSync(WindowData *w, bool inExpose);
+    void exposeWindow(QQuickWindow *window);
+    void obscureWindow(QQuickWindow *window);
+    void renderWindow(QQuickWindow *window);
+    void render();
+    void maybePostUpdateTimer();
+    bool somethingVisible() const;
 
     QSGD3D12Context *sg;
-    QAnimationDriver *anim;
-    int animationTimer = 0;
-    bool lockedForSync = false;
-    QVector<WindowData> windows;
+    QAnimationDriver *m_anims;
+    int m_vsyncDelta;
+    int m_updateTimer = 0;
+    int m_animationTimer = 0;
 
-    friend class QSGD3D12RenderThread;
+    struct WindowData {
+        QSGD3D12RenderContext *rc = nullptr;
+        QSGD3D12Engine *engine = nullptr;
+        bool updatePending = false;
+        bool grabOnly = false;
+        bool exposed = false;
+    };
+
+    QHash<QQuickWindow *, WindowData> m_windows;
+
+    QImage m_grabContent;
 };
 
 QT_END_NAMESPACE

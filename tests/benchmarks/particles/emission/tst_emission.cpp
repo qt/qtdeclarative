@@ -79,7 +79,7 @@ void tst_emission::test_basic()
 
     int stillAlive = 0;
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 1000, 10));//Small simulation variance is permissible.
-    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

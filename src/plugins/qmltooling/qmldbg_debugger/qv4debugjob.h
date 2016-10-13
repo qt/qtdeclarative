@@ -65,7 +65,7 @@ class JavaScriptJob : public QV4DebugJob
 
 public:
     JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script);
-    void run();
+    void run() override;
     bool hasExeption() const;
 
 protected:
@@ -90,7 +90,7 @@ class BacktraceJob: public CollectJob
     int toFrame;
 public:
     BacktraceJob(QV4DataCollector *collector, int fromFrame, int toFrame);
-    void run();
+    void run() override;
 };
 
 class FrameJob: public CollectJob
@@ -100,7 +100,7 @@ class FrameJob: public CollectJob
 
 public:
     FrameJob(QV4DataCollector *collector, int frameNr);
-    void run();
+    void run() override;
     bool wasSuccessful() const;
 };
 
@@ -123,7 +123,7 @@ class ValueLookupJob: public CollectJob
 
 public:
     ValueLookupJob(const QJsonArray &handles, QV4DataCollector *collector);
-    void run();
+    void run() override;
     const QString &exceptionMessage() const;
 };
 
@@ -137,7 +137,7 @@ class ExpressionEvalJob: public JavaScriptJob
 public:
     ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, const QString &expression,
                       QV4DataCollector *collector);
-    virtual void handleResult(QV4::ScopedValue &value);
+    void handleResult(QV4::ScopedValue &value) override;
     const QString &exceptionMessage() const;
     const QJsonObject &returnValue() const;
     const QJsonArray &refs() const;
@@ -150,7 +150,7 @@ class GatherSourcesJob: public QV4DebugJob
 
 public:
     GatherSourcesJob(QV4::ExecutionEngine *engine);
-    void run();
+    void run() override;
     const QStringList &result() const;
 };
 
@@ -161,7 +161,7 @@ class EvalJob: public JavaScriptJob
 public:
     EvalJob(QV4::ExecutionEngine *engine, const QString &script);
 
-    virtual void handleResult(QV4::ScopedValue &result);
+    void handleResult(QV4::ScopedValue &result) override;
     bool resultAsBoolean() const;
 };
 

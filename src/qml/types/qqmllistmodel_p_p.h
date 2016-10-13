@@ -71,8 +71,8 @@ public:
     bool m_enabled;
 
 protected:
-    void propertyWrite(int index);
-    void propertyWritten(int index);
+    void propertyWrite(int index) override;
+    void propertyWritten(int index) override;
 
 private:
     DynamicRoleModelNode *m_owner;
@@ -88,7 +88,7 @@ public:
 
     void updateValues(const QVariantMap &object, QVector<int> &roles);
 
-    QVariant getValue(const QString &name)
+    QVariant getValue(const QString &name) const
     {
         return m_meta->value(name.toUtf8());
     }
@@ -124,7 +124,7 @@ public:
     ModelNodeMetaObject(QObject *object, QQmlListModel *model, int elementIndex);
     ~ModelNodeMetaObject();
 
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *object);
+    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *object) override;
 
     static ModelNodeMetaObject *get(QObject *obj);
 
@@ -138,7 +138,7 @@ public:
     bool initialized() const { return m_initialized; }
 
 protected:
-    void propertyWritten(int index);
+    void propertyWritten(int index) override;
 
 private:
     using QQmlOpenMetaObject::setValue;

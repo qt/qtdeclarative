@@ -68,7 +68,7 @@ struct Print: FunctionObject
     };
     V4_OBJECT(FunctionObject)
 
-    static ReturnedValue call(const Managed *, CallData *callData)
+    static void call(const Managed *, Scope &scope, CallData *callData)
     {
         for (int i = 0; i < callData->argc; ++i) {
             QString s = callData->args[i].toQStringNoThrow();
@@ -77,7 +77,7 @@ struct Print: FunctionObject
             std::cout << qPrintable(s);
         }
         std::cout << std::endl;
-        return Encode::undefined();
+        scope.result = Encode::undefined();
     }
 };
 
@@ -94,10 +94,10 @@ struct GC: public FunctionObject
     };
     V4_OBJECT(FunctionObject)
 
-    static ReturnedValue call(const Managed *m, CallData *)
+    static void call(const Managed *m, Scope &scope, CallData *)
     {
         static_cast<const GC *>(m)->engine()->memoryManager->runGC();
-        return Encode::undefined();
+        scope.result = Encode::undefined();
     }
 };
 
@@ -118,7 +118,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exceptio
         std::cerr << "Uncaught exception: " << qPrintable(message->toQStringNoThrow()) << std::endl;
     }
 
-    foreach (const QV4::StackFrame &frame, trace) {
+    for (const QV4::StackFrame &frame : trace) {
         std::cerr << "    at " << qPrintable(frame.function) << " (" << qPrintable(frame.source);
         if (frame.line >= 0)
             std::cerr << ':' << frame.line;
@@ -145,22 +145,22 @@ int main(int argc, char *argv[])
     bool runAsQml = false;
 
     if (!args.isEmpty()) {
-        if (args.first() == QLatin1String("--jit")) {
+        if (args.constFirst() == QLatin1String("--jit")) {
             mode = use_masm;
             args.removeFirst();
         }
 
-        if (args.first() == QLatin1String("--interpret")) {
+        if (args.constFirst() == QLatin1String("--interpret")) {
             mode = use_moth;
             args.removeFirst();
         }
 
-        if (args.first() == QLatin1String("--qml")) {
+        if (args.constFirst() == QLatin1String("--qml")) {
             runAsQml = true;
             args.removeFirst();
         }
 
-        if (args.first() == QLatin1String("--help")) {
+        if (args.constFirst() == QLatin1String("--help")) {
             std::cerr << "Usage: qmljs [|--jit|--interpret|--qml] file..." << std::endl;
             return EXIT_SUCCESS;
         }
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         QV4::ScopedObject gc(scope, vm.memoryManager->allocObject<builtins::GC>(ctx));
         vm.globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
 
-        foreach (const QString &fn, args) {
+        for (const QString &fn : qAsConst(args)) {
             QFile file(fn);
             if (file.open(QFile::ReadOnly)) {
                 const QString code = QString::fromUtf8(file.readAll());

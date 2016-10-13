@@ -63,8 +63,12 @@ QT_BEGIN_NAMESPACE
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
     QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(0)
 {
-    QObject::connect(m_watch, SIGNAL(propertyChanged(int,int,QMetaProperty,QVariant)),
-                     this, SLOT(propertyChanged(int,int,QMetaProperty,QVariant)));
+    connect(m_watch, &QQmlWatcher::propertyChanged,
+            this, &QQmlEngineDebugServiceImpl::propertyChanged);
+
+    // Move the message into the correct thread for processing
+    connect(this, &QQmlEngineDebugServiceImpl::scheduleMessage,
+            this, &QQmlEngineDebugServiceImpl::processMessage, Qt::QueuedConnection);
 }
 
 QQmlEngineDebugServiceImpl::~QQmlEngineDebugServiceImpl()
@@ -285,10 +289,12 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
                 if (scope) {
-                    QString methodName = QString::fromLatin1(QMetaObjectPrivate::signal(scope->metaObject(), signalHandler->signalIndex()).name());
-                    if (!methodName.isEmpty()) {
-                        prop.name = QLatin1String("on") + methodName[0].toUpper()
-                                + methodName.mid(1);
+                    const QByteArray methodName = QMetaObjectPrivate::signal(scope->metaObject(),
+                                                                             signalHandler->signalIndex()).name();
+                    const QLatin1String methodNameStr(methodName);
+                    if (methodNameStr.size() != 0) {
+                        prop.name = QLatin1String("on") + QChar(methodNameStr.at(0)).toUpper()
+                                + methodNameStr.mid(1);
                     }
                 }
             }
@@ -420,7 +426,7 @@ QQmlEngineDebugServiceImpl::objectData(QObject *object)
 
 void QQmlEngineDebugServiceImpl::messageReceived(const QByteArray &message)
 {
-    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+    emit scheduleMessage(message);
 }
 
 /*!
@@ -516,12 +522,12 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
         ds >> file >> lineNumber >> columnNumber >> recurse >> dumpProperties;
 
-        QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
+        const QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
 
         rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
            << objects.count();
 
-        foreach (QObject *object, objects) {
+        for (QObject *object : objects) {
             if (recurse)
                 prepareDeferredObjects(object);
             buildObjectDump(rs, object, recurse, dumpProperties);
@@ -656,7 +662,7 @@ bool QQmlEngineDebugServiceImpl::setBinding(int objectId,
                                                                                              filename, line, column);
                     QQmlPropertyPrivate::takeSignalExpression(property, qmlExpression);
                 } else if (property.isProperty()) {
-                    QQmlBinding *binding = new QQmlBinding(expression.toString(), object, QQmlContextData::get(context), filename, line, column);
+                    QQmlBinding *binding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, expression.toString(), object, QQmlContextData::get(context), filename, line, column);
                     binding->setTarget(property);
                     QQmlPropertyPrivate::setBinding(binding);
                     binding->update();
@@ -749,7 +755,7 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     if (!prop || !prop->isVMEFunction())
         return false;
 
-    QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex);
+    QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex());
     QList<QByteArray> paramNames = metaMethod.parameterNames();
 
     QString paramStr;
@@ -758,10 +764,8 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
         paramStr.append(QString::fromUtf8(paramNames.at(ii)));
     }
 
-    QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
-            QLatin1String(") {");
-    jsfunction += body;
-    jsfunction += QLatin1String("\n})");
+    const QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
+            QLatin1String(") {") + body + QLatin1String("\n})");
 
     QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
@@ -770,12 +774,12 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QV4::Scope scope(v4);
 
     int lineNumber = 0;
-    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex));
+    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex()));
     if (oldMethod && oldMethod->d()->function) {
         lineNumber = oldMethod->d()->function->compiledFunction->location.line;
     }
     QV4::ScopedValue v(scope, QQmlJavaScriptExpression::evalFunction(contextData, object, jsfunction, contextData->urlString(), lineNumber));
-    vmeMetaObject->setVmeMethod(prop->coreIndex, v);
+    vmeMetaObject->setVmeMethod(prop->coreIndex(), v);
     return true;
 }
 
