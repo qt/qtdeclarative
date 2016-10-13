@@ -65,9 +65,12 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \section1 Attaching ScrollBar to a Flickable
+
     When ScrollBar is attached \l {ScrollBar::vertical}{vertically} or
-    \l {ScrollBar::horizontal}{horizontally} to a Flickable, the following
-    properties are automatically set and updated as appropriate:
+    \l {ScrollBar::horizontal}{horizontally} to a Flickable, its geometry and
+    the following properties are automatically set and updated as appropriate:
+
     \list
     \li \l orientation
     \li \l position
@@ -113,12 +116,37 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \section1 Binding the Active State of Horizontal and Vertical Scroll Bars
+
     Horizontal and vertical scroll bars do not share the \l active state with
     each other by default. In order to keep both bars visible whilst scrolling
     to either direction, establish a two-way binding between the active states
     as presented by the following example:
 
     \snippet qtquickcontrols2-scrollbar-active.qml 1
+
+    \section1 Non-attached Scroll Bars
+
+    It is possible to create an instance of ScrollBar without using the
+    attached property API. This is useful when the behavior of the attached
+    scoll bar is not sufficient or a \l Flickable is not in use. In the
+    following example, horizontal and vertical scroll bars are used to
+    scroll over the text without using \l Flickable:
+
+    \snippet qtquickcontrols2-scrollbar-non-attached.qml 1
+
+    \image qtquickcontrols2-scrollbar-non-attached.png
+
+    When using a non-attached ScrollBar, the following must be done manually:
+
+    \list
+    \li Layout the scroll bar (with the \l {Item::}{x} and \l {Item::}{y} or
+        \l {Item::anchors}{anchor} properties, for example).
+    \li Set the \l size and \l position properties to determine the size and position
+        of the scroll bar in relation to the scrolled item.
+    \li Set the \l active property to determine when the scroll bar will be
+        visible.
+    \endlist
 
     \sa ScrollIndicator, {Customizing ScrollBar}, {Indicator Controls}
 */
@@ -199,6 +227,9 @@ QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
     This property holds the size of the scroll bar, scaled to \c {0.0 - 1.0}.
 
     \sa {Flickable::visibleArea.heightRatio}{Flickable::visibleArea}
+
+    This property is automatically set when the scroll bar is
+    \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
 */
 qreal QQuickScrollBar::size() const
 {
@@ -225,6 +256,9 @@ void QQuickScrollBar::setSize(qreal size)
     This property holds the position of the scroll bar, scaled to \c {0.0 - 1.0}.
 
     \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}
+
+    This property is automatically set when the scroll bar is
+    \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
 */
 qreal QQuickScrollBar::position() const
 {
@@ -273,6 +307,12 @@ void QQuickScrollBar::setStepSize(qreal step)
 
     This property holds whether the scroll bar is active, i.e. when it's \l pressed
     or the attached Flickable is \l {Flickable::moving}{moving}.
+
+    It is possible to keep \l {Binding the Active State of Horizontal and Vertical Scroll Bars}
+    {both horizontal and vertical bars visible} while scrolling in either direction.
+
+    This property is automatically set when the scroll bar is
+    \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
 */
 bool QQuickScrollBar::isActive() const
 {
@@ -321,6 +361,9 @@ void QQuickScrollBar::setPressed(bool pressed)
     Possible values:
     \value Qt.Horizontal Horizontal
     \value Qt.Vertical Vertical (default)
+
+    This property is automatically set when the scroll bar is
+    \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
 */
 Qt::Orientation QQuickScrollBar::orientation() const
 {
@@ -560,6 +603,8 @@ QQuickScrollBarAttached::~QQuickScrollBarAttached()
         ScrollBar.horizontal: ScrollBar { }
     }
     \endcode
+
+    \sa {Attaching ScrollBar to a Flickable}
 */
 QQuickScrollBar *QQuickScrollBarAttached::horizontal() const
 {
@@ -618,6 +663,8 @@ void QQuickScrollBarAttached::setHorizontal(QQuickScrollBar *horizontal)
         ScrollBar.vertical: ScrollBar { }
     }
     \endcode
+
+    \sa {Attaching ScrollBar to a Flickable}
 */
 QQuickScrollBar *QQuickScrollBarAttached::vertical() const
 {
