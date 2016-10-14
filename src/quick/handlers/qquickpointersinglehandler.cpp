@@ -40,6 +40,7 @@
 #include "qquickpointersinglehandler_p.h"
 
 QT_BEGIN_NAMESPACE
+Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
 
 /*!
     An intermediate class (not registered as a QML type)
@@ -62,14 +63,28 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (m_currentPointId) {
         // We already know which one we want, so check whether it's there.
         // It's expected to be an update or a release.
-        return (event->pointById(m_currentPointId) != nullptr);
+        // If we no longer want it, cancel the grab.
+        if (auto point = event->pointById(m_currentPointId)) {
+            if (wantsEventPoint(point)) {
+                point->setAccepted();
+                return true;
+            } else if (point->grabber() == this) {
+                point->cancelGrab();
+            }
+        } else {
+            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << m_currentPointId
+                << "is missing from current event, but was neither canceled nor released";
+            return false;
+        }
     } else {
-        // We have not yet chosen a point; choose the first one within target bounds.
+        // We have not yet chosen a point; choose the first one for which wantsEventPoint() returns true.
         int c = event->pointCount();
         for (int i = 0; i < c && !m_currentPointId; ++i) {
             QQuickEventPoint *p = event->point(i);
-            if (p->state() == QQuickEventPoint::Pressed && !p->grabber() && targetContains(p))
+            if (!p->grabber() && wantsEventPoint(p)) {
                 m_currentPointId = p->pointId();
+                p->setAccepted();
+            }
         }
     }
     return m_currentPointId;
@@ -80,18 +95,29 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
     QQuickEventPoint *currentPoint = event->pointById(m_currentPointId);
     Q_ASSERT(currentPoint);
-    currentPoint->setAccepted(true);
-    handleEventPoint(currentPoint);
+    if (!m_currentPointId || !currentPoint->isAccepted()) {
+        m_currentPointId = 0;
+        setPressedButtons(Qt::NoButton);
+    } else {
+        setPressedButtons(event->buttons());
+        handleEventPoint(currentPoint);
+    }
     bool grab = currentPoint->isAccepted() && currentPoint->state() != QQuickEventPoint::Released;
     setGrab(currentPoint, grab);
     if (!grab)
         m_currentPointId = 0;
 }
 
+bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
+{
+    return targetContains(point);
+}
+
 void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)
 {
     QQuickPointerHandler::handleGrabCancel(point);
     m_currentPointId = 0;
+    setPressedButtons(Qt::NoButton);
 }
 
 void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
