@@ -76,6 +76,8 @@ private slots:
     void checkables_data();
     void checkables();
     void comboBox();
+    void stackView_data();
+    void stackView();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -877,6 +879,33 @@ void tst_Gifs::progressBar()
     gifRecorder.setRecordingDuration(4);
     gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-progressbar%1").arg(
         indeterminate ? QLatin1String("-indeterminate.qml") : QLatin1String(".qml")));
+
+    gifRecorder.start();
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::stackView_data()
+{
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<int>("duration");
+
+    QTest::newRow("push") << "push" << 8;
+    QTest::newRow("pop") << "pop" << 6;
+    QTest::newRow("unwind") << "unwind" << 6;
+    QTest::newRow("replace") << "replace" << 6;
+}
+
+void tst_Gifs::stackView()
+{
+    QFETCH(QString, name);
+    QFETCH(int, duration);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(duration);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-stackview-%1.qml").arg(name));
 
     gifRecorder.start();
     gifRecorder.waitForFinish();

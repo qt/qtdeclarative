@@ -126,6 +126,33 @@ QT_BEGIN_NAMESPACE
     application UI, "pop" navigates backward, and "replace" replaces the
     \l currentItem.
 
+    \section2 Pushing Items
+
+    In the following animation, three \l Label controls are pushed onto a
+    stack view with the \l push() function:
+
+    \image qtquickcontrols2-stackview-push.gif
+
+    The stack now contains the following items: \c [A, B, C].
+
+    \note When the stack is empty, a push() operation will not have a
+    transition animation because there is nothing to transition from (typically
+    on application start-up).
+
+    \section2 Popping Items
+
+    Continuing on from the example above, the topmost item on the stack is
+    removed with a call to \l pop():
+
+    \image qtquickcontrols2-stackview-pop.gif
+
+    The stack now contains the following items: \c [A, B].
+
+    \note A pop() operation on a stack with depth 1 or 0 does nothing. In such
+    cases, the stack can be emptied using the \l clear() method.
+
+    \section3 Unwinding Items via Pop
+
     Sometimes, it is necessary to go back more than a single step in the stack.
     For example, to return to a "main" item or some kind of section item in the
     application. In such cases, it is possible to specify an item as a
@@ -135,22 +162,20 @@ QT_BEGIN_NAMESPACE
     explicitly unwind to the bottom of the stack, it is recommended to use
     \l{pop()}{pop(null)}, although any non-existent item will do.
 
-    Given the stack [A, B, C]:
+    In the following animation, we unwind the stack to the first item by
+    calling \c pop(null):
 
-    \list
-    \li \l{push()}{push(D)} => [A, B, C, D] - "push" transition animation
-        between C and D
-    \li pop() => [A, B] - "pop" transition animation between C and B
-    \li \l{replace()}{replace(D)} => [A, B, D] - "replace" transition between
-        C and D
-    \li \l{pop()}{pop(A)} => [A] - "pop" transition between C and A
-    \endlist
+    \image qtquickcontrols2-stackview-unwind.gif
 
-    \note When the stack is empty, a push() operation will not have a
-    transition animation because there is nothing to transition from (typically
-    on application start-up). A pop() operation on a stack with depth 1 or
-    0 does nothing. In such cases, the stack can be emptied using the clear()
-    method.
+    The stack now contains a single item: \c [A].
+
+    \section2 Replacing Items
+
+    In the following animation, we \l replace the topmost item with \c D:
+
+    \image qtquickcontrols2-stackview-replace.gif
+
+    The stack now contains the following items: \c [A, B, D].
 
     \section1 Deep Linking
 
@@ -441,7 +466,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     \value StackView.Transition An operation with transitions.
     \value StackView.Immediate An immediate operation without transitions.
 
-    \sa initialItem
+    \sa initialItem, {Pushing Items}
 */
 void QQuickStackView::push(QQmlV4Function *args)
 {
@@ -510,7 +535,7 @@ void QQuickStackView::push(QQmlV4Function *args)
     stackView.pop(null)
     \endcode
 
-    \sa clear()
+    \sa clear(), {Popping Items}, {Unwinding Items via Pop}
 */
 void QQuickStackView::pop(QQmlV4Function *args)
 {
@@ -625,7 +650,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     \value StackView.Transition An operation with transitions.
     \value StackView.Immediate An immediate operation without transitions.
 
-    \sa push()
+    \sa push(), {Replacing Items}
 */
 void QQuickStackView::replace(QQmlV4Function *args)
 {
