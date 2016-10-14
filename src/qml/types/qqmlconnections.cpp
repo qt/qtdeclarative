@@ -159,9 +159,9 @@ private:
 void QQmlConnections::setTarget(QObject *obj)
 {
     Q_D(QQmlConnections);
-    d->targetSet = true; // even if setting to 0, it is *set*
-    if (d->target == obj)
+    if (d->targetSet && d->target == obj)
         return;
+    d->targetSet = true; // even if setting to 0, it is *set*
     foreach (QQmlBoundSignal *s, d->boundsignals) {
         // It is possible that target is being changed due to one of our signal
         // handlers -> use deleteLater().
