@@ -1861,15 +1861,19 @@ void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
     QQmlData_setBit(this, obj, coreIndex * 2 + 1);
 }
 
-QQmlPropertyCache *QQmlData::ensurePropertyCache(QJSEngine *engine, QObject *object)
+QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
 {
-    Q_ASSERT(engine);
+    Q_ASSERT(priv);
+    priv->declarativeData = new QQmlData;
+    return static_cast<QQmlData *>(priv->declarativeData);
+}
+
+QQmlPropertyCache *QQmlData::createPropertyCache(QJSEngine *engine, QObject *object)
+{
     QQmlData *ddata = QQmlData::get(object, /*create*/true);
-    if (!ddata->propertyCache) {
-        ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object);
-        if (ddata->propertyCache)
-            ddata->propertyCache->addref();
-    }
+    ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object);
+    if (ddata->propertyCache)
+        ddata->propertyCache->addref();
     return ddata->propertyCache;
 }
 
