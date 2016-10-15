@@ -847,8 +847,15 @@ TestCase {
         compare(control.mirroredspy_5.count, 1)
     }
 
-    function test_hover() {
-        var control = component.createObject(testCase, {width: 100, height: 100})
+    function test_hover_data() {
+        return [
+            { tag: "normal", target: component, pressed: false },
+            { tag: "pressed", target: button, pressed: true }
+        ]
+    }
+
+    function test_hover(data) {
+        var control = data.target.createObject(testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.hovered, false)
@@ -862,8 +869,18 @@ TestCase {
         mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, true)
 
+        if (data.pressed) {
+            mousePress(control, control.width / 2, control.height / 2)
+            compare(control.hovered, true)
+        }
+
         mouseMove(control, -10, -10)
         compare(control.hovered, false)
+
+        if (data.pressed) {
+            mouseRelease(control, -10, control.height / 2)
+            compare(control.hovered, false)
+        }
 
         mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, true)

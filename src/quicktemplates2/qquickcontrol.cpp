@@ -1132,6 +1132,13 @@ void QQuickControl::hoverEnterEvent(QHoverEvent *event)
     event->setAccepted(d->hoverEnabled);
 }
 
+void QQuickControl::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickControl);
+    setHovered(d->hoverEnabled && contains(event->pos()));
+    event->setAccepted(d->hoverEnabled);
+}
+
 void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickControl);
@@ -1150,6 +1157,8 @@ void QQuickControl::mousePressEvent(QMouseEvent *event)
 
 void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 {
+    Q_D(QQuickControl);
+    setHovered(d->hoverEnabled && contains(event->pos()));
     event->accept();
 }
 
