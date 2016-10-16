@@ -582,14 +582,11 @@ Heap::QQmlSequence<Container>::QQmlSequence(QObject *object, int propertyIndex)
 namespace QV4 {
 
 typedef QQmlSequence<QVector<int> > QQmlIntVectorList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlIntVectorList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntVectorList);
 typedef QQmlSequence<QVector<qreal> > QQmlRealVectorList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlRealVectorList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealVectorList);
 typedef QQmlSequence<QVector<bool> > QQmlBoolVectorList;
-template<>
-DEFINE_OBJECT_VTABLE(QQmlBoolVectorList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolVectorList);
 typedef QQmlSequence<QStringList> QQmlQStringList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQStringList);
 typedef QQmlSequence<QList<QString> > QQmlStringList;
