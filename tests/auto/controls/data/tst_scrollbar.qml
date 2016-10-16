@@ -201,6 +201,31 @@ TestCase {
         control.destroy()
     }
 
+    function test_increase_decrease_data() {
+        return [
+            { tag: "increase:active", increase: true, active: true },
+            { tag: "decrease:active", increase: false, active: true },
+            { tag: "increase:inactive", increase: true, active: false },
+            { tag: "decrease:inactive", increase: false, active: false }
+        ]
+    }
+
+    function test_increase_decrease(data) {
+        var control = scrollBar.createObject(testCase, {position: 0.5, active: data.active})
+        verify(control)
+
+        if (data.increase) {
+            control.increase()
+            compare(control.position, 0.6)
+        } else {
+            control.decrease()
+            compare(control.position, 0.4)
+        }
+        compare(control.active, data.active)
+
+        control.destroy()
+    }
+
     function test_stepSize_data() {
         return [
             { tag: "0.0", stepSize: 0.0 },
