@@ -288,4 +288,28 @@ TestCase {
 
         container.destroy()
     }
+
+    function test_hover_data() {
+        return [
+            { tag: "enabled", hoverEnabled: true },
+            { tag: "disabled", hoverEnabled: false },
+        ]
+    }
+
+    function test_hover(data) {
+        var control = scrollBar.createObject(testCase, {hoverEnabled: data.hoverEnabled})
+        verify(control)
+
+        compare(control.hovered, false)
+
+        mouseMove(control)
+        compare(control.hovered, data.hoverEnabled)
+        compare(control.active, data.hoverEnabled)
+
+        mouseMove(control, -1, -1)
+        compare(control.hovered, false)
+        compare(control.active, false)
+
+        control.destroy()
+    }
 }

@@ -1012,6 +1012,7 @@ void QQuickControl::setHovered(bool hovered)
 
     d->hovered = hovered;
     emit hoveredChanged();
+    hoverChange();
 }
 
 /*!
@@ -1286,6 +1287,10 @@ void QQuickControl::fontChange(const QFont &newFont, const QFont &oldFont)
 {
     Q_UNUSED(newFont);
     Q_UNUSED(oldFont);
+}
+
+void QQuickControl::hoverChange()
+{
 }
 
 void QQuickControl::mirrorChange()
