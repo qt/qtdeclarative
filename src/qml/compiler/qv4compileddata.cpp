@@ -571,6 +571,17 @@ QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine
     }
 }
 
+bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engine)
+{
+    if (type) {
+        bool ok = false;
+        hash->addData(createPropertyCache(engine)->checksum(&ok));
+        return ok;
+    }
+    hash->addData(compilationUnit->data->md5Checksum, sizeof(compilationUnit->data->md5Checksum));
+    return true;
+}
+
 template <typename T>
 bool qtTypeInherits(const QMetaObject *mo) {
     while (mo) {
@@ -596,13 +607,24 @@ void ResolvedTypeReference::doDynamicTypeCheck()
 bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
 {
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
-        QQmlPropertyCache *pc = it.value()->createPropertyCache(engine);
-        bool ok = false;
-        hash->addData(pc->checksum(&ok));
-        if (!ok)
+        if (!it.value()->addToHash(hash, engine))
             return false;
     }
     return true;
+}
+
+void Unit::generateChecksum()
+{
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    const int checksummableDataOffset = qOffsetOf(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
+
+    const char *dataPtr = reinterpret_cast<const char *>(this) + checksummableDataOffset;
+    hash.addData(dataPtr, unitSize - checksummableDataOffset);
+
+    QByteArray checksum = hash.result();
+    Q_ASSERT(checksum.size() == sizeof(md5Checksum));
+    memcpy(md5Checksum, checksum.constData(), sizeof(md5Checksum));
 }
 
 #endif

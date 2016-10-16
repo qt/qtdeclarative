@@ -56,6 +56,7 @@ private slots:
     void fileSelectors();
     void localAliases();
     void cacheResources();
+    void stableOrderOfDependentCompositeTypes();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -563,6 +564,105 @@ void tst_qmldiskcache::cacheResources()
         QV4::CompiledData::Unit unit;
         QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));
         QCOMPARE(qint64(unit.sourceTimeStamp), QFileInfo(QCoreApplication::applicationFilePath()).lastModified().toMSecsSinceEpoch());
+    }
+}
+
+void tst_qmldiskcache::stableOrderOfDependentCompositeTypes()
+{
+    QQmlEngine engine;
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    {
+        const QString depFilePath = tempDir.path() + "/FirstDependentType.qml";
+        QFile f(depFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\nQtObject { property int value: 42 }"));
+    }
+
+    {
+        const QString depFilePath = tempDir.path() + "/SecondDependentType.qml";
+        QFile f(depFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\nQtObject { property int value: 100 }"));
+    }
+
+    const QString testFilePath = tempDir.path() + "/main.qml";
+    {
+        QFile f(testFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\nQtObject {\n"
+                                  "    property QtObject dep1: FirstDependentType{}\n"
+                                  "    property QtObject dep2: SecondDependentType{}\n"
+                                  "    property int value: dep1.value + dep2.value\n"
+                                  "}"));
+    }
+
+    QByteArray firstDependentTypeClassName;
+    QByteArray secondDependentTypeClassName;
+
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 142);
+
+        firstDependentTypeClassName = qvariant_cast<QObject *>(obj->property("dep1"))->metaObject()->className();
+        secondDependentTypeClassName = qvariant_cast<QObject *>(obj->property("dep2"))->metaObject()->className();
+    }
+
+    QVERIFY(firstDependentTypeClassName != secondDependentTypeClassName);
+    QVERIFY2(firstDependentTypeClassName.contains("QMLTYPE"), firstDependentTypeClassName.constData());
+    QVERIFY2(secondDependentTypeClassName.contains("QMLTYPE"), secondDependentTypeClassName.constData());
+
+    const QString testFileCachePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(testFileCachePath));
+    QDateTime initialCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
+
+    engine.clearComponentCache();
+    waitForFileSystem();
+
+    // Creating the test component a second time should load it from the cache (same time stamp),
+    // despite the class names of the dependent composite types differing.
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 142);
+
+        QVERIFY(qvariant_cast<QObject *>(obj->property("dep1"))->metaObject()->className() != firstDependentTypeClassName);
+        QVERIFY(qvariant_cast<QObject *>(obj->property("dep2"))->metaObject()->className() != secondDependentTypeClassName);
+    }
+
+    {
+        QVERIFY(QFile::exists(testFileCachePath));
+        QDateTime newCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
+        QCOMPARE(newCacheTimeStamp, initialCacheTimeStamp);
+    }
+
+    // Now change the first dependent QML type and see if we correctly re-generate the
+    // caches.
+    engine.clearComponentCache();
+    waitForFileSystem();
+    {
+        const QString depFilePath = tempDir.path() + "/FirstDependentType.qml";
+        QFile f(depFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\nQtObject { property int value: 40 }"));
+    }
+
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 140);
+    }
+
+    {
+        QVERIFY(QFile::exists(testFileCachePath));
+        QDateTime newCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
+        QVERIFY2(newCacheTimeStamp > initialCacheTimeStamp, qPrintable(newCacheTimeStamp.toString()));
     }
 }
 

@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x05
+#define QV4_DATA_STRUCTURE_VERSION 0x06
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -612,6 +612,9 @@ struct Unit
     LEUInt32 unitSize; // Size of the Unit and any depending data.
     // END DO NOT CHANGE THESE FIELDS EVER
 
+    char md5Checksum[16]; // checksum of all bytes following this field.
+    void generateChecksum();
+
     LEUInt32 architectureIndex; // string index to QSysInfo::buildAbi()
     LEUInt32 codeGeneratorIndex;
     char dependencyMD5Checksum[16];
@@ -727,7 +730,7 @@ struct TypeReference
     bool errorWhenNotFound: 1;
 };
 
-// map from name index to location of first use
+// Map from name index to location of first use.
 struct TypeReferenceMap : QHash<int, TypeReference>
 {
     TypeReference &add(int nameIndex, const Location &loc) {
@@ -791,6 +794,7 @@ struct ResolvedTypeReference
 
     QQmlPropertyCache *propertyCache() const;
     QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
 
     void doDynamicTypeCheck();
 };
