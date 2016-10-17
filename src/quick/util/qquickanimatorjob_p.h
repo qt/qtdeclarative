@@ -1,7 +1,6 @@
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
-** Copyright (C) 2016 Gunnar Sletta <gunnar@sletta.org>
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -81,20 +80,25 @@ public:
     QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObject *item);
     ~QQuickAnimatorProxyJob();
 
-    int duration() const override { return m_duration; }
+    int duration() const Q_DECL_OVERRIDE { return m_duration; }
 
-    const QSharedPointer<QAbstractAnimationJob> &job() const { return m_job; }
+    QAbstractAnimationJob *job() const { return m_job; }
+
+    void startedByController();
+    void controllerWasDeleted();
+    void markJobManagedByController() { m_jobManagedByController = true; }
 
 protected:
-    void updateCurrentTime(int) override;
-    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
-    void debugAnimation(QDebug d) const override;
+    void updateCurrentTime(int) Q_DECL_OVERRIDE;
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) Q_DECL_OVERRIDE;
+    void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
     void windowChanged(QQuickWindow *window);
     void sceneGraphInitialized();
 
 private:
+    void deleteJob();
     void syncBackCurrentValues();
     void readyToAnimate();
     void setWindow(QQuickWindow *window);
@@ -102,7 +106,7 @@ private:
 
     QPointer<QQuickAnimatorController> m_controller;
     QQuickAbstractAnimation *m_animation;
-    QSharedPointer<QAbstractAnimationJob> m_job;
+    QAbstractAnimationJob *m_job;
     int m_duration;
 
     enum InternalState {
@@ -113,6 +117,7 @@ private:
     };
 
     InternalState m_internalState;
+    bool m_jobManagedByController;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorJob : public QAbstractAnimationJob
@@ -121,45 +126,29 @@ public:
     virtual void setTarget(QQuickItem *target);
     QQuickItem *target() const { return m_target; }
 
-    void setFrom(qreal from) { m_from = from; }
+    void setFrom(qreal scale) { m_from = scale; }
     qreal from() const { return m_from; }
 
     void setTo(qreal to) { m_to = to; }
     qreal to() const { return m_to; }
 
     void setDuration(int duration) { m_duration = duration; }
-    int duration() const override { return m_duration; }
+    int duration() const Q_DECL_OVERRIDE { return m_duration; }
 
     QEasingCurve easingCurve() const { return m_easing; }
     void setEasingCurve(const QEasingCurve &curve) { m_easing = curve; }
 
-    // Initialize is called on the GUI thread just before it is started
-    // and taken over on the render thread.
+    virtual void targetWasDeleted();
     virtual void initialize(QQuickAnimatorController *controller);
-
-    // Called on the render thread during SG shutdown.
-    virtual void invalidate() = 0;
-
-    // Called on the GUI thread after a complete render thread animation job
-    // has been completed to write back a given animator's result to the
-    // source item.
     virtual void writeBack() = 0;
-
-    // Called before the SG sync on the render thread. The GUI thread is
-    // locked during this call.
-    virtual void preSync() { }
-
-    // Called after the SG sync on the render thread. The GUI thread is
-    // locked during this call.
-    virtual void postSync() { }
-
-    // Called after animations have ticked on the render thread. No locks are
-    // held at this time, so synchronization needs to be taken into account
-    // if applicable.
-    virtual void commit() { }
+    virtual void nodeWasDestroyed() = 0;
+    virtual void afterNodeSync() { }
 
     bool isTransform() const { return m_isTransform; }
     bool isUniform() const { return m_isUniform; }
+
+    bool hasBeenRunning() const { return m_hasBeenRunning; }
+    void setHasBeenRunning(bool has) { m_hasBeenRunning = has; }
 
     qreal value() const;
 
@@ -167,7 +156,7 @@ public:
 
 protected:
     QQuickAnimatorJob();
-    void debugAnimation(QDebug d) const override;
+    void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
     qreal progress(int time) const;
 
@@ -184,6 +173,7 @@ protected:
 
     uint m_isTransform : 1;
     uint m_isUniform : 1;
+    uint m_hasBeenRunning : 1;
 };
 
 class QQuickTransformAnimatorJob : public QQuickAnimatorJob
@@ -207,7 +197,7 @@ public:
         }
 
         void sync();
-        void commit();
+        void apply();
 
         int ref;
         QQuickItem *item;
@@ -227,16 +217,13 @@ public:
     };
 
     ~QQuickTransformAnimatorJob();
-
-    void commit() override;
-    void preSync() override;
-
-    void setTarget(QQuickItem *item) override;
+    Helper *transformHelper() const { return m_helper; }
 
 protected:
     QQuickTransformAnimatorJob();
-    void postSync() override;
-    void invalidate() override;
+    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
+    void nodeWasDestroyed() Q_DECL_OVERRIDE;
+    void targetWasDeleted() Q_DECL_OVERRIDE;
 
     Helper *m_helper;
 };
@@ -244,22 +231,22 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickXAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickYAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimatorJob : public QQuickTransformAnimatorJob
@@ -267,8 +254,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimatorJob : public QQuickTransformA
 public:
     QQuickRotationAnimatorJob();
 
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 
     void setDirection(QQuickRotationAnimator::RotationDirection direction) { m_direction = direction; }
     QQuickRotationAnimator::RotationDirection direction() const { return m_direction; }
@@ -282,10 +269,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimatorJob : public QQuickAnimatorJob
 public:
     QQuickOpacityAnimatorJob();
 
-    void invalidate() override;
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
-    void postSync() override;
+    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
+    void nodeWasDestroyed() Q_DECL_OVERRIDE;
 
 private:
     QSGOpacityNode *m_opacityNode;
@@ -296,17 +283,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 public:
     QQuickUniformAnimatorJob();
 
-    void setTarget(QQuickItem *target) override;
+    void setTarget(QQuickItem *target) Q_DECL_OVERRIDE;
 
     void setUniform(const QByteArray &uniform) { m_uniform = uniform; }
     QByteArray uniform() const { return m_uniform; }
 
-    void postSync() override;
+    void afterNodeSync() Q_DECL_OVERRIDE;
 
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
-
-    void invalidate() override;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
+    void nodeWasDestroyed() Q_DECL_OVERRIDE;
 
 private:
     QByteArray m_uniform;
