@@ -269,8 +269,8 @@ QQmlPropertyCache::~QQmlPropertyCache()
     QQmlPropertyCacheMethodArguments *args = argumentsCache;
     while (args) {
         QQmlPropertyCacheMethodArguments *next = args->next;
-        if (args->signalParameterStringForJS) delete args->signalParameterStringForJS;
-        if (args->names) delete args->names;
+        delete args->signalParameterStringForJS;
+        delete args->names;
         free(args);
         args = next;
     }
