@@ -446,6 +446,12 @@ void QQuickSpinBox::setValidator(QValidator *validator)
     This property holds a callback function that is called whenever
     an integer value needs to be converted to display text.
 
+    The default function can be overridden to display custom text for a given
+    value. This applies to both editable and non-editable spinboxes;
+    for example, when using the up and down buttons or a mouse wheel to
+    increment and decrement the value, the new value is converted to display
+    text using this function.
+
     The callback function signature is \c {string function(value, locale)}.
     The function can have one or two arguments, where the first argument
     is the value to be converted, and the optional second argument is the
@@ -456,6 +462,10 @@ void QQuickSpinBox::setValidator(QValidator *validator)
     \code
     textFromValue: function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }
     \endcode
+
+    \note When applying a custom \c textFromValue implementation for editable
+    spinboxes, a matching \l valueFromText implementation must be provided
+    to be able to convert the custom text back to an integer value.
 
     \sa valueFromText, validator, {Control::locale}{locale}
 */
@@ -487,6 +497,9 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
     This property holds a callback function that is called whenever
     input text needs to be converted to an integer value.
 
+    This function only needs to be overridden when \l textFromValue
+    is overridden for an editable spinbox.
+
     The callback function signature is \c {int function(text, locale)}.
     The function can have one or two arguments, where the first argument
     is the text to be converted, and the optional second argument is the
@@ -497,6 +510,10 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
     \code
     valueFromText: function(text, locale) { return Number.fromLocaleString(locale, text); }
     \endcode
+
+    \note When applying a custom \l textFromValue implementation for editable
+    spinboxes, a matching \c valueFromText implementation must be provided
+    to be able to convert the custom text back to an integer value.
 
     \sa textFromValue, validator, {Control::locale}{locale}
 */
@@ -555,7 +572,7 @@ QQuickSpinButton *QQuickSpinBox::down() const
 /*!
     \qmlmethod void QtQuick.Controls::SpinBox::increase()
 
-    Increases the value by \l stepSize.
+    Increases the value by \l stepSize, or \c 1 if stepSize is not defined.
 
     \sa stepSize
 */
@@ -568,7 +585,7 @@ void QQuickSpinBox::increase()
 /*!
     \qmlmethod void QtQuick.Controls::SpinBox::decrease()
 
-    Decreases the value by \l stepSize.
+    Decreases the value by \l stepSize, or \c 1 if stepSize is not defined.
 
     \sa stepSize
 */
