@@ -57,6 +57,7 @@
 #include <QtCore/qjsonarray.h>
 
 #include <algorithm>
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -1123,17 +1124,13 @@ bool QQmlImportsPrivate::getQmldirContent(const QString &qmldirIdentifier, const
 
 QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDatabase *database)
 {
-    struct I { static bool greaterThan(const QString &s1, const QString &s2) {
-        return s1 > s2;
-    } };
-
     QString dir = dir_arg;
     if (dir.endsWith(Slash) || dir.endsWith(Backslash))
         dir.chop(1);
 
     QStringList paths = database->fileImportPath;
     if (!paths.isEmpty())
-        std::sort(paths.begin(), paths.end(), I::greaterThan); // Ensure subdirs preceed their parents.
+        std::sort(paths.begin(), paths.end(), std::greater<QString>()); // Ensure subdirs preceed their parents.
 
     QString stableRelativePath = dir;
     for (const QString &path : qAsConst(paths)) {
