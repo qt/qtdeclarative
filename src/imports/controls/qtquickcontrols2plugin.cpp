@@ -47,7 +47,7 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 
-#include "qquickbusyindicatorring_p.h"
+#include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultstyle_p.h"
 #include "qquickdialring_p.h"
 #include "qquickprogressstrip_p.h"
@@ -163,8 +163,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/images")));
 
     const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterType<QQuickBusyIndicatorRing>(import, 2, 0, "BusyRing");
-    qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 2, 0, "BusyRingAnimator");
+    qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickProgressStrip>(import, 2, 0, "ProgressStrip");
     qmlRegisterType<QQuickProgressAnimator>(import, 2, 0, "ProgressStripAnimator");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");

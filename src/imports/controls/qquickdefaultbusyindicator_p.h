@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKBUSYINDICATORRING_P_H
-#define QQUICKBUSYINDICATORRING_P_H
+#ifndef QQUICKDEFAULTBUSYINDICATOR_P_H
+#define QQUICKDEFAULTBUSYINDICATOR_P_H
 
 //
 //  W A R N I N G
@@ -49,34 +49,28 @@
 //
 
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickanimatorjob_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickBusyIndicatorRing : public QQuickItem
+class QQuickDefaultBusyIndicator : public QQuickItem
 {
     Q_OBJECT
 
 public:
-    explicit QQuickBusyIndicatorRing(QQuickItem *parent = nullptr);
-    ~QQuickBusyIndicatorRing();
+    explicit QQuickDefaultBusyIndicator(QQuickItem *parent = nullptr);
+
+    int elapsed() const;
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
-};
 
-class QQuickBusyIndicatorAnimator : public QQuickAnimator
-{
-public:
-    QQuickBusyIndicatorAnimator(QObject *parent = nullptr);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
+private:
+    int m_elapsed;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickBusyIndicatorRing)
+QML_DECLARE_TYPE(QQuickDefaultBusyIndicator)
 
-#endif // QQUICKBUSYINDICATORRING_P_H
+#endif // QQUICKDEFAULTBUSYINDICATOR_P_H
