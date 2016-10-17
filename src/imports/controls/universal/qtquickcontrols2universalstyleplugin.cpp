@@ -36,8 +36,8 @@
 
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 
+#include "qquickuniversalbusyindicator_p.h"
 #include "qquickuniversalfocusrectangle_p.h"
-#include "qquickuniversalprogressring_p.h"
 #include "qquickuniversalprogressstrip_p.h"
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
@@ -88,9 +88,8 @@ void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, 
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickUniversalFocusRectangle>(import, 2, 0, "FocusRectangle");
+    qmlRegisterType<QQuickUniversalBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterRevision<QQuickUniversalFocusRectangle, 1>(import, 2, 1);
-    qmlRegisterType<QQuickUniversalProgressRing>(import, 2, 0, "ProgressRing");
-    qmlRegisterType<QQuickUniversalProgressRingAnimator>(import, 2, 0, "ProgressRingAnimator");
     qmlRegisterType<QQuickUniversalProgressStrip>(import, 2, 0, "ProgressStrip");
     qmlRegisterType<QQuickUniversalProgressStripAnimator>(import, 2, 0, "ProgressStripAnimator");
 

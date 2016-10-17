@@ -45,9 +45,7 @@ T.BusyIndicator {
     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
     implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
 
-    contentItem: ProgressRing {
-        id: ring
-
+    contentItem: BusyIndicatorImpl {
         implicitWidth: 20
         implicitHeight: 20
 
@@ -55,10 +53,6 @@ T.BusyIndicator {
 
         count: size < 60 ? 5 : 6 // "Small" vs. "Large"
         color: control.Universal.accent
-
-        ProgressRingAnimator {
-            target: ring
-            running: control.visible && control.running
-        }
+        visible: control.running
     }
 }

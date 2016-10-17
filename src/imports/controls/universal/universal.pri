@@ -47,15 +47,15 @@ QML_FILES += \
     $$PWD/Tumbler.qml
 
 HEADERS += \
+    $$PWD/qquickuniversalbusyindicator_p.h \
     $$PWD/qquickuniversalfocusrectangle_p.h \
-    $$PWD/qquickuniversalprogressring_p.h \
     $$PWD/qquickuniversalprogressstrip_p.h \
     $$PWD/qquickuniversalstyle_p.h \
     $$PWD/qquickuniversaltheme_p.h
 
 SOURCES += \
+    $$PWD/qquickuniversalbusyindicator.cpp \
     $$PWD/qquickuniversalfocusrectangle.cpp \
-    $$PWD/qquickuniversalprogressring.cpp \
     $$PWD/qquickuniversalprogressstrip.cpp \
     $$PWD/qquickuniversalstyle.cpp \
     $$PWD/qquickuniversaltheme.cpp

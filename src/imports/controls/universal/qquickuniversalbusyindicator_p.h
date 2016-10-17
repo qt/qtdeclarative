@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKUNIVERSALPROGRESSRING_P_H
-#define QQUICKUNIVERSALPROGRESSRING_P_H
+#ifndef QQUICKUNIVERSALBUSYINDICATOR_P_H
+#define QQUICKUNIVERSALBUSYINDICATOR_P_H
 
 //
 //  W A R N I N G
@@ -49,18 +49,17 @@
 //
 
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickanimator_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickUniversalProgressRing : public QQuickItem
+class QQuickUniversalBusyIndicator : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(int count READ count WRITE setCount FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
 
 public:
-    QQuickUniversalProgressRing(QQuickItem *parent = nullptr);
+    explicit QQuickUniversalBusyIndicator(QQuickItem *parent = nullptr);
 
     int count() const;
     void setCount(int count);
@@ -68,32 +67,20 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
-Q_SIGNALS:
-    void countChanged();
-    void colorChanged();
+    int elapsed() const;
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
     int m_count;
+    int m_elapsed;
     QColor m_color;
-};
-
-class QQuickUniversalProgressRingAnimator : public QQuickAnimator
-{
-    Q_OBJECT
-
-public:
-    QQuickUniversalProgressRingAnimator(QObject *parent = nullptr);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickUniversalProgressRing)
+QML_DECLARE_TYPE(QQuickUniversalBusyIndicator)
 
-#endif // QQUICKUNIVERSALPROGRESSRING_P_H
+#endif // QQUICKUNIVERSALBUSYINDICATOR_P_H
