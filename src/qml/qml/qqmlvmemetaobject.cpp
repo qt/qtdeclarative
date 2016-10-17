@@ -343,7 +343,7 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     qDeleteAll(varObjectGuards);
 }
 
-QV4::MemberData *QQmlVMEMetaObject::propertyAndMethodStorageAsMemberData()
+QV4::MemberData *QQmlVMEMetaObject::propertyAndMethodStorageAsMemberData() const
 {
     if (propertyAndMethodStorage.isUndefined()) {
         if (propertyAndMethodStorage.valueRef())
@@ -442,7 +442,7 @@ void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
         guard->setGuardedValue(v, this, id);
 }
 
-int QQmlVMEMetaObject::readPropertyAsInt(int id)
+int QQmlVMEMetaObject::readPropertyAsInt(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -455,7 +455,7 @@ int QQmlVMEMetaObject::readPropertyAsInt(int id)
     return sv->integerValue();
 }
 
-bool QQmlVMEMetaObject::readPropertyAsBool(int id)
+bool QQmlVMEMetaObject::readPropertyAsBool(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -468,7 +468,7 @@ bool QQmlVMEMetaObject::readPropertyAsBool(int id)
     return sv->booleanValue();
 }
 
-double QQmlVMEMetaObject::readPropertyAsDouble(int id)
+double QQmlVMEMetaObject::readPropertyAsDouble(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -481,7 +481,7 @@ double QQmlVMEMetaObject::readPropertyAsDouble(int id)
     return sv->doubleValue();
 }
 
-QString QQmlVMEMetaObject::readPropertyAsString(int id)
+QString QQmlVMEMetaObject::readPropertyAsString(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -494,7 +494,7 @@ QString QQmlVMEMetaObject::readPropertyAsString(int id)
     return sv->stringValue()->toQString();
 }
 
-QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)
+QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -508,7 +508,7 @@ QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)
     return v->d()->data.value<QUrl>();
 }
 
-QDate QQmlVMEMetaObject::readPropertyAsDate(int id)
+QDate QQmlVMEMetaObject::readPropertyAsDate(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -536,7 +536,7 @@ QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
     return v->d()->data.value<QDateTime>();
 }
 
-QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
+QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -550,7 +550,7 @@ QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
     return v->d()->data.value<QSizeF>();
 }
 
-QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id)
+QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -564,7 +564,7 @@ QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id)
     return v->d()->data.value<QPointF>();
 }
 
-QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id)
+QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -578,7 +578,7 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id)
     return wrapper->object();
 }
 
-QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id)
+QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -594,7 +594,7 @@ QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id)
     return static_cast<QList<QObject *> *>(v->d()->data.data());
 }
 
-QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id)
+QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -976,7 +976,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 #pragma optimize("", on)
 #endif
 
-QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
+QV4::ReturnedValue QQmlVMEMetaObject::method(int index) const
 {
     if (!ctxt || !ctxt->isValid() || !compiledObject) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
@@ -990,7 +990,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
     return (md->data() + index + compiledObject->nProperties)->asReturnedValue();
 }
 
-QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
+QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id) const
 {
     Q_ASSERT(compiledObject && compiledObject->propertyTable()[id].type == QV4::CompiledData::Property::Var);
 
@@ -1000,7 +1000,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
     return QV4::Primitive::undefinedValue().asReturnedValue();
 }
 
-QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
+QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md) {
@@ -1107,7 +1107,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
     }
 }
 
-QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index)
+QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index) const
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());
@@ -1139,7 +1139,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, const QV4::Value &function)
     *(md->data() + methodIndex + compiledObject->nProperties) = function;
 }
 
-QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)
+QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index) const
 {
     if (index < propOffset()) {
         Q_ASSERT(parentVMEMetaObject());
