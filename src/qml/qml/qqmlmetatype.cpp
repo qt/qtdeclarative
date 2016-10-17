@@ -1049,7 +1049,7 @@ void QQmlTypeModulePrivate::add(QQmlType *type)
     list.append(type);
 }
 
-QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
+QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor) const
 {
     QMutexLocker lock(metaTypeDataLock());
 
@@ -1063,7 +1063,7 @@ QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
     return 0;
 }
 
-QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor)
+QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor) const
 {
     QMutexLocker lock(metaTypeDataLock());
 

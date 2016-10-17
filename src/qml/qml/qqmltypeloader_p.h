@@ -287,7 +287,7 @@ public:
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
-    QQmlImportDatabase *importDatabase();
+    QQmlImportDatabase *importDatabase() const;
 
     QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
     QQmlTypeData *getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);

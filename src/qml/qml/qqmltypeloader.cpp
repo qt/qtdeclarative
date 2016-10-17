@@ -1618,7 +1618,7 @@ QQmlTypeLoader::~QQmlTypeLoader()
     invalidate();
 }
 
-QQmlImportDatabase *QQmlTypeLoader::importDatabase()
+QQmlImportDatabase *QQmlTypeLoader::importDatabase() const
 {
     return &QQmlEnginePrivate::get(engine())->importDatabase;
 }

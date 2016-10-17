@@ -60,7 +60,7 @@ class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 public:
     QQmlValueTypeProxyBinding(QObject *o, QQmlPropertyIndex coreIndex);
 
-    QQmlAbstractBinding *binding(QQmlPropertyIndex targetPropertyIndex);
+    QQmlAbstractBinding *binding(QQmlPropertyIndex targetPropertyIndex) const;
     void removeBindings(quint32 mask);
 
     void setEnabled(bool, QQmlPropertyData::WriteFlags) override;

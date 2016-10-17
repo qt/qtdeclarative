@@ -84,7 +84,7 @@ void QQmlTypeNameCache::add(const QHashedString &name, int importedScriptIndex, 
     m_namedImports.insert(name, import);
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name) const
 {
     Result result = query(m_namedImports, name);
 
@@ -98,7 +98,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
 }
 
 QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
-                                                                   const void *importNamespace)
+                                                   const void *importNamespace) const
 {
     Q_ASSERT(importNamespace);
     const Import *i = static_cast<const Import *>(importNamespace);
@@ -112,7 +112,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name)
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) const
 {
     Result result = query(m_namedImports, name);
 
@@ -125,7 +125,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name)
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, const void *importNamespace)
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, const void *importNamespace) const
 {
     Q_ASSERT(importNamespace);
     const Import *i = static_cast<const Import *>(importNamespace);
