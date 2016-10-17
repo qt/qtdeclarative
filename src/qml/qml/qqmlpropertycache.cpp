@@ -193,7 +193,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         _flags.hasArguments = true;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
             _flags.isV4Function = true;
         }
     }
@@ -228,7 +228,7 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     const int paramCount = m.parameterCount();
     if (paramCount) {
         _flags.hasArguments = true;
-        if ((paramCount == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
             _flags.isV4Function = true;
         }
     }
