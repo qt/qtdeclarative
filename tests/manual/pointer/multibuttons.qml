@@ -55,20 +55,21 @@ Item {
             id: balloonsButton
             label: "Launch Balloons"
             Layout.fillWidth: true
-            gesturePolicy: TapHandler.DragThreshold
+            gesturePolicy: TapHandler.WithinBounds
         }
         Text { text: "the goons"; font.pointSize: 12 }
         MultiButton {
             id: missilesButton
-            label: "Launch Missiles"
+            label: "Launch Missile"
             Layout.fillWidth: true
-            gesturePolicy: TapHandler.WithinBounds
+            gesturePolicy: TapHandler.ReleaseWithinBounds
+            onTapped: missileEmitter.burst(1)
         }
         MultiButton {
             id: fightersButton
             label: "Launch Fighters"
             Layout.fillWidth: true
-            gesturePolicy: TapHandler.ReleaseWithinBounds
+            gesturePolicy: TapHandler.DragThreshold
         }
     }
     ParticleSystem {
@@ -90,6 +91,6 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: 100
         ImageParticle { source: "resources/missile.png"; autoRotation: true; rotation: 90 }
-        Emitter { anchors.bottom: parent.bottom; enabled: missilesButton.pressed; lifeSpan: 5000; size: 128
-            emitRate: 10; velocity: PointDirection { x: -200; y: -350; yVariation: 200; xVariation: 100 } } }
+        Emitter { id: missileEmitter; anchors.bottom: parent.bottom; lifeSpan: 5000; size: 128;
+            emitRate: 0; velocity: PointDirection { x: -200; y: -350; yVariation: 200; xVariation: 100 } } }
 }

@@ -62,7 +62,7 @@ Rectangle {
         objectName: label.text
         onTapped: {
             tapFlash.start()
-            root.tapped
+            root.tapped()
         }
     }
 
