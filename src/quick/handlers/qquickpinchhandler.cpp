@@ -282,6 +282,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
         mat = mat * m_startMatrix;
         m_transform.setMatrix(mat);
+        m_translation = QPointF(mat.constData()[12], mat.constData()[13]);
     }
 
     emit updated();
