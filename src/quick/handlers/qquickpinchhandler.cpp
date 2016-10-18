@@ -202,11 +202,15 @@ void QQuickPinchHandler::onActiveChanged()
     if (active()) {
         m_startScale = m_scale; // TODO incompatible with independent x/y scaling
         m_startRotation = m_rotation;
-        m_startAngles = angles(touchPointCentroid());
+        m_startCentroid = touchPointCentroid();
+        m_startAngles = angles(m_startCentroid);
+        m_startDistance = averageTouchPointDistance(m_startCentroid);
         m_activeRotation = 0;
         m_startMatrix = m_transform.matrix();
         qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
         grabPoints(m_currentPoints);
+    } else {
+        qCInfo(lcPinchHandler) << "deactivated with scale" << m_scale << "rotation" << m_rotation;
     }
 }
 
@@ -230,16 +234,19 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     }
 
     // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
-    QPointF startCentroid = startingCentroid();
     m_centroid = touchPointCentroid();
-    m_centroid = QPointF(qBound(m_minimumX, m_centroid.x(), m_maximumX),
-                         qBound(m_minimumY, m_centroid.y(), m_maximumY));
-
-
+    QRectF bounds(m_minimumX, m_minimumY, m_maximumX, m_maximumY);
+    // avoid mapping the minima and maxima, as they might have unmappable values
+    // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
+    QPointF centroidLocalPos;
+    if (target() && target()->parentItem()) {
+        centroidLocalPos = target()->parentItem()->mapFromScene(m_centroid);
+        centroidLocalPos = QPointF(qBound(bounds.left(), centroidLocalPos.x(), bounds.right()),
+                                   qBound(bounds.top(), centroidLocalPos.y(), bounds.bottom()));
+    }
     // 1. scale
-    qreal startDist = averageStartingDistance(startCentroid);
     qreal dist = averageTouchPointDistance(m_centroid);
-    qreal activeScale = dist / startDist;
+    qreal activeScale = dist / m_startDistance;
     activeScale = qBound(m_minimumScale/m_startScale, activeScale, m_maximumScale/m_startScale);
     m_scale = m_startScale * activeScale;
 
@@ -252,26 +259,30 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     m_activeRotation += (m_rotation - totalRotation);   //adjust for the potential bounding above
     m_startAngles = std::move(newAngles);
 
-    // 3. Drag/translate
-    QPointF activeTranslation(m_centroid - startCentroid);
+    if (target() && target()->parentItem()) {
+        // 3. Drag/translate
+        QPointF activeTranslation(centroidLocalPos - target()->parentItem()->mapFromScene(m_startCentroid));
 
-    // apply rotation + scaling around the centroid - then apply translation.
-    QMatrix4x4 mat;
-    QVector3D xlatOrigin(m_centroid - target()->position());
-    mat.translate(xlatOrigin);
-    mat.rotate(m_activeRotation, 0, 0, -1);
-    mat.scale(activeScale);
-    mat.translate(-xlatOrigin);
-    mat.translate(QVector3D(activeTranslation));
+        // apply rotation + scaling around the centroid - then apply translation.
+        QMatrix4x4 mat;
+        QVector3D xlatOrigin(centroidLocalPos - target()->position());
+        mat.translate(xlatOrigin);
+        mat.rotate(m_activeRotation, 0, 0, -1);
+        mat.scale(activeScale);
+        mat.translate(-xlatOrigin);
+        mat.translate(QVector3D(activeTranslation));
 
-    // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
+        // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
 
-    qCDebug(lcPinchHandler) << "startCentroid" << startCentroid << "centroid"  << m_centroid << "dist" << dist << "starting dist" << startDist
-                            << "startScale" << m_startScale << "activeRotation" << m_activeRotation
-                            << "scale" << m_scale << "rotation" << m_rotation;
+        qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
+                                << ", distance" << m_startDistance << "->" << dist
+                                << ", startScale" << m_startScale << "->" << m_scale
+                                << ", activeRotation" << m_activeRotation
+                                << ", rotation" << m_rotation;
 
-    mat = mat * m_startMatrix;
-    m_transform.setMatrix(mat);
+        mat = mat * m_startMatrix;
+        m_transform.setMatrix(mat);
+    }
 
     emit updated();
 }

@@ -42,60 +42,68 @@ import QtQuick 2.8
 import Qt.labs.handlers 1.0
 
 Rectangle {
-    id: root
     width: 1024; height: 600
-    color: "black"
-
+    color: "#eee"
     Rectangle {
-        width: 400
-        height: 300
-        color: "lightsteelblue"
-        antialiasing: true
+        id: root
+        color: "black"
+        width: 900
+        height: 600
+        x: 100
 
-        Text {
-            anchors.centerIn: parent
-            text: "Pinch with 2 fingers to scale, rotate and translate"
-                + "\ncurrent rotation: " + pinch2.rotation.toFixed(1)
-                + "\nscale: " + pinch2.scale.toFixed(1)
-                + "\ntranslation: " + pinch2.translation
+        Rectangle {
+            width: 400
+            height: 300
+            color: "lightsteelblue"
+            antialiasing: true
+
+            Text {
+                anchors.centerIn: parent
+                text: "Pinch with 2 fingers to scale, rotate and translate"
+                    + "\ncurrent rotation: " + pinch2.rotation.toFixed(1)
+                    + "\nscale: " + pinch2.scale.toFixed(1)
+                    + "\ntranslation: " + pinch2.translation
+            }
+
+            PinchHandler {
+                id: pinch2
+                objectName: "2-finger pinch"
+                minimumRotation: -45
+                maximumRotation: 45
+                minimumScale: 0.5
+                maximumScale: 3
+                minimumX: 0
+                maximumX: 600
+                pointDistanceThreshold: 150
+            }
         }
 
-        PinchHandler {
-            id: pinch2
-            objectName: "2-finger pinch"
-            minimumRotation: -45
-            maximumRotation: 45
-            minimumScale: 0.5
-            maximumScale: 3
-            minimumX: 0
-            maximumX: 600
-            pointDistanceThreshold: 150
+        Rectangle {
+            x: 500
+            width: 400
+            height: 300
+            color: "wheat"
+            antialiasing: true
+
+            Text {
+                anchors.centerIn: parent
+                text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
+                    + "\ncurrent rotation " + pinch3.rotation.toFixed(1)
+                    + "\nscale: " + pinch3.scale.toFixed(1)
+                    + "\ntranslation: " + pinch3.translation
+            }
+            DragHandler { objectName: "DragHandler" }
+
+            PinchHandler {
+                id: pinch3
+                objectName: "3-finger pinch"
+                requiredPointCount: 3
+                minimumScale: 0.1
+                maximumScale: 10
+            }
         }
+
     }
-
-    Rectangle {
-        x: 512
-        width: 400
-        height: 300
-        color: "wheat"
-        antialiasing: true
-
-        Text {
-            anchors.centerIn: parent
-            text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
-                + "\ncurrent rotation " + pinch3.rotation.toFixed(1)
-        }
-        DragHandler { objectName: "DragHandler" }
-
-        PinchHandler {
-            id: pinch3
-            objectName: "3-finger pinch"
-            requiredPointCount: 3
-            minimumScale: 0.1
-            maximumScale: 10
-        }
-    }
-
     Rectangle {
         id: centroidIndicator
         property QtObject pincher: pinch2.active ? pinch2 : pinch3

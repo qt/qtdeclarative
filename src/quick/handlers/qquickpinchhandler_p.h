@@ -155,6 +155,8 @@ private:
     qreal m_startScale;
     qreal m_startRotation;
     qreal m_activeRotation;
+    QPointF m_startCentroid;
+    qreal m_startDistance;
 
     QVector<PointData> m_startAngles;
     QMatrix4x4 m_startMatrix;
