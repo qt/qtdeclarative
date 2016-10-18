@@ -88,7 +88,7 @@ inline double wtf_ceil(double x) { return copysign(ceil(x), x); }
 
 #endif
 
-#if OS(SOLARIS)
+#if OS(SOLARIS) && __cplusplus < 201103L
 
 namespace std {
 
