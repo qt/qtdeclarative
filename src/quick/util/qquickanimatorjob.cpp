@@ -220,7 +220,6 @@ void QQuickAnimatorProxyJob::readyToAnimate()
 static void qquick_syncback_helper(QAbstractAnimationJob *job)
 {
     if (job->isRenderThreadJob()) {
-        Q_ASSERT(!job->isRunning());
         static_cast<QQuickAnimatorJob *>(job)->writeBack();
 
     } else if (job->isGroup()) {
@@ -264,7 +263,13 @@ qreal QQuickAnimatorJob::progress(int time) const
 
 qreal QQuickAnimatorJob::value() const
 {
-    return m_value;
+    qreal value = m_to;
+    if (m_controller) {
+        m_controller->lock();
+        value = m_value;
+        m_controller->unlock();
+    }
+    return value;
 }
 
 void QQuickAnimatorJob::setTarget(QQuickItem *target)
