@@ -68,7 +68,8 @@ namespace QV4 {
 namespace Heap {
 
 struct Object : Base {
-    inline Object() { Base::init(); }
+    void init() { Base::init(); }
+    void destroy() { Base::destroy(); }
 
     const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
     Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
@@ -93,9 +94,10 @@ struct Object : Base {
         Data *d_unchecked() const { return static_cast<Data *>(m()); } \
         Data *d() const { \
             Data *dptr = d_unchecked(); \
-            if (std::is_trivial<Data>::value) dptr->_checkIsInitialized(); \
+            dptr->_checkIsInitialized(); \
             return dptr; \
-        }
+        } \
+        V4_ASSERT_IS_TRIVIAL(Data);
 
 #define V4_OBJECT2(DataClass, superClass) \
     private: \
@@ -111,9 +113,10 @@ struct Object : Base {
         QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
         QV4::Heap::DataClass *d() const { \
             QV4::Heap::DataClass *dptr = d_unchecked(); \
-            if (std::is_trivial<QV4::Heap::DataClass>::value) dptr->_checkIsInitialized(); \
+            dptr->_checkIsInitialized(); \
             return dptr; \
-        }
+        } \
+        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
 
 #define V4_INTERNALCLASS(c) \
     static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
@@ -141,7 +144,7 @@ struct ObjectVTable
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
-#define DEFINE_OBJECT_VTABLE(classname) \
+#define DEFINE_OBJECT_VTABLE_BASE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
     DEFINE_MANAGED_VTABLE_INT(classname, (QT_PREPEND_NAMESPACE(QtPrivate)::is_same<classname::SuperClass, Object>::value) ? Q_NULLPTR : &classname::SuperClass::static_vtbl.vTable), \
@@ -161,7 +164,15 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     advanceIterator                            \
 }
 
+#define DEFINE_OBJECT_VTABLE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+DEFINE_OBJECT_VTABLE_BASE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
+#define DEFINE_OBJECT_TEMPLATE_VTABLE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+template<> DEFINE_OBJECT_VTABLE_BASE(classname) \
+QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
@@ -375,18 +386,22 @@ private:
 namespace Heap {
 
 struct BooleanObject : Object {
-    BooleanObject() {}
-    BooleanObject(bool b)
-        : b(b)
-    {}
+    void init() { Object::init(); }
+    void init(bool b) {
+        Object::init();
+        this->b = b;
+    }
+
     bool b;
 };
 
 struct NumberObject : Object {
-    NumberObject() {}
-    NumberObject(double val)
-        : value(val)
-    {}
+    void init() { Object::init(); }
+    void init(double val) {
+        Object::init();
+        value = val;
+    }
+
     double value;
 };
 
@@ -395,10 +410,15 @@ struct ArrayObject : Object {
         LengthPropertyIndex = 0
     };
 
-    ArrayObject()
-    { init(); }
-    ArrayObject(const QStringList &list);
-    void init()
+    void init() {
+        Object::init();
+        commonInit();
+    }
+
+    void init(const QStringList &list);
+
+private:
+    void commonInit()
     { *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0); }
 };
 

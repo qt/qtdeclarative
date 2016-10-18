@@ -1058,9 +1058,9 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlIncubatorObject : Object {
-    QmlIncubatorObject(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
-    ~QmlIncubatorObject() { parent.destroy(); }
-    QScopedPointer<QQmlComponentIncubator> incubator;
+    void init(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
+    inline void destroy();
+    QQmlComponentIncubator *incubator;
     QQmlQPointer<QObject> parent;
     QV4::Value valuemap;
     QV4::Value statusChanged;
@@ -1389,7 +1389,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     r->d()->qmlContext = v4->qmlContext();
     r->d()->parent = parent;
 
-    QQmlIncubator *incubator = r->d()->incubator.data();
+    QQmlIncubator *incubator = r->d()->incubator;
     create(*incubator, creationContext());
 
     if (incubator->status() == QQmlIncubator::Null) {
@@ -1484,13 +1484,20 @@ QQmlComponentExtension::~QQmlComponentExtension()
 {
 }
 
-QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QQmlIncubator::IncubationMode m)
-    : valuemap(QV4::Primitive::undefinedValue())
-    , statusChanged(QV4::Primitive::undefinedValue())
+void QV4::Heap::QmlIncubatorObject::init(QQmlIncubator::IncubationMode m)
 {
+    Object::init();
+    valuemap = QV4::Primitive::undefinedValue();
+    statusChanged = QV4::Primitive::undefinedValue();
     parent.init();
     qmlContext = nullptr;
-    incubator.reset(new QQmlComponentIncubator(this, m));
+    incubator = new QQmlComponentIncubator(this, m);
+}
+
+void QV4::Heap::QmlIncubatorObject::destroy() {
+    delete incubator;
+    parent.destroy();
+    Object::destroy();
 }
 
 void QV4::QmlIncubatorObject::setInitialState(QObject *o)

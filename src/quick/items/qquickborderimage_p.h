@@ -101,7 +101,7 @@ private:
 private Q_SLOTS:
     void doUpdate();
     void requestFinished() Q_DECL_OVERRIDE;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     void sciRequestFinished();
 #endif
 

@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
+QT_FOR_CONFIG += qml-private
 SUBDIRS += \
     qmlmin \
     qmlimportscanner
@@ -11,7 +12,7 @@ qmlimportscanner.CONFIG = host_build
         qml \
         qmllint
 
-    !contains(QT_CONFIG, no-qml-debug): SUBDIRS += qmlprofiler
+    qtConfig(qml-network):!contains(QT_CONFIG, no-qml-debug): SUBDIRS += qmlprofiler
 
     qtHaveModule(quick) {
         !static: {

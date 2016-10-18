@@ -70,7 +70,7 @@
 
 using namespace QV4;
 
-#if !defined(QT_NO_XMLSTREAMREADER) && !defined(QT_NO_NETWORK)
+#if !defined(QT_NO_XMLSTREAMREADER) && QT_CONFIG(qml_network)
 
 #define V4THROW_REFERENCE(string) { \
         ScopedObject error(scope, ctx->engine()->newReferenceErrorObject(QStringLiteral(string))); \
@@ -174,33 +174,43 @@ public:
 namespace Heap {
 
 struct NamedNodeMap : Object {
-    NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list);
-    ~NamedNodeMap() {
+    void init(NodeImpl *data, const QList<NodeImpl *> &list);
+    void destroy() {
+        delete listPtr;
         if (d)
             d->release();
+        Object::destroy();
     }
-    QList<NodeImpl *> list; // Only used in NamedNodeMap
+    QList<NodeImpl *> &list() {
+        if (listPtr == nullptr)
+            listPtr = new QList<NodeImpl *>;
+        return *listPtr;
+    }
+
+    QList<NodeImpl *> *listPtr; // Only used in NamedNodeMap
     NodeImpl *d;
 };
 
 struct NodeList : Object {
-    NodeList(NodeImpl *data);
-    ~NodeList() {
+    void init(NodeImpl *data);
+    void destroy() {
         if (d)
             d->release();
+        Object::destroy();
     }
     NodeImpl *d;
 };
 
 struct NodePrototype : Object {
-    NodePrototype();
+    void init();
 };
 
 struct Node : Object {
-    Node(NodeImpl *data);
-    ~Node() {
+    void init(NodeImpl *data);
+    void destroy() {
         if (d)
             d->release();
+        Object::destroy();
     }
     NodeImpl *d;
 };
@@ -221,10 +231,11 @@ public:
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
-Heap::NamedNodeMap::NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list)
-    : list(list)
-    , d(data)
+void Heap::NamedNodeMap::init(NodeImpl *data, const QList<NodeImpl *> &list)
 {
+    Object::init();
+    d = data;
+    this->list() = list;
     if (d)
         d->addref();
 }
@@ -246,9 +257,10 @@ public:
 
 };
 
-Heap::NodeList::NodeList(NodeImpl *data)
-    : d(data)
+void Heap::NodeList::init(NodeImpl *data)
 {
+    Object::init();
+    d = data;
     if (d)
         d->addref();
 }
@@ -287,8 +299,9 @@ public:
 
 };
 
-Heap::NodePrototype::NodePrototype()
+void Heap::NodePrototype::init()
 {
+    Object::init();
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
@@ -320,9 +333,10 @@ struct Node : public Object
     bool isNull() const;
 };
 
-Heap::Node::Node(NodeImpl *data)
-    : d(data)
+void Heap::Node::init(NodeImpl *data)
 {
+    Object::init();
+    d = data;
     if (d)
         d->addref();
 }
@@ -878,10 +892,10 @@ ReturnedValue NamedNodeMap::getIndexed(const Managed *m, uint index, bool *hasPr
     const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
-    if ((int)index < r->d()->list.count()) {
+    if ((int)index < r->d()->list().count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(v4, r->d()->list.at(index));
+        return Node::create(v4, r->d()->list().at(index));
     }
     if (hasProperty)
         *hasProperty = false;
@@ -896,14 +910,14 @@ ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasPropert
 
     name->makeIdentifier(v4);
     if (name->equals(v4->id_length()))
-        return Primitive::fromInt32(r->d()->list.count()).asReturnedValue();
+        return Primitive::fromInt32(r->d()->list().count()).asReturnedValue();
 
     QString str = name->toQString();
-    for (int ii = 0; ii < r->d()->list.count(); ++ii) {
-        if (r->d()->list.at(ii)->name == str) {
+    for (int ii = 0; ii < r->d()->list().count(); ++ii) {
+        if (r->d()->list().at(ii)->name == str) {
             if (hasProperty)
                 *hasProperty = true;
-            return Node::create(v4, r->d()->list.at(ii));
+            return Node::create(v4, r->d()->list().at(ii));
         }
     }
 
@@ -1588,15 +1602,20 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlXMLHttpRequestWrapper : Object {
-    QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request);
-    ~QQmlXMLHttpRequestWrapper() {
+    void init(QQmlXMLHttpRequest *request) {
+        Object::init();
+        this->request = request;
+    }
+
+    void destroy() {
         delete request;
+        Object::destroy();
     }
     QQmlXMLHttpRequest *request;
 };
 
 struct QQmlXMLHttpRequestCtor : FunctionObject {
-    QQmlXMLHttpRequestCtor(ExecutionEngine *engine);
+    void init(ExecutionEngine *engine);
 
     Pointer<Object> proto;
 };
@@ -1608,11 +1627,6 @@ struct QQmlXMLHttpRequestWrapper : public Object
     V4_OBJECT2(QQmlXMLHttpRequestWrapper, Object)
     V4_NEEDS_DESTROY
 };
-
-Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request)
-    : request(request)
-{
-}
 
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
@@ -1665,9 +1679,9 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 
 DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 
-Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
-    : Heap::FunctionObject(engine->rootContext(), QStringLiteral("XMLHttpRequest"))
+void Heap::QQmlXMLHttpRequestCtor::init(ExecutionEngine *engine)
 {
+    Heap::FunctionObject::init(engine->rootContext(), QStringLiteral("XMLHttpRequest"));
     Scope scope(engine);
     Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
 
@@ -2043,6 +2057,6 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_XMLSTREAMREADER && QT_NO_NETWORK
+#endif // QT_NO_XMLSTREAMREADER && qml_network
 
 #include <qqmlxmlhttprequest.moc>

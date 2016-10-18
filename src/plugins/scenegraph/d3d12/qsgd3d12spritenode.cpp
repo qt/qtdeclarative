@@ -166,8 +166,8 @@ QSGD3D12Material::UpdateResults QSGD3D12SpriteMaterial::updatePipeline(const QSG
 }
 
 static QSGGeometry::Attribute Sprite_Attributes[] = {
-    QSGGeometry::Attribute::createWithSemantic(0, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::POSITION),
-    QSGGeometry::Attribute::createWithSemantic(1, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD),
+    QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
+    QSGGeometry::Attribute::createWithAttributeType(1, 2, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute),
 };
 
 static QSGGeometry::AttributeSet Sprite_AttributeSet = { 2, 4 * sizeof(float), Sprite_Attributes };

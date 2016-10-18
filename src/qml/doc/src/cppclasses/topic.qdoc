@@ -91,7 +91,7 @@ at run-time using a QQmlComponent.  An instance of the QQmlComponent class can
 be created in C++ directly, or via the \l{QtQml::Qt::createComponent()}
 {Qt.createComponent()} function in imperative QML code.  Arbitrary expressions
 can be calculated in C++ via the QQmlExpression class, and such expressions
-can interact directly the QML context.
+can interact directly with the QML context.
 
 \section2 The QQmlComponent Class
 
@@ -106,7 +106,7 @@ how to use QQmlComponent.
 
 The QQmlExpression class provides a way for clients to evaluate JavaScript
 expressions from C++, using a particular QML evaluation context.  This allows
-clients to access QML objects by id, for example.  The result of evaluation
+clients to access QML objects by id, for example.  The result of the evaluation
 is returned as a QVariant, and the conversion rules are defined by the QML
 engine.
 

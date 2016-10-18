@@ -40,14 +40,12 @@
 #include "qquickanimatedimage_p.h"
 #include "qquickanimatedimage_p_p.h"
 
-#ifndef QT_NO_MOVIE
-
 #include <QtGui/qguiapplication.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlengine.h>
 #include <QtGui/qmovie.h>
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
 #endif
@@ -146,7 +144,7 @@ QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
 QQuickAnimatedImage::~QQuickAnimatedImage()
 {
     Q_D(QQuickAnimatedImage);
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     if (d->reply)
         d->reply->deleteLater();
 #endif
@@ -268,7 +266,7 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
     if (url == d->url)
         return;
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     if (d->reply) {
         d->reply->deleteLater();
         d->reply = 0;
@@ -325,7 +323,7 @@ void QQuickAnimatedImage::load()
             d->_movie = new QMovie(lf);
             movieRequestFinished();
         } else {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
             if (d->status != Loading) {
                 d->status = Loading;
                 emit statusChanged(d->status);
@@ -354,7 +352,7 @@ void QQuickAnimatedImage::movieRequestFinished()
 
     Q_D(QQuickAnimatedImage);
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     if (d->reply) {
         d->redirectCount++;
         if (d->redirectCount < ANIMATEDIMAGE_MAXIMUM_REDIRECT_RECURSION) {
@@ -493,5 +491,3 @@ void QQuickAnimatedImage::componentComplete()
 }
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_MOVIE

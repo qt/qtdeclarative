@@ -69,14 +69,14 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
         Index_ProtoConstructor = 0
     };
 
-    FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto = false);
-    FunctionObject(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
-    FunctionObject(QV4::ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
-    FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
-    FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name);
-    FunctionObject(ExecutionContext *scope, const ReturnedValue name);
-    FunctionObject();
-    ~FunctionObject();
+    void init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
+    void init(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
+    void init(QV4::ExecutionContext *scope, const ReturnedValue name);
+    void init(ExecutionContext *scope, const ReturnedValue name);
+    void init();
+    void destroy();
 
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
@@ -87,20 +87,20 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
 };
 
 struct FunctionCtor : FunctionObject {
-    FunctionCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct FunctionPrototype : FunctionObject {
-    FunctionPrototype();
+    void init();
 };
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    BuiltinFunction(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *));
+    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *));
     ReturnedValue (*code)(QV4::CallContext *);
 };
 
 struct IndexedBuiltinFunction : FunctionObject {
-    inline IndexedBuiltinFunction(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(QV4::CallContext *ctx, uint index));
+    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(QV4::CallContext *ctx, uint index));
     ReturnedValue (*code)(QV4::CallContext *, uint index);
     uint index;
 };
@@ -110,15 +110,15 @@ struct SimpleScriptFunction : FunctionObject {
         Index_Name = FunctionObject::Index_Prototype + 1,
         Index_Length
     };
-    SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto);
+    void init(QV4::ExecutionContext *scope, Function *function, bool createProto);
 };
 
 struct ScriptFunction : SimpleScriptFunction {
-    ScriptFunction(QV4::ExecutionContext *scope, Function *function);
+    void init(QV4::ExecutionContext *scope, Function *function);
 };
 
 struct BoundFunction : FunctionObject {
-    BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
+    void init(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
     Pointer<FunctionObject> target;
     Value boundThis;
     Pointer<MemberData> boundArgs;
@@ -216,12 +216,12 @@ struct IndexedBuiltinFunction: FunctionObject
     static void call(const Managed *that, Scope &scope, CallData *callData);
 };
 
-Heap::IndexedBuiltinFunction::IndexedBuiltinFunction(QV4::ExecutionContext *scope, uint index,
-                                                     ReturnedValue (*code)(QV4::CallContext *ctx, uint index))
-    : Heap::FunctionObject(scope),
-      code(code)
-    , index(index)
+void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index,
+                                        ReturnedValue (*code)(QV4::CallContext *ctx, uint index))
 {
+    Heap::FunctionObject::init(scope);
+    this->index = index;
+    this->code = code;
 }
 
 

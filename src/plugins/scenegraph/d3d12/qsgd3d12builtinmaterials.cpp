@@ -679,7 +679,7 @@ void QSGD3D12TextMaterial::populate(const QPointF &p,
     float glyphCacheInverseScaleX = 1.0 / glyphCacheScaleX;
     float glyphCacheInverseScaleY = 1.0 / glyphCacheScaleY;
 
-    Q_ASSERT(geometry->indexType() == QSGGeometry::TypeUnsignedShort);
+    Q_ASSERT(geometry->indexType() == QSGGeometry::UnsignedShortType);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
     QVector4D *vp = reinterpret_cast<QVector4D *>(geometry->vertexDataAsTexturedPoint2D());
     Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));

@@ -139,6 +139,7 @@ private slots:
 
     void arrayPop_QTBUG_35979();
     void array_unshift_QTBUG_52065();
+    void array_join_QTBUG_53672();
 
     void regexpLastMatch();
     void indexedAccesses();
@@ -190,6 +191,7 @@ private slots:
     void v4FunctionWithoutQML();
 
     void withNoContext();
+    void holeInPropertyData();
 
 signals:
     void testSignal();
@@ -3186,6 +3188,14 @@ void tst_QJSEngine::array_unshift_QTBUG_52065()
         QCOMPARE(result.property(i).toInt(), i);
 }
 
+void tst_QJSEngine::array_join_QTBUG_53672()
+{
+    QJSEngine eng;
+    QJSValue result = eng.evaluate("Array.prototype.join.call(0)");
+    QVERIFY(result.isString());
+    QCOMPARE(result.toString(), QString(""));
+}
+
 void tst_QJSEngine::regexpLastMatch()
 {
     QJSEngine eng;
@@ -4017,6 +4027,19 @@ void tst_QJSEngine::withNoContext()
     // Don't crash (QTBUG-53794)
     QJSEngine engine;
     engine.evaluate("with (noContext) true");
+}
+
+void tst_QJSEngine::holeInPropertyData()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+                "var o = {};\n"
+                "o.bar = 0xcccccccc;\n"
+                "o.foo = 0x55555555;\n"
+                "Object.defineProperty(o, 'bar', { get: function() { return 0xffffffff }});\n"
+                "o.bar === 0xffffffff && o.foo === 0x55555555;");
+    QVERIFY(ok.isBool());
+    QVERIFY(ok.toBool());
 }
 
 QTEST_MAIN(tst_QJSEngine)

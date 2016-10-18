@@ -2344,7 +2344,9 @@ QQuickItem::~QQuickItem()
 
     if (d->extra.isAllocated()) {
         delete d->extra->contents; d->extra->contents = 0;
+#if QT_CONFIG(quick_shadereffect)
         delete d->extra->layer; d->extra->layer = 0;
+#endif
     }
 
     delete d->_anchors; d->_anchors = 0;
@@ -4774,8 +4776,10 @@ void QQuickItem::classBegin()
         d->_stateGroup->classBegin();
     if (d->_anchors)
         d->_anchors->classBegin();
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated() && d->extra->layer)
         d->extra->layer->classBegin();
+#endif
 }
 
 /*!
@@ -4795,8 +4799,10 @@ void QQuickItem::componentComplete()
     }
 
     if (d->extra.isAllocated()) {
+#if QT_CONFIG(quick_shadereffect)
         if (d->extra->layer)
             d->extra->layer->componentComplete();
+#endif
 
         if (d->extra->keyHandler)
             d->extra->keyHandler->componentComplete();
@@ -4852,8 +4858,10 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
 
 void QQuickItemPrivate::transformChanged()
 {
+#if QT_CONFIG(quick_shadereffect)
     if (extra.isAllocated() && extra->layer)
         extra->layer->updateMatrix();
+#endif
 }
 
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
@@ -5235,8 +5243,10 @@ void QQuickItem::setZ(qreal v)
 
     emit zChanged();
 
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated() && d->extra->layer)
         d->extra->layer->updateZ();
+#endif
 }
 
 /*!
@@ -7023,15 +7033,6 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     }
 }
 
-void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
-{
-    Q_Q(QQuickItem);
-    QV4::QObjectWrapper::markWrapper(q, e);
-
-    for (QQuickItem *child : qAsConst(childItems))
-        QQuickItemPrivate::get(child)->markObjects(e);
-}
-
 #ifndef QT_NO_CURSOR
 
 /*!
@@ -7647,9 +7648,13 @@ QDebug operator<<(QDebug debug, QQuickItem *item)
 
 bool QQuickItem::isTextureProvider() const
 {
+#if QT_CONFIG(quick_shadereffect)
     Q_D(const QQuickItem);
     return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
            d->extra->layer->effectSource()->isTextureProvider() : false;
+#else
+    return false;
+#endif
 }
 
 /*!
@@ -7663,9 +7668,13 @@ bool QQuickItem::isTextureProvider() const
 
 QSGTextureProvider *QQuickItem::textureProvider() const
 {
+#if QT_CONFIG(quick_shadereffect)
     Q_D(const QQuickItem);
     return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
            d->extra->layer->effectSource()->textureProvider() : 0;
+#else
+    return 0;
+#endif
 }
 
 /*!
@@ -7674,14 +7683,19 @@ QSGTextureProvider *QQuickItem::textureProvider() const
   */
 QQuickItemLayer *QQuickItemPrivate::layer() const
 {
+#if QT_CONFIG(quick_shadereffect)
     if (!extra.isAllocated() || !extra->layer) {
         extra.value().layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
         if (!componentComplete)
             extra->layer->classBegin();
     }
     return extra->layer;
+#else
+    return 0;
+#endif
 }
 
+#if QT_CONFIG(quick_shadereffect)
 QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     : m_item(item)
     , m_enabled(false)
@@ -8169,12 +8183,16 @@ void QQuickItemLayer::updateMatrix()
         ld->extra.value().origin = QQuickItemPrivate::get(m_item)->origin();
     ld->dirty(QQuickItemPrivate::Transform);
 }
+#endif // quick_shadereffect
 
 QQuickItemPrivate::ExtraData::ExtraData()
 : z(0), scale(1), rotation(0), opacity(1),
   contents(0), screenAttached(0), layoutDirectionAttached(0),
   enterKeyAttached(0),
-  keyHandler(0), layer(0),
+  keyHandler(0),
+#if QT_CONFIG(quick_shadereffect)
+  layer(0),
+#endif
   effectRefCount(0), hideRefCount(0),
   opacityNode(0), clipNode(0), rootNode(0),
   acceptedMouseButtons(0), origin(QQuickItem::Center),
@@ -8194,6 +8212,37 @@ QAccessible::Role QQuickItemPrivate::accessibleRole() const
     return QAccessible::NoRole;
 }
 #endif
+
+// helper code to let a visual parent mark its visual children for the garbage collector
+
+namespace QV4 {
+namespace Heap {
+struct QQuickItemWrapper : public QObjectWrapper {
+};
+}
+}
+
+struct QQuickItemWrapper : public QV4::QObjectWrapper {
+    V4_OBJECT2(QQuickItemWrapper, QV4::QObjectWrapper)
+    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickItemWrapper);
+
+void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+{
+    QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
+    if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
+        foreach (QQuickItem *child, QQuickItemPrivate::get(item)->childItems)
+            QV4::QObjectWrapper::markWrapper(child, e);
+    }
+    QV4::QObjectWrapper::markObjects(that, e);
+}
+
+quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
+{
+    return (engine->memoryManager->allocObject<QQuickItemWrapper>(q_func()))->asReturnedValue();
+}
 
 QT_END_NAMESPACE
 

@@ -600,7 +600,7 @@ protected:
                 resultMo = resultObject->metaObject();
             }
         } else if (auto variant = result.as<QV4::VariantObject>()) {
-            QVariant value = variant->d()->data;
+            QVariant value = variant->d()->data();
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context());
             resultMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, value.userType());
             if (resultMo.isNull())

@@ -50,11 +50,12 @@
 //
 // We mean it.
 //
-
-#include <QtCore/qglobal.h>
+#include <private/qv4global_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4runtime_p.h>
+
+QT_REQUIRE_CONFIG(qml_interpreter);
 
 QT_BEGIN_NAMESPACE
 

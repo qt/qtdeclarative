@@ -1,11 +1,8 @@
 TARGET     = QtQml
 QT = core-private
 
-no_network {
-    DEFINES += QT_NO_NETWORK
-} else {
+qtConfig(qml-network): \
     QT += network
-}
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
@@ -20,11 +17,6 @@ gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov
-}
-
-gcc:!intel_icc:greaterThan(QT_GCC_MAJOR_VERSION, 5) {
-    # Our code is bad. Temporary workaround.
-    QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks -fno-lifetime-dse
 }
 
 # QTBUG-55238, disable new optimizer for MSVC 2015/Update 3.

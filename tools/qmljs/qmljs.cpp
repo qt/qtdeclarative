@@ -32,8 +32,10 @@
 #include "private/qv4errorobject_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4codegen_p.h"
+#if QT_CONFIG(qml_interpreter)
 #include "private/qv4isel_moth_p.h"
 #include "private/qv4vme_moth_p.h"
+#endif
 #include "private/qv4objectproto_p.h"
 #include "private/qv4isel_p.h"
 #include "private/qv4mm_p.h"
@@ -43,6 +45,8 @@
 
 #ifdef V4_ENABLE_JIT
 #  include "private/qv4isel_masm_p.h"
+#else
+QT_REQUIRE_CONFIG(qml_interpreter);
 #endif // V4_ENABLE_JIT
 
 #include <QtCore/QCoreApplication>
@@ -61,9 +65,9 @@ using namespace QV4;
 struct Print: FunctionObject
 {
     struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope)
-            : Heap::FunctionObject(scope, QStringLiteral("print"))
+        void init(ExecutionContext *scope)
         {
+            Heap::FunctionObject::init(scope, QStringLiteral("print"));
         }
     };
     V4_OBJECT(FunctionObject)
@@ -86,9 +90,9 @@ DEFINE_OBJECT_VTABLE(Print);
 struct GC: public FunctionObject
 {
     struct Data : Heap::FunctionObject {
-        Data(ExecutionContext *scope)
-            : Heap::FunctionObject(scope, QStringLiteral("gc"))
+        void init(ExecutionContext *scope)
         {
+            Heap::FunctionObject::init(scope, QStringLiteral("gc"));
         }
 
     };
@@ -150,10 +154,12 @@ int main(int argc, char *argv[])
             args.removeFirst();
         }
 
+#if QT_CONFIG(qml_interpreter)
         if (args.constFirst() == QLatin1String("--interpret")) {
             mode = use_moth;
             args.removeFirst();
         }
+#endif
 
         if (args.constFirst() == QLatin1String("--qml")) {
             runAsQml = true;
@@ -171,7 +177,9 @@ int main(int argc, char *argv[])
     case use_moth: {
         QV4::EvalISelFactory* iSelFactory = 0;
         if (mode == use_moth) {
+#if QT_CONFIG(qml_interpreter)
             iSelFactory = new QV4::Moth::ISelFactory;
+#endif
 #ifdef V4_ENABLE_JIT
         } else {
             iSelFactory = new QV4::JIT::ISelFactory;

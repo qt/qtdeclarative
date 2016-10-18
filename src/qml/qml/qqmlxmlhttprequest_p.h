@@ -55,7 +55,7 @@
 #include <QtCore/qglobal.h>
 #include <private/qqmlglobal_p.h>
 
-#if !defined(QT_NO_XMLSTREAMREADER) && !defined(QT_NO_NETWORK)
+#if !defined(QT_NO_XMLSTREAMREADER) && QT_CONFIG(qml_network)
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +64,7 @@ void qt_rem_qmlxmlhttprequest(QV4::ExecutionEngine *engine, void *);
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_XMLSTREAMREADER && QT_NO_NETWORK
+#endif // QT_NO_XMLSTREAMREADER && qml_network
 
 #endif // QQMLXMLHTTPREQUEST_P_H
 

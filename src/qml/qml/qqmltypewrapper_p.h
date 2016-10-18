@@ -71,8 +71,8 @@ struct QmlTypeWrapper : Object {
         ExcludeEnums
     };
 
-    QmlTypeWrapper();
-    ~QmlTypeWrapper();
+    void init();
+    void destroy();
     TypeNameMode mode;
     QQmlQPointer<QObject> object;
 

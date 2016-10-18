@@ -43,7 +43,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 
-#ifdef HAS_D3D12
+#if QT_CONFIG(d3d12)
 
 #include "vs_shader.hlslh"
 #include "ps_shader.hlslh"
@@ -280,4 +280,4 @@ QRectF D3D12RenderNode::rect() const
     return QRect(0, 0, m_item->width(), m_item->height());
 }
 
-#endif // HAS_D3D12
+#endif // d3d12

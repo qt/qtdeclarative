@@ -41,6 +41,10 @@
 #define QTQMLGLOBAL_H
 
 #include <QtCore/qglobal.h>
+#include <QtQml/qtqml-config.h>
+#if QT_CONFIG(qml_network)
+#include <QtNetwork/qtnetworkglobal.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 

@@ -52,6 +52,9 @@
 //
 
 #include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_viewtransitions);
+
 #include <QtCore/qobject.h>
 #include <QtCore/qpoint.h>
 #include <QtQml/qqml.h>

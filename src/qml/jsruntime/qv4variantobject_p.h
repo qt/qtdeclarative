@@ -64,16 +64,28 @@ namespace QV4 {
 
 namespace Heap {
 
-struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
+struct VariantObject : Object
 {
-    VariantObject();
-    VariantObject(const QVariant &value);
-    ~VariantObject() {
+    void init();
+    void init(const QVariant &value);
+    void destroy() {
+        Q_ASSERT(scarceData);
         if (isScarce())
-            node.remove();
+            addVmePropertyReference();
+        delete scarceData;
+        Object::destroy();
     }
     bool isScarce() const;
     int vmePropertyReferenceCount;
+
+    const QVariant &data() const { return scarceData->data; }
+    QVariant &data() { return scarceData->data; }
+
+    void addVmePropertyReference() { scarceData->node.remove(); }
+    void removeVmePropertyReference() { internalClass->engine->scarceResources.insert(scarceData); }
+
+private:
+    ExecutionEngine::ScarceResourceData *scarceData;
 };
 
 }

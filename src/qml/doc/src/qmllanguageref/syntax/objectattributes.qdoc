@@ -191,7 +191,7 @@ which was then imported by the client), then a property of type
 
 \section3 Assigning Values to Property Attributes
 
-The value of a property of an object instance may specified in two separate ways:
+The value of a property of an object instance may be specified in two separate ways:
 \list
   \li a value assignment on initialization
   \li an imperative value assignment
@@ -724,7 +724,8 @@ Rectangle {
     signal activated(real xPosition, real yPosition)
     signal deactivated
 
-    width: 100; height: 100
+    property int side: 100
+    width: side; height: side
 
     MouseArea {
         anchors.fill: parent

@@ -43,6 +43,7 @@
 #include "qquickdrag_p.h"
 
 #include <private/qqmldata_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qevent.h>
@@ -672,6 +673,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickMouseArea);
     d->moved = false;
     d->stealMouse = d->preventStealing;
+    d->overThreshold = false;
     if (!d->enabled || !(event->button() & acceptedMouseButtons())) {
         QQuickItem::mousePressEvent(event);
     } else {
@@ -957,6 +959,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
             if (!d->pressed) {
                 // no other buttons are pressed
                 d->stealMouse = false;
+                d->overThreshold = false;
                 if (c && c->mouseGrabberItem() == this)
                     ungrabMouse();
                 emit canceled();

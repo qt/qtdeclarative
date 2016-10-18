@@ -55,10 +55,10 @@ namespace
     const QSGGeometry::AttributeSet &smoothAttributeSet()
     {
         static QSGGeometry::Attribute data[] = {
-            QSGGeometry::Attribute::createWithSemantic(0, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::POSITION),
-            QSGGeometry::Attribute::createWithSemantic(1, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD),
-            QSGGeometry::Attribute::createWithSemantic(2, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD1),
-            QSGGeometry::Attribute::createWithSemantic(3, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD2)
+            QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
+            QSGGeometry::Attribute::createWithAttributeType(1, 2, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute),
+            QSGGeometry::Attribute::createWithAttributeType(2, 2, QSGGeometry::FloatType, QSGGeometry::TexCoord1Attribute),
+            QSGGeometry::Attribute::createWithAttributeType(3, 2, QSGGeometry::FloatType, QSGGeometry::TexCoord2Attribute)
         };
         static QSGGeometry::AttributeSet attrs = { 4, sizeof(SmoothVertex), data };
         return attrs;
@@ -427,7 +427,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         if (!geometry) {
             geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                        hCells * vCells * 4, hCells * vCells * 6,
-                                       QSGGeometry::TypeUnsignedShort);
+                                       QSGGeometry::UnsignedShortType);
         } else {
             geometry->allocate(hCells * vCells * 4, hCells * vCells * 6);
         }

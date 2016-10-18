@@ -8,9 +8,14 @@ Rectangle {
     Flickable {
         id: flick
         objectName: "flick"
+        property bool ended: false
+        property int movementsAfterEnd: 0
         anchors.fill: parent
         contentWidth: 800
         contentHeight: 800
+        onContentXChanged: if (ended) ++movementsAfterEnd
+        onContentYChanged: if (ended) ++movementsAfterEnd
+        onMovementEnded: ended = true
 
         Rectangle {
             width: flick.contentWidth

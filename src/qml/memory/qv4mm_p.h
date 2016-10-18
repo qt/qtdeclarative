@@ -108,8 +108,10 @@ public:
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, std::size_t unmanagedSize = 0)
     {
+        V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
         Heap::Base *o = allocData(size, unmanagedSize);
+        memset(o, 0, size);
         o->setVtable(ManagedType::staticVTable());
         return static_cast<typename ManagedType::Data *>(o);
     }
@@ -144,7 +146,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
-        (void)new (t->d()) typename ManagedType::Data(this, arg1);
+        t->d_unchecked()->init(this, arg1);
         return t->d();
     }
 
@@ -153,7 +155,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        (void)new (t->d()) typename ObjectType::Data();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -162,8 +164,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data();
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -172,8 +174,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1);
         return t->d();
     }
 
@@ -182,8 +184,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
 
@@ -192,8 +194,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
 
@@ -202,8 +204,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d()->prototype = prototype->d();
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3, arg4);
+        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
 
@@ -212,7 +214,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -221,7 +223,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1);
+        t->d_unchecked()->init(arg1);
         return t->d();
     }
 
@@ -230,7 +232,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
+        t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
 
@@ -239,7 +241,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3);
+        t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
 
@@ -248,7 +250,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3, arg4);
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
 
@@ -258,7 +260,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data();
+        t->d_unchecked()->init();
         return t->d();
     }
 
@@ -267,7 +269,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1);
+        t->d_unchecked()->init(arg1);
         return t->d();
     }
 
@@ -294,7 +296,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4);
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
 
@@ -303,7 +305,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4, arg5);
+        t->d_unchecked()->init(arg1, arg2, arg3, arg4, arg5);
         return t->d();
     }
 

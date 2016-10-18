@@ -70,7 +70,7 @@
 #include <QtCore/qthread.h>
 #include <private/qthread_p.h>
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include "qqmlnetworkaccessmanagerfactory.h"
 #include <QNetworkAccessManager>
 #include <QtNetwork/qnetworkconfigmanager.h>
@@ -660,7 +660,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0),
   activeObjectCreator(0),
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
   networkAccessManager(0), networkAccessManagerFactory(0),
 #endif
   urlInterceptor(0), scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
@@ -1143,7 +1143,7 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
     }
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 /*!
   Sets the \a factory to use for creating QNetworkAccessManager(s).
 
@@ -1210,7 +1210,7 @@ QNetworkAccessManager *QQmlEngine::networkAccessManager() const
     Q_D(const QQmlEngine);
     return d->getNetworkAccessManager();
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 /*!
 

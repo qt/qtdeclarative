@@ -246,7 +246,7 @@ Creates a new empty QQmlPropertyCache.
 QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e)
     : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
       signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(0), argumentsCache(0)
+      _metaObject(0), argumentsCache(0), _jsFactoryMethodIndex(-1)
 {
     Q_ASSERT(engine);
 }
@@ -507,6 +507,11 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             const char *name = mci.name();
             if (0 == qstrcmp(name, "DefaultProperty")) {
                 _defaultPropertyName = QString::fromUtf8(mci.value());
+            } else if (0 == qstrcmp(name, "qt_QmlJSWrapperFactoryMethod")) {
+                const char * const factoryMethod = mci.value();
+                _jsFactoryMethodIndex = metaObject->indexOfSlot(factoryMethod);
+                if (_jsFactoryMethodIndex != -1)
+                    _jsFactoryMethodIndex -= metaObject->methodOffset();
             }
         }
     }

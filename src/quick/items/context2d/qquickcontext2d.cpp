@@ -489,34 +489,43 @@ namespace QV4 {
 namespace Heap {
 
 struct QQuickJSContext2D : Object {
-    QQuickJSContext2D() {}
+    void init() { Object::init(); }
     QQuickContext2D* context;
 };
 
 struct QQuickJSContext2DPrototype : Object {
-    QQuickJSContext2DPrototype() {}
+    void init() { Object::init(); }
 };
 
 struct QQuickContext2DStyle : Object {
-    QQuickContext2DStyle()
+    void init()
     {
+        brush = new QBrush;
         patternRepeatX = false;
         patternRepeatY = false;
     }
+    void destroy() {
+        delete brush;
+        Object::destroy();
+    }
 
-    QBrush brush;
+    QBrush *brush;
     bool patternRepeatX:1;
     bool patternRepeatY:1;
 };
 
 struct QQuickJSContext2DPixelData : Object {
-    QQuickJSContext2DPixelData();
+    void init();
+    void destroy() {
+        delete image;
+        Object::destroy();
+    }
 
-    QImage image;
+    QImage *image;
 };
 
 struct QQuickJSContext2DImageData : Object {
-    QQuickJSContext2DImageData();
+    void init();
 
     QV4::Value pixelData;
 };
@@ -897,8 +906,10 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     static QV4::ReturnedValue proto_get_length(QV4::CallContext *ctx);
 };
 
-QV4::Heap::QQuickJSContext2DPixelData::QQuickJSContext2DPixelData()
+void QV4::Heap::QQuickJSContext2DPixelData::init()
 {
+    Object::init();
+    image = new QImage;
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(QV4::Heap::ArrayData::Custom);
@@ -920,8 +931,9 @@ struct QQuickJSContext2DImageData : public QV4::Object
     }
 };
 
-QV4::Heap::QQuickJSContext2DImageData::QQuickJSContext2DImageData()
+void QV4::Heap::QQuickJSContext2DImageData::init()
 {
+    Object::init();
     pixelData = QV4::Primitive::undefinedValue();
 
     QV4::Scope scope(internalClass->engine);
@@ -943,11 +955,11 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
     pixelData->setPrototype(p);
 
     if (image.isNull()) {
-        pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
-        pixelData->d()->image.fill(0x00000000);
+        *pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
+        pixelData->d()->image->fill(0x00000000);
     } else {
         Q_ASSERT(image.width() == qRound(w) && image.height() == qRound(h));
-        pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
+        *pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, scope.engine->memoryManager->allocObject<QQuickJSContext2DImageData>());
@@ -1392,9 +1404,9 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(QV4::CallContext *ctx
            r->d()->context->m_fillStyle.set(scope.engine, value);
        } else {
            QV4::Scoped<QQuickContext2DStyle> style(scope, value->as<QQuickContext2DStyle>());
-           if (style && style->d()->brush != r->d()->context->state.fillStyle) {
-               r->d()->context->state.fillStyle = style->d()->brush;
-               r->d()->context->buffer()->setFillStyle(style->d()->brush, style->d()->patternRepeatX, style->d()->patternRepeatY);
+           if (style && *style->d()->brush != r->d()->context->state.fillStyle) {
+               r->d()->context->state.fillStyle = *style->d()->brush;
+               r->d()->context->buffer()->setFillStyle(*style->d()->brush, style->d()->patternRepeatX, style->d()->patternRepeatY);
                r->d()->context->m_fillStyle.set(scope.engine, value);
                r->d()->context->state.fillPatternRepeatX = style->d()->patternRepeatX;
                r->d()->context->state.fillPatternRepeatY = style->d()->patternRepeatY;
@@ -1501,9 +1513,9 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(QV4::CallContext *c
             r->d()->context->m_strokeStyle.set(scope.engine, value);
         } else {
             QV4::Scoped<QQuickContext2DStyle> style(scope, value->as<QQuickContext2DStyle>());
-            if (style && style->d()->brush != r->d()->context->state.strokeStyle) {
-                r->d()->context->state.strokeStyle = style->d()->brush;
-                r->d()->context->buffer()->setStrokeStyle(style->d()->brush, style->d()->patternRepeatX, style->d()->patternRepeatY);
+            if (style && *style->d()->brush != r->d()->context->state.strokeStyle) {
+                r->d()->context->state.strokeStyle = *style->d()->brush;
+                r->d()->context->buffer()->setStrokeStyle(*style->d()->brush, style->d()->patternRepeatX, style->d()->patternRepeatY);
                 r->d()->context->m_strokeStyle.set(scope.engine, value);
                 r->d()->context->state.strokePatternRepeatX = style->d()->patternRepeatX;
                 r->d()->context->state.strokePatternRepeatY = style->d()->patternRepeatY;
@@ -1561,7 +1573,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
-        gradient->d()->brush = QLinearGradient(x0, y0, x1, y1);
+        *gradient->d()->brush = QLinearGradient(x0, y0, x1, y1);
         return gradient.asReturnedValue();
     }
 
@@ -1612,7 +1624,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
-        gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
+        *gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
         return gradient.asReturnedValue();
     }
 
@@ -1655,7 +1667,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
-        gradient->d()->brush = QConicalGradient(x, y, angle);
+        *gradient->d()->brush = QConicalGradient(x, y, angle);
         return gradient.asReturnedValue();
     }
 
@@ -1720,7 +1732,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
             if (patternMode >= 0 && patternMode < Qt::LinearGradientPattern) {
                 style = static_cast<Qt::BrushStyle>(patternMode);
             }
-            pattern->d()->brush = QBrush(color, style);
+            *pattern->d()->brush = QBrush(color, style);
         } else {
             QImage patternTexture;
 
@@ -1728,14 +1740,14 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
                 QV4::ScopedString s(scope, scope.engine->newString(QStringLiteral("data")));
                 QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s));
                 if (!!pixelData) {
-                    patternTexture = pixelData->d()->image;
+                    patternTexture = *pixelData->d()->image;
                 }
             } else {
                 patternTexture = r->d()->context->createPixmap(QUrl(ctx->args()[0].toQStringNoThrow()))->image();
             }
 
             if (!patternTexture.isNull()) {
-                pattern->d()->brush.setTextureImage(patternTexture);
+                pattern->d()->brush->setTextureImage(patternTexture);
 
                 QString repetition = ctx->args()[1].toQStringNoThrow();
                 if (repetition == QLatin1String("repeat") || repetition.isEmpty()) {
@@ -2925,8 +2937,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::CallContext
             QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, arg);
             if (!!imageData) {
                 QV4::Scoped<QQuickJSContext2DPixelData> pix(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
-                if (pix && !pix->d()->image.isNull()) {
-                    pixmap.adopt(new QQuickCanvasPixmap(pix->d()->image));
+                if (pix && !pix->d()->image->isNull()) {
+                    pixmap.adopt(new QQuickCanvasPixmap(*pix->d()->image));
                 } else {
                     V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
                 }
@@ -3034,7 +3046,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_width(QV4::CallContext
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     if (!r)
         return QV4::Encode(0);
-    return QV4::Encode(r->d()->image.width());
+    return QV4::Encode(r->d()->image->width());
 }
 
 /*!
@@ -3050,7 +3062,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_height(QV4::CallContex
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     if (!r)
         return QV4::Encode(0);
-    return QV4::Encode(r->d()->image.height());
+    return QV4::Encode(r->d()->image->height());
 }
 
 /*!
@@ -3088,10 +3100,10 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::proto_get_length(QV4::CallContext
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, ctx->thisObject().as<QQuickJSContext2DPixelData>());
-    if (!r || r->d()->image.isNull())
+    if (!r || r->d()->image->isNull())
         return QV4::Encode::undefined();
 
-    return QV4::Encode(r->d()->image.width() * r->d()->image.height() * 4);
+    return QV4::Encode(r->d()->image->width() * r->d()->image->height() * 4);
 }
 
 QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(const QV4::Managed *m, uint index, bool *hasProperty)
@@ -3101,13 +3113,13 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(const QV4::Managed *m,
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, static_cast<const QQuickJSContext2DPixelData *>(m));
 
-    if (index < static_cast<quint32>(r->d()->image.width() * r->d()->image.height() * 4)) {
+    if (index < static_cast<quint32>(r->d()->image->width() * r->d()->image->height() * 4)) {
         if (hasProperty)
             *hasProperty = true;
-        const quint32 w = r->d()->image.width();
+        const quint32 w = r->d()->image->width();
         const quint32 row = (index / 4) / w;
         const quint32 col = (index / 4) % w;
-        const QRgb* pixel = reinterpret_cast<const QRgb*>(r->d()->image.constScanLine(row));
+        const QRgb* pixel = reinterpret_cast<const QRgb*>(r->d()->image->constScanLine(row));
         pixel += col;
         switch (index % 4) {
         case 0:
@@ -3136,12 +3148,12 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, static_cast<QQuickJSContext2DPixelData *>(m));
 
     const int v = value.toInt32();
-    if (r && index < static_cast<quint32>(r->d()->image.width() * r->d()->image.height() * 4) && v >= 0 && v <= 255) {
-        const quint32 w = r->d()->image.width();
+    if (r && index < static_cast<quint32>(r->d()->image->width() * r->d()->image->height() * 4) && v >= 0 && v <= 255) {
+        const quint32 w = r->d()->image->width();
         const quint32 row = (index / 4) / w;
         const quint32 col = (index / 4) % w;
 
-        QRgb* pixel = reinterpret_cast<QRgb*>(r->d()->image.scanLine(row));
+        QRgb* pixel = reinterpret_cast<QRgb*>(r->d()->image->scanLine(row));
         pixel += col;
         switch (index % 4) {
         case 0:
@@ -3192,8 +3204,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::CallC
         if (!!imgData) {
             QV4::Scoped<QQuickJSContext2DPixelData> pa(scope, imgData->d()->pixelData.as<QQuickJSContext2DPixelData>());
             if (pa) {
-                qreal w = pa->d()->image.width();
-                qreal h = pa->d()->image.height();
+                qreal w = pa->d()->image->width();
+                qreal h = pa->d()->image->height();
                 return qt_create_image_data(w, h, scope.engine, QImage());
             }
         } else if (arg0->isString()) {
@@ -3271,8 +3283,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::CallCont
 
     QV4::Scoped<QQuickJSContext2DPixelData> pixelArray(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     if (pixelArray) {
-        w = pixelArray->d()->image.width();
-        h = pixelArray->d()->image.height();
+        w = pixelArray->d()->image->width();
+        h = pixelArray->d()->image->height();
 
         if (ctx->argc() == 7) {
             dirtyX = ctx->args()[3].toNumber();
@@ -3321,7 +3333,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::CallCont
             dirtyHeight = h;
         }
 
-        QImage image = pixelArray->d()->image.copy(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+        QImage image = pixelArray->d()->image->copy(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
         r->d()->context->buffer()->drawImage(image, QRectF(dirtyX, dirtyY, dirtyWidth, dirtyHeight), QRectF(dx, dy, dirtyWidth, dirtyHeight));
     }
     return ctx->thisObject().asReturnedValue();
@@ -3356,9 +3368,9 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(QV4::CallCo
 
     if (ctx->argc() == 2) {
 
-        if (!style->d()->brush.gradient())
+        if (!style->d()->brush->gradient())
             V4THROW_ERROR("Not a valid CanvasGradient object, can't get the gradient information");
-        QGradient gradient = *(style->d()->brush.gradient());
+        QGradient gradient = *(style->d()->brush->gradient());
         qreal pos = ctx->args()[0].toNumber();
         QColor color;
 
@@ -3376,7 +3388,7 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(QV4::CallCo
         } else {
             V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "CanvasGradient: parameter color is not a valid color string");
         }
-        style->d()->brush = gradient;
+        *style->d()->brush = gradient;
     }
 
     return ctx->thisObject().asReturnedValue();

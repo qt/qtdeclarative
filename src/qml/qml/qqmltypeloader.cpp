@@ -123,7 +123,7 @@ namespace {
     };
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 // This is a lame object that we need to ensure that slots connected to
 // QNetworkReply get called in the correct thread (the loader thread).
 // As QQmlTypeLoader lives in the main thread, and we can't use
@@ -143,7 +143,7 @@ public slots:
 private:
     QQmlTypeLoader *l;
 };
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 class QQmlTypeLoaderThread : public QQmlThread
 {
@@ -151,10 +151,10 @@ class QQmlTypeLoaderThread : public QQmlThread
 
 public:
     QQmlTypeLoaderThread(QQmlTypeLoader *loader);
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkAccessManager *networkAccessManager() const;
     QQmlTypeLoaderNetworkReplyProxy *networkReplyProxy() const;
-#endif // QT_NO_NETWORK
+#endif // qml_network
     void load(QQmlDataBlob *b);
     void loadAsync(QQmlDataBlob *b);
     void loadWithStaticData(QQmlDataBlob *b, const QByteArray &);
@@ -177,13 +177,13 @@ private:
     void initializeEngineMain(QQmlExtensionInterface *iface, const char *uri);
 
     QQmlTypeLoader *m_loader;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     mutable QNetworkAccessManager *m_networkAccessManager;
     mutable QQmlTypeLoaderNetworkReplyProxy *m_networkReplyProxy;
-#endif // QT_NO_NETWORK
+#endif // qml_network
 };
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 QQmlTypeLoaderNetworkReplyProxy::QQmlTypeLoaderNetworkReplyProxy(QQmlTypeLoader *l)
 : l(l)
 {
@@ -212,7 +212,7 @@ void QQmlTypeLoaderNetworkReplyProxy::manualFinished(QNetworkReply *reply)
     l->networkReplyProgress(reply, replySize, replySize);
     l->networkReplyFinished(reply);
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 /*!
 \class QQmlDataBlob
@@ -529,7 +529,7 @@ void QQmlDataBlob::done()
 {
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 /*!
 Invoked if there is a network error while fetching this blob.
 
@@ -582,7 +582,7 @@ void QQmlDataBlob::networkError(QNetworkReply::NetworkError networkError)
 
     setError(error);
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 /*!
 Called if \a blob, which was previously waited for, has an error.
@@ -782,15 +782,15 @@ void QQmlDataBlob::ThreadData::setProgress(quint8 v)
 
 QQmlTypeLoaderThread::QQmlTypeLoaderThread(QQmlTypeLoader *loader)
 : m_loader(loader)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 , m_networkAccessManager(0), m_networkReplyProxy(0)
-#endif // QT_NO_NETWORK
+#endif // qml_network
 {
     // Do that after initializing all the members.
     startup();
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 QNetworkAccessManager *QQmlTypeLoaderThread::networkAccessManager() const
 {
     Q_ASSERT(isThisThread());
@@ -808,7 +808,7 @@ QQmlTypeLoaderNetworkReplyProxy *QQmlTypeLoaderThread::networkReplyProxy() const
     Q_ASSERT(m_networkReplyProxy); // Must call networkAccessManager() first
     return m_networkReplyProxy;
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 void QQmlTypeLoaderThread::load(QQmlDataBlob *b)
 {
@@ -866,12 +866,12 @@ void QQmlTypeLoaderThread::initializeEngine(QQmlExtensionInterface *iface,
 
 void QQmlTypeLoaderThread::shutdownThread()
 {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     delete m_networkAccessManager;
     m_networkAccessManager = 0;
     delete m_networkReplyProxy;
     m_networkReplyProxy = 0;
-#endif // QT_NO_NETWORK
+#endif // qml_network
 }
 
 void QQmlTypeLoaderThread::loadThread(QQmlDataBlob *b)
@@ -957,14 +957,14 @@ void QQmlTypeLoader::invalidate()
         m_thread = 0;
     }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     // Need to delete the network replies after
     // the loader thread is shutdown as it could be
     // getting new replies while we clear them
     for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter)
         (*iter)->release();
     m_networkReplies.clear();
-#endif // QT_NO_NETWORK
+#endif // qml_network
 }
 
 void QQmlTypeLoader::lock()
@@ -1138,7 +1138,7 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
         setData(blob, fileName);
 
     } else {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(blob->m_url));
         QQmlTypeLoaderNetworkReplyProxy *nrp = m_thread->networkReplyProxy();
         blob->addref();
@@ -1156,14 +1156,14 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
 #ifdef DATABLOB_DEBUG
         qWarning("QQmlDataBlob: requested %s", qPrintable(blob->url().toString()));
 #endif // DATABLOB_DEBUG
-#endif // QT_NO_NETWORK
+#endif // qml_network
     }
 }
 
 #define DATALOADER_MAXIMUM_REDIRECT_RECURSION 16
 #define TYPELOADER_MINIMUM_TRIM_THRESHOLD 64
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
 {
     Q_ASSERT(m_thread->isThisThread());
@@ -1219,7 +1219,7 @@ void QQmlTypeLoader::networkReplyProgress(QNetworkReply *reply,
             m_thread->callDownloadProgressChanged(blob, blob->m_data.progress());
     }
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 /*!
 Return the QQmlEngine associated with this loader
@@ -1968,12 +1968,11 @@ void QQmlTypeLoader::trimCache()
         for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)  {
             QQmlTypeData *typeData = iter.value();
 
-            const bool hasError = !typeData->m_compiledData && !typeData->m_errors.isEmpty();
-            const bool isNotReferenced = typeData->isComplete() && typeData->m_compiledData
-                    && typeData->m_compiledData->count() == 1;
-            // typeData->m_compiledData may be set early on in the proccess of loading a file, so it's important
-            // to check the general loading status of the typeData before making any other decisions.
-            if (typeData->count() == 1 && (hasError || isNotReferenced)) {
+            // typeData->m_compiledData may be set early on in the proccess of loading a file, so
+            // it's important to check the general loading status of the typeData before making any
+            // other decisions.
+            if (typeData->count() == 1 && (typeData->isError() || typeData->isComplete())
+                    && (!typeData->m_compiledData || typeData->m_compiledData->count() == 1)) {
                 // There are no live objects of this type
                 unneededTypes.append(iter);
             }
@@ -3106,8 +3105,14 @@ QByteArray QQmlDataBlob::Data::readAll(QString *error, qint64 *sourceTimeStamp) 
         *error = f.errorString();
         return QByteArray();
     }
-    if (sourceTimeStamp)
-        *sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
+    if (sourceTimeStamp) {
+        QDateTime timeStamp = QFileInfo(f).lastModified();
+        // Files from the resource system do not have any time stamps, so fall back to the application
+        // executable.
+        if (!timeStamp.isValid())
+            timeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+        *sourceTimeStamp = timeStamp.toMSecsSinceEpoch();
+    }
     QByteArray data(f.size(), Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();

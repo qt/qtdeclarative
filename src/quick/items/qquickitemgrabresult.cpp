@@ -37,17 +37,21 @@
 **
 ****************************************************************************/
 
+#include <private/qtquickglobal_p.h>
 #include "qquickitemgrabresult.h"
 
 #include "qquickwindow.h"
 #include "qquickitem.h"
+#if QT_CONFIG(quick_shadereffect)
 #include "qquickshadereffectsource_p.h"
+#endif
 
 #include <QtQml/QQmlEngine>
 
 #include <private/qquickpixmapcache_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgcontext_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 

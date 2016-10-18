@@ -42,6 +42,7 @@
 #include "qquicksprite_p.h"
 #include "qquickspriteengine_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtQuick/qsgnode.h>
@@ -349,7 +350,7 @@ void QQuickAnimatedSprite::start()
     }
     emit currentFrameChanged(0);
     emit runningChanged(true);
-    update();
+    maybeUpdate();
 }
 
 void QQuickAnimatedSprite::stop()
@@ -360,7 +361,7 @@ void QQuickAnimatedSprite::stop()
         return;
     d->m_pauseOffset = 0;
     emit runningChanged(false);
-    update();
+    maybeUpdate();
 }
 
 /*!
@@ -379,7 +380,15 @@ void QQuickAnimatedSprite::advance(int frames)
         d->m_curFrame += d->m_spriteEngine->maxFrames();
     d->m_curFrame = d->m_curFrame % d->m_spriteEngine->maxFrames();
     emit currentFrameChanged(d->m_curFrame);
-    update();
+    maybeUpdate();
+}
+
+void QQuickAnimatedSprite::maybeUpdate()
+{
+    QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
+    const QLazilyAllocated<QQuickItemPrivate::ExtraData> &extraData = priv->extra;
+    if ((extraData.isAllocated() && extraData->effectRefCount > 0) || priv->effectiveVisible)
+        update();
 }
 
 /*!
@@ -399,7 +408,7 @@ void QQuickAnimatedSprite::pause()
     d->m_pauseOffset = d->m_timestamp.elapsed();
     d->m_paused = true;
     emit pausedChanged(true);
-    update();
+    maybeUpdate();
 }
 
 /*!
@@ -419,7 +428,7 @@ void QQuickAnimatedSprite::resume()
     d->m_pauseOffset = d->m_pauseOffset - d->m_timestamp.elapsed();
     d->m_paused = false;
     emit pausedChanged(false);
-    update();
+    maybeUpdate();
 }
 
 void QQuickAnimatedSprite::setRunning(bool arg)
@@ -610,7 +619,6 @@ void QQuickAnimatedSprite::createEngine()
     d->m_spriteEngine = new QQuickSpriteEngine(QList<QQuickSprite*>(spriteList), this);
     d->m_spriteEngine->startAssemblingImage();
     reset();
-    update();
 }
 
 QSGSpriteNode* QQuickAnimatedSprite::initNode()
@@ -622,10 +630,10 @@ QSGSpriteNode* QQuickAnimatedSprite::initNode()
         return nullptr;
     } else if (d->m_spriteEngine->status() == QQuickPixmap::Null) {
         d->m_spriteEngine->startAssemblingImage();
-        update();//Schedule another update, where we will check again
+        maybeUpdate();//Schedule another update, where we will check again
         return nullptr;
     } else if (d->m_spriteEngine->status() == QQuickPixmap::Loading) {
-        update();//Schedule another update, where we will check again
+        maybeUpdate();//Schedule another update, where we will check again
         return nullptr;
     }
 
@@ -651,7 +659,7 @@ void QQuickAnimatedSprite::reset()
 {
     Q_D(QQuickAnimatedSprite);
     d->m_pleaseReset = true;
-    update();
+    maybeUpdate();
 }
 
 QSGNode *QQuickAnimatedSprite::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -673,7 +681,7 @@ QSGNode *QQuickAnimatedSprite::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
         prepareNextFrame(node);
 
     if (d->m_running && !d->m_paused)
-        update();
+        maybeUpdate();
 
     return node;
 }
@@ -726,7 +734,7 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
             frameAt = 0;
             d->m_running = false;
             emit runningChanged(false);
-            update();
+            maybeUpdate();
         }
     } else {
         frameAt = d->m_curFrame;
@@ -734,7 +742,7 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
     if (d->m_curFrame != lastFrame) {
         if (isCurrentFrameChangedConnected())
             emit currentFrameChanged(d->m_curFrame);
-        update();
+        maybeUpdate();
     }
 
     qreal frameCount = d->m_spriteEngine->spriteFrames();

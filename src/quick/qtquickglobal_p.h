@@ -40,6 +40,10 @@
 #ifndef QTQUICKGLOBAL_P_H
 #define QTQUICKGLOBAL_P_H
 
+#include <QtQml/private/qtqmlglobal_p.h>
+#include <QtGui/private/qtguiglobal_p.h>
+#include <QtQuick/private/qtquick-config_p.h>
+
 #include <QtCore/qloggingcategory.h>
 
 //

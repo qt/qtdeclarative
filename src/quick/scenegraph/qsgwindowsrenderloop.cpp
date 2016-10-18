@@ -55,7 +55,7 @@
 #include <private/qquickprofiler_p.h>
 #include <private/qquickanimatorcontroller_p.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 #include <private/qquickopenglshadereffectnode_p.h>
 #endif
 
@@ -245,7 +245,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     if (Q_UNLIKELY(!current))
         qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
     QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 

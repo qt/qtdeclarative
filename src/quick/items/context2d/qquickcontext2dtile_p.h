@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_canvas);
+
 #include "qquickcontext2d_p.h"
 #ifndef QT_NO_OPENGL
 # include <QOpenGLFramebufferObject>

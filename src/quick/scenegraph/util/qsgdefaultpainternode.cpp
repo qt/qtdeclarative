@@ -443,9 +443,21 @@ void QSGDefaultPainterNode::setContentsScale(qreal s)
     markDirty(DirtyMaterial);
 }
 
-void QSGDefaultPainterNode::setFastFBOResizing(bool dynamic)
+void QSGDefaultPainterNode::setFastFBOResizing(bool fastResizing)
 {
-    m_fastFBOResizing = dynamic;
+    if (m_fastFBOResizing == fastResizing)
+        return;
+
+    m_fastFBOResizing = fastResizing;
+    updateFBOSize();
+
+    if ((m_preferredRenderTarget == QQuickPaintedItem::FramebufferObject
+         || m_preferredRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
+            && (!m_fbo || (m_fbo && m_fbo->size() != m_fboSize))) {
+        m_dirtyRenderTarget = true;
+        m_dirtyGeometry = true;
+        m_dirtyTexture = true;
+    }
 }
 
 QImage QSGDefaultPainterNode::toImage() const

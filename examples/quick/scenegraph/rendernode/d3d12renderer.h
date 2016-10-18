@@ -43,7 +43,7 @@
 
 #include <qsgrendernode.h>
 
-#ifdef HAS_D3D12
+#if QT_CONFIG(d3d12)
 
 class QQuickItem;
 
@@ -77,6 +77,6 @@ private:
     quint8 *cbPtr = nullptr;
 };
 
-#endif // HAS_D3D12
+#endif // d3d12
 
 #endif

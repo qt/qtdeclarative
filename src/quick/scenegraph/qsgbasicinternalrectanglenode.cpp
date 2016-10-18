@@ -87,9 +87,9 @@ namespace
     const QSGGeometry::AttributeSet &smoothAttributeSet()
     {
         static QSGGeometry::Attribute data[] = {
-            QSGGeometry::Attribute::createWithSemantic(0, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::POSITION),
-            QSGGeometry::Attribute::createWithSemantic(1, 4, QSGGeometry::TypeUnsignedByte, QSGGeometry::Attribute::COLOR),
-            QSGGeometry::Attribute::createWithSemantic(2, 2, QSGGeometry::TypeFloat, QSGGeometry::Attribute::TEXCOORD)
+            QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
+            QSGGeometry::Attribute::createWithAttributeType(1, 4, QSGGeometry::UnsignedByteType, QSGGeometry::ColorAttribute),
+            QSGGeometry::Attribute::createWithAttributeType(2, 2, QSGGeometry::FloatType, QSGGeometry::TexCoordAttribute)
         };
         static QSGGeometry::AttributeSet attrs = { 3, sizeof(SmoothVertex), data };
         return attrs;
