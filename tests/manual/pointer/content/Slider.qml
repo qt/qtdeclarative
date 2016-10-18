@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -46,6 +46,9 @@ Item {
     property int value: 50
     property int maximumValue: 99
     property alias label: label.text
+    property alias tapEnabled: tap.enabled
+    property alias pressed: tap.isPressed
+    signal tapped
 
     Rectangle {
         id: slot
@@ -70,7 +73,10 @@ Item {
         anchors.horizontalCenterOffset: 1
         radius: 5
         color: "#4400FFFF"
-        opacity: dragHandler.active ? 1 : 0
+        opacity: dragHandler.active || tapFlash.running ? 1 : 0
+        FlashAnimation on visible {
+            id: tapFlash
+        }
     }
     Image {
         id: knob
@@ -89,6 +95,15 @@ Item {
             xAxis.enabled: false
             yAxis.minimum: slot.y
             yAxis.maximum: slot.height + slot.y - knob.height
+        }
+        TapHandler {
+            id: tap
+            objectName: label.text
+            gesturePolicy: TapHandler.DragThreshold
+            onTapped: {
+                tapFlash.start()
+                root.tapped
+            }
         }
     }
 

@@ -64,8 +64,16 @@ class Q_AUTOTEST_EXPORT QQuickTapHandler : public QQuickPointerSingleHandler
     Q_PROPERTY(bool isPressed READ isPressed NOTIFY pressedChanged)
     Q_PROPERTY(int tapCount READ tapCount NOTIFY tapCountChanged)
     Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged)
+    Q_PROPERTY(GesturePolicy gesturePolicy READ gesturePolicy WRITE setGesturePolicy NOTIFY gesturePolicyChanged)
 
 public:
+    enum GesturePolicy {
+        DragThreshold,
+        WithinBounds,
+        ReleaseWithinBounds
+    };
+    Q_ENUM(GesturePolicy)
+
     QQuickTapHandler(QObject *parent = 0);
     ~QQuickTapHandler();
 
@@ -79,10 +87,14 @@ public:
     qreal longPressThreshold() const;
     void setLongPressThreshold(qreal longPressThreshold);
 
+    GesturePolicy gesturePolicy() const { return m_gesturePolicy; }
+    void setGesturePolicy(GesturePolicy gesturePolicy);
+
 Q_SIGNALS:
     void pressedChanged();
     void tapCountChanged();
     void longPressThresholdChanged();
+    void gesturePolicyChanged();
     void tapped(QQuickEventPoint *point);
     void longPressed();
 
@@ -96,13 +108,13 @@ private:
 
 private:
     bool m_pressed;
+    GesturePolicy m_gesturePolicy;
     int m_tapCount;
     int m_longPressThreshold;
     QBasicTimer m_longPressTimer;
     QPointF m_lastTapPos;
     qreal m_lastTapTimestamp;
 
-    static qreal m_tapInterval;
     static qreal m_multiTapInterval;
     static int m_mouseMultiClickDistanceSquared;
     static int m_touchMultiTapDistanceSquared;

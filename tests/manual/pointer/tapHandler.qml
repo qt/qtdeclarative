@@ -57,6 +57,9 @@ Item {
             acceptedButtons: (leftAllowedCB.checked ? Qt.LeftButton : Qt.NoButton) |
                              (middleAllowedCB.checked ? Qt.MiddleButton : Qt.NoButton) |
                              (rightAllowedCB.checked ? Qt.RightButton : Qt.NoButton)
+            gesturePolicy: (policyDragThresholdCB.checked ? TapHandler.DragThreshold :
+                            policyWithinBoundsCB.checked ? TapHandler.WithinBounds :
+                            TapHandler.ReleaseWithinBounds)
             onPressedButtonsChanged: switch (pressedButtons) {
                 case Qt.MiddleButton: borderBlink.blinkColor = "orange"; break;
                 case Qt.RightButton: borderBlink.blinkColor = "magenta"; break;
@@ -140,6 +143,32 @@ Item {
         Examples.CheckBox {
             id: rightAllowedCB
             text: "right click"
+        }
+        Text { text: "      gesture policy:"; anchors.verticalCenter: leftAllowedCB.verticalCenter }
+        Examples.CheckBox {
+            id: policyDragThresholdCB
+            text: "drag threshold"
+            onCheckedChanged: if (checked) {
+                policyWithinBoundsCB.checked = false;
+                policyReleaseWithinBoundsCB.checked = false;
+            }
+        }
+        Examples.CheckBox {
+            id: policyWithinBoundsCB
+            text: "within bounds"
+            onCheckedChanged: if (checked) {
+                policyDragThresholdCB.checked = false;
+                policyReleaseWithinBoundsCB.checked = false;
+            }
+        }
+        Examples.CheckBox {
+            id: policyReleaseWithinBoundsCB
+            checked: true
+            text: "release within bounds"
+            onCheckedChanged: if (checked) {
+                policyDragThresholdCB.checked = false;
+                policyWithinBoundsCB.checked = false;
+            }
         }
     }
 }
