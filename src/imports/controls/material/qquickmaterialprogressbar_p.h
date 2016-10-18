@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMATERIALPROGRESSSTRIP_P_H
-#define QQUICKMATERIALPROGRESSSTRIP_P_H
+#ifndef QQUICKMATERIALPROGRESSBAR_P_H
+#define QQUICKMATERIALPROGRESSBAR_P_H
 
 //
 //  W A R N I N G
@@ -49,11 +49,10 @@
 //
 
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickanimator_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialProgressStrip : public QQuickItem
+class QQuickMaterialProgressBar : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
@@ -61,7 +60,7 @@ class QQuickMaterialProgressStrip : public QQuickItem
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate FINAL)
 
 public:
-    QQuickMaterialProgressStrip(QQuickItem *parent = nullptr);
+    explicit QQuickMaterialProgressBar(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(const QColor &color);
@@ -73,6 +72,7 @@ public:
     void setIndeterminate(bool indeterminate);
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
@@ -81,21 +81,8 @@ private:
     bool m_indeterminate;
 };
 
-class QQuickMaterialStripAnimator : public QQuickAnimator
-{
-    Q_OBJECT
-
-public:
-    QQuickMaterialStripAnimator(QObject *parent = nullptr);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
-};
-
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMaterialProgressStrip)
-QML_DECLARE_TYPE(QQuickMaterialStripAnimator)
+QML_DECLARE_TYPE(QQuickMaterialProgressBar)
 
-#endif // QQUICKMATERIALPROGRESSSTRIP_P_H
+#endif // QQUICKMATERIALPROGRESSBAR_P_H

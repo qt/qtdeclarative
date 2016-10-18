@@ -1,16 +1,16 @@
 HEADERS += \
     $$PWD/qquickmaterialbusyindicator_p.h \
+    $$PWD/qquickmaterialprogressbar_p.h \
     $$PWD/qquickmaterialripple_p.h \
     $$PWD/qquickmaterialstyle_p.h \
-    $$PWD/qquickmaterialtheme_p.h \
-    $$PWD/qquickmaterialprogressstrip_p.h
+    $$PWD/qquickmaterialtheme_p.h
 
 SOURCES += \
     $$PWD/qquickmaterialbusyindicator.cpp \
+    $$PWD/qquickmaterialprogressbar.cpp \
     $$PWD/qquickmaterialripple.cpp \
     $$PWD/qquickmaterialstyle.cpp \
-    $$PWD/qquickmaterialtheme.cpp \
-    $$PWD/qquickmaterialprogressstrip.cpp
+    $$PWD/qquickmaterialtheme.cpp
 
 QML_FILES += \
     $$PWD/ApplicationWindow.qml \
