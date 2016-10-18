@@ -47,20 +47,13 @@ T.ProgressBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    contentItem: ProgressStrip {
-        id: strip
+    contentItem: ProgressBarImpl {
         implicitHeight: 10
 
         scale: control.mirrored ? -1 : 1
-        indeterminate: control.indeterminate
         color: control.Universal.accent
         progress: control.position
-        clip: control.indeterminate
-
-        ProgressStripAnimator {
-            target: strip
-            running: control.visible && control.indeterminate
-        }
+        indeterminate: control.visible && control.indeterminate
     }
 
     background: Rectangle {

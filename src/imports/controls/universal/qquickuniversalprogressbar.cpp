@@ -34,12 +34,12 @@
 **
 ****************************************************************************/
 
-#include "qquickuniversalprogressstrip_p.h"
+#include "qquickuniversalprogressbar_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgrectanglenode.h>
 
@@ -57,16 +57,13 @@ static const qreal ContainerAnimationEndPosition = 0.435222; // relative
 static const qreal EllipseAnimationWellPosition = 0.333333333333333; // relative
 static const qreal EllipseAnimationEndPosition = 0.666666666666667; // relative
 
-class QQuickUniversalProgressStripAnimatorJob : public QQuickAnimatorJob
+class QQuickUniversalProgressBarNode : public QObject, public QSGNode
 {
 public:
-    QQuickUniversalProgressStripAnimatorJob();
+    QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *item);
 
-    void initialize(QQuickAnimatorController *controller) override;
-    void updateCurrentTime(int time) override;
-    void writeBack() override;
-    void nodeWasDestroyed() override;
-    void afterNodeSync() override;
+    void animate();
+    void sync(QQuickUniversalProgressBar *item);
 
 private:
     struct Phase {
@@ -77,12 +74,14 @@ private:
         qreal to;
     };
 
-    QSGNode *m_node;
+    bool m_indeterminate;
+    QElapsedTimer m_timer;
     Phase m_borderPhases[PhaseCount];
     Phase m_ellipsePhases[PhaseCount];
 };
 
-QQuickUniversalProgressStripAnimatorJob::QQuickUniversalProgressStripAnimatorJob() : m_node(nullptr)
+QQuickUniversalProgressBarNode::QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *)
+    : m_indeterminate(false)
 {
     m_borderPhases[0] = Phase( 500, -50,   0);
     m_borderPhases[1] = Phase(1500,   0,   0);
@@ -93,20 +92,17 @@ QQuickUniversalProgressStripAnimatorJob::QQuickUniversalProgressStripAnimatorJob
     m_ellipsePhases[1] = Phase(1000, EllipseAnimationWellPosition, EllipseAnimationWellPosition);
     m_ellipsePhases[2] = Phase(1000, EllipseAnimationWellPosition, EllipseAnimationEndPosition);
     m_ellipsePhases[3] = Phase(1000, EllipseAnimationWellPosition, EllipseAnimationEndPosition);
+
+    m_timer.start();
 }
 
-void QQuickUniversalProgressStripAnimatorJob::initialize(QQuickAnimatorController *controller)
+void QQuickUniversalProgressBarNode::animate()
 {
-    QQuickAnimatorJob::initialize(controller);
-    m_node = QQuickItemPrivate::get(m_target)->childContainerNode();
-}
+    qint64 time = m_timer.elapsed();
+    if (time >= TotalDuration)
+        m_timer.restart();
 
-void QQuickUniversalProgressStripAnimatorJob::updateCurrentTime(int time)
-{
-    if (!m_node)
-        return;
-
-    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(m_node->firstChild());
+    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(firstChild());
     Q_ASSERT(!geometryNode || geometryNode->type() == QSGNode::GeometryNodeType);
     if (!geometryNode)
         return;
@@ -197,105 +193,40 @@ void QQuickUniversalProgressStripAnimatorJob::updateCurrentTime(int time)
     }
 }
 
-void QQuickUniversalProgressStripAnimatorJob::writeBack()
+void QQuickUniversalProgressBarNode::sync(QQuickUniversalProgressBar *item)
 {
-}
+    if (m_indeterminate != item->isIndeterminate()) {
+        m_indeterminate = item->isIndeterminate();
+        QQuickWindow *window = item->window();
+        if (m_indeterminate) {
+            connect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
+            connect(window, &QQuickWindow::beforeRendering, this, &QQuickUniversalProgressBarNode::animate);
+        } else {
+            disconnect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
+            disconnect(window, &QQuickWindow::beforeRendering, this, &QQuickUniversalProgressBarNode::animate);
+        }
+    }
 
-void QQuickUniversalProgressStripAnimatorJob::nodeWasDestroyed()
-{
-    m_node = nullptr;
-}
+    QQuickItemPrivate *d = QQuickItemPrivate::get(item);
 
-void QQuickUniversalProgressStripAnimatorJob::afterNodeSync()
-{
-    m_node = QQuickItemPrivate::get(m_target)->childContainerNode();
-}
-
-QQuickUniversalProgressStripAnimator::QQuickUniversalProgressStripAnimator(QObject *parent)
-    : QQuickAnimator(parent)
-{
-    setDuration(TotalDuration);
-    setLoops(QQuickAnimator::Infinite);
-}
-
-QString QQuickUniversalProgressStripAnimator::propertyName() const
-{
-    return QString();
-}
-
-QQuickAnimatorJob *QQuickUniversalProgressStripAnimator::createJob() const
-{
-    return new QQuickUniversalProgressStripAnimatorJob;
-}
-
-QQuickUniversalProgressStrip::QQuickUniversalProgressStrip(QQuickItem *parent)
-    : QQuickItem(parent), m_color(Qt::black), m_progress(0.0), m_indeterminate(false)
-{
-    setFlag(ItemHasContents);
-}
-
-QColor QQuickUniversalProgressStrip::color() const
-{
-    return m_color;
-}
-
-void QQuickUniversalProgressStrip::setColor(const QColor &color)
-{
-    if (m_color == color)
-        return;
-
-    m_color = color;
-    update();
-}
-
-qreal QQuickUniversalProgressStrip::progress() const
-{
-    return m_progress;
-}
-
-void QQuickUniversalProgressStrip::setProgress(qreal progress)
-{
-    if (progress == m_progress)
-        return;
-
-    m_progress = progress;
-    update();
-}
-
-bool QQuickUniversalProgressStrip::isIndeterminate() const
-{
-    return m_indeterminate;
-}
-
-void QQuickUniversalProgressStrip::setIndeterminate(bool indeterminate)
-{
-    if (indeterminate == m_indeterminate)
-        return;
-
-    m_indeterminate = indeterminate;
-    update();
-}
-
-QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
-{
-    QQuickItemPrivate *d = QQuickItemPrivate::get(this);
-
-    QRectF bounds = boundingRect();
-    bounds.setHeight(implicitHeight());
-    bounds.moveTop((height() - bounds.height()) / 2.0);
+    QRectF bounds = item->boundingRect();
+    bounds.setHeight(item->implicitHeight());
+    bounds.moveTop((item->height() - bounds.height()) / 2.0);
     if (!m_indeterminate)
-        bounds.setWidth(m_progress * bounds.width());
+        bounds.setWidth(item->progress() * bounds.width());
 
-    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(oldNode);
-    if (!geometryNode)
-        geometryNode = window()->createRectangleNode();
+    QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(firstChild());
+    if (!geometryNode) {
+        geometryNode = item->window()->createRectangleNode();
+        appendChildNode(geometryNode);
+    }
     geometryNode->setRect(bounds);
-    geometryNode->setColor(m_indeterminate ? Qt::transparent : m_color);
+    geometryNode->setColor(m_indeterminate ? Qt::transparent : item->color());
 
     if (!m_indeterminate) {
         while (QSGNode *node = geometryNode->firstChild())
             delete node;
-        return geometryNode;
+        return;
     }
 
     QSGTransformNode *gridNode = static_cast<QSGTransformNode *>(geometryNode->firstChild());
@@ -333,14 +264,82 @@ QSGNode *QQuickUniversalProgressStrip::updatePaintNode(QSGNode *oldNode, UpdateP
         QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
-        rectNode->setRect(QRectF((EllipseCount - i - 1) * (EllipseDiameter + EllipseOffset), (height() - EllipseDiameter) / 2, EllipseDiameter, EllipseDiameter));
-        rectNode->setColor(m_color);
+        rectNode->setRect(QRectF((EllipseCount - i - 1) * (EllipseDiameter + EllipseOffset), (item->height() - EllipseDiameter) / 2, EllipseDiameter, EllipseDiameter));
+        rectNode->setColor(item->color());
         rectNode->update();
 
         borderNode = borderNode->nextSibling();
     }
+}
 
-    return geometryNode;
+QQuickUniversalProgressBar::QQuickUniversalProgressBar(QQuickItem *parent)
+    : QQuickItem(parent), m_color(Qt::black), m_progress(0.0), m_indeterminate(false)
+{
+    setFlag(ItemHasContents);
+}
+
+QColor QQuickUniversalProgressBar::color() const
+{
+    return m_color;
+}
+
+void QQuickUniversalProgressBar::setColor(const QColor &color)
+{
+    if (m_color == color)
+        return;
+
+    m_color = color;
+    update();
+}
+
+qreal QQuickUniversalProgressBar::progress() const
+{
+    return m_progress;
+}
+
+void QQuickUniversalProgressBar::setProgress(qreal progress)
+{
+    if (progress == m_progress)
+        return;
+
+    m_progress = progress;
+    update();
+}
+
+bool QQuickUniversalProgressBar::isIndeterminate() const
+{
+    return m_indeterminate;
+}
+
+void QQuickUniversalProgressBar::setIndeterminate(bool indeterminate)
+{
+    if (indeterminate == m_indeterminate)
+        return;
+
+    m_indeterminate = indeterminate;
+    setClip(m_indeterminate);
+    update();
+}
+
+void QQuickUniversalProgressBar::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
+{
+    QQuickItem::itemChange(change, data);
+    if (change == ItemVisibleHasChanged)
+        update();
+}
+
+QSGNode *QQuickUniversalProgressBar::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
+{
+    QQuickUniversalProgressBarNode *node = static_cast<QQuickUniversalProgressBarNode *>(oldNode);
+    if (isVisible() && width() > 0 && height() > 0) {
+        if (!node)
+            node = new QQuickUniversalProgressBarNode(this);
+        node->sync(this);
+    } else {
+        delete node;
+        node = nullptr;
+    }
+    return node;
 }
 
 QT_END_NAMESPACE

@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKUNIVERSALPROGRESSSTRIP_P_H
-#define QQUICKUNIVERSALPROGRESSSTRIP_P_H
+#ifndef QQUICKUNIVERSALPROGRESSBAR_P_H
+#define QQUICKUNIVERSALPROGRESSBAR_P_H
 
 //
 //  W A R N I N G
@@ -49,11 +49,10 @@
 //
 
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickanimator_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickUniversalProgressStrip : public QQuickItem
+class QQuickUniversalProgressBar : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
@@ -61,7 +60,7 @@ class QQuickUniversalProgressStrip : public QQuickItem
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate FINAL)
 
 public:
-    QQuickUniversalProgressStrip(QQuickItem *parent = nullptr);
+    explicit QQuickUniversalProgressBar(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(const QColor &color);
@@ -73,6 +72,7 @@ public:
     void setIndeterminate(bool indeterminate);
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
@@ -81,21 +81,8 @@ private:
     bool m_indeterminate;
 };
 
-class QQuickUniversalProgressStripAnimator : public QQuickAnimator
-{
-    Q_OBJECT
-
-public:
-    QQuickUniversalProgressStripAnimator(QObject *parent = nullptr);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
-};
-
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickUniversalProgressStrip)
-QML_DECLARE_TYPE(QQuickUniversalProgressStripAnimator)
+QML_DECLARE_TYPE(QQuickUniversalProgressBar)
 
-#endif // QQUICKUNIVERSALPROGRESSSTRIP_P_H
+#endif // QQUICKUNIVERSALPROGRESSBAR_P_H
