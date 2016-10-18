@@ -1993,7 +1993,7 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
         qmlInfo(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
         return false;
     } else {
-        return text().mid(start, end - start).isRightToLeft();
+        return text().midRef(start, end - start).isRightToLeft();
     }
 }
 
