@@ -47,24 +47,13 @@ T.BusyIndicator {
 
     padding: 6
 
-    contentItem: ProgressRing {
-        id: ring
-        x: control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
+    contentItem: BusyIndicatorImpl {
         implicitWidth: 48
         implicitHeight: 48
-        width: size
-        height: size
-        opacity: control.running ? 1 : 0
         color: control.Material.accentColor
 
-        readonly property real size: Math.min(control.availableWidth, control.availableHeight)
-
-        Behavior on opacity { OpacityAnimator { duration: 250 } }
-
-        RingAnimator {
-            target: ring
-            running: control.visible && control.running
-        }
+        opacity: control.running ? 1 : 0
+        visible: control.running || animator.running
+        Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }
     }
 }

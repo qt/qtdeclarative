@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMATERIALPROGRESSRING_P_H
-#define QQUICKMATERIALPROGRESSRING_P_H
+#ifndef QQUICKMATERIALBUSYINDICATOR_P_H
+#define QQUICKMATERIALBUSYINDICATOR_P_H
 
 //
 //  W A R N I N G
@@ -50,44 +50,33 @@
 
 #include <QtGui/qcolor.h>
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickanimatorjob_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialProgressRing : public QQuickItem
+class QQuickMaterialBusyIndicator : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
 
 public:
-    explicit QQuickMaterialProgressRing(QQuickItem *parent = nullptr);
-    ~QQuickMaterialProgressRing();
+    explicit QQuickMaterialBusyIndicator(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(QColor color);
 
-Q_SIGNALS:
-    void colorChanged();
+    int elapsed() const;
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
+    int m_elapsed;
     QColor m_color;
-};
-
-class QQuickMaterialRingAnimator : public QQuickAnimator
-{
-public:
-    QQuickMaterialRingAnimator(QObject *parent = nullptr);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMaterialProgressRing)
+QML_DECLARE_TYPE(QQuickMaterialBusyIndicator)
 
-#endif // QQUICKMATERIALPROGRESSRING_P_H
+#endif // QQUICKMATERIALBUSYINDICATOR_P_H
