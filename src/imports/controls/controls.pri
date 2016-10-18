@@ -1,13 +1,13 @@
 HEADERS += \
-    $$PWD/qquickprogressstrip_p.h \
     $$PWD/qquickdialring_p.h \
     $$PWD/qquickdefaultbusyindicator_p.h \
+    $$PWD/qquickdefaultprogressbar_p.h \
     $$PWD/qquickdefaultstyle_p.h \
 
 SOURCES += \
-    $$PWD/qquickprogressstrip.cpp \
     $$PWD/qquickdialring.cpp \
     $$PWD/qquickdefaultbusyindicator.cpp \
+    $$PWD/qquickdefaultprogressbar.cpp \
     $$PWD/qquickdefaultstyle.cpp
 
 QML_CONTROLS = \

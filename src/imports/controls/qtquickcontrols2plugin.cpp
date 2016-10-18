@@ -48,9 +48,9 @@
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
+#include "qquickdefaultprogressbar_p.h"
 #include "qquickdefaultstyle_p.h"
 #include "qquickdialring_p.h"
-#include "qquickprogressstrip_p.h"
 
 static inline void initResources()
 {
@@ -164,8 +164,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickProgressStrip>(import, 2, 0, "ProgressStrip");
-    qmlRegisterType<QQuickProgressAnimator>(import, 2, 0, "ProgressStripAnimator");
+    qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
     qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);

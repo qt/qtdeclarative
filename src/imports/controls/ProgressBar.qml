@@ -48,18 +48,12 @@ T.ProgressBar {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     //! [contentItem]
-    contentItem: ProgressStrip {
-        id: strip
+    contentItem: ProgressBarImpl {
         implicitHeight: 6
         implicitWidth: 116
         scale: control.mirrored ? -1 : 1
         progress: control.position
-        indeterminate: control.indeterminate
-
-        ProgressStripAnimator {
-            target: strip
-            running: control.visible && control.indeterminate
-        }
+        indeterminate: control.visible && control.indeterminate
     }
     //! [contentItem]
 

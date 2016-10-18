@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPROGRESSSTRIP_P_H
-#define QQUICKPROGRESSSTRIP_P_H
+#ifndef QQUICKDEFAULTPROGRESSBAR_P_H
+#define QQUICKDEFAULTPROGRESSBAR_P_H
 
 //
 //  W A R N I N G
@@ -49,19 +49,17 @@
 //
 
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickanimatorjob_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickProgressStrip : public QQuickItem
+class QQuickDefaultProgressBar : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
     Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
 
 public:
-    explicit QQuickProgressStrip(QQuickItem *parent = nullptr);
-    ~QQuickProgressStrip();
+    explicit QQuickDefaultProgressBar(QQuickItem *parent = nullptr);
 
     bool isIndeterminate() const;
     void setIndeterminate(bool indeterminate);
@@ -74,6 +72,7 @@ Q_SIGNALS:
     void indeterminateChanged();
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
@@ -81,16 +80,8 @@ private:
     bool m_indeterminate;
 };
 
-class QQuickProgressAnimator : public QQuickAnimator
-{
-public:
-    QQuickProgressAnimator(QObject *parent = nullptr);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
-};
-
 QT_END_NAMESPACE
 
-#endif // QQUICKPROGRESSSTRIP_P_H
+QML_DECLARE_TYPE(QQuickDefaultProgressBar)
+
+#endif // QQUICKDEFAULTPROGRESSBAR_P_H
