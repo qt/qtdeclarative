@@ -75,6 +75,9 @@ private slots:
     void triState();
     void checkables_data();
     void checkables();
+    void comboBox();
+    void stackView_data();
+    void stackView();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -710,6 +713,49 @@ void tst_Gifs::checkables()
     gifRecorder.waitForFinish();
 }
 
+void tst_Gifs::comboBox()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols2-combobox.qml"));
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *comboBox = window->property("comboBox").value<QQuickItem*>();
+    QVERIFY(comboBox);
+
+    // Open the popup.
+    const QPoint center = comboBox->mapToScene(
+        QPoint(comboBox->width() / 2, comboBox->height() / 2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, center, 800);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, center, 80);
+
+    // Select the third item.
+    QObject *popup = comboBox->property("popup").value<QObject*>();
+    QVERIFY(popup);
+    QQuickItem *popupContent = popup->property("contentItem").value<QQuickItem*>();
+    QVERIFY(popupContent);
+    const QPoint lastItemPos = popupContent->mapToScene(
+        QPoint(popupContent->width() / 2, popupContent->height() * 0.8)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 600);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 200);
+
+    // Open the popup.
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, center, 1500);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, center, 80);
+
+    // Select the first item.
+    const QPoint firstItemPos = popupContent->mapToScene(
+        QPoint(popupContent->width() / 2, popupContent->height() * 0.2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, firstItemPos, 600);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, firstItemPos, 200);
+
+    gifRecorder.waitForFinish();
+}
+
 void tst_Gifs::triState_data()
 {
     QTest::addColumn<QString>("name");
@@ -836,6 +882,33 @@ void tst_Gifs::progressBar()
     gifRecorder.setRecordingDuration(4);
     gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-progressbar%1").arg(
         indeterminate ? QLatin1String("-indeterminate.qml") : QLatin1String(".qml")));
+
+    gifRecorder.start();
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::stackView_data()
+{
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<int>("duration");
+
+    QTest::newRow("push") << "push" << 8;
+    QTest::newRow("pop") << "pop" << 6;
+    QTest::newRow("unwind") << "unwind" << 6;
+    QTest::newRow("replace") << "replace" << 6;
+}
+
+void tst_Gifs::stackView()
+{
+    QFETCH(QString, name);
+    QFETCH(int, duration);
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(duration);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-stackview-%1.qml").arg(name));
 
     gifRecorder.start();
     gifRecorder.waitForFinish();

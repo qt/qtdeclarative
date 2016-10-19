@@ -334,9 +334,10 @@ void QQuickScrollBar::increase()
 {
     Q_D(QQuickScrollBar);
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    bool wasActive = d->active;
     setActive(true);
     setPosition(d->position + step);
-    setActive(false);
+    setActive(wasActive);
 }
 
 /*!
@@ -350,9 +351,10 @@ void QQuickScrollBar::decrease()
 {
     Q_D(QQuickScrollBar);
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    bool wasActive = d->active;
     setActive(true);
     setPosition(d->position - step);
-    setActive(false);
+    setActive(wasActive);
 }
 
 void QQuickScrollBar::mousePressEvent(QMouseEvent *event)

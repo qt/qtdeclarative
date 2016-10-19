@@ -58,21 +58,23 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-input
     \brief A combined button and popup list taking minimal space.
 
-    \image qtquickcontrols2-combobox.png
+    \image qtquickcontrols2-combobox.gif
 
     ComboBox is a combined button and popup list. It provides a means of
     presenting a list of options to the user in a way that takes up the
     minimum amount of screen space.
 
     ComboBox is populated with a data model. The data model is commonly
-    a JavaScript array, a \l ListModel or an integer, but also other types
-    of \l {qml-data-models}{data models} are supported.
+    a JavaScript array, a \l ListModel or an integer, but other types
+    of \l {qml-data-models}{data models} are also supported.
 
     \code
     ComboBox {
         model: ["First", "Second", "Third"]
     }
     \endcode
+
+    \section1 ComboBox Model Roles
 
     ComboBox is able to visualize standard \l {qml-data-models}{data models}
     that provide the \c modelData role:
@@ -108,6 +110,12 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the item at \a index is activated by the user.
 
+    An item is activated when it is selected while the popup is open,
+    causing the popup to close (and \l currentIndex to change),
+    or while the popup is closed and the combo box is navigated via
+    keyboard, causing the \l currentIndex to change.
+    The \l currentIndex property is set to \a index.
+
     \sa currentIndex
 */
 
@@ -115,6 +123,9 @@ QT_BEGIN_NAMESPACE
     \qmlsignal void QtQuick.Controls::ComboBox::highlighted(int index)
 
     This signal is emitted when the item at \a index in the popup list is highlighted by the user.
+
+    The highlighted signal is only emitted when the popup is open and an item
+    is highlighted, but not necessarily \l activated.
 
     \sa highlightedIndex
 */
@@ -499,6 +510,10 @@ void QQuickComboBox::setPressed(bool pressed)
 
     This property holds the index of the highlighted item in the combo box popup list.
 
+    When a highlighted item is activated, the popup is closed, \l currentIndex
+    is set to \c highlightedIndex, and the value of this property is reset to
+    \c -1, as there is no longer a highlighted item.
+
     \sa highlighted(), currentIndex
 */
 int QQuickComboBox::highlightedIndex() const
@@ -512,7 +527,7 @@ int QQuickComboBox::highlightedIndex() const
 
     This property holds the index of the current item in the combo box.
 
-    \sa activated(), currentText
+    \sa activated(), currentText, highlightedIndex
 */
 int QQuickComboBox::currentIndex() const
 {
@@ -598,7 +613,10 @@ void QQuickComboBox::resetDisplayText()
 
     This property holds the model role used for populating the combo box.
 
-    \sa model, currentText, displayText
+    When the model has multiple roles, \c textRole can be set to determine
+    which role should be displayed.
+
+    \sa model, currentText, displayText, {ComboBox Model Roles}
 */
 QString QQuickComboBox::textRole() const
 {
@@ -622,6 +640,22 @@ void QQuickComboBox::setTextRole(const QString &role)
     \qmlproperty Component QtQuick.Controls::ComboBox::delegate
 
     This property holds a delegate that presents an item in the combo box popup.
+
+    It is recommended to use \l ItemDelegate (or any other \l AbstractButton
+    derivatives) as the delegate. This ensures that the interaction works as
+    expected, and the popup will automatically close when appropriate. When
+    other types are used as the delegate, the popup must be closed manually.
+    For example, if \l MouseArea is used:
+
+    \code
+    delegate: Rectangle {
+        // ...
+        MouseArea {
+            // ...
+            onClicked: comboBox.popup.close()
+        }
+    }
+    \endcode
 
     \sa ItemDelegate, {Customizing ComboBox}
 */
@@ -649,6 +683,8 @@ void QQuickComboBox::setDelegate(QQmlComponent* delegate)
     \qmlproperty Item QtQuick.Controls::ComboBox::indicator
 
     This property holds the drop indicator item.
+
+    \sa {Customizing ComboBox}
 */
 QQuickItem *QQuickComboBox::indicator() const
 {
@@ -675,6 +711,12 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     \qmlproperty Popup QtQuick.Controls::ComboBox::popup
 
     This property holds the popup.
+
+    The popup can be opened or closed manually, if necessary:
+
+    \code
+    onSpecialEvent: comboBox.popup.close()
+    \endcode
 
     \sa {Customizing ComboBox}
 */
@@ -792,7 +834,7 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
     \qmlmethod void QtQuick.Controls::ComboBox::incrementCurrentIndex()
 
     Increments the current index of the combo box, or the highlighted
-    index if the popup list when it is visible.
+    index if the popup list is visible.
 
     \sa currentIndex, highlightedIndex
 */
@@ -806,7 +848,7 @@ void QQuickComboBox::incrementCurrentIndex()
     \qmlmethod void QtQuick.Controls::ComboBox::decrementCurrentIndex()
 
     Decrements the current index of the combo box, or the highlighted
-    index if the popup list when it is visible.
+    index if the popup list is visible.
 
     \sa currentIndex, highlightedIndex
 */

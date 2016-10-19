@@ -52,6 +52,8 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquickcontrols2-input
     \brief A spinnable wheel of items that can be selected.
 
+    \image qtquickcontrols2-tumbler-wrap.gif
+
     \code
     Tumbler {
         model: 5
@@ -79,8 +81,6 @@ QT_BEGIN_NAMESPACE
     that is, when \l count is greater than \l visibleItemCount:
 
     \snippet qtquickcontrols2-tumbler-timePicker.qml tumbler
-
-    \image qtquickcontrols2-tumbler-wrap.gif
 
     \sa {Customizing Tumbler}, {Input Controls}
 */
@@ -364,7 +364,7 @@ QQuickItem *QQuickTumbler::currentItem() const
 }
 
 /*!
-    \qmlproperty component QtQuick.Controls::Tumbler::delegate
+    \qmlproperty Component QtQuick.Controls::Tumbler::delegate
 
     This property holds the delegate used to display each item.
 */

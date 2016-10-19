@@ -42,10 +42,10 @@ Item {
 
     //! [1]
     Button {
-        text: qsTr("Button")
+        text: qsTr("Save")
 
-        ToolTip.visible: pressed
-        ToolTip.text: qsTr("A descriptive tool tip of what the button does")
+        ToolTip.visible: down
+        ToolTip.text: qsTr("Save the active project")
     }
     //! [1]
 }

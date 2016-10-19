@@ -400,6 +400,10 @@ static const QRgb hintTextColorLight = 0x60000000;
 static const QRgb hintTextColorDark = 0x4CFFFFFF;
 static const QRgb dividerColorLight = 0x1E000000;
 static const QRgb dividerColorDark = 0x1EFFFFFF;
+static const QRgb iconColorLight = 0x89000000;
+static const QRgb iconColorDark = 0xFFFFFFFF;
+static const QRgb iconDisabledColorLight = 0x42000000;
+static const QRgb iconDisabledColorDark = 0x4CFFFFFF;
 static const QRgb raisedButtonColorLight = 0xFFD6D7D7;
 static const QRgb raisedButtonColorDark = 0x3FCCCCCC;
 static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
@@ -851,6 +855,16 @@ QColor QQuickMaterialStyle::dropShadowColor() const
 QColor QQuickMaterialStyle::dividerColor() const
 {
     return QColor::fromRgba(m_theme == Light ? dividerColorLight : dividerColorDark);
+}
+
+QColor QQuickMaterialStyle::iconColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? iconColorLight : iconColorDark);
+}
+
+QColor QQuickMaterialStyle::iconDisabledColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? iconDisabledColorLight : iconDisabledColorDark);
 }
 
 QColor QQuickMaterialStyle::buttonColor(bool highlighted) const
