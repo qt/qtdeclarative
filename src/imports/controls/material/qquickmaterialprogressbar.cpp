@@ -38,11 +38,12 @@
 
 #include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
-#include <QtCore/qelapsedtimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgrectanglenode.h>
 #include <QtQuick/qsgimagenode.h>
+#include <QtQuick/qquickwindow.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,34 +51,32 @@ static const int PauseDuration = 520;
 static const int SlideDuration = 1240;
 static const int TotalDuration = SlideDuration + PauseDuration;
 
-class QQuickMaterialProgressBarNode : public QObject, public QSGNode
+class QQuickMaterialProgressBarNode : public QQuickAnimatedNode
 {
 public:
     QQuickMaterialProgressBarNode(QQuickMaterialProgressBar *item);
 
-    void animate();
-    void sync(QQuickMaterialProgressBar *item);
+    void updateCurrentTime(int time) override;
+    void sync(QQuickItem *item) override;
 
 private:
     void moveNode(QSGTransformNode *node, const QRectF &geometry, qreal progress);
 
     bool m_indeterminate;
-    QElapsedTimer m_timer;
     QEasingCurve m_easing;
 };
 
-QQuickMaterialProgressBarNode::QQuickMaterialProgressBarNode(QQuickMaterialProgressBar *)
-    : m_indeterminate(false), m_easing(QEasingCurve::OutCubic)
+QQuickMaterialProgressBarNode::QQuickMaterialProgressBarNode(QQuickMaterialProgressBar *item)
+    : QQuickAnimatedNode(item),
+      m_indeterminate(false),
+      m_easing(QEasingCurve::OutCubic)
 {
-    m_timer.start();
+    setLoopCount(Infinite);
+    setDuration(TotalDuration);
 }
 
-void QQuickMaterialProgressBarNode::animate()
+void QQuickMaterialProgressBarNode::updateCurrentTime(int time)
 {
-    qint64 time = m_timer.elapsed();
-    if (time >= TotalDuration)
-        m_timer.restart();
-
     QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(firstChild());
     Q_ASSERT(geometryNode->type() == QSGNode::GeometryNodeType);
     const QRectF geometry = geometryNode->rect();
@@ -99,18 +98,15 @@ void QQuickMaterialProgressBarNode::animate()
     }
 }
 
-void QQuickMaterialProgressBarNode::sync(QQuickMaterialProgressBar *item)
+void QQuickMaterialProgressBarNode::sync(QQuickItem *item)
 {
-    if (m_indeterminate != item->isIndeterminate()) {
-        m_indeterminate = item->isIndeterminate();
-        QQuickWindow *window = item->window();
-        if (m_indeterminate) {
-            connect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-            connect(window, &QQuickWindow::beforeRendering, this, &QQuickMaterialProgressBarNode::animate);
-        } else {
-            disconnect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-            disconnect(window, &QQuickWindow::beforeRendering, this, &QQuickMaterialProgressBarNode::animate);
-        }
+    QQuickMaterialProgressBar *bar = static_cast<QQuickMaterialProgressBar *>(item);
+    if (m_indeterminate != bar->isIndeterminate()) {
+        m_indeterminate = bar->isIndeterminate();
+        if (m_indeterminate)
+            start();
+        else
+            stop();
     }
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
@@ -128,7 +124,7 @@ void QQuickMaterialProgressBarNode::sync(QQuickMaterialProgressBar *item)
     geometryNode->setRect(bounds);
 
     const int count = m_indeterminate ? 2 : 1;
-    const qreal w = m_indeterminate ? 0 : item->progress() * item->width();
+    const qreal w = m_indeterminate ? 0 : bar->progress() * item->width();
     const QRectF rect(0, bounds.y(), w, bounds.height());
 
     QSGNode *transformNode = geometryNode->firstChild();
@@ -148,7 +144,7 @@ void QQuickMaterialProgressBarNode::sync(QQuickMaterialProgressBar *item)
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         rectNode->setRect(rect);
-        rectNode->setColor(item->color());
+        rectNode->setColor(bar->color());
         rectNode->update();
 
         transformNode = transformNode->nextSibling();

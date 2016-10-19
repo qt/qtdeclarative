@@ -37,11 +37,10 @@
 #include "qquickmaterialbusyindicator_p.h"
 
 #include <QtCore/qeasingcurve.h>
-#include <QtCore/qelapsedtimer.h>
 #include <QtGui/qpainter.h>
-#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/qsgimagenode.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,42 +65,38 @@ static const int OneDegree = 16;
 static const qreal MinSweepSpan = 10 * OneDegree;
 static const qreal MaxSweepSpan = 300 * OneDegree;
 
-class QQuickMaterialBusyIndicatorNode : public QObject, public QSGNode
+class QQuickMaterialBusyIndicatorNode : public QQuickAnimatedNode
 {
 public:
     QQuickMaterialBusyIndicatorNode(QQuickMaterialBusyIndicator *item);
 
-    int elapsed() const;
+    void sync(QQuickItem *item) override;
 
-    void animate();
-    void sync(QQuickMaterialBusyIndicator *item);
+protected:
+    void updateCurrentTime(int time) override;
 
 private:
-    int m_offset;
     int m_lastStartAngle;
     int m_lastEndAngle;
     qreal m_width;
     qreal m_height;
     qreal m_devicePixelRatio;
-    QSGNode *m_containerNode;
-    QQuickWindow *m_window;
-    QElapsedTimer m_timer;
     QColor m_color;
 };
 
-QQuickMaterialBusyIndicatorNode::QQuickMaterialBusyIndicatorNode(QQuickMaterialBusyIndicator *item) :
-    m_offset(item->elapsed()),
-    m_lastStartAngle(0),
-    m_lastEndAngle(0),
-    m_width(0),
-    m_height(0),
-    m_devicePixelRatio(1),
-    m_window(item->window())
+QQuickMaterialBusyIndicatorNode::QQuickMaterialBusyIndicatorNode(QQuickMaterialBusyIndicator *item)
+    : QQuickAnimatedNode(item),
+      m_lastStartAngle(0),
+      m_lastEndAngle(0),
+      m_width(0),
+      m_height(0),
+      m_devicePixelRatio(1)
 {
-    connect(m_window, &QQuickWindow::frameSwapped, m_window, &QQuickWindow::update);
-    connect(m_window, &QQuickWindow::beforeRendering, this, &QQuickMaterialBusyIndicatorNode::animate);
+    setLoopCount(Infinite);
+    setCurrentTime(item->elapsed());
+    setDuration(RotationAnimationDuration);
 
-    QSGImageNode *textureNode = m_window->createImageNode();
+    QSGImageNode *textureNode = item->window()->createImageNode();
     textureNode->setOwnsTexture(true);
     appendChildNode(textureNode);
 
@@ -109,24 +104,11 @@ QQuickMaterialBusyIndicatorNode::QQuickMaterialBusyIndicatorNode(QQuickMaterialB
     // so just use a blank image.
     QImage blankImage(item->width(), item->height(), QImage::Format_ARGB32_Premultiplied);
     blankImage.fill(Qt::transparent);
-    textureNode->setTexture(m_window->createTextureFromImage(blankImage));
-
-    m_timer.restart();
+    textureNode->setTexture(item->window()->createTextureFromImage(blankImage));
 }
 
-int QQuickMaterialBusyIndicatorNode::elapsed() const
+void QQuickMaterialBusyIndicatorNode::updateCurrentTime(int time)
 {
-    return m_timer.elapsed() + m_offset;
-}
-
-void QQuickMaterialBusyIndicatorNode::animate()
-{
-    qint64 time = m_timer.elapsed() + m_offset;
-    if (time >= RotationAnimationDuration) {
-        m_timer.restart();
-        m_offset = 0;
-    }
-
     const qreal w = m_width;
     const qreal h = m_height;
     const qreal size = qMin(w, h);
@@ -183,15 +165,16 @@ void QQuickMaterialBusyIndicatorNode::animate()
     painter.end();
 
     textureNode->setRect(QRectF(dx, dy, size, size));
-    textureNode->setTexture(m_window->createTextureFromImage(image));
+    textureNode->setTexture(window()->createTextureFromImage(image));
 }
 
-void QQuickMaterialBusyIndicatorNode::sync(QQuickMaterialBusyIndicator *item)
+void QQuickMaterialBusyIndicatorNode::sync(QQuickItem *item)
 {
-    m_color = item->color();
-    m_width = item->width();
-    m_height = item->height();
-    m_devicePixelRatio = m_window->effectiveDevicePixelRatio();
+    QQuickMaterialBusyIndicator *indicator = static_cast<QQuickMaterialBusyIndicator *>(item);
+    m_color = indicator->color();
+    m_width = indicator->width();
+    m_height = indicator->height();
+    m_devicePixelRatio = indicator->window()->effectiveDevicePixelRatio();
 }
 
 QQuickMaterialBusyIndicator::QQuickMaterialBusyIndicator(QQuickItem *parent) :
@@ -230,11 +213,13 @@ QSGNode *QQuickMaterialBusyIndicator::updatePaintNode(QSGNode *oldNode, UpdatePa
 {
     QQuickMaterialBusyIndicatorNode *node = static_cast<QQuickMaterialBusyIndicatorNode *>(oldNode);
     if (isVisible() && width() > 0 && height() > 0) {
-        if (!node)
+        if (!node) {
             node = new QQuickMaterialBusyIndicatorNode(this);
+            node->start();
+        }
         node->sync(this);
     } else {
-        m_elapsed = node ? node->elapsed() : 0;
+        m_elapsed = node ? node->currentTime() : 0;
         delete node;
         node = nullptr;
     }

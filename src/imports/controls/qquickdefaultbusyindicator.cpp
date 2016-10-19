@@ -36,12 +36,9 @@
 
 #include "qquickdefaultbusyindicator_p.h"
 
-#include <QtCore/qset.h>
-#include <QtCore/qelapsedtimer.h>
-#include <QtGui/qpainter.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/qquickwindow.h>
-#include <QtQuick/qsgnode.h>
+#include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,27 +52,21 @@ static QPointF moveCircle(const QPointF &pos, qreal rotation, qreal distance)
     return pos - QTransform().rotate(rotation).map(QPointF(0, distance));
 }
 
-class QQuickDefaultBusyIndicatorNode : public QObject, public QSGNode
+class QQuickDefaultBusyIndicatorNode : public QQuickAnimatedNode
 {
 public:
     QQuickDefaultBusyIndicatorNode(QQuickDefaultBusyIndicator *item);
 
-    int elapsed() const;
-
-    void animate();
-    void sync(QQuickDefaultBusyIndicator *item);
-
-private:
-    int m_offset;
-    QElapsedTimer m_timer;
+    void updateCurrentTime(int time) override;
+    void sync(QQuickItem *item) override;
 };
 
 QQuickDefaultBusyIndicatorNode::QQuickDefaultBusyIndicatorNode(QQuickDefaultBusyIndicator *item)
-    : m_offset(item->elapsed())
+    : QQuickAnimatedNode(item)
 {
-    QQuickWindow *window = item->window();
-    connect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-    connect(window, &QQuickWindow::beforeRendering, this, &QQuickDefaultBusyIndicatorNode::animate);
+    setLoopCount(Infinite);
+    setDuration(TotalDuration);
+    setCurrentTime(item->elapsed());
 
     for (int i = 0; i < CircleCount; ++i) {
         QSGTransformNode *transformNode = new QSGTransformNode;
@@ -86,23 +77,10 @@ QQuickDefaultBusyIndicatorNode::QQuickDefaultBusyIndicatorNode(QQuickDefaultBusy
         rectNode->setAntialiasing(true);
         transformNode->appendChildNode(rectNode);
     }
-
-    m_timer.restart();
 }
 
-int QQuickDefaultBusyIndicatorNode::elapsed() const
+void QQuickDefaultBusyIndicatorNode::updateCurrentTime(int time)
 {
-    return m_timer.elapsed() + m_offset;
-}
-
-void QQuickDefaultBusyIndicatorNode::animate()
-{
-    qint64 time = m_timer.elapsed() + m_offset;
-    if (time >= TotalDuration) {
-        m_timer.restart();
-        m_offset = 0;
-    }
-
     const qreal percentageComplete = time / qreal(TotalDuration);
     const qreal firstPhaseProgress = percentageComplete <= 0.5 ? percentageComplete * 2 : 0;
     const qreal secondPhaseProgress = percentageComplete > 0.5 ? (percentageComplete - 0.5) * 2 : 0;
@@ -122,7 +100,7 @@ void QQuickDefaultBusyIndicatorNode::animate()
     }
 }
 
-void QQuickDefaultBusyIndicatorNode::sync(QQuickDefaultBusyIndicator *item)
+void QQuickDefaultBusyIndicatorNode::sync(QQuickItem *item)
 {
     const qreal w = item->width();
     const qreal h = item->height();
@@ -174,11 +152,13 @@ QSGNode *QQuickDefaultBusyIndicator::updatePaintNode(QSGNode *oldNode, QQuickIte
 {
     QQuickDefaultBusyIndicatorNode *node = static_cast<QQuickDefaultBusyIndicatorNode *>(oldNode);
     if (isVisible() && width() > 0 && height() > 0) {
-        if (!node)
+        if (!node) {
             node = new QQuickDefaultBusyIndicatorNode(this);
+            node->start();
+        }
         node->sync(this);
     } else {
-        m_elapsed = node ? node->elapsed() : 0;
+        m_elapsed = node ? node->currentTime() : 0;
         delete node;
         node = nullptr;
     }

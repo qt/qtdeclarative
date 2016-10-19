@@ -37,9 +37,9 @@
 #include "qquickdefaultprogressbar_p.h"
 
 #include <QtCore/qeasingcurve.h>
-#include <QtCore/qelapsedtimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,32 +69,30 @@ static inline qreal blockEndX(int blockIndex, qreal availableWidth)
     return availableWidth - blockStartX(Blocks - 1 - blockIndex) - BlockWidth;
 }
 
-class QQuickDefaultProgressBarNode : public QObject, public QSGTransformNode
+class QQuickDefaultProgressBarNode : public QQuickAnimatedNode
 {
 public:
     QQuickDefaultProgressBarNode(QQuickDefaultProgressBar *item);
 
-    void animate();
-    void sync(QQuickDefaultProgressBar *item);
+    void updateCurrentTime(int time) override;
+    void sync(QQuickItem *item) override;
 
 private:
     bool m_indeterminate;
     qreal m_pixelsPerSecond;
-    QElapsedTimer m_timer;
 };
 
 QQuickDefaultProgressBarNode::QQuickDefaultProgressBarNode(QQuickDefaultProgressBar *item)
-    : m_indeterminate(false), m_pixelsPerSecond(item->width())
+    : QQuickAnimatedNode(item),
+      m_indeterminate(false),
+      m_pixelsPerSecond(item->width())
 {
-    m_timer.start();
+    setLoopCount(Infinite);
+    setDuration(TotalDuration);
 }
 
-void QQuickDefaultProgressBarNode::animate()
+void QQuickDefaultProgressBarNode::updateCurrentTime(int time)
 {
-    qint64 time = m_timer.elapsed();
-    if (time >= TotalDuration)
-        m_timer.restart();
-
     QSGTransformNode *transformNode = static_cast<QSGTransformNode*>(firstChild());
     for (int i = 0; i < Blocks; ++i) {
         Q_ASSERT(transformNode->type() == QSGNode::TransformNodeType);
@@ -146,20 +144,17 @@ void QQuickDefaultProgressBarNode::animate()
     }
 }
 
-void QQuickDefaultProgressBarNode::sync(QQuickDefaultProgressBar *item)
+void QQuickDefaultProgressBarNode::sync(QQuickItem *item)
 {
-    m_pixelsPerSecond = item->width();
-    if (m_indeterminate != item->isIndeterminate()) {
-        m_indeterminate = item->isIndeterminate();
-        QQuickWindow *window = item->window();
-        if (m_indeterminate) {
-            connect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-            connect(window, &QQuickWindow::beforeRendering, this, &QQuickDefaultProgressBarNode::animate);
-        } else {
-            disconnect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-            disconnect(window, &QQuickWindow::beforeRendering, this, &QQuickDefaultProgressBarNode::animate);
-        }
+    QQuickDefaultProgressBar *bar = static_cast<QQuickDefaultProgressBar *>(item);
+    if (m_indeterminate != bar->isIndeterminate()) {
+        m_indeterminate = bar->isIndeterminate();
+        if (m_indeterminate)
+            start();
+        else
+            stop();
     }
+    m_pixelsPerSecond = item->width();
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
 
@@ -167,7 +162,7 @@ void QQuickDefaultProgressBarNode::sync(QQuickDefaultProgressBar *item)
     m.translate(0, (item->height() - item->implicitHeight()) / 2);
     setMatrix(m);
 
-    if (item->isIndeterminate()) {
+    if (m_indeterminate) {
         if (childCount() != Blocks) {
             // This was previously a regular progress bar; remove the old nodes.
             removeAllChildNodes();
@@ -209,7 +204,7 @@ void QQuickDefaultProgressBarNode::sync(QQuickDefaultProgressBar *item)
             appendChildNode(rectNode);
         }
 
-        rectNode->setRect(QRectF(QPointF(0, 0), QSizeF(item->progress() * item->width(), item->implicitHeight())));
+        rectNode->setRect(QRectF(QPointF(0, 0), QSizeF(bar->progress() * item->width(), item->implicitHeight())));
         rectNode->update();
     }
 }

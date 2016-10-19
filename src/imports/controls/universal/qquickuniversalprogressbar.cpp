@@ -38,10 +38,10 @@
 
 #include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
-#include <QtCore/qelapsedtimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgrectanglenode.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,13 +57,13 @@ static const qreal ContainerAnimationEndPosition = 0.435222; // relative
 static const qreal EllipseAnimationWellPosition = 0.333333333333333; // relative
 static const qreal EllipseAnimationEndPosition = 0.666666666666667; // relative
 
-class QQuickUniversalProgressBarNode : public QObject, public QSGNode
+class QQuickUniversalProgressBarNode : public QQuickAnimatedNode
 {
 public:
     QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *item);
 
-    void animate();
-    void sync(QQuickUniversalProgressBar *item);
+    void updateCurrentTime(int time) override;
+    void sync(QQuickItem *item) override;
 
 private:
     struct Phase {
@@ -75,14 +75,17 @@ private:
     };
 
     bool m_indeterminate;
-    QElapsedTimer m_timer;
     Phase m_borderPhases[PhaseCount];
     Phase m_ellipsePhases[PhaseCount];
 };
 
-QQuickUniversalProgressBarNode::QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *)
-    : m_indeterminate(false)
+QQuickUniversalProgressBarNode::QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *item)
+    : QQuickAnimatedNode(item),
+      m_indeterminate(false)
 {
+    setLoopCount(Infinite);
+    setDuration(TotalDuration);
+
     m_borderPhases[0] = Phase( 500, -50,   0);
     m_borderPhases[1] = Phase(1500,   0,   0);
     m_borderPhases[2] = Phase(1000,   0, 100);
@@ -92,16 +95,10 @@ QQuickUniversalProgressBarNode::QQuickUniversalProgressBarNode(QQuickUniversalPr
     m_ellipsePhases[1] = Phase(1000, EllipseAnimationWellPosition, EllipseAnimationWellPosition);
     m_ellipsePhases[2] = Phase(1000, EllipseAnimationWellPosition, EllipseAnimationEndPosition);
     m_ellipsePhases[3] = Phase(1000, EllipseAnimationWellPosition, EllipseAnimationEndPosition);
-
-    m_timer.start();
 }
 
-void QQuickUniversalProgressBarNode::animate()
+void QQuickUniversalProgressBarNode::updateCurrentTime(int time)
 {
-    qint64 time = m_timer.elapsed();
-    if (time >= TotalDuration)
-        m_timer.restart();
-
     QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(firstChild());
     Q_ASSERT(!geometryNode || geometryNode->type() == QSGNode::GeometryNodeType);
     if (!geometryNode)
@@ -193,18 +190,15 @@ void QQuickUniversalProgressBarNode::animate()
     }
 }
 
-void QQuickUniversalProgressBarNode::sync(QQuickUniversalProgressBar *item)
+void QQuickUniversalProgressBarNode::sync(QQuickItem *item)
 {
-    if (m_indeterminate != item->isIndeterminate()) {
-        m_indeterminate = item->isIndeterminate();
-        QQuickWindow *window = item->window();
-        if (m_indeterminate) {
-            connect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-            connect(window, &QQuickWindow::beforeRendering, this, &QQuickUniversalProgressBarNode::animate);
-        } else {
-            disconnect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-            disconnect(window, &QQuickWindow::beforeRendering, this, &QQuickUniversalProgressBarNode::animate);
-        }
+    QQuickUniversalProgressBar *bar = static_cast<QQuickUniversalProgressBar *>(item);
+    if (m_indeterminate != bar->isIndeterminate()) {
+        m_indeterminate = bar->isIndeterminate();
+        if (m_indeterminate)
+            start();
+        else
+            stop();
     }
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
@@ -213,7 +207,7 @@ void QQuickUniversalProgressBarNode::sync(QQuickUniversalProgressBar *item)
     bounds.setHeight(item->implicitHeight());
     bounds.moveTop((item->height() - bounds.height()) / 2.0);
     if (!m_indeterminate)
-        bounds.setWidth(item->progress() * bounds.width());
+        bounds.setWidth(bar->progress() * bounds.width());
 
     QSGRectangleNode *geometryNode = static_cast<QSGRectangleNode *>(firstChild());
     if (!geometryNode) {
@@ -221,7 +215,7 @@ void QQuickUniversalProgressBarNode::sync(QQuickUniversalProgressBar *item)
         appendChildNode(geometryNode);
     }
     geometryNode->setRect(bounds);
-    geometryNode->setColor(m_indeterminate ? Qt::transparent : item->color());
+    geometryNode->setColor(m_indeterminate ? Qt::transparent : bar->color());
 
     if (!m_indeterminate) {
         while (QSGNode *node = geometryNode->firstChild())
@@ -265,7 +259,7 @@ void QQuickUniversalProgressBarNode::sync(QQuickUniversalProgressBar *item)
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         rectNode->setRect(QRectF((EllipseCount - i - 1) * (EllipseDiameter + EllipseOffset), (item->height() - EllipseDiameter) / 2, EllipseDiameter, EllipseDiameter));
-        rectNode->setColor(item->color());
+        rectNode->setColor(bar->color());
         rectNode->update();
 
         borderNode = borderNode->nextSibling();

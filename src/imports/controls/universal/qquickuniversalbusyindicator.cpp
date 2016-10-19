@@ -38,9 +38,9 @@
 
 #include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
-#include <QtCore/qelapsedtimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,15 +48,13 @@ static const int PhaseCount = 6;
 static const int Interval = 167;
 static const int TotalDuration = 4052;
 
-class QQuickUniversalBusyIndicatorNode : public QObject, public QSGTransformNode
+class QQuickUniversalBusyIndicatorNode : public QQuickAnimatedNode
 {
 public:
     QQuickUniversalBusyIndicatorNode(QQuickUniversalBusyIndicator *item);
 
-    int elapsed() const;
-
-    void animate();
-    void sync(QQuickUniversalBusyIndicator *item);
+    void updateCurrentTime(int time) override;
+    void sync(QQuickItem *item) override;
 
 private:
     struct Phase {
@@ -68,17 +66,15 @@ private:
         QEasingCurve curve;
     };
 
-    int m_offset;
-    QElapsedTimer m_timer;
     Phase m_phases[PhaseCount];
 };
 
 QQuickUniversalBusyIndicatorNode::QQuickUniversalBusyIndicatorNode(QQuickUniversalBusyIndicator *item)
-    : m_offset(item->elapsed())
+    : QQuickAnimatedNode(item)
 {
-    QQuickWindow *window = item->window();
-    connect(window, &QQuickWindow::frameSwapped, window, &QQuickWindow::update);
-    connect(window, &QQuickWindow::beforeRendering, this, &QQuickUniversalBusyIndicatorNode::animate);
+    setLoopCount(Infinite);
+    setDuration(TotalDuration);
+    setCurrentTime(item->elapsed());
 
     m_phases[0] = Phase(433, -110,  10, QEasingCurve::BezierSpline);
     m_phases[1] = Phase(767,   10,  93, QEasingCurve::Linear      );
@@ -91,23 +87,10 @@ QQuickUniversalBusyIndicatorNode::QQuickUniversalBusyIndicatorNode(QQuickUnivers
     m_phases[2].curve.addCubicBezierSegment(QPointF(0.57, 0.17), QPointF(0.95, 0.75), QPointF(1.00, 1.00));
     m_phases[3].curve.addCubicBezierSegment(QPointF(0.00, 0.19), QPointF(0.07, 0.72), QPointF(1.00, 1.00));
     m_phases[5].curve.addCubicBezierSegment(QPointF(0.00, 0.00), QPointF(0.95, 0.37), QPointF(1.00, 1.00));
-
-    m_timer.restart();
 }
 
-int QQuickUniversalBusyIndicatorNode::elapsed() const
+void QQuickUniversalBusyIndicatorNode::updateCurrentTime(int time)
 {
-    return m_timer.elapsed() + m_offset;
-}
-
-void QQuickUniversalBusyIndicatorNode::animate()
-{
-    qint64 time = m_timer.elapsed() + m_offset;
-    if (time >= TotalDuration) {
-        m_timer.restart();
-        m_offset = 0;
-    }
-
     int nodeIndex = 0;
     int count = childCount();
     QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(firstChild());
@@ -151,8 +134,9 @@ void QQuickUniversalBusyIndicatorNode::animate()
     }
 }
 
-void QQuickUniversalBusyIndicatorNode::sync(QQuickUniversalBusyIndicator *item)
+void QQuickUniversalBusyIndicatorNode::sync(QQuickItem *item)
 {
+    QQuickUniversalBusyIndicator *indicator = static_cast<QQuickUniversalBusyIndicator *>(item);
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
 
     QMatrix4x4 matrix;
@@ -165,7 +149,7 @@ void QQuickUniversalBusyIndicatorNode::sync(QQuickUniversalBusyIndicator *item)
     qreal offset = (size - diameter * 2) / M_PI;
     const QRectF rect(offset, offset, diameter, diameter);
 
-    int count = item->count();
+    int count = indicator->count();
     QSGNode *transformNode = firstChild();
     for (int i = 0; i < count; ++i) {
         if (!transformNode) {
@@ -187,7 +171,7 @@ void QQuickUniversalBusyIndicatorNode::sync(QQuickUniversalBusyIndicator *item)
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         rectNode->setRect(rect);
-        rectNode->setColor(item->color());
+        rectNode->setColor(indicator->color());
         rectNode->setRadius(radius);
         rectNode->update();
 
@@ -251,11 +235,13 @@ QSGNode *QQuickUniversalBusyIndicator::updatePaintNode(QSGNode *oldNode, UpdateP
 {
     QQuickUniversalBusyIndicatorNode *node = static_cast<QQuickUniversalBusyIndicatorNode *>(oldNode);
     if (isVisible() && width() > 0 && height() > 0) {
-        if (!node)
+        if (!node) {
             node = new QQuickUniversalBusyIndicatorNode(this);
+            node->start();
+        }
         node->sync(this);
     } else {
-        m_elapsed = node ? node->elapsed() : 0;
+        m_elapsed = node ? node->currentTime() : 0;
         delete node;
         node = nullptr;
     }
