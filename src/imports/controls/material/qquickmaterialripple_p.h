@@ -52,9 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickOpacityAnimator;
-class QQuickMaterialRippleAnimator;
-
 class QQuickMaterialRipple : public QQuickItem
 {
     Q_OBJECT
@@ -91,6 +88,8 @@ public:
     QQuickItem *anchor() const;
     void setAnchor(QQuickItem *anchor);
 
+    qreal diameter() const;
+
 protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
@@ -103,13 +102,12 @@ protected:
 private:
     bool m_active;
     bool m_pressed;
+    int m_waves;
     int m_enterDelay;
     Trigger m_trigger;
     qreal m_clipRadius;
     QColor m_color;
     QQuickItem *m_anchor;
-    QQuickOpacityAnimator *m_opacityAnimator;
-    QVector<QQuickMaterialRippleAnimator *> m_rippleAnimators;
 };
 
 QT_END_NAMESPACE

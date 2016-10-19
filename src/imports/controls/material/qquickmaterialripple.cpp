@@ -38,10 +38,8 @@
 
 #include <QtCore/qmath.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickanimator_p.h>
-#include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
+#include <QtQuickControls2/private/qquickanimatednode_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p_p.h>
 
@@ -57,154 +55,183 @@ static const int WAVE_OPACITY_DECAY_DURATION = 333;
 static const qreal WAVE_TOUCH_UP_ACCELERATION = 3400.0;
 static const qreal WAVE_TOUCH_DOWN_ACCELERATION = 1024.0;
 
-class QQuickMaterialRippleAnimatorJob : public QQuickAnimatorJob
+class QQuickMaterialRippleWaveNode : public QQuickAnimatedNode
 {
 public:
-    QQuickMaterialRippleAnimatorJob(WavePhase phase, const QPointF &anchor, const QRectF &bounds);
+    QQuickMaterialRippleWaveNode(QQuickMaterialRipple *ripple);
 
-    void initialize(QQuickAnimatorController *controller) override;
+    void exit();
     void updateCurrentTime(int time) override;
-    void writeBack() override;
-    void nodeWasDestroyed() override;
-    void afterNodeSync() override;
+    void sync(QQuickItem *item) override;
 
 private:
+    qreal m_from;
+    qreal m_to;
+    qreal m_value;
     qreal m_diameter;
     WavePhase m_phase;
-    QRectF m_bounds;
     QPointF m_anchor;
-    QSGTransformNode *m_itemNode;
-    QSGOpacityNode *m_opacityNode;
-    QSGInternalRectangleNode *m_rectNode;
+    QRectF m_bounds;
 };
 
-QQuickMaterialRippleAnimatorJob::QQuickMaterialRippleAnimatorJob(WavePhase phase, const QPointF &anchor, const QRectF &bounds)
-    : m_diameter(qSqrt(bounds.width() * bounds.width() + bounds.height() * bounds.height())),
-      m_phase(phase),
-      m_bounds(bounds),
-      m_anchor(anchor),
-      m_itemNode(nullptr),
-      m_opacityNode(nullptr),
-      m_rectNode(nullptr)
+QQuickMaterialRippleWaveNode::QQuickMaterialRippleWaveNode(QQuickMaterialRipple *ripple)
+    : QQuickAnimatedNode(ripple),
+      m_from(0),
+      m_to(0),
+      m_value(0),
+      m_phase(WaveEnter)
 {
+    start(qRound(1000.0 * qSqrt(ripple->diameter() / 2.0 / WAVE_TOUCH_DOWN_ACCELERATION)));
+
+    QSGOpacityNode *opacityNode = new QSGOpacityNode;
+    appendChildNode(opacityNode);
+
+    QQuickItemPrivate *d = QQuickItemPrivate::get(ripple);
+    QSGInternalRectangleNode *rectNode = d->sceneGraphContext()->createInternalRectangleNode();
+    rectNode->setAntialiasing(true);
+    opacityNode->appendChildNode(rectNode);
 }
 
-void QQuickMaterialRippleAnimatorJob::initialize(QQuickAnimatorController *controller)
+void QQuickMaterialRippleWaveNode::exit()
 {
-    QQuickAnimatorJob::initialize(controller);
-    afterNodeSync();
+    m_phase = WaveExit;
+    m_from = m_value;
+    setDuration(WAVE_OPACITY_DECAY_DURATION);
+    restart();
+    connect(this, &QQuickAnimatedNode::stopped, this, &QObject::deleteLater);
 }
 
-void QQuickMaterialRippleAnimatorJob::updateCurrentTime(int time)
+void QQuickMaterialRippleWaveNode::updateCurrentTime(int time)
 {
-    if (!m_itemNode || !m_rectNode)
-        return;
-
-    qreal duration = 0;
-    if (m_phase == WaveEnter)
-        duration = QQuickAnimatorJob::duration();
-    else
-        duration = 1000.0 * qSqrt((m_diameter - m_from) / 2.0 / (WAVE_TOUCH_UP_ACCELERATION + WAVE_TOUCH_DOWN_ACCELERATION));
-
     qreal p = 1.0;
-    if (!qFuzzyIsNull(duration) && time < duration)
-        p = time / duration;
+    if (duration() > 0)
+        p = time / static_cast<qreal>(duration());
 
     m_value = m_from + (m_to - m_from) * p;
-    p = m_value / m_diameter;
+    p = m_value / m_to;
 
     const qreal dx = (1.0 - p) * (m_anchor.x() - m_bounds.width() / 2);
     const qreal dy = (1.0 - p) * (m_anchor.y() - m_bounds.height() / 2);
 
-    m_rectNode->setRect(QRectF(0, 0, m_value, m_value));
-    m_rectNode->setRadius(m_value / 2);
-    m_rectNode->update();
-
     QMatrix4x4 m;
     m.translate((m_bounds.width() - m_value) / 2 + dx,
                 (m_bounds.height() - m_value) / 2 + dy);
-    m_itemNode->setMatrix(m);
+    setMatrix(m);
 
-    if (m_opacityNode) {
-        qreal opacity = 1.0;
-        if (m_phase == WaveExit)
-            opacity -= static_cast<qreal>(time) / WAVE_OPACITY_DECAY_DURATION;
-        m_opacityNode->setOpacity(opacity);
-    }
-}
-
-void QQuickMaterialRippleAnimatorJob::writeBack()
-{
-    if (m_target)
-        m_target->setSize(QSizeF(m_value, m_value));
+    QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode *>(firstChild());
+    Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
+    qreal opacity = 1.0;
     if (m_phase == WaveExit)
-        m_target->deleteLater();
+        opacity -= static_cast<qreal>(time) / WAVE_OPACITY_DECAY_DURATION;
+    opacityNode->setOpacity(opacity);
+
+    QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
+    Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
+    rectNode->setRect(QRectF(0, 0, m_value, m_value));
+    rectNode->setRadius(m_value / 2);
+    rectNode->update();
 }
 
-void QQuickMaterialRippleAnimatorJob::nodeWasDestroyed()
+void QQuickMaterialRippleWaveNode::sync(QQuickItem *item)
 {
-    m_itemNode = nullptr;
-    m_opacityNode = nullptr;
-    m_rectNode = nullptr;
+    QQuickMaterialRipple *ripple = static_cast<QQuickMaterialRipple *>(item);
+    m_to = ripple->diameter();
+    m_anchor = ripple->anchorPoint();
+    m_bounds = ripple->boundingRect();
+
+    QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode *>(firstChild());
+    Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
+
+    QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
+    Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
+    rectNode->setColor(ripple->color());
 }
 
-void QQuickMaterialRippleAnimatorJob::afterNodeSync()
+class QQuickMaterialRippleBackgroundNode : public QQuickAnimatedNode
 {
-    m_itemNode = QQuickItemPrivate::get(m_target)->itemNode();
-    m_opacityNode = QQuickItemPrivate::get(m_target)->opacityNode();
-    m_rectNode = static_cast<QSGInternalRectangleNode *>(QQuickItemPrivate::get(m_target)->childContainerNode()->firstChild());
-}
+    Q_OBJECT
 
-class QQuickMaterialRippleAnimator : public QQuickAnimator
-{
 public:
-    QQuickMaterialRippleAnimator(const QPointF &anchor, const QRectF &bounds, QObject *parent = nullptr);
+    QQuickMaterialRippleBackgroundNode(QQuickMaterialRipple *ripple);
 
-    WavePhase phase() const;
-    void setPhase(WavePhase phase);
-
-protected:
-    QString propertyName() const override;
-    QQuickAnimatorJob *createJob() const override;
+    void updateCurrentTime(int time) override;
+    void sync(QQuickItem *item) override;
 
 private:
-    QPointF m_anchor;
-    QRectF m_bounds;
-    WavePhase m_phase;
+    bool m_active;
 };
 
-QQuickMaterialRippleAnimator::QQuickMaterialRippleAnimator(const QPointF &anchor, const QRectF &bounds, QObject *parent)
-    : QQuickAnimator(parent), m_anchor(anchor), m_bounds(bounds), m_phase(WaveEnter)
+QQuickMaterialRippleBackgroundNode::QQuickMaterialRippleBackgroundNode(QQuickMaterialRipple *ripple)
+    : QQuickAnimatedNode(ripple),
+      m_active(false)
 {
+    setDuration(OPACITY_ENTER_DURATION_FAST);
+
+    QSGOpacityNode *opacityNode = new QSGOpacityNode;
+    opacityNode->setOpacity(0.0);
+    appendChildNode(opacityNode);
+
+    QQuickItemPrivate *d = QQuickItemPrivate::get(ripple);
+    QSGInternalRectangleNode *rectNode = d->sceneGraphContext()->createInternalRectangleNode();
+    rectNode->setAntialiasing(true);
+    opacityNode->appendChildNode(rectNode);
 }
 
-WavePhase QQuickMaterialRippleAnimator::phase() const
+void QQuickMaterialRippleBackgroundNode::updateCurrentTime(int time)
 {
-    return m_phase;
+    qreal opacity = time / static_cast<qreal>(duration());
+    if (!m_active)
+        opacity = 1.0 - opacity;
+
+    QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode *>(firstChild());
+    Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
+    opacityNode->setOpacity(opacity);
 }
 
-void QQuickMaterialRippleAnimator::setPhase(WavePhase phase)
+void QQuickMaterialRippleBackgroundNode::sync(QQuickItem *item)
 {
-    if (m_phase == phase)
-        return;
+    QQuickMaterialRipple *ripple = static_cast<QQuickMaterialRipple *>(item);
+    if (m_active != ripple->isActive()) {
+        m_active = ripple->isActive();
+        setDuration(m_active ? OPACITY_ENTER_DURATION_FAST : WAVE_OPACITY_DECAY_DURATION);
+        restart();
+    }
 
-    m_phase = phase;
-}
+    QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode *>(firstChild());
+    Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
 
-QString QQuickMaterialRippleAnimator::propertyName() const
-{
-    return QString();
-}
+    QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(opacityNode->firstChild());
+    Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
-QQuickAnimatorJob *QQuickMaterialRippleAnimator::createJob() const
-{
-    return new QQuickMaterialRippleAnimatorJob(m_phase, m_anchor, m_bounds);
+    const qreal w = ripple->width();
+    const qreal h = ripple->height();
+    const qreal sz = qSqrt(w * w + h * h);
+
+    QMatrix4x4 matrix;
+    if (qFuzzyIsNull(ripple->clipRadius())) {
+        matrix.translate((w - sz) / 2, (h - sz) / 2);
+        rectNode->setRect(QRectF(0, 0, sz, sz));
+        rectNode->setRadius(sz / 2);
+    } else {
+        rectNode->setRect(QRectF(0, 0, w, h));
+        rectNode->setRadius(ripple->clipRadius());
+    }
+
+    setMatrix(matrix);
+    rectNode->setColor(ripple->color());
+    rectNode->update();
 }
 
 QQuickMaterialRipple::QQuickMaterialRipple(QQuickItem *parent)
-    : QQuickItem(parent), m_active(false), m_pressed(false), m_enterDelay(0), m_trigger(Press), m_clipRadius(0.0), m_anchor(nullptr), m_opacityAnimator(nullptr)
+    : QQuickItem(parent),
+      m_active(false),
+      m_pressed(false),
+      m_waves(0),
+      m_enterDelay(0),
+      m_trigger(Press),
+      m_clipRadius(0.0),
+      m_anchor(nullptr)
 {
-    setOpacity(0.0);
     setFlag(ItemHasContents);
 }
 
@@ -219,19 +246,7 @@ void QQuickMaterialRipple::setActive(bool active)
         return;
 
     m_active = active;
-
-    if (!m_opacityAnimator) {
-        m_opacityAnimator = new QQuickOpacityAnimator(this);
-        m_opacityAnimator->setTargetItem(this);
-    }
-    m_opacityAnimator->setDuration(active ? OPACITY_ENTER_DURATION_FAST : WAVE_OPACITY_DECAY_DURATION);
-
-    const int time = m_opacityAnimator->currentTime();
-    m_opacityAnimator->stop();
-    m_opacityAnimator->setFrom(opacity());
-    m_opacityAnimator->setTo(active ? 1.0 : 0.0);
-    m_opacityAnimator->setCurrentTime(time);
-    m_opacityAnimator->start();
+    update();
 }
 
 QColor QQuickMaterialRipple::color() const
@@ -336,15 +351,16 @@ void QQuickMaterialRipple::setAnchor(QQuickItem *item)
     m_anchor = item;
 }
 
+qreal QQuickMaterialRipple::diameter() const
+{
+    const qreal w = width();
+    const qreal h = height();
+    return qSqrt(w * w + h * h);
+}
+
 void QQuickMaterialRipple::itemChange(ItemChange change, const ItemChangeData &data)
 {
     QQuickItem::itemChange(change, data);
-
-    if (change == ItemChildRemovedChange) {
-        QQuickMaterialRippleAnimator *animator = data.item->findChild<QQuickMaterialRippleAnimator *>();
-        if (animator)
-            m_rippleAnimators.removeOne(animator);
-    }
 }
 
 QSGNode *QQuickMaterialRipple::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -358,35 +374,41 @@ QSGNode *QQuickMaterialRipple::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
         clipNode->update();
     }
 
-    const qreal w = width();
-    const qreal h = height();
-    const qreal sz = qSqrt(w * w + h * h);
+    QSGNode *container = oldNode;
+    if (!container)
+        container = new QSGNode;
 
-    QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(oldNode);
-    if (!transformNode)
-        transformNode = new QSGTransformNode;
+    QQuickMaterialRippleBackgroundNode *backgroundNode = static_cast<QQuickMaterialRippleBackgroundNode *>(container->firstChild());
+    if (!backgroundNode) {
+        backgroundNode = new QQuickMaterialRippleBackgroundNode(this);
+        backgroundNode->setObjectName(objectName());
+        container->appendChildNode(backgroundNode);
+    }
+    backgroundNode->sync(this);
 
-    QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(transformNode->firstChild());
-    if (!rectNode) {
-        rectNode = d->sceneGraphContext()->createInternalRectangleNode();
-        rectNode->setAntialiasing(true);
-        transformNode->appendChildNode(rectNode);
+    // enter new waves
+    int i = m_waves;
+    QQuickMaterialRippleWaveNode *enterNode = static_cast<QQuickMaterialRippleWaveNode *>(backgroundNode->nextSibling());
+    while (i-- > 0) {
+        if (!enterNode) {
+            enterNode = new QQuickMaterialRippleWaveNode(this);
+            container->appendChildNode(enterNode);
+        }
+        enterNode->sync(this);
+        enterNode = static_cast<QQuickMaterialRippleWaveNode *>(enterNode->nextSibling());
     }
 
-    QMatrix4x4 matrix;
-    if (qFuzzyIsNull(m_clipRadius)) {
-        matrix.translate((w - sz) / 2, (h - sz) / 2);
-        rectNode->setRect(QRectF(0, 0, sz, sz));
-        rectNode->setRadius(sz / 2);
-    } else {
-        rectNode->setRect(QRectF(0, 0, w, h));
-        rectNode->setRadius(m_clipRadius);
+    // exit old waves
+    int j = container->childCount() - 1 - m_waves;
+    while (j-- > 0) {
+        QQuickMaterialRippleWaveNode *exitNode = static_cast<QQuickMaterialRippleWaveNode *>(backgroundNode->nextSibling());
+        if (exitNode) {
+            exitNode->exit();
+            exitNode->sync(this);
+        }
     }
-    transformNode->setMatrix(matrix);
-    rectNode->setColor(m_color);
-    rectNode->update();
 
-    return transformNode;
+    return container;
 }
 
 void QQuickMaterialRipple::timerEvent(QTimerEvent *event)
@@ -410,23 +432,8 @@ void QQuickMaterialRipple::enterWave()
         m_enterDelay = 0;
     }
 
-    const qreal w = width();
-    const qreal h = height();
-    const qreal sz = qSqrt(w * w + h * h);
-
-    QQuickRectangle *wave = new QQuickRectangle(this);
-    wave->setPosition(QPointF((w - sz) / 2, (h - sz) / 2));
-    wave->setSize(QSizeF(sz, sz));
-    wave->setRadius(sz / 2);
-    wave->setColor(color());
-    wave->setOpacity(0.0);
-
-    QQuickMaterialRippleAnimator *animator = new QQuickMaterialRippleAnimator(anchorPoint(), boundingRect(), wave);
-    animator->setDuration(qRound(1000.0 * qSqrt(sz / 2.0 / WAVE_TOUCH_DOWN_ACCELERATION)));
-    animator->setTargetItem(wave);
-    animator->setTo(sz);
-    animator->start();
-    m_rippleAnimators += animator;
+    ++m_waves;
+    update();
 }
 
 void QQuickMaterialRipple::exitWave()
@@ -436,16 +443,12 @@ void QQuickMaterialRipple::exitWave()
         m_enterDelay = 0;
     }
 
-    for (QQuickMaterialRippleAnimator *animator : m_rippleAnimators) {
-        if (animator->phase() == WaveEnter) {
-            animator->stop(); // -> writeBack() -> setSize()
-            if (QQuickItem *wave = animator->targetItem())
-                animator->setFrom(wave->width());
-            animator->setDuration(WAVE_OPACITY_DECAY_DURATION);
-            animator->setPhase(WaveExit);
-            animator->restart();
-        }
+    if (m_waves > 0) {
+        --m_waves;
+        update();
     }
 }
 
 QT_END_NAMESPACE
+
+#include "qquickmaterialripple.moc"
