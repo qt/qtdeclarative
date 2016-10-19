@@ -847,12 +847,21 @@ TestCase {
         compare(control.mirroredspy_5.count, 1)
     }
 
-    function test_hover() {
-        var control = component.createObject(testCase, {width: 100, height: 100})
+    function test_hover_data() {
+        return [
+            { tag: "normal", target: component, pressed: false },
+            { tag: "pressed", target: button, pressed: true }
+        ]
+    }
+
+    function test_hover(data) {
+        var control = data.target.createObject(testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.hovered, false)
-        compare(control.hoverEnabled, false)
+        compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
+
+        control.hoverEnabled = false
 
         mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, false)
@@ -862,14 +871,60 @@ TestCase {
         mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, true)
 
+        if (data.pressed) {
+            mousePress(control, control.width / 2, control.height / 2)
+            compare(control.hovered, true)
+        }
+
         mouseMove(control, -10, -10)
         compare(control.hovered, false)
+
+        if (data.pressed) {
+            mouseRelease(control, -10, control.height / 2)
+            compare(control.hovered, false)
+        }
 
         mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, true)
 
         control.visible = false
         compare(control.hovered, false)
+
+        control.destroy()
+    }
+
+    function test_hoverEnabled() {
+        var control = component.createObject(testCase)
+        compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
+
+        var child = component.createObject(control)
+        var grandChild = component.createObject(child)
+
+        var childExplicitHoverEnabled = component.createObject(control, {hoverEnabled: true})
+        var grandChildExplicitHoverDisabled = component.createObject(childExplicitHoverEnabled, {hoverEnabled: false})
+
+        var childExplicitHoverDisabled = component.createObject(control, {hoverEnabled: false})
+        var grandChildExplicitHoverEnabled = component.createObject(childExplicitHoverDisabled, {hoverEnabled: true})
+
+        control.hoverEnabled = false
+        compare(control.hoverEnabled, false)
+        compare(grandChild.hoverEnabled, false)
+
+        compare(childExplicitHoverEnabled.hoverEnabled, true)
+        compare(grandChildExplicitHoverDisabled.hoverEnabled, false)
+
+        compare(childExplicitHoverDisabled.hoverEnabled, false)
+        compare(grandChildExplicitHoverEnabled.hoverEnabled, true)
+
+        control.hoverEnabled = true
+        compare(control.hoverEnabled, true)
+        compare(grandChild.hoverEnabled, true)
+
+        compare(childExplicitHoverEnabled.hoverEnabled, true)
+        compare(grandChildExplicitHoverDisabled.hoverEnabled, false)
+
+        compare(childExplicitHoverDisabled.hoverEnabled, false)
+        compare(grandChildExplicitHoverEnabled.hoverEnabled, true)
 
         control.destroy()
     }

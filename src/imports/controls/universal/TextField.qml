@@ -48,8 +48,6 @@ T.TextField {
                              background ? background.implicitHeight : 0,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     // TextControlThemePadding + 2 (border)
     padding: 12
     topPadding: padding - 7

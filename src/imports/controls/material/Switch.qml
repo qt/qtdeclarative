@@ -52,8 +52,6 @@ T.Switch {
     padding: 8
     spacing: 8
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

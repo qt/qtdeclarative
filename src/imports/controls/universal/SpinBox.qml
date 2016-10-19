@@ -51,8 +51,6 @@ T.SpinBox {
                              down.indicator ? down.indicator.implicitHeight : 0)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     // TextControlThemePadding + 2 (border)
     padding: 12
     topPadding: padding - 7

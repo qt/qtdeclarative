@@ -47,8 +47,6 @@ T.RoundButton {
                              contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     padding: 8
 
     property bool useSystemFocusVisuals: true

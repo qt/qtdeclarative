@@ -56,12 +56,26 @@ QT_BEGIN_NAMESPACE
     RangeSlider is used to select a range specified by two values, by sliding
     each handle along a track.
 
+    In the example below, custom \l from and \l to values are set, and the
+    initial positions of the \l first and \l second handles are set:
+
     \code
     RangeSlider {
-        first.value: 0.25
-        second.value: 0.75
+        from: 1
+        to: 100
+        first.value: 25
+        second.value: 75
     }
     \endcode
+
+    The \l {first.position} and \l {second.position} properties are defined as a
+    percentage of the control's size, scaled within the range \c {0.0 - 1.0}.
+    The \l {first.visualPosition} and \l {second.visualPosition} properties are
+    the same, except that they are reversed in a
+    \l {Right-to-left User Interfaces}{right-to-left} application.
+    The \c visualPosition is useful for positioning the handles when styling
+    RangeSlider. In the example above, \l {first.visualPosition} will be \c 0.24
+    in a left-to-right application, and \c 0.76 in a right-to-left application.
 
     \sa {Customizing RangeSlider}, {Input Controls}
 */
@@ -601,6 +615,9 @@ void QQuickRangeSlider::setStepSize(qreal step)
     \value RangeSlider.NoSnap The slider does not snap (default).
     \value RangeSlider.SnapAlways The slider snaps while the handle is dragged.
     \value RangeSlider.SnapOnRelease The slider does not snap while being dragged, but only after the handle is released.
+
+    For visual explanations of the various modes, see the
+    \l {Slider::}{snapMode} documentation of \l Slider.
 
     \sa stepSize
 */

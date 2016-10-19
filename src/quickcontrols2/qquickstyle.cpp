@@ -89,6 +89,8 @@ struct QQuickStyleSpec
 
     QString name()
     {
+        if (!resolved)
+            resolve();
         return style.mid(style.lastIndexOf(QLatin1Char('/')) + 1);
     }
 

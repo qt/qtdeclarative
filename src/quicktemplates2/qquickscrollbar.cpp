@@ -117,7 +117,7 @@ public:
     }
 
     qreal positionAt(const QPoint &point) const;
-
+    void updateActive();
     void resizeContent() override;
 
     qreal size;
@@ -137,6 +137,12 @@ qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
         return (point.x() - q->leftPadding()) / q->availableWidth();
     else
         return (point.y() - q->topPadding()) / q->availableHeight();
+}
+
+void QQuickScrollBarPrivate::updateActive()
+{
+    Q_Q(QQuickScrollBar);
+    q->setActive(moving || pressed || hovered);
 }
 
 void QQuickScrollBarPrivate::resizeContent()
@@ -286,7 +292,7 @@ void QQuickScrollBar::setPressed(bool pressed)
 
     d->pressed = pressed;
     setAccessibleProperty("pressed", pressed);
-    setActive(d->pressed || d->moving);
+    d->updateActive();
     emit pressedChanged();
 }
 
@@ -328,9 +334,10 @@ void QQuickScrollBar::increase()
 {
     Q_D(QQuickScrollBar);
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    bool wasActive = d->active;
     setActive(true);
     setPosition(d->position + step);
-    setActive(false);
+    setActive(wasActive);
 }
 
 /*!
@@ -344,9 +351,10 @@ void QQuickScrollBar::decrease()
 {
     Q_D(QQuickScrollBar);
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
+    bool wasActive = d->active;
     setActive(true);
     setPosition(d->position - step);
-    setActive(false);
+    setActive(wasActive);
 }
 
 void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
@@ -373,6 +381,12 @@ void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
     setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
     d->offset = 0.0;
     setPressed(false);
+}
+
+void QQuickScrollBar::hoverChange()
+{
+    Q_D(QQuickScrollBar);
+    d->updateActive();
 }
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -417,14 +431,14 @@ void QQuickScrollBarAttachedPrivate::activateHorizontal()
 {
     QQuickScrollBarPrivate *p = QQuickScrollBarPrivate::get(horizontal);
     p->moving = flickable->isMovingHorizontally();
-    horizontal->setActive(p->moving || p->pressed);
+    p->updateActive();
 }
 
 void QQuickScrollBarAttachedPrivate::activateVertical()
 {
     QQuickScrollBarPrivate *p = QQuickScrollBarPrivate::get(vertical);
     p->moving = flickable->isMovingVertically();
-    vertical->setActive(p->moving || p->pressed);
+    p->updateActive();
 }
 
 // TODO: QQuickFlickable::maxXYExtent()

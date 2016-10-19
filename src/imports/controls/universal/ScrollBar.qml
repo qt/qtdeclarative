@@ -46,8 +46,6 @@ T.ScrollBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     // TODO: arrows
 
     contentItem: Rectangle {

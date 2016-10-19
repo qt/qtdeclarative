@@ -115,6 +115,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
     : hovered(false)
+    , explicitHoverEnabled(false)
     , background(nullptr)
     , focusReason(Qt::OtherFocusReason)
     , accessibleAttached(nullptr)
@@ -221,6 +222,21 @@ void QQuickTextFieldPrivate::inheritFont(const QFont &f)
         emit q->fontChanged();
 }
 
+void QQuickTextFieldPrivate::updateHoverEnabled(bool enabled, bool xplicit)
+{
+    Q_Q(QQuickTextField);
+    if (!xplicit && explicitHoverEnabled)
+        return;
+
+    bool wasEnabled = q->isHoverEnabled();
+    explicitHoverEnabled = xplicit;
+    if (wasEnabled != enabled) {
+        q->setAcceptHoverEvents(enabled);
+        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
+        emit q->hoverEnabledChanged();
+    }
+}
+
 void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -297,9 +313,7 @@ void QQuickTextField::setFont(const QFont &font)
 
     This property holds the background item.
 
-    \note If the background item has no explicit size specified, it automatically
-          follows the control's size. In most cases, there is no need to specify
-          width or height for a background item.
+    \input qquickcontrol-background.qdocinc notes
 
     \sa {Customizing TextField}
 */
@@ -356,21 +370,7 @@ void QQuickTextField::setPlaceholderText(const QString &text)
 /*!
     \qmlproperty enumeration QtQuick.Controls::TextField::focusReason
 
-    This property holds the reason of the last focus change.
-
-    \note This property does not indicate whether the control has \l {Item::activeFocus}
-          {active focus}, but the reason why the control either gained or lost focus.
-
-    \value Qt.MouseFocusReason         A mouse action occurred.
-    \value Qt.TabFocusReason           The Tab key was pressed.
-    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
-    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
-    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
-    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
-    \value Qt.MenuBarFocusReason       The menu bar took focus.
-    \value Qt.OtherFocusReason         Another reason, usually application-specific.
-
-    \sa Item::activeFocus
+    \include qquickcontrol-focusreason.qdocinc
 */
 Qt::FocusReason QQuickTextField::focusReason() const
 {
@@ -430,11 +430,20 @@ bool QQuickTextField::isHoverEnabled() const
 void QQuickTextField::setHoverEnabled(bool enabled)
 {
     Q_D(QQuickTextField);
-    if (enabled == d->hoverEnabled)
+    if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
-    setAcceptHoverEvents(enabled);
-    emit hoverEnabledChanged();
+    d->updateHoverEnabled(enabled, true); // explicit=true
+}
+
+void QQuickTextField::resetHoverEnabled()
+{
+    Q_D(QQuickTextField);
+    if (!d->explicitHoverEnabled)
+        return;
+
+    d->explicitHoverEnabled = false;
+    d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 }
 
 void QQuickTextField::classBegin()
@@ -448,6 +457,8 @@ void QQuickTextField::componentComplete()
 {
     Q_D(QQuickTextField);
     QQuickTextInput::componentComplete();
+    if (!d->explicitHoverEnabled)
+        setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
@@ -461,8 +472,11 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
 {
     Q_D(QQuickTextField);
     QQuickTextInput::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item)
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+        if (!d->explicitHoverEnabled)
+            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+    }
 }
 
 void QQuickTextField::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

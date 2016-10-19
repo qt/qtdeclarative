@@ -54,8 +54,6 @@ T.SwipeDelegate {
     bottomPadding: 8
     spacing: 16
 
-    hoverEnabled: Qt.styleHints.useHoverEffects
-
     contentItem: Text {
         leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width + control.spacing : 0) : 0
         rightPadding: control.mirrored ? (control.indicator ? control.indicator.width + control.spacing : 0) : 0

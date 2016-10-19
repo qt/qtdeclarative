@@ -59,9 +59,15 @@ QT_BEGIN_NAMESPACE
     expose more options or information. It is used as a delegate in views such
     as \l ListView.
 
-    SwipeDelegate inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text} and react to
-    \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
+    In the following example, SwipeDelegate is used in a \l ListView to allow
+    items to be removed from it by swiping to the left:
+
+    \snippet qtquickcontrols2-swipedelegate.qml 1
+
+    SwipeDelegate inherits its API from \l ItemDelegate, which is inherited
+    from AbstractButton. For instance, you can set \l {AbstractButton::text}{text},
+    and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton
+    API.
 
     Information regarding the progress of a swipe, as well as the components
     that should be shown upon swiping, are both available through the

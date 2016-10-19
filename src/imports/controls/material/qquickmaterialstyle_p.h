@@ -74,6 +74,8 @@ class QQuickMaterialStyle : public QQuickStyleAttached
     Q_PROPERTY(QColor textSelectionColor READ textSelectionColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dropShadowColor READ dropShadowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor iconColor READ iconColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor iconDisabledColor READ iconDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
@@ -195,6 +197,8 @@ public:
     QColor textSelectionColor() const;
     QColor dropShadowColor() const;
     QColor dividerColor() const;
+    QColor iconColor() const;
+    QColor iconDisabledColor() const;
     QColor buttonColor() const;
     QColor buttonDisabledColor() const;
     QColor highlightedButtonColor() const;

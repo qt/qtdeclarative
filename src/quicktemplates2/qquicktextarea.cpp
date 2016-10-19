@@ -131,7 +131,8 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : hovered(false), background(nullptr), focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
+    : hovered(false), explicitHoverEnabled(false), background(nullptr),
+      focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -355,6 +356,21 @@ void QQuickTextAreaPrivate::inheritFont(const QFont &f)
         emit q->fontChanged();
 }
 
+void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
+{
+    Q_Q(QQuickTextArea);
+    if (!xplicit && explicitHoverEnabled)
+        return;
+
+    bool wasEnabled = q->isHoverEnabled();
+    explicitHoverEnabled = xplicit;
+    if (wasEnabled != enabled) {
+        q->setAcceptHoverEvents(enabled);
+        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
+        emit q->hoverEnabledChanged();
+    }
+}
+
 void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -416,9 +432,7 @@ void QQuickTextArea::setFont(const QFont &font)
 
     This property holds the background item.
 
-    \note If the background item has no explicit size specified, it automatically
-          follows the control's size. In most cases, there is no need to specify
-          width or height for a background item.
+    \input qquickcontrol-background.qdocinc notes
 
     \sa {Customizing TextArea}
 */
@@ -475,21 +489,7 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
 /*!
     \qmlproperty enumeration QtQuick.Controls::TextArea::focusReason
 
-    This property holds the reason of the last focus change.
-
-    \note This property does not indicate whether the control has \l {Item::activeFocus}
-          {active focus}, but the reason why the control either gained or lost focus.
-
-    \value Qt.MouseFocusReason         A mouse action occurred.
-    \value Qt.TabFocusReason           The Tab key was pressed.
-    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
-    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
-    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
-    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
-    \value Qt.MenuBarFocusReason       The menu bar took focus.
-    \value Qt.OtherFocusReason         Another reason, usually application-specific.
-
-    \sa Item::activeFocus
+    \include qquickcontrol-focusreason.qdocinc
 */
 Qt::FocusReason QQuickTextArea::focusReason() const
 {
@@ -549,11 +549,20 @@ bool QQuickTextArea::isHoverEnabled() const
 void QQuickTextArea::setHoverEnabled(bool enabled)
 {
     Q_D(QQuickTextArea);
-    if (enabled == d->hoverEnabled)
+    if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
-    setAcceptHoverEvents(enabled);
-    emit hoverEnabledChanged();
+    d->updateHoverEnabled(enabled, true); // explicit=true
+}
+
+void QQuickTextArea::resetHoverEnabled()
+{
+    Q_D(QQuickTextArea);
+    if (!d->explicitHoverEnabled)
+        return;
+
+    d->explicitHoverEnabled = false;
+    d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 }
 
 bool QQuickTextArea::contains(const QPointF &point) const
@@ -575,6 +584,8 @@ void QQuickTextArea::componentComplete()
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::componentComplete();
+    if (!d->explicitHoverEnabled)
+        setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
@@ -588,8 +599,11 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item)
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+        if (!d->explicitHoverEnabled)
+            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+    }
 }
 
 void QQuickTextArea::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

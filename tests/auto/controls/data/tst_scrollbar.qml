@@ -215,6 +215,31 @@ TestCase {
         control.destroy()
     }
 
+    function test_increase_decrease_data() {
+        return [
+            { tag: "increase:active", increase: true, active: true },
+            { tag: "decrease:active", increase: false, active: true },
+            { tag: "increase:inactive", increase: true, active: false },
+            { tag: "decrease:inactive", increase: false, active: false }
+        ]
+    }
+
+    function test_increase_decrease(data) {
+        var control = scrollBar.createObject(testCase, {position: 0.5, active: data.active})
+        verify(control)
+
+        if (data.increase) {
+            control.increase()
+            compare(control.position, 0.6)
+        } else {
+            control.decrease()
+            compare(control.position, 0.4)
+        }
+        compare(control.active, data.active)
+
+        control.destroy()
+    }
+
     function test_stepSize_data() {
         return [
             { tag: "0.0", stepSize: 0.0 },
@@ -287,5 +312,29 @@ TestCase {
         compare(container.ScrollBar.vertical.x, 0)
 
         container.destroy()
+    }
+
+    function test_hover_data() {
+        return [
+            { tag: "enabled", hoverEnabled: true },
+            { tag: "disabled", hoverEnabled: false },
+        ]
+    }
+
+    function test_hover(data) {
+        var control = scrollBar.createObject(testCase, {hoverEnabled: data.hoverEnabled})
+        verify(control)
+
+        compare(control.hovered, false)
+
+        mouseMove(control)
+        compare(control.hovered, data.hoverEnabled)
+        compare(control.active, data.hoverEnabled)
+
+        mouseMove(control, -1, -1)
+        compare(control.hovered, false)
+        compare(control.active, false)
+
+        control.destroy()
     }
 }
