@@ -78,8 +78,8 @@ QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject
 
 void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
-    qmlRegisterRevision<QQuickMaterialStyle, 1>(uri, 2, 1);
 }
 
 void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -89,8 +89,9 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
     engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/Material/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+
     qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
-    qmlRegisterRevision<QQuickPaddedRectangle, 1>(import, 2, 1);
     qmlRegisterType<QQuickMaterialBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickMaterialProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickMaterialRipple>(import, 2, 0, "Ripple");

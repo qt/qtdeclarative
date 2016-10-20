@@ -88,6 +88,8 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     QQuickStyleSelector selector;
     selector.setBaseUrl(typeUrl());
 
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+
     // QtQuick.Controls 2.0 (Qt 5.7)
     qmlRegisterType(selector.select(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
@@ -163,12 +165,13 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/images")));
 
     const QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
     qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
-
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");

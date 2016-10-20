@@ -52,12 +52,9 @@ void tst_revisions::revisions_data()
 {
     QTest::addColumn<int>("revision");
 
-    // In theory, this could be done in a loop from 5.7 to QT_VERSION, but
-    // the test would immediately fail when the Qt version was bumped up.
-    // Therefore it is better to just add these lines by hand when adding
-    // new revisions.
-    QTest::newRow("2.0") << 0; // Qt 5.7
-    QTest::newRow("2.1") << 1; // Qt 5.8
+    // Qt 5.7: 2.0, Qt 5.8: 2.1, Qt 5.9: 2.2...
+    for (int i = 0; i <= QT_VERSION_MINOR - 7; ++i)
+        QTest::newRow(qPrintable(QString("2.%1").arg(i))) << i;
 }
 
 void tst_revisions::revisions()
@@ -67,6 +64,7 @@ void tst_revisions::revisions()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick 2.0; \
+                               import QtQuick.Templates 2.%1 as T; \
                                import QtQuick.Controls 2.%1; \
                                import QtQuick.Controls.impl 2.%1; \
                                import QtQuick.Controls.Material 2.%1; \

@@ -76,8 +76,8 @@ QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObje
 
 void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
     qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
-    qmlRegisterRevision<QQuickUniversalStyle, 1>(uri, 2, 1);
 }
 
 void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
@@ -87,11 +87,11 @@ void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, 
     engine->addImageProvider(name(), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/Universal/images")));
 
     QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+
     qmlRegisterType<QQuickUniversalFocusRectangle>(import, 2, 0, "FocusRectangle");
     qmlRegisterType<QQuickUniversalBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickUniversalProgressBar>(import, 2, 0, "ProgressBarImpl");
-    qmlRegisterRevision<QQuickUniversalFocusRectangle, 1>(import, 2, 1);
-
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }

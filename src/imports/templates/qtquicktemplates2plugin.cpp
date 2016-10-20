@@ -131,6 +131,8 @@ QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+
     // QtQuick.Templates 2.0 (Qt 5.7)
     qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 2, 0, "ApplicationWindow");
