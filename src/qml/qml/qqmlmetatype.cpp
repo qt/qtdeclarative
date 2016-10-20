@@ -1268,6 +1268,19 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 }
 
 // NOTE: caller must hold a QMutexLocker on "data"
+QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data)
+{
+    QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
+    QQmlTypeModule *module = data->uriToModule.value(versionedUri);
+    if (!module) {
+        module = new QQmlTypeModule;
+        module->d->uri = versionedUri;
+        data->uriToModule.insert(versionedUri, module);
+    }
+    return module;
+}
+
+// NOTE: caller must hold a QMutexLocker on "data"
 void addTypeToData(QQmlType* type, QQmlMetaTypeData *data)
 {
     if (!type->elementName().isEmpty())
@@ -1293,13 +1306,8 @@ void addTypeToData(QQmlType* type, QQmlMetaTypeData *data)
     if (!type->module().isEmpty()) {
         const QHashedString &mod = type->module();
 
-        QQmlMetaTypeData::VersionedUri versionedUri(mod, type->majorVersion());
-        QQmlTypeModule *module = data->uriToModule.value(versionedUri);
-        if (!module) {
-            module = new QQmlTypeModule;
-            module->d->uri = versionedUri;
-            data->uriToModule.insert(versionedUri, module);
-        }
+        QQmlTypeModule *module = getTypeModule(mod, type->majorVersion(), data);
+        Q_ASSERT(module);
         module->d->add(type);
     }
 }
@@ -1440,6 +1448,20 @@ bool qmlProtectModule(const char *uri, int majVersion)
         return true;
     }
     return false;
+}
+
+//From qqml.h
+void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), versionMajor, data);
+    Q_ASSERT(module);
+
+    QQmlTypeModulePrivate *p = QQmlTypeModulePrivate::get(module);
+    p->minMinorVersion = qMin(p->minMinorVersion, versionMinor);
+    p->maxMinorVersion = qMax(p->maxMinorVersion, versionMinor);
 }
 
 bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri, int majorVersion)

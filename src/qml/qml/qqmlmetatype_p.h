@@ -266,6 +266,7 @@ public:
 
 private:
     //Used by register functions and creates the QQmlTypeModule for them
+    friend QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data);
     friend void addTypeToData(QQmlType* type, QQmlMetaTypeData *data);
     friend struct QQmlMetaTypeData;
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();

@@ -52,8 +52,7 @@ public:
 private slots:
     virtual void initTestCase();
     void importsPlugin();
-    void importsPlugin2();
-    void importsPlugin21();
+    void importsPlugin_data();
     void importsMixedQmlCppPlugin();
     void incorrectPluginCase();
     void importPluginWithQmlFile();
@@ -70,6 +69,7 @@ private slots:
     void importStrictModule();
     void importStrictModule_data();
     void importProtectedModule();
+    void importVersionedModule();
     void importsChildPlugin();
     void importsChildPlugin2();
     void importsChildPlugin21();
@@ -130,12 +130,15 @@ void tst_qqmlmoduleplugin::initTestCase()
 
 void tst_qqmlmoduleplugin::importsPlugin()
 {
+    QFETCH(QString, suffix);
+    QFETCH(QString, qmlFile);
+
     QQmlEngine engine;
     engine.addImportPath(m_importsDirectory);
-    QTest::ignoreMessage(QtWarningMsg, "plugin created");
-    QTest::ignoreMessage(QtWarningMsg, "import worked");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(QString("plugin%1 created").arg(suffix)));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(QString("import%1 worked").arg(suffix)));
     QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
-    QQmlComponent component(&engine, testFileUrl(QStringLiteral("works.qml")));
+    QQmlComponent component(&engine, testFileUrl(qmlFile));
     foreach (QQmlError err, component.errors())
         qWarning() << err;
     VERIFY_ERRORS(0);
@@ -145,38 +148,15 @@ void tst_qqmlmoduleplugin::importsPlugin()
     delete object;
 }
 
-void tst_qqmlmoduleplugin::importsPlugin2()
+void tst_qqmlmoduleplugin::importsPlugin_data()
 {
-    QQmlEngine engine;
-    engine.addImportPath(m_importsDirectory);
-    QTest::ignoreMessage(QtWarningMsg, "plugin2 created");
-    QTest::ignoreMessage(QtWarningMsg, "import2 worked");
-    QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
-    QQmlComponent component(&engine, testFileUrl(QStringLiteral("works2.qml")));
-    foreach (QQmlError err, component.errors())
-        qWarning() << err;
-    VERIFY_ERRORS(0);
-    QObject *object = component.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("value").toInt(),123);
-    delete object;
-}
+    QTest::addColumn<QString>("suffix");
+    QTest::addColumn<QString>("qmlFile");
 
-void tst_qqmlmoduleplugin::importsPlugin21()
-{
-    QQmlEngine engine;
-    engine.addImportPath(m_importsDirectory);
-    QTest::ignoreMessage(QtWarningMsg, "plugin2.1 created");
-    QTest::ignoreMessage(QtWarningMsg, "import2.1 worked");
-    QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
-    QQmlComponent component(&engine, testFileUrl(QStringLiteral("works21.qml")));
-    foreach (QQmlError err, component.errors())
-        qWarning() << err;
-    VERIFY_ERRORS(0);
-    QObject *object = component.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("value").toInt(),123);
-    delete object;
+    QTest::newRow("1.0") << "" << "works.qml";
+    QTest::newRow("2.0") << "2" << "works2.qml";
+    QTest::newRow("2.1") << "2.1" << "works21.qml";
+    QTest::newRow("2.2") << "2.2" << "works22.qml";
 }
 
 void tst_qqmlmoduleplugin::incorrectPluginCase()
@@ -576,6 +556,32 @@ void tst_qqmlmoduleplugin::importProtectedModule()
     QScopedPointer<QObject> object(component.create());
     //qDebug() << component.errorString();
     QVERIFY(object != 0);
+}
+
+void tst_qqmlmoduleplugin::importVersionedModule()
+{
+    qmlRegisterType<QObject>("org.qtproject.VersionedModule", 1, 0, "TestType");
+    qmlRegisterModule("org.qtproject.VersionedModule", 1, 1);
+
+    QQmlEngine engine;
+    engine.addImportPath(m_importsDirectory);
+
+    QUrl url(testFileUrl("empty.qml"));
+
+    QQmlComponent component(&engine);
+    component.setData("import org.qtproject.VersionedModule 1.0\n TestType {}\n", url);
+    QScopedPointer<QObject> object10(component.create());
+    QVERIFY(!object10.isNull());
+
+    component.setData("import org.qtproject.VersionedModule 1.1\n TestType {}\n", url);
+    QScopedPointer<QObject> object11(component.create());
+    QVERIFY(!object11.isNull());
+
+    component.setData("import org.qtproject.VersionedModule 1.2\n TestType {}\n", url);
+    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+    QScopedPointer<QObject> object12(component.create());
+    QVERIFY(object12.isNull());
+    QCOMPARE(component.errorString(), QString("%1:1 module \"org.qtproject.VersionedModule\" version 1.2 is not installed\n").arg(url.toString()));
 }
 
 void tst_qqmlmoduleplugin::importsChildPlugin()
