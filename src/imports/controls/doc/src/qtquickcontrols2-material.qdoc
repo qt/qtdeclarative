@@ -239,6 +239,8 @@
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
+    The default value is \c Material.Pink.
+
     In the following example, the accent color of the highlighted button is
     changed to \c Material.Orange:
 
@@ -249,8 +251,6 @@
             \li
                 \image qtquickcontrols2-material-accent.png
     \endtable
-
-    The default value is \c Material.Pink.
 
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined Material colors} that have been
@@ -308,7 +308,7 @@
     The default value is theme-specific (light or dark).
 
     In the following example, the foreground color of the button is set to \c
-    Material.Brown:
+    Material.Pink:
 
     \table
         \row
