@@ -57,6 +57,15 @@ ApplicationWindow {
         property string style: "Default"
     }
 
+    Shortcut {
+        sequence: "Esc"
+        enabled: stackView.depth > 1
+        onActivated: {
+            stackView.pop()
+            listView.currentIndex = -1
+        }
+    }
+
     header: ToolBar {
         Material.foreground: "white"
 
