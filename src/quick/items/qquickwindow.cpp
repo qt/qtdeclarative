@@ -3067,10 +3067,12 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
             if (itemPriv->paintNode && itemPriv->paintNode->parent() == 0) {
                 QSGNode *before = qquickitem_before_paintNode(itemPriv);
-                if (before)
+                if (before && before->parent()) {
+                    Q_ASSERT(before->parent() == itemPriv->childContainerNode());
                     itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, before);
-                else
+                } else {
                     itemPriv->childContainerNode()->prependChildNode(itemPriv->paintNode);
+                }
             }
         } else if (itemPriv->paintNode) {
             delete itemPriv->paintNode;
