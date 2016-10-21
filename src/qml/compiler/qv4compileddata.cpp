@@ -654,8 +654,11 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *e
     return true;
 }
 
+#endif
+
 void Unit::generateChecksum()
 {
+#ifndef V4_BOOTSTRAP
     QCryptographicHash hash(QCryptographicHash::Md5);
 
     const int checksummableDataOffset = qOffsetOf(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
@@ -666,9 +669,10 @@ void Unit::generateChecksum()
     QByteArray checksum = hash.result();
     Q_ASSERT(checksum.size() == sizeof(md5Checksum));
     memcpy(md5Checksum, checksum.constData(), sizeof(md5Checksum));
-}
-
+#else
+    memset(md5Checksum, 0, sizeof(md5Checksum));
 #endif
+}
 
 }
 
