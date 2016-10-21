@@ -54,7 +54,10 @@ T.ComboBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 6
-    padding: 16
+    // external vertical padding is 6 (to increase touch area)
+    padding: 12
+    leftPadding: padding - 4
+    rightPadding: padding - 4
 
     // Don't use toolTextColor, as that is often white when we have a white background.
     Material.foreground: Material.foreground === Material.toolTextColor ? undefined : Material.foreground
@@ -89,6 +92,9 @@ T.ComboBox {
         implicitWidth: 120
         implicitHeight: 48
 
+        // external vertical padding is 6 (to increase touch area)
+        y: 6
+        height: parent.height - 12
         radius: 2
         color: control.Material.dialogColor
 
