@@ -169,10 +169,7 @@ public:
     Q_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
     Q_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
 
-#if defined(V4_BOOTSTRAP)
-    Q_ALWAYS_INLINE Heap::Base *m() const { Q_UNREACHABLE(); return Q_NULLPTR; }
-    Q_ALWAYS_INLINE void setM(Heap::Base *b) { Q_UNUSED(b); Q_UNREACHABLE(); }
-#elif defined(QV4_USE_64_BIT_VALUE_ENCODING)
+#if defined(QV4_USE_64_BIT_VALUE_ENCODING)
     Q_ALWAYS_INLINE Heap::Base *m() const
     {
         Heap::Base *b;
