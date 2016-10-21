@@ -50,8 +50,8 @@ static bool isBlockedByPopup(QQuickItem *item)
     QQuickOverlay *overlay = QQuickOverlay::overlay(item->window());
     const auto popups = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
     for (QQuickPopup *popup : popups) {
-        if (popup->isModal())
-            return !popup->popupItem()->isAncestorOf(item);
+        if (popup->isModal() || popup->closePolicy() & QQuickPopup::CloseOnEscape)
+            return item != popup->popupItem() && !popup->popupItem()->isAncestorOf(item);
     }
 
     return false;
@@ -67,8 +67,12 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
         while (obj && !obj->isWindowType()) {
             obj = obj->parent();
             item = qobject_cast<QQuickItem *>(obj);
-            if (item)
+            if (item) {
                 obj = item->window();
+            } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj)) {
+                obj = popup->window();
+                item = popup->popupItem();
+            }
         }
         return obj && obj == QGuiApplication::focusWindow() && !isBlockedByPopup(item);
     default:

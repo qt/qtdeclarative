@@ -37,9 +37,12 @@
 #include "qquickpopup_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include "qquickshortcutcontext_p_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtGui/private/qshortcutmap_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -433,10 +436,15 @@ public:
 
     void resolveFont() override;
 
+    int backId;
+    int escapeId;
     QQuickPopup *popup;
 };
 
-QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup)
+QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
+    : backId(0),
+      escapeId(0),
+      popup(popup)
 {
     isTabFence = true;
 }
@@ -477,6 +485,47 @@ void QQuickPopupItem::updatePolish()
 {
     Q_D(QQuickPopupItem);
     return QQuickPopupPrivate::get(d->popup)->reposition();
+}
+
+void QQuickPopupItem::grabShortcut()
+{
+#ifndef QT_NO_SHORTCUT
+    Q_D(QQuickPopupItem);
+    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
+    if (!d->backId)
+        d->backId = pApp->shortcutMap.addShortcut(this, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+    if (!d->escapeId)
+        d->escapeId = pApp->shortcutMap.addShortcut(this, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+#endif // QT_NO_SHORTCUT
+}
+
+void QQuickPopupItem::ungrabShortcut()
+{
+#ifndef QT_NO_SHORTCUT
+    Q_D(QQuickPopupItem);
+    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
+    if (d->backId) {
+        pApp->shortcutMap.removeShortcut(d->backId, this);
+        d->backId = 0;
+    }
+    if (d->escapeId) {
+        pApp->shortcutMap.removeShortcut(d->escapeId, this);
+        d->escapeId = 0;
+    }
+#endif // QT_NO_SHORTCUT
+}
+
+bool QQuickPopupItem::event(QEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    if (event->type() == QEvent::Shortcut) {
+        QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
+        if (se->shortcutId() == d->escapeId || se->shortcutId() == d->backId) {
+            d->popup->close();
+            return true;
+        }
+    }
+    return QQuickItem::event(event);
 }
 
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)
@@ -912,6 +961,7 @@ QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
     setParentItem(nullptr);
+    d->popupItem->ungrabShortcut();
     delete d->popupItem;
 }
 
@@ -1963,6 +2013,12 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
     if (d->closePolicy == policy)
         return;
     d->closePolicy = policy;
+    if (isVisible()) {
+        if (policy & QQuickPopup::CloseOnEscape)
+            d->popupItem->grabShortcut();
+        else
+            d->popupItem->ungrabShortcut();
+    }
     emit closePolicyChanged();
 }
 
@@ -2131,12 +2187,6 @@ void QQuickPopup::keyPressEvent(QKeyEvent *event)
 
     if (hasActiveFocus() && (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab))
         QQuickItemPrivate::focusNextPrev(d->popupItem, event->key() == Qt::Key_Tab);
-
-    if (event->key() != Qt::Key_Escape && event->key() != Qt::Key_Back)
-        return;
-
-    if (d->closePolicy.testFlag(CloseOnEscape))
-        close();
 }
 
 void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
@@ -2233,7 +2283,7 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 
 void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
 {
-    Q_UNUSED(data);
+    Q_D(QQuickPopup);
 
     switch (change) {
     case QQuickItem::ItemActiveFocusHasChanged:
@@ -2242,6 +2292,13 @@ void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
     case QQuickItem::ItemOpacityHasChanged:
         emit opacityChanged();
         break;
+    case QQuickItem::ItemVisibleHasChanged:
+        if (isComponentComplete() && d->closePolicy & CloseOnEscape) {
+            if (data.boolValue)
+                d->popupItem->grabShortcut();
+            else
+                d->popupItem->ungrabShortcut();
+        }
     default:
         break;
     }
