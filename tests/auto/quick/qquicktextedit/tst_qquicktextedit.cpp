@@ -2963,9 +2963,6 @@ void tst_qquicktextedit::middleClickPaste()
     // Middle click pastes the selected text, assuming the platform supports it.
     QTest::mouseClick(&window, Qt::MiddleButton, Qt::NoModifier, p3);
 
-    // ### This is to prevent double click detection from carrying over to the next test.
-    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
-
     if (QGuiApplication::clipboard()->supportsSelection())
         QCOMPARE(textEditObject->text().mid(1, selectedText.length()), selectedText);
     else
