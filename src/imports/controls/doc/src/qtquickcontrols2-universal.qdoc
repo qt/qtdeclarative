@@ -78,28 +78,6 @@
 
     \image qtquickcontrols2-universal-attributes.png
 
-    The following example illustrates how to create a red \e stop button with light text:
-
-    \table
-        \row
-            \li
-                \qml
-                import QtQuick 2.0
-                import QtQuick.Controls 2.0
-                import QtQuick.Controls.Universal 2.0
-
-                Button {
-                    text: "Stop"
-                    highlighted: true
-
-                    Universal.accent: Universal.Red
-                    Universal.theme: Universal.Dark
-                }
-                \endqml
-            \li
-                \image qtquickcontrols2-universal-button.png
-    \endtable
-
     Both attributes can be specified for any window or item, and they automatically
     propagate to children in the same manner as \l {Control::font}{fonts}. In the
     following example, the window and all three radio buttons appear in the dark
@@ -209,8 +187,21 @@
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
 
+    The default value is \c Universal.Cobalt.
+
+    In the following example, the accent color of the highlighted button is
+    changed to \c Universal.Orange:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-universal-accent.qml 1
+            \li
+                \image qtquickcontrols2-universal-accent.png
+    \endtable
+
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
-    recommended to use one of the  \l {pre-defined Universal colors} that have been
+    recommended to use one of the \l {pre-defined Universal colors} that have been
     designed to work well with the rest of the Universal style palette.
 
     \endstyleproperty
@@ -222,6 +213,17 @@
 
     The default value is theme-specific (light or dark).
 
+    In the following example, the background color of the pane is changed to
+    \c Universal.Steel:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-universal-background.qml 1
+            \li
+                \image qtquickcontrols2-universal-background.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Universal.foreground} {color} {universal-foreground-attached-prop}
@@ -231,6 +233,17 @@
 
     The default value is theme-specific (light or dark).
 
+    In the following example, the foreground color of the button is set to \c
+    Universal.Pink:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-universal-foreground.qml 1
+            \li
+                \image qtquickcontrols2-universal-foreground.png
+    \endtable
+
     \styleproperty {Universal.theme} {enumeration} {universal-theme-attached-prop}
     \target universal-theme-attached-prop
     This attached property holds whether the theme is light or dark. The property
@@ -239,6 +252,17 @@
     Available themes:
     \value Universal.Light Light theme (default)
     \value Universal.Dark Dark theme
+
+    In the following example, the theme for both the pane and the button is set
+    to \c Universal.Dark:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-universal-theme.qml 1
+            \li
+                \image qtquickcontrols2-universal-theme.png
+    \endtable
 
     \endstyleproperty
 
@@ -250,9 +274,6 @@
     \l {pre-defined Universal colors}{pre-defined Universal color}.
 
     \qml
-    import QtQuick 2.0
-    import QtQuick.Controls.Universal 2.0
-
     Rectangle {
         color: Universal.color(Universal.Red)
     }
