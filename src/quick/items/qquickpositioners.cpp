@@ -290,6 +290,11 @@ void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &v
     QQuickItem::itemChange(change, value);
 }
 
+void QQuickBasePositioner::forceLayout()
+{
+    updatePolish();
+}
+
 void QQuickBasePositioner::prePositioning()
 {
     Q_D(QQuickBasePositioner);
@@ -401,6 +406,8 @@ void QQuickBasePositioner::prePositioning()
 
     //Set implicit size to the size of its children
     setImplicitSize(contentSize.width(), contentSize.height());
+
+    emit positioningComplete();
 }
 
 void QQuickBasePositioner::positionItem(qreal x, qreal y, PositionedItem *target)
@@ -910,6 +917,28 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
   \sa Grid::spacing
 */
+/*!
+    \qmlmethod QtQuick::Column::forceLayout()
+    \since 5.9
+
+    Column typically positions its children once per frame. This means that
+    inside script blocks it is possible for the underlying children to have changed,
+    but the Column to have not yet been updated accordingly.
+
+    This method forces the Column to immediately respond to any outstanding
+    changes in its children.
+
+    \b Note: methods in general should only be called after the Component has completed.
+*/
+/*!
+    \qmlsignal QtQuick::Column::positioningComplete()
+    \since 5.9
+
+    This signal is emitted when positioning has been completed.
+
+    The corresponding handler is \c onPositioningComplete.
+*/
+
 QQuickColumn::QQuickColumn(QQuickItem *parent)
 : QQuickBasePositioner(Vertical, parent)
 {
@@ -1076,6 +1105,27 @@ void QQuickColumn::reportConflictingAnchors()
   items. The default spacing is 0.
 
   \sa Grid::spacing
+*/
+/*!
+    \qmlmethod QtQuick::Row::forceLayout()
+    \since 5.9
+
+    Row typically positions its children once per frame. This means that
+    inside script blocks it is possible for the underlying children to have changed,
+    but the Row to have not yet been updated accordingly.
+
+    This method forces the Row to immediately respond to any outstanding
+    changes in its children.
+
+    \b Note: methods in general should only be called after the Component has completed.
+*/
+/*!
+    \qmlsignal QtQuick::Row::positioningComplete()
+    \since 5.9
+
+    This signal is emitted when positioning has been completed.
+
+    The corresponding handler is \c onPositioningComplete.
 */
 
 class QQuickRowPrivate : public QQuickBasePositionerPrivate
@@ -1354,6 +1404,27 @@ void QQuickRow::reportConflictingAnchors()
   \inlineimage qml-grid-spacing.png
 
   \sa rows, columns
+*/
+/*!
+    \qmlmethod QtQuick::Grid::forceLayout()
+    \since 5.9
+
+    Grid typically positions its children once per frame. This means that
+    inside script blocks it is possible for the underlying children to have changed,
+    but the Grid to have not yet been updated accordingly.
+
+    This method forces the Grid to immediately respond to any outstanding
+    changes in its children.
+
+    \b Note: methods in general should only be called after the Component has completed.
+*/
+/*!
+    \qmlsignal QtQuick::Grid::positioningComplete()
+    \since 5.9
+
+    This signal is emitted when positioning has been completed.
+
+    The corresponding handler is \c onPositioningComplete.
 */
 
 class QQuickGridPrivate : public QQuickBasePositionerPrivate
@@ -1919,6 +1990,28 @@ void QQuickGrid::reportConflictingAnchors()
   item, and defaults to 0.
 
   \sa Grid::spacing
+*/
+/*!
+    \qmlmethod QtQuick::Flow::forceLayout()
+    \since 5.9
+
+    Flow typically positions its children once per frame. This means that
+    inside script blocks it is possible for the underlying children to have changed,
+    but the Flow to have not yet been updated accordingly.
+
+    This method forces the Flow to immediately respond to any outstanding
+    changes in its children.
+
+
+    \b Note: methods in general should only be called after the Component has completed.
+*/
+/*!
+    \qmlsignal QtQuick::Flow::positioningComplete()
+    \since 5.9
+
+    This signal is emitted when positioning has been completed.
+
+    The corresponding handler is \c onPositioningComplete.
 */
 
 class QQuickFlowPrivate : public QQuickBasePositionerPrivate

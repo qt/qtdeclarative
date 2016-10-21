@@ -380,6 +380,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTouchPoint>(uri, 2, 9, "TouchPoint");
     qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
     qmlRegisterUncreatableType<QPointingDeviceUniqueId>(uri, 2, 9, "PointingDeviceUniqueId", QQuickTouchPoint::tr("PointingDeviceUniqueId is only available via read-only properties"));
+#if QT_CONFIG(quick_positioners)
+    qmlRegisterUncreatableType<QQuickBasePositioner, 9>(uri, 2, 9, "Positioner",
+                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
+#endif
 }
 
 static void initResources()

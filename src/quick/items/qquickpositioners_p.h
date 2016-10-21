@@ -155,6 +155,8 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    Q_REVISION(9) Q_INVOKABLE void forceLayout();
+
 protected:
     QQuickBasePositioner(QQuickBasePositionerPrivate &dd, PositionerType at, QQuickItem *parent);
     void componentComplete() Q_DECL_OVERRIDE;
@@ -172,6 +174,7 @@ Q_SIGNALS:
     Q_REVISION(6) void leftPaddingChanged();
     Q_REVISION(6) void rightPaddingChanged();
     Q_REVISION(6) void bottomPaddingChanged();
+    Q_REVISION(9) void positioningComplete();
 
 protected Q_SLOTS:
     void prePositioning();
