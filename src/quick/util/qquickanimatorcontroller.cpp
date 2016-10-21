@@ -75,8 +75,10 @@ void QQuickAnimatorController::windowNodesDestroyed()
 {
     m_nodesAreInvalid = true;
 
-    for (const QSharedPointer<QAbstractAnimationJob> &toStop : qAsConst(m_rootsPendingStop))
+    for (const QSharedPointer<QAbstractAnimationJob> &toStop : qAsConst(m_rootsPendingStop)) {
+        qquickanimator_invalidate_jobs(toStop.data());
         toStop->stop();
+    }
     m_rootsPendingStop.clear();
 
     // Clear animation roots and iterate over a temporary to avoid that job->stop()
