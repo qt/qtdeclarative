@@ -55,7 +55,7 @@ T.Dialog {
 
     padding: 24
     topPadding: 18
-    bottomPadding: 0
+    bottomPadding: 18
 
     background: Rectangle {
         color: control.Universal.chromeMediumLowColor
