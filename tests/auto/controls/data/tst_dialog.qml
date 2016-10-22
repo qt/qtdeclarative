@@ -62,16 +62,6 @@ TestCase {
     }
 
     Component {
-        id: headerBox
-        DialogButtonBox { position: DialogButtonBox.Header }
-    }
-
-    Component {
-        id: footerBox
-        DialogButtonBox { position: DialogButtonBox.Footer }
-    }
-
-    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -80,8 +70,7 @@ TestCase {
         var control = dialog.createObject(testCase)
         verify(control)
         verify(!control.header)
-        verify(!control.footer)
-        verify(control.buttonBox)
+        verify(control.footer)
         compare(control.standardButtons, 0)
         control.destroy()
     }
@@ -122,22 +111,18 @@ TestCase {
 
     function test_buttonBox_data() {
         return [
-            { tag: "default header", property: "header", buttonBox: headerBox },
-            { tag: "default footer", property: "footer", buttonBox: footerBox },
-            { tag: "custom header", property: "header", position: DialogButtonBox.Header },
-            { tag: "custom footer", property: "footer", position: DialogButtonBox.Footer }
+            { tag: "default" },
+            { tag: "custom", custom: true }
         ]
     }
 
     function test_buttonBox(data) {
         var control = dialog.createObject(testCase)
 
-        if (data.buttonBox)
-            control.buttonBox = data.buttonBox
-        else
-            control[data.property] = buttonBox.createObject(testCase, {position: data.position})
+        if (data.custom)
+            control.footer = buttonBox.createObject(testCase)
         control.standardButtons = Dialog.Ok | Dialog.Cancel
-        var box = control[data.property]
+        var box = control.footer
         verify(box)
         compare(box.standardButtons, Dialog.Ok | Dialog.Cancel)
 
@@ -188,30 +173,6 @@ TestCase {
 
         control.standardButtons = 0
         compare(box.count, 0)
-
-        control.destroy()
-    }
-
-    function test_warnings() {
-        var control = dialog.createObject(testCase)
-        verify(control)
-
-        var testComponent = Qt.createComponent("TestItem.qml")
-        verify(testComponent)
-
-        control.buttonBox = headerBox
-        control.header = testComponent.createObject(testCase)
-        ignoreWarning(Qt.resolvedUrl("tst_dialog.qml") + ":56:9: QML Dialog: Custom header detected. Cannot assign buttonBox as a header. No standard buttons will appear in the header.")
-        control.standardButtons = Dialog.Apply
-
-        control.buttonBox = footerBox
-        control.footer = testComponent.createObject(testCase)
-        ignoreWarning(Qt.resolvedUrl("tst_dialog.qml") + ":56:9: QML Dialog: Custom footer detected. Cannot assign buttonBox as a footer. No standard buttons will appear in the footer.")
-        control.standardButtons = Dialog.Cancel
-
-        control.buttonBox = testComponent
-        ignoreWarning(Qt.resolvedUrl("tst_dialog.qml") + ":56:9: QML Dialog: buttonBox must be an instance of DialogButtonBox")
-        control.standardButtons = Dialog.Ok
 
         control.destroy()
     }

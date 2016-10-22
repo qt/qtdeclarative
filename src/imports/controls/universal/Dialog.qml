@@ -63,7 +63,7 @@ T.Dialog {
         border.width: 1 // FlyoutBorderThemeThickness
     }
 
-    buttonBox: DialogButtonBox {
-        position: DialogButtonBox.Footer
+    footer: DialogButtonBox {
+        visible: count > 0
     }
 }

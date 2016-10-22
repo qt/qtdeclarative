@@ -59,7 +59,7 @@ T.Dialog {
         border.color: Default.frameDarkColor
     }
 
-    buttonBox: DialogButtonBox {
-        position: DialogButtonBox.Footer
+    footer: DialogButtonBox {
+        visible: count > 0
     }
 }
