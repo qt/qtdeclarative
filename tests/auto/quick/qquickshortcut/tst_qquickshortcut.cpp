@@ -45,6 +45,8 @@ private slots:
     void context();
     void matcher_data();
     void matcher();
+    void multiple_data();
+    void multiple();
 };
 
 Q_DECLARE_METATYPE(Qt::Key)
@@ -406,6 +408,49 @@ void tst_QQuickShortcut::matcher()
     QCOMPARE(window->property("activatedShortcut").toString(), activatedShortcut);
 
     qt_quick_set_shortcut_context_matcher(defaultMatcher);
+}
+
+void tst_QQuickShortcut::multiple_data()
+{
+    QTest::addColumn<QStringList>("sequences");
+    QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<Qt::KeyboardModifiers>("modifiers");
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<bool>("activated");
+
+    // first
+    QTest::newRow("Ctrl+X,(Shift+Del)") << (QStringList() << "Ctrl+X" << "Shift+Del") << Qt::Key_X << Qt::KeyboardModifiers(Qt::ControlModifier) << true << true;
+    // second
+    QTest::newRow("(Ctrl+X),Shift+Del") << (QStringList() << "Ctrl+X" << "Shift+Del") << Qt::Key_Delete << Qt::KeyboardModifiers(Qt::ShiftModifier) << true << true;
+    // disabled
+    QTest::newRow("(Ctrl+X,Shift+Del)") << (QStringList() << "Ctrl+X" << "Shift+Del") << Qt::Key_X << Qt::KeyboardModifiers(Qt::ControlModifier) << false << false;
+}
+
+void tst_QQuickShortcut::multiple()
+{
+    QFETCH(QStringList, sequences);
+    QFETCH(Qt::Key, key);
+    QFETCH(Qt::KeyboardModifiers, modifiers);
+    QFETCH(bool, enabled);
+    QFETCH(bool, activated);
+
+    QQmlApplicationEngine engine;
+
+    engine.load(testFileUrl("multiple.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QObject *shortcut = window->property("shortcut").value<QObject *>();
+    QVERIFY(shortcut);
+
+    shortcut->setProperty("enabled", enabled);
+    shortcut->setProperty("sequences", sequences);
+
+    QTest::keyPress(window, key, modifiers);
+
+    QCOMPARE(window->property("activated").toBool(), activated);
 }
 
 QTEST_MAIN(tst_QQuickShortcut)

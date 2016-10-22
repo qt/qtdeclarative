@@ -123,4 +123,6 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickShortcut>("QtQuick", 2, 5, "Shortcut");
 
     qmlRegisterType<QQuickShortcut,1>("QtQuick", 2, 6, "Shortcut");
+
+    qmlRegisterType<QQuickShortcut,9>("QtQuick", 2, 9, "Shortcut");
 }
