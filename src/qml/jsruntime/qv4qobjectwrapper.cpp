@@ -195,12 +195,6 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
     }
 }
 
-void Heap::QObjectWrapper::init(QObject *object)
-{
-    Object::init();
-    qObj.init(object);
-}
-
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 {
     engine->functionPrototype()->defineDefaultProperty(QStringLiteral("connect"), method_connect);

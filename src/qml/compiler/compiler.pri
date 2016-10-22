@@ -49,4 +49,5 @@ qtConfig(qml-interpreter) {
 }
 
 
+qtConfig(private_tests): LIBS_PRIVATE += $$QMAKE_LIBS_DYNLOAD
 }

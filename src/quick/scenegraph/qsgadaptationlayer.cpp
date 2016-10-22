@@ -122,7 +122,7 @@ void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
     int count = glyphs.count();
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs.at(i);
-        if ((int) glyphIndex >= glyphCount()) {
+        if ((int) glyphIndex >= glyphCount() && glyphCount() > 0) {
             qWarning("Warning: distance-field glyph is not available with index %d", glyphIndex);
             continue;
         }

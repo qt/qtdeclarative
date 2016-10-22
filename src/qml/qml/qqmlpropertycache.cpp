@@ -1429,6 +1429,12 @@ QByteArray QQmlPropertyCache::checksum(bool *ok)
         return _checksum;
     }
 
+    // Generate a checksum on the meta-object data only on C++ types.
+    if (!_metaObject || _ownMetaObject) {
+        *ok = false;
+        return _checksum;
+    }
+
     QCryptographicHash hash(QCryptographicHash::Md5);
 
     if (_parent) {

@@ -766,7 +766,7 @@ void QQuickTextInput::setMaxLength(int ml)
     (but without actually giving it active focus).
 
     It should not be set directly on the item, like in the below QML,
-    as the specified value will be overridden an lost on focus changes.
+    as the specified value will be overridden and lost on focus changes.
 
     \code
     TextInput {

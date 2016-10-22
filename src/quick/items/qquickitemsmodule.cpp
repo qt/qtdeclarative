@@ -349,6 +349,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickShaderEffectSource, 1>(uri, 2, 6, "ShaderEffectSource");
 #endif
 
+    qmlRegisterType<QQuickItem, 7>(uri, 2, 7, "Item");
 #if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
 #endif

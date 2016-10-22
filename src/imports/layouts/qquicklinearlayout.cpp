@@ -56,15 +56,7 @@
 
     Items in a RowLayout support these attached properties:
     \list
-        \li \l{Layout::minimumWidth}{Layout.minimumWidth}
-        \li \l{Layout::minimumHeight}{Layout.minimumHeight}
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth}
-        \li \l{Layout::preferredHeight}{Layout.preferredHeight}
-        \li \l{Layout::maximumWidth}{Layout.maximumWidth}
-        \li \l{Layout::maximumHeight}{Layout.maximumHeight}
-        \li \l{Layout::fillWidth}{Layout.fillWidth}
-        \li \l{Layout::fillHeight}{Layout.fillHeight}
-        \li \l{Layout::alignment}{Layout.alignment}
+    \input layout.qdocinc attached-properties
     \endlist
 
     \image rowlayout.png
@@ -118,15 +110,7 @@
 
     Items in a ColumnLayout support these attached properties:
     \list
-        \li \l{Layout::minimumWidth}{Layout.minimumWidth}
-        \li \l{Layout::minimumHeight}{Layout.minimumHeight}
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth}
-        \li \l{Layout::preferredHeight}{Layout.preferredHeight}
-        \li \l{Layout::maximumWidth}{Layout.maximumWidth}
-        \li \l{Layout::maximumHeight}{Layout.maximumHeight}
-        \li \l{Layout::fillWidth}{Layout.fillWidth}
-        \li \l{Layout::fillHeight}{Layout.fillHeight}
-        \li \l{Layout::alignment}{Layout.alignment}
+    \input layout.qdocinc attached-properties
     \endlist
 
     \image columnlayout.png
@@ -220,15 +204,7 @@
         \li \l{Layout::column}{Layout.column}
         \li \l{Layout::rowSpan}{Layout.rowSpan}
         \li \l{Layout::columnSpan}{Layout.columnSpan}
-        \li \l{Layout::minimumWidth}{Layout.minimumWidth}
-        \li \l{Layout::minimumHeight}{Layout.minimumHeight}
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth}
-        \li \l{Layout::preferredHeight}{Layout.preferredHeight}
-        \li \l{Layout::maximumWidth}{Layout.maximumWidth}
-        \li \l{Layout::maximumHeight}{Layout.maximumHeight}
-        \li \l{Layout::fillWidth}{Layout.fillWidth}
-        \li \l{Layout::fillHeight}{Layout.fillHeight}
-        \li \l{Layout::alignment}{Layout.alignment}
+        \input layout.qdocinc attached-properties
     \endlist
 
     Read more about attached properties \l{QML Object Attributes}{here}.

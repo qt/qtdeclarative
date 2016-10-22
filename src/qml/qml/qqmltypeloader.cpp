@@ -2232,6 +2232,7 @@ void QQmlTypeData::done()
 
     // verify if any dependencies changed if we're using a cache
     if (m_document.isNull() && !m_compiledData->verifyChecksum(engine, resolvedTypeCache)) {
+        qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->url().toString();
         if (!loadFromSource())
             return;
         m_backupSourceCode.clear();
