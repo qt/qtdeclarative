@@ -125,6 +125,7 @@ private slots:
     void jsIncDecNonObjectProperty();
     void JSONparse();
     void arraySort();
+    void lookupOnDisappearingProperty();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -2962,6 +2963,22 @@ void tst_QJSEngine::arraySort()
                  "    });"
                  "}"
                  "crashMe();");
+}
+
+void tst_QJSEngine::lookupOnDisappearingProperty()
+{
+    QJSEngine eng;
+    QJSValue func = eng.evaluate("(function(){\"use strict\"; return eval(\"function(obj) { return obj.someProperty; }\")})()");
+    QVERIFY(func.isCallable());
+
+    QJSValue o = eng.newObject();
+    o.setProperty(QStringLiteral("someProperty"), 42);
+
+    QCOMPARE(func.call(QJSValueList()<< o).toInt(), 42);
+
+    o = eng.newObject();
+    QVERIFY(func.call(QJSValueList()<< o).isUndefined());
+    QVERIFY(func.call(QJSValueList()<< o).isUndefined());
 }
 
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }
