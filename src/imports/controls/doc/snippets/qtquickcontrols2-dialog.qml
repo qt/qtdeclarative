@@ -34,6 +34,7 @@ Item {
 //! [1]
 Dialog {
     id: dialog
+    title: "Title"
     standardButtons: Dialog.Ok | Dialog.Cancel
 
     onAccepted: console.log("Ok clicked")

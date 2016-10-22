@@ -56,7 +56,10 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-page-wireframe.png
 
-    \section1 Dialog Buttons
+    \section1 Dialog Title and Buttons
+
+    Dialog's \l title is displayed by a style-specific title bar that is assigned
+    as a dialog \l header by default.
 
     Dialog's standard buttons are managed by a \l DialogButtonBox that is assigned
     as a dialog \l footer by default. The dialog's \l standardButtons property is
@@ -116,6 +119,39 @@ QQuickDialog::QQuickDialog(QObject *parent) :
 {
     Q_D(QQuickDialog);
     d->layout.reset(new QQuickPageLayout(d->popupItem));
+}
+
+/*!
+    \qmlproperty string QtQuick.Controls::Dialog::title
+
+    This property holds the dialog title.
+
+    The title is displayed in the dialog header.
+
+    \code
+    Dialog {
+        title: qsTr("About")
+
+        Label {
+            text: "Lorem ipsum..."
+        }
+    }
+    \endcode
+*/
+QString QQuickDialog::title() const
+{
+    Q_D(const QQuickDialog);
+    return d->title;
+}
+
+void QQuickDialog::setTitle(const QString &title)
+{
+    Q_D(QQuickDialog);
+    if (d->title == title)
+        return;
+
+    d->title = title;
+    emit titleChanged();
 }
 
 /*!

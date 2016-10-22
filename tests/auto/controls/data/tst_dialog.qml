@@ -69,7 +69,7 @@ TestCase {
     function test_defaults() {
         var control = dialog.createObject(testCase)
         verify(control)
-        verify(!control.header)
+        verify(control.header)
         verify(control.footer)
         compare(control.standardButtons, 0)
         control.destroy()

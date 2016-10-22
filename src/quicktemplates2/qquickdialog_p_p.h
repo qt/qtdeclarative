@@ -67,6 +67,7 @@ public:
         return dialog->d_func();
     }
 
+    QString title;
     QQuickDialogButtonBox *buttonBox;
     QScopedPointer<QQuickPageLayout> layout;
     QPlatformDialogHelper::StandardButtons standardButtons;

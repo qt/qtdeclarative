@@ -55,6 +55,7 @@ T.Dialog {
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     padding: 24
+    topPadding: 20
 
     Material.elevation: 24
 
@@ -77,6 +78,23 @@ T.Dialog {
         layer.enabled: control.Material.elevation > 0
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
+        }
+    }
+
+    header: Label {
+        text: control.title
+        visible: control.title
+        elide: Label.ElideRight
+        padding: 24
+        bottomPadding: 0
+        // TODO: QPlatformTheme::TitleBarFont
+        font.bold: true
+        font.pixelSize: 16
+        background: PaddedRectangle {
+            radius: 2
+            color: control.Material.dialogColor
+            bottomPadding: -2
+            clip: true
         }
     }
 

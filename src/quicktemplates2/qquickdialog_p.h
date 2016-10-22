@@ -58,6 +58,7 @@ class QQuickDialogPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
 {
     Q_OBJECT
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
@@ -65,6 +66,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
 
 public:
     explicit QQuickDialog(QObject *parent = nullptr);
+
+    QString title() const;
+    void setTitle(const QString &title);
 
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);
@@ -83,6 +87,7 @@ Q_SIGNALS:
     void accepted();
     void rejected();
 
+    void titleChanged();
     void headerChanged();
     void footerChanged();
     void standardButtonsChanged();

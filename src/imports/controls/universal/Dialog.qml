@@ -63,6 +63,23 @@ T.Dialog {
         border.width: 1 // FlyoutBorderThemeThickness
     }
 
+    header: Label {
+        text: control.title
+        visible: control.title
+        elide: Label.ElideRight
+        topPadding: 18
+        leftPadding: 24
+        rightPadding: 24
+        // TODO: QPlatformTheme::TitleBarFont
+        font.pixelSize: 20
+        background: Rectangle {
+            x: 1; y: 1 // // FlyoutBorderThemeThickness
+            color: control.Universal.chromeMediumLowColor
+            width: parent.width - 2
+            height: parent.height - 1
+        }
+    }
+
     footer: DialogButtonBox {
         visible: count > 0
     }

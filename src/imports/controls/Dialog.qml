@@ -59,6 +59,19 @@ T.Dialog {
         border.color: Default.frameDarkColor
     }
 
+    header: Label {
+        text: control.title
+        visible: control.title
+        elide: Label.ElideRight
+        font.bold: true
+        padding: 12
+        background: Rectangle {
+            x: 1; y: 1
+            width: parent.width - 2
+            height: parent.height - 1
+        }
+    }
+
     footer: DialogButtonBox {
         visible: count > 0
     }
