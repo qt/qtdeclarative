@@ -43,11 +43,11 @@ T.Dialog {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            header ? header.implicitWidth : 0,
-                            footer ? footer.implicitWidth : 0,
+                            header && header.visible ? header.implicitWidth : 0,
+                            footer && footer.visible ? footer.implicitWidth : 0,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             (header ? header.implicitHeight : 0) + (footer ? footer.implicitHeight : 0))
+                             (header && header.visible ? header.implicitHeight : 0) + (footer && footer.visible ? footer.implicitHeight : 0))
                              + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0)
 
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
