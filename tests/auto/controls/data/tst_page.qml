@@ -56,6 +56,40 @@ TestCase {
     }
 
     Component {
+        id: oneChildPage
+        Page {
+            Item {
+                implicitWidth: 100
+                implicitHeight: 30
+            }
+        }
+    }
+
+    Component {
+        id: twoChildrenPage
+        Page {
+            Item {
+                implicitWidth: 100
+                implicitHeight: 30
+            }
+            Item {
+                implicitWidth: 200
+                implicitHeight: 60
+            }
+        }
+    }
+
+    Component {
+        id: contentPage
+        Page {
+            contentItem: Item {
+                implicitWidth: 100
+                implicitHeight: 30
+            }
+        }
+    }
+
+    Component {
         id: toolBar
         ToolBar { }
     }
@@ -67,6 +101,53 @@ TestCase {
         verify(control.contentItem)
         compare(control.header, null)
         compare(control.footer, null)
+
+        control.destroy()
+    }
+
+    function test_empty() {
+        var control = page.createObject(testCase)
+        verify(control)
+
+        verify(control.contentItem)
+        compare(control.contentWidth, 0)
+        compare(control.contentHeight, 0)
+
+        control.destroy()
+    }
+
+    function test_oneChild() {
+        var control = oneChildPage.createObject(testCase)
+        verify(control)
+
+        compare(control.contentWidth, 100)
+        compare(control.contentHeight, 30)
+        compare(control.implicitWidth, 100 + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, 30 + control.topPadding + control.bottomPadding)
+
+        control.destroy()
+    }
+
+    function test_twoChildren() {
+        var control = twoChildrenPage.createObject(testCase)
+        verify(control)
+
+        compare(control.contentWidth, 0)
+        compare(control.contentHeight, 0)
+        compare(control.implicitWidth, control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.topPadding + control.bottomPadding)
+
+        control.destroy()
+    }
+
+    function test_contentItem() {
+        var control = contentPage.createObject(testCase)
+        verify(control)
+
+        compare(control.contentWidth, 100)
+        compare(control.contentHeight, 30)
+        compare(control.implicitWidth, 100 + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, 30 + control.topPadding + control.bottomPadding)
 
         control.destroy()
     }
@@ -123,6 +204,25 @@ TestCase {
         compare(control.contentItem.y, control.topPadding)
         compare(control.contentItem.width, control.availableWidth)
         compare(control.contentItem.height, control.availableHeight)
+
+        control.contentItem.implicitWidth = 50
+        control.contentItem.implicitHeight = 60
+        compare(control.implicitWidth, control.contentItem.implicitWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding)
+
+        control.header.visible = true
+        compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding
+                                      + control.header.implicitHeight + control.spacing)
+
+        control.footer.visible = true
+        compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding
+                                      + control.header.implicitHeight + control.footer.implicitHeight + 2 * control.spacing)
+
+        control.header.implicitWidth = 150
+        compare(control.implicitWidth, control.header.implicitWidth + control.leftPadding + control.rightPadding)
+
+        control.footer.implicitWidth = 160
+        compare(control.implicitWidth, control.footer.implicitWidth + control.leftPadding + control.rightPadding)
 
         control.destroy()
     }
