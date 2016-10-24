@@ -130,54 +130,21 @@
     of supported environment variables.
 
     \section2 Configuration file
-    \target qtquickcontrols2-conf
 
     Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols2.conf,
     that is built into an application's resources.
 
     The configuration file can specify the preferred style (may be overridden by either
     of the methods described earlier) and certain style-specific attributes. The following
-    example specifies that the preferred style is the Material style. Furthermore, when the
-    application is run with the Material style, its theme is light and the accent and primary
-    colors are teal and blue grey, respectively. However, if the application is run with the
-    Universal style instead, the theme is dark and the accent color is red.
+    example specifies that the preferred style is the Material style.
 
     \code
     [Controls]
     Style=Material
-
-    [Universal]
-    Theme=Dark
-    Accent=Red
-
-    [Material]
-    Theme=Light
-    Accent=Teal
-    Primary=BlueGrey
     \endcode
 
-    In order to make it possible for Qt Quick Controls 2 to find the configuration file,
-    it must be built into application's resources using the \l {The Qt Resource System}.
-    Here's an example \c .qrc file:
-
-    \code
-    <!DOCTYPE RCC><RCC version="1.0">
-    <qresource prefix="/">
-        <file>qtquickcontrols2.conf</file>
-    </qresource>
-    </RCC>
-    \endcode
-
-    \note Qt Quick Controls 2 uses a file selector to load the configuration file. It
-    is possible to provide a different configuration file for different platforms and
-    locales. See \l QFileSelector documentation for more details.
-
-    Finally, the \c .qrc file must be listed in the application's \c .pro file so that
-    the build system knows about it. For example:
-
-    \code
-    RESOURCES = application.qrc
-    \endcode
+    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    configuration file.
 
     \section1 Related Information
     \list
@@ -186,6 +153,7 @@
     \li \l {Universal Style}
     \li \l{Using File Selectors with Qt Quick Controls 2}
     \li \l {Deploying Qt Quick Controls 2 Applications}
+    \li \l {Qt Quick Controls 2 Configuration File}
     \li \l {Supported Environment Variables in Qt Quick Controls 2}
     \endlist
 */

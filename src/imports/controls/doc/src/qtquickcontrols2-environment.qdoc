@@ -44,7 +44,7 @@
                 or the path to a custom style such as \c ":/mystyle".
         \row
             \li \c QT_QUICK_CONTROLS_CONF
-            \li Specifies the location of the Qt Quick Controls 2 configuration file.
+            \li Specifies the location of the \l {Qt Quick Controls 2 configuration file}.
                 By default, the configuration file is loaded from the application's
                 resources in \c ":/qtquickcontrols2.conf".
      \endtable
@@ -61,5 +61,6 @@
 
     \list
       \li \l{Styling Qt Quick Controls 2}
+      \li \l{Qt Quick Controls 2 Configuration File}
     \endlist
 */

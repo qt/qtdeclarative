@@ -112,9 +112,15 @@
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
-    specify them via environment variables or in a \l {qtquickcontrols2-conf}
-    {configuration file}. Attributes specified in QML take precedence over all
-    other methods.
+    specify them via environment variables or in a configuration file. Attributes
+    specified in QML take precedence over all other methods.
+
+    \section3 Configuration File
+
+    \include qquickmaterialstyle.qdocinc conf
+
+    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    configuration file.
 
     \section3 Environment Variables
 
