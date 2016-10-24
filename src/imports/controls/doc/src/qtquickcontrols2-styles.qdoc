@@ -83,27 +83,14 @@
 
     \section2 Using QQuickStyle in C++
 
-    \l QQuickStyle provides API for configuring a specific style. The following
+    \l QQuickStyle provides C++ API for configuring a specific style. The following
     example runs a Qt Quick Controls 2 application with the Material style:
 
     \code
-    #include <QGuiApplication>
-    #include <QQmlApplicationEngine>
-    #include <QQuickStyle>
-
-    int main(int argc, char *argv[])
-    {
-        QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        QGuiApplication app(argc, argv);
-
-        QQuickStyle::setStyle("Material");
-
-        QQmlApplicationEngine engine;
-        engine.load(QUrl("qrc:/main.qml"));
-
-        return app.exec();
-    }
+    QQuickStyle::setStyle("Material");
     \endcode
+
+    See the detailed description of \l QQuickStyle for more details.
 
     \section2 Command line argument
 
