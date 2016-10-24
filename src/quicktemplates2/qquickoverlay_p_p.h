@@ -72,6 +72,7 @@ public:
 
     void addPopup(QQuickPopup *popup);
     void removePopup(QQuickPopup *popup);
+    void setMouseGrabberPopup(QQuickPopup *popup);
 
     void popupAboutToShow();
     void popupAboutToHide();
