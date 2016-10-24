@@ -349,6 +349,13 @@ void QQuickPage::paddingChange(const QMarginsF &newPadding, const QMarginsF &old
     d->layout->update();
 }
 
+void QQuickPage::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_D(QQuickPage);
+    QQuickControl::spacingChange(newSpacing, oldSpacing);
+    d->layout->update();
+}
+
 #ifndef QT_NO_ACCESSIBILITY
 QAccessible::Role QQuickPage::accessibleRole() const
 {

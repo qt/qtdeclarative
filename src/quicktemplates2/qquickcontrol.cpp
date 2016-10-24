@@ -766,10 +766,13 @@ qreal QQuickControl::spacing() const
 void QQuickControl::setSpacing(qreal spacing)
 {
     Q_D(QQuickControl);
-    if (!qFuzzyCompare(d->spacing, spacing)) {
-        d->spacing = spacing;
-        emit spacingChanged();
-    }
+    if (qFuzzyCompare(d->spacing, spacing))
+        return;
+
+    qreal oldSpacing = d->spacing;
+    d->spacing = spacing;
+    emit spacingChanged();
+    spacingChange(spacing, oldSpacing);
 }
 
 void QQuickControl::resetSpacing()
@@ -1289,6 +1292,12 @@ void QQuickControl::hoverChange()
 void QQuickControl::mirrorChange()
 {
     emit mirroredChanged();
+}
+
+void QQuickControl::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_UNUSED(newSpacing);
+    Q_UNUSED(oldSpacing);
 }
 
 void QQuickControl::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)

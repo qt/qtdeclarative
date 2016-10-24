@@ -100,6 +100,7 @@ protected:
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
+    void spacingChange(qreal newSpacing, qreal oldSpacing) override;
 
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;

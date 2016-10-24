@@ -142,17 +142,19 @@ void QQuickPageLayout::update()
 
     const qreal hh = m_header && m_header->isVisible() ? m_header->height() : 0;
     const qreal fh = m_footer && m_footer->isVisible() ? m_footer->height() : 0;
+    const qreal hsp = hh > 0 ? m_control->spacing() : 0;
+    const qreal fsp = fh > 0 ? m_control->spacing() : 0;
 
-    content->setY(hh + m_control->topPadding());
+    content->setY(m_control->topPadding() + hh + hsp);
     content->setX(m_control->leftPadding());
     content->setWidth(m_control->availableWidth());
-    content->setHeight(m_control->availableHeight() - hh - fh);
+    content->setHeight(m_control->availableHeight() - hh - fh - hsp - fsp);
 
     if (m_header)
         m_header->setWidth(m_control->width());
 
     if (m_footer) {
-        m_footer->setY(m_control->height() - fh);
+        m_footer->setY(m_control->height() - m_footer->height());
         m_footer->setWidth(m_control->width());
     }
 }
