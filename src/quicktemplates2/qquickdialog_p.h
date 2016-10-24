@@ -95,6 +95,7 @@ Q_SIGNALS:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
+    void spacingChange(qreal newSpacing, qreal oldSpacing) override;
 
 private:
     Q_DISABLE_COPY(QQuickDialog)

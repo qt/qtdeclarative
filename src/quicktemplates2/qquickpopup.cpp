@@ -519,6 +519,13 @@ void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF
     d->popup->paddingChange(newPadding, oldPadding);
 }
 
+void QQuickPopupItem::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_D(QQuickPopupItem);
+    QQuickControl::spacingChange(newSpacing, oldSpacing);
+    d->popup->spacingChange(newSpacing, oldSpacing);
+}
+
 QFont QQuickPopupItem::defaultFont() const
 {
     Q_D(const QQuickPopupItem);
@@ -1126,6 +1133,35 @@ qreal QQuickPopup::availableHeight() const
 {
     Q_D(const QQuickPopup);
     return d->popupItem->availableHeight();
+}
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlproperty real QtQuick.Controls::Popup::spacing
+
+    This property holds the spacing.
+
+    Spacing is useful for popups that have multiple or repetitive building
+    blocks. For example, some styles use spacing to determine the distance
+    between the header, content, and footer of \l Dialog. Spacing is not
+    enforced by Popup, so each style may interpret it differently, and some
+    may ignore it altogether.
+*/
+qreal QQuickPopup::spacing() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->spacing();
+}
+
+void QQuickPopup::setSpacing(qreal spacing)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setSpacing(spacing);
+}
+
+void QQuickPopup::resetSpacing()
+{
+    setSpacing(0);
 }
 
 /*!
@@ -2150,6 +2186,13 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
         emit availableWidthChanged();
     if (tp || bp)
         emit availableHeightChanged();
+}
+
+void QQuickPopup::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_UNUSED(newSpacing);
+    Q_UNUSED(oldSpacing);
+    emit spacingChanged();
 }
 
 QFont QQuickPopup::defaultFont() const

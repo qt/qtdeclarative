@@ -105,6 +105,7 @@ protected:
     void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
+    void spacingChange(qreal newSpacing, qreal oldSpacing) override;
 
     QFont defaultFont() const override;
 

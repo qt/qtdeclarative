@@ -336,4 +336,11 @@ void QQuickDialog::paddingChange(const QMarginsF &newPadding, const QMarginsF &o
     d->layout->update();
 }
 
+void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_D(QQuickDialog);
+    QQuickPopup::spacingChange(newSpacing, oldSpacing);
+    d->layout->update();
+}
+
 QT_END_NAMESPACE
