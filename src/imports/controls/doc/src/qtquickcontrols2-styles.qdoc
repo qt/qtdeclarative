@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -126,6 +126,9 @@
     QT_QUICK_CONTROLS_STYLE=universal ./app
     \endcode
 
+    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full list
+    of supported environment variables.
+
     \section2 Configuration file
     \target qtquickcontrols2-conf
 
@@ -183,5 +186,6 @@
     \li \l {Universal Style}
     \li \l{Using File Selectors with Qt Quick Controls 2}
     \li \l {Deploying Qt Quick Controls 2 Applications}
+    \li \l {Supported Environment Variables in Qt Quick Controls 2}
     \endlist
 */

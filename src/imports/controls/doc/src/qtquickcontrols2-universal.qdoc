@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -117,27 +117,10 @@
 
     \section3 Environment Variables
 
-    \table
-        \header
-            \li Variable
-            \li Description
-        \row
-            \li \c QT_QUICK_CONTROLS_UNIVERSAL_THEME
-            \li The value can be one of the available \l {universal-theme-attached-prop}{themes},
-                for example \c "Dark".
-        \row
-            \li \c QT_QUICK_CONTROLS_UNIVERSAL_ACCENT
-            \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
-                to use one of the \l {pre-defined Universal colors}, for example \c "Violet".
-        \row
-            \li \c QT_QUICK_CONTROLS_UNIVERSAL_FOREGROUND
-            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
-                \l {pre-defined Universal colors}.
-        \row
-            \li \c QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND
-            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
-                \l {pre-defined Universal colors}.
-    \endtable
+    \include qquickuniversalstyle.qdocinc env
+
+    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full
+    list of supported environment variables.
 
     \section2 Dependency
 

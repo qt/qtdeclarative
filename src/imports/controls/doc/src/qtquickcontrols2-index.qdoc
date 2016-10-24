@@ -69,6 +69,7 @@
       \li \l{Using File Selectors with Qt Quick Controls 2}
       \li \l{Differences between Qt Quick Controls}
       \li \l{Deploying Qt Quick Controls 2 Applications}
+      \li \l{Supported Environment Variables in Qt Quick Controls 2}
     \endlist
 
     \section1 Reference
