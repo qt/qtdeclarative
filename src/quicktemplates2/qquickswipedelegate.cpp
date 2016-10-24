@@ -96,11 +96,6 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-swipedelegate-behind.gif
 
-    The following snippet shows SwipeDelegate used in a \l ListView to remove
-    items from the list:
-
-    \snippet qtquickcontrols2-swipedelegate.qml file
-
     \sa {Customizing SwipeDelegate}, {Delegate Controls}
 */
 
