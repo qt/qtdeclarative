@@ -102,7 +102,7 @@ void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
 
 void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
-    if (isAncestor(child))
+    if (child->isAncestorOf(m_parentItem))
         removeAncestorListeners(item);
 }
 
@@ -128,21 +128,6 @@ void QQuickPopupPositioner::addAncestorListeners(QQuickItem *item)
         QQuickItemPrivate::get(p)->addItemChangeListener(this, AncestorChangeTypes);
         p = p->parentItem();
     }
-}
-
-// TODO: use QQuickItem::isAncestorOf() in dev/5.7
-bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
-{
-    if (!m_parentItem)
-        return false;
-
-    QQuickItem *parent = m_parentItem;
-    while (parent) {
-        if (parent == item)
-            return true;
-        parent = parent->parentItem();
-    }
-    return false;
 }
 
 QT_END_NAMESPACE

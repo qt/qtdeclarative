@@ -74,8 +74,6 @@ private:
     void removeAncestorListeners(QQuickItem *item);
     void addAncestorListeners(QQuickItem *item);
 
-    bool isAncestor(QQuickItem *item) const;
-
     QQuickItem *m_parentItem;
     QQuickPopupPrivate *m_popup;
 };
