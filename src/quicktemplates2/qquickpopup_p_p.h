@@ -50,6 +50,7 @@
 
 #include "qquickpopup_p.h"
 #include "qquickcontrol_p.h"
+#include "qquickpopuppositioner_p_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
@@ -116,30 +117,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickPopupItem)
 
     friend class QQuickPopup;
-};
-
-class QQuickPopupPositioner : public QQuickItemChangeListener
-{
-public:
-    explicit QQuickPopupPositioner(QQuickPopupPrivate *popup);
-    ~QQuickPopupPositioner();
-
-    QQuickItem *parentItem() const;
-    void setParentItem(QQuickItem *parent);
-
-protected:
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
-    void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
-    void itemChildRemoved(QQuickItem *, QQuickItem *child) override;
-
-private:
-    void removeAncestorListeners(QQuickItem *item);
-    void addAncestorListeners(QQuickItem *item);
-
-    bool isAncestor(QQuickItem *item) const;
-
-    QQuickItem *m_parentItem;
-    QQuickPopupPrivate *m_popup;
 };
 
 class Q_AUTOTEST_EXPORT QQuickPopupPrivate : public QObjectPrivate, public QQuickItemChangeListener

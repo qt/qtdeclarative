@@ -113,13 +113,6 @@ QT_BEGIN_NAMESPACE
     \sa opened
 */
 
-static const QQuickItemPrivate::ChangeTypes AncestorChangeTypes = QQuickItemPrivate::Geometry
-                                                                  | QQuickItemPrivate::Parent
-                                                                  | QQuickItemPrivate::Children;
-
-static const QQuickItemPrivate::ChangeTypes ItemChangeTypes = QQuickItemPrivate::Geometry
-                                                             | QQuickItemPrivate::Parent;
-
 QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , focus(false)
@@ -533,64 +526,6 @@ QAccessible::Role QQuickPopupItem::accessibleRole() const
 }
 #endif // QT_NO_ACCESSIBILITY
 
-QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
-    m_parentItem(nullptr),
-    m_popup(popup)
-{
-}
-
-QQuickPopupPositioner::~QQuickPopupPositioner()
-{
-    if (m_parentItem) {
-        QQuickItemPrivate::get(m_parentItem)->removeItemChangeListener(this, ItemChangeTypes);
-        removeAncestorListeners(m_parentItem->parentItem());
-    }
-}
-
-QQuickItem *QQuickPopupPositioner::parentItem() const
-{
-    return m_parentItem;
-}
-
-void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
-{
-    if (m_parentItem == parent)
-        return;
-
-    if (m_parentItem) {
-        QQuickItemPrivate::get(m_parentItem)->removeItemChangeListener(this, ItemChangeTypes);
-        removeAncestorListeners(m_parentItem->parentItem());
-    }
-
-    m_parentItem = parent;
-
-    if (!parent)
-        return;
-
-    QQuickItemPrivate::get(parent)->addItemChangeListener(this, ItemChangeTypes);
-    addAncestorListeners(parent->parentItem());
-
-    if (m_popup->popupItem->isVisible())
-        m_popup->reposition();
-}
-
-void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
-{
-    if (m_parentItem && m_popup->popupItem->isVisible())
-        m_popup->reposition();
-}
-
-void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
-{
-    addAncestorListeners(parent);
-}
-
-void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
-{
-    if (isAncestor(child))
-        removeAncestorListeners(item);
-}
-
 void QQuickPopupPrivate::itemDestroyed(QQuickItem *item)
 {
     Q_Q(QQuickPopup);
@@ -738,45 +673,6 @@ void QQuickPopupPrivate::resizeOverlay()
     qreal w = window ? window->width() : 0;
     qreal h = window ? window->height() : 0;
     dimmer->setSize(QSizeF(w, h));
-}
-
-void QQuickPopupPositioner::removeAncestorListeners(QQuickItem *item)
-{
-    if (item == m_parentItem)
-        return;
-
-    QQuickItem *p = item;
-    while (p) {
-        QQuickItemPrivate::get(p)->removeItemChangeListener(this, AncestorChangeTypes);
-        p = p->parentItem();
-    }
-}
-
-void QQuickPopupPositioner::addAncestorListeners(QQuickItem *item)
-{
-    if (item == m_parentItem)
-        return;
-
-    QQuickItem *p = item;
-    while (p) {
-        QQuickItemPrivate::get(p)->addItemChangeListener(this, AncestorChangeTypes);
-        p = p->parentItem();
-    }
-}
-
-// TODO: use QQuickItem::isAncestorOf() in dev/5.7
-bool QQuickPopupPositioner::isAncestor(QQuickItem *item) const
-{
-    if (!m_parentItem)
-        return false;
-
-    QQuickItem *parent = m_parentItem;
-    while (parent) {
-        if (parent == item)
-            return true;
-        parent = parent->parentItem();
-    }
-    return false;
 }
 
 QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *popup)
