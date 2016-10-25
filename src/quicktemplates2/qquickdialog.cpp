@@ -37,6 +37,7 @@
 #include "qquickdialog_p.h"
 #include "qquickdialog_p_p.h"
 #include "qquickdialogbuttonbox_p.h"
+#include "qquickpopupitem_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlcontext.h>

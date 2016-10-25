@@ -46,7 +46,7 @@
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
 #include "qquickpopup_p.h"
-#include "qquickpopup_p_p.h"
+#include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>

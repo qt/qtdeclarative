@@ -36,6 +36,7 @@
 
 #include "qquickoverlay_p.h"
 #include "qquickoverlay_p_p.h"
+#include "qquickpopupitem_p_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickdrawer_p_p.h"
 #include "qquickapplicationwindow_p.h"

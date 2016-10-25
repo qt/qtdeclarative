@@ -62,8 +62,8 @@ QT_BEGIN_NAMESPACE
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
+class QQuickPopupItem;
 class QQuickPopupPrivate;
-class QQuickPopupItemPrivate;
 
 class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
@@ -78,45 +78,6 @@ protected:
 
 private:
     QQuickPopupPrivate *popup;
-};
-
-class QQuickPopupItem : public QQuickControl
-{
-    Q_OBJECT
-
-public:
-    explicit QQuickPopupItem(QQuickPopup *popup);
-
-protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
-    void focusInEvent(QFocusEvent *event) override;
-    void focusOutEvent(QFocusEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
-    void mouseUngrabEvent() override;
-    void wheelEvent(QWheelEvent *event) override;
-
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
-    void fontChange(const QFont &newFont, const QFont &oldFont) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
-    void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
-
-    QFont defaultFont() const override;
-
-#ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const override;
-#endif
-
-private:
-    Q_DECLARE_PRIVATE(QQuickPopupItem)
-
-    friend class QQuickPopup;
 };
 
 class Q_AUTOTEST_EXPORT QQuickPopupPrivate : public QObjectPrivate, public QQuickItemChangeListener

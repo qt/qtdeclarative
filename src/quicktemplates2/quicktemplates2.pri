@@ -42,6 +42,7 @@ HEADERS += \
     $$PWD/qquickpane_p_p.h \
     $$PWD/qquickpopup_p.h \
     $$PWD/qquickpopup_p_p.h \
+    $$PWD/qquickpopupitem_p_p.h \
     $$PWD/qquickpopuppositioner_p_p.h \
     $$PWD/qquickpresshandler_p_p.h \
     $$PWD/qquickprogressbar_p.h \
@@ -101,6 +102,7 @@ SOURCES += \
     $$PWD/qquickpagelayout.cpp \
     $$PWD/qquickpane.cpp \
     $$PWD/qquickpopup.cpp \
+    $$PWD/qquickpopupitem.cpp \
     $$PWD/qquickpopuppositioner.cpp \
     $$PWD/qquickpresshandler.cpp \
     $$PWD/qquickprogressbar.cpp \

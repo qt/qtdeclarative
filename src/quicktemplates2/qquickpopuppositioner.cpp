@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickpopuppositioner_p_p.h"
+#include "qquickpopupitem_p_p.h"
 #include "qquickpopup_p_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>

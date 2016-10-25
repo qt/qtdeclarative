@@ -36,6 +36,7 @@
 
 #include "qquickdrawer_p.h"
 #include "qquickdrawer_p_p.h"
+#include "qquickpopupitem_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
