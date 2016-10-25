@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x06
+#define QV4_DATA_STRUCTURE_VERSION 0x07
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -587,7 +587,7 @@ struct Import
         ImportFile = 0x2,
         ImportScript = 0x3
     };
-    quint8 type;
+    LEUInt32 type;
 
     LEUInt32 uriIndex;
     LEUInt32 qualifierIndex;
