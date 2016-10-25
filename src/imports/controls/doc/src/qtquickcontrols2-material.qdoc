@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -79,28 +79,6 @@
 
     \image qtquickcontrols2-material-attributes.png
 
-    The following example illustrates how to create a red \e stop button with light text:
-
-    \table
-        \row
-            \li
-                \qml
-                import QtQuick 2.0
-                import QtQuick.Controls 2.1
-                import QtQuick.Controls.Material 2.1
-
-                Button {
-                    text: "Stop"
-                    highlighted: true
-
-                    Material.accent: Material.Red
-                    Material.theme: Material.Dark
-                }
-                \endqml
-            \li
-                \image qtquickcontrols2-material-button.png
-    \endtable
-
     All attributes can be specified for any window or item, and they automatically
     propagate to children in the same manner as \l {Control::font}{fonts}. In the
     following example, the window and all three radio buttons appear in the dark
@@ -134,37 +112,22 @@
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
-    specify them via environment variables or in a \l {qtquickcontrols2-conf}
-    {configuration file}. Attributes specified in QML take precedence over all
-    other methods.
+    specify them via environment variables or in a configuration file. Attributes
+    specified in QML take precedence over all other methods.
+
+    \section3 Configuration File
+
+    \include qquickmaterialstyle.qdocinc conf
+
+    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    configuration file.
 
     \section3 Environment Variables
 
-    \table
-        \header
-            \li Variable
-            \li Description
-        \row
-            \li \c QT_QUICK_CONTROLS_MATERIAL_THEME
-            \li The value can be one of the available \l {material-theme-attached-prop}{themes},
-                for example \c "Dark".
-        \row
-            \li \c QT_QUICK_CONTROLS_MATERIAL_ACCENT
-            \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
-                to use one of the \l {pre-defined Material colors}, for example \c "Teal".
-        \row
-            \li \c QT_QUICK_CONTROLS_MATERIAL_PRIMARY
-            \li The value can be any \l {colorbasictypedocs}{color}, but it is recommended
-                to use one of the \l {pre-defined Material colors}, for example \c "BlueGrey".
-        \row
-            \li \c QT_QUICK_CONTROLS_MATERIAL_FOREGROUND
-            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
-                \l {pre-defined Material colors}.
-        \row
-            \li \c QT_QUICK_CONTROLS_MATERIAL_BACKGROUND
-            \li The value can be any \l {colorbasictypedocs}{color}, or one of the
-                \l {pre-defined Material colors}.
-    \endtable
+    \include qquickmaterialstyle.qdocinc env
+
+    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full
+    list of supported environment variables.
 
     \section2 Dependency
 
@@ -263,6 +226,17 @@
 
     The default value is \c Material.Pink.
 
+    In the following example, the accent color of the highlighted button is
+    changed to \c Material.Orange:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-accent.qml 1
+            \li
+                \image qtquickcontrols2-material-accent.png
+    \endtable
+
     \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
     recommended to use one of the \l {pre-defined Material colors} that have been
     designed to work well with the rest of the Material style palette.
@@ -276,6 +250,17 @@
 
     The default value is theme-specific (light or dark).
 
+    In the following example, the background color of the button is changed to
+    \c Material.Teal:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-background.qml 1
+            \li
+                \image qtquickcontrols2-material-background.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Material.elevation} {int} {material-elevation-attached-prop}
@@ -286,6 +271,18 @@
 
     The default value is control-specific.
 
+    In the following example, the elevation of the pane is set to \c 6
+    in order to achieve the look of an
+    \l {https://material.google.com/components/cards.html}{elevated card}:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-elevation.qml 1
+            \li
+                \image qtquickcontrols2-material-elevation.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Material.foreground} {color} {material-foreground-attached-prop}
@@ -295,12 +292,25 @@
 
     The default value is theme-specific (light or dark).
 
+    In the following example, the foreground color of the button is set to \c
+    Material.Pink:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-foreground.qml 1
+            \li
+                \image qtquickcontrols2-material-foreground.png
+    \endtable
+
     \endstyleproperty
 
     \styleproperty {Material.primary} {color} {material-primary-attached-prop}
     \target material-primary-attached-prop
     This attached property holds the primary color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
+
+    The primary color is used as the background color of ToolBar by default.
 
     The default value is \c Material.Indigo.
 
@@ -324,6 +334,17 @@
     on the system theme colors. However, when reading the value of the theme
     property, the value is never \c System, but the actual theme.
 
+    In the following example, the theme for both the pane and the button is set
+    to \c Material.Dark:
+
+    \table
+        \row
+            \li
+                \snippet qtquickcontrols2-material-theme.qml 1
+            \li
+                \image qtquickcontrols2-material-theme.png
+    \endtable
+
     \endstyleproperty
 
     \section1 Attached Method Documentation
@@ -336,9 +357,6 @@
     defaults to \c Material.Shade500.
 
     \qml
-    import QtQuick 2.0
-    import QtQuick.Controls.Material 2.1
-
     Rectangle {
         color: Material.color(Material.Red)
     }

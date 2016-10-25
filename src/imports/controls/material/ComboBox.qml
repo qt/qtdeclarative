@@ -52,7 +52,10 @@ T.ComboBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 6
-    padding: 16
+    // external vertical padding is 6 (to increase touch area)
+    padding: 12
+    leftPadding: padding - 4
+    rightPadding: padding - 4
 
     Material.elevation: flat ? control.pressed || control.hovered ? 2 : 0
                              : control.pressed ? 8 : 2
@@ -89,6 +92,9 @@ T.ComboBox {
         implicitWidth: 120
         implicitHeight: 48
 
+        // external vertical padding is 6 (to increase touch area)
+        y: 6
+        height: parent.height - 12
         radius: control.flat ? 0 : 2
         color: control.Material.dialogColor
 
