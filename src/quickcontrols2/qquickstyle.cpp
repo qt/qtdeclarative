@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QQuickStyle
-    \brief The QQQuickStyle class allows configuring the application style.
+    \brief The QQuickStyle class allows configuring the application style.
     \inmodule QtQuickControls2
     \since 5.7
 
