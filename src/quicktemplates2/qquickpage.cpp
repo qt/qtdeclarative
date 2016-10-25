@@ -87,11 +87,21 @@ class QQuickPagePrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickPage)
 
 public:
+    QQuickPagePrivate();
+
     QQuickItem *getContentItem() override;
 
+    qreal contentWidth;
+    qreal contentHeight;
     QString title;
     QScopedPointer<QQuickPageLayout> layout;
 };
+
+QQuickPagePrivate::QQuickPagePrivate()
+    : contentWidth(0),
+      contentHeight(0)
+{
+}
 
 QQuickItem *QQuickPagePrivate::getContentItem()
 {
@@ -216,6 +226,56 @@ void QQuickPage::setFooter(QQuickItem *footer)
     if (isComponentComplete())
         d->layout->update();
     emit footerChanged();
+}
+
+/*!
+    \qmlproperty real QtQuick.Controls::Page::contentWidth
+    \since QtQuick.Controls 2.1
+
+    This property holds the content width. It is used for calculating the total
+    implicit width of the page.
+
+    \sa contentHeight
+*/
+qreal QQuickPage::contentWidth() const
+{
+    Q_D(const QQuickPage);
+    return d->contentWidth;
+}
+
+void QQuickPage::setContentWidth(qreal width)
+{
+    Q_D(QQuickPage);
+    if (qFuzzyCompare(d->contentWidth, width))
+        return;
+
+    d->contentWidth = width;
+    emit contentWidthChanged();
+}
+
+/*!
+    \qmlproperty real QtQuick.Controls::Page::contentHeight
+    \since QtQuick.Controls 2.1
+
+    This property holds the content height. It is used for calculating the total
+    implicit height of the page.
+
+    \sa contentWidth
+*/
+qreal QQuickPage::contentHeight() const
+{
+    Q_D(const QQuickPage);
+    return d->contentHeight;
+}
+
+void QQuickPage::setContentHeight(qreal height)
+{
+    Q_D(QQuickPage);
+    if (qFuzzyCompare(d->contentHeight, height))
+        return;
+
+    d->contentHeight = height;
+    emit contentHeightChanged();
 }
 
 /*!

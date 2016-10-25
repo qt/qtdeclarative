@@ -69,7 +69,7 @@ Pane {
                     }
 
                     Image {
-                        source: "qrc:/images/arrows.png"
+                        source: "../images/arrows.png"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }

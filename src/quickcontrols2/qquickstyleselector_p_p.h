@@ -54,9 +54,12 @@ class QQuickStyleSelectorPrivate
 {
 public:
     QString select(const QString &filePath) const;
+    QString trySelect(const QString &filePath, const QString &fallback = QString()) const;
 
     QUrl baseUrl;
-    QString style;
+    QString basePath;
+    QString styleName;
+    QString stylePath;
 };
 
 QT_END_NAMESPACE

@@ -311,7 +311,7 @@ TestCase {
         var control = swipeDelegateComponent.createObject(testCase);
         verify(control);
 
-        var overDragDistance = dragDistance * 1.1;
+        var overDragDistance = Math.round(dragDistance * 1.1);
 
         var completedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "completed" });
         verify(completedSpy);
@@ -456,7 +456,7 @@ TestCase {
         var control = swipeDelegateComponent.createObject(testCase);
         verify(control);
 
-        var distance = dragDistance * 1.1;
+        var distance = Math.round(dragDistance * 1.1);
         if (distance >= control.width / 2)
             skip("This test requires a startDragDistance that is less than half the width of the control");
 
@@ -881,7 +881,7 @@ TestCase {
         control.swipe.left = smallLeftComponent;
 
         // Ensure that the position is scaled to the width of the currently visible delegate.
-        var overDragDistance = dragDistance * 1.1;
+        var overDragDistance = Math.round(dragDistance * 1.1);
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
         mouseMove(control, control.width / 2 + overDragDistance, control.height / 2, Qt.LeftButton);
         verify(control.swipe.leftItem);
@@ -940,7 +940,7 @@ TestCase {
         mousePress(control, control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
-        var newX = control.swipe.leftItem.width - dragDistance * 1.1;
+        var newX = control.swipe.leftItem.width - Math.round(dragDistance * 1.1);
         mouseMove(control, newX, control.height / 2, Qt.LeftButton, Qt.LeftButton);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);

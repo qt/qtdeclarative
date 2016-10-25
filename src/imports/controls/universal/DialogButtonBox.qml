@@ -48,6 +48,8 @@ T.DialogButtonBox {
 
     spacing: 4
     padding: 24
+    topPadding: position === T.DialogButtonBox.Footer ? 6 : 24
+    bottomPadding: position === T.DialogButtonBox.Header ? 6 : 24
     alignment: count === 1 ? Qt.AlignRight : undefined
 
     delegate: Button {

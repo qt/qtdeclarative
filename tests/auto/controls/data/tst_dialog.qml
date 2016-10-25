@@ -215,4 +215,83 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_layout() {
+        var control = dialog.createObject(testCase, {width: 100, height: 100})
+        verify(control)
+
+        control.open()
+        waitForRendering(control.contentItem)
+        verify(control.visible)
+
+        compare(control.width, 100)
+        compare(control.height, 100)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight)
+
+        control.header = buttonBox.createObject(control.contentItem)
+        compare(control.header.width, control.width)
+        verify(control.header.height > 0)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight - control.header.height)
+
+        control.footer = buttonBox.createObject(control.contentItem)
+        compare(control.footer.width, control.width)
+        verify(control.footer.height > 0)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight - control.header.height - control.footer.height)
+
+        control.topPadding = 9
+        control.leftPadding = 2
+        control.rightPadding = 6
+        control.bottomPadding = 7
+
+        compare(control.header.x, 0)
+        compare(control.header.y, 0)
+        compare(control.header.width, control.width)
+        verify(control.header.height > 0)
+
+        compare(control.footer.x, 0)
+        compare(control.footer.y, control.height - control.footer.height)
+        compare(control.footer.width, control.width)
+        verify(control.footer.height > 0)
+
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding + control.header.height)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight - control.header.height - control.footer.height)
+
+        control.header.visible = false
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight - control.footer.height)
+
+        control.footer.visible = false
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight)
+
+        control.contentItem.implicitWidth = 50
+        control.contentItem.implicitHeight = 60
+        compare(control.implicitWidth, control.contentItem.implicitWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding)
+
+        control.header.visible = true
+        compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding
+                                      + control.header.implicitHeight)
+
+        control.footer.visible = true
+        compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding
+                                      + control.header.implicitHeight + control.footer.implicitHeight)
+
+        control.header.implicitWidth = 150
+        compare(control.implicitWidth, control.header.implicitWidth)
+
+        control.footer.implicitWidth = 160
+        compare(control.implicitWidth, control.footer.implicitWidth)
+
+        control.destroy()
+    }
 }

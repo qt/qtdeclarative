@@ -56,7 +56,10 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePrivate
 {
 public:
+    static QString fallbackStyle();
+    static bool isCustomStyle();
     static void init(const QUrl &baseUrl);
+    static void reset();
 };
 
 QT_END_NAMESPACE

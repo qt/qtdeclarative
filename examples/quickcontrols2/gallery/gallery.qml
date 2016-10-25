@@ -96,7 +96,7 @@ ApplicationWindow {
                     fillMode: Image.Pad
                     horizontalAlignment: Image.AlignHCenter
                     verticalAlignment: Image.AlignVCenter
-                    source: "qrc:/images/menu.png"
+                    source: "images/menu.png"
                 }
                 onClicked: optionsMenu.open()
 
@@ -190,7 +190,7 @@ ApplicationWindow {
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: -50
                 fillMode: Image.PreserveAspectFit
-                source: "qrc:/images/qt-logo.png"
+                source: "images/qt-logo.png"
             }
 
             Label {
@@ -207,7 +207,7 @@ ApplicationWindow {
 
             Image {
                 id: arrow
-                source: "qrc:/images/arrow.png"
+                source: "images/arrow.png"
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
             }

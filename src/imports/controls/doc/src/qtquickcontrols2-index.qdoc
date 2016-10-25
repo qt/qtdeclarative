@@ -70,6 +70,8 @@
       \li \l{Using File Selectors with Qt Quick Controls 2}
       \li \l{Differences between Qt Quick Controls}
       \li \l{Deploying Qt Quick Controls 2 Applications}
+      \li \l{Qt Quick Controls 2 Configuration File}
+      \li \l{Supported Environment Variables in Qt Quick Controls 2}
     \endlist
 
     \section1 Reference
@@ -84,6 +86,7 @@
     \list
       \li \l{Qt Quick Controls 2 - Gallery}{Gallery}
       \li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat Tutorial}
+      \li \l{Qt Quick Controls 2 - Text Editor}{Text Editor}
       \li \l{Qt Quick Controls 2 Examples}{All Examples}
     \endlist
 
