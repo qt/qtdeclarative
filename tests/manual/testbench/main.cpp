@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     // TODO: move style selection into app UI and use settings to save choices.
     // qputenv("QT_QUICK_CONTROLS_STYLE", "material");
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
 
     return app.exec();
 }
