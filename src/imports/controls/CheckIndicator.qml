@@ -47,6 +47,7 @@ Rectangle {
     color: control.enabled ? (control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : "#ffffff") : "#353637"
     border.width: control.visualFocus ? 2 : 1
     border.color: control.enabled ? (control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")) : "transparent"
+    opacity: enabled ? 1 : 0.3
 
     Image {
         x: (parent.width - width) / 2

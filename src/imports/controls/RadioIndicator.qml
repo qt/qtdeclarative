@@ -44,6 +44,7 @@ Rectangle {
     color: control.down ? (control.visualFocus ? "#cce0ff" : "#f6f6f6") : (control.visualFocus ? "#f0f6ff" : "#ffffff")
     border.width: control.visualFocus ? 2 : 1
     border.color: control.visualFocus ? "#0066ff" : (control.down ? "#808080" : "#909090")
+    opacity: enabled ? 1 : 0.3
 
     property Item control
 

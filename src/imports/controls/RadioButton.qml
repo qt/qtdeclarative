@@ -51,7 +51,6 @@ T.RadioButton {
 
     padding: 6
     spacing: 6
-    opacity: enabled ? 1 : 0.3
 
     //! [indicator]
     indicator: RadioIndicator {
@@ -73,6 +72,7 @@ T.RadioButton {
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
+        opacity: enabled ? 1 : 0.3
     }
     //! [contentItem]
 }
