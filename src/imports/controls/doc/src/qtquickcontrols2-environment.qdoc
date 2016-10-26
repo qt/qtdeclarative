@@ -47,6 +47,10 @@
             \li Specifies the location of the \l {Qt Quick Controls 2 configuration file}.
                 By default, the configuration file is loaded from the application's
                 resources in \c ":/qtquickcontrols2.conf".
+        \row
+            \li \c QT_QUICK_CONTROLS_HOVER_ENABLED
+            \li Specifies whether Qt Quick Controls 2 use \l {Control::hoverEnabled}{hover effects}.
+                The value can be set to \c 0 or \c 1 to disable or enable hover effects, respectively.
      \endtable
 
     \l {Material style} specific environment variables:
