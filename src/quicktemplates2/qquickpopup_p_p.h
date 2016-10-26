@@ -50,7 +50,6 @@
 
 #include "qquickpopup_p.h"
 #include "qquickcontrol_p.h"
-#include "qquickpopuppositioner_p_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
@@ -64,6 +63,7 @@ class QQuickTransitionManager;
 class QQuickPopup;
 class QQuickPopupItem;
 class QQuickPopupPrivate;
+class QQuickPopupPositioner;
 
 class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
@@ -155,7 +155,7 @@ public:
     QQuickTransition *enter;
     QQuickTransition *exit;
     QQuickPopupItem *popupItem;
-    QQuickPopupPositioner positioner;
+    QQuickPopupPositioner *positioner;
     QList<QQuickStateAction> enterActions;
     QList<QQuickStateAction> exitActions;
     QQuickPopupTransitionManager transitionManager;

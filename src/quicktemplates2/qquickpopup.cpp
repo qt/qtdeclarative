@@ -37,6 +37,7 @@
 #include "qquickpopup_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickpopuppositioner_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
@@ -154,7 +155,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , enter(nullptr)
     , exit(nullptr)
     , popupItem(nullptr)
-    , positioner(this)
+    , positioner(nullptr)
     , transitionManager(this)
 {
 }
@@ -169,6 +170,7 @@ void QQuickPopupPrivate::init()
     popupItem = new QQuickPopupItem(q);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
+    positioner = new QQuickPopupPositioner(q);
 }
 
 bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
@@ -205,7 +207,7 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         visible = true;
         transitionState = EnterTransition;
         popupItem->setVisible(true);
-        positioner.setParentItem(parentItem);
+        positioner->setParentItem(parentItem);
         emit q->visibleChanged();
     }
     return true;
@@ -242,7 +244,7 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
-    positioner.setParentItem(nullptr);
+    positioner->setParentItem(nullptr);
     popupItem->setParentItem(nullptr);
     popupItem->setVisible(false);
 
@@ -352,134 +354,7 @@ void QQuickPopupPrivate::itemDestroyed(QQuickItem *item)
 
 void QQuickPopupPrivate::reposition()
 {
-    Q_Q(QQuickPopup);
-    if (!popupItem->isVisible())
-        return;
-
-    const qreal w = popupItem->width();
-    const qreal h = popupItem->height();
-    const qreal iw = popupItem->implicitWidth();
-    const qreal ih = popupItem->implicitHeight();
-
-    bool widthAdjusted = false;
-    bool heightAdjusted = false;
-
-    QRectF rect(allowHorizontalMove ? x : popupItem->x(),
-                allowVerticalMove ? y : popupItem->y(),
-                !hasWidth && iw > 0 ? iw : w,
-                !hasHeight && ih > 0 ? ih : h);
-    if (parentItem) {
-        rect = parentItem->mapRectToScene(rect);
-
-        if (window) {
-            const QMarginsF margins = getMargins();
-            const QRectF bounds(qMax<qreal>(0.0, margins.left()),
-                                qMax<qreal>(0.0, margins.top()),
-                                window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
-                                window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
-
-            // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
-            if (allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
-                const QRectF flipped = parentItem->mapRectToScene(QRectF(parentItem->width() - x - rect.width(), y, rect.width(), rect.height()));
-                if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
-                    rect.moveLeft(flipped.left());
-            }
-
-            // if the popup doesn't fit vertically inside the window, try flipping it around (above <-> below)
-            if (allowVerticalFlip && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
-                const QRectF flipped = parentItem->mapRectToScene(QRectF(x, parentItem->height() - y - rect.height(), rect.width(), rect.height()));
-                if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
-                    rect.moveTop(flipped.top());
-            }
-
-            // push inside the margins if specified
-            if (allowVerticalMove) {
-                if (margins.top() >= 0 && rect.top() < bounds.top())
-                    rect.moveTop(margins.top());
-                if (margins.bottom() >= 0 && rect.bottom() > bounds.bottom())
-                    rect.moveBottom(bounds.bottom());
-            }
-            if (allowHorizontalMove) {
-                if (margins.left() >= 0 && rect.left() < bounds.left())
-                    rect.moveLeft(margins.left());
-                if (margins.right() >= 0 && rect.right() > bounds.right())
-                    rect.moveRight(bounds.right());
-            }
-
-            if (iw > 0 && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
-                // neither the flipped or pushed geometry fits inside the window, choose
-                // whichever side (left vs. right) fits larger part of the popup
-                if (allowHorizontalMove && allowHorizontalFlip) {
-                    if (rect.left() < bounds.left() && bounds.left() + rect.width() <= bounds.right())
-                        rect.moveLeft(bounds.left());
-                    else if (rect.right() > bounds.right() && bounds.right() - rect.width() >= bounds.left())
-                        rect.moveRight(bounds.right());
-                }
-
-                // as a last resort, adjust the width to fit the window
-                if (allowHorizontalResize) {
-                    if (rect.left() < bounds.left()) {
-                        rect.setLeft(bounds.left());
-                        widthAdjusted = true;
-                    }
-                    if (rect.right() > bounds.right()) {
-                        rect.setRight(bounds.right());
-                        widthAdjusted = true;
-                    }
-                }
-            } else if (iw > 0 && rect.left() >= bounds.left() && rect.right() <= bounds.right()
-                       && iw != w) {
-                // restore original width
-                rect.setWidth(iw);
-                widthAdjusted = true;
-            }
-
-            if (ih > 0 && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
-                // neither the flipped or pushed geometry fits inside the window, choose
-                // whichever side (above vs. below) fits larger part of the popup
-                if (allowVerticalMove && allowVerticalFlip) {
-                    if (rect.top() < bounds.top() && bounds.top() + rect.height() <= bounds.bottom())
-                        rect.moveTop(bounds.top());
-                    else if (rect.bottom() > bounds.bottom() && bounds.bottom() - rect.height() >= bounds.top())
-                        rect.moveBottom(bounds.bottom());
-                }
-
-                // as a last resort, adjust the height to fit the window
-                if (allowVerticalResize) {
-                    if (rect.top() < bounds.top()) {
-                        rect.setTop(bounds.top());
-                        heightAdjusted = true;
-                    }
-                    if (rect.bottom() > bounds.bottom()) {
-                        rect.setBottom(bounds.bottom());
-                        heightAdjusted = true;
-                    }
-                }
-            } else if (ih > 0 && rect.top() >= bounds.top() && rect.bottom() <= bounds.bottom()
-                       && ih != h) {
-                // restore original height
-                rect.setHeight(ih);
-                heightAdjusted = true;
-            }
-        }
-    }
-
-    popupItem->setPosition(rect.topLeft());
-
-    const QPointF effectivePos = parentItem ? parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
-    if (!qFuzzyCompare(effectiveX, effectivePos.x())) {
-        effectiveX = effectivePos.x();
-        emit q->xChanged();
-    }
-    if (!qFuzzyCompare(effectiveY, effectivePos.y())) {
-        effectiveY = effectivePos.y();
-        emit q->yChanged();
-    }
-
-    if (!hasWidth && widthAdjusted && rect.width() > 0)
-        popupItem->setWidth(rect.width());
-    if (!hasHeight && heightAdjusted && rect.height() > 0)
-        popupItem->setHeight(rect.height());
+    positioner->reposition();
 }
 
 void QQuickPopupPrivate::resizeOverlay()
@@ -1219,8 +1094,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
         QQuickItemPrivate::get(d->parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Destroyed);
     }
     d->parentItem = parent;
-    if (d->positioner.parentItem())
-        d->positioner.setParentItem(parent);
+    if (d->positioner->parentItem())
+        d->positioner->setParentItem(parent);
     if (parent) {
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);

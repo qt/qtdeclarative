@@ -54,16 +54,17 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickPopup;
-class QQuickPopupPrivate;
 
 class QQuickPopupPositioner : public QQuickItemChangeListener
 {
 public:
-    explicit QQuickPopupPositioner(QQuickPopupPrivate *popup);
+    explicit QQuickPopupPositioner(QQuickPopup *popup);
     ~QQuickPopupPositioner();
 
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
+
+    virtual void reposition();
 
 protected:
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
@@ -75,7 +76,7 @@ private:
     void addAncestorListeners(QQuickItem *item);
 
     QQuickItem *m_parentItem;
-    QQuickPopupPrivate *m_popup;
+    QQuickPopup *m_popup;
 };
 
 QT_END_NAMESPACE
