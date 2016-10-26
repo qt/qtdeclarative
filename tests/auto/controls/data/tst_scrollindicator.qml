@@ -136,6 +136,22 @@ TestCase {
         compare(horizontal.size, container.visibleArea.widthRatio)
         compare(horizontal.position, container.visibleArea.xPosition)
 
+        var oldY = vertical.y
+        var oldHeight = vertical.height
+        vertical.parent = testCase
+        vertical.y -= 10
+        container.height += 10
+        compare(vertical.y, oldY - 10)
+        compare(vertical.height, oldHeight)
+
+        var oldX = horizontal.x
+        var oldWidth = horizontal.width
+        horizontal.parent = testCase
+        horizontal.x -= 10
+        container.width += 10
+        compare(horizontal.x, oldX - 10)
+        compare(horizontal.width, oldWidth)
+
         container.destroy()
     }
 

@@ -65,15 +65,38 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \note When ScrollBar is attached \l {ScrollBar::vertical}{vertically} or
-    \l {ScrollBar::horizontal}{horizontally} to a Flickable, its geometry and
-    the following properties are automatically set and updated as appropriate:
+    When ScrollBar is attached \l {ScrollBar::vertical}{vertically} or
+    \l {ScrollBar::horizontal}{horizontally} to a Flickable, the following
+    properties are automatically set and updated as appropriate:
     \list
     \li \l orientation
     \li \l position
     \li \l size
     \li \l active
     \endlist
+
+    An attached ScrollBar re-parents itself to the target Flickable. A vertically
+    attached ScrollBar resizes itself to the height of the Flickable, and positions
+    itself to either side of it based on the \l {Control::mirrored}{layout direction}.
+    A horizontally attached ScrollBar resizes itself to the width of the Flickable,
+    and positions itself to the bottom. The automatic geometry management can be disabled
+    by specifying another parent for the attached ScrollBar. This can be useful, for
+    example, if the ScrollBar should be placed outside a clipping Flickable. This is
+    demonstrated by the following example:
+
+    \code
+    Flickable {
+        id: flickable
+        clip: true
+        // ...
+        ScrollBar.vertical: ScrollBar {
+            parent: flickable.parent
+            anchors.top: flickable.top
+            anchors.left: flickable.right
+            anchors.bottom: flickable.bottom
+        }
+    }
+    \endcode
 
     Notice that ScrollBar does not filter key events of the Flickable it is
     attached to. The following example illustrates how to implement scrolling
@@ -465,6 +488,8 @@ void QQuickScrollBarAttachedPrivate::mirrorVertical()
 void QQuickScrollBarAttachedPrivate::layoutHorizontal(bool move)
 {
     Q_ASSERT(horizontal && flickable);
+    if (horizontal->parentItem() != flickable)
+        return;
     horizontal->setWidth(flickable->width());
     if (move)
         horizontal->setY(flickable->height() - horizontal->height());
@@ -473,6 +498,8 @@ void QQuickScrollBarAttachedPrivate::layoutHorizontal(bool move)
 void QQuickScrollBarAttachedPrivate::layoutVertical(bool move)
 {
     Q_ASSERT(vertical && flickable);
+    if (vertical->parentItem() != flickable)
+        return;
     vertical->setHeight(flickable->height());
     if (move)
         vertical->setX(vertical->isMirrored() ? 0 : flickable->width() - vertical->width());

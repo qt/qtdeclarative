@@ -65,15 +65,38 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \note When ScrollIndicator is attached \l {ScrollIndicator::vertical}{vertically}
-    or \l {ScrollIndicator::horizontal}{horizontally} to a Flickable, its geometry and
-    the following properties are automatically set and updated as appropriate:
+    When ScrollIndicator is attached \l {ScrollIndicator::vertical}{vertically} or
+    \l {ScrollIndicator::horizontal}{horizontally} to a Flickable, the following
+    properties are automatically set and updated as appropriate:
     \list
     \li \l orientation
     \li \l position
     \li \l size
     \li \l active
     \endlist
+
+    An attached ScrollIndicator re-parents itself to the target Flickable. A vertically
+    attached ScrollIndicator resizes itself to the height of the Flickable, and positions
+    itself to either side of it based on the \l {Control::mirrored}{layout direction}.
+    A horizontally attached ScrollIndicator resizes itself to the width of the Flickable,
+    and positions itself to the bottom. The automatic geometry management can be disabled
+    by specifying another parent for the attached ScrollIndicator. This can be useful, for
+    example, if the ScrollIndicator should be placed outside a clipping Flickable. This is
+    demonstrated by the following example:
+
+    \code
+    Flickable {
+        id: flickable
+        clip: true
+        // ...
+        ScrollIndicator.vertical: ScrollIndicator {
+            parent: flickable.parent
+            anchors.top: flickable.top
+            anchors.left: flickable.right
+            anchors.bottom: flickable.bottom
+        }
+    }
+    \endcode
 
     Horizontal and vertical scroll indicators do not share the \l active state with
     each other by default. In order to keep both indicators visible whilst scrolling
@@ -268,6 +291,8 @@ void QQuickScrollIndicatorAttachedPrivate::activateVertical()
 void QQuickScrollIndicatorAttachedPrivate::layoutHorizontal(bool move)
 {
     Q_ASSERT(horizontal && flickable);
+    if (horizontal->parentItem() != flickable)
+        return;
     horizontal->setWidth(flickable->width());
     if (move)
         horizontal->setY(flickable->height() - horizontal->height());
@@ -276,6 +301,8 @@ void QQuickScrollIndicatorAttachedPrivate::layoutHorizontal(bool move)
 void QQuickScrollIndicatorAttachedPrivate::layoutVertical(bool move)
 {
     Q_ASSERT(vertical && flickable);
+    if (vertical->parentItem() != flickable)
+        return;
     vertical->setHeight(flickable->height());
     if (move && !QQuickItemPrivate::get(vertical)->isMirrored())
         vertical->setX(flickable->width() - vertical->width());
