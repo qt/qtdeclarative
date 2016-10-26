@@ -43,6 +43,10 @@
                 The value can be either one of the built-in styles, for example \c "Material",
                 or the path to a custom style such as \c ":/mystyle".
         \row
+            \li \c QT_QUICK_CONTROLS_FALLBACK_STYLE
+            \li Specifies a fallback style for \l {Creating a Custom Style}{custom styles}.
+                The value can be one of the built-in styles, for example \c "Material",
+        \row
             \li \c QT_QUICK_CONTROLS_CONF
             \li Specifies the location of the \l {Qt Quick Controls 2 configuration file}.
                 By default, the configuration file is loaded from the application's

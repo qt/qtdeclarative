@@ -136,8 +136,6 @@
     \list
     \li At least one QML file whose name matches a control (for example,
         \c Button.qml) must exist.
-
-        The Default style will be used for any controls that aren't implemented.
     \li The files must be in a directory in the filesystem or in the
         \l {The Qt Resource System}{resource system}.
 
@@ -154,6 +152,10 @@
         list. This is the same as what happens when you pass \c Material as the style,
         for example.
     \endlist
+
+    By default, the styling system uses the Default style as a fallback for
+    controls that aren't implemented. To customize or extend any other built-in
+    style, it is possible to specify a different fallback style using \l QQuickStyle.
 
     What this means is that you can implement as many controls as you like for
     your custom style, and place them almost anywhere. It also allows users to
