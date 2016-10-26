@@ -625,14 +625,14 @@ ApplicationWindow {
                     Frame {
                         Tumbler {
                             model: 5
-                            implicitWidth: 100
+                            implicitWidth: 80
                             implicitHeight: 100
                         }
                     }
                     Frame {
                         Tumbler {
                             model: 5
-                            implicitWidth: 100
+                            implicitWidth: 80
                             implicitHeight: 100
                             enabled: false
                         }
@@ -641,9 +641,145 @@ ApplicationWindow {
 
                 RowLayout {
                     Dial {
+                        implicitWidth: 100
+                        implicitHeight: 100
                     }
                     Dial {
+                        implicitWidth: 100
+                        implicitHeight: 100
                         enabled: false
+                    }
+                }
+
+                ListModel {
+                    id: checkableDelegateModel
+                    ListElement { label: "Normal" }
+                    ListElement { label: "Pressed"; press: true }
+                    ListElement { label: "Checked"; check: true }
+                    ListElement { label: "CH + PR"; check: true; press: true }
+                    ListElement { label: "Disabled"; disabled: true }
+                }
+
+                RowLayout {
+                    Frame {
+                        Column {
+                            width: 200
+
+                            Repeater {
+                                model: checkableDelegateModel
+                                delegate: CheckDelegate {
+                                    text: label
+                                    width: parent.width
+                                    down: press
+                                    checked: check
+                                    enabled: !disabled
+                                    ButtonGroup.group: radioButtonGroup
+                                }
+                            }
+                        }
+                    }
+
+                    ButtonGroup {
+                        id: radioButtonGroup
+                    }
+
+                    Frame {
+                        Column {
+                            width: 200
+
+                            Repeater {
+                                model: checkableDelegateModel
+                                delegate: RadioDelegate {
+                                    text: label
+                                    down: press
+                                    width: parent.width
+                                    checked: check
+                                    enabled: !disabled
+                                    ButtonGroup.group: radioButtonGroup
+                                }
+                            }
+                        }
+                    }
+
+                    Frame {
+                        Column {
+                            width: 200
+
+                            Repeater {
+                                model: checkableDelegateModel
+                                delegate: SwitchDelegate {
+                                    text: label
+                                    width: parent.width
+                                    checked: check
+                                    down: press
+                                    enabled: !disabled
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ListModel {
+                    id: regularDelegateModel
+                    ListElement { label: "Normal" }
+                    ListElement { label: "Pressed"; press: true }
+                    ListElement { label: "Disabled"; disabled: true }
+                }
+
+                RowLayout {
+                    Frame {
+                        Column {
+                            width: 200
+
+                            Repeater {
+                                model: regularDelegateModel
+                                delegate: ItemDelegate {
+                                    text: label
+                                    width: parent.width
+                                    down: press
+                                    enabled: !disabled
+                                }
+                            }
+                        }
+                    }
+                    Frame {
+                        Column {
+                            id: listView
+                            width: 200
+                            clip: true
+
+                            Repeater {
+                                model: regularDelegateModel
+                                delegate: SwipeDelegate {
+                                    id: swipeDelegate
+                                    text: label
+                                    width: parent.width
+                                    down: press
+                                    enabled: !disabled
+
+                                    Component {
+                                        id: removeComponent
+
+                                        Rectangle {
+                                            color: swipeDelegate.swipe.complete && swipeDelegate.pressed ? "#333" : "#444"
+                                            width: parent.width
+                                            height: parent.height
+                                            clip: true
+
+                                            Label {
+                                                font.pixelSize: swipeDelegate.font.pixelSize
+                                                text: "Boop"
+                                                color: "white"
+                                                anchors.centerIn: parent
+                                            }
+                                        }
+                                    }
+
+                                    swipe.left: removeComponent
+                                    swipe.right: removeComponent
+                                }
+                            }
+                        }
                     }
                 }
             }
