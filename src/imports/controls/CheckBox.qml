@@ -51,7 +51,7 @@ T.CheckBox {
 
     padding: 6
     spacing: 6
-    opacity: enabled ? 1 : 0.2
+    opacity: enabled ? 1 : 0.3
 
     //! [indicator]
     indicator: CheckIndicator {

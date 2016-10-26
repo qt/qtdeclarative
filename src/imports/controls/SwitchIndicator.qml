@@ -47,7 +47,6 @@ Item {
         width: 56
         height: 16
         radius: 8
-        opacity: control.enabled ? 1 : 0.3
         color: control.checked ? (control.visualFocus ? "#0066ff" : "#353637") : "#e0e0e0"
         border.width: control.visualFocus ? 2 : 0
         border.color: "#0066ff"

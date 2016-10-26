@@ -88,7 +88,6 @@ T.RangeSlider {
         width: horizontal ? control.availableWidth : implicitWidth
         height: horizontal ? implicitHeight : control.availableHeight
         radius: 3
-        opacity: control.enabled ? 1 : 0.3
         color: "#e0e0e0"
         scale: horizontal && control.mirrored ? -1 : 1
 
