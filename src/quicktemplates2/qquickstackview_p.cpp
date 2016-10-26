@@ -36,6 +36,7 @@
 
 #include "qquickstackview_p_p.h"
 #include "qquickstackelement_p_p.h"
+#include "qquickstacktransition_p_p.h"
 
 #include <QtQml/qqmllist.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
@@ -263,121 +264,6 @@ void QQuickStackViewPrivate::setBusy(bool b)
     busy = b;
     q->setFiltersChildMouseEvents(busy);
     emit q->busyChanged();
-}
-
-static QQuickStackTransition exitTransition(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    QQuickStackTransition st;
-    st.status = QQuickStackView::Deactivating;
-    st.transition = nullptr;
-    st.element = element;
-
-    const QQuickItemViewTransitioner *transitioner = QQuickStackViewPrivate::get(view)->transitioner;
-
-    switch (operation) {
-    case QQuickStackView::PushTransition:
-        st.target = false;
-        st.type = QQuickItemViewTransitioner::AddTransition;
-        st.viewBounds = QRectF();
-        if (transitioner)
-            st.transition = transitioner->addDisplacedTransition;
-        break;
-    case QQuickStackView::ReplaceTransition:
-        st.target = false;
-        st.type = QQuickItemViewTransitioner::MoveTransition;
-        st.viewBounds = QRectF();
-        if (transitioner)
-            st.transition = transitioner->moveDisplacedTransition;
-        break;
-    case QQuickStackView::PopTransition:
-        st.target = true;
-        st.type = QQuickItemViewTransitioner::RemoveTransition;
-        st.viewBounds = view->boundingRect();
-        if (transitioner)
-            st.transition = transitioner->removeTransition;
-        break;
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-
-    return st;
-}
-
-static QQuickStackTransition enterTransition(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    QQuickStackTransition st;
-    st.status = QQuickStackView::Activating;
-    st.transition = nullptr;
-    st.element = element;
-
-    const QQuickItemViewTransitioner *transitioner = QQuickStackViewPrivate::get(view)->transitioner;
-
-    switch (operation) {
-    case QQuickStackView::PushTransition:
-        st.target = true;
-        st.type = QQuickItemViewTransitioner::AddTransition;
-        st.viewBounds = view->boundingRect();
-        if (transitioner)
-            st.transition = transitioner->addTransition;
-        break;
-    case QQuickStackView::ReplaceTransition:
-        st.target = true;
-        st.type = QQuickItemViewTransitioner::MoveTransition;
-        st.viewBounds = view->boundingRect();
-        if (transitioner)
-            st.transition = transitioner->moveTransition;
-        break;
-    case QQuickStackView::PopTransition:
-        st.target = false;
-        st.type = QQuickItemViewTransitioner::RemoveTransition;
-        st.viewBounds = QRectF();
-        if (transitioner)
-            st.transition = transitioner->removeDisplacedTransition;
-        break;
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-
-    return st;
-}
-
-static QQuickStackView::Operation operationTransition(QQuickStackView::Operation operation, QQuickStackView::Operation transition)
-{
-    if (operation == QQuickStackView::Immediate || operation == QQuickStackView::Transition)
-        return transition;
-    return operation;
-}
-
-QQuickStackTransition QQuickStackTransition::popExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    return exitTransition(operationTransition(operation, QQuickStackView::PopTransition), element, view);
-}
-
-QQuickStackTransition QQuickStackTransition::popEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    return enterTransition(operationTransition(operation, QQuickStackView::PopTransition), element, view);
-}
-
-QQuickStackTransition QQuickStackTransition::pushExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    return exitTransition(operationTransition(operation, QQuickStackView::PushTransition), element, view);
-}
-
-QQuickStackTransition QQuickStackTransition::pushEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    return enterTransition(operationTransition(operation, QQuickStackView::PushTransition), element, view);
-}
-
-QQuickStackTransition QQuickStackTransition::replaceExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    return exitTransition(operationTransition(operation, QQuickStackView::ReplaceTransition), element, view);
-}
-
-QQuickStackTransition QQuickStackTransition::replaceEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view)
-{
-    return enterTransition(operationTransition(operation, QQuickStackView::ReplaceTransition), element, view);
 }
 
 QT_END_NAMESPACE

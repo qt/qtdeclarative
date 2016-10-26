@@ -37,6 +37,7 @@
 #include "qquickstackview_p.h"
 #include "qquickstackview_p_p.h"
 #include "qquickstackelement_p_p.h"
+#include "qquickstacktransition_p_p.h"
 
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlengine.h>

@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTACKVIEW_P_P_H
-#define QQUICKSTACKVIEW_P_P_H
+#ifndef QQUICKSTACKTRANSITION_P_P_H
+#define QQUICKSTACKTRANSITION_P_P_H
 
 //
 //  W A R N I N G
@@ -49,71 +49,31 @@
 //
 
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
-#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQml/private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStackElement;
-struct QQuickStackTransition;
 
-class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
+struct QQuickStackTransition
 {
-    Q_DECLARE_PUBLIC(QQuickStackView)
+    static QQuickStackTransition popExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition popEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
 
-public:
-    QQuickStackViewPrivate();
+    static QQuickStackTransition pushExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition pushEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
 
-    static QQuickStackViewPrivate *get(QQuickStackView *view)
-    {
-        return view->d_func();
-    }
+    static QQuickStackTransition replaceExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
+    static QQuickStackTransition replaceEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
 
-    void setCurrentItem(QQuickItem *item);
-
-    QList<QQuickStackElement *> parseElements(QQmlV4Function *args, int from = 0);
-    QQuickStackElement *findElement(QQuickItem *item) const;
-    QQuickStackElement *findElement(const QV4::Value &value) const;
-    QQuickStackElement *createElement(const QV4::Value &value);
-    bool pushElements(const QList<QQuickStackElement *> &elements);
-    bool pushElement(QQuickStackElement *element);
-    bool popElements(QQuickStackElement *element);
-    bool replaceElements(QQuickStackElement *element, const QList<QQuickStackElement *> &elements);
-
-    void ensureTransitioner();
-    void startTransition(const QQuickStackTransition &first, const QQuickStackTransition &second, bool immediate);
-    void completeTransition(QQuickStackElement *element, QQuickTransition *transition, QQuickStackView::Status status);
-
-    void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
-    void setBusy(bool busy);
-
-    bool busy;
-    QVariant initialItem;
-    QQuickItem *currentItem;
-    QList<QQuickStackElement*> removals;
-    QStack<QQuickStackElement *> elements;
-    QQuickItemViewTransitioner *transitioner;
-};
-
-class QQuickStackAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
-{
-    Q_DECLARE_PUBLIC(QQuickStackAttached)
-
-public:
-    QQuickStackAttachedPrivate() : element(nullptr) { }
-
-    static QQuickStackAttachedPrivate *get(QQuickStackAttached *attached)
-    {
-        return attached->d_func();
-    }
-
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent);
-
+    bool target;
+    QQuickStackView::Status status;
+    QQuickItemViewTransitioner::TransitionType type;
+    QRectF viewBounds;
     QQuickStackElement *element;
+    QQuickTransition *transition;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSTACKVIEW_P_P_H
+#endif // QQUICKSTACKTRANSITION_P_P_H
