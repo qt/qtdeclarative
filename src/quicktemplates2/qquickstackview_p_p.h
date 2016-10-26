@@ -52,53 +52,12 @@
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQml/private/qv4persistent_p.h>
+#include <QtQml/private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlContext;
-class QQmlComponent;
+class QQuickStackElement;
 struct QQuickStackTransition;
-
-class QQuickStackElement : public QQuickItemViewTransitionableItem, public QQuickItemChangeListener
-{
-    QQuickStackElement();
-
-public:
-    ~QQuickStackElement();
-
-    static QQuickStackElement *fromString(const QString &str, QQuickStackView *view);
-    static QQuickStackElement *fromObject(QObject *object, QQuickStackView *view);
-
-    bool load(QQuickStackView *parent);
-    void incubate(QObject *object);
-    void initialize();
-
-    void setIndex(int index);
-    void setView(QQuickStackView *view);
-    void setStatus(QQuickStackView::Status status);
-
-    void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
-    bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
-    void startTransition(QQuickItemViewTransitioner *transitioner, QQuickStackView::Status status);
-
-    void itemDestroyed(QQuickItem *item) override;
-
-    int index;
-    bool init;
-    bool removal;
-    bool ownItem;
-    bool ownComponent;
-    bool widthValid;
-    bool heightValid;
-    QQmlContext *context;
-    QQmlComponent *component;
-    QQuickStackView *view;
-    QPointer<QQuickItem> originalParent;
-    QQuickStackView::Status status;
-    QV4::PersistentValue properties;
-    QV4::PersistentValue qmlCallingContext;
-};
 
 class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
 {

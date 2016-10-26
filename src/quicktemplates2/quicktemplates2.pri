@@ -54,6 +54,7 @@ HEADERS += \
     $$PWD/qquickscrollindicator_p.h \
     $$PWD/qquickslider_p.h \
     $$PWD/qquickspinbox_p.h \
+    $$PWD/qquickstackelement_p_p.h \
     $$PWD/qquickstackview_p.h \
     $$PWD/qquickstackview_p_p.h \
     $$PWD/qquickswipedelegate_p.h \
@@ -114,6 +115,7 @@ SOURCES += \
     $$PWD/qquickscrollindicator.cpp \
     $$PWD/qquickslider.cpp \
     $$PWD/qquickspinbox.cpp \
+    $$PWD/qquickstackelement.cpp \
     $$PWD/qquickstackview.cpp \
     $$PWD/qquickstackview_p.cpp \
     $$PWD/qquickswipedelegate.cpp \
