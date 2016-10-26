@@ -110,8 +110,9 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
     if (image.width() < m_atlas_size_limit && image.height() < m_atlas_size_limit) {
         if (!m_atlas)
             m_atlas = new Atlas(m_atlas_size);
+        // t may be null for atlas allocation failure
         t = m_atlas->create(image);
-        if (!hasAlphaChannel && t->hasAlphaChannel())
+        if (t && !hasAlphaChannel && t->hasAlphaChannel())
             t->setHasAlphaChannel(false);
     }
     return t;
