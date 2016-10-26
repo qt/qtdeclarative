@@ -701,7 +701,7 @@ void QQuickDragAttached::cancel()
  */
 
 /*!
-    \qmlattachedsignal QtQuick::Drag::dragFinished(DropAction action)
+    \qmlattachedsignal QtQuick::Drag::dragFinished(DropAction dropAction)
 
     This signal is emitted when a drag finishes and the drag was started with the
     \l startDrag() method or started automatically using the \l dragType property.
