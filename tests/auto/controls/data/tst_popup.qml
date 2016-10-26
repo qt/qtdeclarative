@@ -1229,4 +1229,35 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: xyBindingLoop
+        ApplicationWindow {
+            id: window
+            width: 360
+            height: 360
+            visible: true
+            property alias popup: popup
+
+            Popup {
+                id: popup
+                visible: true
+                x: (parent.width - width) / 2
+                y: (parent.height - height) / 2
+                Label {
+                    text: "Content"
+                    anchors.fill: parent
+                }
+            }
+        }
+    }
+
+    function test_xyBindingLoop() {
+        var window = xyBindingLoop.createObject(testCase)
+        var control = window.popup
+        waitForRendering(control.contentItem)
+        compare(control.x, (control.parent.width - control.width) / 2)
+        compare(control.y, (control.parent.height - control.height) / 2)
+        window.destroy()
+    }
 }
