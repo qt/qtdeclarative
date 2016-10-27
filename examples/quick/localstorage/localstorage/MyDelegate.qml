@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -24,24 +24,51 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-/*!
-    \title Qt Quick Examples - Local Storage
-    \example localstorage
-    \brief A collection of QML local storage examples.
-    \image qml-localstorage-example.png
 
-    \e{Local Storage} is a collection of small QML examples relating to
-    Qt Quick's \l{local storage} functionality.
+import QtQuick 2.0
+import QtQuick.LocalStorage 2.0
+import QtQuick.Layouts 1.1
+import "Database.js" as JS
 
-    \include examples-run.qdocinc
+Item {
+    width: parent.width
+    height: rDate.implicitHeight
 
-    \section1 Activity Tracker
+    Rectangle {
+        id: baseRec
+        anchors.fill: parent
+        opacity: 0.8
+        color: index % 2 ? "lightgrey" : "grey"
 
-    \e {Activity tracker} allows you to keep track of walks, hikes, or bike trips.
+        MouseArea {
+            anchors.fill: parent
+            onClicked: listView.currentIndex = index
+        }
+        GridLayout {
+            anchors.fill:parent
+            columns: 3
 
-    All database transactions are handled in Database.js. The database is
-    checked at startup, and created if it does not exist. LocalStorage uses
-    SQLite, which is a self-contained, serverless, public-domain database.
-    Opening a connection to the database is handled at the beginning of each
-    function that manipulates or retrieves data.
-*/
+            Text {
+                id: rDate
+                text: date
+                font.pixelSize: 22
+                Layout.preferredWidth: parent.width / 4
+                color: "black"
+            }
+            Text {
+                id: rDesc
+                text: trip_desc
+                Layout.fillWidth: true
+                font.pixelSize: 22
+                color: "black"
+            }
+            Text {
+                id: rDistance
+                text: distance
+                font.pixelSize: 22
+                Layout.alignment: Qt.AlignRight
+                color: "black"
+            }
+        }
+    }
+}

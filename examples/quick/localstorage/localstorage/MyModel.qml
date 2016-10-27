@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -24,24 +24,12 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-/*!
-    \title Qt Quick Examples - Local Storage
-    \example localstorage
-    \brief A collection of QML local storage examples.
-    \image qml-localstorage-example.png
 
-    \e{Local Storage} is a collection of small QML examples relating to
-    Qt Quick's \l{local storage} functionality.
+import QtQuick 2.0
+import QtQuick.LocalStorage 2.0
+import "Database.js" as JS
 
-    \include examples-run.qdocinc
-
-    \section1 Activity Tracker
-
-    \e {Activity tracker} allows you to keep track of walks, hikes, or bike trips.
-
-    All database transactions are handled in Database.js. The database is
-    checked at startup, and created if it does not exist. LocalStorage uses
-    SQLite, which is a self-contained, serverless, public-domain database.
-    Opening a connection to the database is handled at the beginning of each
-    function that manipulates or retrieves data.
-*/
+ListModel {
+    id: listModel
+    Component.onCompleted: JS.dbReadAll()
+}

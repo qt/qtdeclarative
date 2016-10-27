@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -24,24 +24,53 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-/*!
-    \title Qt Quick Examples - Local Storage
-    \example localstorage
-    \brief A collection of QML local storage examples.
-    \image qml-localstorage-example.png
 
-    \e{Local Storage} is a collection of small QML examples relating to
-    Qt Quick's \l{local storage} functionality.
+import QtQuick 2.0
 
-    \include examples-run.qdocinc
+Rectangle {
+    id: button
 
-    \section1 Activity Tracker
+    property bool checked: false
+    property alias text: buttonText.text
 
-    \e {Activity tracker} allows you to keep track of walks, hikes, or bike trips.
+    Accessible.name: text
+    Accessible.description: "This button does " + text
+    Accessible.role: Accessible.Button
+    Accessible.onPressAction: button.clicked()
 
-    All database transactions are handled in Database.js. The database is
-    checked at startup, and created if it does not exist. LocalStorage uses
-    SQLite, which is a self-contained, serverless, public-domain database.
-    Opening a connection to the database is handled at the beginning of each
-    function that manipulates or retrieves data.
-*/
+    signal clicked
+
+    implicitWidth: buttonText.implicitWidth + 20
+    implicitHeight: 30
+    gradient: Gradient {
+        GradientStop {
+            position: 0.0
+            color: "grey"
+        }
+        GradientStop {
+            position: 1.0
+            color: button.focus ? "red" : "grey"
+        }
+    }
+
+    radius: 5
+    antialiasing: true
+
+    Text {
+        id: buttonText
+        text: parent.description
+        anchors.centerIn: parent
+        font.pixelSize: parent.height * .5
+        style: enabled ? Text.Sunken : Text.Normal
+        color: enabled ? "white" : "#555"
+        styleColor: "black"
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        onClicked: parent.clicked()
+    }
+
+    Keys.onSpacePressed: clicked()
+}
