@@ -73,31 +73,8 @@ T.SpinBox {
         selectedTextColor: control.Material.primaryTextColor
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
-        cursorDelegate: Rectangle {
-            id: cursor
-            color: control.Material.accentColor
-            width: 2
-            visible: control.activeFocus && contentItem.selectionStart === contentItem.selectionEnd
 
-            Connections {
-                target: contentItem
-                onCursorPositionChanged: {
-                    // keep a moving cursor visible
-                    cursor.opacity = 1
-                    timer.restart()
-                }
-            }
-
-            Timer {
-                id: timer
-                running: control.activeFocus
-                repeat: true
-                interval: Qt.styleHints.cursorFlashTime / 2
-                onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
-                // force the cursor visible when gaining focus
-                onRunningChanged: cursor.opacity = 1
-            }
-        }
+        cursorDelegate: CursorDelegate { }
 
         readOnly: !control.editable
         validator: control.validator

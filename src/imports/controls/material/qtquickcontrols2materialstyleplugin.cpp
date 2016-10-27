@@ -96,6 +96,7 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
     qmlRegisterType<QQuickMaterialRipple>(import, 2, 0, "Ripple");
     qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 0, "BoxShadow");
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
+    qmlRegisterType(typeUrl(QStringLiteral("CursorDelegate.qml")), import, 2, 0, "CursorDelegate");
     qmlRegisterType(typeUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 0, "ElevationEffect");
     qmlRegisterType(typeUrl(QStringLiteral("RectangularGlow.qml")), import, 2, 0, "RectangularGlow");
     qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 0, "SliderHandle");

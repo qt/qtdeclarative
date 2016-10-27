@@ -1,8 +1,4 @@
-[signalHandlers:material/SpinBox.qml]
-*
-[signalHandlers:material/TextArea.qml]
-*
-[signalHandlers:material/TextField.qml]
+[signalHandlers:material/CursorDelegate.qml]
 *
 [attachedObjects:controls/ComboBox.qml]
 *

@@ -35,48 +35,31 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Templates 2.1 as T
 import QtQuick.Controls.Material 2.1
-import QtQuick.Controls.Material.impl 2.1
 
-T.TextArea {
-    id: control
+Rectangle {
+    id: cursor
 
-    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(contentHeight + 1 + topPadding + bottomPadding,
-                             background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + 1 + topPadding + bottomPadding)
+    color: parent.Material.accentColor
+    width: 2
+    visible: parent.activeFocus && parent.selectionStart === parent.selectionEnd
 
-    topPadding: 8
-    bottomPadding: 16
-
-    color: enabled ? Material.primaryTextColor : Material.hintTextColor
-    selectionColor: Material.accentColor
-    selectedTextColor: Material.primaryHighlightedTextColor
-
-    cursorDelegate: CursorDelegate { }
-
-    Text {
-        id: placeholder
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.width - (control.leftPadding + control.rightPadding)
-        height: control.height - (control.topPadding + control.bottomPadding)
-        text: control.placeholderText
-        font: control.font
-        color: control.Material.hintTextColor
-        horizontalAlignment: control.horizontalAlignment
-        verticalAlignment: control.verticalAlignment
-        elide: Text.ElideRight
-        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+    Connections {
+        target: cursor.parent
+        onCursorPositionChanged: {
+            // keep a moving cursor visible
+            cursor.opacity = 1
+            timer.restart()
+        }
     }
 
-    background: Rectangle {
-        y: parent.height - height - control.bottomPadding / 2
-        implicitWidth: 120
-        height: control.activeFocus ? 2 : 1
-        color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
+    Timer {
+        id: timer
+        running: cursor.parent.activeFocus
+        repeat: true
+        interval: Qt.styleHints.cursorFlashTime / 2
+        onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
+        // force the cursor visible when gaining focus
+        onRunningChanged: cursor.opacity = 1
     }
 }
