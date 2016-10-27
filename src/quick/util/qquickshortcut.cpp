@@ -41,9 +41,8 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 #include <QtGui/private/qguiapplication_p.h>
-
-QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Shortcut
@@ -88,6 +87,39 @@ QT_BEGIN_NAMESPACE
 
     The corresponding handler is \c onActivatedAmbiguously.
 */
+
+static bool qQuickShortcutContextMatcher(QObject *obj, Qt::ShortcutContext context)
+{
+    switch (context) {
+    case Qt::ApplicationShortcut:
+        return true;
+    case Qt::WindowShortcut:
+        while (obj && !obj->isWindowType()) {
+            obj = obj->parent();
+            if (QQuickItem *item = qobject_cast<QQuickItem *>(obj))
+                obj = item->window();
+        }
+        return obj && obj == QGuiApplication::focusWindow();
+    default:
+        return false;
+    }
+}
+
+typedef bool (*ContextMatcher)(QObject *, Qt::ShortcutContext);
+
+Q_GLOBAL_STATIC_WITH_ARGS(ContextMatcher, ctxMatcher, (qQuickShortcutContextMatcher))
+
+Q_QUICK_PRIVATE_EXPORT ContextMatcher qt_quick_shortcut_context_matcher()
+{
+    return *ctxMatcher();
+}
+
+Q_QUICK_PRIVATE_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher matcher)
+{
+    *ctxMatcher() = matcher;
+}
+
+QT_BEGIN_NAMESPACE
 
 QQuickShortcut::QQuickShortcut(QObject *parent) : QObject(parent), m_id(0),
     m_enabled(true), m_completed(false), m_autorepeat(true), m_context(Qt::WindowShortcut)
@@ -278,30 +310,13 @@ bool QQuickShortcut::event(QEvent *event)
     return false;
 }
 
-static bool qQuickShortcutContextMatcher(QObject *obj, Qt::ShortcutContext context)
-{
-    switch (context) {
-    case Qt::ApplicationShortcut:
-        return true;
-    case Qt::WindowShortcut:
-        while (obj && !obj->isWindowType()) {
-            obj = obj->parent();
-            if (QQuickItem *item = qobject_cast<QQuickItem *>(obj))
-                obj = item->window();
-        }
-        return obj && obj == QGuiApplication::focusWindow();
-    default:
-        return false;
-    }
-}
-
 void QQuickShortcut::grabShortcut(const QKeySequence &sequence, Qt::ShortcutContext context)
 {
     ungrabShortcut();
 
     if (m_completed && !sequence.isEmpty()) {
         QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
-        m_id = pApp->shortcutMap.addShortcut(this, sequence, context, qQuickShortcutContextMatcher);
+        m_id = pApp->shortcutMap.addShortcut(this, sequence, context, *ctxMatcher());
         if (!m_enabled)
             pApp->shortcutMap.setShortcutEnabled(false, m_id, this);
         if (!m_autorepeat)
