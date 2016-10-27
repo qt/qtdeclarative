@@ -1,7 +1,5 @@
 [signalHandlers:material/CursorDelegate.qml]
 *
-[attachedObjects:controls/ComboBox.qml]
-*
 [attachedObjects:material/ComboBox.qml]
 *
 [attachedObjects:material/Switch.qml]
