@@ -62,7 +62,7 @@ FocusScope {
             text: "Enter word"
             font.pixelSize: 18
             color: "#707070"
-            opacity: input.length ? 0 : 1
+            opacity: input.displayText.length ? 0 : 1
         }
 
         Text {

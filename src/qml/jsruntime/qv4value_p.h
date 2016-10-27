@@ -175,10 +175,7 @@ public:
     Q_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
     Q_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
 
-#if defined(V4_BOOTSTRAP)
-    Q_ALWAYS_INLINE Heap::Base *m() const { Q_UNREACHABLE(); return Q_NULLPTR; }
-    Q_ALWAYS_INLINE void setM(Heap::Base *b) { Q_UNUSED(b); Q_UNREACHABLE(); }
-#elif defined(QV4_USE_64_BIT_VALUE_ENCODING)
+#if defined(QV4_USE_64_BIT_VALUE_ENCODING)
     Q_ALWAYS_INLINE Heap::Base *m() const
     {
         Heap::Base *b;
@@ -224,6 +221,17 @@ public:
     Q_ALWAYS_INLINE void setEmpty(int i)
     {
         setTagValue(Empty_Type_Internal, quint32(i));
+    }
+
+    Q_ALWAYS_INLINE void setEmpty(quint32 i)
+    {
+        setTagValue(Empty_Type_Internal, i);
+    }
+
+    Q_ALWAYS_INLINE quint32 emptyValue()
+    {
+        Q_ASSERT(isEmpty());
+        return quint32(value());
     }
 
     enum Type {
@@ -530,6 +538,7 @@ ReturnedValue Heap::Base::asReturnedValue() const
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
     inline static Primitive emptyValue();
+    inline static Primitive emptyValue(uint v);
     static inline Primitive fromBoolean(bool b);
     static inline Primitive fromInt32(int i);
     inline static Primitive undefinedValue();
@@ -556,6 +565,13 @@ inline Primitive Primitive::emptyValue()
 {
     Primitive v;
     v.setEmpty(0);
+    return v;
+}
+
+inline Primitive Primitive::emptyValue(uint e)
+{
+    Primitive v;
+    v.setEmpty(e);
     return v;
 }
 
