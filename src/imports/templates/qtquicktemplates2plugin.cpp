@@ -151,7 +151,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSpinBox>(uri, 2, 0, "SpinBox");
     qmlRegisterType<QQuickSpinButton>();
     qmlRegisterType<QQuickStackView>(uri, 2, 0, "StackView");
-    qmlRegisterType<QQuickStackAttached>();
+    qmlRegisterType<QQuickStackViewAttached>();
     qmlRegisterType<QQuickSwipeDelegate>(uri, 2, 0, "SwipeDelegate");
     qmlRegisterType<QQuickSwipe>();
     qmlRegisterType<QQuickSwipeViewAttached>();

@@ -314,9 +314,9 @@ QQuickStackView::~QQuickStackView()
     qDeleteAll(d->elements);
 }
 
-QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
+QQuickStackViewAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
 {
-    return new QQuickStackAttached(object);
+    return new QQuickStackViewAttached(object);
 }
 
 /*!
@@ -994,9 +994,9 @@ bool QQuickStackView::childMouseEventFilter(QQuickItem *item, QEvent *event)
     return window && !window->mouseGrabberItem();
 }
 
-void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
+void QQuickStackViewAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
-    Q_Q(QQuickStackAttached);
+    Q_Q(QQuickStackViewAttached);
     int oldIndex = element ? element->index : -1;
     QQuickStackView *oldView = element ? element->view : nullptr;
     QQuickStackView::Status oldStatus = element ? element->status : QQuickStackView::Inactive;
@@ -1015,10 +1015,10 @@ void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem 
         emit q->statusChanged();
 }
 
-QQuickStackAttached::QQuickStackAttached(QObject *parent) :
-    QObject(*(new QQuickStackAttachedPrivate), parent)
+QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent) :
+    QObject(*(new QQuickStackViewAttachedPrivate), parent)
 {
-    Q_D(QQuickStackAttached);
+    Q_D(QQuickStackViewAttached);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (item) {
         QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
@@ -1028,9 +1028,9 @@ QQuickStackAttached::QQuickStackAttached(QObject *parent) :
     }
 }
 
-QQuickStackAttached::~QQuickStackAttached()
+QQuickStackViewAttached::~QQuickStackViewAttached()
 {
-    Q_D(QQuickStackAttached);
+    Q_D(QQuickStackViewAttached);
     QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
     if (parentItem)
         QQuickItemPrivate::get(parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Parent);
@@ -1043,9 +1043,9 @@ QQuickStackAttached::~QQuickStackAttached()
     This attached property holds the stack index of the item it's
     attached to, or \c -1 if the item is not in a stack.
 */
-int QQuickStackAttached::index() const
+int QQuickStackViewAttached::index() const
 {
-    Q_D(const QQuickStackAttached);
+    Q_D(const QQuickStackViewAttached);
     return d->element ? d->element->index : -1;
 }
 
@@ -1056,9 +1056,9 @@ int QQuickStackAttached::index() const
     This attached property holds the stack view of the item it's
     attached to, or \c null if the item is not in a stack.
 */
-QQuickStackView *QQuickStackAttached::view() const
+QQuickStackView *QQuickStackViewAttached::view() const
 {
-    Q_D(const QQuickStackAttached);
+    Q_D(const QQuickStackViewAttached);
     return d->element ? d->element->view : nullptr;
 }
 
@@ -1075,9 +1075,9 @@ QQuickStackView *QQuickStackAttached::view() const
     \value StackView.Activating The item is being activated (becoming the current item).
     \value StackView.Active The item is active, that is, the current item.
 */
-QQuickStackView::Status QQuickStackAttached::status() const
+QQuickStackView::Status QQuickStackViewAttached::status() const
 {
-    Q_D(const QQuickStackAttached);
+    Q_D(const QQuickStackViewAttached);
     return d->element ? d->element->status : QQuickStackView::Inactive;
 }
 

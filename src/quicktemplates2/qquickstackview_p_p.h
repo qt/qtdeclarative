@@ -97,14 +97,14 @@ public:
     QQuickItemViewTransitioner *transitioner;
 };
 
-class QQuickStackAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
+class QQuickStackViewAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
-    Q_DECLARE_PUBLIC(QQuickStackAttached)
+    Q_DECLARE_PUBLIC(QQuickStackViewAttached)
 
 public:
-    QQuickStackAttachedPrivate() : element(nullptr) { }
+    QQuickStackViewAttachedPrivate() : element(nullptr) { }
 
-    static QQuickStackAttachedPrivate *get(QQuickStackAttached *attached)
+    static QQuickStackViewAttachedPrivate *get(QQuickStackViewAttached *attached)
     {
         return attached->d_func();
     }

@@ -55,8 +55,9 @@ QT_BEGIN_NAMESPACE
 class QQmlV4Function;
 class QQuickTransition;
 class QQuickStackElement;
-class QQuickStackAttached;
 class QQuickStackViewPrivate;
+class QQuickStackViewAttached;
+class QQuickStackViewAttachedPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
 {
@@ -76,7 +77,7 @@ public:
     explicit QQuickStackView(QQuickItem *parent = nullptr);
     ~QQuickStackView();
 
-    static QQuickStackAttached *qmlAttachedProperties(QObject *object);
+    static QQuickStackViewAttached *qmlAttachedProperties(QObject *object);
 
     bool isBusy() const;
     int depth() const;
@@ -157,9 +158,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickStackView)
 };
 
-class QQuickStackAttachedPrivate;
-
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackAttached : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
@@ -167,8 +166,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackAttached : public QObject
     Q_PROPERTY(QQuickStackView::Status status READ status NOTIFY statusChanged FINAL)
 
 public:
-    explicit QQuickStackAttached(QObject *parent = nullptr);
-    ~QQuickStackAttached();
+    explicit QQuickStackViewAttached(QObject *parent = nullptr);
+    ~QQuickStackViewAttached();
 
     int index() const;
     QQuickStackView *view() const;
@@ -185,8 +184,8 @@ Q_SIGNALS:
     /*Q_REVISION(1)*/ void removed();
 
 private:
-    Q_DISABLE_COPY(QQuickStackAttached)
-    Q_DECLARE_PRIVATE(QQuickStackAttached)
+    Q_DISABLE_COPY(QQuickStackViewAttached)
+    Q_DECLARE_PRIVATE(QQuickStackViewAttached)
 };
 
 QT_END_NAMESPACE

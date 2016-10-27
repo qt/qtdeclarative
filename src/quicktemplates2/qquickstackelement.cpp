@@ -47,11 +47,11 @@
 
 QT_BEGIN_NAMESPACE
 
-static QQuickStackAttached *attachedStackObject(QQuickStackElement *element)
+static QQuickStackViewAttached *attachedStackObject(QQuickStackElement *element)
 {
-    QQuickStackAttached *attached = qobject_cast<QQuickStackAttached *>(qmlAttachedPropertiesObject<QQuickStackView>(element->item, false));
+    QQuickStackViewAttached *attached = qobject_cast<QQuickStackViewAttached *>(qmlAttachedPropertiesObject<QQuickStackView>(element->item, false));
     if (attached)
-        QQuickStackAttachedPrivate::get(attached)->element = element;
+        QQuickStackViewAttachedPrivate::get(attached)->element = element;
     return attached;
 }
 
@@ -82,7 +82,7 @@ QQuickStackElement::~QQuickStackElement()
     if (ownComponent)
         delete component;
 
-    QQuickStackAttached *attached = attachedStackObject(this);
+    QQuickStackViewAttached *attached = attachedStackObject(this);
     if (item) {
         if (ownItem) {
             item->setParentItem(nullptr);
@@ -98,7 +98,7 @@ QQuickStackElement::~QQuickStackElement()
                 item->setParentItem(originalParent);
             } else {
                 if (attached)
-                    QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, nullptr);
+                    QQuickStackViewAttachedPrivate::get(attached)->itemParentChanged(item, nullptr);
             }
         }
     }
@@ -205,7 +205,7 @@ void QQuickStackElement::setIndex(int value)
         return;
 
     index = value;
-    QQuickStackAttached *attached = attachedStackObject(this);
+    QQuickStackViewAttached *attached = attachedStackObject(this);
     if (attached)
         emit attached->indexChanged();
 }
@@ -216,7 +216,7 @@ void QQuickStackElement::setView(QQuickStackView *value)
         return;
 
     view = value;
-    QQuickStackAttached *attached = attachedStackObject(this);
+    QQuickStackViewAttached *attached = attachedStackObject(this);
     if (attached)
         emit attached->viewChanged();
 }
@@ -227,7 +227,7 @@ void QQuickStackElement::setStatus(QQuickStackView::Status value)
         return;
 
     status = value;
-    QQuickStackAttached *attached = attachedStackObject(this);
+    QQuickStackViewAttached *attached = attachedStackObject(this);
     if (!attached)
         return;
 
