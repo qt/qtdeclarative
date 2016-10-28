@@ -79,6 +79,8 @@ QT_BEGIN_NAMESPACE
     decoration of the TextArea scrolls together with the rest of the scrollable
     content.
 
+    \section2 Scrollable TextArea
+
     If you want to make a TextArea scrollable, for example, when it covers
     an entire application page, attach it to a \l Flickable and combine with a
     \l ScrollBar or \l ScrollIndicator.
@@ -87,7 +89,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-textarea-flickable.qml 1
 
-    A TextArea that is attached to a Flickable does the following:
+    A TextArea that is attached to a \l Flickable does the following:
 
     \list
     \li Sets the content size automatically
@@ -630,9 +632,7 @@ QQuickTextAreaAttached::~QQuickTextAreaAttached()
 
     This property attaches a text area to a \l Flickable.
 
-    \snippet qtquickcontrols2-textarea-flickable.qml 1
-
-    \sa ScrollBar, ScrollIndicator
+    \sa ScrollBar, ScrollIndicator, {Scrollable TextArea}
 */
 QQuickTextArea *QQuickTextAreaAttached::flickable() const
 {
