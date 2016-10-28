@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-label.qml 1
 
-    You can use the properties of Text to change the appearance of the text as desired:
+    You can use the properties of \l Text to change the appearance of the text as desired:
 
     \qml
      Label {
