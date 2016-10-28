@@ -1276,14 +1276,16 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     // OS X 10.8.3 introduced a bug in the AMD drivers, for at least the 2011 macbook pros,
     // causing point sprites who read gl_PointCoord in the frag shader to come out as
     // green-red blobs.
-    if (perfLevel < Deformable && strstr((char *) glGetString(GL_VENDOR), "ATI")) {
+    const GLubyte *glVendor = QOpenGLContext::currentContext()->functions()->glGetString(GL_VENDOR);
+    if (perfLevel < Deformable && glVendor && strstr((char *) glVendor, "ATI")) {
         perfLevel = Deformable;
     }
 #endif
 
 #ifdef Q_OS_LINUX
     // Nouveau drivers can potentially freeze a machine entirely when taking the point-sprite path.
-    if (perfLevel < Deformable && strstr((const char *) glGetString(GL_VENDOR), "nouveau"))
+    const GLubyte *glVendor = QOpenGLContext::currentContext()->functions()->glGetString(GL_VENDOR);
+    if (perfLevel < Deformable && glVendor && strstr((const char *) glVendor, "nouveau"))
         perfLevel = Deformable;
 #endif
 
