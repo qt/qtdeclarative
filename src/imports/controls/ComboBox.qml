@@ -50,10 +50,8 @@ T.ComboBox {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    spacing: 8
-    padding: 6
-    leftPadding: padding + 6
-    rightPadding: padding + 6
+    leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
+    rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
     //! [delegate]
     delegate: ItemDelegate {
@@ -67,7 +65,7 @@ T.ComboBox {
 
     //! [indicator]
     indicator: Image {
-        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
         source: "image://default/double-arrow/" + (control.visualFocus ? Default.focusColor : Default.textColor)
         sourceSize.width: width
@@ -78,8 +76,10 @@ T.ComboBox {
 
     //! [contentItem]
     contentItem: Text {
-        leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
-        rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
+        leftPadding: 12
+        rightPadding: 12
+        topPadding: 6 - control.padding
+        bottomPadding: 6 - control.padding
 
         text: control.displayText
         font: control.font
