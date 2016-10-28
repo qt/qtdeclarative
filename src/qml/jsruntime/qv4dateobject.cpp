@@ -54,16 +54,29 @@
 
 #include <wtf/MathExtras.h>
 
-#ifdef Q_OS_WIN
-#  include <windows.h>
-#else
-#  ifndef Q_OS_VXWORKS
-#    include <sys/time.h>
-#  else
-#    include "qplatformdefs.h"
-#  endif
-#  include <unistd.h> // for _POSIX_THREAD_SAFE_FUNCTIONS
+#ifdef Q_OS_LINUX
+/*
+  See QTBUG-56899.  Although we don't (yet) have a proper way to reset the
+  system zone, the code below, that uses QTimeZone::systemTimeZone(), works
+  adequately on Linux, when the TZ environment variable is changed.
+ */
+#define USE_QTZ_SYSTEM_ZONE
 #endif
+
+#ifdef USE_QTZ_SYSTEM_ZONE
+#include <QtCore/QTimeZone>
+#else
+#  ifdef Q_OS_WIN
+#    include <windows.h>
+#  else
+#    ifndef Q_OS_VXWORKS
+#      include <sys/time.h>
+#    else
+#      include "qplatformdefs.h"
+#    endif
+#    include <unistd.h> // for _POSIX_THREAD_SAFE_FUNCTIONS
+#  endif
+#endif // USE_QTZ_SYSTEM_ZONE
 
 using namespace QV4;
 
@@ -75,6 +88,7 @@ static const double msPerMinute = 60000.0;
 static const double msPerHour = 3600000.0;
 static const double msPerDay = 86400000.0;
 
+// The current *standard* time offset, regardless of DST:
 static double LocalTZA = 0.0; // initialized at startup
 
 static inline double TimeWithinDay(double t)
@@ -285,6 +299,31 @@ static inline double MakeDate(double day, double time)
     return day * msPerDay + time;
 }
 
+#ifdef USE_QTZ_SYSTEM_ZONE
+/*
+  ECMAScript specifies use of a fixed (current, standard) time-zone offset,
+  LocalTZA; and LocalTZA + DaylightSavingTA(t) is taken to be (see LocalTime and
+  UTC, following) local time's offset from UTC at time t.  For simple zones,
+  DaylightSavingTA(t) is thus the DST offset applicable at date/time t; however,
+  if a zone has changed its standard offset, the only way to make LocalTime and
+  UTC (if implemented in accord with the spec) perform correct transformations
+  is to have DaylightSavingTA(t) correct for the zone's standard offset change
+  as well as its actual DST offset.
+
+  This means we have to treat any historical changes in the zone's standard
+  offset as DST perturbations, regardless of historical reality.  (This shall
+  mean a whole day of DST offset for some zones, that have crossed the
+  international date line.  This shall confuse client code.)  The bug report
+  against the ECMAScript spec is https://github.com/tc39/ecma262/issues/725
+*/
+
+static inline double DaylightSavingTA(double t) // t is a UTC time
+{
+    return QTimeZone::systemTimeZone().offsetFromUtc(
+        QDateTime::fromMSecsSinceEpoch(qint64(t), Qt::UTC)) * 1e3 - LocalTZA;
+}
+#else
+// This implementation fails to take account of past changes in standard offset.
 static inline double DaylightSavingTA(double t)
 {
     struct tm tmtm;
@@ -306,34 +345,26 @@ static inline double DaylightSavingTA(double t)
         return 0;
     return (tmtm.tm_isdst > 0) ? msPerHour : 0;
 }
+#endif // USE_QTZ_SYSTEM_ZONE
 
 static inline double LocalTime(double t)
 {
+    // Flawed, yet verbatim from the spec:
     return t + LocalTZA + DaylightSavingTA(t);
 }
 
+// The spec does note [*] that UTC and LocalTime are not quite mutually inverse.
+// [*] http://www.ecma-international.org/ecma-262/7.0/index.html#sec-utc-t
+
 static inline double UTC(double t)
 {
+    // Flawed, yet verbatim from the spec:
     return t - LocalTZA - DaylightSavingTA(t - LocalTZA);
 }
 
 static inline double currentTime()
 {
-#ifndef Q_OS_WIN
-    struct timeval tv;
-
-    gettimeofday(&tv, 0);
-    return ::floor(tv.tv_sec * msPerSecond + (tv.tv_usec / 1000.0));
-#else
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    FILETIME ft;
-    SystemTimeToFileTime(&st, &ft);
-    LARGE_INTEGER li;
-    li.LowPart = ft.dwLowDateTime;
-    li.HighPart = ft.dwHighDateTime;
-    return double(li.QuadPart - Q_INT64_C(116444736000000000)) / 10000.0;
-#endif
+    return QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
 }
 
 static inline double TimeClip(double t)
@@ -616,20 +647,28 @@ static inline QString ToLocaleTimeString(double t)
 static double getLocalTZA()
 {
 #ifndef Q_OS_WIN
+    tzset();
+#endif
+#ifdef USE_QTZ_SYSTEM_ZONE
+    // TODO: QTimeZone::resetSystemTimeZone(), see QTBUG-56899 and comment above.
+    // Standard offset, with no daylight-savings adjustment, in ms:
+    return QTimeZone::systemTimeZone().standardTimeOffset(QDateTime::currentDateTime()) * 1e3;
+#else
+#  ifdef Q_OS_WIN
+    TIME_ZONE_INFORMATION tzInfo;
+    GetTimeZoneInformation(&tzInfo);
+    return -tzInfo.Bias * 60.0 * 1000.0;
+#  else
     struct tm t;
     time_t curr;
-    tzset();
     time(&curr);
-    localtime_r(&curr, &t);
+    localtime_r(&curr, &t); // Wrong: includes DST offset
     time_t locl = mktime(&t);
     gmtime_r(&curr, &t);
     time_t globl = mktime(&t);
     return (double(locl) - double(globl)) * 1000.0;
-#else
-    TIME_ZONE_INFORMATION tzInfo;
-    GetTimeZoneInformation(&tzInfo);
-    return -tzInfo.Bias * 60.0 * 1000.0;
-#endif
+#  endif
+#endif // USE_QTZ_SYSTEM_ZONE
 }
 
 DEFINE_OBJECT_VTABLE(DateObject);
@@ -648,17 +687,19 @@ void Heap::DateObject::init(const QTime &time)
         return;
     }
 
-    /* All programmers know that stuff starts at 0. Whatever that may mean in this context (and
-     * local timezone), it's before the epoch, so there is defenitely no DST problem. Specifically:
-     * you can't start with a date before the epoch, add some[*] hours, and end up with a date
-     * after. That's a problem for timezones where new year happens during DST, like
-     * Australia/Hobart, because we have to ignore DST before the epoch (but honor it after the
-     * epoch).
-     *
-     * [*] Well, when "some" is in the range 0-24. If you add something like 1M then this might
-     *     still happen.
+    /* We have to chose a date on which to instantiate this time.  All we really
+     * care about is that it round-trips back to the same time if we extract the
+     * time from it, which shall (via toQDateTime(), below) discard the date
+     * part.  We need a date for which time-zone data is likely to be sane (so
+     * MakeDay(0, 0, 0) was a bad choice; 2 BC, December 31st is before
+     * time-zones were standardized), with no transition nearby in date.  We
+     * ignore DST transitions before 1970, but even then zone transitions did
+     * happen.  Some do happen at new year, others on DST transitions in spring
+     * and autumn; so pick the three hundredth anniversary of the birth of
+     * Giovanni Domenico Cassini (1625-06-08), whose work first let us
+     * synchronize clocks tolerably accurately at distant locations.
      */
-    static const double d = MakeDay(0, 0, 0);
+    static const double d = MakeDay(1925, 5, 8);
     double t = MakeTime(time.hour(), time.minute(), time.second(), time.msec());
     date = TimeClip(UTC(MakeDate(d, t)));
 }

@@ -1268,8 +1268,8 @@ void tst_qqmllocale::timeZoneUpdated()
 {
     QByteArray original(qgetenv("TZ"));
 
-    // Set the timezone to Brisbane time
-    setTimeZone(QByteArray("AEST-10:00"));
+    // Set the timezone to Brisbane time, AEST-10:00
+    setTimeZone(QByteArray("Australia/Brisbane"));
 
     DateFormatter formatter;
 
@@ -1281,8 +1281,8 @@ void tst_qqmllocale::timeZoneUpdated()
     QVERIFY(obj);
     QVERIFY(obj->property("success").toBool());
 
-    // Change to Indian time
-    setTimeZone(QByteArray("IST-05:30"));
+    // Change to Indian time, IST-05:30
+    setTimeZone(QByteArray("Asia/Kolkata"));
 
     QMetaObject::invokeMethod(obj.data(), "check");
 

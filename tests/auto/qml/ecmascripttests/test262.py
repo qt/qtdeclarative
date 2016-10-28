@@ -552,10 +552,10 @@ class TestSuite(object):
 
 
 def Main():
-  # Some date tests rely on being run in pacific time.
   # Uncomment the next line for more logging info.
   #logging.basicConfig(level=logging.DEBUG)
-  os.environ["TZ"] = "PST8PDT"
+  # Some date tests rely on being run in pacific time and the USA's locale:
+  os.environ["TZ"] = "America/Vancouver"
   os.environ["LANG"] = "en_US.UTF-8"
   os.environ["LC_TIME"] = "en_US.UTF-8"
   parser = BuildOptions()
