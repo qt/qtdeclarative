@@ -1291,7 +1291,7 @@ void tst_qqmllocale::timeZoneUpdated()
     QQmlComponent c(&e, testFileUrl("timeZoneUpdated.qml"));
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
-    QCOMPARE(obj->property("success").toBool(), true);
+    QVERIFY(obj->property("success").toBool());
 
     // Change to Indian time
     setTimeZone(QByteArray("IST-05:30"));
@@ -1302,7 +1302,7 @@ void tst_qqmllocale::timeZoneUpdated()
     setTimeZone(original);
     QMetaObject::invokeMethod(obj.data(), "resetTimeZone");
 
-    QCOMPARE(obj->property("success").toBool(), true);
+    QVERIFY(obj->property("success").toBool());
 }
 #endif
 
