@@ -62,6 +62,8 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-tooltip.png
 
+    \section2 Attached Tool Tips
+
     The most straight-forward way to setup tool tips for controls is to
     specify \l text and \l {visible}{visibility} via attached properties.
     The following example illustrates this approach:
@@ -358,6 +360,8 @@ QQuickToolTipAttached::QQuickToolTipAttached(QObject *parent) :
 
     This attached property holds the text of the shared tool tip.
     The property can be attached to any item.
+
+    \sa {Attached Tool Tips}
 */
 QString QQuickToolTipAttached::text() const
 {
@@ -384,7 +388,7 @@ void QQuickToolTipAttached::setText(const QString &text)
     This attached property holds the delay (milliseconds) of the shared tool tip.
     The property can be attached to any item.
 
-    \sa {Delay and Timeout}
+    \sa {Attached Tool Tips}, {Delay and Timeout}
 */
 int QQuickToolTipAttached::delay() const
 {
@@ -411,7 +415,7 @@ void QQuickToolTipAttached::setDelay(int delay)
     This attached property holds the timeout (milliseconds) of the shared tool tip.
     The property can be attached to any item.
 
-    \sa {Delay and Timeout}
+    \sa {Attached Tool Tips}, {Delay and Timeout}
 */
 int QQuickToolTipAttached::timeout() const
 {
@@ -437,6 +441,8 @@ void QQuickToolTipAttached::setTimeout(int timeout)
 
     This attached property holds whether the shared tool tip is visible.
     The property can be attached to any item.
+
+    \sa {Attached Tool Tips}
 */
 bool QQuickToolTipAttached::isVisible() const
 {
@@ -462,6 +468,8 @@ void QQuickToolTipAttached::setVisible(bool visible)
 
     This attached property holds the shared tool tip instance. The property
     can be attached to any item.
+
+    \sa {Attached Tool Tips}
 */
 QQuickToolTip *QQuickToolTipAttached::toolTip() const
 {
@@ -474,6 +482,8 @@ QQuickToolTip *QQuickToolTipAttached::toolTip() const
 
     This attached method shows the shared tooltip with \a text and \a timeout (milliseconds).
     The method can be attached to any item.
+
+    \sa {Attached Tool Tips}
 */
 void QQuickToolTipAttached::show(const QString &text, int ms)
 {
@@ -495,6 +505,8 @@ void QQuickToolTipAttached::show(const QString &text, int ms)
     \qmlattachedmethod void QtQuick.Controls::ToolTip::hide()
 
     This attached method hides the shared tooltip. The method can be attached to any item.
+
+    \sa {Attached Tool Tips}
 */
 void QQuickToolTipAttached::hide()
 {
