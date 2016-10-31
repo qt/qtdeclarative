@@ -84,6 +84,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
     Q_PROPERTY(qreal margins READ margins WRITE setMargins RESET resetMargins NOTIFY marginsChanged FINAL)
     Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin RESET resetTopMargin NOTIFY topMarginChanged FINAL)
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged FINAL)
@@ -153,6 +154,10 @@ public:
 
     qreal availableWidth() const;
     qreal availableHeight() const;
+
+    qreal spacing() const;
+    void setSpacing(qreal spacing);
+    void resetSpacing();
 
     qreal margins() const;
     void setMargins(qreal margins);
@@ -293,6 +298,7 @@ Q_SIGNALS:
     void contentHeightChanged();
     void availableWidthChanged();
     void availableHeightChanged();
+    Q_REVISION(1) void spacingChanged();
     void marginsChanged();
     void topMarginChanged();
     void leftMarginChanged();
@@ -354,6 +360,7 @@ protected:
     virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
+    virtual void spacingChange(qreal newSpacing, qreal oldSpacing);
 
     virtual QFont defaultFont() const;
 

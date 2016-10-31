@@ -50,6 +50,7 @@ static const QQuickItemPrivate::ChangeTypes ItemChangeTypes = QQuickItemPrivate:
                                                              | QQuickItemPrivate::Parent;
 
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopup *popup) :
+    m_positioning(false),
     m_parentItem(nullptr),
     m_popup(popup)
 {
@@ -95,6 +96,11 @@ void QQuickPopupPositioner::reposition()
     QQuickItem *popupItem = m_popup->popupItem();
     if (!popupItem->isVisible())
         return;
+
+    if (m_positioning) {
+        popupItem->polish();
+        return;
+    }
 
     const qreal w = popupItem->width();
     const qreal h = popupItem->height();
@@ -205,6 +211,8 @@ void QQuickPopupPositioner::reposition()
         }
     }
 
+    m_positioning = true;
+
     popupItem->setPosition(rect.topLeft());
 
     const QPointF effectivePos = m_parentItem ? m_parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
@@ -221,6 +229,8 @@ void QQuickPopupPositioner::reposition()
         popupItem->setWidth(rect.width());
     if (!p->hasHeight && heightAdjusted && rect.height() > 0)
         popupItem->setHeight(rect.height());
+
+    m_positioning = false;
 }
 
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)

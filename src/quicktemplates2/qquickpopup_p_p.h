@@ -123,6 +123,7 @@ public:
     bool hasDim;
     bool visible;
     bool complete;
+    bool positioning;
     bool hasWidth;
     bool hasHeight;
     bool hasTopMargin;

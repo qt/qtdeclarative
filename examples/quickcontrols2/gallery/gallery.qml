@@ -57,6 +57,15 @@ ApplicationWindow {
         property string style: "Default"
     }
 
+    Shortcut {
+        sequence: "Esc"
+        enabled: stackView.depth > 1
+        onActivated: {
+            stackView.pop()
+            listView.currentIndex = -1
+        }
+    }
+
     header: ToolBar {
         Material.foreground: "white"
 
@@ -126,6 +135,8 @@ ApplicationWindow {
 
         ListView {
             id: listView
+
+            focus: true
             currentIndex: -1
             anchors.fill: parent
 
@@ -134,10 +145,8 @@ ApplicationWindow {
                 text: model.title
                 highlighted: ListView.isCurrentItem
                 onClicked: {
-                    if (listView.currentIndex != index) {
-                        listView.currentIndex = index
-                        stackView.push(model.source)
-                    }
+                    listView.currentIndex = index
+                    stackView.push(model.source)
                     drawer.close()
                 }
             }
@@ -221,6 +230,7 @@ ApplicationWindow {
         width: Math.round(Math.min(window.width, window.height) / 3 * 2)
         modal: true
         focus: true
+        title: "Settings"
 
         standardButtons: Dialog.Ok | Dialog.Cancel
         onAccepted: {
@@ -235,11 +245,6 @@ ApplicationWindow {
         contentItem: ColumnLayout {
             id: settingsColumn
             spacing: 20
-
-            Label {
-                text: "Settings"
-                font.bold: true
-            }
 
             RowLayout {
                 spacing: 10
@@ -277,6 +282,7 @@ ApplicationWindow {
         id: aboutDialog
         modal: true
         focus: true
+        title: "About"
         x: (window.width - width) / 2
         y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
@@ -285,11 +291,6 @@ ApplicationWindow {
         Column {
             id: aboutColumn
             spacing: 20
-
-            Label {
-                text: "About"
-                font.bold: true
-            }
 
             Label {
                 width: aboutDialog.availableWidth

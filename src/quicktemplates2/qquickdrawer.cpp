@@ -157,7 +157,9 @@ QT_BEGIN_NAMESPACE
     the drawer is opened, don't apply a translation.
 
     \note On some platforms, certain edges may be reserved for system
-    gestures and therefore cannot be used with Drawer.
+    gestures and therefore cannot be used with Drawer. For example, the
+    top and bottom edges may be reserved for system notifications and
+    control centers on Android and iOS.
 
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
@@ -482,13 +484,13 @@ QQuickDrawer::QQuickDrawer(QObject *parent) :
 /*!
     \qmlproperty enumeration QtQuick.Controls::Drawer::edge
 
-    This property holds the edge of the content item at which the drawer will
+    This property holds the edge of the window at which the drawer will
     open from. The acceptable values are:
 
-    \value Qt.TopEdge     The top edge of the content item.
-    \value Qt.LeftEdge    The left edge of the content item (default).
-    \value Qt.RightEdge   The right edge of the content item.
-    \value Qt.BottomEdge  The bottom edge of the content item.
+    \value Qt.TopEdge     The top edge of the window.
+    \value Qt.LeftEdge    The left edge of the window (default).
+    \value Qt.RightEdge   The right edge of the window.
+    \value Qt.BottomEdge  The bottom edge of the window.
 */
 Qt::Edge QQuickDrawer::edge() const
 {
@@ -512,8 +514,8 @@ void QQuickDrawer::setEdge(Qt::Edge edge)
     \qmlproperty real QtQuick.Controls::Drawer::position
 
     This property holds the position of the drawer relative to its final
-    destination. That is, the position will be \c 0 when the drawer
-    is fully closed, and \c 1 when fully open.
+    destination. That is, the position will be \c 0.0 when the drawer
+    is fully closed, and \c 1.0 when fully open.
 */
 qreal QQuickDrawer::position() const
 {

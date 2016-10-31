@@ -103,6 +103,12 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
 }
 
+void QQuickPopupItem::updatePolish()
+{
+    Q_D(QQuickPopupItem);
+    return QQuickPopupPrivate::get(d->popup)->reposition();
+}
+
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)
 {
     Q_D(QQuickPopupItem);

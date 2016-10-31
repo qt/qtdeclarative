@@ -55,8 +55,6 @@ T.ComboBox {
     leftPadding: padding + 6
     rightPadding: padding + 6
 
-    opacity: enabled ? 1 : 0.3
-
     //! [delegate]
     delegate: ItemDelegate {
         width: control.popup.width
@@ -74,6 +72,7 @@ T.ComboBox {
         source: "image://default/double-arrow/" + (control.visualFocus ? Default.focusColor : Default.textColor)
         sourceSize.width: width
         sourceSize.height: height
+        opacity: enabled ? 1 : 0.3
     }
     //! [indicator]
 
@@ -88,6 +87,7 @@ T.ComboBox {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
+        opacity: enabled ? 1 : 0.3
     }
     //! [contentItem]
 

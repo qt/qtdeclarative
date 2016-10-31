@@ -56,8 +56,8 @@ QT_BEGIN_NAMESPACE
     or a \l ColumnLayout.
 
     Items declared as children of a GroupBox are automatically parented to the
-    GroupBox's contentItem. Items created dynamically need to be explicitly
-    parented to the contentItem.
+    GroupBox's \l {Control::}{contentItem}. Items created dynamically need to be
+    explicitly parented to the contentItem.
 
     If only a single item is used within a GroupBox, it will resize to fit the
     implicit size of its contained item. This makes it particularly suitable

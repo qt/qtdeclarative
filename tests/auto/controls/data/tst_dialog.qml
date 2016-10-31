@@ -62,16 +62,6 @@ TestCase {
     }
 
     Component {
-        id: headerBox
-        DialogButtonBox { position: DialogButtonBox.Header }
-    }
-
-    Component {
-        id: footerBox
-        DialogButtonBox { position: DialogButtonBox.Footer }
-    }
-
-    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -79,9 +69,8 @@ TestCase {
     function test_defaults() {
         var control = dialog.createObject(testCase)
         verify(control)
-        verify(!control.header)
-        verify(!control.footer)
-        verify(control.buttonBox)
+        verify(control.header)
+        verify(control.footer)
         compare(control.standardButtons, 0)
         control.destroy()
     }
@@ -122,22 +111,18 @@ TestCase {
 
     function test_buttonBox_data() {
         return [
-            { tag: "default header", property: "header", buttonBox: headerBox },
-            { tag: "default footer", property: "footer", buttonBox: footerBox },
-            { tag: "custom header", property: "header", position: DialogButtonBox.Header },
-            { tag: "custom footer", property: "footer", position: DialogButtonBox.Footer }
+            { tag: "default" },
+            { tag: "custom", custom: true }
         ]
     }
 
     function test_buttonBox(data) {
         var control = dialog.createObject(testCase)
 
-        if (data.buttonBox)
-            control.buttonBox = data.buttonBox
-        else
-            control[data.property] = buttonBox.createObject(testCase, {position: data.position})
+        if (data.custom)
+            control.footer = buttonBox.createObject(testCase)
         control.standardButtons = Dialog.Ok | Dialog.Cancel
-        var box = control[data.property]
+        var box = control.footer
         verify(box)
         compare(box.standardButtons, Dialog.Ok | Dialog.Cancel)
 
@@ -188,30 +173,6 @@ TestCase {
 
         control.standardButtons = 0
         compare(box.count, 0)
-
-        control.destroy()
-    }
-
-    function test_warnings() {
-        var control = dialog.createObject(testCase)
-        verify(control)
-
-        var testComponent = Qt.createComponent("TestItem.qml")
-        verify(testComponent)
-
-        control.buttonBox = headerBox
-        control.header = testComponent.createObject(testCase)
-        ignoreWarning(Qt.resolvedUrl("tst_dialog.qml") + ":56:9: QML Dialog: Custom header detected. Cannot assign buttonBox as a header. No standard buttons will appear in the header.")
-        control.standardButtons = Dialog.Apply
-
-        control.buttonBox = footerBox
-        control.footer = testComponent.createObject(testCase)
-        ignoreWarning(Qt.resolvedUrl("tst_dialog.qml") + ":56:9: QML Dialog: Custom footer detected. Cannot assign buttonBox as a footer. No standard buttons will appear in the footer.")
-        control.standardButtons = Dialog.Cancel
-
-        control.buttonBox = testComponent
-        ignoreWarning(Qt.resolvedUrl("tst_dialog.qml") + ":56:9: QML Dialog: buttonBox must be an instance of DialogButtonBox")
-        control.standardButtons = Dialog.Ok
 
         control.destroy()
     }
@@ -291,6 +252,50 @@ TestCase {
 
         control.footer.implicitWidth = 160
         compare(control.implicitWidth, control.footer.implicitWidth)
+
+        control.destroy()
+    }
+
+    function test_spacing_data() {
+        return [
+            { tag: "content", header: false, content: true, footer: false },
+            { tag: "header,content", header: true, content: true, footer: false },
+            { tag: "content,footer", header: false, content: true, footer: true },
+            { tag: "header,content,footer", header: true, content: true, footer: true },
+            { tag: "header,footer", header: true, content: false, footer: true },
+            { tag: "header", header: true, content: false, footer: false },
+            { tag: "footer", header: false, content: false, footer: true },
+        ]
+    }
+
+    function test_spacing(data) {
+        var control = dialog.createObject(testCase, {spacing: 20, width: 100, height: 100})
+        verify(control)
+
+        control.open()
+        waitForRendering(control.contentItem)
+        verify(control.visible)
+
+        control.contentItem.visible = data.content
+        control.header = buttonBox.createObject(control.contentItem, {visible: data.header})
+        control.footer = buttonBox.createObject(control.contentItem, {visible: data.footer})
+
+        compare(control.header.x, 0)
+        compare(control.header.y, 0)
+        compare(control.header.width, control.width)
+        verify(control.header.height > 0)
+
+        compare(control.footer.x, 0)
+        compare(control.footer.y, control.height - control.footer.height)
+        compare(control.footer.width, control.width)
+        verify(control.footer.height > 0)
+
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding + (data.header ? control.header.height + control.spacing : 0))
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight
+                                            - (data.header ? control.header.height + control.spacing : 0)
+                                            - (data.footer ? control.footer.height + control.spacing : 0))
 
         control.destroy()
     }

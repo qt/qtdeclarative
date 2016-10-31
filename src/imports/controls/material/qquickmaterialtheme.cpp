@@ -45,15 +45,15 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
     QFont font;
-    font.setFamily(QStringLiteral("Roboto"));
+    font.setFamily(QLatin1String("Roboto"));
     QString family = QFontInfo(font).family();
 
-    if (family != QStringLiteral("Roboto")) {
-        font.setFamily(QStringLiteral("Noto"));
+    if (family != QLatin1String("Roboto")) {
+        font.setFamily(QLatin1String("Noto"));
         family = QFontInfo(font).family();
     }
 
-    if (family == QStringLiteral("Roboto") || family == QStringLiteral("Noto")) {
+    if (family == QLatin1String("Roboto") || family == QLatin1String("Noto")) {
         systemFont.setFamily(family);
         buttonFont.setFamily(family);
         toolTipFont.setFamily(family);

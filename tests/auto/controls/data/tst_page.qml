@@ -226,4 +226,44 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_spacing_data() {
+        return [
+            { tag: "content", header: false, content: true, footer: false },
+            { tag: "header,content", header: true, content: true, footer: false },
+            { tag: "content,footer", header: false, content: true, footer: true },
+            { tag: "header,content,footer", header: true, content: true, footer: true },
+            { tag: "header,footer", header: true, content: false, footer: true },
+            { tag: "header", header: true, content: false, footer: false },
+            { tag: "footer", header: false, content: false, footer: true },
+        ]
+    }
+
+    function test_spacing(data) {
+        var control = page.createObject(testCase, {spacing: 20, width: 100, height: 100})
+        verify(control)
+
+        control.contentItem.visible = data.content
+        control.header = toolBar.createObject(control.contentItem, {visible: data.header})
+        control.footer = toolBar.createObject(control.contentItem, {visible: data.footer})
+
+        compare(control.header.x, 0)
+        compare(control.header.y, 0)
+        compare(control.header.width, control.width)
+        verify(control.header.height > 0)
+
+        compare(control.footer.x, 0)
+        compare(control.footer.y, control.height - control.footer.height)
+        compare(control.footer.width, control.width)
+        verify(control.footer.height > 0)
+
+        compare(control.contentItem.x, control.leftPadding)
+        compare(control.contentItem.y, control.topPadding + (data.header ? control.header.height + control.spacing : 0))
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight
+                                            - (data.header ? control.header.height + control.spacing : 0)
+                                            - (data.footer ? control.footer.height + control.spacing : 0))
+
+        control.destroy()
+    }
 }

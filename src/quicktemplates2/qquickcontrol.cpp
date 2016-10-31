@@ -766,10 +766,13 @@ qreal QQuickControl::spacing() const
 void QQuickControl::setSpacing(qreal spacing)
 {
     Q_D(QQuickControl);
-    if (!qFuzzyCompare(d->spacing, spacing)) {
-        d->spacing = spacing;
-        emit spacingChanged();
-    }
+    if (qFuzzyCompare(d->spacing, spacing))
+        return;
+
+    qreal oldSpacing = d->spacing;
+    d->spacing = spacing;
+    emit spacingChanged();
+    spacingChange(spacing, oldSpacing);
 }
 
 void QQuickControl::resetSpacing()
@@ -1011,6 +1014,10 @@ void QQuickControl::setHovered(bool hovered)
 
     Setting this property propagates the value to all child controls that do not have
     \c hoverEnabled explicitly set.
+
+    You can also enable or disable hover effects for all Qt Quick Controls 2 applications
+    by setting the \c QT_QUICK_CONTROLS_HOVER_ENABLED \l {Supported Environment Variables
+    in Qt Quick Controls 2}{environment variable}.
 
     \sa hovered
 */
@@ -1285,6 +1292,12 @@ void QQuickControl::hoverChange()
 void QQuickControl::mirrorChange()
 {
     emit mirroredChanged();
+}
+
+void QQuickControl::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_UNUSED(newSpacing);
+    Q_UNUSED(oldSpacing);
 }
 
 void QQuickControl::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)

@@ -48,13 +48,15 @@ T.Dialog {
                             footer && footer.visible ? footer.implicitWidth : 0,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             (header && header.visible ? header.implicitHeight : 0) + (footer && footer.visible ? footer.implicitHeight : 0))
-                             + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0)
+                             (header && header.visible ? header.implicitHeight + spacing : 0)
+                             + (footer && footer.visible ? footer.implicitHeight + spacing : 0)
+                             + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0))
 
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     padding: 24
+    topPadding: 20
 
     Material.elevation: 24
 
@@ -80,7 +82,24 @@ T.Dialog {
         }
     }
 
-    buttonBox: DialogButtonBox {
-        position: DialogButtonBox.Footer
+    header: Label {
+        text: control.title
+        visible: control.title
+        elide: Label.ElideRight
+        padding: 24
+        bottomPadding: 0
+        // TODO: QPlatformTheme::TitleBarFont
+        font.bold: true
+        font.pixelSize: 16
+        background: PaddedRectangle {
+            radius: 2
+            color: control.Material.dialogColor
+            bottomPadding: -2
+            clip: true
+        }
+    }
+
+    footer: DialogButtonBox {
+        visible: count > 0
     }
 }

@@ -53,9 +53,13 @@ QT_BEGIN_NAMESPACE
 
     SwitchDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Switch delegates are typically used to select one or more
-    options from a set of options.
+    options from a set of options. For smaller sets of options, or for options
+    that need to be uniquely identifiable, consider using \l Switch instead.
 
-    The state of the check delegate can be set with the
+    SwitchDelegate inherits its API from \l ItemDelegate, which is inherited
+    from \l AbstractButton. For instance, you can set \l {AbstractButton::text}{text},
+    and react to \l {AbstractButton::clicked}{clicks} using the \l AbstractButton
+    API. The state of the switch delegate can be set with the
     \l {AbstractButton::}{checked} property.
 
     \code

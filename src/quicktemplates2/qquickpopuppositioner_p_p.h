@@ -75,6 +75,7 @@ private:
     void removeAncestorListeners(QQuickItem *item);
     void addAncestorListeners(QQuickItem *item);
 
+    bool m_positioning;
     QQuickItem *m_parentItem;
     QQuickPopup *m_popup;
 };

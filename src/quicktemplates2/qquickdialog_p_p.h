@@ -53,7 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
 class QQuickDialogButtonBox;
 
 class QQuickDialogPrivate : public QQuickPopupPrivate
@@ -61,17 +60,15 @@ class QQuickDialogPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickDialog)
 
 public:
-    QQuickDialogPrivate() : buttonBox(nullptr), buttonBoxComponent(nullptr) { }
+    QQuickDialogPrivate() : buttonBox(nullptr) { }
 
     static QQuickDialogPrivate *get(QQuickDialog *dialog)
     {
         return dialog->d_func();
     }
 
-    void createButtonBox();
-
+    QString title;
     QQuickDialogButtonBox *buttonBox;
-    QQmlComponent *buttonBoxComponent;
     QScopedPointer<QQuickPageLayout> layout;
     QPlatformDialogHelper::StandardButtons standardButtons;
 };

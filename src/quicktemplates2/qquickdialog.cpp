@@ -39,10 +39,6 @@
 #include "qquickdialogbuttonbox_p.h"
 #include "qquickpopupitem_p_p.h"
 
-#include <QtQml/qqmlinfo.h>
-#include <QtQml/qqmlcontext.h>
-#include <QtQml/qqmlcomponent.h>
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -61,21 +57,18 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-page-wireframe.png
 
-    \section1 Dialog Buttons
+    \section1 Dialog Title and Buttons
 
-    Dialog's standard buttons are managed by \l DialogButtonBox. When a button box
-    is assigned as a dialog \l footer or \l header, the dialog's \l standardButtons
-    property is forwarded to the respective property of the button box. Furthermore,
-    the \l {DialogButtonBox::}{accepted()} and \l {DialogButtonBox::}{rejected()}
+    Dialog's \l title is displayed by a style-specific title bar that is assigned
+    as a dialog \l header by default.
+
+    Dialog's standard buttons are managed by a \l DialogButtonBox that is assigned
+    as a dialog \l footer by default. The dialog's \l standardButtons property is
+    forwarded to the respective property of the button box. Furthermore, the
+    \l {DialogButtonBox::}{accepted()} and \l {DialogButtonBox::}{rejected()}
     signals of the button box are connected to the respective signals in Dialog.
 
     \snippet qtquickcontrols2-dialog.qml 1
-
-    \note If any standard buttons are specified for the dialog but no button box has
-    been assigned as a footer or header, Dialog automatically creates an instance of
-    \l buttonBox, and assigns it as a footer or header of the dialog depending on the
-    value of the \l {DialogButtonBox::}{position} property. All built-in Dialog styles
-    assign the button box as a footer.
 
     \section1 Modal Dialogs
 
@@ -122,45 +115,44 @@ QT_BEGIN_NAMESPACE
     \sa accepted()
 */
 
-void QQuickDialogPrivate::createButtonBox()
-{
-    Q_Q(QQuickDialog);
-    QQmlContext *context = qmlContext(q);
-    if (!context || !buttonBoxComponent)
-        return;
-
-    QObject *object = buttonBoxComponent->create(context);
-    QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(object);
-    if (!buttonBox) {
-        if (object) {
-            qmlInfo(q) << "buttonBox must be an instance of DialogButtonBox";
-            delete object;
-        }
-        return;
-    }
-
-    if (buttonBox->position() == QQuickDialogButtonBox::Header) {
-        if (layout->header()) {
-            qmlInfo(q) << "Custom header detected. Cannot assign buttonBox as a header. No standard buttons will appear in the header.";
-            delete buttonBox;
-        } else {
-            q->setHeader(buttonBox);
-        }
-    } else {
-        if (layout->footer()) {
-            qmlInfo(q) << "Custom footer detected. Cannot assign buttonBox as a footer. No standard buttons will appear in the footer.";
-            delete buttonBox;
-        } else {
-            q->setFooter(buttonBox);
-        }
-    }
-}
-
 QQuickDialog::QQuickDialog(QObject *parent) :
     QQuickPopup(*(new QQuickDialogPrivate), parent)
 {
     Q_D(QQuickDialog);
     d->layout.reset(new QQuickPageLayout(d->popupItem));
+}
+
+/*!
+    \qmlproperty string QtQuick.Controls::Dialog::title
+
+    This property holds the dialog title.
+
+    The title is displayed in the dialog header.
+
+    \code
+    Dialog {
+        title: qsTr("About")
+
+        Label {
+            text: "Lorem ipsum..."
+        }
+    }
+    \endcode
+*/
+QString QQuickDialog::title() const
+{
+    Q_D(const QQuickDialog);
+    return d->title;
+}
+
+void QQuickDialog::setTitle(const QString &title)
+{
+    Q_D(QQuickDialog);
+    if (d->title == title)
+        return;
+
+    d->title = title;
+    emit titleChanged();
 }
 
 /*!
@@ -177,7 +169,7 @@ QQuickDialog::QQuickDialog(QObject *parent) :
     header automatically sets the respective \l DialogButtonBox::position,
     \l ToolBar::position, or \l TabBar::position property to \c Header.
 
-    \sa footer, buttonBox
+    \sa footer
 */
 QQuickItem *QQuickDialog::header() const
 {
@@ -224,7 +216,7 @@ void QQuickDialog::setHeader(QQuickItem *header)
     footer automatically sets the respective \l DialogButtonBox::position,
     \l ToolBar::position, or \l TabBar::position property to \c Footer.
 
-    \sa header, buttonBox
+    \sa header
 */
 QQuickItem *QQuickDialog::footer() const
 {
@@ -258,33 +250,6 @@ void QQuickDialog::setFooter(QQuickItem *footer)
 }
 
 /*!
-    \qmlproperty Component QtQuick.Controls::Dialog::buttonBox
-
-    This property holds a delegate for creating a button box.
-
-    A button box is only created if any standard buttons are set.
-    The \l {DialogButtonBox::}{position} property determines whether
-    the button box is assigned as a \l header or \l footer.
-
-    \sa standardButtons, header, footer, DialogButtonBox
-*/
-QQmlComponent *QQuickDialog::buttonBox() const
-{
-    Q_D(const QQuickDialog);
-    return d->buttonBoxComponent;
-}
-
-void QQuickDialog::setButtonBox(QQmlComponent *box)
-{
-    Q_D(QQuickDialog);
-    if (d->buttonBoxComponent == box)
-        return;
-
-    d->buttonBoxComponent = box;
-    emit buttonBoxChanged();
-}
-
-/*!
     \qmlproperty enumeration QtQuick.Controls::Dialog::standardButtons
 
     This property holds a combination of standard buttons that are used by the dialog.
@@ -312,7 +277,7 @@ void QQuickDialog::setButtonBox(QQmlComponent *box)
     \value Dialog.Ignore An "Ignore" button defined with the \c AcceptRole.
     \value Dialog.NoButton An invalid button.
 
-    \sa buttonBox, DialogButtonBox
+    \sa DialogButtonBox
 */
 QPlatformDialogHelper::StandardButtons QQuickDialog::standardButtons() const
 {
@@ -327,12 +292,8 @@ void QQuickDialog::setStandardButtons(QPlatformDialogHelper::StandardButtons but
         return;
 
     d->standardButtons = buttons;
-    if (isComponentComplete()) {
-        if (d->buttonBox)
-            d->buttonBox->setStandardButtons(buttons);
-        else if (buttons)
-            d->createButtonBox();
-    }
+    if (d->buttonBox)
+        d->buttonBox->setStandardButtons(buttons);
     emit standardButtonsChanged();
 }
 
@@ -362,14 +323,6 @@ void QQuickDialog::reject()
     emit rejected();
 }
 
-void QQuickDialog::componentComplete()
-{
-    Q_D(QQuickDialog);
-    QQuickPopup::componentComplete();
-    if (!d->buttonBox && d->standardButtons)
-        d->createButtonBox();
-}
-
 void QQuickDialog::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickDialog);
@@ -381,6 +334,13 @@ void QQuickDialog::paddingChange(const QMarginsF &newPadding, const QMarginsF &o
 {
     Q_D(QQuickDialog);
     QQuickPopup::paddingChange(newPadding, oldPadding);
+    d->layout->update();
+}
+
+void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
+{
+    Q_D(QQuickDialog);
+    QQuickPopup::spacingChange(newSpacing, oldSpacing);
     d->layout->update();
 }
 

@@ -47,8 +47,9 @@ T.Dialog {
                             footer && footer.visible ? footer.implicitWidth : 0,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             (header && header.visible ? header.implicitHeight : 0) + (footer && footer.visible ? footer.implicitHeight : 0))
-                             + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0)
+                             (header && header.visible ? header.implicitHeight + spacing : 0)
+                             + (footer && footer.visible ? footer.implicitHeight + spacing : 0)
+                             + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0))
 
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
@@ -59,7 +60,20 @@ T.Dialog {
         border.color: Default.frameDarkColor
     }
 
-    buttonBox: DialogButtonBox {
-        position: DialogButtonBox.Footer
+    header: Label {
+        text: control.title
+        visible: control.title
+        elide: Label.ElideRight
+        font.bold: true
+        padding: 12
+        background: Rectangle {
+            x: 1; y: 1
+            width: parent.width - 2
+            height: parent.height - 1
+        }
+    }
+
+    footer: DialogButtonBox {
+        visible: count > 0
     }
 }

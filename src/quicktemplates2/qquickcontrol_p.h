@@ -189,6 +189,7 @@ protected:
     virtual void fontChange(const QFont &newFont, const QFont &oldFont);
     virtual void hoverChange();
     virtual void mirrorChange();
+    virtual void spacingChange(qreal newSpacing, qreal oldSpacing);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);

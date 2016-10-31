@@ -51,7 +51,6 @@ T.CheckBox {
 
     padding: 6
     spacing: 6
-    opacity: enabled ? 1 : 0.2
 
     //! [indicator]
     indicator: CheckIndicator {
@@ -73,6 +72,7 @@ T.CheckBox {
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
+        opacity: enabled ? 1 : 0.3
     }
     //! [contentItem]
 }
