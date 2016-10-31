@@ -838,7 +838,7 @@ void QQuickTextEdit::setWrapMode(WrapMode mode)
 /*!
     \qmlproperty int QtQuick::TextEdit::lineCount
 
-    Returns the total number of lines in the textEdit item.
+    Returns the total number of lines in the TextEdit item.
 */
 int QQuickTextEdit::lineCount() const
 {
