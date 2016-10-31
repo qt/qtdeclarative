@@ -48,6 +48,7 @@ Rectangle {
         : (control.visualFocus ? Default.focusLightColor : Default.backgroundColor)
     border.width: control.visualFocus ? 2 : 1
     border.color: control.visualFocus ? Default.focusColor : (control.down ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)
+    opacity: enabled ? 1 : 0.3
 
     property Item control
 

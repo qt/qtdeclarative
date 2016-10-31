@@ -70,7 +70,6 @@ T.Button {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        opacity: enabled ? 1 : 0.3
         visible: !control.flat || control.down || control.checked || control.highlighted
         color: control.checked || control.highlighted ?
             (control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : Default.focusColor) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)) :

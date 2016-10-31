@@ -57,6 +57,15 @@ ApplicationWindow {
         property string style: "Default"
     }
 
+    Shortcut {
+        sequence: "Esc"
+        enabled: stackView.depth > 1
+        onActivated: {
+            stackView.pop()
+            listView.currentIndex = -1
+        }
+    }
+
     header: ToolBar {
         Material.foreground: "white"
 
@@ -126,6 +135,8 @@ ApplicationWindow {
 
         ListView {
             id: listView
+
+            focus: true
             currentIndex: -1
             anchors.fill: parent
 
@@ -134,10 +145,8 @@ ApplicationWindow {
                 text: model.title
                 highlighted: ListView.isCurrentItem
                 onClicked: {
-                    if (listView.currentIndex != index) {
-                        listView.currentIndex = index
-                        stackView.push(model.source)
-                    }
+                    listView.currentIndex = index
+                    stackView.push(model.source)
                     drawer.close()
                 }
             }

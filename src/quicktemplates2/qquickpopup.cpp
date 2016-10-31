@@ -128,6 +128,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , hasDim(false)
     , visible(false)
     , complete(false)
+    , positioning(false)
     , hasWidth(false)
     , hasHeight(false)
     , hasTopMargin(false)
@@ -411,6 +412,12 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
 }
 
+void QQuickPopupItem::updatePolish()
+{
+    Q_D(QQuickPopupItem);
+    return QQuickPopupPrivate::get(d->popup)->reposition();
+}
+
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)
 {
     Q_D(QQuickPopupItem);
@@ -611,6 +618,11 @@ void QQuickPopupPrivate::reposition()
     if (!popupItem->isVisible())
         return;
 
+    if (positioning) {
+        popupItem->polish();
+        return;
+    }
+
     const qreal w = popupItem->width();
     const qreal h = popupItem->height();
     const qreal iw = popupItem->implicitWidth();
@@ -719,6 +731,8 @@ void QQuickPopupPrivate::reposition()
         }
     }
 
+    positioning = true;
+
     popupItem->setPosition(rect.topLeft());
 
     const QPointF effectivePos = parentItem ? parentItem->mapFromScene(rect.topLeft()) : rect.topLeft();
@@ -735,6 +749,8 @@ void QQuickPopupPrivate::reposition()
         popupItem->setWidth(rect.width());
     if (!hasHeight && heightAdjusted && rect.height() > 0)
         popupItem->setHeight(rect.height());
+
+    positioning = false;
 }
 
 void QQuickPopupPrivate::resizeOverlay()

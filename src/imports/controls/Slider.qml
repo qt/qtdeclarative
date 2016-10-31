@@ -77,7 +77,6 @@ T.Slider {
         width: horizontal ? control.availableWidth : implicitWidth
         height: horizontal ? implicitHeight : control.availableHeight
         radius: 3
-        opacity: control.enabled ? 1 : 0.3
         color: Default.buttonColor
         scale: horizontal && control.mirrored ? -1 : 1
 

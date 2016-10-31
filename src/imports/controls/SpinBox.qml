@@ -139,7 +139,6 @@ T.SpinBox {
 
     //! [background]
     background: Rectangle {
-        opacity: control.enabled ? 1 : 0.3
         implicitWidth: 140
         border.color: Default.buttonColor
     }

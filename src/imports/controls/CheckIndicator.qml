@@ -53,6 +53,7 @@ Rectangle {
     border.color: control.enabled ? (control.visualFocus
         ? Default.focusColor
         : (control.down ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : "transparent"
+    opacity: enabled ? 1 : 0.3
 
     Image {
         x: (parent.width - width) / 2

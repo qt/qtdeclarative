@@ -57,17 +57,11 @@ QT_BEGIN_NAMESPACE
 
     Switch is an option button that can be dragged or toggled on (checked) or
     off (unchecked). Switches are typically used to select between two states.
+    For larger sets of options, such as those in a list, consider using
+    \l SwitchDelegate instead.
 
-    \table
-    \row \li \image qtquickcontrols2-switch-normal.png
-         \li A switch in its normal state.
-    \row \li \image qtquickcontrols2-switch-checked.png
-         \li A switch that is checked.
-    \row \li \image qtquickcontrols2-switch-focused.png
-         \li A switch that has active focus.
-    \row \li \image qtquickcontrols2-switch-disabled.png
-         \li A switch that is disabled.
-    \endtable
+    Switch inherits its API from \l AbstractButton. For instance, the state
+    of the switch can be set with the \l {AbstractButton::}{checked} property.
 
     \code
     ColumnLayout {

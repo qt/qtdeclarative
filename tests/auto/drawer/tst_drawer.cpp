@@ -380,7 +380,7 @@ void tst_Drawer::reposition()
 
     window->setWidth(window->width() + 100);
     QTRY_COMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
-    QCOMPARE(geometry(popupItem), QRectF(window->width() - drawer->width(), 150, window->width() / 2, window->height() - 150));
+    QTRY_COMPARE(geometry(popupItem), QRectF(window->width() - drawer->width(), 150, window->width() / 2, window->height() - 150));
 
     drawer->close();
     QTRY_COMPARE(geometry(popupItem), QRectF(window->width(), 150, window->width() / 2, window->height() - 150));
