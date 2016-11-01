@@ -73,6 +73,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("BusyIndicator") << "busyindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Button") << "button" << 0x0000002B << "Button"; //QAccessible::Button
     QTest::newRow("CheckBox") << "checkbox" << 0x0000002C << "CheckBox"; //QAccessible::CheckBox
+    QTest::newRow("ComboBox") << "combobox" << 0x0000002E << "ComboBox"; //QAccessible::ComboBox
     // Frame
     // GroupBox
     QTest::newRow("Label") << "label" << 0x00000029 << "Label"; //QAccessible::StaticText

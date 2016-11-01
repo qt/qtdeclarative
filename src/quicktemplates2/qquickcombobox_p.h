@@ -146,6 +146,11 @@ protected:
 
     QFont defaultFont() const override;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const override;
+    void accessibilityActiveChanged(bool active) override;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickComboBox)
     Q_DECLARE_PRIVATE(QQuickComboBox)
