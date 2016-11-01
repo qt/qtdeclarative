@@ -78,6 +78,7 @@ void tst_accessibility::a11y_data()
     // GroupBox
     QTest::newRow("Label") << "label" << 0x00000029 << "Label"; //QAccessible::StaticText
     QTest::newRow("Menu") << "menu" << 0x0000000B << ""; //QAccessible::PopupMenu
+    QTest::newRow("Page") << "page" << 0x00000025 << "Page"; //QAccessible::PageTab
     QTest::newRow("PageIndicator") << "pageindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Popup") << "popup" << 0x00000080 << ""; //QAccessible::LayeredPane
     QTest::newRow("ProgressBar") << "progressbar" << 0x00000030 << ""; //QAccessible::ProgressBar

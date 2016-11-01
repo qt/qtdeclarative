@@ -211,6 +211,7 @@ void QQuickPage::setTitle(const QString &title)
         return;
 
     d->title = title;
+    setAccessibleName(title);
     emit titleChanged();
 }
 
@@ -381,6 +382,15 @@ void QQuickPage::paddingChange(const QMarginsF &newPadding, const QMarginsF &old
 QAccessible::Role QQuickPage::accessibleRole() const
 {
     return QAccessible::PageTab;
+}
+
+void QQuickPage::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickPage);
+    QQuickControl::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->title);
 }
 #endif
 
