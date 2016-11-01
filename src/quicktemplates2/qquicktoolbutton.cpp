@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-buttons
-    \brief A button with a layout suitable for a ToolBar.
+    \brief A button with a look suitable for a ToolBar.
 
     ToolButton is functionally similar to \l Button, but provides a look that
     is more suitable within a \l ToolBar.
@@ -56,6 +56,10 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-toolbar.png
 
     \snippet qtquickcontrols2-toolbar.qml 1
+
+    ToolButton inherits its API from AbstractButton. For instance, you can set
+    \l {AbstractButton::text}{text}, and react to \l {AbstractButton::clicked}{clicks}
+    using the AbstractButton API.
 
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */

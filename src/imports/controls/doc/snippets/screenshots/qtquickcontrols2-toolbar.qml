@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,19 +29,34 @@ import QtQuick 2.0
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
 
+Item {
+    width: children[0].implicitWidth * 2
+    height: children[0].implicitHeight
+    Binding {
+        target: children[0]
+        property: "width"
+        value: width
+    }
 //! [1]
 ToolBar {
     RowLayout {
         anchors.fill: parent
         ToolButton {
-            text: qsTr("\u25C0 Qt")
+            text: qsTr("‹")
             onClicked: stack.pop()
         }
-        Item { Layout.fillWidth: true }
-        Switch {
-            checked: true
-            text: qsTr("Notifications")
+        Label {
+            text: "Title"
+            elide: Label.ElideRight
+            horizontalAlignment: Qt.AlignHCenter
+            verticalAlignment: Qt.AlignVCenter
+            Layout.fillWidth: true
+        }
+        ToolButton {
+            text: qsTr("⋮")
+            onClicked: menu.open()
         }
     }
 }
 //! [1]
+}

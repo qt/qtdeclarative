@@ -69,14 +69,19 @@ QT_BEGIN_NAMESPACE
             RowLayout {
                 anchors.fill: parent
                 ToolButton {
-                    text: qsTr("\u25C0 %1").arg(Qt.application.name)
-                    enabled: stack.depth > 1
+                    text: qsTr("‹")
                     onClicked: stack.pop()
                 }
-                Item { Layout.fillWidth: true }
-                Switch {
-                    checked: true
-                    text: qsTr("Notifications")
+                Label {
+                    text: "Title"
+                    elide: Label.ElideRight
+                    horizontalAlignment: Qt.AlignHCenter
+                    verticalAlignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
+                }
+                ToolButton {
+                    text: qsTr("⋮")
+                    onClicked: menu.open()
                 }
             }
         }
