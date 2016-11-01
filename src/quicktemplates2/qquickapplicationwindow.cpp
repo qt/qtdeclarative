@@ -89,9 +89,44 @@ QT_BEGIN_NAMESPACE
 
     ApplicationWindow supports popups via its \l overlay property, which
     ensures that popups are displayed above other content and that the
-    background is dimmed when a modal popup is visible.
+    background is dimmed when a \l {Popup::}{modal} or \l {Popup::dim}
+    {dimmed} popup is visible.
 
     \note By default, an ApplicationWindow is not visible.
+
+    \section2 Attached ApplicationWindow Properties
+
+    Due to how \l {Scope and Naming Resolution} works in QML, it is possible
+    to reference the \c id of the application root element anywhere in its
+    child QML objects. Even though this approach is fine for many applications
+    and use cases, for a generic QML component it may not be acceptable as it
+    creates a dependency to the surrounding environment.
+
+    ApplicationWindow provides a set of attached properties that can be used
+    to access the window and its building blocks from places where no direct
+    access to the window is available, without creating a dependency to a
+    certain window \c id. A QML component that uses the ApplicationWindow
+    attached properties works in any window regardless of its \c id. The
+    following example uses the attached \c overlay property to position the
+    popup to the center of the window, despite the position of the button
+    that opens the popup.
+
+    \code
+    Button {
+        onClicked: popup.open()
+
+        Popup {
+            id: popup
+
+            parent: ApplicationWindow.overlay
+
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 100
+            height: 100
+        }
+    }
+    \endcode
 
     \sa {Customizing ApplicationWindow}, Page, {Container Controls}
 */
@@ -314,6 +349,14 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     This property holds the window header item. The header item is positioned to
     the top, and resized to the width of the window. The default value is \c null.
 
+    \code
+    ApplicationWindow {
+        header: TabBar {
+            // ...
+        }
+    }
+    \endcode
+
     \note Assigning a ToolBar or TabBar as a window header sets the respective
     \l ToolBar::position or \l TabBar::position property automatically to \c Header.
 
@@ -359,6 +402,14 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 
     This property holds the window footer item. The footer item is positioned to
     the bottom, and resized to the width of the window. The default value is \c null.
+
+    \code
+    ApplicationWindow {
+        footer: ToolBar {
+            // ...
+        }
+    }
+    \endcode
 
     \note Assigning a ToolBar or TabBar as a window footer sets the respective
     \l ToolBar::position or \l TabBar::position property automatically to \c Footer.
@@ -719,6 +770,8 @@ QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent
 
     This attached property holds the application window. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.
+
+    \sa {Attached ApplicationWindow Properties}
 */
 QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 {
@@ -732,6 +785,8 @@ QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
 
     This attached property holds the window content item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.
+
+    \sa {Attached ApplicationWindow Properties}
 */
 QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 {
@@ -750,7 +805,7 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
     The value is \c null if the item is not in an ApplicationWindow, or the window has
     no active focus.
 
-    \sa Window::activeFocusItem
+    \sa Window::activeFocusItem, {Attached ApplicationWindow Properties}
 */
 QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 {
@@ -767,6 +822,8 @@ QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
     This attached property holds the window header item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow, or
     the window has no header item.
+
+    \sa {Attached ApplicationWindow Properties}
 */
 QQuickItem *QQuickApplicationWindowAttached::header() const
 {
@@ -783,6 +840,8 @@ QQuickItem *QQuickApplicationWindowAttached::header() const
     This attached property holds the window footer item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow, or
     the window has no footer item.
+
+    \sa {Attached ApplicationWindow Properties}
 */
 QQuickItem *QQuickApplicationWindowAttached::footer() const
 {
@@ -798,6 +857,8 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
 
     This attached property holds the window overlay item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.
+
+    \sa {Attached ApplicationWindow Properties}
 */
 QQuickOverlay *QQuickApplicationWindowAttached::overlay() const
 {
