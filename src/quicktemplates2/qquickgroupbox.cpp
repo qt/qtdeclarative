@@ -118,6 +118,7 @@ void QQuickGroupBox::setTitle(const QString &title)
         return;
 
     d->title = title;
+    setAccessibleName(title);
     emit titleChanged();
 }
 
@@ -151,5 +152,21 @@ QFont QQuickGroupBox::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::GroupBoxTitleFont);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickGroupBox::accessibleRole() const
+{
+    return QAccessible::Grouping;
+}
+
+void QQuickGroupBox::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickGroupBox);
+    QQuickFrame::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->title);
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE

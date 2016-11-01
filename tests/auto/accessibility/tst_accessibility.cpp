@@ -75,7 +75,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("CheckBox") << "checkbox" << 0x0000002C << "CheckBox"; //QAccessible::CheckBox
     QTest::newRow("ComboBox") << "combobox" << 0x0000002E << "ComboBox"; //QAccessible::ComboBox
     // Frame
-    // GroupBox
+    QTest::newRow("GroupBox") << "groupbox" << 0x00000014 << "GroupBox"; //QAccessible::Grouping
     QTest::newRow("Label") << "label" << 0x00000029 << "Label"; //QAccessible::StaticText
     QTest::newRow("Menu") << "menu" << 0x0000000B << ""; //QAccessible::PopupMenu
     QTest::newRow("Page") << "page" << 0x00000025 << "Page"; //QAccessible::PageTab
