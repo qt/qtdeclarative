@@ -60,6 +60,7 @@ private slots:
     void button();
     void tabBar();
     void menu();
+    void swipeView();
     void swipeDelegate_data();
     void swipeDelegate();
     void swipeDelegateBehind();
@@ -477,6 +478,31 @@ void tst_Gifs::menu()
     const QPoint lastItemPos = menuContentItem->mapToScene(QPointF(menuContentItem->width() / 2, menuContentItem->height() - 10)).toPoint();
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 1000);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 300);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::swipeView()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(8);
+    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols2-swipeview.qml"));
+    gifRecorder.setHighQuality(true);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *swipeView = window->property("swipeView").value<QQuickItem*>();
+    QVERIFY(swipeView);
+
+    QTest::qWait(1200);
+    swipeView->setProperty("currentIndex", 1);
+    QTest::qWait(2000);
+    swipeView->setProperty("currentIndex", 2);
+    QTest::qWait(2000);
+    swipeView->setProperty("currentIndex", 0);
 
     gifRecorder.waitForFinish();
 }
