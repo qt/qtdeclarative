@@ -343,4 +343,11 @@ void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
     d->layout->update();
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickDialog::accessibleRole() const
+{
+    return QAccessible::Dialog;
+}
+#endif
+
 QT_END_NAMESPACE
