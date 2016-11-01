@@ -35,7 +35,6 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qtquic
 # Note: paths passed to \example command must contain the parent directory, e.g.
 # \example controls/tabs
 exampledirs += ../../../../examples/quickcontrols2 \
-               ../ \
                ../../../quicktemplates2 \
                ../../calendar \
                ../../../../tests/auto/controls/data \

@@ -52,15 +52,12 @@ T.SwitchDelegate {
     padding: 12
     spacing: 12
 
-    //! [indicator]
     indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.indicator && !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.indicator && control.mirrored ? 0 : control.indicator.width + control.spacing
@@ -73,14 +70,11 @@ T.SwitchDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
         color: control.down ? "#bdbebf" : "#eeeeee"
     }
-    //! [background]
 }

@@ -48,13 +48,9 @@ T.Pane {
 
     padding: 12
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: "#ffffff"
     }
-    //! [background]
 }

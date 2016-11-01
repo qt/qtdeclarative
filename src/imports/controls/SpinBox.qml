@@ -54,15 +54,12 @@ T.SpinBox {
     leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: padding + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
 
-    //! [validator]
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)
         top: Math.max(control.from, control.to)
     }
-    //! [validator]
 
-    //! [contentItem]
     contentItem: TextInput {
         z: 2
         text: control.textFromValue(control.value, control.locale)
@@ -90,9 +87,7 @@ T.SpinBox {
             border.width: 2
         }
     }
-    //! [contentItem]
 
-    //! [up.indicator]
     up.indicator: Rectangle {
         x: control.mirrored ? 0 : parent.width - width
         height: parent.height
@@ -115,9 +110,7 @@ T.SpinBox {
             color: enabled ? "#353637" : "#bdbebf"
         }
     }
-    //! [up.indicator]
 
-    //! [down.indicator]
     down.indicator: Rectangle {
         x: control.mirrored ? parent.width - width : 0
         height: parent.height
@@ -133,12 +126,9 @@ T.SpinBox {
             color: enabled ? "#353637" : "#bdbebf"
         }
     }
-    //! [down.indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 140
         border.color: "#e0e0e0"
     }
-    //! [background]
 }

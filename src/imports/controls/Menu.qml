@@ -48,7 +48,6 @@ T.Menu {
 
     margins: 0
 
-    //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
         model: control.contentModel
@@ -60,14 +59,11 @@ T.Menu {
 
         ScrollIndicator.vertical: ScrollIndicator {}
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
         color: "#ffffff"
         border.color: "#353637"
     }
-    //! [background]
 }

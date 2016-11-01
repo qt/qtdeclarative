@@ -49,7 +49,6 @@ T.MenuItem {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
@@ -62,9 +61,7 @@ T.MenuItem {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [indicator]
     indicator: Image {
         x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -72,9 +69,7 @@ T.MenuItem {
         visible: control.checked
         source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
     }
-    //! [indicator]
 
-    //! [background]
     background: Item {
         implicitWidth: 200
         implicitHeight: 40
@@ -87,5 +82,4 @@ T.MenuItem {
             color: control.visualFocus || control.down ? "#eeeeee" : "transparent"
         }
     }
-    //! [background]
 }

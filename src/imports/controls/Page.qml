@@ -40,13 +40,9 @@ import QtQuick.Templates 2.0 as T
 T.Page {
     id: control
 
-    //! [contentItem]
     contentItem: Item { }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: "#ffffff"
     }
-    //! [background]
 }

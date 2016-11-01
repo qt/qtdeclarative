@@ -47,7 +47,6 @@ T.TabBar {
 
     spacing: 1
 
-    //! [contentItem]
     contentItem: ListView {
         implicitWidth: contentWidth
         implicitHeight: 40
@@ -66,9 +65,6 @@ T.TabBar {
         preferredHighlightBegin: 40
         preferredHighlightEnd: width - 40
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle { }
-    //! [background]
 }
