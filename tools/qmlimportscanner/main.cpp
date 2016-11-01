@@ -528,7 +528,12 @@ int main(int argc, char *argv[])
             if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;
             ++i;
-            *argReceiver += arg;
+            if (!QFile::exists(arg)) {
+                std::cerr << "No such file or directory: \"" << qPrintable(arg) << "\"\n";
+                return 1;
+            } else {
+                *argReceiver += arg;
+            }
         }
     }
 
