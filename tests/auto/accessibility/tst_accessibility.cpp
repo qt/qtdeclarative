@@ -75,7 +75,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("CheckBox") << "checkbox" << 0x0000002C << "CheckBox"; //QAccessible::CheckBox
     QTest::newRow("CheckDelegate") << "checkdelegate" << 0x0000002C << "CheckDelegate"; //QAccessible::CheckBox
     QTest::newRow("ComboBox") << "combobox" << 0x0000002E << "ComboBox"; //QAccessible::ComboBox
-    // Frame
+    QTest::newRow("Frame") << "frame" << 0x00000013 << ""; //QAccessible::Border
     QTest::newRow("GroupBox") << "groupbox" << 0x00000014 << "GroupBox"; //QAccessible::Grouping
     QTest::newRow("ItemDelegate") << "itemdelegate" << 0x00000022 << "ItemDelegate"; //QAccessible::ListItem
     QTest::newRow("Label") << "label" << 0x00000029 << "Label"; //QAccessible::StaticText

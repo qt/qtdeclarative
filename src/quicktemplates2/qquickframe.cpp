@@ -78,4 +78,11 @@ QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
 {
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickFrame::accessibleRole() const
+{
+    return QAccessible::Border;
+}
+#endif // QT_NO_ACCESSIBILITY
+
 QT_END_NAMESPACE
