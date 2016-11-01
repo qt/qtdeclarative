@@ -188,6 +188,7 @@ void QQuickToolTip::setText(const QString &text)
         return;
 
     d->text = text;
+    setAccessibleName(text);
     emit textChanged();
 }
 
@@ -306,6 +307,15 @@ void QQuickToolTip::timerEvent(QTimerEvent *event)
 QAccessible::Role QQuickToolTip::accessibleRole() const
 {
     return QAccessible::ToolTip;
+}
+
+void QQuickToolTip::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickToolTip);
+    QQuickPopup::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->text);
 }
 #endif
 

@@ -101,7 +101,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("TextField") << "textfield" << 0x0000002A << ""; //QAccessible::Accessible.EditableText
     QTest::newRow("ToolBar") << "toolbar" << 0x00000016 << ""; //QAccessible::ToolBar
     QTest::newRow("ToolButton") << "toolbutton" << 0x0000002B << "ToolButton"; //QAccessible::Button
-    // ToolTip
+    QTest::newRow("ToolTip") << "tooltip" << 0x0000000D << "ToolTip"; //QAccessible::ToolTip
 
     QTest::newRow("Dial") << "dial" << 0x00000031 << ""; //QAccessible::Dial
     // Drawer
