@@ -116,6 +116,7 @@ protected:
 
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const override;
+    void accessibilityActiveChanged(bool active) override;
 #endif
 
 private:

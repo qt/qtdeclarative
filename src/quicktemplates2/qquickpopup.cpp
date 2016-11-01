@@ -648,6 +648,13 @@ QAccessible::Role QQuickPopupItem::accessibleRole() const
     Q_D(const QQuickPopupItem);
     return d->popup->accessibleRole();
 }
+
+void QQuickPopupItem::accessibilityActiveChanged(bool active)
+{
+    Q_D(const QQuickPopupItem);
+    QQuickControl::accessibilityActiveChanged(active);
+    d->popup->accessibilityActiveChanged(active);
+}
 #endif // QT_NO_ACCESSIBILITY
 
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopupPrivate *popup) :
@@ -2351,7 +2358,36 @@ QAccessible::Role QQuickPopup::accessibleRole() const
 {
     return QAccessible::LayeredPane;
 }
+
+void QQuickPopup::accessibilityActiveChanged(bool active)
+{
+    Q_UNUSED(active);
+}
 #endif // QT_NO_ACCESSIBILITY
+
+QString QQuickPopup::accessibleName() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->accessibleName();
+}
+
+void QQuickPopup::setAccessibleName(const QString &name)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setAccessibleName(name);
+}
+
+QVariant QQuickPopup::accessibleProperty(const char *propertyName)
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->accessibleProperty(propertyName);
+}
+
+bool QQuickPopup::setAccessibleProperty(const char *propertyName, const QVariant &value)
+{
+    Q_D(QQuickPopup);
+    return d->popupItem->setAccessibleProperty(propertyName, value);
+}
 
 QT_END_NAMESPACE
 
