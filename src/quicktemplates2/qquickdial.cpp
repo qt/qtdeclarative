@@ -55,6 +55,8 @@ QT_BEGIN_NAMESPACE
     such as stereos or industrial equipment. It allows the user to specify a
     value within a range.
 
+    \image qtquickcontrols2-dial-no-wrap.gif
+
     The value of the dial is set with the \l value property. The range is
     set with the \l from and \l to properties. To enable or disable wrapping,
     use the \l wrap property.
