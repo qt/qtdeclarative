@@ -87,6 +87,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("Slider") << "slider" << 0x00000033 << ""; //QAccessible::Slider
     QTest::newRow("SpinBox") << "spinbox" << 0x00000034 << ""; //QAccessible::SpinBox
     QTest::newRow("StackView") << "stackview" << 0x00000080 << ""; //QAccessible::LayeredPane
+    QTest::newRow("SwipeView") << "swipeview" << 0x0000003C << ""; //QAccessible::Pane
     QTest::newRow("Switch") << "switch" << 0x0000002B << "Switch"; //QAccessible::Button
     QTest::newRow("SwitchDelegate") << "switchdelegate" << 0x00000022 << "SwitchDelegate"; //QAccessible::ListItem
     QTest::newRow("TabBar") << "tabbar" << 0x0000003C << ""; //QAccessible::PageTabList
@@ -99,7 +100,6 @@ void tst_accessibility::a11y_data()
 
     QTest::newRow("Dial") << "dial" << 0x00000031 << ""; //QAccessible::Dial
     // Drawer
-    // SwipeView
     // Tumbler
 
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
