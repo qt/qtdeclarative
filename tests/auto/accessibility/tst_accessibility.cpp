@@ -83,6 +83,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ProgressBar") << "progressbar" << 0x00000030 << ""; //QAccessible::ProgressBar
     QTest::newRow("RadioButton") << "radiobutton" << 0x0000002D << "RadioButton"; //QAccessible::RadioButton
     QTest::newRow("RangeSlider") << "rangeslider" << 0x00000033 << ""; //QAccessible::Slider
+    QTest::newRow("RoundButton") << "roundbutton" << 0x0000002B << "RoundButton"; //QAccessible::Button
     QTest::newRow("ScrollBar") << "scrollbar" << 0x00000003 << ""; //QAccessible::ScrollBar
     QTest::newRow("ScrollIndicator") << "scrollindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Slider") << "slider" << 0x00000033 << ""; //QAccessible::Slider
