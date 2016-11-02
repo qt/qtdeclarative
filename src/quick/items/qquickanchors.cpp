@@ -617,74 +617,75 @@ void QQuickAnchorsPrivate::updateVerticalAnchors()
     if (fill || centerIn || !isItemComplete())
         return;
 
-    if (updatingVerticalAnchor < 2) {
-        ++updatingVerticalAnchor;
-        if (usedAnchors & QQuickAnchors::TopAnchor) {
-            //Handle stretching
-            bool invalid = true;
-            qreal height = 0.0;
-            if (usedAnchors & QQuickAnchors::BottomAnchor) {
-                invalid = calcStretch(topAnchorItem, topAnchorLine,
-                                      bottomAnchorItem, bottomAnchorLine,
-                                      topMargin, -bottomMargin, QQuickAnchors::TopAnchor, height);
-            } else if (usedAnchors & QQuickAnchors::VCenterAnchor) {
-                invalid = calcStretch(topAnchorItem, topAnchorLine,
-                                      vCenterAnchorItem, vCenterAnchorLine,
-                                      topMargin, vCenterOffset, QQuickAnchors::TopAnchor, height);
-                height *= 2;
-            }
-            if (!invalid)
-                setItemHeight(height);
-
-            //Handle top
-            if (topAnchorItem == readParentItem(item)) {
-                setItemY(adjustedPosition(topAnchorItem, topAnchorLine) + topMargin);
-            } else if (readParentItem(topAnchorItem) == readParentItem(item)) {
-                setItemY(position(topAnchorItem, topAnchorLine) + topMargin);
-            }
-        } else if (usedAnchors & QQuickAnchors::BottomAnchor) {
-            //Handle stretching (top + bottom case is handled above)
-            if (usedAnchors & QQuickAnchors::VCenterAnchor) {
-                qreal height = 0.0;
-                bool invalid = calcStretch(vCenterAnchorItem, vCenterAnchorLine,
-                                           bottomAnchorItem, bottomAnchorLine,
-                                           vCenterOffset, -bottomMargin, QQuickAnchors::TopAnchor,
-                                           height);
-                if (!invalid)
-                    setItemHeight(height*2);
-            }
-
-            //Handle bottom
-            if (bottomAnchorItem == readParentItem(item)) {
-                setItemY(adjustedPosition(bottomAnchorItem, bottomAnchorLine) - readHeight(item) - bottomMargin);
-            } else if (readParentItem(bottomAnchorItem) == readParentItem(item)) {
-                setItemY(position(bottomAnchorItem, bottomAnchorLine) - readHeight(item) - bottomMargin);
-            }
-        } else if (usedAnchors & QQuickAnchors::VCenterAnchor) {
-            //(stetching handled above)
-
-            //Handle vCenter
-            if (vCenterAnchorItem == readParentItem(item)) {
-                setItemY(adjustedPosition(vCenterAnchorItem, vCenterAnchorLine)
-                              - vcenter(item) + vCenterOffset);
-            } else if (readParentItem(vCenterAnchorItem) == readParentItem(item)) {
-                setItemY(position(vCenterAnchorItem, vCenterAnchorLine) - vcenter(item) + vCenterOffset);
-            }
-        } else if (usedAnchors & QQuickAnchors::BaselineAnchor) {
-            //Handle baseline
-            if (baselineAnchorItem == readParentItem(item)) {
-                setItemY(adjustedPosition(baselineAnchorItem, baselineAnchorLine)
-                         - readBaselineOffset(item) + baselineOffset);
-            } else if (readParentItem(baselineAnchorItem) == readParentItem(item)) {
-                setItemY(position(baselineAnchorItem, baselineAnchorLine)
-                         - readBaselineOffset(item) + baselineOffset);
-            }
-        }
-        --updatingVerticalAnchor;
-    } else {
+    if (Q_UNLIKELY(updatingVerticalAnchor > 1)) {
         // ### Make this certain :)
         qmlInfo(item) << QQuickAnchors::tr("Possible anchor loop detected on vertical anchor.");
+        return;
     }
+
+    ++updatingVerticalAnchor;
+    if (usedAnchors & QQuickAnchors::TopAnchor) {
+        //Handle stretching
+        bool invalid = true;
+        qreal height = 0.0;
+        if (usedAnchors & QQuickAnchors::BottomAnchor) {
+            invalid = calcStretch(topAnchorItem, topAnchorLine,
+                                  bottomAnchorItem, bottomAnchorLine,
+                                  topMargin, -bottomMargin, QQuickAnchors::TopAnchor, height);
+        } else if (usedAnchors & QQuickAnchors::VCenterAnchor) {
+            invalid = calcStretch(topAnchorItem, topAnchorLine,
+                                  vCenterAnchorItem, vCenterAnchorLine,
+                                  topMargin, vCenterOffset, QQuickAnchors::TopAnchor, height);
+            height *= 2;
+        }
+        if (!invalid)
+            setItemHeight(height);
+
+        //Handle top
+        if (topAnchorItem == readParentItem(item)) {
+            setItemY(adjustedPosition(topAnchorItem, topAnchorLine) + topMargin);
+        } else if (readParentItem(topAnchorItem) == readParentItem(item)) {
+            setItemY(position(topAnchorItem, topAnchorLine) + topMargin);
+        }
+    } else if (usedAnchors & QQuickAnchors::BottomAnchor) {
+        //Handle stretching (top + bottom case is handled above)
+        if (usedAnchors & QQuickAnchors::VCenterAnchor) {
+            qreal height = 0.0;
+            bool invalid = calcStretch(vCenterAnchorItem, vCenterAnchorLine,
+                                       bottomAnchorItem, bottomAnchorLine,
+                                       vCenterOffset, -bottomMargin, QQuickAnchors::TopAnchor,
+                                       height);
+            if (!invalid)
+                setItemHeight(height*2);
+        }
+
+        //Handle bottom
+        if (bottomAnchorItem == readParentItem(item)) {
+            setItemY(adjustedPosition(bottomAnchorItem, bottomAnchorLine) - readHeight(item) - bottomMargin);
+        } else if (readParentItem(bottomAnchorItem) == readParentItem(item)) {
+            setItemY(position(bottomAnchorItem, bottomAnchorLine) - readHeight(item) - bottomMargin);
+        }
+    } else if (usedAnchors & QQuickAnchors::VCenterAnchor) {
+        //(stetching handled above)
+
+        //Handle vCenter
+        if (vCenterAnchorItem == readParentItem(item)) {
+            setItemY(adjustedPosition(vCenterAnchorItem, vCenterAnchorLine)
+                     - vcenter(item) + vCenterOffset);
+        } else if (readParentItem(vCenterAnchorItem) == readParentItem(item)) {
+            setItemY(position(vCenterAnchorItem, vCenterAnchorLine) - vcenter(item) + vCenterOffset);
+        }
+    } else if (usedAnchors & QQuickAnchors::BaselineAnchor) {
+        //Handle baseline
+        if (baselineAnchorItem == readParentItem(item)) {
+            setItemY(adjustedPosition(baselineAnchorItem, baselineAnchorLine)
+                     - readBaselineOffset(item) + baselineOffset);
+        } else if (readParentItem(baselineAnchorItem) == readParentItem(item)) {
+            setItemY(position(baselineAnchorItem, baselineAnchorLine)
+                     - readBaselineOffset(item) + baselineOffset);
+        }
+    }
+    --updatingVerticalAnchor;
 }
 
 static inline QQuickAnchors::Anchor reverseAnchorLine(QQuickAnchors::Anchor anchorLine)
