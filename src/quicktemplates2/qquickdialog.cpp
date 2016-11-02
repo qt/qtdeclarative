@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-dialogs
     \ingroup qtquickcontrols2-popups
-    \brief A dialog control.
+    \brief Popup dialog with standard buttons and a title, used for short-term interaction with the user.
     \since 5.8
 
     A dialog is a popup mostly used for short-term tasks and brief communications
