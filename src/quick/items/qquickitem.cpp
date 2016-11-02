@@ -6303,7 +6303,7 @@ QPointF QQuickItem::position() const
 void QQuickItem::setX(qreal v)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(v))
+    if (qt_is_nan(v))
         return;
     if (d->x == v)
         return;
@@ -6320,7 +6320,7 @@ void QQuickItem::setX(qreal v)
 void QQuickItem::setY(qreal v)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(v))
+    if (qt_is_nan(v))
         return;
     if (d->y == v)
         return;
