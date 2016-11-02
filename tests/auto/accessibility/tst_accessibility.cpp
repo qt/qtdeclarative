@@ -69,6 +69,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("CheckBox") << "checkbox" << 0x0000002C << "CheckBox"; //QAccessible::CheckBox
     QTest::newRow("CheckDelegate") << "checkdelegate" << 0x0000002C << "CheckDelegate"; //QAccessible::CheckBox
     QTest::newRow("ComboBox") << "combobox" << 0x0000002E << "ComboBox"; //QAccessible::ComboBox
+    QTest::newRow("Drawer") << "drawer" << 0x00000012 << ""; //QAccessible::Dialog
     QTest::newRow("Frame") << "frame" << 0x00000013 << ""; //QAccessible::Border
     QTest::newRow("GroupBox") << "groupbox" << 0x00000014 << "GroupBox"; //QAccessible::Grouping
     QTest::newRow("ItemDelegate") << "itemdelegate" << 0x00000022 << "ItemDelegate"; //QAccessible::ListItem
@@ -78,7 +79,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("Page") << "page" << 0x00000025 << "Page"; //QAccessible::PageTab
     QTest::newRow("PageIndicator") << "pageindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Pane") << "pane" << 0x00000010 << ""; //QAccessible::Pane
-    QTest::newRow("Popup") << "popup" << 0x00000080 << ""; //QAccessible::LayeredPane
+    QTest::newRow("Popup") << "popup" << 0x00000012 << ""; //QAccessible::Dialog
     QTest::newRow("ProgressBar") << "progressbar" << 0x00000030 << ""; //QAccessible::ProgressBar
     QTest::newRow("RadioButton") << "radiobutton" << 0x0000002D << "RadioButton"; //QAccessible::RadioButton
     QTest::newRow("RangeSlider") << "rangeslider" << 0x00000033 << ""; //QAccessible::Slider
@@ -99,7 +100,6 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ToolTip") << "tooltip" << 0x0000000D << "ToolTip"; //QAccessible::ToolTip
 
     QTest::newRow("Dial") << "dial" << 0x00000031 << ""; //QAccessible::Dial
-    // Drawer
     // Tumbler
 
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
