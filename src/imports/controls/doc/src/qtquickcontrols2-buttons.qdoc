@@ -128,6 +128,24 @@
 
     \b {See also} \l RadioButton
 
+    \section1 RoundButton Control
+
+    \l RoundButton is a clickable control that starts an action, or opens or
+    closes a popup. A round button with a square image icon or one-letter font
+    icon is circular. A circular RoundButton takes less space than a normal
+    \l Button, and can also be used as a floating action button.
+
+    \image qtquickcontrols2-roundbutton.png
+
+    Recommendations:
+
+    \list
+    \li Keep labels short and concise.
+    \li If the text is localized, consider the influence of a longer text on the layout.
+    \endlist
+
+    \b {See also} \l RoundButton
+
     \section1 Switch Control
 
     \image qtquickcontrols2-switch.png
