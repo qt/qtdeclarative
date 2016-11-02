@@ -151,6 +151,7 @@ void QQuickDialog::setTitle(const QString &title)
         return;
 
     d->title = title;
+    setAccessibleName(title);
     emit titleChanged();
 }
 
@@ -347,6 +348,15 @@ void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
 QAccessible::Role QQuickDialog::accessibleRole() const
 {
     return QAccessible::Dialog;
+}
+
+void QQuickDialog::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickDialog);
+    QQuickPopup::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->title);
 }
 #endif
 
