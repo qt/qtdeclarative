@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators
-    \brief Indicates activity while content is being loaded.
+    \brief Indicates background activity, for example, while content is being loaded.
 
     \image qtquickcontrols2-busyindicator.gif
 

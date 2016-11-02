@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A circular dial that is rotated to set a value.
+    \brief Circular dial that is rotated to set a value.
 
     The Dial is similar to a traditional dial knob that is found on devices
     such as stereos or industrial equipment. It allows the user to specify a

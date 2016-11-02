@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A control that makes it convenient to add a header and footer to a page.
+    \brief Styled page control with support for a header and footer.
 
     Page is a container control which makes it convenient to add
     a \l header and \l footer item to a page.

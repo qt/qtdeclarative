@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-delegates
-    \brief An item delegate that can be checked or unchecked.
+    \brief Exclusive item delegate with a radio indicator that can be toggled on or off.
 
     \image qtquickcontrols2-radiodelegate.gif
 

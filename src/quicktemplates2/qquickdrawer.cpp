@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-popups
-    \brief Provides a swipe-based side panel.
+    \brief Side panel that can be opened and closed using a swipe gesture.
 
     Drawer provides a swipe-based side panel, similar to those often used in
     touch interfaces to provide a central location for navigation.

@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A container for context-sensitive controls.
+    \brief Container for context-sensitive controls.
 
     ToolBar is a container of application-wide and context sensitive
     actions and controls, such as navigation buttons and search fields.

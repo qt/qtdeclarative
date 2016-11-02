@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A combined button and popup list taking minimal space.
+    \brief Combined button and popup list for selecting options.
 
     \image qtquickcontrols2-combobox.gif
 

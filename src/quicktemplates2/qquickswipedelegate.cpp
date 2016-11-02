@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-delegates
-    \brief A swipable item delegate.
+    \brief Swipable item delegate.
 
     SwipeDelegate presents a view item that can be swiped left or right to
     expose more options or information. It is used as a delegate in views such

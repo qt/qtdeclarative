@@ -56,7 +56,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-buttons
-    \brief Base type of all button controls.
+    \brief Abstract base type providing functionality common to buttons.
 
     AbstractButton provides the interface for controls with button-like
     behavior; for example, push buttons and checkable controls like

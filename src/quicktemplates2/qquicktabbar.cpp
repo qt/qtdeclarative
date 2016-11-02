@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
-    \brief A bar with tabs that allows the user to switch between different views or subtasks.
+    \brief Allows the user to switch between different views or subtasks.
 
     TabBar provides a tab-based navigation model.
 

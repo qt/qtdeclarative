@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-buttons
-    \brief A button with a look suitable for a ToolBar.
+    \brief Button with a look suitable for a ToolBar.
 
     ToolButton is functionally similar to \l Button, but provides a look that
     is more suitable within a \l ToolBar.

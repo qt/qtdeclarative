@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A logical group of controls within a titled visual frame.
+    \brief Visual frame and title for a logical group of controls.
 
     GroupBox is used to layout a logical group of controls together, within
     a \l {title}{titled} visual frame. GroupBox does not provide a layout of its own, but

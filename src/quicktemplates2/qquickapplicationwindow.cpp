@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief Provides a top-level application window.
+    \brief Styled top-level window with support for a header and footer.
 
     ApplicationWindow is a \l Window which makes it convenient to add
     a \l header and \l footer item to the window.
