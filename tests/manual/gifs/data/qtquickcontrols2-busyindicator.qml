@@ -51,7 +51,7 @@ Window {
 
     BusyIndicator {
         id: busyIndicator
-        running: false
+        running: true
         anchors.centerIn: parent
     }
 }
