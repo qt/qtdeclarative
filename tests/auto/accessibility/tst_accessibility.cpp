@@ -64,11 +64,15 @@ void tst_accessibility::a11y_data()
     QTest::addColumn<int>("role");
     QTest::addColumn<QString>("text");
 
+    QTest::newRow("AbstractButton") << "abstractbutton" << 0x0000002B << "AbstractButton"; //QAccessible::Button
     QTest::newRow("BusyIndicator") << "busyindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Button") << "button" << 0x0000002B << "Button"; //QAccessible::Button
     QTest::newRow("CheckBox") << "checkbox" << 0x0000002C << "CheckBox"; //QAccessible::CheckBox
     QTest::newRow("CheckDelegate") << "checkdelegate" << 0x0000002C << "CheckDelegate"; //QAccessible::CheckBox
     QTest::newRow("ComboBox") << "combobox" << 0x0000002E << "ComboBox"; //QAccessible::ComboBox
+    QTest::newRow("Container") << "container" << 0x00000000 << ""; //QAccessible::NoRole
+    QTest::newRow("Control") << "control" << 0x00000000 << ""; //QAccessible::NoRole
+    QTest::newRow("Dial") << "dial" << 0x00000031 << ""; //QAccessible::Dial
     QTest::newRow("Drawer") << "drawer" << 0x00000012 << ""; //QAccessible::Dialog
     QTest::newRow("Frame") << "frame" << 0x00000013 << ""; //QAccessible::Border
     QTest::newRow("GroupBox") << "groupbox" << 0x00000014 << "GroupBox"; //QAccessible::Grouping
@@ -82,12 +86,14 @@ void tst_accessibility::a11y_data()
     QTest::newRow("Popup") << "popup" << 0x00000012 << ""; //QAccessible::Dialog
     QTest::newRow("ProgressBar") << "progressbar" << 0x00000030 << ""; //QAccessible::ProgressBar
     QTest::newRow("RadioButton") << "radiobutton" << 0x0000002D << "RadioButton"; //QAccessible::RadioButton
+    QTest::newRow("RadioDelegate") << "radiodelegate" << 0x0000002D << "RadioDelegate"; //QAccessible::RadioButton
     QTest::newRow("RangeSlider") << "rangeslider" << 0x00000033 << ""; //QAccessible::Slider
     QTest::newRow("ScrollBar") << "scrollbar" << 0x00000003 << ""; //QAccessible::ScrollBar
     QTest::newRow("ScrollIndicator") << "scrollindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Slider") << "slider" << 0x00000033 << ""; //QAccessible::Slider
     QTest::newRow("SpinBox") << "spinbox" << 0x00000034 << ""; //QAccessible::SpinBox
     QTest::newRow("StackView") << "stackview" << 0x00000080 << ""; //QAccessible::LayeredPane
+    QTest::newRow("SwipeDelegate") << "swipedelegate" << 0x00000022 << "SwipeDelegate"; //QAccessible::ListItem
     QTest::newRow("SwipeView") << "swipeview" << 0x0000003C << ""; //QAccessible::Pane
     QTest::newRow("Switch") << "switch" << 0x0000002B << "Switch"; //QAccessible::Button
     QTest::newRow("SwitchDelegate") << "switchdelegate" << 0x00000022 << "SwitchDelegate"; //QAccessible::ListItem
@@ -98,9 +104,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ToolBar") << "toolbar" << 0x00000016 << ""; //QAccessible::ToolBar
     QTest::newRow("ToolButton") << "toolbutton" << 0x0000002B << "ToolButton"; //QAccessible::Button
     QTest::newRow("ToolTip") << "tooltip" << 0x0000000D << "ToolTip"; //QAccessible::ToolTip
-
-    QTest::newRow("Dial") << "dial" << 0x00000031 << ""; //QAccessible::Dial
-    // Tumbler
+    QTest::newRow("Tumbler") << "tumbler" << 0x00000000 << ""; //QAccessible::NoRole (TODO)
 
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
     QTest::newRow("MonthGrid") << "monthgrid" << 0x0 << "MonthGrid"; //QAccessible::NoRole
