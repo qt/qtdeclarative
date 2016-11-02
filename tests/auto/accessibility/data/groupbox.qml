@@ -1,13 +1,6 @@
 import QtQuick 2.5
-import QtQuick.Window 2.2
 import QtQuick.Controls 2.0
 
-Window {
-    visible: true
-
-    GroupBox {
-        id: groupbox
-        objectName: "groupbox"
-        title: "GroupBox"
-    }
+GroupBox {
+    title: "GroupBox"
 }

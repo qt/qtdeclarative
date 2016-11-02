@@ -34,27 +34,21 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QtTest/QSignalSpy>
+#include <QtTest/qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
-#include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include "../shared/util.h"
-#include "../shared/visualtestutil.h"
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
-using namespace QQuickVisualTestUtil;
-
 class tst_accessibility : public QQmlDataTest
 {
     Q_OBJECT
-public:
 
 private slots:
     void a11y_data();
@@ -127,7 +121,6 @@ void tst_accessibility::a11y()
     QFETCH(int, role);
     QFETCH(QString, text);
 
-    QQmlComponent component(&engine);
     QString fn = name;
 #ifdef QT_NO_ACCESSIBILITY
     if (name == QLatin1Literal("dayofweekrow")
@@ -135,20 +128,16 @@ void tst_accessibility::a11y()
             || name == QLatin1Literal("weeknumbercolumn"))
         fn += QLatin1Literal("-2");
 #endif
+
+    QQmlComponent component(&engine);
     component.loadUrl(testFileUrl(fn + ".qml"));
-    QObject* created = component.create();
-    QVERIFY2(created, qPrintable(component.errorString()));
-    QScopedPointer<QObject> cleanup(created);
-    QVERIFY(!cleanup.isNull());
 
-    QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
-    QVERIFY(window);
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
 
-    QQuickItem *item = findItem<QQuickItem>(window->contentItem(), name);
+    QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
     if (!item) {
-        QQuickPopup *popup = window->contentItem()->findChild<QQuickPopup *>(name);
+        QQuickPopup *popup = qobject_cast<QQuickPopup *>(object.data());
         if (popup)
             item = popup->popupItem();
     }
