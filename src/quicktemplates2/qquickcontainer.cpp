@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A container control base type.
+    \brief Abstract base type providing functionality common to containers.
 
     Container is the base type of container-like user interface controls that
     allow dynamic insertion and removal of items.

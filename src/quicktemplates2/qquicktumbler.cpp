@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A spinnable wheel of items that can be selected.
+    \brief Spinnable wheel of items that can be selected.
 
     \image qtquickcontrols2-tumbler-wrap.gif
 

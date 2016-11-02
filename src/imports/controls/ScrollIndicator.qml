@@ -49,7 +49,6 @@ T.ScrollIndicator {
 
     padding: 2
 
-    //! [contentItem]
     contentItem: Rectangle {
         id: indicator
 
@@ -76,5 +75,4 @@ T.ScrollIndicator {
             }
         ]
     }
-    //! [contentItem]
 }

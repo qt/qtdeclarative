@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators
-    \brief An interactive scroll bar control.
+    \brief Vertical or horizontal interactive scroll bar.
 
     \image qtquickcontrols2-scrollbar.gif
 

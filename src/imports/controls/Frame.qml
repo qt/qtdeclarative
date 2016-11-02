@@ -50,10 +50,8 @@ T.Frame {
 
     padding: 12
 
-    //! [background]
     background: Rectangle {
         color: "transparent"
         border.color: Default.frameLightColor
     }
-    //! [background]
 }

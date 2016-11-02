@@ -47,7 +47,6 @@ T.BusyIndicator {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: BusyRing {
         id: ring
         implicitWidth: 48
@@ -61,5 +60,4 @@ T.BusyIndicator {
             running: control.visible && control.running
         }
     }
-    //! [contentItem]
 }

@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-menus
-    \brief A menu item within a Menu.
+    \brief Presents an item within a Menu.
 
     MenuItem is a convenience type that implements the AbstractButton API,
     providing a familiar way to respond to menu items being \l triggered, for

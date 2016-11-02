@@ -59,6 +59,30 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    ProgressBar also supports a special \l indeterminate mode, which is useful,
+    for example, when unable to determine the size of the item being downloaded,
+    or if the download progress gets interrupted due to a network disconnection.
+
+    \image qtquickcontrols2-progressbar-indeterminate.gif
+
+    \code
+    ProgressBar {
+        indeterminate: true
+    }
+    \endcode
+
+    The indeterminate mode is similar to a \l BusyIndicator. Both can be used
+    to indicate background activity. The main difference is visual, and that
+    ProgressBar can also present a concrete amount of progress (when it can be
+    determined). Due to the visual difference, indeterminate progress bars and
+    busy indicators fit different places in user interfaces. Typical places for
+    an indeterminate progress bar:
+    \list
+    \li at the bottom of a \l ToolBar
+    \li inline within the content of a \l Page
+    \li in an \l ItemDelegate to show the progress of a particular item
+    \endlist
+
     \sa {Customizing ProgressBar}, BusyIndicator, {Indicator Controls}
 */
 

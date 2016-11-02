@@ -468,7 +468,6 @@ TestCase {
         // hide popup
         keyPress(data.key2)
         compare(control.pressed, data.hidePress)
-        compare(control.popup.visible, data.showPopup)
         keyRelease(data.key2)
         compare(control.pressed, false)
         tryCompare(control.popup, "visible", !data.hidePopup)

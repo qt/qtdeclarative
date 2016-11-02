@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A combined button and popup list taking minimal space.
+    \brief Combined button and popup list for selecting options.
 
     \image qtquickcontrols2-combobox.gif
 
@@ -274,6 +274,8 @@ void QQuickComboBoxPrivate::updateCurrentText()
     QString text = q->textAt(currentIndex);
     if (currentText != text) {
         currentText = text;
+        if (!hasDisplayText)
+           q->setAccessibleName(text);
         emit q->currentTextChanged();
     }
     if (!hasDisplayText && displayText != text) {
@@ -595,6 +597,7 @@ void QQuickComboBox::setDisplayText(const QString &text)
         return;
 
     d->displayText = text;
+    setAccessibleName(text);
     emit displayTextChanged();
 }
 
@@ -995,5 +998,21 @@ QFont QQuickComboBox::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickComboBox::accessibleRole() const
+{
+    return QAccessible::ComboBox;
+}
+
+void QQuickComboBox::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE

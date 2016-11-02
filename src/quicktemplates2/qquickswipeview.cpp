@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
     SwipeView provides a swipe-based navigation model.
 
-    \image qtquickcontrols2-swipeview-wireframe.png
+    \image qtquickcontrols2-swipeview.gif
 
     SwipeView is populated with a set of pages. One page is visible at a time.
     The user can navigate between the pages by swiping sideways. Notice that

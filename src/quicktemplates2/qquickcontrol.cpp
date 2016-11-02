@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickControl
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \brief The base type of user interface controls.
+    \brief Abstract base type providing functionality common to all controls.
 
     Control is the base type of user interface controls.  It receives input
     events from the window system, and paints a representation of itself on

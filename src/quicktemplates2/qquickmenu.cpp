@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-menus
     \ingroup qtquickcontrols2-popups
-    \brief A menu control that can be used as a context menu or popup menu.
+    \brief Menu popup that can be used as a context menu or popup menu.
 
     \image qtquickcontrols2-menu.png
 

@@ -57,7 +57,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup input
-    \brief A spinbox control that allows the user to select from a set of preset values.
+    \brief Allows the user to select from a set of preset values.
 
     \image qtquickcontrols2-spinbox.png
 
@@ -430,7 +430,16 @@ void QQuickSpinBox::setEditable(bool editable)
     This property holds the input text validator for editable spinboxes. By
     default, SpinBox uses \l IntValidator to accept input of integer numbers.
 
-    \snippet SpinBox.qml validator
+    \code
+    SpinBox {
+        id: control
+        validator: IntValidator {
+            locale: control.locale.name
+            bottom: Math.min(control.from, control.to)
+            top: Math.max(control.from, control.to)
+        }
+    }
+    \endcode
 
     \sa editable, textFromValue, valueFromText, {Control::locale}{locale}
 */

@@ -37,9 +37,12 @@
 #include "qquickpopup_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include "qquickshortcutcontext_p_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtGui/private/qshortcutmap_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -54,16 +57,16 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-popups
-    \brief The base type of popup-like user interface controls.
+    \brief Base type of popup-like user interface controls.
 
     Popup is the base type of popup-like user interface controls. It can be
-    used with Window or ApplicationWindow.
+    used with \l Window or \l ApplicationWindow.
 
     \qml
     import QtQuick.Window 2.2
     import QtQuick.Controls 2.1
 
-    Window {
+    ApplicationWindow {
         id: window
         width: 400
         height: 400
@@ -91,8 +94,79 @@ QT_BEGIN_NAMESPACE
     scene, it is recommended to use ApplicationWindow. ApplicationWindow also
     provides background dimming effects.
 
-    Popup lays out its content in a similar fashion to \l Control. For more
-    information, see the \l {Control Layout} section of the documentation.
+    Popup does not provide a layout of its own, but requires you to position
+    its contents, for instance by creating a \l RowLayout or a \l ColumnLayout.
+
+    Items declared as children of a Popup are automatically parented to the
+    Popups's \l contentItem. Items created dynamically need to be explicitly
+    parented to the contentItem.
+
+    \section1 Popup Layout
+
+    The following diagram illustrates the layout of a typical popup:
+
+    \image qtquickcontrols2-popup.png
+
+    The \l implicitWidth and \l implicitHeight of a popup are typically based
+    on the implicit sizes of the background and the content item plus any
+    \l padding. These properties determine how large the popup will be when no
+    explicit \l width or \l height is specified.
+
+    The \l background item fills the entire width and height of the popup,
+    unless an explicit size has been given for it.
+
+    The geometry of the \l contentItem is determined by the \l padding.
+
+    \section1 Popup Sizing
+
+    If only a single item is used within a Popup, it will resize to fit the
+    implicit size of its contained item. This makes it particularly suitable
+    for use together with layouts.
+
+    \code
+    Popup {
+        ColumnLayout {
+            anchors.fill: parent
+            CheckBox { text: qsTr("E-mail") }
+            CheckBox { text: qsTr("Calendar") }
+            CheckBox { text: qsTr("Contacts") }
+        }
+    }
+    \endcode
+
+    Sometimes there might be two items within the popup:
+
+    \code
+    Popup {
+        SwipeView {
+            // ...
+        }
+        PageIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+        }
+    }
+    \endcode
+
+    In this case, Popup cannot calculate a sensible implicit size. Since we're
+    anchoring the \l PageIndicator over the \l SwipeView, we can simply set the
+    content size to the view's implicit size:
+
+    \code
+    Popup {
+        contentWidth: view.implicitWidth
+        contentHeight: view.implicitHeight
+
+        SwipeView {
+            id: view
+            // ...
+        }
+        PageIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+        }
+     }
+    \endcode
 
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
@@ -364,10 +438,15 @@ public:
 
     QQuickItem *getContentItem() override;
 
+    int backId;
+    int escapeId;
     QQuickPopup *popup;
 };
 
-QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup)
+QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
+    : backId(0),
+      escapeId(0),
+      popup(popup)
 {
     isTabFence = true;
 }
@@ -416,6 +495,47 @@ void QQuickPopupItem::updatePolish()
 {
     Q_D(QQuickPopupItem);
     return QQuickPopupPrivate::get(d->popup)->reposition();
+}
+
+void QQuickPopupItem::grabShortcut()
+{
+#ifndef QT_NO_SHORTCUT
+    Q_D(QQuickPopupItem);
+    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
+    if (!d->backId)
+        d->backId = pApp->shortcutMap.addShortcut(this, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+    if (!d->escapeId)
+        d->escapeId = pApp->shortcutMap.addShortcut(this, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+#endif // QT_NO_SHORTCUT
+}
+
+void QQuickPopupItem::ungrabShortcut()
+{
+#ifndef QT_NO_SHORTCUT
+    Q_D(QQuickPopupItem);
+    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
+    if (d->backId) {
+        pApp->shortcutMap.removeShortcut(d->backId, this);
+        d->backId = 0;
+    }
+    if (d->escapeId) {
+        pApp->shortcutMap.removeShortcut(d->escapeId, this);
+        d->escapeId = 0;
+    }
+#endif // QT_NO_SHORTCUT
+}
+
+bool QQuickPopupItem::event(QEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    if (event->type() == QEvent::Shortcut) {
+        QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
+        if (se->shortcutId() == d->escapeId || se->shortcutId() == d->backId) {
+            d->popup->close();
+            return true;
+        }
+    }
+    return QQuickItem::event(event);
 }
 
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)
@@ -544,6 +664,13 @@ QAccessible::Role QQuickPopupItem::accessibleRole() const
 {
     Q_D(const QQuickPopupItem);
     return d->popup->accessibleRole();
+}
+
+void QQuickPopupItem::accessibilityActiveChanged(bool active)
+{
+    Q_D(const QQuickPopupItem);
+    QQuickControl::accessibilityActiveChanged(active);
+    d->popup->accessibilityActiveChanged(active);
 }
 #endif // QT_NO_ACCESSIBILITY
 
@@ -858,6 +985,7 @@ QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
     setParentItem(nullptr);
+    d->popupItem->ungrabShortcut();
     delete d->popupItem;
 }
 
@@ -1077,8 +1205,9 @@ void QQuickPopup::setImplicitHeight(qreal height)
     This property holds the content width. It is used for calculating the
     total implicit width of the Popup.
 
-    \note If only a single item is used within the Popup, the implicit width
-          of its contained item is used as the content width.
+    For more information, see \l {Popup Sizing}.
+
+    \sa contentHeight
 */
 qreal QQuickPopup::contentWidth() const
 {
@@ -1102,8 +1231,9 @@ void QQuickPopup::setContentWidth(qreal width)
     This property holds the content height. It is used for calculating the
     total implicit height of the Popup.
 
-    \note If only a single item is used within the Popup, the implicit height
-          of its contained item is used as the content height.
+    For more information, see \l {Popup Sizing}.
+
+    \sa contentWidth
 */
 qreal QQuickPopup::contentHeight() const
 {
@@ -1505,6 +1635,28 @@ void QQuickPopup::resetLocale()
     \qmlproperty font QtQuick.Controls::Popup::font
 
     This property holds the font currently set for the popup.
+
+    Popup propagates explicit font properties to its children. If you change a specific
+    property on a popup's font, that property propagates to all of the popup's children,
+    overriding any system defaults for that property.
+
+    \code
+    Popup {
+        font.family: "Courier"
+
+        Column {
+            Label {
+                text: qsTr("This will use Courier...")
+            }
+
+            Switch {
+                text: qsTr("... and so will this")
+            }
+        }
+    }
+    \endcode
+
+    \sa Control::font, ApplicationWindow::font
 */
 QFont QQuickPopup::font() const
 {
@@ -1844,7 +1996,10 @@ void QQuickPopup::setVisible(bool visible)
 /*!
     \qmlproperty real QtQuick.Controls::Popup::opacity
 
-    This property holds the opacity of the popup. The default value is \c 1.0.
+    This property holds the opacity of the popup. Opacity is specified as a number between
+    \c 0.0 (fully transparent) and \c 1.0 (fully opaque). The default value is \c 1.0.
+
+    \sa visible
 */
 qreal QQuickPopup::opacity() const
 {
@@ -1862,6 +2017,10 @@ void QQuickPopup::setOpacity(qreal opacity)
     \qmlproperty real QtQuick.Controls::Popup::scale
 
     This property holds the scale factor of the popup. The default value is \c 1.0.
+
+    A scale of less than \c 1.0 causes the popup to be rendered at a smaller size,
+    and a scale greater than \c 1.0 renders the popup at a larger size. A negative
+    scale causes the popup to be mirrored when rendered.
 */
 qreal QQuickPopup::scale() const
 {
@@ -1907,6 +2066,12 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
     if (d->closePolicy == policy)
         return;
     d->closePolicy = policy;
+    if (isVisible()) {
+        if (policy & QQuickPopup::CloseOnEscape)
+            d->popupItem->grabShortcut();
+        else
+            d->popupItem->ungrabShortcut();
+    }
     emit closePolicyChanged();
 }
 
@@ -1937,8 +2102,20 @@ void QQuickPopup::setTransformOrigin(TransformOrigin origin)
 /*!
     \qmlproperty Transition QtQuick.Controls::Popup::enter
 
-    This property holds the transition that is applied to the content item
+    This property holds the transition that is applied to the popup item
     when the popup is opened and enters the screen.
+
+    The following example animates the opacity of the popup when it enters
+    the screen:
+    \code
+    Popup {
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0.0; to: 1.0 }
+        }
+    }
+    \endcode
+
+    \sa exit
 */
 QQuickTransition *QQuickPopup::enter() const
 {
@@ -1958,8 +2135,20 @@ void QQuickPopup::setEnter(QQuickTransition *transition)
 /*!
     \qmlproperty Transition QtQuick.Controls::Popup::exit
 
-    This property holds the transition that is applied to the content item
+    This property holds the transition that is applied to the popup item
     when the popup is closed and exits the screen.
+
+    The following example animates the opacity of the popup when it exits
+    the screen:
+    \code
+    Popup {
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1.0; to: 0.0 }
+        }
+    }
+    \endcode
+
+    \sa enter
 */
 QQuickTransition *QQuickPopup::exit() const
 {
@@ -2051,12 +2240,6 @@ void QQuickPopup::keyPressEvent(QKeyEvent *event)
 
     if (hasActiveFocus() && (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab))
         QQuickItemPrivate::focusNextPrev(d->popupItem, event->key() == Qt::Key_Tab);
-
-    if (event->key() != Qt::Key_Escape && event->key() != Qt::Key_Back)
-        return;
-
-    if (d->closePolicy.testFlag(CloseOnEscape))
-        close();
 }
 
 void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
@@ -2153,7 +2336,7 @@ void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 
 void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
 {
-    Q_UNUSED(data);
+    Q_D(QQuickPopup);
 
     switch (change) {
     case QQuickItem::ItemActiveFocusHasChanged:
@@ -2162,6 +2345,13 @@ void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
     case QQuickItem::ItemOpacityHasChanged:
         emit opacityChanged();
         break;
+    case QQuickItem::ItemVisibleHasChanged:
+        if (isComponentComplete() && d->closePolicy & CloseOnEscape) {
+            if (data.boolValue)
+                d->popupItem->grabShortcut();
+            else
+                d->popupItem->ungrabShortcut();
+        }
     default:
         break;
     }
@@ -2221,7 +2411,36 @@ QAccessible::Role QQuickPopup::accessibleRole() const
 {
     return QAccessible::LayeredPane;
 }
+
+void QQuickPopup::accessibilityActiveChanged(bool active)
+{
+    Q_UNUSED(active);
+}
 #endif // QT_NO_ACCESSIBILITY
+
+QString QQuickPopup::accessibleName() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->accessibleName();
+}
+
+void QQuickPopup::setAccessibleName(const QString &name)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setAccessibleName(name);
+}
+
+QVariant QQuickPopup::accessibleProperty(const char *propertyName)
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->accessibleProperty(propertyName);
+}
+
+bool QQuickPopup::setAccessibleProperty(const char *propertyName, const QVariant &value)
+{
+    Q_D(QQuickPopup);
+    return d->popupItem->setAccessibleProperty(propertyName, value);
+}
 
 QT_END_NAMESPACE
 

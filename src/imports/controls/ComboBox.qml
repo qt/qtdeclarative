@@ -55,7 +55,6 @@ T.ComboBox {
     leftPadding: padding + 6
     rightPadding: padding + 6
 
-    //! [delegate]
     delegate: ItemDelegate {
         width: control.popup.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
@@ -63,9 +62,7 @@ T.ComboBox {
         highlighted: control.highlightedIndex == index
         hoverEnabled: control.hoverEnabled
     }
-    //! [delegate]
 
-    //! [indicator]
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -74,9 +71,7 @@ T.ComboBox {
         sourceSize.height: height
         opacity: enabled ? 1 : 0.3
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
         rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
@@ -89,9 +84,7 @@ T.ComboBox {
         elide: Text.ElideRight
         opacity: enabled ? 1 : 0.3
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 40
@@ -102,9 +95,7 @@ T.ComboBox {
         border.width: control.visualFocus ? 2 : 0
         visible: !control.flat || control.pressed
     }
-    //! [background]
 
-    //! [popup]
     popup: T.Popup {
         y: control.height - (control.visualFocus ? 0 : 1)
         width: control.width
@@ -135,5 +126,4 @@ T.ComboBox {
 
         background: Rectangle { }
     }
-    //! [popup]
 }

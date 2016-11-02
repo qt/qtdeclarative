@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators
-    \brief A non-interactive scroll indicator control.
+    \brief Vertical or horizontal non-interactive scroll indicator.
 
     \image qtquickcontrols2-scrollindicator.gif
 

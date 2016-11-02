@@ -49,7 +49,6 @@ T.ScrollBar {
 
     padding: 2
 
-    //! [contentItem]
     contentItem: Rectangle {
         id: handle
 
@@ -75,5 +74,4 @@ T.ScrollBar {
             }
         }
     }
-    //! [contentItem]
 }
