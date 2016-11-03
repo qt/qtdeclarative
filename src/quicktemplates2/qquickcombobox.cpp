@@ -130,6 +130,11 @@ QT_BEGIN_NAMESPACE
     \sa highlightedIndex
 */
 
+namespace {
+    enum Activation { NoActivate, Activate };
+    enum Highlighting { NoHighlight, Highlight };
+}
+
 class QQuickComboBoxDelegateModel : public QQmlDelegateModel
 {
 public:
@@ -181,8 +186,9 @@ public:
     void updateCurrentText();
     void incrementCurrentIndex();
     void decrementCurrentIndex();
+    void setCurrentIndex(int index, Activation activate);
     void updateHighlightedIndex();
-    void setHighlightedIndex(int index);
+    void setHighlightedIndex(int index, Highlighting highlight);
 
     void createDelegateModel();
 
@@ -241,8 +247,7 @@ void QQuickComboBoxPrivate::itemClicked()
     Q_Q(QQuickComboBox);
     int index = delegateModel->indexOf(q->sender(), nullptr);
     if (index != -1) {
-        setHighlightedIndex(index);
-        emit q->highlighted(index);
+        setHighlightedIndex(index, Highlight);
         hidePopup(true);
     }
 }
@@ -283,44 +288,51 @@ void QQuickComboBoxPrivate::updateCurrentText()
     }
 }
 
+void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)
+{
+    Q_Q(QQuickComboBox);
+    if (currentIndex == index)
+        return;
+
+    currentIndex = index;
+    emit q->currentIndexChanged();
+
+    if (componentComplete)
+        updateCurrentText();
+
+    if (activate)
+        emit q->activated(index);
+}
+
 void QQuickComboBoxPrivate::incrementCurrentIndex()
 {
     Q_Q(QQuickComboBox);
     if (isPopupVisible()) {
-        if (highlightedIndex < q->count() - 1) {
-            setHighlightedIndex(highlightedIndex + 1);
-            emit q->highlighted(highlightedIndex);
-        }
+        if (highlightedIndex < q->count() - 1)
+            setHighlightedIndex(highlightedIndex + 1, Highlight);
     } else {
-        if (currentIndex < q->count() - 1) {
-            q->setCurrentIndex(currentIndex + 1);
-            emit q->activated(currentIndex);
-        }
+        if (currentIndex < q->count() - 1)
+            setCurrentIndex(currentIndex + 1, Activate);
     }
 }
 
 void QQuickComboBoxPrivate::decrementCurrentIndex()
 {
-    Q_Q(QQuickComboBox);
     if (isPopupVisible()) {
-        if (highlightedIndex > 0) {
-            setHighlightedIndex(highlightedIndex - 1);
-            emit q->highlighted(highlightedIndex);
-        }
+        if (highlightedIndex > 0)
+            setHighlightedIndex(highlightedIndex - 1, Highlight);
     } else {
-        if (currentIndex > 0) {
-            q->setCurrentIndex(currentIndex - 1);
-            emit q->activated(currentIndex);
-        }
+        if (currentIndex > 0)
+            setCurrentIndex(currentIndex - 1, Activate);
     }
 }
 
 void QQuickComboBoxPrivate::updateHighlightedIndex()
 {
-    setHighlightedIndex(popup->isVisible() ? currentIndex : -1);
+    setHighlightedIndex(popup->isVisible() ? currentIndex : -1, NoHighlight);
 }
 
-void QQuickComboBoxPrivate::setHighlightedIndex(int index)
+void QQuickComboBoxPrivate::setHighlightedIndex(int index, Highlighting highlight)
 {
     Q_Q(QQuickComboBox);
     if (highlightedIndex == index)
@@ -328,6 +340,9 @@ void QQuickComboBoxPrivate::setHighlightedIndex(int index)
 
     highlightedIndex = index;
     emit q->highlightedIndexChanged();
+
+    if (highlight)
+        emit q->highlighted(index);
 }
 
 void QQuickComboBoxPrivate::createDelegateModel()
@@ -510,13 +525,7 @@ void QQuickComboBox::setCurrentIndex(int index)
 {
     Q_D(QQuickComboBox);
     d->hasCurrentIndex = true;
-    if (d->currentIndex == index)
-        return;
-
-    d->currentIndex = index;
-    emit currentIndexChanged();
-    if (isComponentComplete())
-        d->updateCurrentText();
+    d->setCurrentIndex(index, NoActivate);
 }
 
 /*!
@@ -842,8 +851,6 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::keyPressEvent(event);
-    if (!d->popup)
-        return;
 
     switch (event->key()) {
     case Qt::Key_Escape:
@@ -868,6 +875,20 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_Down:
         d->incrementCurrentIndex();
+        event->accept();
+        break;
+    case Qt::Key_Home:
+        if (d->isPopupVisible())
+            d->setHighlightedIndex(0, Highlight);
+        else
+            d->setCurrentIndex(0, Activate);
+        event->accept();
+        break;
+    case Qt::Key_End:
+        if (d->isPopupVisible())
+            d->setHighlightedIndex(count() - 1, Highlight);
+        else
+            d->setCurrentIndex(count() - 1, Activate);
         event->accept();
         break;
     default:

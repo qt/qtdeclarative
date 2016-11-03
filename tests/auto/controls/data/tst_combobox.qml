@@ -431,7 +431,7 @@ TestCase {
         control.destroy()
     }
 
-    function test_keys_data() {
+    function test_keys_space_enter_escape_data() {
         return [
             { tag: "space-space", key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
             { tag: "space-enter", key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
@@ -444,7 +444,7 @@ TestCase {
         ]
     }
 
-    function test_keys(data) {
+    function test_keys_space_enter_escape(data) {
         var control = comboBox.createObject(testCase, {model: 3})
         verify(control)
 
@@ -470,6 +470,119 @@ TestCase {
         keyRelease(data.key2)
         compare(control.pressed, false)
         tryCompare(control.popup, "visible", !data.hidePopup)
+
+        control.destroy()
+    }
+
+    function test_keys_home_end() {
+        var control = comboBox.createObject(testCase, {model: 5})
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, -1)
+
+        var activatedCount = 0
+        var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
+        verify(activatedSpy.valid)
+
+        var highlightedCount = 0
+        var highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
+        verify(highlightedSpy.valid)
+
+        var currentIndexCount = 0
+        var currentIndexSpy = signalSpy.createObject(control, {target: control, signalName: "currentIndexChanged"})
+        verify(currentIndexSpy.valid)
+
+        var highlightedIndexCount = 0
+        var highlightedIndexSpy = signalSpy.createObject(control, {target: control, signalName: "highlightedIndexChanged"})
+        verify(highlightedIndexSpy.valid)
+
+        // end (popup closed)
+        keyClick(Qt.Key_End)
+        compare(control.currentIndex, 4)
+        compare(currentIndexSpy.count, ++currentIndexCount)
+
+        compare(control.highlightedIndex, -1)
+        compare(highlightedIndexSpy.count, highlightedIndexCount)
+
+        compare(activatedSpy.count, ++activatedCount)
+        compare(activatedSpy.signalArguments[activatedCount-1][0], 4)
+
+        compare(highlightedSpy.count, highlightedCount)
+
+        // repeat (no changes/signals)
+        keyClick(Qt.Key_End)
+        compare(currentIndexSpy.count, currentIndexCount)
+        compare(highlightedIndexSpy.count, highlightedIndexCount)
+        compare(activatedSpy.count, activatedCount)
+        compare(highlightedSpy.count, highlightedCount)
+
+        // home (popup closed)
+        keyClick(Qt.Key_Home)
+        compare(control.currentIndex, 0)
+        compare(currentIndexSpy.count, ++currentIndexCount)
+
+        compare(control.highlightedIndex, -1)
+        compare(highlightedIndexSpy.count, highlightedIndexCount)
+
+        compare(activatedSpy.count, ++activatedCount)
+        compare(activatedSpy.signalArguments[activatedCount-1][0], 0)
+
+        compare(highlightedSpy.count, highlightedCount)
+
+        // repeat (no changes/signals)
+        keyClick(Qt.Key_Home)
+        compare(currentIndexSpy.count, currentIndexCount)
+        compare(highlightedIndexSpy.count, highlightedIndexCount)
+        compare(activatedSpy.count, activatedCount)
+        compare(highlightedSpy.count, highlightedCount)
+
+        control.popup.open()
+        compare(control.highlightedIndex, 0)
+        compare(highlightedIndexSpy.count, ++highlightedIndexCount)
+        compare(highlightedSpy.count, highlightedCount)
+
+        // end (popup open)
+        keyClick(Qt.Key_End)
+        compare(control.currentIndex, 0)
+        compare(currentIndexSpy.count, currentIndexCount)
+
+        compare(control.highlightedIndex, 4)
+        compare(highlightedIndexSpy.count, ++highlightedIndexCount)
+
+        compare(activatedSpy.count, activatedCount)
+
+        compare(highlightedSpy.count, ++highlightedCount)
+        compare(highlightedSpy.signalArguments[highlightedCount-1][0], 4)
+
+        // repeat (no changes/signals)
+        keyClick(Qt.Key_End)
+        compare(currentIndexSpy.count, currentIndexCount)
+        compare(highlightedIndexSpy.count, highlightedIndexCount)
+        compare(activatedSpy.count, activatedCount)
+        compare(highlightedSpy.count, highlightedCount)
+
+        // home (popup open)
+        keyClick(Qt.Key_Home)
+        compare(control.currentIndex, 0)
+        compare(currentIndexSpy.count, currentIndexCount)
+
+        compare(control.highlightedIndex, 0)
+        compare(highlightedIndexSpy.count, ++highlightedIndexCount)
+
+        compare(activatedSpy.count, activatedCount)
+
+        compare(highlightedSpy.count, ++highlightedCount)
+        compare(highlightedSpy.signalArguments[highlightedCount-1][0], 0)
+
+        // repeat (no changes/signals)
+        keyClick(Qt.Key_Home)
+        compare(currentIndexSpy.count, currentIndexCount)
+        compare(highlightedIndexSpy.count, highlightedIndexCount)
+        compare(activatedSpy.count, activatedCount)
+        compare(highlightedSpy.count, highlightedCount)
 
         control.destroy()
     }
