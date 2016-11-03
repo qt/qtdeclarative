@@ -587,6 +587,49 @@ TestCase {
         control.destroy()
     }
 
+    function test_keySearch() {
+        var control = comboBox.createObject(testCase, {model: ["Banana", "Coco", "Coconut", "Apple", "Cocomuffin"]})
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "Banana")
+
+        keyPress(Qt.Key_C)
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Coco")
+
+        // no match
+        keyPress(Qt.Key_N)
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Coco")
+
+        keyPress(Qt.Key_C)
+        compare(control.currentIndex, 2)
+        compare(control.currentText, "Coconut")
+
+        keyPress(Qt.Key_C)
+        compare(control.currentIndex, 4)
+        compare(control.currentText, "Cocomuffin")
+
+        // wrap
+        keyPress(Qt.Key_C)
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "Coco")
+
+        keyPress(Qt.Key_A)
+        compare(control.currentIndex, 3)
+        compare(control.currentText, "Apple")
+
+        keyPress(Qt.Key_B)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "Banana")
+
+        control.destroy()
+    }
+
     function test_popup() {
         var control = comboBox.createObject(testCase, {model: 3})
         verify(control)

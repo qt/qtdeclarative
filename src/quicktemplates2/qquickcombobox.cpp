@@ -190,6 +190,9 @@ public:
     void updateHighlightedIndex();
     void setHighlightedIndex(int index, Highlighting highlight);
 
+    void keySearch(const QString &text);
+    int match(int start, const QString &text, Qt::MatchFlags flags) const;
+
     void createDelegateModel();
 
     bool pressed;
@@ -343,6 +346,65 @@ void QQuickComboBoxPrivate::setHighlightedIndex(int index, Highlighting highligh
 
     if (highlight)
         emit q->highlighted(index);
+}
+
+void QQuickComboBoxPrivate::keySearch(const QString &text)
+{
+    int index = match(currentIndex + 1, text, Qt::MatchStartsWith | Qt::MatchWrap);
+    if (index != -1)
+        setCurrentIndex(index, Activate);
+}
+
+int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags flags) const
+{
+    Q_Q(const QQuickComboBox);
+    uint matchType = flags & 0x0F;
+    bool wrap = flags & Qt::MatchWrap;
+    Qt::CaseSensitivity cs = flags & Qt::MatchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    int from = start;
+    int to = q->count();
+
+    // iterates twice if wrapping
+    for (int i = 0; (wrap && i < 2) || (!wrap && i < 1); ++i) {
+        for (int idx = from; idx < to; ++idx) {
+            QString t = q->textAt(idx);
+            switch (matchType) {
+            case Qt::MatchExactly:
+                if (t == text)
+                    return idx;
+                break;
+            case Qt::MatchRegExp:
+                if (QRegExp(text, cs).exactMatch(t))
+                    return idx;
+                break;
+            case Qt::MatchWildcard:
+                if (QRegExp(text, cs, QRegExp::Wildcard).exactMatch(t))
+                    return idx;
+                break;
+            case Qt::MatchStartsWith:
+                if (t.startsWith(text, cs))
+                    return idx;
+                break;
+            case Qt::MatchEndsWith:
+                if (t.endsWith(text, cs))
+                    return idx;
+                break;
+            case Qt::MatchFixedString:
+                if (t.compare(text, cs) == 0)
+                    return idx;
+                break;
+            case Qt::MatchContains:
+            default:
+                if (t.contains(text, cs))
+                    return idx;
+                break;
+            }
+        }
+        // prepare for the next iteration
+        from = 0;
+        to = start;
+    }
+    return -1;
 }
 
 void QQuickComboBoxPrivate::createDelegateModel()
@@ -770,45 +832,8 @@ QString QQuickComboBox::textAt(int index) const
 */
 int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 {
-    int itemCount = count();
-    uint matchType = flags & 0x0F;
-    Qt::CaseSensitivity cs = flags & Qt::MatchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
-
-    for (int idx = 0; idx < itemCount; ++idx) {
-        QString t = textAt(idx);
-        switch (matchType) {
-        case Qt::MatchExactly:
-            if (t == text)
-                return idx;
-            break;
-        case Qt::MatchRegExp:
-            if (QRegExp(text, cs).exactMatch(t))
-                return idx;
-            break;
-        case Qt::MatchWildcard:
-            if (QRegExp(text, cs, QRegExp::Wildcard).exactMatch(t))
-                return idx;
-            break;
-        case Qt::MatchStartsWith:
-            if (t.startsWith(text, cs))
-                return idx;
-            break;
-        case Qt::MatchEndsWith:
-            if (t.endsWith(text, cs))
-                return idx;
-            break;
-        case Qt::MatchFixedString:
-            if (t.compare(text, cs) == 0)
-                return idx;
-            break;
-        case Qt::MatchContains:
-        default:
-            if (t.contains(text, cs))
-                return idx;
-            break;
-        }
-    }
-    return -1;
+    Q_D(const QQuickComboBox);
+    return d->match(0, text, flags);
 }
 
 /*!
@@ -892,6 +917,10 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         event->accept();
         break;
     default:
+        if (!event->text().isEmpty())
+            d->keySearch(event->text());
+        else
+            event->ignore();
         break;
     }
 }
