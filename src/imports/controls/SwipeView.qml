@@ -46,8 +46,6 @@ T.SwipeView {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    Accessible.role: Accessible.PageTabList
-
     contentItem: ListView {
         model: control.contentModel
         interactive: control.interactive

@@ -2409,7 +2409,7 @@ QFont QQuickPopup::defaultFont() const
 #ifndef QT_NO_ACCESSIBILITY
 QAccessible::Role QQuickPopup::accessibleRole() const
 {
-    return QAccessible::LayeredPane;
+    return QAccessible::Dialog;
 }
 
 void QQuickPopup::accessibilityActiveChanged(bool active)

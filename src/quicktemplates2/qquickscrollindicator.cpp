@@ -65,9 +65,12 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    When ScrollIndicator is attached \l {ScrollIndicator::vertical}{vertically} or
-    \l {ScrollIndicator::horizontal}{horizontally} to a Flickable, the following
-    properties are automatically set and updated as appropriate:
+    \section1 Attaching ScrollIndicator to a Flickable
+
+    \note When ScrollIndicator is attached \l {ScrollIndicator::vertical}{vertically}
+    or \l {ScrollIndicator::horizontal}{horizontally} to a Flickable, its geometry and
+    the following properties are automatically set and updated as appropriate:
+
     \list
     \li \l orientation
     \li \l position
@@ -98,12 +101,27 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \section1 Binding the Active State of Horizontal and Vertical Scroll Indicators
+
     Horizontal and vertical scroll indicators do not share the \l active state with
     each other by default. In order to keep both indicators visible whilst scrolling
     to either direction, establish a two-way binding between the active states as
     presented by the following example:
 
     \snippet qtquickcontrols2-scrollindicator-active.qml 1
+
+    \section1 Non-attached Scroll Indicators
+
+    It is possible to create an instance of ScrollIndicator without using the
+    attached property API. This is useful when the behavior of the attached
+    scoll indicator is not sufficient or a \l Flickable is not in use. In the
+    following example, horizontal and vertical scroll indicators are used to
+    indicate how far the user has scrolled over the text (using \l MouseArea
+    instead of \l Flickable):
+
+    \snippet qtquickcontrols2-scrollindicator-non-attached.qml 1
+
+    \image qtquickcontrols2-scrollindicator-non-attached.png
 
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
 */
@@ -166,6 +184,9 @@ QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObj
     This property holds the size of the indicator, scaled to \c {0.0 - 1.0}.
 
     \sa {Flickable::visibleArea.heightRatio}{Flickable::visibleArea}
+
+    This property is automatically set when the scroll indicator is
+    \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
 */
 qreal QQuickScrollIndicator::size() const
 {
@@ -189,6 +210,9 @@ void QQuickScrollIndicator::setSize(qreal size)
     \qmlproperty real QtQuick.Controls::ScrollIndicator::position
 
     This property holds the position of the indicator, scaled to \c {0.0 - 1.0}.
+
+    This property is automatically set when the scroll indicator is
+    \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
 
     \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}
 */
@@ -215,6 +239,12 @@ void QQuickScrollIndicator::setPosition(qreal position)
 
     This property holds whether the indicator is active, that is, when the
     attached Flickable is \l {Flickable::moving}{moving}.
+
+    It is possible to keep \l {Binding the Active State of Horizontal and Vertical Scroll Indicators}
+    {both horizontal and vertical indicators visible} while scrolling in either direction.
+
+    This property is automatically set when the scroll indicator is
+    \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
 */
 bool QQuickScrollIndicator::isActive() const
 {
@@ -240,6 +270,9 @@ void QQuickScrollIndicator::setActive(bool active)
     Possible values:
     \value Qt.Horizontal Horizontal
     \value Qt.Vertical Vertical (default)
+
+    This property is automatically set when the scroll indicator is
+    \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
 */
 Qt::Orientation QQuickScrollIndicator::orientation() const
 {
@@ -363,6 +396,8 @@ QQuickScrollIndicatorAttached::~QQuickScrollIndicatorAttached()
         ScrollIndicator.horizontal: ScrollIndicator { }
     }
     \endcode
+
+    \sa {Attaching ScrollIndicator to a Flickable}
 */
 QQuickScrollIndicator *QQuickScrollIndicatorAttached::horizontal() const
 {
@@ -419,6 +454,8 @@ void QQuickScrollIndicatorAttached::setHorizontal(QQuickScrollIndicator *horizon
         ScrollIndicator.vertical: ScrollIndicator { }
     }
     \endcode
+
+    \sa {Attaching ScrollIndicator to a Flickable}
 */
 QQuickScrollIndicator *QQuickScrollIndicatorAttached::vertical() const
 {
