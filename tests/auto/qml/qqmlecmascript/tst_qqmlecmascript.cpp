@@ -443,29 +443,37 @@ void tst_qqmlecmascript::assignBasicTypes()
 void tst_qqmlecmascript::assignDate_data()
 {
     QTest::addColumn<QUrl>("source");
+    QTest::addColumn<int>("timeOffset"); // -1 for local-time, else minutes from UTC
 
-    QTest::newRow("Component.onComplete JS Parse") << testFileUrl("assignDate.qml");
-    QTest::newRow("Component.onComplete JS") << testFileUrl("assignDate.1.qml");
-    QTest::newRow("Binding JS") << testFileUrl("assignDate.2.qml");
-    QTest::newRow("Binding UTC") << testFileUrl("assignDate.3.qml");
-    QTest::newRow("Binding JS UTC") << testFileUrl("assignDate.4.qml");
-    QTest::newRow("Binding UTC+2") << testFileUrl("assignDate.5.qml");
-    QTest::newRow("Binding JS UTC+2 ") << testFileUrl("assignDate.6.qml");
+    QTest::newRow("Component.onComplete JS Parse") << testFileUrl("assignDate.qml") << -1;
+    QTest::newRow("Component.onComplete JS") << testFileUrl("assignDate.1.qml") << 0;
+    QTest::newRow("Binding JS") << testFileUrl("assignDate.2.qml") << -1;
+    QTest::newRow("Binding UTC") << testFileUrl("assignDate.3.qml") << 0;
+    QTest::newRow("Binding JS UTC") << testFileUrl("assignDate.4.qml") << 0;
+    QTest::newRow("Binding UTC+2") << testFileUrl("assignDate.5.qml") << 120;
+    QTest::newRow("Binding JS UTC+2 ") << testFileUrl("assignDate.6.qml") << 120;
 }
 
 void tst_qqmlecmascript::assignDate()
 {
     QFETCH(QUrl, source);
+    QFETCH(int, timeOffset);
 
     QQmlComponent component(&engine, source);
     QScopedPointer<QObject> obj(component.create());
     MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
     QVERIFY(object != 0);
 
-    // Dates received from JS are automatically converted to local time
-    QDate expectedDate(QDateTime(QDate(2009, 5, 12), QTime(0, 0, 0), Qt::UTC).toLocalTime().date());
-    QDateTime expectedDateTime(QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1), Qt::UTC).toLocalTime());
-    QDateTime expectedDateTime2(QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59), Qt::UTC).toLocalTime());
+    QDate expectedDate(2009, 5, 12);
+    QDateTime expectedDateTime;
+    QDateTime expectedDateTime2;
+    if (timeOffset == -1) {
+        expectedDateTime = QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1), Qt::LocalTime);
+        expectedDateTime2 = QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59), Qt::LocalTime);
+    } else {
+        expectedDateTime = QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1), Qt::OffsetFromUTC, timeOffset * 60);
+        expectedDateTime2 = QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59), Qt::OffsetFromUTC, timeOffset * 60);
+    }
 
     QCOMPARE(object->dateProperty(), expectedDate);
     QCOMPARE(object->dateTimeProperty(), expectedDateTime);

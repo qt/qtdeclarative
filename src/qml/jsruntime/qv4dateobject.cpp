@@ -378,13 +378,20 @@ static inline double TimeClip(double t)
 
 static inline double ParseString(const QString &s)
 {
-    // first try the format defined in 15.9.1.15, only if that fails fall back to
-    // QDateTime for parsing
+    /*
+      First, try the format defined in ECMA 262's "Date Time String Format";
+      only if that fails, fall back to QDateTime for parsing
 
-    // the define string format is YYYY-MM-DDTHH:mm:ss.sssZ
-    // It can be date or time only, and the second and later components
-    // of both fields are optional
-    // and extended syntax for negative and large positive years exists: +/-YYYYYY
+      The defined string format is YYYY-MM-DDTHH:mm:ss.sssZ; the time (T and all
+      after it) may be omitted; in each part, the second and later components
+      are optional; and there's an extended syntax for negative and large
+      positive years: +/-YYYYYY; the leading sign, even when +, isn't optional.
+      If month or day is omitted, it is 01; if minute or second is omitted, it's
+      00; if milliseconds are omitted, they're 000.
+
+      When the time zone offset is absent, date-only forms are interpreted as
+      indicating a UTC time and date-time forms are interpreted in local time.
+    */
 
     enum Format {
         Year,
@@ -417,6 +424,8 @@ static inline double ParseString(const QString &s)
     int msec = 0;
     int offsetSign = 1;
     int offset = 0;
+    bool seenT = false;
+    bool seenZ = false; // Have seen zone, i.e. +HH:mm or literal Z.
 
     bool error = false;
     if (*ch == '+' || *ch == '-') {
@@ -425,7 +434,7 @@ static inline double ParseString(const QString &s)
             yearSign = -1;
         ++ch;
     }
-    while (ch <= end) {
+    for (; ch <= end && !error && format != Done; ++ch) {
         if (*ch >= '0' && *ch <= '9') {
             current *= 10;
             current += ch->unicode() - '0';
@@ -453,7 +462,7 @@ static inline double ParseString(const QString &s)
                 break;
             case Minute:
                 minute = current;
-                error = (currentSize != 2) || minute > 60;
+                error = (currentSize != 2) || minute >= 60;
                 break;
             case Second:
                 second = current;
@@ -464,8 +473,10 @@ static inline double ParseString(const QString &s)
                 error = (currentSize != 3);
                 break;
             case TimezoneHour:
-                offset = current*60;
-                error = (currentSize != 2) || offset > 23*60;
+                Q_ASSERT(offset == 0 && !seenZ);
+                offset = current * 60;
+                error = (currentSize != 2) || current > 23;
+                seenZ = true;
                 break;
             case TimezoneMinute:
                 offset += current;
@@ -476,6 +487,7 @@ static inline double ParseString(const QString &s)
                 if (format >= Hour)
                     error = true;
                 format = Hour;
+                seenT = true;
             } else if (*ch == '-') {
                 if (format < Day)
                     ++format;
@@ -484,6 +496,7 @@ static inline double ParseString(const QString &s)
                 else if (format >= TimezoneHour)
                     error = true;
                 else {
+                    Q_ASSERT(offset == 0 && !seenZ);
                     offsetSign = -1;
                     format = TimezoneHour;
                 }
@@ -496,23 +509,31 @@ static inline double ParseString(const QString &s)
                     error = true;
                 ++format;
             } else if (*ch == '+') {
-                if (format < Minute || format >= TimezoneHour)
+                if (seenZ || format < Minute || format >= TimezoneHour)
                     error = true;
                 format = TimezoneHour;
-            } else if (*ch == 'Z' || ch->unicode() == 0) {
+            } else if (*ch == 'Z') {
+                if (seenZ || format < Minute || format >= TimezoneHour)
+                    error = true;
+                else
+                    Q_ASSERT(offset == 0);
+                format = Done;
+                seenZ = true;
+            } else if (ch->unicode() == 0) {
                 format = Done;
             }
             current = 0;
             currentSize = 0;
         }
-        if (error || format == Done)
-            break;
-        ++ch;
     }
 
     if (!error) {
         double t = MakeDate(MakeDay(year * yearSign, month, day), MakeTime(hour, minute, second, msec));
-        t -= offset * offsetSign * 60 * 1000;
+        if (seenZ)
+            t -= offset * offsetSign * 60 * 1000;
+        else if (seenT) // No zone specified, treat date-time as local time
+            t = UTC(t);
+        // else: treat plain date as already in UTC
         return t;
     }
 
@@ -571,7 +592,11 @@ static inline double ParseString(const QString &s)
                 << QStringLiteral("d MMMM, yyyy hh:mm:ss");
 
         for (int i = 0; i < formats.size(); ++i) {
-            dt = QDateTime::fromString(s, formats.at(i));
+            const QString &format(formats.at(i));
+            dt = format.indexOf(QLatin1String("hh:mm")) < 0
+                ? QDateTime(QDate::fromString(s, format),
+                            QTime(0, 0, 0), Qt::UTC)
+                : QDateTime::fromString(s, format); // as local time
             if (dt.isValid())
                 break;
         }
@@ -591,7 +616,7 @@ static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
 {
     if (std::isnan(t))
         return QDateTime();
-    return QDateTime::fromMSecsSinceEpoch(t, spec);
+    return QDateTime::fromMSecsSinceEpoch(t, Qt::UTC).toTimeSpec(spec);
 }
 
 static inline QString ToString(double t)

@@ -1370,7 +1370,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::QDateTime:
                 return QV4::Encode(newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:
-                return QV4::Encode(newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
+                return QV4::Encode(newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr), QTime(0, 0, 0), Qt::UTC)));
             case QMetaType::QTime:
                 return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
             case QMetaType::QRegExp:

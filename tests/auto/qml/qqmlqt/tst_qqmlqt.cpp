@@ -888,7 +888,8 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
     QTest::newRow("formatTime, qtime") << "formatTime" << QVariant::fromValue(time) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
 
     QDate date(2011,5,31);
-    temporary = QDateTime(date);
+    // V4 reads the date in UTC but DateObject::toQDateTime() gives it back in local time:
+    temporary = QDateTime(date, QTime(0, 0, 0), Qt::UTC).toLocalTime();
     QTest::newRow("formatDate, qdate") << "formatDate" << QVariant::fromValue(date) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
     QTest::newRow("formatDateTime, qdate") << "formatDateTime" << QVariant::fromValue(date) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
     QTest::newRow("formatTime, qdate") << "formatTime" << QVariant::fromValue(date) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
