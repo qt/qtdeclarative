@@ -2308,29 +2308,31 @@ QQuickItem::~QQuickItem()
     while (!d->childItems.isEmpty())
         d->childItems.constFirst()->setParentItem(0);
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-        if (anchor)
-            anchor->clearItem(this);
-    }
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+            if (anchor)
+                anchor->clearItem(this);
+        }
 
-    /*
+        /*
         update item anchors that depended on us unless they are our child (and will also be destroyed),
         or our sibling, and our parent is also being destroyed.
     */
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-        if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
-            anchor->update();
-    }
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+            if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
+                anchor->update();
+        }
 
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Destroyed)
-            change.listener->itemDestroyed(this);
-    }
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::Destroyed)
+                change.listener->itemDestroyed(this);
+        }
 
-    d->changeListeners.clear();
+        d->changeListeners.clear();
+    }
 
     /*
        Remove any references our transforms have to us, in case they try to
@@ -3549,10 +3551,12 @@ QQuickAnchors *QQuickItemPrivate::anchors() const
 void QQuickItemPrivate::siblingOrderChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::SiblingOrder) {
-            change.listener->itemSiblingOrderChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::SiblingOrder) {
+                change.listener->itemSiblingOrderChanged(q);
+            }
         }
     }
 }
@@ -3663,11 +3667,13 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     change.setWidthChange(diff.width() != 0);
     change.setHeightChange(diff.height() != 0);
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
-        if (listener.types & QQuickItemPrivate::Geometry) {
-            if (change.matches(listener.gTypes))
-                listener.listener->itemGeometryChanged(this, change, diff);
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
+            if (listener.types & QQuickItemPrivate::Geometry) {
+                if (change.matches(listener.gTypes))
+                    listener.listener->itemGeometryChanged(this, change, diff);
+            }
         }
     }
 
@@ -4224,12 +4230,14 @@ void QQuickItem::setBaselineOffset(qreal offset)
 
     d->baselineOffset = offset;
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Geometry) {
-            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-            if (anchor)
-                anchor->updateVerticalAnchors();
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::Geometry) {
+                QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+                if (anchor)
+                    anchor->updateVerticalAnchors();
+            }
         }
     }
 
@@ -5977,20 +5985,24 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Children) {
-                change.listener->itemChildAdded(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Children) {
+                    change.listener->itemChildAdded(q, data.item);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemChildRemovedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Children) {
-                change.listener->itemChildRemoved(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Children) {
+                    change.listener->itemChildRemoved(q, data.item);
+                }
             }
         }
         break;
@@ -6000,30 +6012,36 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemVisibleHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Visibility) {
-                change.listener->itemVisibilityChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Visibility) {
+                    change.listener->itemVisibilityChanged(q);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemParentHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Parent) {
-                change.listener->itemParentChanged(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Parent) {
+                    change.listener->itemParentChanged(q, data.item);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemOpacityHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Opacity) {
-                change.listener->itemOpacityChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Opacity) {
+                    change.listener->itemOpacityChanged(q);
+                }
             }
         }
         break;
@@ -6033,10 +6051,12 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemRotationHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Rotation) {
-                change.listener->itemRotationChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Rotation) {
+                    change.listener->itemRotationChanged(q);
+                }
             }
         }
         break;
@@ -6395,10 +6415,12 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::ImplicitWidth) {
-            change.listener->itemImplicitWidthChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::ImplicitWidth) {
+                change.listener->itemImplicitWidthChanged(q);
+            }
         }
     }
     emit q->implicitWidthChanged();
@@ -6559,10 +6581,12 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::ImplicitHeight) {
-            change.listener->itemImplicitHeightChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::ImplicitHeight) {
+                change.listener->itemImplicitHeightChanged(q);
+            }
         }
     }
     emit q->implicitHeightChanged();
