@@ -2566,7 +2566,7 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 {
     Q_Q(QQuickTextEdit);
     QTextOption opt = document->defaultTextOption();
-    int oldAlignment = opt.alignment();
+    const Qt::Alignment oldAlignment = opt.alignment();
     Qt::LayoutDirection oldTextDirection = opt.textDirection();
 
     QQuickTextEdit::HAlignment horizontalAlignment = q->effectiveHAlign();
