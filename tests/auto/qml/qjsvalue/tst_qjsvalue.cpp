@@ -1371,6 +1371,33 @@ void tst_QJSValue::hasProperty_changePrototype()
     QVERIFY(obj.hasOwnProperty("foo"));
 }
 
+void tst_QJSValue::hasProperty_QTBUG56830_data()
+{
+    QTest::addColumn<QString>("key");
+    QTest::addColumn<QString>("lookup");
+
+    QTest::newRow("bugreport-1") << QStringLiteral("240000000000") << QStringLiteral("3776798720");
+    QTest::newRow("bugreport-2") << QStringLiteral("240000000001") << QStringLiteral("3776798721");
+    QTest::newRow("biggest-ok-before-bug") << QStringLiteral("238609294221") << QStringLiteral("2386092941");
+    QTest::newRow("smallest-bugged") << QStringLiteral("238609294222") << QStringLiteral("2386092942");
+    QTest::newRow("biggest-bugged") << QStringLiteral("249108103166") << QStringLiteral("12884901886");
+    QTest::newRow("smallest-ok-after-bug") << QStringLiteral("249108103167") << QStringLiteral("12884901887");
+}
+
+void tst_QJSValue::hasProperty_QTBUG56830()
+{
+    QFETCH(QString, key);
+    QFETCH(QString, lookup);
+
+    QJSEngine eng;
+    const QJSValue value(42);
+
+    QJSValue obj = eng.newObject();
+    obj.setProperty(key, value);
+    QVERIFY(obj.hasProperty(key));
+    QVERIFY(!obj.hasProperty(lookup));
+}
+
 void tst_QJSValue::deleteProperty_basic()
 {
     QJSEngine eng;
