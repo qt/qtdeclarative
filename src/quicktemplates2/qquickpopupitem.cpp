@@ -36,8 +36,12 @@
 
 #include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include "qquickshortcutcontext_p_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickpopup_p_p.h"
+
+#include <QtGui/private/qshortcutmap_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,10 +59,15 @@ public:
 
     QQuickItem *getContentItem() override;
 
+    int backId;
+    int escapeId;
     QQuickPopup *popup;
 };
 
-QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup) : popup(popup)
+QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
+    : backId(0),
+      escapeId(0),
+      popup(popup)
 {
     isTabFence = true;
 }
@@ -103,10 +112,51 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
     // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
 }
 
+void QQuickPopupItem::grabShortcut()
+{
+#ifndef QT_NO_SHORTCUT
+    Q_D(QQuickPopupItem);
+    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
+    if (!d->backId)
+        d->backId = pApp->shortcutMap.addShortcut(this, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+    if (!d->escapeId)
+        d->escapeId = pApp->shortcutMap.addShortcut(this, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+#endif // QT_NO_SHORTCUT
+}
+
+void QQuickPopupItem::ungrabShortcut()
+{
+#ifndef QT_NO_SHORTCUT
+    Q_D(QQuickPopupItem);
+    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
+    if (d->backId) {
+        pApp->shortcutMap.removeShortcut(d->backId, this);
+        d->backId = 0;
+    }
+    if (d->escapeId) {
+        pApp->shortcutMap.removeShortcut(d->escapeId, this);
+        d->escapeId = 0;
+    }
+#endif // QT_NO_SHORTCUT
+}
+
 void QQuickPopupItem::updatePolish()
 {
     Q_D(QQuickPopupItem);
     return QQuickPopupPrivate::get(d->popup)->reposition();
+}
+
+bool QQuickPopupItem::event(QEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    if (event->type() == QEvent::Shortcut) {
+        QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
+        if (se->shortcutId() == d->escapeId || se->shortcutId() == d->backId) {
+            d->popup->close();
+            return true;
+        }
+    }
+    return QQuickItem::event(event);
 }
 
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)
@@ -228,6 +278,13 @@ QAccessible::Role QQuickPopupItem::accessibleRole() const
 {
     Q_D(const QQuickPopupItem);
     return d->popup->accessibleRole();
+}
+
+void QQuickPopupItem::accessibilityActiveChanged(bool active)
+{
+    Q_D(const QQuickPopupItem);
+    QQuickControl::accessibilityActiveChanged(active);
+    d->popup->accessibilityActiveChanged(active);
 }
 #endif // QT_NO_ACCESSIBILITY
 

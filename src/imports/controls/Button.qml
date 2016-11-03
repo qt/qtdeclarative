@@ -52,7 +52,6 @@ T.Button {
     leftPadding: padding + 2
     rightPadding: padding + 2
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -64,9 +63,7 @@ T.Button {
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
@@ -77,5 +74,4 @@ T.Button {
         border.color: Default.focusColor
         border.width: control.visualFocus ? 2 : 0
     }
-    //! [background]
 }

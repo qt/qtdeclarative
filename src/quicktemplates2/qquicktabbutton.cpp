@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-navigation
-    \brief A tab button control that can be used in a TabBar.
+    \brief Button with a look suitable for a TabBar.
 
     \image qtquickcontrols2-tabbutton.png
 

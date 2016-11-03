@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-dialogs
     \ingroup qtquickcontrols2-popups
-    \brief A dialog control.
+    \brief Popup dialog with standard buttons and a title, used for short-term interaction with the user.
     \since 5.8
 
     A dialog is a popup mostly used for short-term tasks and brief communications
@@ -152,6 +152,7 @@ void QQuickDialog::setTitle(const QString &title)
         return;
 
     d->title = title;
+    setAccessibleName(title);
     emit titleChanged();
 }
 
@@ -343,5 +344,21 @@ void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
     QQuickPopup::spacingChange(newSpacing, oldSpacing);
     d->layout->update();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickDialog::accessibleRole() const
+{
+    return QAccessible::Dialog;
+}
+
+void QQuickDialog::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickDialog);
+    QQuickPopup::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->title);
+}
+#endif
 
 QT_END_NAMESPACE

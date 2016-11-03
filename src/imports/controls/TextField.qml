@@ -74,7 +74,6 @@ T.TextField {
         elide: Text.ElideRight
     }
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
@@ -82,5 +81,4 @@ T.TextField {
         color: control.enabled ? Default.backgroundColor : Default.disabledDarkColor
         border.color: control.activeFocus ? Default.focusColor : (control.enabled ? Default.disabledLightColor : "transparent")
     }
-    //! [background]
 }

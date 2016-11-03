@@ -47,7 +47,6 @@ T.BusyIndicator {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: BusyIndicatorImpl {
         implicitWidth: 48
         implicitHeight: 48
@@ -56,5 +55,4 @@ T.BusyIndicator {
         visible: control.running || animator.running
         Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }
     }
-    //! [contentItem]
 }

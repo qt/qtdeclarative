@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickItemDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \brief  A standard view item that can be used in various views and controls.
+    \brief Basic item delegate that can be used in various views and controls.
 
     \image qtquickcontrols2-itemdelegate.gif
 

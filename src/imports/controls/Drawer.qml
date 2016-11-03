@@ -55,15 +55,9 @@ T.Drawer {
     rightPadding: control.edge === Qt.LeftEdge
     bottomPadding: control.edge === Qt.TopEdge
 
-    //! [enter]
     enter: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [enter]
-
-    //! [exit]
     exit: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [exit]
 
-    //! [background]
     background: Rectangle {
         Rectangle {
             readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
@@ -74,5 +68,4 @@ T.Drawer {
             y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
         }
     }
-    //! [background]
 }

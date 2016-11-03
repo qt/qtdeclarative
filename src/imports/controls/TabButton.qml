@@ -50,7 +50,6 @@ T.TabButton {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -60,14 +59,11 @@ T.TabButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 40
         color: control.down
             ? (control.checked ? Default.tabButtonCheckedPressedColor : Default.tabButtonPressedColor)
             : (control.checked ? "transparent" : Default.tabButtonColor)
     }
-    //! [background]
 }

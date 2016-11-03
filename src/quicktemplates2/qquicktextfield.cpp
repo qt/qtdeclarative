@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A single line text input control.
+    \brief Single-line text input field.
 
     TextField is a single line text editor. TextField extends TextInput with
     a \l {placeholderText}{placeholder text} functionality, and adds decoration.

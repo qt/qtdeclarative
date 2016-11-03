@@ -54,7 +54,6 @@ T.GroupBox {
     padding: 12
     topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
 
-    //! [label]
     label: Text {
         x: control.leftPadding
         width: control.availableWidth
@@ -66,9 +65,7 @@ T.GroupBox {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [label]
 
-    //! [background]
     background: Rectangle {
         y: control.topPadding - control.padding
         width: parent.width
@@ -77,5 +74,4 @@ T.GroupBox {
         color: "transparent"
         border.color: Default.frameLightColor
     }
-    //! [background]
 }
