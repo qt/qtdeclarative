@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
     Using StackView in an application is as simple as adding it as a child to
     a Window. The stack is usually anchored to the edges of the window, except
     at the top or bottom where it might be anchored to a status bar, or some
-    other similar UI component. The stack can then be  used by invoking its
+    other similar UI component. The stack can then be used by invoking its
     navigation methods. The first item to show in the StackView is the one
     that was assigned to \l initialItem, or the topmost item if \l initialItem
     is not set.

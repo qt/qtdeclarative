@@ -629,7 +629,7 @@ TestCase {
                 snapMode: ListView.SnapToItem
                 highlightRangeMode: ListView.StrictlyEnforceRange
                 preferredHighlightBegin: height / 2 - (height / listViewTumbler.visibleItemCount / 2)
-                preferredHighlightEnd: height / 2  + (height / listViewTumbler.visibleItemCount / 2)
+                preferredHighlightEnd: height / 2 + (height / listViewTumbler.visibleItemCount / 2)
                 clip: true
             }
         }

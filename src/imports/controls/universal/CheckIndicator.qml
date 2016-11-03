@@ -67,7 +67,7 @@ Rectangle {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
         width: partiallyChecked ? parent.width / 2 : parent.width
-        height: partiallyChecked  ? parent.height / 2 : parent.height
+        height: partiallyChecked ? parent.height / 2 : parent.height
 
         visible: !control.pressed && control.hovered || partiallyChecked
         color: !partiallyChecked ? "transparent" :

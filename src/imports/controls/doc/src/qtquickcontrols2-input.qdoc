@@ -96,7 +96,6 @@
     \l RangeSlider is used to select a range specified by two values,
     by sliding each handle along a track.
 
-
     \b {See also} \l {Slider Control}.
 
     \section1 Tumbler Control

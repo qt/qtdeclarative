@@ -98,4 +98,3 @@ public:
 QT_END_NAMESPACE
 
 #endif // QQUICKMENU_P_P_H
-

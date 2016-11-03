@@ -41,7 +41,6 @@
 
     \section1 Button Control
 
-
     \l Button is a clickable control that starts an action, or opens or
     closes a popup. A button usually has a text label but it can also
     contain an icon.

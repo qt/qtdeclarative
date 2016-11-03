@@ -48,6 +48,6 @@ ListView {
     snapMode: ListView.SnapToItem
     highlightRangeMode: ListView.StrictlyEnforceRange
     preferredHighlightBegin: height / 2 - (height / parent.visibleItemCount / 2)
-    preferredHighlightEnd: height / 2  + (height / parent.visibleItemCount / 2)
+    preferredHighlightEnd: height / 2 + (height / parent.visibleItemCount / 2)
     clip: true
 }

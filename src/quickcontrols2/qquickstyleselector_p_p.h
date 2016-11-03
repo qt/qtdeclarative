@@ -65,4 +65,3 @@ public:
 QT_END_NAMESPACE
 
 #endif // QQUICKSTYLESELECTOR_P_P_H
-

@@ -359,7 +359,6 @@ QQuickDialogButtonBox::~QQuickDialogButtonBox()
 {
 }
 
-
 /*!
     \qmlproperty enumeration QtQuick.Controls::DialogButtonBox::position
 

@@ -189,7 +189,7 @@ void QQuickTumblerView::updateView()
         m_pathView->setDragMargin(width() / 2);
     } else {
         m_listView->setPreferredHighlightBegin(height() / 2 - (height() / m_tumbler->visibleItemCount() / 2));
-        m_listView->setPreferredHighlightEnd(height() / 2  + (height() / m_tumbler->visibleItemCount() / 2));
+        m_listView->setPreferredHighlightEnd(height() / 2 + (height() / m_tumbler->visibleItemCount() / 2));
     }
 }
 

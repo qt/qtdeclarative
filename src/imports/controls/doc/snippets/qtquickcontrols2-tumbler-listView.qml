@@ -39,7 +39,7 @@ Tumbler {
         snapMode: ListView.SnapToItem
         highlightRangeMode: ListView.StrictlyEnforceRange
         preferredHighlightBegin: height / 2 - (height / tumbler.visibleItemCount / 2)
-        preferredHighlightEnd: height / 2  + (height / tumbler.visibleItemCount / 2)
+        preferredHighlightEnd: height / 2 + (height / tumbler.visibleItemCount / 2)
         clip: true
     }
 }

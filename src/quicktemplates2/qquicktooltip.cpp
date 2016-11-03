@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
     Should one need more fine-grained control over the tool tip position, or
     multiple simultaneous tool tip instances are needed, it is also possible
     to create local tool tip instances. This way, it is possible to
-    \l {Customizing ToolTip}{customize} the tool tip, and the whole  \l Popup
+    \l {Customizing ToolTip}{customize} the tool tip, and the whole \l Popup
     API is available. The following example presents a tool tip that presents
     the value of a slider when the handle is dragged.
 
