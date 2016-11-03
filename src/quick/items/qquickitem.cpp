@@ -2603,7 +2603,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     if (parentItem) {
         QQuickItem *itemAncestor = parentItem;
         while (itemAncestor != 0) {
-            if (itemAncestor == this) {
+            if (Q_UNLIKELY(itemAncestor == this)) {
                 qWarning() << "QQuickItem::setParentItem: Parent" << parentItem << "is already part of the subtree of" << this;
                 return;
             }
