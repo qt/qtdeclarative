@@ -253,6 +253,7 @@ union Instr
 {
     enum Type {
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
+        LastInstruction
     };
 
     struct instr_common {

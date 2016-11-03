@@ -48,7 +48,7 @@ public:
     TestItem(QQuickItem *parent = 0)
         : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
         , wheelCount(0), acceptIncomingTouchEvents(true)
-        , touchEventReached(false) {}
+        , touchEventReached(false), timestamp(0) {}
 
     bool focused;
     int pressCount;
@@ -56,6 +56,7 @@ public:
     int wheelCount;
     bool acceptIncomingTouchEvents;
     bool touchEventReached;
+    ulong timestamp;
 protected:
     virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
@@ -65,7 +66,7 @@ protected:
         touchEventReached = true;
         event->setAccepted(acceptIncomingTouchEvents);
     }
-    virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
+    virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; timestamp = event->timestamp(); }
 };
 
 class TestWindow: public QQuickWindow
@@ -1432,12 +1433,14 @@ void tst_qquickitem::wheelEvent()
     item->setVisible(visible);
 
     QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
+    event.setTimestamp(123456UL);
     event.setAccepted(false);
     QGuiApplication::sendEvent(&window, &event);
 
     if (shouldReceiveWheelEvents) {
         QVERIFY(event.isAccepted());
         QCOMPARE(item->wheelCount, 1);
+        QCOMPARE(item->timestamp, 123456UL);
     } else {
         QVERIFY(!event.isAccepted());
         QCOMPARE(item->wheelCount, 0);

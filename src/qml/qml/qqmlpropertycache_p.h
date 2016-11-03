@@ -468,7 +468,7 @@ private:
 
     QQmlPropertyData *ensureResolved(QQmlPropertyData*) const;
 
-    void resolve(QQmlPropertyData *) const;
+    Q_NEVER_INLINE void resolve(QQmlPropertyData *) const;
     void updateRecur(const QMetaObject *);
 
     template<typename K>
@@ -677,7 +677,7 @@ bool QQmlPropertyData::operator==(const QQmlPropertyRawData &other)
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
 {
-    if (p && p->notFullyResolved())
+    if (p && Q_UNLIKELY(p->notFullyResolved()))
         resolve(p);
 
     return p;

@@ -194,6 +194,8 @@ private slots:
     void withNoContext();
     void holeInPropertyData();
 
+    void basicBlockMergeAfterLoopPeeling();
+
 signals:
     void testSignal();
 };
@@ -4057,6 +4059,22 @@ void tst_QJSEngine::holeInPropertyData()
                 "o.bar === 0xffffffff && o.foo === 0x55555555;");
     QVERIFY(ok.isBool());
     QVERIFY(ok.toBool());
+}
+
+void tst_QJSEngine::basicBlockMergeAfterLoopPeeling()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+    "function crashMe() {\n"
+    "    var seen = false;\n"
+    "    while (globalVar) {\n"
+    "        if (seen)\n"
+    "            return;\n"
+    "        seen = true;\n"
+    "    }\n"
+    "}\n");
+    QVERIFY(!ok.isCallable());
+
 }
 
 QTEST_MAIN(tst_QJSEngine)

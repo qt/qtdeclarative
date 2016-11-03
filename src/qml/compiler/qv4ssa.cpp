@@ -5077,6 +5077,10 @@ void mergeBasicBlocks(IR::Function *function, DefUses *du, DominatorTree *dt)
         BasicBlock *successor = bb->out.first();
         if (successor->in.size() != 1) continue; // more than one incoming edge
 
+        // Loop header? No efficient way to update the other blocks that refer to this as containing group,
+        // so don't do merging yet.
+        if (successor->isGroupStart()) continue;
+
         // Ok, we can merge the two basic blocks.
         if (DebugBlockMerging) {
             qDebug("Merging L%d into L%d", successor->index(), bb->index());
