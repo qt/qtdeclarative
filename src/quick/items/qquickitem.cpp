@@ -3658,21 +3658,17 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
         QQuickAnchorsPrivate::get(d->_anchors)->updateMe();
 
     QQuickGeometryChange change;
-    QRectF diff(newGeometry.x() - oldGeometry.x(),
-                newGeometry.y() - oldGeometry.y(),
-                newGeometry.width() - oldGeometry.width(),
-                newGeometry.height() - oldGeometry.height());
-    change.setXChange(diff.x() != 0);
-    change.setYChange(diff.y() != 0);
-    change.setWidthChange(diff.width() != 0);
-    change.setHeightChange(diff.height() != 0);
+    change.setXChange(newGeometry.x() != oldGeometry.x());
+    change.setYChange(newGeometry.y() != oldGeometry.y());
+    change.setWidthChange(newGeometry.width() != oldGeometry.width());
+    change.setHeightChange(newGeometry.height() != oldGeometry.height());
 
     if (!d->changeListeners.isEmpty()) {
         const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
         for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
             if (listener.types & QQuickItemPrivate::Geometry) {
                 if (change.matches(listener.gTypes))
-                    listener.listener->itemGeometryChanged(this, change, diff);
+                    listener.listener->itemGeometryChanged(this, change, oldGeometry);
             }
         }
     }

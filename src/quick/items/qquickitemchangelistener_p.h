@@ -115,12 +115,14 @@ private:
     int kind;
 };
 
+#define QT_QUICK_NEW_GEOMETRY_CHANGED_HANDLING
+
 class QQuickItemChangeListener
 {
 public:
     virtual ~QQuickItemChangeListener() {}
 
-    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF & /* diff */) {}
+    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF & /* oldGeometry */) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}
     virtual void itemVisibilityChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}

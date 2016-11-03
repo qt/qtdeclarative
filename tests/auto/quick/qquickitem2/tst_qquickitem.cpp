@@ -2726,9 +2726,9 @@ struct TestListener : public QQuickItemChangeListener
 {
     TestListener(bool remove = false) : remove(remove) { }
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange, const QRectF &diff) override
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange, const QRectF &oldGeometry) override
     {
-        record(item, QQuickItemPrivate::Geometry, diff);
+        record(item, QQuickItemPrivate::Geometry, oldGeometry);
     }
     void itemSiblingOrderChanged(QQuickItem *item) override
     {
@@ -2810,20 +2810,20 @@ void tst_QQuickItem::changeListener()
     item->setImplicitWidth(10);
     QCOMPARE(itemListener.count(QQuickItemPrivate::ImplicitWidth), 1);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 1);
-    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,10,0)));
+    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,0,0)));
 
     item->setImplicitHeight(20);
     QCOMPARE(itemListener.count(QQuickItemPrivate::ImplicitHeight), 1);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 2);
-    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,0,20)));
+    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,10,0)));
 
     item->setWidth(item->width() + 30);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 3);
-    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,30,0)));
+    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,10,20)));
 
     item->setHeight(item->height() + 40);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 4);
-    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,0,40)));
+    QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,40,20)));
 
     item->setOpacity(0.5);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Opacity), 1);

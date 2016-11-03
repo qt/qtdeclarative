@@ -245,14 +245,14 @@ void QQuickWidgetPrivate::execute()
 }
 
 void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
-                                              const QRectF &diff)
+                                              const QRectF &oldGeometry)
 {
     Q_Q(QQuickWidget);
     if (resizeItem == root && resizeMode == QQuickWidget::SizeViewToRootObject) {
         // wait for both width and height to be changed
         resizetimer.start(0,q);
     }
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, oldGeometry);
 }
 
 void QQuickWidgetPrivate::render(bool needsSync)
