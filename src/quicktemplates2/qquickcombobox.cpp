@@ -278,6 +278,12 @@ void QQuickComboBoxPrivate::itemClicked()
 
 void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 {
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (popup && item && !item->parentItem()) {
+        item->setParentItem(popup->contentItem());
+        QQuickItemPrivate::get(item)->setCulled(true);
+    }
+
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(object);
     if (button) {
         button->setFocusPolicy(Qt::NoFocus);
