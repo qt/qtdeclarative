@@ -921,13 +921,14 @@ void tst_qqmllocale::dateFromLocaleString()
         Q_ARG(QVariant, QVariant(locale)));
 
     QLocale l(locale);
+    const QString localeText(l.toString(dt, format));
     QVariant val;
     QMetaObject::invokeMethod(obj, "fromLocaleString", Qt::DirectConnection,
         Q_RETURN_ARG(QVariant, val),
-        Q_ARG(QVariant, QVariant(l.toString(dt, format))),
+        Q_ARG(QVariant, QVariant(localeText)),
         Q_ARG(QVariant, QVariant(format)));
 
-    QDateTime pd = l.toDateTime(l.toString(dt, format), format);
+    QDateTime pd = l.toDateTime(localeText, format);
     QCOMPARE(val.toDateTime(), pd);
 }
 
@@ -963,13 +964,14 @@ void tst_qqmllocale::dateFromLocaleDateString()
         Q_ARG(QVariant, QVariant(locale)));
 
     QLocale l(locale);
+    const QString localeText(l.toString(dt, format));
     QVariant val;
     QMetaObject::invokeMethod(obj, "fromLocaleDateString", Qt::DirectConnection,
         Q_RETURN_ARG(QVariant, val),
-        Q_ARG(QVariant, QVariant(l.toString(dt, format))),
+        Q_ARG(QVariant, QVariant(localeText)),
         Q_ARG(QVariant, QVariant(format)));
 
-    QDate pd = l.toDate(l.toString(dt, format), format);
+    QDate pd = l.toDate(localeText, format);
     QCOMPARE(val.toDate(), pd);
 }
 
@@ -1005,13 +1007,14 @@ void tst_qqmllocale::dateFromLocaleTimeString()
         Q_ARG(QVariant, QVariant(locale)));
 
     QLocale l(locale);
+    const QString localeText(l.toString(dt, format));
     QVariant val;
     QMetaObject::invokeMethod(obj, "fromLocaleTimeString", Qt::DirectConnection,
         Q_RETURN_ARG(QVariant, val),
-        Q_ARG(QVariant, QVariant(l.toString(dt, format))),
+        Q_ARG(QVariant, QVariant(localeText)),
         Q_ARG(QVariant, QVariant(format)));
 
-    QTime pd = l.toTime(l.toString(dt, format), format);
+    QTime pd = l.toTime(localeText, format);
     QCOMPARE(val.toTime(), pd);
 }
 
