@@ -558,6 +558,74 @@ TestCase {
         control.destroy()
     }
 
+    function test_down() {
+        var control = comboBox.createObject(testCase, {model: 3})
+        verify(control)
+
+        // some styles position the popup over the combo button. move it out
+        // of the way to avoid stealing mouse presses. we want to test the
+        // combinations of the button being pressed and the popup being visible.
+        control.popup.y = control.height
+
+        var downSpy = signalSpy.createObject(control, {target: control, signalName: "downChanged"})
+        verify(downSpy.valid)
+
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        verify(pressedSpy.valid)
+
+        mousePress(control)
+        compare(control.popup.visible, false)
+        compare(control.pressed, true)
+        compare(control.down, true)
+        compare(downSpy.count, 1)
+        compare(pressedSpy.count, 1)
+
+        mouseRelease(control)
+        compare(control.popup.visible, true)
+        compare(control.pressed, false)
+        compare(control.down, true)
+        compare(downSpy.count, 3)
+        compare(pressedSpy.count, 2)
+
+        control.down = false
+        compare(control.down, false)
+        compare(downSpy.count, 4)
+
+        mousePress(control)
+        compare(control.popup.visible, true)
+        compare(control.pressed, true)
+        compare(control.down, false) // explicit false
+        compare(downSpy.count, 4)
+        compare(pressedSpy.count, 3)
+
+        control.down = undefined
+        compare(control.down, true)
+        compare(downSpy.count, 5)
+
+        mouseRelease(control)
+        tryCompare(control.popup, "visible", false)
+        compare(control.pressed, false)
+        compare(control.down, false)
+        compare(downSpy.count, 6)
+        compare(pressedSpy.count, 4)
+
+        control.popup.open()
+        compare(control.popup.visible, true)
+        compare(control.pressed, false)
+        compare(control.down, true)
+        compare(downSpy.count, 7)
+        compare(pressedSpy.count, 4)
+
+        control.popup.close()
+        tryCompare(control.popup, "visible", false)
+        compare(control.pressed, false)
+        compare(control.down, false)
+        compare(downSpy.count, 8)
+        compare(pressedSpy.count, 4)
+
+        control.destroy()
+    }
+
     function test_focus() {
         var control = comboBox.createObject(testCase, {model: 3})
         verify(control)

@@ -63,7 +63,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
     Q_PROPERTY(QQmlInstanceModel *delegateModel READ delegateModel NOTIFY delegateModelChanged FINAL)
     Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL REVISION 1)
-    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool down READ isDown WRITE setDown RESET resetDown NOTIFY downChanged FINAL REVISION 2)
+    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL) // ### Qt 6: should not be writable
     Q_PROPERTY(int highlightedIndex READ highlightedIndex NOTIFY highlightedIndexChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QString currentText READ currentText NOTIFY currentTextChanged FINAL)
@@ -85,6 +86,10 @@ public:
 
     bool isFlat() const;
     void setFlat(bool flat);
+
+    bool isDown() const;
+    void setDown(bool down);
+    void resetDown();
 
     bool isPressed() const;
     void setPressed(bool pressed);
@@ -124,6 +129,7 @@ Q_SIGNALS:
     void modelChanged();
     void delegateModelChanged();
     Q_REVISION(1) void flatChanged();
+    Q_REVISION(2) void downChanged();
     void pressedChanged();
     void highlightedIndexChanged();
     void currentIndexChanged();

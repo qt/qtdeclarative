@@ -38,7 +38,7 @@ import QtQuick 2.8
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
 import QtQuick.Controls.impl 2.1
-import QtQuick.Templates 2.1 as T
+import QtQuick.Templates 2.2 as T
 
 T.ComboBox {
     id: control
@@ -97,7 +97,7 @@ T.ComboBox {
         implicitHeight: 40
 
         color: control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
-            (control.pressed || popup.visible ? Default.buttonPressedColor : Default.buttonColor)
+            (control.down ? Default.buttonPressedColor : Default.buttonColor)
         border.color: Default.focusColor
         border.width: control.visualFocus ? 2 : 0
         visible: !control.flat || control.pressed

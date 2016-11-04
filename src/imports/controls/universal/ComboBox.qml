@@ -37,7 +37,7 @@
 import QtQuick 2.8
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
-import QtQuick.Templates 2.1 as T
+import QtQuick.Templates 2.2 as T
 import QtQuick.Controls.Universal 2.1
 
 T.ComboBox {
@@ -90,10 +90,10 @@ T.ComboBox {
 
         border.width: control.flat ? 0 : 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor :
+                       control.down ? control.Universal.baseMediumLowColor :
                        control.hovered ? control.Universal.baseMediumColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed || popup.visible ? control.Universal.listMediumColor :
+                control.down ? control.Universal.listMediumColor :
                 control.flat && control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
         visible: !control.flat || control.pressed || control.hovered || control.visualFocus
 

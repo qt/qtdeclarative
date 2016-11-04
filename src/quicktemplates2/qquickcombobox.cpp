@@ -165,14 +165,13 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickComboBox)
 
 public:
-    QQuickComboBoxPrivate() : flat(false), pressed(false), ownModel(false), hasDisplayText(false), hasCurrentIndex(false),
-        highlightedIndex(-1), currentIndex(-1), delegateModel(nullptr),
-        delegate(nullptr), indicator(nullptr), popup(nullptr) { }
+    QQuickComboBoxPrivate();
 
     bool isPopupVisible() const;
     void showPopup();
     void hidePopup(bool accept);
     void togglePopup(bool accept);
+    void popupVisibleChanged();
 
     void itemClicked();
 
@@ -187,6 +186,8 @@ public:
     void createDelegateModel();
 
     bool flat;
+    bool down;
+    bool hasDown;
     bool pressed;
     bool ownModel;
     bool hasDisplayText;
@@ -203,6 +204,23 @@ public:
     QQuickItem *indicator;
     QQuickPopup *popup;
 };
+
+QQuickComboBoxPrivate::QQuickComboBoxPrivate()
+    : flat(false),
+      down(false),
+      hasDown(false),
+      pressed(false),
+      ownModel(false),
+      hasDisplayText(false),
+      hasCurrentIndex(false),
+      highlightedIndex(-1),
+      currentIndex(-1),
+      delegateModel(nullptr),
+      delegate(nullptr),
+      indicator(nullptr),
+      popup(nullptr)
+{
+}
 
 bool QQuickComboBoxPrivate::isPopupVisible() const
 {
@@ -235,6 +253,16 @@ void QQuickComboBoxPrivate::togglePopup(bool accept)
         hidePopup(accept);
     else
         showPopup();
+}
+
+void QQuickComboBoxPrivate::popupVisibleChanged()
+{
+    Q_Q(QQuickComboBox);
+    updateHighlightedIndex();
+    if (!hasDown) {
+        q->setDown(pressed || isPopupVisible());
+        hasDown = false;
+    }
 }
 
 void QQuickComboBoxPrivate::itemClicked()
@@ -484,9 +512,52 @@ void QQuickComboBox::setFlat(bool flat)
 }
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::ComboBox::down
+
+    This property holds whether the combo box button is visually down.
+
+    Unless explicitly set, this property is \c true when either \c pressed
+    or \c popup.visible is \c true. To return to the default value, set this
+    property to \c undefined.
+
+    \sa pressed, popup
+*/
+bool QQuickComboBox::isDown() const
+{
+    Q_D(const QQuickComboBox);
+    return d->down;
+}
+
+void QQuickComboBox::setDown(bool down)
+{
+    Q_D(QQuickComboBox);
+    d->hasDown = true;
+
+    if (d->down == down)
+        return;
+
+    d->down = down;
+    emit downChanged();
+}
+
+void QQuickComboBox::resetDown()
+{
+    Q_D(QQuickComboBox);
+    if (!d->hasDown)
+        return;
+
+    setDown(d->pressed || d->isPopupVisible());
+    d->hasDown = false;
+}
+
+/*!
     \qmlproperty bool QtQuick.Controls::ComboBox::pressed
 
-    This property holds whether the combo box button is pressed.
+    This property holds whether the combo box button is physically pressed.
+    A button can be pressed by either touch or key events.
+
+    \sa down
 */
 bool QQuickComboBox::isPressed() const
 {
@@ -502,6 +573,11 @@ void QQuickComboBox::setPressed(bool pressed)
 
     d->pressed = pressed;
     emit pressedChanged();
+
+    if (!d->hasDown) {
+        setDown(d->pressed || d->isPopupVisible());
+        d->hasDown = false;
+    }
 }
 
 /*!
@@ -733,12 +809,12 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         return;
 
     if (d->popup)
-        QObjectPrivate::disconnect(d->popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::updateHighlightedIndex);
+        QObjectPrivate::disconnect(d->popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
     d->deleteDelegate(d->popup);
     if (popup) {
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
-        QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::updateHighlightedIndex);
+        QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
     }
     d->popup = popup;
     emit popupChanged();
