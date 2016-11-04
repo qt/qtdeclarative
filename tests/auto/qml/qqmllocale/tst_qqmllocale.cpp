@@ -640,9 +640,7 @@ void tst_qqmllocale::dateToLocaleString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -701,9 +699,7 @@ void tst_qqmllocale::dateToLocaleStringFormatted()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -732,9 +728,7 @@ void tst_qqmllocale::dateToLocaleDateString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -793,9 +787,7 @@ void tst_qqmllocale::dateToLocaleDateStringFormatted()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -824,9 +816,7 @@ void tst_qqmllocale::dateToLocaleTimeString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -885,9 +875,7 @@ void tst_qqmllocale::dateToLocaleTimeStringFormatted()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -927,9 +915,7 @@ void tst_qqmllocale::dateFromLocaleString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -971,9 +957,7 @@ void tst_qqmllocale::dateFromLocaleDateString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -1015,9 +999,7 @@ void tst_qqmllocale::dateFromLocaleTimeString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
