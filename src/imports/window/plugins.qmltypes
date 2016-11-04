@@ -55,8 +55,12 @@ Module {
         name: "QQuickWindow"
         defaultProperty: "data"
         prototype: "QWindow"
-        exports: ["QtQuick.Window/Window 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Window/Window 2.0",
+            "QtQuick.Window/Window 2.1",
+            "QtQuick.Window/Window 2.2"
+        ]
+        exportMetaObjectRevisions: [0, 1, 2]
         Enum {
             name: "SceneGraphError"
             values: {
