@@ -113,7 +113,6 @@ T.ComboBox {
         bottomMargin: 6
 
         contentItem: ListView {
-            id: listview
             clip: true
             implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null
@@ -123,9 +122,8 @@ T.ComboBox {
 
             Rectangle {
                 z: 10
-                parent: listview
-                width: listview.width
-                height: listview.height
+                width: parent.width
+                height: parent.height
                 color: "transparent"
                 border.color: Default.frameLightColor
             }
