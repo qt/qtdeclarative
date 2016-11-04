@@ -641,7 +641,7 @@ void tst_qqmllocale::dateToLocaleString()
     QVERIFY(obj);
 
     QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
+    dt.setDate(QDate(2011, 10, 7));
     dt.setTime(QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
@@ -702,7 +702,7 @@ void tst_qqmllocale::dateToLocaleStringFormatted()
     QVERIFY(obj);
 
     QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
+    dt.setDate(QDate(2011, 10, 7));
     dt.setTime(QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
@@ -733,7 +733,7 @@ void tst_qqmllocale::dateToLocaleDateString()
     QVERIFY(obj);
 
     QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
+    dt.setDate(QDate(2011, 10, 7));
     dt.setTime(QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
@@ -794,7 +794,7 @@ void tst_qqmllocale::dateToLocaleDateStringFormatted()
     QVERIFY(obj);
 
     QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
+    dt.setDate(QDate(2011, 10, 7));
     dt.setTime(QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
@@ -825,7 +825,7 @@ void tst_qqmllocale::dateToLocaleTimeString()
     QVERIFY(obj);
 
     QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
+    dt.setDate(QDate(2011, 10, 7));
     dt.setTime(QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
@@ -886,7 +886,7 @@ void tst_qqmllocale::dateToLocaleTimeStringFormatted()
     QVERIFY(obj);
 
     QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
+    dt.setDate(QDate(2011, 10, 7));
     dt.setTime(QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
