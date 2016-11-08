@@ -467,6 +467,7 @@ int main(int argc, char ** argv)
     app.setApplicationName("QtQmlViewer");
     app.setOrganizationName("QtProject");
     app.setOrganizationDomain("qt-project.org");
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
     const QStringList arguments = QCoreApplication::arguments();
     for (int i = 1, size = arguments.size(); i < size; ++i) {

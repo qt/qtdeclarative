@@ -983,6 +983,7 @@ int main(int argc, char *argv[])
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
 
     QGuiApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
     const QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
     if (args.size() < 2) {
