@@ -96,6 +96,8 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(QStringLiteral("find"), method_find, 1);
+    defineDefaultProperty(QStringLiteral("findIndex"), method_findIndex, 1);
     defineDefaultProperty(QStringLiteral("join"), method_join, 1);
     defineDefaultProperty(QStringLiteral("pop"), method_pop, 0);
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);
@@ -180,6 +182,80 @@ ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
     }
 
     return result.asReturnedValue();
+}
+
+ReturnedValue ArrayPrototype::method_find(CallContext *ctx)
+{
+    Scope scope(ctx);
+    ScopedObject instance(scope, ctx->thisObject().toObject(scope.engine));
+    if (!instance)
+        return Encode::undefined();
+
+    uint len = instance->getLength();
+
+    ScopedFunctionObject callback(scope, ctx->argument(0));
+    if (!callback)
+        return ctx->engine()->throwTypeError();
+
+    ScopedCallData callData(scope, 3);
+    callData->thisObject = ctx->argument(1);
+    callData->args[2] = instance;
+
+    ScopedValue v(scope);
+
+    for (uint k = 0; k < len; ++k) {
+        v = instance->getIndexed(k);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        callData->args[0] = v;
+        callData->args[1] = Primitive::fromDouble(k);
+        callback->call(scope, callData);
+
+        if (scope.hasException())
+            return Encode::undefined();
+        else if (scope.result.toBoolean())
+            return v->asReturnedValue();
+    }
+
+    return Encode::undefined();
+}
+
+ReturnedValue ArrayPrototype::method_findIndex(CallContext *ctx)
+{
+    Scope scope(ctx);
+    ScopedObject instance(scope, ctx->thisObject().toObject(scope.engine));
+    if (!instance)
+        return Encode::undefined();
+
+    uint len = instance->getLength();
+
+    ScopedFunctionObject callback(scope, ctx->argument(0));
+    if (!callback)
+        return ctx->engine()->throwTypeError();
+
+    ScopedCallData callData(scope, 3);
+    callData->thisObject = ctx->argument(1);
+    callData->args[2] = instance;
+
+    ScopedValue v(scope);
+
+    for (uint k = 0; k < len; ++k) {
+        v = instance->getIndexed(k);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        callData->args[0] = v;
+        callData->args[1] = Primitive::fromDouble(k);
+        callback->call(scope, callData);
+
+        if (scope.hasException())
+            return Encode::undefined();
+        else if (scope.result.toBoolean())
+            return Encode(k);
+    }
+
+    return Encode(-1);
 }
 
 ReturnedValue ArrayPrototype::method_join(CallContext *ctx)

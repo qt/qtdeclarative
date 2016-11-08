@@ -1038,6 +1038,8 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("Array.prototype.toString") << QString("Array.prototype.toString") << QString("toString");
     QTest::newRow("Array.prototype.toLocaleString") << QString("Array.prototype.toLocaleString") << QString("toLocaleString");
     QTest::newRow("Array.prototype.concat") << QString("Array.prototype.concat") << QString("concat");
+    QTest::newRow("Array.prototype.find") << QString("Array.prototype.find") << QString("find");
+    QTest::newRow("Array.prototype.findIndex") << QString("Array.prototype.findIndex") << QString("findIndex");
     QTest::newRow("Array.prototype.join") << QString("Array.prototype.join") << QString("join");
     QTest::newRow("Array.prototype.pop") << QString("Array.prototype.pop") << QString("pop");
     QTest::newRow("Array.prototype.push") << QString("Array.prototype.push") << QString("push");

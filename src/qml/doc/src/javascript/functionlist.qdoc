@@ -143,6 +143,8 @@
     \li toLocaleString()
     \li concat([item1 [, item2 [, ...]]])
     \li join(separator)
+    \li find(callbackfn [, thisArg]) // ECMAScript 6: Added in Qt 5.9
+    \li findIndex(callbackfn [, thisArg]) // ECMAScript 6: Added in Qt 5.9
     \li pop()
     \li push([item1 [, item2 [, ...]]])
     \li reverse()
