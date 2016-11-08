@@ -2007,6 +2007,10 @@ void QQuickPopup::setScale(qreal scale)
         has active focus.
 
     The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
+
+    \note There is a known limitation that the \c Popup.CloseOnReleaseOutside
+        and \c Popup.CloseOnReleaseOutsideParent policies only work with
+        \l modal popups.
 */
 QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
 {
