@@ -451,11 +451,73 @@ struct Batch
 struct Node
 {
     QSGNode *sgNode;
-    Node *parent;
     void *data;
-    Node *firstChild;
-    Node *nextSibling;
-    Node *lastChild;
+
+    Node *m_parent;
+    Node *m_child;
+    Node *m_next;
+    Node *m_prev;
+
+    Node *parent() const { return m_parent; }
+
+    void append(Node *child) {
+        Q_ASSERT(child);
+        Q_ASSERT(!hasChild(child));
+        Q_ASSERT(child->m_parent == 0);
+        Q_ASSERT(child->m_next == 0);
+        Q_ASSERT(child->m_prev == 0);
+
+        if (!m_child) {
+            child->m_next = child;
+            child->m_prev = child;
+            m_child = child;
+        } else {
+            m_child->m_prev->m_next = child;
+            child->m_prev = m_child->m_prev;
+            m_child->m_prev = child;
+            child->m_next = m_child;
+        }
+        child->setParent(this);
+    }
+
+    void remove(Node *child) {
+        Q_ASSERT(child);
+        Q_ASSERT(hasChild(child));
+
+        // only child..
+        if (child->m_next == child) {
+            m_child = 0;
+        } else {
+            if (m_child == child)
+                m_child = child->m_next;
+            child->m_next->m_prev = child->m_prev;
+            child->m_prev->m_next = child->m_next;
+        }
+        child->m_next = 0;
+        child->m_prev = 0;
+        child->setParent(0);
+    }
+
+    Node *firstChild() const { return m_child; }
+
+    Node *sibling() const {
+        Q_ASSERT(m_parent);
+        return m_next == m_parent->m_child ? 0 : m_next;
+    }
+
+    void setParent(Node *p) {
+        Q_ASSERT(m_parent == 0 || p == 0);
+        m_parent = p;
+    }
+
+    bool hasChild(Node *child) const {
+        Node *n = m_child;
+        while (n && n != child)
+            n = n->sibling();
+        return n;
+    }
+
+
 
     QSGNode::DirtyState dirtyState;
 
