@@ -40,8 +40,8 @@
 
 import QtQuick 2.6
 import QtTest 1.0
-import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.1
+
 
 TestCase {
     id: testCase
@@ -1094,22 +1094,22 @@ TestCase {
                 property int firstClickCount: 0
                 property int secondClickCount: 0
 
-                RowLayout {
+                Row {
                     anchors.fill: parent
                     anchors.margins: 5
 
                     Rectangle {
                         id: firstAction
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: parent.width / 2
+                        height: parent.height
                         color: "tomato"
 
                         SwipeDelegate.onClicked: ++firstClickCount
                     }
                     Rectangle {
                         id: secondAction
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: parent.width / 2
+                        height: parent.height
                         color: "navajowhite"
 
                         SwipeDelegate.onClicked: ++secondClickCount
