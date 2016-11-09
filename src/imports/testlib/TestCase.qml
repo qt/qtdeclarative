@@ -221,7 +221,7 @@ Item {
         \qmlproperty string TestCase::name
 
         This property defines the name of the test case for result reporting.
-        The default is the empty string.
+        The default value is an empty string.
 
         \code
         TestCase {
@@ -763,7 +763,7 @@ Item {
         \c{QEXPECT_FAIL(tag, message, Abort)} in C++.
 
         If the test is not data-driven, then \a tag must be set to
-        the empty string.
+        an empty string.
 
         \sa expectFailContinue()
     */
@@ -789,7 +789,7 @@ Item {
         \c{QEXPECT_FAIL(tag, message, Continue)} in C++.
 
         If the test is not data-driven, then \a tag must be set to
-        the empty string.
+        an empty string.
 
         \sa expectFail()
     */
