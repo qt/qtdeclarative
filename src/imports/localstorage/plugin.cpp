@@ -640,14 +640,32 @@ Below you will find an example of a database transaction which catches exception
 
 \snippet qml/localstorage/dbtransaction.js 0
 
+In the example you can see an \c insert statement where values are assigned to the fields,
+and the record is written into the table. That is an \c insert statement with a syntax that is usual
+for a relational database. It is however also possible to work with JSON objects and
+store them in a table.
+
+Let's suppose a simple example where we store trips in JSON format using \c date as the unique key.
+An example of a table that could be used for that purpose:
+
+\snippet qml/localstorage/dbtransaction.js 3
+
+The assignment of values to a JSON object:
+
+\snippet qml/localstorage/dbtransaction.js 4
+
+In that case, the data could be saved in the following way:
+
+\snippet qml/localstorage/dbtransaction.js 5
+
 \section3 db.readTransaction(callback(tx))
 
 This method creates a read-only transaction and passed to \e callback. In this function,
-you can call \e executeSql on \e tx to read the database (with SELECT statements).
+you can call \e executeSql on \e tx to read the database (with \c select statements).
 
 \section3 results = tx.executeSql(statement, values)
 
-This method executes a SQL \e statement, binding the list of \e values to SQL positional parameters ("?").
+This method executes an SQL \e statement, binding the list of \e values to SQL positional parameters ("?").
 
 It returns a results object, with the following properties:
 
