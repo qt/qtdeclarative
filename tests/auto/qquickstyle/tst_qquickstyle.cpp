@@ -50,6 +50,7 @@ private slots:
     void lookup();
     void commandLineArgument();
     void environmentVariables();
+    void availableStyles();
 };
 
 void tst_QQuickStyle::init()
@@ -92,6 +93,13 @@ void tst_QQuickStyle::environmentVariables()
     qputenv("QT_QUICK_CONTROLS_FALLBACK_STYLE", "EnvVarFallbackStyle");
     QCOMPARE(QQuickStyle::name(), QString("EnvVarStyle"));
     QCOMPARE(QQuickStylePrivate::fallbackStyle(), QString("EnvVarFallbackStyle"));
+}
+
+void tst_QQuickStyle::availableStyles()
+{
+    QStringList styles = QQuickStyle::availableStyles();
+    QVERIFY(!styles.isEmpty());
+    QCOMPARE(styles.first(), QString("Default"));
 }
 
 QTEST_MAIN(tst_QQuickStyle)

@@ -178,11 +178,9 @@ struct QQuickStyleSpec
 
         if (QGuiApplication::instance()) {
             if (!custom) {
-                const QString targetPath = QStringLiteral("QtQuick/Controls.2");
-                const QStringList importPaths = QQmlEngine().importPathList();
-
-                for (const QString &importPath : importPaths) {
-                    QString stylePath = findStyle(importPath + QLatin1Char('/') + targetPath, style);
+                const QStringList stylePaths = QQuickStylePrivate::stylePaths();
+                for (const QString &path : stylePaths) {
+                    QString stylePath = findStyle(path, style);
                     if (!stylePath.isEmpty()) {
                         style = stylePath;
                         resolved = true;
@@ -211,6 +209,20 @@ struct QQuickStyleSpec
 };
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
+
+QStringList QQuickStylePrivate::stylePaths()
+{
+    const QString targetPath = QStringLiteral("QtQuick/Controls.2");
+    const QStringList importPaths = QQmlEngine().importPathList();
+
+    QStringList paths;
+    for (const QString &importPath : importPaths) {
+        QDir dir(importPath);
+        if (dir.cd(targetPath))
+            paths += dir.absolutePath();
+    }
+    return paths;
+}
 
 QString QQuickStylePrivate::fallbackStyle()
 {
@@ -305,6 +317,31 @@ void QQuickStyle::setFallbackStyle(const QString &style)
     }
 
     styleSpec()->setFallbackStyle(style, "QQuickStyle::setFallbackStyle()");
+}
+
+/*!
+    \since 5.9
+    Returns the names of the available built-in styles.
+
+    \note The method must be called \b after creating an instance of QGuiApplication.
+*/
+QStringList QQuickStyle::availableStyles()
+{
+    QStringList styles;
+    if (!QGuiApplication::instance()) {
+        qWarning() << "ERROR: QQuickStyle::availableStyles() must be called after creating an instance of QGuiApplication.";
+        return styles;
+    }
+
+    const QStringList stylePaths = QQuickStylePrivate::stylePaths();
+    for (const QString &path : stylePaths) {
+        QDir dir(path);
+        styles += dir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
+        styles.removeAll(QStringLiteral("designer"));
+    }
+    styles.prepend(QStringLiteral("Default"));
+    styles.removeDuplicates();
+    return styles;
 }
 
 QT_END_NAMESPACE

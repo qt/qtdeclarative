@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
         QQuickStyle::setStyle(settings.value("style").toString());
 
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
     engine.load(QUrl("qrc:/gallery.qml"));
     if (engine.rootObjects().isEmpty())
         return -1;

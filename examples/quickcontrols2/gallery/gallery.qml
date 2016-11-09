@@ -256,7 +256,7 @@ ApplicationWindow {
                 ComboBox {
                     id: styleBox
                     property int styleIndex: -1
-                    model: ["Default", "Material", "Universal"]
+                    model: availableStyles
                     Component.onCompleted: {
                         styleIndex = find(settings.style, Qt.MatchFixedString)
                         if (styleIndex !== -1)
