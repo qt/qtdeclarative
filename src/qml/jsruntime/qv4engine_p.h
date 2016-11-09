@@ -131,7 +131,8 @@ public:
     Value *jsAlloca(int nValues) {
         Value *ptr = jsStackTop;
         jsStackTop = ptr + nValues;
-        memset(ptr, 0, nValues*sizeof(Value));
+        for (int i = 0; i < nValues; ++i)
+            ptr[i] = Primitive::undefinedValue();
         return ptr;
     }
 
