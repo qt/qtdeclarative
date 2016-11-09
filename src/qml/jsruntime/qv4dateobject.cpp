@@ -543,56 +543,57 @@ static inline double ParseString(const QString &s)
     if (!dt.isValid())
         dt = QDateTime::fromString(s, Qt::RFC2822Date);
     if (!dt.isValid()) {
-        QStringList formats;
-        formats << QStringLiteral("M/d/yyyy")
-                << QStringLiteral("M/d/yyyy hh:mm")
-                << QStringLiteral("M/d/yyyy hh:mm A")
+        const QString formats[] = {
+            QStringLiteral("M/d/yyyy"),
+            QStringLiteral("M/d/yyyy hh:mm"),
+            QStringLiteral("M/d/yyyy hh:mm A"),
 
-                << QStringLiteral("M/d/yyyy, hh:mm")
-                << QStringLiteral("M/d/yyyy, hh:mm A")
+            QStringLiteral("M/d/yyyy, hh:mm"),
+            QStringLiteral("M/d/yyyy, hh:mm A"),
 
-                << QStringLiteral("MMM d yyyy")
-                << QStringLiteral("MMM d yyyy hh:mm")
-                << QStringLiteral("MMM d yyyy hh:mm:ss")
-                << QStringLiteral("MMM d yyyy, hh:mm")
-                << QStringLiteral("MMM d yyyy, hh:mm:ss")
+            QStringLiteral("MMM d yyyy"),
+            QStringLiteral("MMM d yyyy hh:mm"),
+            QStringLiteral("MMM d yyyy hh:mm:ss"),
+            QStringLiteral("MMM d yyyy, hh:mm"),
+            QStringLiteral("MMM d yyyy, hh:mm:ss"),
 
-                << QStringLiteral("MMMM d yyyy")
-                << QStringLiteral("MMMM d yyyy hh:mm")
-                << QStringLiteral("MMMM d yyyy hh:mm:ss")
-                << QStringLiteral("MMMM d yyyy, hh:mm")
-                << QStringLiteral("MMMM d yyyy, hh:mm:ss")
+            QStringLiteral("MMMM d yyyy"),
+            QStringLiteral("MMMM d yyyy hh:mm"),
+            QStringLiteral("MMMM d yyyy hh:mm:ss"),
+            QStringLiteral("MMMM d yyyy, hh:mm"),
+            QStringLiteral("MMMM d yyyy, hh:mm:ss"),
 
-                << QStringLiteral("MMM d, yyyy")
-                << QStringLiteral("MMM d, yyyy hh:mm")
-                << QStringLiteral("MMM d, yyyy hh:mm:ss")
+            QStringLiteral("MMM d, yyyy"),
+            QStringLiteral("MMM d, yyyy hh:mm"),
+            QStringLiteral("MMM d, yyyy hh:mm:ss"),
 
-                << QStringLiteral("MMMM d, yyyy")
-                << QStringLiteral("MMMM d, yyyy hh:mm")
-                << QStringLiteral("MMMM d, yyyy hh:mm:ss")
+            QStringLiteral("MMMM d, yyyy"),
+            QStringLiteral("MMMM d, yyyy hh:mm"),
+            QStringLiteral("MMMM d, yyyy hh:mm:ss"),
 
-                << QStringLiteral("d MMM yyyy")
-                << QStringLiteral("d MMM yyyy hh:mm")
-                << QStringLiteral("d MMM yyyy hh:mm:ss")
-                << QStringLiteral("d MMM yyyy, hh:mm")
-                << QStringLiteral("d MMM yyyy, hh:mm:ss")
+            QStringLiteral("d MMM yyyy"),
+            QStringLiteral("d MMM yyyy hh:mm"),
+            QStringLiteral("d MMM yyyy hh:mm:ss"),
+            QStringLiteral("d MMM yyyy, hh:mm"),
+            QStringLiteral("d MMM yyyy, hh:mm:ss"),
 
-                << QStringLiteral("d MMMM yyyy")
-                << QStringLiteral("d MMMM yyyy hh:mm")
-                << QStringLiteral("d MMMM yyyy hh:mm:ss")
-                << QStringLiteral("d MMMM yyyy, hh:mm")
-                << QStringLiteral("d MMMM yyyy, hh:mm:ss")
+            QStringLiteral("d MMMM yyyy"),
+            QStringLiteral("d MMMM yyyy hh:mm"),
+            QStringLiteral("d MMMM yyyy hh:mm:ss"),
+            QStringLiteral("d MMMM yyyy, hh:mm"),
+            QStringLiteral("d MMMM yyyy, hh:mm:ss"),
 
-                << QStringLiteral("d MMM, yyyy")
-                << QStringLiteral("d MMM, yyyy hh:mm")
-                << QStringLiteral("d MMM, yyyy hh:mm:ss")
+            QStringLiteral("d MMM, yyyy"),
+            QStringLiteral("d MMM, yyyy hh:mm"),
+            QStringLiteral("d MMM, yyyy hh:mm:ss"),
 
-                << QStringLiteral("d MMMM, yyyy")
-                << QStringLiteral("d MMMM, yyyy hh:mm")
-                << QStringLiteral("d MMMM, yyyy hh:mm:ss");
+            QStringLiteral("d MMMM, yyyy"),
+            QStringLiteral("d MMMM, yyyy hh:mm"),
+            QStringLiteral("d MMMM, yyyy hh:mm:ss"),
+        };
 
-        for (int i = 0; i < formats.size(); ++i) {
-            const QString &format(formats.at(i));
+        for (uint i = 0; i < sizeof(formats) / sizeof(formats[0]); ++i) {
+            const QString &format(formats[i]);
             dt = format.indexOf(QLatin1String("hh:mm")) < 0
                 ? QDateTime(QDate::fromString(s, format),
                             QTime(0, 0, 0), Qt::UTC)
