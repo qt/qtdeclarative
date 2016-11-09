@@ -1267,7 +1267,10 @@ QString DateFormatter::getLocalizedForm(const QString &isoTimestamp)
 // which will require linking to a different library to access that API.
 static void setTimeZone(const QByteArray &tz)
 {
-    qputenv("TZ", tz);
+    if (tz.isEmpty())
+        qunsetenv("TZ");
+    else
+        qputenv("TZ", tz);
     ::tzset();
 
 // following left for future reference, see comment above
