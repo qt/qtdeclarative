@@ -177,6 +177,7 @@ namespace QtQuickTest
             case MouseMove:
                 // with move event the button is NoButton, but 'buttons' holds the currently pressed buttons
                 me = QMouseEvent(QEvent::MouseMove, pos, window->mapToGlobal(pos), Qt::NoButton, button, stateKey);
+                me.setTimestamp(++lastMouseTimestamp);
                 break;
             default:
                 QTEST_ASSERT(false);
