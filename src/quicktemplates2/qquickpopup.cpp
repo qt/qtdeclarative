@@ -40,6 +40,7 @@
 #include "qquickshortcutcontext_p_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickdialog_p.h"
 
 #include <QtGui/private/qshortcutmap_p.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -252,6 +253,14 @@ void QQuickPopupPrivate::init()
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
 }
 
+static void closeOrReject(QQuickPopup *popup)
+{
+    if (QQuickDialog *dialog = qobject_cast<QQuickDialog*>(popup))
+        dialog->reject();
+    else
+        popup->close();
+}
+
 bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickPopup);
@@ -261,7 +270,7 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
     if (onOutside || onOutsideParent) {
         if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
-                q->close();
+                closeOrReject(q);
                 return true;
             }
         }
@@ -531,7 +540,7 @@ bool QQuickPopupItem::event(QEvent *event)
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
         if (se->shortcutId() == d->escapeId || se->shortcutId() == d->backId) {
-            d->popup->close();
+            closeOrReject(d->popup);
             return true;
         }
     }

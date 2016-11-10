@@ -106,6 +106,50 @@ TestCase {
 
         tryCompare(control, "visible", false)
 
+        // Check that rejected() is emitted when CloseOnEscape is triggered.
+        control.x = 10
+        control.y = 10
+        control.width = 100
+        control.height = 100
+        control.closePolicy = Popup.CloseOnEscape
+        control.open()
+        verify(control.visible)
+
+        keyPress(Qt.Key_Escape)
+        compare(rejectedSpy.count, 2)
+        tryCompare(control, "visible", false)
+
+        keyRelease(Qt.Key_Escape)
+        compare(rejectedSpy.count, 2)
+
+        // Check that rejected() is emitted when CloseOnPressOutside is triggered.
+        control.closePolicy = Popup.CloseOnPressOutside
+        control.open()
+        verify(control.visible)
+
+        mousePress(testCase, 1, 1)
+        compare(rejectedSpy.count, 3)
+        tryCompare(control, "visible", false)
+
+        mouseRelease(testCase, 1, 1)
+        compare(rejectedSpy.count, 3)
+
+        // Check that rejected() is emitted when CloseOnReleaseOutside is triggered.
+        // For this, we need to make the dialog modal, because the overlay won't accept
+        // the press event because it doesn't want to block the press.
+        control.modal = true
+        control.closePolicy = Popup.CloseOnReleaseOutside
+        control.open()
+        verify(control.visible)
+
+        mousePress(testCase, 1, 1)
+        compare(rejectedSpy.count, 3)
+        verify(control.visible)
+
+        mouseRelease(testCase, 1, 1)
+        compare(rejectedSpy.count, 4)
+        tryCompare(control, "visible", false)
+
         control.destroy()
     }
 
