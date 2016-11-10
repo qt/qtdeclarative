@@ -252,8 +252,10 @@ void QQuickAbstractButton::setText(const QString &text)
     if (d->text == text)
         return;
 
+    QString oldText = d->text;
     d->text = text;
     setAccessibleName(text);
+    textChange(text, oldText);
     emit textChanged();
 }
 
@@ -615,6 +617,12 @@ void QQuickAbstractButton::checkableChange()
 
 void QQuickAbstractButton::autoRepeatChange()
 {
+}
+
+void QQuickAbstractButton::textChange(const QString &newText, const QString &oldText)
+{
+    Q_UNUSED(newText);
+    Q_UNUSED(oldText);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

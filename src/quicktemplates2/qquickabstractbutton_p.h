@@ -128,6 +128,7 @@ protected:
 
     virtual void checkableChange();
     virtual void autoRepeatChange();
+    virtual void textChange(const QString &newText, const QString &oldText);
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
