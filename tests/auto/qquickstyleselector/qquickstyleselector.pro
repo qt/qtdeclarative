@@ -15,5 +15,5 @@ RESOURCES += resourcestyle
 TESTDATA = data/*
 
 OTHER_FILES += \
-    data/*
+    data/*.qml
 

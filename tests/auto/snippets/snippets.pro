@@ -11,7 +11,7 @@ SOURCES += \
     $$PWD/tst_snippets.cpp
 
 OTHER_FILES += \
-    $$PWD/data/*
+    $$PWD/data/*.qml
 
 TESTDATA += \
     $$PWD/data/*

@@ -6,7 +6,7 @@ SOURCES += \
     $$PWD/tst_platform.cpp
 
 OTHER_FILES += \
-    $$PWD/data/*
+    $$PWD/data/*.qml
 
 TESTDATA += \
     $$PWD/data/tst_*
