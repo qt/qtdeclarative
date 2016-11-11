@@ -93,10 +93,12 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     bool preferNativeGlyphNode = m_useNativeRenderer;
     if (!preferNativeGlyphNode) {
         QRawFontPrivate *fontPriv = QRawFontPrivate::get(font);
-        if (fontPriv->fontEngine->hasUnreliableGlyphOutline())
+        if (fontPriv->fontEngine->hasUnreliableGlyphOutline()) {
             preferNativeGlyphNode = true;
-        else
-            preferNativeGlyphNode = !QFontDatabase().isSmoothlyScalable(font.familyName(), font.styleName());
+        } else {
+            QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+            preferNativeGlyphNode = !fe->isSmoothlyScalable;
+        }
     }
 
     QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode);
