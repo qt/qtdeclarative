@@ -64,65 +64,6 @@ Rectangle {
         model: StockListModel{}
         currentIndex: -1 // Don't pre-select any item
 
-        function requestUrl(stockId) {
-            var endDate = new Date(""); //today
-            var startDate = new Date()
-            startDate.setDate(startDate.getDate() - 5);
-
-            var request = "http://ichart.finance.yahoo.com/table.csv?";
-            request += "s=" + stockId;
-            request += "&g=d";
-            request += "&a=" + startDate.getMonth();
-            request += "&b=" + startDate.getDate();
-            request += "&c=" + startDate.getFullYear();
-            request += "&d=" + endDate.getMonth();
-            request += "&e=" + endDate.getDate();
-            request += "&f=" + endDate.getFullYear();
-            request += "&g=d";
-            request += "&ignore=.csv";
-            return request;
-        }
-
-        function getCloseValue(index) {
-            var req = requestUrl(model.get(index).stockId);
-
-            if (!req)
-                return;
-
-            var xhr = new XMLHttpRequest;
-
-            xhr.open("GET", req, true);
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
-                    var records = xhr.responseText.split('\n');
-                    if (records.length > 0 && xhr.status == 200) {
-                        var r = records[1].split(',');
-                        var today = parseFloat(r[4]);
-                        model.setProperty(index, "value", today.toFixed(2));
-
-                        r = records[2].split(',');
-                        var yesterday = parseFloat(r[4]);
-                        var change = today - yesterday;
-                        if (change >= 0.0)
-                            model.setProperty(index, "change", "+" + change.toFixed(2));
-                        else
-                            model.setProperty(index, "change", change.toFixed(2));
-
-                        var changePercentage = (change / yesterday) * 100.0;
-                        if (changePercentage >= 0.0)
-                            model.setProperty(index, "changePercentage", "+" + changePercentage.toFixed(2) + "%");
-                        else
-                            model.setProperty(index, "changePercentage", changePercentage.toFixed(2) + "%");
-                    } else {
-                        var unknown = "n/a";
-                        model.set(index, {"value": unknown, "change": unknown, "changePercentage": unknown});
-                    }
-                }
-            }
-            xhr.send()
-        }
-
         onCurrentIndexChanged: {
             if (currentItem) {
                 root.currentStockId = model.get(currentIndex).stockId;
@@ -175,7 +116,6 @@ Rectangle {
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter
                 text: value
-                Component.onCompleted: view.getCloseValue(index);
             }
 
             Text {
