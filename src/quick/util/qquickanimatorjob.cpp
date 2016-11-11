@@ -434,7 +434,9 @@ void QQuickXAnimatorJob::writeBack()
 
 void QQuickXAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
+#endif
     if (!m_helper)
         return;
 
@@ -451,8 +453,9 @@ void QQuickYAnimatorJob::writeBack()
 
 void QQuickYAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-
+#endif
     if (!m_helper)
         return;
 
@@ -469,8 +472,9 @@ void QQuickScaleAnimatorJob::writeBack()
 
 void QQuickScaleAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-
+#endif
     if (!m_helper)
         return;
 
@@ -491,8 +495,9 @@ extern QVariant _q_interpolateCounterclockwiseRotation(qreal &f, qreal &t, qreal
 
 void QQuickRotationAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-
+#endif
     if (!m_helper)
         return;
 
@@ -597,7 +602,9 @@ void QQuickOpacityAnimatorJob::writeBack()
 
 void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
+#endif
 
     if (!m_opacityNode)
         return;
