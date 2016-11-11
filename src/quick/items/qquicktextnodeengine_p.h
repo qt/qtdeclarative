@@ -144,7 +144,11 @@ public:
         int selectionState;
     };
 
-    QQuickTextNodeEngine() : m_hasSelection(false), m_hasContents(false) {}
+    QQuickTextNodeEngine()
+        : m_currentTextDirection(Qt::LeftToRight)
+        , m_hasSelection(false)
+        , m_hasContents(false)
+    {}
 
     bool hasContents() const { return m_hasContents; }
     void addTextBlock(QTextDocument *, const QTextBlock &, const QPointF &position, const QColor &textColor, const QColor& anchorColor, int selectionStart, int selectionEnd);
@@ -156,6 +160,11 @@ public:
             processCurrentLine();
 
         m_currentLine = currentLine;
+    }
+
+    void setCurrentTextDirection(Qt::LayoutDirection textDirection)
+    {
+        m_currentTextDirection = textDirection;
     }
 
     void addBorder(const QRectF &rect, qreal border, QTextFrameFormat::BorderStyle borderStyle,
@@ -247,6 +256,7 @@ private:
     QPointF m_position;
 
     QTextLine m_currentLine;
+    Qt::LayoutDirection m_currentTextDirection;
 
     QList<QPair<QRectF, QColor> > m_backgrounds;
     QList<QRectF> m_selectionRects;
