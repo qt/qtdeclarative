@@ -64,8 +64,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    The \l position property is defined as a percentage of the control's size,
-    scaled within the range \c {0.0 - 1.0}. The \l visualPosition property is
+    The \l position property is expressed as a fraction of the control's size,
+    in the range \c {0.0 - 1.0}. The \l visualPosition property is
     the same, except that it is reversed in a
     \l {Right-to-left User Interfaces}{right-to-left} application. The
     visualPosition is useful for positioning the handle when styling Slider.
@@ -263,8 +263,8 @@ void QQuickSlider::setValue(qreal value)
 
     This property holds the logical position of the handle.
 
-    The position is defined as a percentage of the control's size, scaled
-    to \c {0.0 - 1.0}. Unlike the \l value property, the \c position is
+    The position is expressed as a fraction of the control's size, in the range
+    \c {0.0 - 1.0}. Unlike the \l value property, the \c position is
     continuously updated while the handle is dragged. For visualizing a
     slider, the right-to-left aware \l visualPosition should be used instead.
 
@@ -282,7 +282,7 @@ qreal QQuickSlider::position() const
 
     This property holds the visual position of the handle.
 
-    The position is defined as a percentage of the control's size, scaled to
+    The position is expressed as a fraction of the control's size, in the range
     \c {0.0 - 1.0}. When the control is \l {Control::mirrored}{mirrored}, the
     value is equal to \c {1.0 - position}. This makes the value suitable for
     visualizing the slider, taking right-to-left support into account.

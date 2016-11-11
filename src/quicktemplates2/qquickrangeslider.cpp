@@ -68,8 +68,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    The \l {first.position} and \l {second.position} properties are defined as a
-    percentage of the control's size, scaled within the range \c {0.0 - 1.0}.
+    The \l {first.position} and \l {second.position} properties are expressed as a
+    fraction of the control's size, in the range \c {0.0 - 1.0}.
     The \l {first.visualPosition} and \l {second.visualPosition} properties are
     the same, except that they are reversed in a
     \l {Right-to-left User Interfaces}{right-to-left} application.
@@ -455,7 +455,7 @@ void QQuickRangeSlider::setTo(qreal to)
         \li visualPosition
         \li This property holds the visual position of the first handle.
 
-            The position is defined as a percentage of the control's size, scaled to
+            The position is expressed as a fraction of the control's size, in the range
             \c {0.0 - 1.0}. When the control is \l {Control::mirrored}{mirrored}, the
             value is equal to \c {1.0 - position}. This makes the value suitable for
             visualizing the slider, taking right-to-left support into account.
@@ -463,8 +463,8 @@ void QQuickRangeSlider::setTo(qreal to)
         \li position
         \li This property holds the logical position of the first handle.
 
-            The position is defined as a percentage of the control's size, scaled
-            to \c {0.0 - 1.0}. Unlike \l {first.value}{value}, position is
+            The position is expressed as a fraction of the control's size, in the range
+            \c {0.0 - 1.0}. Unlike \l {first.value}{value}, position is
             continuously updated while the handle is dragged. For visualizing a
             slider, the right-to-left aware
             \l {first.visualPosition}{visualPosition} should be used instead.
@@ -512,7 +512,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li visualPosition
         \li This property holds the visual position of the second handle.
 
-            The position is defined as a percentage of the control's size, scaled to
+            The position is expressed as a fraction of the control's size, in the range
             \c {0.0 - 1.0}. When the control is \l {Control::mirrored}{mirrored}, the
             value is equal to \c {1.0 - position}. This makes the value suitable for
             visualizing the slider, taking right-to-left support into account.
@@ -520,8 +520,8 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li position
         \li This property holds the logical position of the second handle.
 
-            The position is defined as a percentage of the control's size, scaled
-            to \c {0.0 - 1.0}. Unlike \l {second.value}{value}, position is
+            The position is expressed as a fraction of the control's size, in the range
+            \c {0.0 - 1.0}. Unlike \l {second.value}{value}, position is
             continuously updated while the handle is dragged. For visualizing a
             slider, the right-to-left aware
             \l {second.visualPosition}{visualPosition} should be used instead.
