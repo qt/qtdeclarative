@@ -182,6 +182,7 @@ struct QQuickStyleSpec
                 for (const QString &path : stylePaths) {
                     QString stylePath = findStyle(path, style);
                     if (!stylePath.isEmpty()) {
+                        custom = !stylePath.startsWith(baseUrl.toLocalFile());
                         style = stylePath;
                         resolved = true;
                         break;
@@ -212,15 +213,22 @@ Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
 QStringList QQuickStylePrivate::stylePaths()
 {
+    // system/custom style paths
+    QStringList paths;
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE_PATH"))) {
+        const QByteArray value = qgetenv("QT_QUICK_CONTROLS_STYLE_PATH");
+        paths += QString::fromLatin1(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
+    }
+
+    // built-in import paths
     const QString targetPath = QStringLiteral("QtQuick/Controls.2");
     const QStringList importPaths = QQmlEngine().importPathList();
-
-    QStringList paths;
     for (const QString &importPath : importPaths) {
         QDir dir(importPath);
         if (dir.cd(targetPath))
             paths += dir.absolutePath();
     }
+
     return paths;
 }
 
