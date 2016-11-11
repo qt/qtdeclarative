@@ -52,6 +52,7 @@ HEADERS += \
     $$PWD/qquickroundbutton_p.h \
     $$PWD/qquickscrollbar_p.h \
     $$PWD/qquickscrollindicator_p.h \
+    $$PWD/qquickshortcutcontext_p_p.h \
     $$PWD/qquickslider_p.h \
     $$PWD/qquickspinbox_p.h \
     $$PWD/qquickstackelement_p_p.h \
@@ -114,6 +115,7 @@ SOURCES += \
     $$PWD/qquickroundbutton.cpp \
     $$PWD/qquickscrollbar.cpp \
     $$PWD/qquickscrollindicator.cpp \
+    $$PWD/qquickshortcutcontext.cpp \
     $$PWD/qquickslider.cpp \
     $$PWD/qquickspinbox.cpp \
     $$PWD/qquickstackelement.cpp \

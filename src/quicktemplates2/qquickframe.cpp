@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
-    \brief A logical group of controls within a visual frame.
+    \brief Visual frame for a logical group of controls.
 
     Frame is used to layout a logical group of controls together within a
     visual frame. Frame does not provide a layout of its own, but requires
@@ -77,5 +77,12 @@ QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
     QQuickPane(dd, parent)
 {
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickFrame::accessibleRole() const
+{
+    return QAccessible::Border;
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE

@@ -153,6 +153,10 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const override;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickStackView)
     Q_DECLARE_PRIVATE(QQuickStackView)

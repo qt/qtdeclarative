@@ -45,7 +45,6 @@ T.Dial {
     implicitWidth: 184
     implicitHeight: 184
 
-    //! [background]
     background: DialRing {
         width: control.availableWidth
         height: control.availableHeight
@@ -53,9 +52,7 @@ T.Dial {
         progress: control.position
         opacity: control.enabled ? 1 : 0.3
     }
-    //! [background]
 
-    //! [handle]
     handle: Image {
         id: handleItem
         x: background.x + background.width / 2 - handle.width / 2
@@ -78,5 +75,4 @@ T.Dial {
             }
         ]
     }
-    //! [handle]
 }

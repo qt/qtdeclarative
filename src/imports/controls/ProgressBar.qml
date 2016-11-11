@@ -47,7 +47,6 @@ T.ProgressBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: ProgressBarImpl {
         implicitHeight: 6
         implicitWidth: 116
@@ -55,9 +54,7 @@ T.ProgressBar {
         progress: control.position
         indeterminate: control.visible && control.indeterminate
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 6
@@ -68,5 +65,4 @@ T.ProgressBar {
 
         color: Default.progressBarColor
     }
-    //! [background]
 }

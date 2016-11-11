@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-delegates
-    \brief A swipable item delegate.
+    \brief Swipable item delegate.
 
     SwipeDelegate presents a view item that can be swiped left or right to
     expose more options or information. It is used as a delegate in views such
@@ -818,13 +818,13 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
         \li Description
     \row
         \li position
-        \li This property holds the position of the swipe relative to either
+        \li This read-only property holds the position of the swipe relative to either
             side of the control. When this value reaches either
             \c -1.0 (left side) or \c 1.0 (right side) and the mouse button is
             released, \c complete will be \c true.
     \row
         \li complete
-        \li This property holds whether the control is fully exposed after
+        \li This read-only property holds whether the control is fully exposed after
             having been swiped to the left or right.
 
             When complete is \c true, any interactive items declared in \c left,
@@ -860,19 +860,19 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             \include qquickswipedelegate-interaction.qdocinc
     \row
         \li leftItem
-        \li This property holds the item instantiated from the \c left component.
+        \li This read-only property holds the item instantiated from the \c left component.
 
             If \c left has not been set, or the position hasn't changed since
             creation of the SwipeDelegate, this property will be \c null.
     \row
         \li behindItem
-        \li This property holds the item instantiated from the \c behind component.
+        \li This read-only property holds the item instantiated from the \c behind component.
 
             If \c behind has not been set, or the position hasn't changed since
             creation of the SwipeDelegate, this property will be \c null.
     \row
         \li rightItem
-        \li This property holds the item instantiated from the \c right component.
+        \li This read-only property holds the item instantiated from the \c right component.
 
             If \c right has not been set, or the position hasn't changed since
             creation of the SwipeDelegate, this property will be \c null.

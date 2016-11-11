@@ -60,6 +60,7 @@ private slots:
     void button();
     void tabBar();
     void menu();
+    void swipeView();
     void swipeDelegate_data();
     void swipeDelegate();
     void swipeDelegateBehind();
@@ -78,6 +79,7 @@ private slots:
     void comboBox();
     void stackView_data();
     void stackView();
+    void drawer();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -353,7 +355,7 @@ void tst_Gifs::busyIndicator()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setRecordingDuration(6);
     gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
 
@@ -361,17 +363,17 @@ void tst_Gifs::busyIndicator()
 
     QQuickWindow *window = gifRecorder.window();
     // Record nothing for a bit to make it smoother.
-    QTest::qWait(400);
+    QTest::qWait(800 * 2);
 
     QQuickItem *busyIndicator = window->property("busyIndicator").value<QQuickItem*>();
     QVERIFY(busyIndicator);
 
-    busyIndicator->setProperty("running", true);
+    busyIndicator->setProperty("running", false);
 
     // 800 ms is the duration of one rotation animation cycle for BusyIndicator.
     QTest::qWait(800 * 2);
 
-    busyIndicator->setProperty("running", false);
+    busyIndicator->setProperty("running", true);
 
     gifRecorder.waitForFinish();
 }
@@ -479,6 +481,31 @@ void tst_Gifs::menu()
     const QPoint lastItemPos = menuContentItem->mapToScene(QPointF(menuContentItem->width() / 2, menuContentItem->height() - 10)).toPoint();
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 1000);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 300);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::swipeView()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(8);
+    gifRecorder.setQmlFileName(QStringLiteral("qtquickcontrols2-swipeview.qml"));
+    gifRecorder.setHighQuality(true);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QQuickItem *swipeView = window->property("swipeView").value<QQuickItem*>();
+    QVERIFY(swipeView);
+
+    QTest::qWait(1200);
+    swipeView->setProperty("currentIndex", 1);
+    QTest::qWait(2000);
+    swipeView->setProperty("currentIndex", 2);
+    QTest::qWait(2000);
+    swipeView->setProperty("currentIndex", 0);
 
     gifRecorder.waitForFinish();
 }
@@ -911,6 +938,31 @@ void tst_Gifs::stackView()
     gifRecorder.setQmlFileName(QString::fromLatin1("qtquickcontrols2-stackview-%1.qml").arg(name));
 
     gifRecorder.start();
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::drawer()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName("qtquickcontrols2-drawer.qml");
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QObject *drawer = window->property("drawer").value<QObject*>();
+    qreal width = drawer->property("width").toReal();
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1), 100);
+    moveSmoothly(window, QPoint(1, 1), QPoint(width, 1), width, QEasingCurve::InOutBack, 1);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(width, 1), 30);
+
+    QTest::qWait(1000);
+    QMetaObject::invokeMethod(drawer, "close");
+
     gifRecorder.waitForFinish();
 }
 

@@ -366,7 +366,14 @@ protected:
 
 #ifndef QT_NO_ACCESSIBILITY
     virtual QAccessible::Role accessibleRole() const;
+    virtual void accessibilityActiveChanged(bool active);
 #endif
+
+    QString accessibleName() const;
+    void setAccessibleName(const QString &name);
+
+    QVariant accessibleProperty(const char *propertyName);
+    bool setAccessibleProperty(const char *propertyName, const QVariant &value);
 
 private:
     Q_DISABLE_COPY(QQuickPopup)

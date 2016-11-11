@@ -55,17 +55,13 @@ T.ToolTip {
 
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
         // TODO: wrapMode: Label.Wrap
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         border.color: Default.frameDarkColor
     }
-    //! [background]
 }

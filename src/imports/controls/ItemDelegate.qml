@@ -52,7 +52,6 @@ T.ItemDelegate {
     padding: 12
     spacing: 12
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -65,9 +64,7 @@ T.ItemDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
@@ -76,5 +73,4 @@ T.ItemDelegate {
             ? (control.pressed ? Default.focusPressedColor : Default.delegateFocusColor)
             : (control.down ? Default.delegatePressedColor : Default.delegateColor)
     }
-    //! [background]
 }

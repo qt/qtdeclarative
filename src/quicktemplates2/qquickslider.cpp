@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief Selects a value by sliding a handle along a track.
+    \brief Used to select a value by sliding a handle along a track.
 
     \image qtquickcontrols2-slider.gif
 

@@ -50,9 +50,7 @@ T.Pane {
 
     padding: 12
 
-    //! [background]
     background: Rectangle {
         color: Default.backgroundColor
     }
-    //! [background]
 }

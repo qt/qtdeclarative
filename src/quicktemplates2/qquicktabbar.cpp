@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
-    \brief A bar with icons allowing to switch between different views or subtasks.
+    \brief Allows the user to switch between different views or subtasks.
 
     TabBar provides a tab-based navigation model.
 
@@ -59,6 +59,13 @@ QT_BEGIN_NAMESPACE
     such as \l StackLayout or \l SwipeView
 
     \snippet qtquickcontrols2-tabbar.qml 1
+
+    As shown above, TabBar is typically populated with a static set of tab buttons
+    that are defined inline as children of the tab bar. It is also possible to
+    \l {Container::addItem()}{add}, \l {Container::insertItem()}{insert},
+    \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
+    items dynamically at run time. The items can be accessed using
+    \l {Container::}{itemAt()} or \l {Container::}{contentChildren}.
 
     \section2 Resizing Tabs
 
@@ -176,8 +183,8 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
 
     This property holds the position of the tab bar.
 
-    \note If the tab bar is assigned as a header or footer of ApplicationWindow
-    or Page, the appropriate position is set automatically.
+    \note If the tab bar is assigned as a header or footer of \l ApplicationWindow
+    or \l Page, the appropriate position is set automatically.
 
     Possible values:
     \value TabBar.Header The tab bar is at the top, as a window or page header.

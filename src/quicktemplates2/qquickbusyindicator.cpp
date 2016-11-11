@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators
-    \brief Indicates activity while content is being loaded.
+    \brief Indicates background activity, for example, while content is being loaded.
 
     \image qtquickcontrols2-busyindicator.gif
 
@@ -60,6 +60,18 @@ QT_BEGIN_NAMESPACE
         running: image.status === Image.Loading
     }
     \endqml
+
+    BusyIndicator is similar to an indeterminate \l ProgressBar. Both can be
+    used to indicate background activity. The main difference is visual, and
+    that ProgressBar can also present a concrete amount of progress (when it
+    can be determined). Due to the visual difference, busy indicators and
+    indeterminate progress bars fit different places in user interfaces.
+    Typical places for a busy indicator:
+    \list
+    \li in the corner of a \l ToolBar
+    \li as an overlay on top of a \l Page
+    \li on the side of an \l ItemDelegate
+    \endlist
 
     \sa {Customizing BusyIndicator}, {Indicator Controls}, ProgressBar
 */

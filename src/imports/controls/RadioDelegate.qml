@@ -52,7 +52,6 @@ T.RadioDelegate {
     padding: 12
     spacing: 12
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
@@ -65,23 +64,18 @@ T.RadioDelegate {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [indicator]
     indicator: RadioIndicator {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 
         control: control
     }
-    //! [indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
         color: control.down ? Default.delegatePressedColor : Default.delegateColor
     }
-    //! [background]
 }

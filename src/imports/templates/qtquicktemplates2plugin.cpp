@@ -69,6 +69,7 @@
 #include <QtQuickTemplates2/private/qquickroundbutton_p.h>
 #include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 #include <QtQuickTemplates2/private/qquickscrollindicator_p.h>
+#include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquickspinbox_p.h>
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
@@ -93,6 +94,11 @@ static inline void initResources()
 #endif
 }
 
+// qtdeclarative/src/quick/util/qquickshortcut.cpp
+typedef bool (*ShortcutContextMatcher)(QObject *, Qt::ShortcutContext);
+extern ShortcutContextMatcher qt_quick_shortcut_context_matcher();
+extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher);
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickTemplates2Plugin: public QQmlExtensionPlugin
@@ -102,12 +108,25 @@ class QtQuickTemplates2Plugin: public QQmlExtensionPlugin
 
 public:
     QtQuickTemplates2Plugin(QObject *parent = nullptr);
+    ~QtQuickTemplates2Plugin();
+
     void registerTypes(const char *uri);
+
+private:
+    ShortcutContextMatcher originalContextMatcher;
 };
 
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
+
+    originalContextMatcher = qt_quick_shortcut_context_matcher();
+    qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
+}
+
+QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
+{
+    qt_quick_set_shortcut_context_matcher(originalContextMatcher);
 }
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)

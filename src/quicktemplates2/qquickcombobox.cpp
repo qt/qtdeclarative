@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A combined button and popup list taking minimal space.
+    \brief Combined button and popup list for selecting options.
 
     \image qtquickcontrols2-combobox.gif
 
@@ -130,6 +130,11 @@ QT_BEGIN_NAMESPACE
     \sa highlightedIndex
 */
 
+namespace {
+    enum Activation { NoActivate, Activate };
+    enum Highlighting { NoHighlight, Highlight };
+}
+
 class QQuickComboBoxDelegateModel : public QQmlDelegateModel
 {
 public:
@@ -180,8 +185,12 @@ public:
     void updateCurrentText();
     void incrementCurrentIndex();
     void decrementCurrentIndex();
+    void setCurrentIndex(int index, Activation activate);
     void updateHighlightedIndex();
-    void setHighlightedIndex(int index);
+    void setHighlightedIndex(int index, Highlighting highlight);
+
+    void keySearch(const QString &text);
+    int match(int start, const QString &text, Qt::MatchFlags flags) const;
 
     void createDelegateModel();
 
@@ -270,8 +279,7 @@ void QQuickComboBoxPrivate::itemClicked()
     Q_Q(QQuickComboBox);
     int index = delegateModel->indexOf(q->sender(), nullptr);
     if (index != -1) {
-        setHighlightedIndex(index);
-        emit q->highlighted(index);
+        setHighlightedIndex(index, Highlight);
         hidePopup(true);
     }
 }
@@ -308,6 +316,8 @@ void QQuickComboBoxPrivate::updateCurrentText()
     QString text = q->textAt(currentIndex);
     if (currentText != text) {
         currentText = text;
+        if (!hasDisplayText)
+           q->setAccessibleName(text);
         emit q->currentTextChanged();
     }
     if (!hasDisplayText && displayText != text) {
@@ -316,44 +326,51 @@ void QQuickComboBoxPrivate::updateCurrentText()
     }
 }
 
+void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)
+{
+    Q_Q(QQuickComboBox);
+    if (currentIndex == index)
+        return;
+
+    currentIndex = index;
+    emit q->currentIndexChanged();
+
+    if (componentComplete)
+        updateCurrentText();
+
+    if (activate)
+        emit q->activated(index);
+}
+
 void QQuickComboBoxPrivate::incrementCurrentIndex()
 {
     Q_Q(QQuickComboBox);
     if (isPopupVisible()) {
-        if (highlightedIndex < q->count() - 1) {
-            setHighlightedIndex(highlightedIndex + 1);
-            emit q->highlighted(highlightedIndex);
-        }
+        if (highlightedIndex < q->count() - 1)
+            setHighlightedIndex(highlightedIndex + 1, Highlight);
     } else {
-        if (currentIndex < q->count() - 1) {
-            q->setCurrentIndex(currentIndex + 1);
-            emit q->activated(currentIndex);
-        }
+        if (currentIndex < q->count() - 1)
+            setCurrentIndex(currentIndex + 1, Activate);
     }
 }
 
 void QQuickComboBoxPrivate::decrementCurrentIndex()
 {
-    Q_Q(QQuickComboBox);
     if (isPopupVisible()) {
-        if (highlightedIndex > 0) {
-            setHighlightedIndex(highlightedIndex - 1);
-            emit q->highlighted(highlightedIndex);
-        }
+        if (highlightedIndex > 0)
+            setHighlightedIndex(highlightedIndex - 1, Highlight);
     } else {
-        if (currentIndex > 0) {
-            q->setCurrentIndex(currentIndex - 1);
-            emit q->activated(currentIndex);
-        }
+        if (currentIndex > 0)
+            setCurrentIndex(currentIndex - 1, Activate);
     }
 }
 
 void QQuickComboBoxPrivate::updateHighlightedIndex()
 {
-    setHighlightedIndex(popup->isVisible() ? currentIndex : -1);
+    setHighlightedIndex(popup->isVisible() ? currentIndex : -1, NoHighlight);
 }
 
-void QQuickComboBoxPrivate::setHighlightedIndex(int index)
+void QQuickComboBoxPrivate::setHighlightedIndex(int index, Highlighting highlight)
 {
     Q_Q(QQuickComboBox);
     if (highlightedIndex == index)
@@ -361,6 +378,68 @@ void QQuickComboBoxPrivate::setHighlightedIndex(int index)
 
     highlightedIndex = index;
     emit q->highlightedIndexChanged();
+
+    if (highlight)
+        emit q->highlighted(index);
+}
+
+void QQuickComboBoxPrivate::keySearch(const QString &text)
+{
+    int index = match(currentIndex + 1, text, Qt::MatchStartsWith | Qt::MatchWrap);
+    if (index != -1)
+        setCurrentIndex(index, Activate);
+}
+
+int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags flags) const
+{
+    Q_Q(const QQuickComboBox);
+    uint matchType = flags & 0x0F;
+    bool wrap = flags & Qt::MatchWrap;
+    Qt::CaseSensitivity cs = flags & Qt::MatchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    int from = start;
+    int to = q->count();
+
+    // iterates twice if wrapping
+    for (int i = 0; (wrap && i < 2) || (!wrap && i < 1); ++i) {
+        for (int idx = from; idx < to; ++idx) {
+            QString t = q->textAt(idx);
+            switch (matchType) {
+            case Qt::MatchExactly:
+                if (t == text)
+                    return idx;
+                break;
+            case Qt::MatchRegExp:
+                if (QRegExp(text, cs).exactMatch(t))
+                    return idx;
+                break;
+            case Qt::MatchWildcard:
+                if (QRegExp(text, cs, QRegExp::Wildcard).exactMatch(t))
+                    return idx;
+                break;
+            case Qt::MatchStartsWith:
+                if (t.startsWith(text, cs))
+                    return idx;
+                break;
+            case Qt::MatchEndsWith:
+                if (t.endsWith(text, cs))
+                    return idx;
+                break;
+            case Qt::MatchFixedString:
+                if (t.compare(text, cs) == 0)
+                    return idx;
+                break;
+            case Qt::MatchContains:
+            default:
+                if (t.contains(text, cs))
+                    return idx;
+                break;
+            }
+        }
+        // prepare for the next iteration
+        from = 0;
+        to = start;
+    }
+    return -1;
 }
 
 void QQuickComboBoxPrivate::createDelegateModel()
@@ -621,13 +700,7 @@ void QQuickComboBox::setCurrentIndex(int index)
 {
     Q_D(QQuickComboBox);
     d->hasCurrentIndex = true;
-    if (d->currentIndex == index)
-        return;
-
-    d->currentIndex = index;
-    emit currentIndexChanged();
-    if (isComponentComplete())
-        d->updateCurrentText();
+    d->setCurrentIndex(index, NoActivate);
 }
 
 /*!
@@ -677,6 +750,7 @@ void QQuickComboBox::setDisplayText(const QString &text)
         return;
 
     d->displayText = text;
+    setAccessibleName(text);
     emit displayTextChanged();
 }
 
@@ -871,45 +945,8 @@ QString QQuickComboBox::textAt(int index) const
 */
 int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 {
-    int itemCount = count();
-    uint matchType = flags & 0x0F;
-    Qt::CaseSensitivity cs = flags & Qt::MatchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
-
-    for (int idx = 0; idx < itemCount; ++idx) {
-        QString t = textAt(idx);
-        switch (matchType) {
-        case Qt::MatchExactly:
-            if (t == text)
-                return idx;
-            break;
-        case Qt::MatchRegExp:
-            if (QRegExp(text, cs).exactMatch(t))
-                return idx;
-            break;
-        case Qt::MatchWildcard:
-            if (QRegExp(text, cs, QRegExp::Wildcard).exactMatch(t))
-                return idx;
-            break;
-        case Qt::MatchStartsWith:
-            if (t.startsWith(text, cs))
-                return idx;
-            break;
-        case Qt::MatchEndsWith:
-            if (t.endsWith(text, cs))
-                return idx;
-            break;
-        case Qt::MatchFixedString:
-            if (t.compare(text, cs) == 0)
-                return idx;
-            break;
-        case Qt::MatchContains:
-        default:
-            if (t.contains(text, cs))
-                return idx;
-            break;
-        }
-    }
-    return -1;
+    Q_D(const QQuickComboBox);
+    return d->match(0, text, flags);
 }
 
 /*!
@@ -952,8 +989,6 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::keyPressEvent(event);
-    if (!d->popup)
-        return;
 
     switch (event->key()) {
     case Qt::Key_Escape:
@@ -980,7 +1015,25 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         d->incrementCurrentIndex();
         event->accept();
         break;
+    case Qt::Key_Home:
+        if (d->isPopupVisible())
+            d->setHighlightedIndex(0, Highlight);
+        else
+            d->setCurrentIndex(0, Activate);
+        event->accept();
+        break;
+    case Qt::Key_End:
+        if (d->isPopupVisible())
+            d->setHighlightedIndex(count() - 1, Highlight);
+        else
+            d->setCurrentIndex(count() - 1, Activate);
+        event->accept();
+        break;
     default:
+        if (!event->text().isEmpty())
+            d->keySearch(event->text());
+        else
+            event->ignore();
         break;
     }
 }
@@ -1077,5 +1130,21 @@ QFont QQuickComboBox::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickComboBox::accessibleRole() const
+{
+    return QAccessible::ComboBox;
+}
+
+void QQuickComboBox::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
+}
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE

@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
-    \brief A slider control used to select a range of values.
+    \brief Used to select a range of values by sliding two handles along a track.
 
     \image qtquickcontrols2-rangeslider.gif
 

@@ -1,15 +1,8 @@
 import QtQuick 2.5
-import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
 
-Window {
-    visible: true
-
-    ProgressBar {
-        id: progressbar
-        objectName: "progressbar"
-        from: 0
-        to: 100
-        value: 50
-    }
+ProgressBar {
+    from: 0
+    to: 100
+    value: 50
 }

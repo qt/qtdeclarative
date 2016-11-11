@@ -766,9 +766,9 @@ Module {
         prototype: "QQuickPopup"
         exports: ["QtQuick.Templates/Dialog 2.1"]
         exportMetaObjectRevisions: [0]
+        Property { name: "title"; type: "string" }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
-        Property { name: "buttonBox"; type: "QQmlComponent"; isPointer: true }
         Property { name: "standardButtons"; type: "QPlatformDialogHelper::StandardButtons" }
         Signal { name: "accepted" }
         Signal { name: "rejected" }
@@ -918,13 +918,17 @@ Module {
         name: "QQuickPage"
         defaultProperty: "contentData"
         prototype: "QQuickControl"
-        exports: ["QtQuick.Templates/Page 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick.Templates/Page 2.0", "QtQuick.Templates/Page 2.1"]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "title"; type: "string" }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
+        Property { name: "contentWidth"; revision: 1; type: "double" }
+        Property { name: "contentHeight"; revision: 1; type: "double" }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
+        Signal { name: "contentWidthChanged"; revision: 1 }
+        Signal { name: "contentHeightChanged"; revision: 1 }
     }
     Component {
         name: "QQuickPageIndicator"
@@ -952,8 +956,11 @@ Module {
         name: "QQuickPopup"
         defaultProperty: "contentData"
         prototype: "QObject"
-        exports: ["QtQuick.Templates/Popup 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/Popup 2.0",
+            "QtQuick.Templates/Popup 2.1"
+        ]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "ClosePolicy"
             values: {
@@ -990,6 +997,7 @@ Module {
         Property { name: "contentHeight"; type: "double" }
         Property { name: "availableWidth"; type: "double"; isReadonly: true }
         Property { name: "availableHeight"; type: "double"; isReadonly: true }
+        Property { name: "spacing"; revision: 1; type: "double" }
         Property { name: "margins"; type: "double" }
         Property { name: "topMargin"; type: "double" }
         Property { name: "leftMargin"; type: "double" }
@@ -1019,6 +1027,7 @@ Module {
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
+        Signal { name: "spacingChanged"; revision: 1 }
         Signal {
             name: "windowChanged"
             Parameter { name: "window"; type: "QQuickWindow"; isPointer: true }

@@ -49,7 +49,6 @@ T.Slider {
 
     padding: 6
 
-    //! [handle]
     handle: Rectangle {
         x: control.leftPadding + (horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
@@ -66,9 +65,7 @@ T.Slider {
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
-    //! [handle]
 
-    //! [background]
     background: Rectangle {
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
@@ -82,5 +79,4 @@ T.Slider {
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
-    //! [background]
 }
