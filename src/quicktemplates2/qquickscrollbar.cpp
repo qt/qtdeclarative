@@ -565,11 +565,19 @@ void QQuickScrollBarAttachedPrivate::itemGeometryChanged(QQuickItem *item, const
     Q_UNUSED(item);
     Q_UNUSED(change);
     if (horizontal && horizontal->height() > 0) {
+#ifdef QT_QUICK_NEW_GEOMETRY_CHANGED_HANDLING // TODO: correct/rename diff to oldGeometry
+        bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), diff.height() - horizontal->height());
+#else
         bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), item->height() - diff.height() - horizontal->height());
+#endif
         layoutHorizontal(move);
     }
     if (vertical && vertical->width() > 0) {
+#ifdef QT_QUICK_NEW_GEOMETRY_CHANGED_HANDLING // TODO: correct/rename diff to oldGeometry
+        bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), diff.width() - vertical->width());
+#else
         bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), item->width() - diff.width() - vertical->width());
+#endif
         layoutVertical(move);
     }
 }

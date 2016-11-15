@@ -13,5 +13,5 @@ RESOURCES += qquickmaterialstyleconf.qrc
 TESTDATA = data/*
 
 OTHER_FILES += \
-    data/*
+    data/*.qml
 

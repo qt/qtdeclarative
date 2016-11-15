@@ -94,6 +94,7 @@ public:
     }
 
     void init();
+    void closeOrReject();
     bool tryClose(QQuickItem *item, QMouseEvent *event);
     virtual void reposition();
     virtual void resizeOverlay();

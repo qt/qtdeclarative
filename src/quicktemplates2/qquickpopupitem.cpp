@@ -152,7 +152,7 @@ bool QQuickPopupItem::event(QEvent *event)
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
         if (se->shortcutId() == d->escapeId || se->shortcutId() == d->backId) {
-            d->popup->close();
+            QQuickPopupPrivate::get(d->popup)->closeOrReject();
             return true;
         }
     }

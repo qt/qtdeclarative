@@ -41,6 +41,7 @@
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickdialog_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
@@ -245,16 +246,24 @@ void QQuickPopupPrivate::init()
     positioner = new QQuickPopupPositioner(q);
 }
 
-bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
+void QQuickPopupPrivate::closeOrReject()
 {
     Q_Q(QQuickPopup);
+    if (QQuickDialog *dialog = qobject_cast<QQuickDialog*>(q))
+        dialog->reject();
+    else
+        q->close();
+}
+
+bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
+{
     const bool isPress = event->type() == QEvent::MouseButtonPress;
     const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutside : QQuickPopup::CloseOnReleaseOutside);
     const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutsideParent : QQuickPopup::CloseOnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
         if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
-                q->close();
+                closeOrReject();
                 return true;
             }
         }
@@ -1563,6 +1572,10 @@ void QQuickPopup::setScale(qreal scale)
         has active focus.
 
     The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
+
+    \note There is a known limitation that the \c Popup.CloseOnReleaseOutside
+        and \c Popup.CloseOnReleaseOutsideParent policies only work with
+        \l modal popups.
 */
 QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
 {
