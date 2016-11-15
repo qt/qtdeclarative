@@ -353,6 +353,7 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
 
     // These four types are the most common used by the value type wrappers
     VALUE_TYPE_LOAD(QMetaType::QReal, qreal, qreal);
+    VALUE_TYPE_LOAD(QMetaType::Int || result->isEnum(), int, int);
     VALUE_TYPE_LOAD(QMetaType::Int, int, int);
     VALUE_TYPE_LOAD(QMetaType::QString, QString, v4->newString);
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
