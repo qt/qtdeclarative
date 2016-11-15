@@ -199,52 +199,77 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
-
         var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
+        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        verify(pressSpy.valid)
+        var releaseSpy = signalSpy.createObject(control, {target: control, signalName: "released"})
+        verify(releaseSpy.valid)
 
-        var repeatCount = 2
-        var repeatSequence = [["pressedChanged", { "pressed": true }],
-                              ["downChanged", { "down": true }],
-                              "pressed",
-                              "released",
-                              "clicked",
-                              "pressed",
-                              "released",
-                              "clicked",
-                              "pressed"]
-
-        // auto-repeat a couple of mouse clicks
-        sequenceSpy.expectedSequence = repeatSequence
+        // auto-repeat mouse click
         mousePress(control)
         compare(control.pressed, true)
-        tryCompare(clickSpy, "count", repeatCount)
-        verify(sequenceSpy.success)
-
-        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
-                                        ["downChanged", { "down": false }],
-                                        "released",
-                                        "clicked"]
+        clickSpy.wait()
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
         mouseRelease(control)
         compare(control.pressed, false)
-        verify(sequenceSpy.success)
+        compare(clickSpy.count, pressSpy.count)
+        compare(releaseSpy.count, pressSpy.count)
 
-        // auto-repeat a couple of key clicks
         clickSpy.clear()
-        sequenceSpy.expectedSequence = repeatSequence
+        pressSpy.clear()
+        releaseSpy.clear()
+
+        // auto-repeat key click
         keyPress(Qt.Key_Space)
         compare(control.pressed, true)
-        tryCompare(clickSpy, "count", repeatCount)
-        verify(sequenceSpy.success)
-
-        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
-                                        ["downChanged", { "down": false }],
-                                        "released",
-                                        "clicked"]
+        clickSpy.wait()
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
         keyRelease(Qt.Key_Space)
         compare(control.pressed, false)
-        verify(sequenceSpy.success)
+        compare(clickSpy.count, pressSpy.count)
+        compare(releaseSpy.count, pressSpy.count)
+
+        clickSpy.clear()
+        pressSpy.clear()
+        releaseSpy.clear()
+
+        mousePress(control)
+        compare(control.pressed, true)
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
+
+        // move inside during repeat -> continue repeat
+        mouseMove(control, control.width / 4, control.height / 4)
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
+
+        clickSpy.clear()
+        pressSpy.clear()
+        releaseSpy.clear()
+
+        // move outside during repeat -> stop repeat
+        mouseMove(control, -1, -1)
+        // NOTE: The following wait() is NOT a reliable way to test that the
+        // auto-repeat timer is not running, but there's no way dig into the
+        // private APIs from QML. If this test ever fails in the future, it
+        // indicates that the auto-repeat timer logic is broken.
+        wait(125)
+        compare(clickSpy.count, 0)
+        compare(pressSpy.count, 0)
+        compare(releaseSpy.count, 0)
+
+        mouseRelease(control, -1, -1)
+        compare(control.pressed, false)
+        compare(clickSpy.count, 0)
+        compare(pressSpy.count, 0)
+        compare(releaseSpy.count, 0)
 
         control.destroy()
     }
