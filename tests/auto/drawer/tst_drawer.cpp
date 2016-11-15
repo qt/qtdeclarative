@@ -714,6 +714,11 @@ void tst_Drawer::touch()
     QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
 
+    QSignalSpy drawerOpenedSpy(drawer, SIGNAL(opened()));
+    QSignalSpy drawerClosedSpy(drawer, SIGNAL(closed()));
+    QVERIFY(drawerOpenedSpy.isValid());
+    QVERIFY(drawerClosedSpy.isValid());
+
     struct TouchDeviceDeleter
     {
         static inline void cleanup(QTouchDevice *device)
@@ -732,7 +737,8 @@ void tst_Drawer::touch()
     QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
-    QTRY_COMPARE(drawer->position(), 1.0);
+    QVERIFY(drawerOpenedSpy.wait());
+    QCOMPARE(drawer->position(), 1.0);
 
     // drag to close
     QTest::touchEvent(window, device.data()).press(0, QPoint(300, 100));
@@ -744,7 +750,8 @@ void tst_Drawer::touch()
     QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
-    QTRY_COMPARE(drawer->position(), 0.0);
+    QVERIFY(drawerClosedSpy.wait());
+    QCOMPARE(drawer->position(), 0.0);
 }
 
 void tst_Drawer::grabber()
