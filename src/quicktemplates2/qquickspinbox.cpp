@@ -242,7 +242,8 @@ bool QQuickSpinBoxPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *
 
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
-    stopPressRepeat();
+    if (!pressed)
+        stopPressRepeat();
     return pressed;
 }
 

@@ -491,4 +491,66 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_autoRepeat() {
+        var control = spinBox.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0)
+
+        var valueSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
+        verify(valueSpy.valid)
+
+        var countBefore = 0
+
+        // repeat up
+        mousePress(control.up.indicator)
+        verify(control.up.pressed)
+        compare(valueSpy.count, 0)
+        valueSpy.wait()
+        valueSpy.wait()
+        countBefore = valueSpy.count
+        mouseRelease(control.up.indicator)
+        verify(!control.up.pressed)
+        compare(valueSpy.count, countBefore)
+
+        valueSpy.clear()
+
+        // repeat down
+        mousePress(control.down.indicator)
+        verify(control.down.pressed)
+        compare(valueSpy.count, 0)
+        valueSpy.wait()
+        valueSpy.wait()
+        countBefore = valueSpy.count
+        mouseRelease(control.down.indicator)
+        verify(!control.down.pressed)
+        compare(valueSpy.count, countBefore)
+
+        mousePress(control.up.indicator)
+        verify(control.up.pressed)
+        valueSpy.wait()
+
+        // move inside during repeat -> continue repeat (QTBUG-57085)
+        mouseMove(control.up.indicator, control.up.indicator.width / 4, control.up.indicator.height / 4)
+        verify(control.up.pressed)
+        valueSpy.wait()
+
+        valueSpy.clear()
+
+        // move outside during repeat -> stop repeat
+        mouseMove(control.up.indicator, -1, -1)
+        verify(!control.up.pressed)
+        // NOTE: The following wait() is NOT a reliable way to test that the
+        // auto-repeat timer is not running, but there's no way dig into the
+        // private APIs from QML. If this test ever fails in the future, it
+        // indicates that the auto-repeat timer logic is broken.
+        wait(125)
+        compare(valueSpy.count, 0)
+
+        mouseRelease(control.up.indicator, -1, -1)
+        verify(!control.up.pressed)
+
+        control.destroy()
+    }
 }
