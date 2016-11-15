@@ -116,6 +116,7 @@ private:
                 _allocatedBlocks *= 2;
 
             _blocks = (char **) realloc(_blocks, sizeof(char *) * _allocatedBlocks);
+            Q_CHECK_PTR(_blocks);
 
             for (int index = _blockCount; index < _allocatedBlocks; ++index)
                 _blocks[index] = 0;
@@ -123,8 +124,10 @@ private:
 
         char *&block = _blocks[_blockCount];
 
-        if (! block)
+        if (! block) {
             block = (char *) malloc(BLOCK_SIZE);
+            Q_CHECK_PTR(block);
+        }
 
         _ptr = block;
         _end = _ptr + BLOCK_SIZE;
