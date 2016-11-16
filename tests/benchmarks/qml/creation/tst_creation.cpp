@@ -219,12 +219,15 @@ inline void QQmlGraphics_setParent_noEvent(QObject *object, QObject *parent)
 
 void tst_creation::itemtree_notree_cpp()
 {
+    std::vector<QQuickItem *> kids;
+    kids.resize(30);
     QBENCHMARK {
         QQuickItem *item = new QQuickItem;
         for (int i = 0; i < 30; ++i) {
             QQuickItem *child = new QQuickItem;
-            Q_UNUSED(child);
+            kids[i] = child;
         }
+        qDeleteAll(kids);
         delete item;
     }
 }
