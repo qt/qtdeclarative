@@ -256,12 +256,13 @@ void tst_creation::itemtree_cpp()
 
 void tst_creation::itemtree_data_cpp()
 {
+    QQmlEngine engine;
     QBENCHMARK {
         QQuickItem *item = new QQuickItem;
         for (int i = 0; i < 30; ++i) {
             QQuickItem *child = new QQuickItem;
             QQmlGraphics_setParent_noEvent(child,item);
-            QQmlListReference ref(item, "data");
+            QQmlListReference ref(item, "data", &engine);
             ref.append(child);
         }
         delete item;
