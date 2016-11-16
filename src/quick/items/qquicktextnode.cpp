@@ -237,7 +237,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     engine.setAnchorColor(anchorColor);
     engine.setPosition(position);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     int preeditLength = textLayout->preeditAreaText().length();
     int preeditPosition = textLayout->preeditAreaPosition();
 #endif
@@ -256,7 +256,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
         int length = line.textLength();
         int end = start + length;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (preeditPosition >= 0
          && preeditPosition >= start
          && preeditPosition < end) {

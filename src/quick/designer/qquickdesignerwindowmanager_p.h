@@ -57,7 +57,7 @@
 #include <private/qtquickglobal_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
 #endif
 
@@ -97,7 +97,7 @@ public:
     static void createOpenGLContext(QQuickWindow *window);
 
 private:
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QScopedPointer<QOpenGLContext> m_openGlContext;
 #endif
     QScopedPointer<QSGContext> m_sgContext;

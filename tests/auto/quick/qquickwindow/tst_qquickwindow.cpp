@@ -284,7 +284,7 @@ public:
 
 private slots:
     void cleanup();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void openglContextCreatedSignal();
 #endif
     void aboutToStopSignal();
@@ -350,7 +350,7 @@ private slots:
     void qobjectEventFilter_key();
     void qobjectEventFilter_mouse();
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     void cursor();
 #endif
 
@@ -373,14 +373,14 @@ private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
 };
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 Q_DECLARE_METATYPE(QOpenGLContext *);
 #endif
 void tst_qquickwindow::cleanup()
 {
     QVERIFY(QGuiApplication::topLevelWindows().isEmpty());
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 void tst_qquickwindow::openglContextCreatedSignal()
 {
     qRegisterMetaType<QOpenGLContext *>();
@@ -1327,7 +1327,7 @@ void tst_qquickwindow::headless()
         if (isGL)
             QVERIFY(!window->isSceneGraphInitialized());
     }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (QGuiApplication::platformName() == QLatin1String("windows")
         && QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
         QSKIP("Crashes on Windows/ANGLE, QTBUG-42967");
@@ -1515,7 +1515,7 @@ void tst_qquickwindow::ownershipRootItem()
     QVERIFY(!accessor->isRootItemDestroyed());
 }
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 void tst_qquickwindow::cursor()
 {
     QQuickWindow window;
@@ -1688,7 +1688,7 @@ void tst_qquickwindow::hideThenDelete()
         QTest::qWaitForWindowExposed(&window);
         const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
         const bool isGL = window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (isGL)
             openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
 #endif
@@ -1717,7 +1717,7 @@ void tst_qquickwindow::hideThenDelete()
     }
 
     QVERIFY(sgInvalidated->size() > 0);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (openglDestroyed)
         QVERIFY(openglDestroyed->size() > 0);
 #endif
@@ -2128,7 +2128,7 @@ void tst_qquickwindow::defaultSurfaceFormat()
     QCOMPARE(format.profile(), reqFmt.profile());
     QCOMPARE(int(format.options()), int(reqFmt.options()));
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     // Depth and stencil should be >= what has been requested. For real. But use
     // the context since the window's surface format is only partially updated
     // on most platforms.
@@ -2183,7 +2183,7 @@ public:
     }
     static int deleted;
 };
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class GlRenderJob : public QRunnable
 {
 public:
@@ -2254,7 +2254,7 @@ void tst_qquickwindow::testRenderJob()
         QTRY_COMPARE(RenderJob::deleted, 1);
         QCOMPARE(completedJobs.size(), 1);
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
             // Do a synchronized GL job.
             GLubyte readPixel[4] = {0, 0, 0, 0};

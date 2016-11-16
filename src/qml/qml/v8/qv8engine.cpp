@@ -160,7 +160,7 @@ QV8Engine::~QV8Engine()
     qDeleteAll(m_extensionData);
     m_extensionData.clear();
 
-#if !defined(QT_NO_XMLSTREAMREADER) && QT_CONFIG(qml_network)
+#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
 #endif
@@ -195,7 +195,7 @@ void QV8Engine::initializeGlobal()
     QQmlDateExtension::registerExtension(m_v4Engine);
     QQmlNumberExtension::registerExtension(m_v4Engine);
 
-#if !defined(QT_NO_XMLSTREAMREADER) && QT_CONFIG(qml_network)
+#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
     qt_add_domexceptions(m_v4Engine);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(m_v4Engine);
 #endif

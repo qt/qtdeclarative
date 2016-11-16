@@ -86,7 +86,7 @@ public Q_SLOTS:
                           int modifiers, int delay);
     bool mouseMove(QObject *item, qreal x, qreal y, int delay, int buttons);
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     bool mouseWheel(QObject *item, qreal x, qreal y, int buttons,
                int modifiers, int xDelta, int yDelta, int delay);
 #endif

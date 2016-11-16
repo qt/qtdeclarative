@@ -53,7 +53,7 @@
 
 #include <QtQuick/qtquickglobal.h>
 #include <private/qobject_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/qopengl.h>
 #endif
 #include "qsgtexture.h"

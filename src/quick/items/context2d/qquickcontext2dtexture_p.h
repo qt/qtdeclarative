@@ -58,7 +58,7 @@ QT_REQUIRE_CONFIG(quick_canvas);
 #include <QtQuick/qsgtexture.h>
 #include "qquickcanvasitem_p.h"
 #include "qquickcontext2d_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QOpenGLContext>
 # include <QOpenGLFramebufferObject>
 #endif
@@ -125,7 +125,7 @@ public:
     // Called during sync() on the scene graph thread while GUI is blocked.
     virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window) = 0;
     bool event(QEvent *e);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void initializeOpenGL(QOpenGLContext *gl, QOffscreenSurface *s) {
         m_gl = gl;
         m_surface = s;
@@ -157,7 +157,7 @@ protected:
 
     QList<QQuickContext2DTile*> m_tiles;
     QQuickContext2D *m_context;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLContext *m_gl;
 #endif
     QSurface *m_surface;
@@ -180,7 +180,7 @@ protected:
     uint m_painting : 1;
     uint m_onCustomThread : 1; // Not GUI and not SGRender
 };
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class QQuickContext2DFBOTexture : public QQuickContext2DTexture
 {
     Q_OBJECT

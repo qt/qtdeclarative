@@ -56,7 +56,7 @@
 QT_REQUIRE_CONFIG(quick_canvas);
 
 #include "qquickcontext2d_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QOpenGLFramebufferObject>
 #endif
 QT_BEGIN_NAMESPACE
@@ -87,7 +87,7 @@ protected:
     QPainter m_painter;
 };
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class QQuickContext2DFBOTile : public QQuickContext2DTile
 {
 public:

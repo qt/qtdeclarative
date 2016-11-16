@@ -125,10 +125,10 @@ public:
     void deliverKeyEvent(QKeyEvent *e);
 
     // Keeps track of the item currently receiving mouse events
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     QQuickItem *cursorItem;
 #endif
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     QQuickDragGrabber *dragGrabber;
 #endif
     int touchMouseId;
@@ -146,10 +146,10 @@ public:
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
-#ifndef QT_NO_GESTURES
+#if QT_CONFIG(gestures)
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
 
@@ -179,11 +179,11 @@ public:
                         Qt::KeyboardModifiers modifiers, ulong timestamp, bool accepted);
     bool clearHover(ulong timestamp = 0);
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
     bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);
 #endif
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     void updateCursor(const QPointF &scenePos);
     QQuickItem *findCursorItem(QQuickItem *item, const QPointF &scenePos);
 #endif

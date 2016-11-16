@@ -35,7 +35,7 @@
 #include "testhttpserver.h"
 #include <QtNetwork/QNetworkConfigurationManager>
 
-#ifndef QT_NO_CONCURRENT
+#if QT_CONFIG(concurrent)
 #include <qtconcurrentrun.h>
 #include <qfuture.h>
 #endif
@@ -57,7 +57,7 @@ private slots:
     void massive();
     void cancelcrash();
     void shrinkcache();
-#ifndef QT_NO_CONCURRENT
+#if QT_CONFIG(concurrent)
     void networkCrash();
 #endif
     void lockingCrash();
@@ -105,7 +105,7 @@ void tst_qquickpixmapcache::initTestCase()
 
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
 
-#ifndef QT_NO_BEARERMANAGEMENT
+#if QT_CONFIG(bearermanagement)
     // This avoids a race condition/deadlock bug in network config
     // manager when it is accessed by the HTTP server thread before
     // anything else. Bug report can be found at:
@@ -372,7 +372,7 @@ void tst_qquickpixmapcache::shrinkcache()
     }
 }
 
-#ifndef QT_NO_CONCURRENT
+#if QT_CONFIG(concurrent)
 
 void createNetworkServer(TestHTTPServer *server)
 {
@@ -382,7 +382,7 @@ void createNetworkServer(TestHTTPServer *server)
    eventLoop.exec();
 }
 
-#ifndef QT_NO_CONCURRENT
+#if QT_CONFIG(concurrent)
 // QT-3957
 void tst_qquickpixmapcache::networkCrash()
 {

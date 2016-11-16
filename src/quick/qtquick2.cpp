@@ -196,7 +196,7 @@ void QQmlQtQuick2Module::defineModule()
 
     QQuickValueTypes::registerValueTypes();
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installFactory(&qQuickAccessibleFactory);
 #endif
 

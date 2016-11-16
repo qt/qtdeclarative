@@ -28,7 +28,7 @@
 
 #include <qtest.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -37,7 +37,7 @@
 #include <QtQuick>
 #include <QtQml>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <private/qopenglcontext_p.h>
 #endif
 
@@ -105,7 +105,7 @@ private slots:
 
     void render_data();
     void render();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void hideWithOtherContext();
 #endif
     void createTextureFromImage_data();
@@ -130,7 +130,7 @@ void tst_SceneGraph::initTestCase()
     QSGRenderLoop *loop = QSGRenderLoop::instance();
     qDebug() << "RenderLoop:        " << loop;
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLContext context;
     context.setFormat(loop->sceneGraphContext()->defaultSurfaceFormat());
     context.create();
@@ -222,7 +222,7 @@ void tst_SceneGraph::manyWindows_data()
     QTest::newRow("rects,subwindow,sharing") << QStringLiteral("manyWindows_rects.qml") << false << true;
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 struct ShareContextResetter {
 public:
     ~ShareContextResetter() { qt_gl_set_global_share_context(0); }
@@ -234,7 +234,7 @@ void tst_SceneGraph::manyWindows()
     QFETCH(QString, file);
     QFETCH(bool, toplevel);
     QFETCH(bool, shared);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLContext sharedGLContext;
     ShareContextResetter cleanup; // To avoid dangling pointer in case of test-failure.
     if (shared) {
@@ -479,7 +479,7 @@ void tst_SceneGraph::render()
     }
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 // Testcase for QTBUG-34898. We make another context current on another surface
 // in the GUI thread and hide the QQuickWindow while the other context is
 // current on the other window.

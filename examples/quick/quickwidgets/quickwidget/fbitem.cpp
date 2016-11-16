@@ -44,7 +44,7 @@
 #include <QtGui/QOpenGLFunctions>
 #include <QtCore/QDebug>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class FbRenderer : public QQuickFramebufferObject::Renderer
 {
 public:
@@ -82,7 +82,7 @@ private:
 
 QQuickFramebufferObject::Renderer *FbItem::createRenderer() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     return new FbRenderer;
 #else
     return nullptr;

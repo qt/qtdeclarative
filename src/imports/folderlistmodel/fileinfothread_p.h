@@ -88,7 +88,7 @@ public:
     void setCaseSensitive(bool on);
 
 public Q_SLOTS:
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
     void dirChanged(const QString &directoryPath);
     void updateFile(const QString &path);
 #endif
@@ -103,7 +103,7 @@ private:
     QWaitCondition condition;
     volatile bool abort;
 
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
     QFileSystemWatcher *watcher;
 #endif
     QList<FileProperty> currentFileList;

@@ -135,7 +135,7 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QQuickOpenGLShaderEffect *m_glImpl;
 #endif
     QQuickGenericShaderEffect *m_impl;

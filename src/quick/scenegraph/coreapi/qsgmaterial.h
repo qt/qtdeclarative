@@ -41,7 +41,7 @@
 #define QSGMATERIAL_H
 
 #include <QtQuick/qtquickglobal.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/qopenglshaderprogram.h>
 #endif
 #include <QtGui/QMatrix4x4>
@@ -84,7 +84,7 @@ public:
         QRect deviceRect() const;
         float determinant() const;
         float devicePixelRatio() const;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         QOpenGLContext *context() const;
 #endif
     private:
@@ -101,7 +101,7 @@ public:
     // First time a material is used, oldMaterial is null.
     virtual void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
     virtual char const *const *attributeNames() const = 0; // Array must end with null.
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     inline QOpenGLShaderProgram *program() { return &m_program; }
 #endif
 protected:
@@ -110,19 +110,19 @@ protected:
 
     friend class QSGDefaultRenderContext;
     friend class QSGBatchRenderer::ShaderManager;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void setShaderSourceFile(QOpenGLShader::ShaderType type, const QString &sourceFile);
     void setShaderSourceFiles(QOpenGLShader::ShaderType type, const QStringList &sourceFiles);
 
     virtual void compile();
 #endif
     virtual void initialize() { }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 #endif
 private:
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLShaderProgram m_program;
 #endif
     QScopedPointer<QSGMaterialShaderPrivate> d_ptr;

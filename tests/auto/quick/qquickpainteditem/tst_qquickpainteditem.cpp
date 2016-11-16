@@ -32,7 +32,7 @@
 #include <QtQuick/qquickview.h>
 
 #include <private/qquickitem_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <private/qsgdefaultpainternode_p.h>
 #else
 #include <private/qsgsoftwarepainternode_p.h>
@@ -73,7 +73,7 @@ public:
         ++paintRequests;
         clipRect = painter->clipBoundingRect();
     }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     {
         paintNode = static_cast<QSGDefaultPainterNode *>(QQuickPaintedItem::updatePaintNode(oldNode, data));

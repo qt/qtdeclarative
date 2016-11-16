@@ -215,7 +215,7 @@ public Q_SLOTS:
         returnCode = retCode;
     }
 
-#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
+#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
     void onOpenGlContextCreated(QOpenGLContext *context);
 #endif
 };
@@ -237,7 +237,7 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
 
 void LoadWatcher::checkForWindow(QObject *o)
 {
-#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
+#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
     if (verboseMode && o->isWindowType() && o->inherits("QQuickWindow")) {
         connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
                 this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
@@ -247,7 +247,7 @@ void LoadWatcher::checkForWindow(QObject *o)
 #endif // QT_GUI_LIB && !QT_NO_OPENGL
 }
 
-#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
+#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
 void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
 {
     context->makeCurrent(qobject_cast<QWindow *>(sender()));
@@ -524,7 +524,7 @@ int main(int argc, char *argv[])
     if (quietMode && verboseMode)
         verboseMode = false;
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
     //qt_ translations loaded by QQmlApplicationEngine
     QString sysLocale = QLocale::system().name();
 
@@ -569,7 +569,7 @@ int main(int argc, char *argv[])
 
     for (const QString &path : qAsConst(files)) {
         //QUrl::fromUserInput doesn't treat no scheme as relative file paths
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
         QRegularExpression urlRe("[[:word:]]+://.*");
         if (urlRe.match(path).hasMatch()) { //Treat as a URL
             QUrl url = QUrl::fromUserInput(path);

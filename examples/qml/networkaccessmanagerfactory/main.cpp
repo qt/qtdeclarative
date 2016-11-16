@@ -56,10 +56,10 @@
      networkaccessmanagerfactory [-host <proxy> -port <port>] [file]
 */
 
-#ifndef QT_NO_NETWORKPROXY
+#if QT_CONFIG(networkproxy)
 static QString proxyHost;
 static int proxyPort = 0;
-#endif // !QT_NO_NETWORKPROXY
+#endif // networkproxy
 
 class MyNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
@@ -70,13 +70,13 @@ public:
 QNetworkAccessManager *MyNetworkAccessManagerFactory::create(QObject *parent)
 {
     QNetworkAccessManager *nam = new QNetworkAccessManager(parent);
-#ifndef QT_NO_NETWORKPROXY
+#if QT_CONFIG(networkproxy)
     if (!proxyHost.isEmpty()) {
         qDebug() << "Created QNetworkAccessManager using proxy" << (proxyHost + ":" + QString::number(proxyPort));
         QNetworkProxy proxy(QNetworkProxy::HttpCachingProxy, proxyHost, proxyPort);
         nam->setProxy(proxy);
     }
-#endif // !QT_NO_NETWORKPROXY
+#endif // networkproxy
 
     return nam;
 }
@@ -88,12 +88,12 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
 
     QCommandLineParser parser;
-#ifndef QT_NO_NETWORKPROXY
+#if QT_CONFIG(networkproxy)
     QCommandLineOption proxyHostOption("host", "The proxy host to use.", "host");
     parser.addOption(proxyHostOption);
     QCommandLineOption proxyPortOption("port", "The proxy port to use.", "port", "0");
     parser.addOption(proxyPortOption);
-#endif // !QT_NO_NETWORKPROXY
+#endif // networkproxy
     parser.addPositionalArgument("file", "The file to use.");
     QCommandLineOption helpOption = parser.addHelpOption();
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
@@ -106,7 +106,7 @@ int main(int argc, char ** argv)
         qWarning() << parser.helpText();
         exit(0);
     }
-#ifndef QT_NO_NETWORKPROXY
+#if QT_CONFIG(networkproxy)
     if (parser.isSet(proxyHostOption))
         proxyHost = parser.value(proxyHostOption);
     if (parser.isSet(proxyPortOption)) {
@@ -118,7 +118,7 @@ int main(int argc, char ** argv)
             exit(1);
         }
     }
-#endif // !QT_NO_NETWORKPROXY
+#endif // networkproxy
     if (parser.positionalArguments().count() == 1)
         source = QUrl::fromLocalFile(parser.positionalArguments().first());
 

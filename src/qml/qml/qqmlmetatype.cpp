@@ -1158,7 +1158,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
     data->uriToModule.clear();
 
     QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
     qmlClearEnginePlugins();
 #endif
 }

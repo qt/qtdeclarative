@@ -402,7 +402,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         }
     }
     break;
-#ifndef QT_NO_DATESTRING
+#if QT_CONFIG(datestring)
     case QVariant::Date: {
         bool ok = false;
         QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(qmlUnit), &ok);
@@ -430,7 +430,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-#endif // QT_NO_DATESTRING
+#endif // datestring
     case QVariant::Point: {
         bool ok = false;
         QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok).toPoint();

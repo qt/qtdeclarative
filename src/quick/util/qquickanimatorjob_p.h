@@ -277,7 +277,7 @@ public:
 private:
     QSGOpacityNode *m_opacityNode;
 };
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 {
 public:

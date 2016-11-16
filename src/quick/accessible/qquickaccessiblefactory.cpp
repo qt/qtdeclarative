@@ -44,7 +44,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 
 QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject *object)
 {

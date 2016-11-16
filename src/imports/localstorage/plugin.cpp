@@ -449,7 +449,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
 
     if (ok) {
         *w->d()->version = to_version;
-#ifndef QT_NO_SETTINGS
+#if QT_CONFIG(settings)
         QSettings ini(qmlsqldatabase_databaseFile(db.connectionName(), scope.engine) + QLatin1String(".ini"), QSettings::IniFormat);
         ini.setValue(QLatin1String("Version"), to_version);
 #endif
@@ -700,7 +700,7 @@ public:
 
 void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
-#ifndef QT_NO_SETTINGS
+#if QT_CONFIG(settings)
     QV4::Scope scope(args->v4engine());
     if (scope.engine->qmlEngine()->offlineStoragePath().isEmpty())
         V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
@@ -770,7 +770,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     }
 
     args->setReturnValue(db.asReturnedValue());
-#endif // QT_NO_SETTINGS
+#endif // settings
 }
 
 static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)

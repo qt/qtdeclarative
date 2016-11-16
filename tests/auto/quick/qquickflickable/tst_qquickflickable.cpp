@@ -1225,7 +1225,7 @@ void tst_qquickflickable::flickOnRelease()
     QTRY_VERIFY(!flickable->isMoving());
 
 #ifdef Q_OS_MAC
-# ifndef QT_NO_OPENGL
+# if QT_CONFIG(opengl)
     QEXPECT_FAIL("", "QTBUG-26094 stopping on a full pixel doesn't work on OS X", Continue);
 # endif
 #endif

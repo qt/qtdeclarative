@@ -40,7 +40,7 @@
 #include "qsgmaterial.h"
 #include "qsgrenderer_p.h"
 #include "qsgmaterialshader_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <private/qsgshadersourcebuilder_p.h>
 # include <private/qsgdefaultcontext_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
@@ -64,7 +64,7 @@ void qsg_set_material_failure()
     qsg_material_failure = true;
 }
 #endif
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType type) const
 {
     const QStringList files = m_sourceFiles[type];
@@ -227,7 +227,7 @@ QSGMaterialShader::~QSGMaterialShader()
     defines the attribute register position in the vertex shader.
  */
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 /*!
     \fn const char *QSGMaterialShader::vertexShader() const
 
@@ -320,7 +320,7 @@ void QSGMaterialShader::updateState(const RenderState & /* state */, QSGMaterial
 {
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 /*!
     Sets the GLSL source file for the shader stage \a type to \a sourceFile. The
     default implementation of the vertexShader() and fragmentShader() functions
@@ -550,7 +550,7 @@ QRect QSGMaterialShader::RenderState::deviceRect() const
     return static_cast<const QSGRenderer *>(m_data)->deviceRect();
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 /*!
     Returns the QOpenGLContext that is being used for rendering

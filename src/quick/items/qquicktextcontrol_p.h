@@ -89,7 +89,7 @@ public:
 
     QString toPlainText() const;
 
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     QString toHtml() const;
 #endif
 
@@ -129,7 +129,7 @@ public Q_SLOTS:
     void setPlainText(const QString &text);
     void setHtml(const QString &text);
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void cut();
     void copy();
     void paste(QClipboard::Mode mode = QClipboard::Clipboard);
@@ -164,7 +164,7 @@ public:
     virtual void processEvent(QEvent *e, const QMatrix &matrix);
     void processEvent(QEvent *e, const QPointF &coordinateOffset = QPointF());
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
     Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif

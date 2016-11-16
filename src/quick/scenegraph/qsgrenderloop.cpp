@@ -58,7 +58,7 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquickprofiler_p.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
 # include <private/qsgdefaultrendercontext_p.h>
 #if QT_CONFIG(quick_shadereffect)
@@ -74,7 +74,7 @@ QT_BEGIN_NAMESPACE
 
 extern bool qsg_useConsistentTiming();
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 /*!
     expectations for this manager to work:
      - one opengl context to render multiple windows
@@ -119,7 +119,7 @@ void QSGRenderLoop::cleanup()
 void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 {
     Q_ASSERT(job);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     Q_ASSERT(window);
     if (window->openglContext()) {
         window->openglContext()->makeCurrent(window);
@@ -131,7 +131,7 @@ void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 #endif
     delete job;
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
@@ -182,7 +182,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
             const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 
         s_instance = QSGContext::createWindowManager();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (!s_instance) {
 
             enum RenderLoopType {
@@ -272,7 +272,7 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
     if (!signalEmitted)
         qFatal("%s", qPrintable(untranslatedMessage));
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     : gl(0)
 {

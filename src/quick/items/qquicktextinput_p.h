@@ -266,7 +266,7 @@ public:
 
     bool hasAcceptableInput() const;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const Q_DECL_OVERRIDE;
     Q_REVISION(3) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
@@ -372,7 +372,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* ev) Q_DECL_OVERRIDE;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *) Q_DECL_OVERRIDE;
 #endif
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
@@ -389,7 +389,7 @@ public Q_SLOTS:
     void select(int start, int end);
     void deselect();
     bool isRightToLeft(int start, int end);
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void cut();
     void copy();
     void paste();
@@ -409,7 +409,7 @@ private Q_SLOTS:
     void q_updateAlignment();
     void triggerPreprocess();
 
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
     void q_validatorChanged();
 #endif
 

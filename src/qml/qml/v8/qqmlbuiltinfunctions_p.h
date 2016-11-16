@@ -135,9 +135,7 @@ struct QtObject : Object
 
     static ReturnedValue method_get_platform(CallContext *ctx);
     static ReturnedValue method_get_application(CallContext *ctx);
-#ifndef QT_NO_IM
     static ReturnedValue method_get_inputMethod(CallContext *ctx);
-#endif
     static ReturnedValue method_get_styleHints(CallContext *ctx);
 
     static ReturnedValue method_callLater(CallContext *ctx);
@@ -169,7 +167,7 @@ struct ConsoleObject : Object
 struct Q_QML_PRIVATE_EXPORT GlobalExtensions {
     static void init(Object *globalObject, QJSEngine::Extensions extensions);
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
     static ReturnedValue method_qsTranslate(CallContext *ctx);
     static ReturnedValue method_qsTranslateNoOp(CallContext *ctx);
     static ReturnedValue method_qsTr(CallContext *ctx);

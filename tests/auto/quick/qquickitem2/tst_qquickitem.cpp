@@ -3133,7 +3133,7 @@ void tst_QQuickItem::parentLoop()
 {
     QQuickView *window = new QQuickView(0);
 
-#ifndef QT_NO_REGULAREXPRESSION
+#if QT_CONFIG(regularexpression)
     QRegularExpression msgRegexp = QRegularExpression("QQuickItem::setParentItem: Parent QQuickItem\\(.*\\) is already part of the subtree of QQuickItem\\(.*\\)");
     QTest::ignoreMessage(QtWarningMsg, msgRegexp);
 #endif
@@ -3304,7 +3304,7 @@ void tst_QQuickItem::grab()
     QVERIFY(root);
     QQuickItem *item = root->findChild<QQuickItem *>("myItem");
     QVERIFY(item);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     { // Default size (item is 100x100)
         QSharedPointer<QQuickItemGrabResult> result = item->grabToImage();
         QSignalSpy spy(result.data(), SIGNAL(ready()));

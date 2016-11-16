@@ -471,7 +471,7 @@ QString Binding::valueAsString(const Unit *unit) const
         return QString::number(valueAsNumber());
     case Type_Invalid:
         return QString();
-#ifdef QT_NO_TRANSLATION
+#if !QT_CONFIG(translation)
     case Type_TranslationById:
     case Type_Translation:
         return unit->stringAt(stringIndex);

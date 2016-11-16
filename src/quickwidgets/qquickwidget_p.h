@@ -101,7 +101,7 @@ public:
 
     QObject *focusObject() Q_DECL_OVERRIDE;
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     GLuint textureId() const Q_DECL_OVERRIDE;
     QImage grabFramebuffer() Q_DECL_OVERRIDE;
 #else
@@ -126,7 +126,7 @@ public:
     QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLFramebufferObject *fbo;
     QOpenGLFramebufferObject *resolvedFbo;
     QOpenGLContext *context;

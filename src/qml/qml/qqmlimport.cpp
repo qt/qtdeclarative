@@ -176,7 +176,7 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
 
 } // namespace
 
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
 struct RegisteredPlugin {
     QString uri;
     QPluginLoader* loader;
@@ -301,7 +301,7 @@ public:
                                                       const QString &uri, const QString &url,
                                                       int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
    bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
 #endif
@@ -897,7 +897,7 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
     return result;
 }
 
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
 /*!
     Get all static plugins that are QML plugins and has a meta data URI that matches with one of
     \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
@@ -960,7 +960,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                                          const QQmlTypeLoader::QmldirContent *qmldir,
                                          QList<QQmlError> *errors)
 {
-#if !defined(QT_NO_LIBRARY)
+#if QT_CONFIG(library)
     Q_ASSERT(qmldir);
 
     if (qmlImportTrace())
@@ -1087,7 +1087,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
     }
 
     return false;
-#endif // QT_NO_LIBRARY
+#endif // library
     return true;
 }
 
@@ -1948,7 +1948,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
 bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &basePath,
                                       const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
     const QString uniquePluginID = QString::asprintf("%p", instance);
@@ -2001,7 +2001,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
 bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QString &uri,
                                              const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
     QFileInfo fileInfo(filePath);
     const QString absoluteFilePath = fileInfo.absoluteFilePath();
 

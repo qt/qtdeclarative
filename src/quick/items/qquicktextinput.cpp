@@ -57,7 +57,7 @@
 #include <QtGui/qinputmethod.h>
 #include <QtCore/qmath.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include "qaccessible.h"
 #include "qquickaccessibleattached_p.h"
 #endif
@@ -142,7 +142,7 @@ void QQuickTextInput::setText(const QString &s)
     if (s == text())
         return;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     d->cancelPreedit();
 #endif
     d->internalSetText(s, -1, false);
@@ -400,7 +400,7 @@ void QQuickTextInput::setFont(const QFont &font)
     if (oldFont != d->font) {
         d->updateLayout();
         updateCursorRectangle();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont | Qt::ImAnchorRectangle);
 #endif
     }
@@ -575,7 +575,7 @@ bool QQuickTextInputPrivate::setHAlign(QQuickTextInput::HAlignment alignment, bo
 Qt::LayoutDirection QQuickTextInputPrivate::textDirection() const
 {
     QString text = m_text;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     if (text.isEmpty())
         text = m_textLayout.preeditAreaText();
 #endif
@@ -602,7 +602,7 @@ Qt::LayoutDirection QQuickTextInputPrivate::layoutDirection() const
     Qt::LayoutDirection direction = m_layoutDirection;
     if (direction == Qt::LayoutDirectionAuto) {
         direction = textDirection();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (direction == Qt::LayoutDirectionAuto)
             direction = QGuiApplication::inputMethod()->inputDirection();
 #endif
@@ -615,7 +615,7 @@ bool QQuickTextInputPrivate::determineHorizontalAlignment()
     if (hAlignImplicit) {
         // if no explicit alignment has been set, follow the natural layout direction of the text
         Qt::LayoutDirection direction = textDirection();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (direction == Qt::LayoutDirectionAuto)
             direction = QGuiApplication::inputMethod()->inputDirection();
 #endif
@@ -707,12 +707,12 @@ void QQuickTextInput::setReadOnly(bool ro)
     if (d->m_readOnly == ro)
         return;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     setFlag(QQuickItem::ItemAcceptsInputMethod, !ro);
 #endif
     d->m_readOnly = ro;
     d->setCursorPosition(d->end());
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     updateInputMethod(Qt::ImEnabled);
 #endif
     q_canPasteChanged();
@@ -830,7 +830,7 @@ QRectF QQuickTextInput::cursorRectangle() const
     Q_D(const QQuickTextInput);
 
     int c = d->m_cursor;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     c += d->m_preeditCursor;
 #endif
     if (d->m_echoMode == NoEcho)
@@ -994,17 +994,17 @@ void QQuickTextInput::setAutoScroll(bool b)
 
 QValidator* QQuickTextInput::validator() const
 {
-#ifdef QT_NO_VALIDATOR
+#if !QT_CONFIG(validator)
     return 0;
 #else
     Q_D(const QQuickTextInput);
     return d->m_validator;
-#endif // QT_NO_VALIDATOR
+#endif // validator
 }
 
 void QQuickTextInput::setValidator(QValidator* v)
 {
-#ifdef QT_NO_VALIDATOR
+#if !QT_CONFIG(validator)
     Q_UNUSED(v);
 #else
     Q_D(QQuickTextInput);
@@ -1029,16 +1029,16 @@ void QQuickTextInput::setValidator(QValidator* v)
         d->checkIsValid();
 
     emit validatorChanged();
-#endif // QT_NO_VALIDATOR
+#endif // validator
 }
 
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
 void QQuickTextInput::q_validatorChanged()
 {
     Q_D(QQuickTextInput);
     d->checkIsValid();
 }
-#endif // QT_NO_VALIDATOR
+#endif // validator
 
 QRectF QQuickTextInputPrivate::anchorRectangle() const
 {
@@ -1056,7 +1056,7 @@ QRectF QQuickTextInputPrivate::anchorRectangle() const
     else
         a = m_selstart == m_cursor ? m_selend : m_selstart;
     if (a >= 0) {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         a += m_preeditCursor;
 #endif
         if (m_echoMode == QQuickTextInput::NoEcho)
@@ -1151,7 +1151,7 @@ bool QQuickTextInput::hasAcceptableInput() const
     The corresponding handler is \c onEditingFinished.
 */
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
 {
     Qt::InputMethodHints hints = inputMethodHints;
@@ -1192,7 +1192,7 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     d->cancelPasswordEchoTimer();
     d->m_echoMode = echo;
     d->m_passwordEchoEditing = false;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     updateInputMethod(Qt::ImHints);
 #endif
     d->updateDisplayText();
@@ -1249,17 +1249,17 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 
 Qt::InputMethodHints QQuickTextInput::inputMethodHints() const
 {
-#ifdef QT_NO_IM
+#if !QT_CONFIG(im)
     return Qt::ImhNone;
 #else
     Q_D(const QQuickTextInput);
     return d->inputMethodHints;
-#endif // QT_NO_IM
+#endif // im
 }
 
 void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
 {
-#ifdef QT_NO_IM
+#if !QT_CONFIG(im)
     Q_UNUSED(hints);
 #else
     Q_D(QQuickTextInput);
@@ -1270,7 +1270,7 @@ void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
     d->inputMethodHints = hints;
     updateInputMethod(Qt::ImHints);
     emit inputMethodHintsChanged();
-#endif // QT_NO_IM
+#endif // im
 }
 
 /*!
@@ -1319,7 +1319,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     Q_D(const QQuickTextInput);
     if (d->m_echoMode == NoEcho)
         pos = 0;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     else if (pos > d->m_cursor)
         pos += d->preeditAreaText().length();
 #endif
@@ -1389,7 +1389,7 @@ void QQuickTextInput::positionAt(QQmlV4Function *args) const
     int pos = d->positionAt(x, y, position);
     const int cursor = d->m_cursor;
     if (pos > cursor) {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         const int preeditLength = d->preeditAreaText().length();
         pos = pos > cursor + preeditLength
                 ? pos - preeditLength
@@ -1470,7 +1470,7 @@ void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
         QQuickImplicitSizeItem::keyPressEvent(ev);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickTextInput::inputMethodEvent(QInputMethodEvent *ev)
 {
     Q_D(QQuickTextInput);
@@ -1493,7 +1493,7 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
     Q_D(QQuickTextInput);
 
     if (d->selectByMouse && event->button() == Qt::LeftButton) {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         d->commitPreedit();
 #endif
         int cursor = d->positionAt(event->localPos());
@@ -1549,7 +1549,7 @@ void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
         if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
             setKeepMouseGrab(true);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (d->composeMode()) {
             // start selection
             int startPos = d->positionAt(d->pressPos);
@@ -1576,7 +1576,7 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     if (QGuiApplication::clipboard()->supportsSelection()) {
         if (event->button() == Qt::LeftButton) {
             d->copy(QClipboard::Selection);
@@ -1596,7 +1596,7 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
 
 bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
-#if !defined QT_NO_IM
+#if QT_CONFIG(im)
     if (composeMode()) {
         int tmp_cursor = positionAt(event->localPos());
         int mousePos = tmp_cursor - m_cursor;
@@ -1623,7 +1623,7 @@ void QQuickTextInput::mouseUngrabEvent()
 
 bool QQuickTextInput::event(QEvent* ev)
 {
-#ifndef QT_NO_SHORTCUT
+#if QT_CONFIG(shortcut)
     Q_D(QQuickTextInput);
     if (ev->type() == QEvent::ShortcutOverride) {
         if (d->m_readOnly)
@@ -1723,7 +1723,7 @@ void QQuickTextInputPrivate::ensureVisible(int position, int preeditCursor, int 
             // left
             hscroll = width - widthUsed;
         }
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
             // off to the left
@@ -1740,7 +1740,7 @@ void QQuickTextInputPrivate::ensureVisible(int position, int preeditCursor, int 
 void QQuickTextInputPrivate::updateHorizontalScroll()
 {
     if (autoScroll && m_echoMode != QQuickTextInput::NoEcho) {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         const int preeditLength = m_textLayout.preeditAreaText().length();
         ensureVisible(m_cursor, m_preeditCursor, preeditLength);
 #else
@@ -1754,7 +1754,7 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
 void QQuickTextInputPrivate::updateVerticalScroll()
 {
     Q_Q(QQuickTextInput);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     const int preeditLength = m_textLayout.preeditAreaText().length();
 #endif
     const qreal height = qMax<qreal>(0, q->height() - q->topPadding() - q->bottomPadding());
@@ -1766,7 +1766,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
         vscroll = -QQuickTextUtil::alignedY(
                     heightUsed, height, vAlign & ~(Qt::AlignAbsolute|Qt::AlignHorizontal_Mask));
     } else {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + preeditLength);
 #else
         QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor);
@@ -1786,7 +1786,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
             // right
             vscroll = heightUsed - height;
         }
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
             // off the top
@@ -1827,7 +1827,7 @@ void QQuickTextInput::ensureActiveFocus()
 {
     bool hadActiveFocus = hasActiveFocus();
     forceActiveFocus();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     Q_D(QQuickTextInput);
     // re-open input panel on press if already focused
     if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
@@ -1877,7 +1877,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         }
 
         if (!d->m_textLayout.text().isEmpty()
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
                 || !d->m_textLayout.preeditAreaText().isEmpty()
 #endif
                 ) {
@@ -1900,7 +1900,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     return node;
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     return inputMethodQuery(property, QVariant());
@@ -1957,7 +1957,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, QVaria
         return QQuickItem::inputMethodQuery(property);
     }
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*!
     \qmlmethod QtQuick::TextInput::deselect()
@@ -1997,7 +1997,7 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
     }
 }
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 /*!
     \qmlmethod QtQuick::TextInput::cut()
 
@@ -2042,7 +2042,7 @@ void QQuickTextInput::paste()
     if (!d->m_readOnly)
         d->paste();
 }
-#endif // QT_NO_CLIPBOARD
+#endif // clipboard
 
 /*!
     \qmlmethod QtQuick::TextInput::undo()
@@ -2416,7 +2416,7 @@ void QQuickTextInput::setPersistentSelection(bool on)
 */
 bool QQuickTextInput::canPaste() const
 {
-#if !defined(QT_NO_CLIPBOARD)
+#if QT_CONFIG(clipboard)
     Q_D(const QQuickTextInput);
     if (!d->canPasteValid) {
         if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
@@ -2597,7 +2597,7 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
     }
     if (focus) {
         q->q_updateAlignment();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (focusOnPress && !m_readOnly)
             qGuiApp->inputMethod()->show();
         q->connect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
@@ -2617,7 +2617,7 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
         if (hasAcceptableInput(m_text) == AcceptableInput || fixup())
             emit q->editingFinished();
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         q->disconnect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                       q, SLOT(q_updateAlignment()));
 #endif
@@ -2645,7 +2645,7 @@ void QQuickTextInput::focusOutEvent(QFocusEvent *event)
 */
 bool QQuickTextInput::isInputMethodComposing() const
 {
-#ifdef QT_NO_IM
+#if !QT_CONFIG(im)
     return false;
 #else
     Q_D(const QQuickTextInput);
@@ -2670,21 +2670,21 @@ QQuickTextInputPrivate::ExtraData::ExtraData()
 void QQuickTextInputPrivate::init()
 {
     Q_Q(QQuickTextInput);
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     if (QGuiApplication::clipboard()->supportsSelection())
         q->setAcceptedMouseButtons(Qt::LeftButton | Qt::MiddleButton);
     else
 #endif
         q->setAcceptedMouseButtons(Qt::LeftButton);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
 #endif
     q->setFlag(QQuickItem::ItemHasContents);
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()),
             q, QQuickTextInput, SLOT(q_canPasteChanged()));
-#endif // QT_NO_CLIPBOARD
+#endif // clipboard
 
     lastSelectionStart = 0;
     lastSelectionEnd = 0;
@@ -2723,7 +2723,7 @@ void QQuickTextInput::updateCursorRectangle(bool scroll)
         d->cursorItem->setPosition(r.topLeft());
         d->cursorItem->setHeight(r.height());
     }
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle);
 #endif
 }
@@ -2783,7 +2783,7 @@ void QQuickTextInput::q_canPasteChanged()
 {
     Q_D(QQuickTextInput);
     bool old = d->canPaste;
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
         d->canPaste = !d->m_readOnly && mimeData->hasText();
     else
@@ -2877,7 +2877,7 @@ qreal QQuickTextInputPrivate::getImplicitWidth() const
             option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
             layout.setTextOption(option);
             layout.setFont(font);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
             layout.setPreeditArea(m_textLayout.preeditAreaPosition(), m_textLayout.preeditAreaText());
 #endif
             layout.beginLayout();
@@ -3054,7 +3054,7 @@ void QQuickTextInputPrivate::updateBaselineOffset()
     q->setBaselineOffset(fm.ascent() + yoff + q->topPadding());
 }
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 /*!
     \internal
 
@@ -3091,9 +3091,9 @@ void QQuickTextInputPrivate::paste(QClipboard::Mode clipboardMode)
     }
 }
 
-#endif // !QT_NO_CLIPBOARD
+#endif // clipboard
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     \internal
 */
@@ -3125,7 +3125,7 @@ void QQuickTextInputPrivate::cancelPreedit()
     QInputMethodEvent ev;
     QCoreApplication::sendEvent(q, &ev);
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*!
     \internal
@@ -3225,7 +3225,7 @@ void QQuickTextInputPrivate::clear()
 void QQuickTextInputPrivate::setSelection(int start, int length)
 {
     Q_Q(QQuickTextInput);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     commitPreedit();
 #endif
 
@@ -3257,7 +3257,7 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
     }
     emit q->selectionChanged();
     emitCursorPositionChanged();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle | Qt::ImCursorPosition | Qt::ImAnchorPosition
                        | Qt::ImCurrentSelection);
 #endif
@@ -3287,7 +3287,7 @@ void QQuickTextInputPrivate::updatePasswordEchoEditing(bool editing)
 */
 bool QQuickTextInputPrivate::fixup() // this function assumes that validate currently returns != Acceptable
 {
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
     if (m_validator) {
         QString textCopy = m_text;
         int cursorCopy = m_cursor;
@@ -3311,7 +3311,7 @@ bool QQuickTextInputPrivate::fixup() // this function assumes that validate curr
 void QQuickTextInputPrivate::moveCursor(int pos, bool mark)
 {
     Q_Q(QQuickTextInput);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     commitPreedit();
 #endif
 
@@ -3339,12 +3339,12 @@ void QQuickTextInputPrivate::moveCursor(int pos, bool mark)
         emit q->selectionChanged();
     }
     emitCursorPositionChanged();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     q->updateInputMethod();
 #endif
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     \internal
 
@@ -3461,7 +3461,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
                             | Qt::ImCurrentSelection);
     }
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*!
     \internal
@@ -3501,7 +3501,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     Q_Q(QQuickTextInput);
 
     Q_UNUSED(update)
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     bool inputMethodAttributesChanged = m_textDirty || m_selDirty;
 #endif
     bool alignmentChanged = false;
@@ -3513,7 +3513,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         bool wasAcceptable = m_acceptableInput;
         m_validInput = true;
         m_acceptableInput = true;
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
         if (m_validator) {
             QString textCopy = m_text;
             int cursorCopy = m_cursor;
@@ -3563,7 +3563,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         if (m_textDirty) {
             textChanged = true;
             m_textDirty = false;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
             m_preeditDirty = false;
 #endif
             alignmentChanged = determineHorizontalAlignment();
@@ -3575,7 +3575,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         if (m_acceptableInput != wasAcceptable)
             emit q->acceptableInputChanged();
     }
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     if (m_preeditDirty) {
         m_preeditDirty = false;
         if (determineHorizontalAlignment()) {
@@ -3590,7 +3590,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         emit q->selectionChanged();
     }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     inputMethodAttributesChanged |= (m_cursor != m_lastCursorPos);
     if (inputMethodAttributesChanged)
         q->updateInputMethod();
@@ -3624,7 +3624,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     m_textDirty = (oldText != m_text);
 
     bool changed = finishChange(-1, true, edited);
-#ifdef QT_NO_ACCESSIBILITY
+#if !QT_CONFIG(accessibility)
     Q_UNUSED(changed)
 #else
     Q_Q(QQuickTextInput);
@@ -3969,7 +3969,7 @@ bool QQuickTextInputPrivate::isValidInput(QChar key, QChar mask) const
 */
 QQuickTextInputPrivate::ValidatorState QQuickTextInputPrivate::hasAcceptableInput(const QString &str) const
 {
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
     QString textCopy = str;
     int cursorCopy = m_cursor;
     if (m_validator) {
@@ -4279,7 +4279,7 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
             }
         }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
         if (QAccessible::isActive()) {
             if (QObject *acc = QQuickAccessibleAttached::findAccessible(q, QAccessible::EditableText)) {
                 QAccessibleTextCursorEvent ev(acc, m_cursor);
@@ -4390,7 +4390,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 
     if (false) {
     }
-#ifndef QT_NO_SHORTCUT
+#if QT_CONFIG(shortcut)
     else if (event == QKeySequence::Undo) {
         q->undo();
     }
@@ -4400,7 +4400,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     else if (event == QKeySequence::SelectAll) {
         selectAll();
     }
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     else if (event == QKeySequence::Copy) {
         copy();
     }
@@ -4417,7 +4417,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
         if (!m_readOnly)
             deleteEndOfLine();
     }
-#endif //QT_NO_CLIPBOARD
+#endif // clipboard
     else if (event == QKeySequence::MoveToStartOfLine || event == QKeySequence::MoveToStartOfBlock) {
         home(0);
     }
@@ -4489,13 +4489,13 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     } else if (event == QKeySequence::DeleteCompleteLine) {
         if (!m_readOnly) {
             selectAll();
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
             copy();
 #endif
             del();
         }
     }
-#endif // QT_NO_SHORTCUT
+#endif // shortcut
     else {
         bool handled = false;
         if (event->modifiers() & Qt::ControlModifier) {

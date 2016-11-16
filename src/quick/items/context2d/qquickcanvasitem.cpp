@@ -802,7 +802,7 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
         return QQuickItem::textureProvider();
 
     Q_D(const QQuickCanvasItem);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QQuickWindow *w = window();
     if (!w || !w->isSceneGraphInitialized()
             || QThread::currentThread() != QQuickWindowPrivate::get(w)->context->thread()) {

@@ -230,7 +230,7 @@ void QQuickTextDocumentWithImageResources::setText(const QString &text)
 {
     clearResources();
 
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     setHtml(text);
 #else
     setPlainText(text);

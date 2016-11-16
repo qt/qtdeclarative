@@ -145,7 +145,7 @@ private slots:
     void cursorRectangle();
     void navigation();
     void navigation_RTL();
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void copyAndPaste();
     void copyAndPasteKeySequence();
     void canPasteEmpty();
@@ -2532,7 +2532,7 @@ void tst_qquicktextinput::navigation_RTL()
     QVERIFY(input->hasActiveFocus());
 }
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextinput::copyAndPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -2630,7 +2630,7 @@ void tst_qquicktextinput::copyAndPaste()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextinput::copyAndPasteKeySequence()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -2698,7 +2698,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextinput::canPasteEmpty()
 {
     QGuiApplication::clipboard()->clear();
@@ -2714,7 +2714,7 @@ void tst_qquicktextinput::canPasteEmpty()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextinput::canPaste()
 {
     QGuiApplication::clipboard()->setText("Some text");
@@ -2730,7 +2730,7 @@ void tst_qquicktextinput::canPaste()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextinput::middleClickPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -3052,7 +3052,7 @@ void tst_qquicktextinput::cursorRectangle_data()
             << false;
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 #define COMPARE_INPUT_METHOD_QUERY(type, input, property, method, result) \
     QCOMPARE((type) input->inputMethodQuery(property).method(), result);
 #else

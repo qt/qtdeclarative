@@ -40,7 +40,7 @@
 #include "qsgdistancefieldutil_p.h"
 
 #include <private/qsgadaptationlayer_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/private/qopenglengineshadersource_p.h>
 #endif
 #include <QtQuick/private/qsgcontext_p.h>

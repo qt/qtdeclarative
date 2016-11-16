@@ -148,9 +148,7 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
 
     o->defineAccessorProperty(QStringLiteral("platform"), QV4::QtObject::method_get_platform, 0);
     o->defineAccessorProperty(QStringLiteral("application"), QV4::QtObject::method_get_application, 0);
-#ifndef QT_NO_IM
     o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, 0);
-#endif
     o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, 0);
 
     o->defineDefaultProperty(QStringLiteral("callLater"), QV4::QtObject::method_callLater);
@@ -1423,13 +1421,11 @@ ReturnedValue QtObject::method_get_application(CallContext *ctx)
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, qt->d()->application);
 }
 
-#ifndef QT_NO_IM
 ReturnedValue QtObject::method_get_inputMethod(CallContext *ctx)
 {
     QObject *o = QQml_guiProvider()->inputMethod();
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, o);
 }
-#endif
 
 ReturnedValue QtObject::method_get_styleHints(CallContext *ctx)
 {
@@ -1740,7 +1736,7 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
     Scope scope(v4);
 
     if (extensions.testFlag(QJSEngine::TranslationExtension)) {
-    #ifndef QT_NO_TRANSLATION
+    #if QT_CONFIG(translation)
         globalObject->defineDefaultProperty(QStringLiteral("qsTranslate"), QV4::GlobalExtensions::method_qsTranslate);
         globalObject->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), QV4::GlobalExtensions::method_qsTranslateNoOp);
         globalObject->defineDefaultProperty(QStringLiteral("qsTr"), QV4::GlobalExtensions::method_qsTr);
@@ -1767,7 +1763,7 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
 }
 
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
 /*!
     \qmlmethod string Qt::qsTranslate(string context, string sourceText, string disambiguation, int n)
 
@@ -2015,7 +2011,7 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(CallContext *ctx)
         return QV4::Encode::undefined();
     return ctx->args()[0].asReturnedValue();
 }
-#endif // QT_NO_TRANSLATION
+#endif // translation
 
 
 QV4::ReturnedValue GlobalExtensions::method_gc(CallContext *ctx)

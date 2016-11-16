@@ -41,7 +41,7 @@
 #include "openglrenderer.h"
 #include <QQuickItem>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
@@ -161,4 +161,4 @@ QRectF OpenGLRenderNode::rect() const
     return QRect(0, 0, m_item->width(), m_item->height());
 }
 
-#endif // QT_NO_OPENGL
+#endif // opengl

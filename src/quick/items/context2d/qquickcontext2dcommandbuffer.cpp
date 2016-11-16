@@ -43,7 +43,7 @@
 #include <QtCore/QMutex>
 #include <QtQuick/qsgtexture.h>
 #include <QtGui/QPaintEngine>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
 # include <QtGui/private/qopenglpaintengine_p.h>
 #endif
