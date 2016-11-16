@@ -69,8 +69,8 @@ T.ComboBox {
     }
 
     contentItem: Text {
-        leftPadding: 12
-        rightPadding: 10
+        leftPadding: control.mirrored ? 0 : 12
+        rightPadding: control.mirrored ? 10 : 0
         topPadding: 5 - control.topPadding
         bottomPadding: 7 - control.bottomPadding
 
