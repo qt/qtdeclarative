@@ -1096,6 +1096,13 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj,
     return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
 }
 
+QQmlPropertyData *
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QLatin1String &name,
+                            QQmlContextData *context, QQmlPropertyData &local)
+{
+    return qQmlPropertyCacheProperty<const QLatin1String &>(engine, obj, name, context, local);
+}
+
 // these two functions are copied from qmetaobject.cpp
 static inline const QMetaObjectPrivate *priv(const uint* data)
 { return reinterpret_cast<const QMetaObjectPrivate*>(data); }
