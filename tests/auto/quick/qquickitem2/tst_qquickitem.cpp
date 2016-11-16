@@ -101,6 +101,7 @@ private slots:
     void mapCoordinatesRect();
     void mapCoordinatesRect_data();
     void propertyChanges();
+    void nonexistentPropertyConnection();
     void transforms();
     void transforms_data();
     void childrenRect();
@@ -2586,6 +2587,15 @@ void tst_QQuickItem::propertyChanges()
     QCOMPARE(ySpy.count(), 1);
 
     delete window;
+}
+
+void tst_QQuickItem::nonexistentPropertyConnection()
+{
+    // QTBUG-56551: don't crash
+    QQmlComponent component(&engine, testFileUrl("nonexistentPropertyConnection.qml"));
+    QObject *o = component.create();
+    QVERIFY(o);
+    delete o;
 }
 
 void tst_QQuickItem::childrenRect()
