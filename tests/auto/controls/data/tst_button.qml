@@ -52,13 +52,13 @@ TestCase {
 
     Component {
         id: button
-        Button {
-            id: control
+        Button { }
+    }
 
-            property SignalSequenceSpy spy: SignalSequenceSpy {
-                target: control
-                signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "downChanged", "checkedChanged"]
-            }
+    Component {
+        id: signalSequenceSpy
+        SignalSequenceSpy {
+            signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "downChanged", "checkedChanged"]
         }
     }
 
@@ -84,52 +84,54 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
 
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
         // click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, true)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }],
                                         "released",
                                         "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // release outside
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, true)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }]]
         mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["canceled", { "pressed": false }]]
+        sequenceSpy.expectedSequence = [["canceled", { "pressed": false }]]
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // right button
-        control.spy.expectedSequence = []
+        sequenceSpy.expectedSequence = []
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(control.pressed, false)
 
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // double click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -145,7 +147,7 @@ TestCase {
                                         "released",
                                         "clicked"]
         mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         control.destroy()
     }
@@ -157,8 +159,10 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
         // click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -166,15 +170,15 @@ TestCase {
                                         "released",
                                         "clicked"]
         keyClick(Qt.Key_Space)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // no change
-        control.spy.expectedSequence = []
+        sequenceSpy.expectedSequence = []
         var keys = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab]
         for (var i = 0; i < keys.length; ++i) {
-            control.spy.reset()
+            sequenceSpy.reset()
             keyClick(keys[i])
-            verify(control.spy.success)
+            verify(sequenceSpy.success)
         }
 
         control.destroy()
@@ -195,6 +199,8 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
         var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
 
@@ -210,35 +216,35 @@ TestCase {
                               "pressed"]
 
         // auto-repeat a couple of mouse clicks
-        control.spy.expectedSequence = repeatSequence
+        sequenceSpy.expectedSequence = repeatSequence
         mousePress(control)
         compare(control.pressed, true)
         tryCompare(clickSpy, "count", repeatCount)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }],
                                         "released",
                                         "clicked"]
         mouseRelease(control)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // auto-repeat a couple of key clicks
         clickSpy.clear()
-        control.spy.expectedSequence = repeatSequence
+        sequenceSpy.expectedSequence = repeatSequence
         keyPress(Qt.Key_Space)
         compare(control.pressed, true)
         tryCompare(clickSpy, "count", repeatCount)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }],
                                         "released",
                                         "clicked"]
         keyRelease(Qt.Key_Space)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         control.destroy()
     }
@@ -256,7 +262,9 @@ TestCase {
         verify(control.hasOwnProperty("checkable"))
         verify(!control.checkable)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -265,9 +273,9 @@ TestCase {
                                         "clicked"]
         mouseClick(control)
         verify(!control.checked)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -278,9 +286,9 @@ TestCase {
         control.checkable = true
         mouseClick(control)
         verify(control.checked)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -290,7 +298,7 @@ TestCase {
                                         "clicked"]
         mouseClick(control)
         verify(!control.checked)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         control.destroy()
     }
