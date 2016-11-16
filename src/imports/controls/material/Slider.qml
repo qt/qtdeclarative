@@ -65,7 +65,7 @@ T.Slider {
         implicitHeight: horizontal ? 48 : 200
         width: horizontal ? control.availableWidth : 1
         height: horizontal ? 1 : control.availableHeight
-        color: control.Material.primaryTextColor
+        color: control.Material.foreground
         scale: horizontal && control.mirrored ? -1 : 1
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal

@@ -58,7 +58,7 @@ T.ItemDelegate {
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

@@ -51,7 +51,7 @@ T.TextArea {
     topPadding: 8
     bottomPadding: 16
 
-    color: enabled ? Material.primaryTextColor : Material.hintTextColor
+    color: enabled ? Material.foreground : Material.hintTextColor
     selectionColor: Material.accentColor
     selectedTextColor: Material.primaryHighlightedTextColor
     cursorDelegate: Rectangle {

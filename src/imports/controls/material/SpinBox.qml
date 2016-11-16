@@ -68,9 +68,9 @@ T.SpinBox {
         text: control.textFromValue(control.value, control.locale)
 
         font: control.font
-        color: enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: enabled ? control.Material.foreground : control.Material.hintTextColor
         selectionColor: control.Material.textSelectionColor
-        selectedTextColor: control.Material.primaryTextColor
+        selectedTextColor: control.Material.foreground
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
         cursorDelegate: Rectangle {
@@ -127,14 +127,14 @@ T.SpinBox {
             y: (parent.height - height) / 2
             width: Math.min(parent.width / 3, parent.width / 3)
             height: 2
-            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
+            color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: Math.min(parent.width / 3, parent.width / 3)
-            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
+            color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
     }
 
@@ -161,7 +161,7 @@ T.SpinBox {
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
+            color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
     }
 

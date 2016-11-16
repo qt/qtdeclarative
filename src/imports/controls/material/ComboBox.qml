@@ -60,7 +60,7 @@ T.ComboBox {
     Material.elevation: flat ? control.pressed || control.hovered ? 2 : 0
                              : control.pressed ? 8 : 2
     Material.background: flat ? "transparent" : undefined
-    Material.foreground: flat ? undefined : Material.foreground
+    Material.foreground: flat ? undefined : Material.primaryTextColor
 
     delegate: MenuItem {
         width: control.popup.width
@@ -73,7 +73,7 @@ T.ComboBox {
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://material/drop-indicator/" + (control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor)
+        source: "image://material/drop-indicator/" + (control.enabled ? control.Material.foreground : control.Material.hintTextColor)
     }
 
     contentItem: Text {
@@ -82,7 +82,7 @@ T.ComboBox {
 
         text: control.displayText
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight

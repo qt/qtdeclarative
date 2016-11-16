@@ -638,7 +638,13 @@ void QQuickMaterialStyle::resetAccent()
 
 QVariant QQuickMaterialStyle::foreground() const
 {
-    return primaryTextColor();
+    if (!m_hasForeground)
+        return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
+    if (m_customForeground)
+        return QColor::fromRgba(m_foreground);
+    if (m_foreground > BlueGrey)
+        return QColor();
+    return QColor::fromRgba(colors[m_foreground][Shade500]);
 }
 
 void QQuickMaterialStyle::setForeground(const QVariant &var)
@@ -814,13 +820,7 @@ QColor QQuickMaterialStyle::backgroundColor() const
 
 QColor QQuickMaterialStyle::primaryTextColor() const
 {
-    if (!m_hasForeground)
-        return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
-    if (m_customForeground)
-        return QColor::fromRgba(m_foreground);
-    if (m_foreground > BlueGrey)
-        return QColor();
-    return colors[m_foreground][Shade500];
+    return QColor::fromRgba(m_theme == Light ? primaryTextColorLight : primaryTextColorDark);
 }
 
 QColor QQuickMaterialStyle::primaryHighlightedTextColor() const

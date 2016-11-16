@@ -62,7 +62,7 @@ T.Button {
         font: control.font
         color: !control.enabled ? control.Material.hintTextColor :
             control.flat && control.highlighted ? control.Material.accentColor :
-            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
+            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
