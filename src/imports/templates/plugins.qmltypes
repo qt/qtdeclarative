@@ -18,6 +18,7 @@ Module {
         Property { name: "down"; type: "bool" }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
         Property { name: "checked"; type: "bool" }
+        Property { name: "checkable"; type: "bool" }
         Property { name: "autoExclusive"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Signal { name: "pressed" }
@@ -69,7 +70,6 @@ Module {
         prototype: "QQuickAbstractButton"
         exports: ["QtQuick.Templates/Button 2.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "checkable"; type: "bool" }
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "highlighted"; type: "bool" }
         Property { name: "flat"; type: "bool" }
@@ -404,7 +404,6 @@ Module {
         prototype: "QQuickAbstractButton"
         exports: ["QtQuick.Templates/MenuItem 2.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "checkable"; type: "bool" }
         Property { name: "highlighted"; type: "bool" }
         Signal { name: "triggered" }
     }
