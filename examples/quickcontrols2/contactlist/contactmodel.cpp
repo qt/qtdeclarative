@@ -104,10 +104,12 @@ void ContactModel::updateContact(int row,
         m_contacts.replace(row, { fullName, address, city, number });
         dataChanged(index(row, 0), index(row, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
     } else if (row < 0) {
-        beginInsertRows(QModelIndex(), rowCount() - 1, rowCount() - 1);
-        m_contacts.append({fullName, address, city, number});
+        row = 0;
+        while (row < m_contacts.count() && fullName > m_contacts.at(row).fullName)
+            ++row;
+        beginInsertRows(QModelIndex(), row, row);
+        m_contacts.insert(row, {fullName, address, city, number});
         endInsertRows();
-        dataChanged(index(rowCount() - 1, 0), index(rowCount() - 1, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
     }
 }
 
