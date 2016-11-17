@@ -67,14 +67,12 @@ Page {
     ListView {
         id: listView
 
-        currentIndex: -1
-        boundsBehavior: Flickable.StopAtBounds
-        clip: true
         focus: true
         anchors.fill: parent
         section.criteria: ViewSection.FirstCharacter
         section.property: "fullName"
         snapMode: ListView.SnapToItem
+        boundsBehavior: Flickable.StopAtBounds
 
         section.delegate: SectionDelegate {
             width: listView.width
@@ -83,7 +81,6 @@ Page {
         delegate: ContactDelegate {
             id: delegate
             width: listView.width
-            x: 5
 
             Connections {
                 target: delegate.edit
