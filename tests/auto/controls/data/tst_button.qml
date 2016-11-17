@@ -52,13 +52,13 @@ TestCase {
 
     Component {
         id: button
-        Button {
-            id: control
+        Button { }
+    }
 
-            property SignalSequenceSpy spy: SignalSequenceSpy {
-                target: control
-                signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "downChanged", "checkedChanged"]
-            }
+    Component {
+        id: signalSequenceSpy
+        SignalSequenceSpy {
+            signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "downChanged", "checkedChanged"]
         }
     }
 
@@ -84,52 +84,54 @@ TestCase {
         var control = button.createObject(testCase)
         verify(control)
 
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
         // click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, true)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }],
                                         "released",
                                         "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // release outside
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, true)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }]]
         mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["canceled", { "pressed": false }]]
+        sequenceSpy.expectedSequence = [["canceled", { "pressed": false }]]
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // right button
-        control.spy.expectedSequence = []
+        sequenceSpy.expectedSequence = []
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(control.pressed, false)
 
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // double click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -145,7 +147,7 @@ TestCase {
                                         "released",
                                         "clicked"]
         mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         control.destroy()
     }
@@ -157,8 +159,10 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
         // click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -166,15 +170,15 @@ TestCase {
                                         "released",
                                         "clicked"]
         keyClick(Qt.Key_Space)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         // no change
-        control.spy.expectedSequence = []
+        sequenceSpy.expectedSequence = []
         var keys = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab]
         for (var i = 0; i < keys.length; ++i) {
-            control.spy.reset()
+            sequenceSpy.reset()
             keyClick(keys[i])
-            verify(control.spy.success)
+            verify(sequenceSpy.success)
         }
 
         control.destroy()
@@ -197,54 +201,75 @@ TestCase {
 
         var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
+        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        verify(pressSpy.valid)
+        var releaseSpy = signalSpy.createObject(control, {target: control, signalName: "released"})
+        verify(releaseSpy.valid)
 
-        var repeatCount = 2
-        var repeatSequence = [["pressedChanged", { "pressed": true }],
-                              ["downChanged", { "down": true }],
-                              "pressed",
-                              "released",
-                              "clicked",
-                              "pressed",
-                              "released",
-                              "clicked",
-                              "pressed"]
-
-        // auto-repeat a couple of mouse clicks
-        control.spy.expectedSequence = repeatSequence
+        // auto-repeat mouse click
         mousePress(control)
         compare(control.pressed, true)
-        tryVerify(function() { return clickSpy.count >= repeatCount })
-        if (clickSpy.count > repeatCount)
-            warn("Expected auto-repeat count " + repeatCount + " exceeded (" + clickSpy.count + ") - busy CI?")
-        else
-            verify(control.spy.success)
-
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
-                                        ["downChanged", { "down": false }],
-                                        "released",
-                                        "clicked"]
+        clickSpy.wait()
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
         mouseRelease(control)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        compare(clickSpy.count, pressSpy.count)
+        compare(releaseSpy.count, pressSpy.count)
 
-        // auto-repeat a couple of key clicks
         clickSpy.clear()
-        control.spy.expectedSequence = repeatSequence
+        pressSpy.clear()
+        releaseSpy.clear()
+
+        // auto-repeat key click
         keyPress(Qt.Key_Space)
         compare(control.pressed, true)
-        tryVerify(function() { return clickSpy.count >= repeatCount })
-        if (clickSpy.count > repeatCount)
-            warn("Expected auto-repeat count " + repeatCount + " exceeded (" + clickSpy.count + ") - busy CI?")
-        else
-            verify(control.spy.success)
-
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
-                                        ["downChanged", { "down": false }],
-                                        "released",
-                                        "clicked"]
+        clickSpy.wait()
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
         keyRelease(Qt.Key_Space)
         compare(control.pressed, false)
-        verify(control.spy.success)
+        compare(clickSpy.count, pressSpy.count)
+        compare(releaseSpy.count, pressSpy.count)
+
+        clickSpy.clear()
+        pressSpy.clear()
+        releaseSpy.clear()
+
+        mousePress(control)
+        compare(control.pressed, true)
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
+
+        // move inside during repeat -> continue repeat
+        mouseMove(control, control.width / 4, control.height / 4)
+        clickSpy.wait()
+        compare(pressSpy.count, clickSpy.count + 1)
+        compare(releaseSpy.count, clickSpy.count)
+
+        clickSpy.clear()
+        pressSpy.clear()
+        releaseSpy.clear()
+
+        // move outside during repeat -> stop repeat
+        mouseMove(control, -1, -1)
+        // NOTE: The following wait() is NOT a reliable way to test that the
+        // auto-repeat timer is not running, but there's no way dig into the
+        // private APIs from QML. If this test ever fails in the future, it
+        // indicates that the auto-repeat timer logic is broken.
+        wait(125)
+        compare(clickSpy.count, 0)
+        compare(pressSpy.count, 0)
+        compare(releaseSpy.count, 0)
+
+        mouseRelease(control, -1, -1)
+        compare(control.pressed, false)
+        compare(clickSpy.count, 0)
+        compare(pressSpy.count, 0)
+        compare(releaseSpy.count, 0)
 
         control.destroy()
     }
@@ -262,7 +287,9 @@ TestCase {
         verify(control.hasOwnProperty("checkable"))
         verify(!control.checkable)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -271,9 +298,9 @@ TestCase {
                                         "clicked"]
         mouseClick(control)
         verify(!control.checked)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -284,9 +311,9 @@ TestCase {
         control.checkable = true
         mouseClick(control)
         verify(control.checked)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
                                         ["downChanged", { "down": true }],
                                         "pressed",
                                         ["pressedChanged", { "pressed": false }],
@@ -296,7 +323,7 @@ TestCase {
                                         "clicked"]
         mouseClick(control)
         verify(!control.checked)
-        verify(control.spy.success)
+        verify(sequenceSpy.success)
 
         control.destroy()
     }

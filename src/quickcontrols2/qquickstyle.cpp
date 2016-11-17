@@ -41,6 +41,7 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
+#include <QtCore/qlibraryinfo.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlengine.h>
@@ -95,6 +96,23 @@ QT_BEGIN_NAMESPACE
 
     \sa {Styling Qt Quick Controls 2}
 */
+
+// TODO: QQmlImportDatabase::defaultImportPathList()
+static QStringList defaultImportPathList()
+{
+    QStringList importPaths;
+    importPaths.reserve(3);
+    importPaths += QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
+        const QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
+        importPaths += QString::fromLatin1(envImportPath).split(QDir::listSeparator(), QString::SkipEmptyParts);
+    }
+
+    importPaths += QStringLiteral("qrc:/qt-project.org/imports");
+    importPaths += QCoreApplication::applicationDirPath();
+    return importPaths;
+}
 
 struct QQuickStyleSpec
 {
@@ -179,7 +197,7 @@ struct QQuickStyleSpec
         if (QGuiApplication::instance()) {
             if (!custom) {
                 const QString targetPath = QStringLiteral("QtQuick/Controls.2");
-                const QStringList importPaths = QQmlEngine().importPathList();
+                const QStringList importPaths = defaultImportPathList();
 
                 for (const QString &importPath : importPaths) {
                     QString stylePath = findStyle(importPath + QLatin1Char('/') + targetPath, style);

@@ -540,7 +540,7 @@ void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
     QQuickControl::mouseMoveEvent(event);
     setPressed(d->keepPressed || contains(event->pos()));
 
-    if (d->autoRepeat)
+    if (!d->pressed && d->autoRepeat)
         d->stopPressRepeat();
     else if (d->holdTimer > 0 && (!d->pressed || QLineF(d->pressPoint, event->localPos()).length() > QGuiApplication::styleHints()->startDragDistance()))
         d->stopPressAndHold();
