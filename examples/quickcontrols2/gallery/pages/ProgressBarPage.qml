@@ -44,8 +44,6 @@ import QtQuick.Controls 2.1
 ScrollablePage {
     id: page
 
-    readonly property int itemWidth: Math.max(bar.implicitWidth, page.availableWidth / 3)
-
     Column {
         spacing: 40
         width: parent.width
@@ -61,13 +59,11 @@ ScrollablePage {
         ProgressBar {
             id: bar
             value: 0.5
-            width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
         ProgressBar {
             indeterminate: true
-            width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

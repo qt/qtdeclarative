@@ -44,8 +44,6 @@ import QtQuick.Controls 2.1
 ScrollablePage {
     id: page
 
-    readonly property int itemWidth: Math.max(slider.implicitWidth, Math.min(slider.implicitWidth * 2, page.availableWidth / 3))
-
     Column {
         spacing: 40
         width: parent.width
@@ -61,7 +59,6 @@ ScrollablePage {
             id: slider
             first.value: 0.25
             second.value: 0.75
-            width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
@@ -69,7 +66,6 @@ ScrollablePage {
             orientation: Qt.Vertical
             first.value: 0.25
             second.value: 0.75
-            height: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

@@ -39,12 +39,11 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.1
 
 ScrollablePage {
     id: page
-
-    readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, page.availableWidth / 3))
 
     Column {
         spacing: 40
@@ -58,24 +57,24 @@ ScrollablePage {
                 + "Buttons are normally used to perform an action, or to answer a question."
         }
 
-        Column {
+        ColumnLayout {
             spacing: 20
             anchors.horizontalCenter: parent.horizontalCenter
 
             Button {
                 text: "First"
-                width: itemWidth
+                Layout.fillWidth: true
             }
             Button {
                 id: button
                 text: "Second"
-                width: itemWidth
                 highlighted: true
+                Layout.fillWidth: true
             }
             Button {
                 text: "Third"
                 enabled: false
-                width: itemWidth
+                Layout.fillWidth: true
             }
         }
     }

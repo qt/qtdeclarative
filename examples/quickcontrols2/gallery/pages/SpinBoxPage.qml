@@ -44,8 +44,6 @@ import QtQuick.Controls 2.1
 ScrollablePage {
     id: page
 
-    readonly property int itemWidth: Math.max(box.implicitWidth, Math.min(box.implicitWidth * 2, pane.availableWidth / 3))
-
     Column {
         spacing: 40
         width: parent.width
@@ -61,7 +59,6 @@ ScrollablePage {
         SpinBox {
             id: box
             value: 50
-            width: itemWidth
             anchors.horizontalCenter: parent.horizontalCenter
             editable: true
         }
