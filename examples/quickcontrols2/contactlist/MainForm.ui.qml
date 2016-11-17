@@ -69,11 +69,11 @@ Page {
 
         focus: true
         anchors.fill: parent
-        section.criteria: ViewSection.FirstCharacter
-        section.property: "fullName"
         snapMode: ListView.SnapToItem
         boundsBehavior: Flickable.StopAtBounds
 
+        section.property: "fullName"
+        section.criteria: ViewSection.FirstCharacter
         section.delegate: SectionDelegate {
             width: listView.width
         }

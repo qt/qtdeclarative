@@ -51,27 +51,14 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.1
 
-Rectangle {
-    height: 20
-    width: 120
-    gradient: Gradient {
-        GradientStop {
-            position: 0
-            color: "#dddddd"
-        }
-
-        GradientStop {
-            position: 1
-            color: "blue"
-        }
-    }
+ToolBar {
+    id: background
 
     Label {
-        x: 12
-        color: "white"
+        id: label
         text: section
-        style: Text.Raised
-        font.pixelSize: 18
-        font.bold: true
+        anchors.fill: parent
+        horizontalAlignment: Qt.AlignHCenter
+        verticalAlignment: Qt.AlignVCenter
     }
 }
