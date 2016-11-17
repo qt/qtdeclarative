@@ -51,8 +51,10 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.1
 
-Item {
+AbstractButton {
     clip: true
+    checkable: true
+    autoExclusive: true
 
     id: delegate
 
@@ -60,22 +62,6 @@ Item {
     property alias remove: remove
     property alias edit: edit
     width: 300
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-    }
-
-    Connections {
-        target: mouseArea
-
-        onClicked: {
-            if (delegate.ListView.view.currentIndex === index)
-                delegate.ListView.view.currentIndex = -1
-            else
-                delegate.ListView.view.currentIndex = index
-        }
-    }
 
     Column {
         id: column1
@@ -174,11 +160,11 @@ Item {
     states: [
         State {
             name: "collapsed"
-            when: !delegate.ListView.isCurrentItem
+            when: !delegate.checked
         },
         State {
             name: "expanded"
-            when: delegate.ListView.isCurrentItem
+            when: delegate.checked
 
             PropertyChanges {
                 target: delegate
