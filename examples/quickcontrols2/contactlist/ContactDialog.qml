@@ -73,6 +73,7 @@ Dialog {
         lastIndex = -1;
         lastModel = model;
 
+        dialog.title = qsTr("Add Contact")
         dialog.open();
     }
 
@@ -84,6 +85,7 @@ Dialog {
         lastIndex = index;
         lastModel = model;
 
+        dialog.title = qsTr("Edit Contact")
         dialog.open();
     }
 
