@@ -79,8 +79,7 @@ QVariant AddressModel::data(const QModelIndex &index, int role) const
         case CityRole: return m_data.at(index.row()).city;
         case NumberRole: return m_data.at(index.row()).number;
         default: return QVariant();
-
-        }
+    }
     return QVariant();
 }
 

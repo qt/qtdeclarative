@@ -53,11 +53,12 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
 
 Dialog {
-    standardButtons: Dialog.Ok | Dialog.Cancel
-    modal: true
+    id: dialog
 
     x: parent.width / 2 - width / 2
     y: parent.height / 2 - height / 2
+    standardButtons: Dialog.Ok | Dialog.Cancel
+    modal: true
 
     property int lastIndex
     property QtObject lastModel
@@ -86,7 +87,7 @@ Dialog {
         dialog.open();
     }
 
-   contentItem: ContactDialogForm {
+    contentItem: ContactDialogForm {
         id: form
     }
 

@@ -1,4 +1,3 @@
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -66,7 +65,7 @@ GridLayout {
     columns: 2
 
     Label {
-        text: qsTr("Full Name:")
+        text: qsTr("Full Name")
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline
     }
 
@@ -117,4 +116,3 @@ GridLayout {
         placeholderText: grid.placeholderText
     }
 }
-

@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-#include "addressmodel.h"
-
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+
+#include "addressmodel.h"
 
 int main(int argc, char *argv[])
 {
@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
     qmlRegisterType<AddressModel>("Backend", 1, 0, "AddressModel");
 
     QQmlApplicationEngine engine;
-    engine.addImportPath(":/imports");
     engine.load(QUrl(QStringLiteral("qrc:/contactlist.qml")));
 
     return app.exec();

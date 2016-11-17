@@ -64,7 +64,6 @@ public:
         CityRole,
         NumberRole
     };
-
     Q_ENUM(AdressModelRoles)
 
     AddressModel(QObject *parent = nullptr);
