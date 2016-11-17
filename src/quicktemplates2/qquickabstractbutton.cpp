@@ -332,6 +332,8 @@ void QQuickAbstractButton::setPressed(bool isPressed)
     \qmlproperty bool QtQuick.Controls::AbstractButton::checked
 
     This property holds whether the button is checked.
+
+    \sa checkable
 */
 bool QQuickAbstractButton::isChecked() const
 {
@@ -354,11 +356,21 @@ void QQuickAbstractButton::setChecked(bool checked)
     emit checkedChanged();
 }
 
-// We define these in QQuickAbstractButton without exposing checkable as a
-// property, and instead expose it as a property in QQuickButton.
-// QQuickRadioButton, QQuickSwitch and QQuickCheckBox are checkable by default,
-// but if we removed the checkable code from here, they'd each have to
-// duplicate it.
+/*!
+    \qmlproperty bool QtQuick.Controls::AbstractButton::checkable
+
+    This property holds whether the button is checkable.
+
+    A checkable button toggles between checked (on) and unchecked (off) when
+    the user clicks on it or presses the space bar while the button has active
+    focus.
+
+    Setting \l checked to \c true forces this property to \c true.
+
+    The default value is \c false.
+
+    \sa checked
+*/
 bool QQuickAbstractButton::isCheckable() const
 {
     Q_D(const QQuickAbstractButton);
@@ -374,6 +386,7 @@ void QQuickAbstractButton::setCheckable(bool checkable)
     d->checkable = checkable;
     setAccessibleProperty("checkable", checkable);
     checkableChange();
+    emit checkableChanged();
 }
 
 /*!
@@ -529,7 +542,7 @@ void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
     QQuickControl::mouseMoveEvent(event);
     setPressed(d->keepPressed || contains(event->pos()));
 
-    if (d->autoRepeat)
+    if (!d->pressed && d->autoRepeat)
         d->stopPressRepeat();
     else if (d->holdTimer > 0 && (!d->pressed || QLineF(d->pressPoint, event->localPos()).length() > QGuiApplication::styleHints()->startDragDistance()))
         d->stopPressAndHold();

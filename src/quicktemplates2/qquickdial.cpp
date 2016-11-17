@@ -283,8 +283,8 @@ void QQuickDial::setValue(qreal value)
 
     This property holds the logical position of the handle.
 
-    The position is defined as a percentage of the control's angle range (the
-    range within which the handle can be moved) scaled to \c {0.0 - 1.0}.
+    The position is expressed as a fraction of the control's angle range (the
+    range within which the handle can be moved) in the range \c {0.0 - 1.0}.
     Unlike the \l value property, the \c position is continuously updated while
     the handle is dragged.
 

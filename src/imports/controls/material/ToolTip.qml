@@ -72,7 +72,7 @@ T.ToolTip {
         text: control.text
         font: control.font
         // TODO: wrapMode: Label.Wrap
-        color: control.Material.primaryTextColor
+        color: control.Material.foreground
     }
 
     background: Rectangle {

@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,30 +48,48 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.1
+#ifndef ADDRESSMODEL_H
+#define ADDRESSMODEL_H
 
-ScrollablePage {
-    id: page
+#include <QAbstractListModel>
 
-    Column {
-        spacing: 40
-        width: parent.width
+class AddressModel : public QAbstractListModel
+{
+    Q_OBJECT
 
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Menu can be used either as a context menu, or as a popup menu."
-        }
+public:
+    enum AdressModelRoles {
+        FullNameRole = Qt::DisplayRole,
+        AddressRole = Qt::UserRole,
+        CityRole,
+        NumberRole
+    };
 
-        Button {
-            id: button
-            text: "Open"
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, page.availableWidth / 3))
+    Q_ENUM(AdressModelRoles)
 
-            onClicked: optionsMenu.open()
-        }
-    }
-}
+    AddressModel(QObject *parent = nullptr);
+
+    int rowCount(const QModelIndex & = QModelIndex()) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    QHash<int, QByteArray> roleNames() const;
+
+    Q_INVOKABLE QString getFullName(int row) const;
+    Q_INVOKABLE QString getAddress(int row) const;
+    Q_INVOKABLE QString getCity(int row) const;
+    Q_INVOKABLE QString getNumber(int row) const;
+
+    Q_INVOKABLE void updateContact(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void removeContact(int row);
+
+private:
+    struct Data {
+        QString fullName;
+        QString address;
+        QString city;
+        QString number;
+    };
+
+    QList<Data> m_data;
+};
+
+#endif // ADDRESSMODEL_H

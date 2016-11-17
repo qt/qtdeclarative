@@ -57,9 +57,6 @@ ScrollablePage {
         }
 
         BusyIndicator {
-            readonly property int size: Math.min(page.availableWidth, page.availableHeight) / 5
-            width: size
-            height: size
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }

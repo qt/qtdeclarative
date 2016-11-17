@@ -159,12 +159,9 @@ ApplicationWindow {
                 ListElement { title: "Dial"; source: "qrc:/pages/DialPage.qml" }
                 ListElement { title: "Dialog"; source: "qrc:/pages/DialogPage.qml" }
                 ListElement { title: "Delegates"; source: "qrc:/pages/DelegatePage.qml" }
-                ListElement { title: "Drawer"; source: "qrc:/pages/DrawerPage.qml" }
                 ListElement { title: "Frame"; source: "qrc:/pages/FramePage.qml" }
                 ListElement { title: "GroupBox"; source: "qrc:/pages/GroupBoxPage.qml" }
-                ListElement { title: "Menu"; source: "qrc:/pages/MenuPage.qml" }
                 ListElement { title: "PageIndicator"; source: "qrc:/pages/PageIndicatorPage.qml" }
-                ListElement { title: "Popup"; source: "qrc:/pages/PopupPage.qml" }
                 ListElement { title: "ProgressBar"; source: "qrc:/pages/ProgressBarPage.qml" }
                 ListElement { title: "RadioButton"; source: "qrc:/pages/RadioButtonPage.qml" }
                 ListElement { title: "RangeSlider"; source: "qrc:/pages/RangeSliderPage.qml" }

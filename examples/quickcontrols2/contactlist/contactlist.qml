@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,31 +48,17 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.7
 import QtQuick.Controls 2.1
 
-ScrollablePage {
-    id: page
+ApplicationWindow {
+    visible: true
+    width: 320
+    height: 480
+    title: qsTr("Contact List")
 
-    Column {
-        spacing: 40
-        width: parent.width
-
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Popup is used to display modal or modeless content that overlays other "
-                + "application content. In this example, the settings are shown in a popup."
-        }
-
-        Button {
-            id: button
-            text: "Open"
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, page.availableWidth / 3))
-
-            onClicked: settingsDialog.open()
-        }
+    MainForm {
+        button.onClicked: dialog.addContact(listView.model)
+        anchors.fill: parent
     }
 }

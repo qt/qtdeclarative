@@ -41,6 +41,6 @@ import QtQuick.Controls.Material 2.1
 T.Label {
     id: control
 
-    color: enabled ? Material.primaryTextColor : Material.hintTextColor
+    color: enabled ? Material.foreground : Material.hintTextColor
     linkColor: Material.accentColor
 }

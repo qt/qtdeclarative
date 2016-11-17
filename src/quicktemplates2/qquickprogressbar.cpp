@@ -192,7 +192,7 @@ void QQuickProgressBar::setValue(qreal value)
 
     This property holds the logical position of the progress.
 
-    The position is defined as a percentage of the value, scaled to
+    The position is expressed as a fraction of the value, in the range
     \c {0.0 - 1.0}. For visualizing the progress, the right-to-left
     aware \l visualPosition should be used instead.
 
@@ -212,7 +212,7 @@ qreal QQuickProgressBar::position() const
 
     This property holds the visual position of the progress.
 
-    The position is defined as a percentage of the value, scaled to \c {0.0 - 1.0}.
+    The position is expressed as a fraction of the value, in the range \c {0.0 - 1.0}.
     When the control is \l {Control::mirrored}{mirrored}, \c visuaPosition is equal
     to \c {1.0 - position}. This makes \c visualPosition suitable for visualizing
     the progress, taking right-to-left support into account.

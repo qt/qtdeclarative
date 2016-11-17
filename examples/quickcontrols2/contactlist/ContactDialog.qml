@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,27 +48,49 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.7
+import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
 
-ScrollablePage {
-    id: page
+Dialog {
+    standardButtons: Dialog.Ok | Dialog.Cancel
+    modal: true
 
-    Column {
-        spacing: 40
-        width: parent.width
+    x: parent.width / 2 - width / 2
+    y: parent.height / 2 - height / 2
 
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "TextField is a single-line text editor."
-        }
+    property int lastIndex
+    property QtObject lastModel
 
-        TextField {
-            id: field
-            placeholderText: "TextField"
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+    property alias form: form
+
+    function addContact(model) {
+        form.fullName.clear();
+        form.address.clear();
+        form.city.clear();
+        form.number.clear();
+        lastIndex = -1;
+        lastModel = model;
+
+        dialog.open();
     }
+
+    function editContact(model, index) {
+        form.fullName.text = model.getFullName(index);
+        form.address.text = model.getAddress(index);
+        form.city.text = model.getCity(index);
+        form.number.text = model.getNumber(index);
+        lastIndex = index;
+        lastModel = model;
+
+        dialog.open();
+    }
+
+   contentItem: ContactDialogForm {
+        id: form
+    }
+
+    onAccepted: lastModel.updateContact(lastIndex, form.fullName.text,
+                                        form.address.text, form.city.text,
+                                        form.number.text)
 }

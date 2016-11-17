@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -39,26 +49,40 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.1
 
-ScrollablePage {
-    id: page
+ListModel {
+    ListElement {
+       address: "Chapel St. 368"
+       city: "Knoxville"
+       number: "0311 1823993"
+       fullName: "Angel Hogan"
+    }
 
-    Column {
-        spacing: 40
-        width: parent.width
+    ListElement {
+       address: "Annadale Lane 2"
+       city: "Clearwater"
+       number: "0368 1244494"
+       fullName: "Felicia Patton"
+    }
 
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "TextField is a single-line text editor."
-        }
+    ListElement {
+       address: "Windsor Drive 34"
+       city: "Riverdale"
+       number: "0368 1244494"
+       fullName: "Grant Crawford"
+    }
 
-        TextField {
-            id: field
-            placeholderText: "TextField"
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+    ListElement {
+       address: "Sunset Drive 348"
+       city: "Virginia Beach"
+       number: "0351 7826892"
+       fullName: "Gretchen Little"
+    }
+
+    ListElement {
+       address: "University Lane 54"
+       city: "Trussville"
+       number: "0399 2826994"
+       fullName: "Geoffrey Richards"
     }
 }

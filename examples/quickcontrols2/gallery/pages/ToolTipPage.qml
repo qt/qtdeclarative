@@ -58,7 +58,6 @@ ScrollablePage {
         Button {
             text: "Tip"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
 
             ToolTip.timeout: 5000
             ToolTip.visible: pressed

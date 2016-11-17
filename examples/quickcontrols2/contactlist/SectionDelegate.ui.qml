@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,36 +48,30 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.7
 import QtQuick.Controls 2.1
 
-Pane {
-    id: pane
-
-    Column {
-        spacing: 40
-        width: parent.width
-
-        Label {
-            width: parent.width
-            wrapMode: Label.Wrap
-            horizontalAlignment: Qt.AlignHCenter
-            text: "Drawer provides a swipe-based side panel, similar to those often used "
-                + "in touch interfaces to provide a central location for navigation."
+Rectangle {
+    height: 20
+    width: 120
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: "#dddddd"
         }
 
-        Button {
-            text: "Open"
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.max(implicitWidth, Math.min(implicitWidth * 2, pane.availableWidth / 3))
-
-            onClicked: drawer.open()
+        GradientStop {
+            position: 1
+            color: "blue"
         }
     }
 
-    Image {
-        source: "../images/arrow.png"
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
+    Label {
+        x: 12
+        color: "white"
+        text: section
+        style: Text.Raised
+        font.pixelSize: 18
+        font.bold: true
     }
 }

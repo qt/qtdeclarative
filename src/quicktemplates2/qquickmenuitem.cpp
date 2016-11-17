@@ -110,22 +110,6 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
     connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuItem::triggered);
 }
 
-/*!
-    \qmlproperty bool QtQuick.Controls::MenuItem::checkable
-
-    This property holds whether the menu item is checkable.
-
-    A checkable menu item toggles between checked (on) and unchecked (off) when
-    the user clicks on it or interacts with it via the keyboard.
-
-    \sa {AbstractButton::}{checked}
-*/
-
-void QQuickMenuItem::checkableChange()
-{
-    emit checkableChanged();
-}
-
 QFont QQuickMenuItem::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
