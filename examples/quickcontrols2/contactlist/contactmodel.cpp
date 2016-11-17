@@ -122,28 +122,20 @@ void ContactModel::removeContact(int row)
 
 QString ContactModel::getFullName(int row) const
 {
-    if (row >= 0 && row < rowCount())
-        return m_contacts.at(row).fullName;
-    return QString();
+    return m_contacts.value(row).fullName;
 }
 
 QString ContactModel::getAddress(int row) const
 {
-    if (row >= 0 && row < rowCount())
-        return m_contacts.at(row).address;
-    return QString();
+    return m_contacts.value(row).address;
 }
 
 QString ContactModel::getCity(int row) const
 {
-    if (row >= 0 && row < rowCount())
-        return m_contacts.at(row).city;
-    return QString();
+    return m_contacts.value(row).city;
 }
 
 QString ContactModel::getNumber(int row) const
 {
-    if (row >= 0 && row < rowCount())
-        return m_contacts.at(row).number;
-    return QString();
+    return m_contacts.value(row).number;
 }
