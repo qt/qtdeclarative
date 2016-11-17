@@ -71,6 +71,7 @@ GridLayout {
 
     TextField {
         id: fullName
+        focus: true
         Layout.fillWidth: true
         Layout.minimumWidth: grid.minimumInputSize
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline

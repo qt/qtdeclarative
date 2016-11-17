@@ -59,6 +59,7 @@ Dialog {
     y: parent.height / 2 - height / 2
     standardButtons: Dialog.Ok | Dialog.Cancel
     modal: true
+    focus: true
 
     property int lastIndex
     property QtObject lastModel
