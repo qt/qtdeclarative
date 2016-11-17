@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.7
+import QtQuick.Controls 2.1
 
 Rectangle {
     height: 20
@@ -65,7 +66,7 @@ Rectangle {
         }
     }
 
-    Text {
+    Label {
         x: 12
         color: "white"
         text: section

@@ -65,7 +65,7 @@ GridLayout {
     rows: 4
     columns: 2
 
-    Text {
+    Label {
         text: qsTr("Full Name:")
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline
     }
@@ -78,7 +78,7 @@ GridLayout {
         placeholderText: grid.placeholderText
     }
 
-    Text {
+    Label {
         text: qsTr("Address")
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline
     }
@@ -91,7 +91,7 @@ GridLayout {
         placeholderText: grid.placeholderText
     }
 
-    Text {
+    Label {
         text: qsTr("City")
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline
     }
@@ -104,7 +104,7 @@ GridLayout {
         placeholderText: grid.placeholderText
     }
 
-    Text {
+    Label {
         text: qsTr("Number")
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline
     }

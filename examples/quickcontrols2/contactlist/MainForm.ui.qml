@@ -52,7 +52,7 @@ import QtQuick 2.7
 import Backend 1.0
 import QtQuick.Controls 2.1
 
-Item {
+Page {
     id: form
 
     width: 320
@@ -71,11 +71,7 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         clip: true
         focus: true
-        anchors.bottom: button.top
-        anchors.right: parent.right
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottomMargin: 4
+        anchors.fill: parent
         section.criteria: ViewSection.FirstCharacter
         section.property: "fullName"
         snapMode: ListView.SnapToItem
@@ -107,14 +103,11 @@ Item {
         }
     }
 
-    Button {
-        id: button
-        width: 80
-        height: 20
-        text: "Add Contact"
-        anchors.rightMargin: 4
-        anchors.bottomMargin: 4
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
+    footer: ToolBar {
+        ToolButton {
+            id: button
+            text: "Add Contact"
+            anchors.right: parent.right
+        }
     }
 }

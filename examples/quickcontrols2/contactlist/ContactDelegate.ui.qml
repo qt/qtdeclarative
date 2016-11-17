@@ -73,7 +73,7 @@ AbstractButton {
             id: row1
             spacing: 10
 
-            Text {
+            Label {
                 text: fullName
                 font.pointSize: 16
                 anchors.verticalCenter: parent.verticalCenter
@@ -88,37 +88,37 @@ AbstractButton {
             x: 60
             spacing: 10
             columns: 2
-            Text {
+            Label {
                 text: qsTr("Address:")
                 font.bold: true
                 font.pixelSize: 16
             }
 
-            Text {
+            Label {
                 text: address
                 font.pixelSize: 16
                 font.bold: true
             }
 
-            Text {
+            Label {
                 text: qsTr("City:")
                 font.pixelSize: 16
                 font.bold: true
             }
 
-            Text {
+            Label {
                 text: city
                 font.pixelSize: 16
                 font.bold: true
             }
 
-            Text {
+            Label {
                 text: qsTr("Number:")
                 font.pixelSize: 16
                 font.bold: true
             }
 
-            Text {
+            Label {
                 text: number
                 font.pixelSize: 16
                 font.bold: true
@@ -145,11 +145,10 @@ AbstractButton {
             }
         }
 
-        Rectangle {
-            id: line
+        MenuSeparator {
+            id: separator
             opacity: 0
-            height: 1
-            color: "#dddddd"
+            padding: 0
             anchors.right: parent.right
             anchors.rightMargin: 4
             anchors.left: parent.left
@@ -172,7 +171,7 @@ AbstractButton {
             }
 
             PropertyChanges {
-                target: line
+                target: separator
                 opacity: 1
             }
 
