@@ -68,8 +68,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    The \l {first.position} and \l {second.position} properties are expressed as a
-    fraction of the control's size, in the range \c {0.0 - 1.0}.
+    The \l {first.position} and \l {second.position} properties are expressed as
+    fractions of the control's size, in the range \c {0.0 - 1.0}.
     The \l {first.visualPosition} and \l {second.visualPosition} properties are
     the same, except that they are reversed in a
     \l {Right-to-left User Interfaces}{right-to-left} application.
