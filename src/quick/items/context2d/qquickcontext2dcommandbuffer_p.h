@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_canvas);
+
 #include <QtCore/qmutex.h>
 #include "qquickcontext2d_p.h"
 
@@ -67,7 +71,7 @@ public:
     void reset();
     void clear();
 
-    inline int size() {return commands.size();}
+    inline int size() const { return commands.size(); }
     inline bool isEmpty() const {return commands.isEmpty(); }
     inline bool hasNext() const {return cmdIdx < commands.size(); }
     inline QQuickContext2D::PaintCommand takeNextCommand() { return commands.at(cmdIdx++); }
@@ -245,7 +249,7 @@ public:
     void replay(QPainter* painter, QQuickContext2D::State& state, const QVector2D &scaleFactor);
 
 private:
-    QPen makePen(const QQuickContext2D::State& state);
+    static QPen makePen(const QQuickContext2D::State& state);
     void setPainterState(QPainter* painter, const QQuickContext2D::State& state, const QPen& pen);
     int cmdIdx;
     int intIdx;

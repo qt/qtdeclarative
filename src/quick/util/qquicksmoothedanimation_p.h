@@ -79,8 +79,8 @@ public:
     ReversingMode reversingMode() const;
     void setReversingMode(ReversingMode);
 
-    virtual int duration() const;
-    virtual void setDuration(int);
+    int duration() const override;
+    void setDuration(int) override;
 
     qreal velocity() const;
     void setVelocity(qreal);
@@ -88,10 +88,10 @@ public:
     int maximumEasingTime() const;
     void setMaximumEasingTime(int);
 
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 Q_SIGNALS:
     void velocityChanged();
     void reversingModeChanged();

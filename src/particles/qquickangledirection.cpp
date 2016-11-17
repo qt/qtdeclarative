@@ -104,7 +104,7 @@ QQuickAngleDirection::QQuickAngleDirection(QObject *parent) :
 
 }
 
-const QPointF QQuickAngleDirection::sample(const QPointF &from)
+QPointF QQuickAngleDirection::sample(const QPointF &from)
 {
     Q_UNUSED(from);
     QPointF ret;

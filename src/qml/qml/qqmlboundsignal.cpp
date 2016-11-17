@@ -146,7 +146,7 @@ QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 {
 }
 
-QString QQmlBoundSignalExpression::expressionIdentifier()
+QString QQmlBoundSignalExpression::expressionIdentifier() const
 {
     QQmlSourceLocation loc = sourceLocation();
     return loc.sourceFile + QLatin1Char(':') + QString::number(loc.line);

@@ -1,12 +1,8 @@
 TARGET = QtQuick
 
 QT = core-private gui-private qml-private
-!no_network {
-    QT_PRIVATE =  network
-}
-no_network {
-    DEFINES += QT_NO_NETWORK
-}
+qtConfig(qml-network): \
+    QT_PRIVATE += network
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
@@ -33,7 +29,8 @@ include(util/util.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
 include(handlers/handlers.pri)
-include(designer/designer.pri)
+qtConfig(quick-designer): \
+    include(designer/designer.pri)
 qtConfig(accessibility) {
     include(accessible/accessible.pri)
 }

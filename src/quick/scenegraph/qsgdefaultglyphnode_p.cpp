@@ -240,7 +240,8 @@ bool QSG24BitTextMaskShader::useSRGB() const
     // m_useSRGB is true, but if some QOGLFBO was bound check it's texture format:
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
     QOpenGLFramebufferObject *qfbo = QOpenGLContextPrivate::get(ctx)->qgl_current_fbo;
-    return !qfbo || qfbo->format().internalTextureFormat() == GL_SRGB8_ALPHA8_EXT;
+    bool fboInvalid = QOpenGLContextPrivate::get(ctx)->qgl_current_fbo_invalid;
+    return !qfbo || fboInvalid || qfbo->format().internalTextureFormat() == GL_SRGB8_ALPHA8_EXT;
 #else
     return m_useSRGB;
 #endif

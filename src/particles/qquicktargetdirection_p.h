@@ -71,7 +71,7 @@ class QQuickTargetDirection : public QQuickDirection
 
 public:
     explicit QQuickTargetDirection(QObject *parent = 0);
-    virtual const QPointF sample(const QPointF &from);
+    QPointF sample(const QPointF &from) override;
 
     qreal targetX() const
     {

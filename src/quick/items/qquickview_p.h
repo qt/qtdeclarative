@@ -108,37 +108,7 @@ public:
     QQuickView::ResizeMode resizeMode;
     QSize initialSize;
     QElapsedTimer frameTimer;
-    QV4::PersistentValue rootItemMarker;
 };
-
-namespace QV4 {
-namespace Heap {
-
-struct QQuickRootItemMarker : Object {
-    inline void init(QQuickWindow *window)
-    {
-        Object::init();
-        this->window = window;
-    }
-
-    QQuickWindow *window;
-};
-
-}
-
-struct QQuickRootItemMarker : public Object
-{
-    V4_OBJECT2(QQuickRootItemMarker, Object)
-
-    static Heap::QQuickRootItemMarker *create(QQmlEngine *engine, QQuickWindow *window);
-
-    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
-
-};
-
-
-
-}
 
 QT_END_NAMESPACE
 

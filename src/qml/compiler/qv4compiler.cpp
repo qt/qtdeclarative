@@ -44,6 +44,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4alloca_p.h>
 #include <wtf/MathExtras.h>
+#include <QCryptographicHash>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {
@@ -211,7 +212,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(irModule->fileName);
-    foreach (QV4::IR::Function *f, irModule->functions) {
+    for (QV4::IR::Function *f : qAsConst(irModule->functions)) {
         registerString(*f->name);
         for (int i = 0; i < f->formals.size(); ++i)
             registerString(*f->formals.at(i));
@@ -227,6 +228,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     {
         QV4::CompiledData::Unit tempHeader = generateHeader(option, functionOffsets, &jsClassDataOffset);
         dataPtr = reinterpret_cast<char *>(malloc(tempHeader.unitSize));
+        memset(dataPtr, 0, tempHeader.unitSize);
         memcpy(&unit, &dataPtr, sizeof(CompiledData::Unit*));
         memcpy(unit, &tempHeader, sizeof(tempHeader));
     }
@@ -242,7 +244,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     }
 
     CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
-    foreach (const CompiledData::Lookup &l, lookups)
+    for (const CompiledData::Lookup &l : qAsConst(lookups))
         *lookupsToWrite++ = l;
 
     CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);
@@ -269,6 +271,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     // write strings and string table
     if (option == GenerateWithStringTable)
         stringTable.serialize(unit);
+
+    unit->generateChecksum();
 
     return unit;
 }
@@ -363,11 +367,13 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *i
 QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset)
 {
     CompiledData::Unit unit;
+    memset(&unit, 0, sizeof(unit));
     memcpy(unit.magic, CompiledData::magic_str, sizeof(unit.magic));
     unit.flags = QV4::CompiledData::Unit::IsJavascript;
     unit.flags |= irModule->unitFlags;
     unit.version = QV4_DATA_STRUCTURE_VERSION;
     unit.qtVersion = QT_VERSION;
+    memset(unit.md5Checksum, 0, sizeof(unit.md5Checksum));
     unit.architectureIndex = registerString(QSysInfo::buildAbi());
     unit.codeGeneratorIndex = registerString(codeGeneratorName);
     memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));

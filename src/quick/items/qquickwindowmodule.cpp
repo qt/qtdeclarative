@@ -47,6 +47,7 @@
 
 #include <private/qguiapplication_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 #include <qpa/qplatformintegration.h>
 
 QT_BEGIN_NAMESPACE
@@ -58,6 +59,7 @@ public:
         : complete(false)
         , visible(false)
         , visibility(QQuickWindow::AutomaticVisibility)
+        , targetScreen(nullptr)
     {
     }
 
@@ -65,6 +67,7 @@ public:
     bool visible;
     QQuickWindow::Visibility visibility;
     QV4::PersistentValue rootItemMarker;
+    QObject *targetScreen;
 };
 
 QQuickWindowQmlImpl::QQuickWindowQmlImpl(QWindow *parent)
@@ -104,12 +107,11 @@ void QQuickWindowQmlImpl::classBegin()
         if (e && !e->incubationController())
             e->setIncubationController(incubationController());
     }
-    Q_ASSERT(e);
     {
+        // The content item has CppOwnership policy (set in QQuickWindow). Ensure the presence of a JS
+        // wrapper so that the garbage collector can see the policy.
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(e);
-        QV4::Scope scope(v4);
-        QV4::ScopedObject v(scope, QV4::QQuickRootItemMarker::create(e, this));
-        d->rootItemMarker = v;
+        QV4::QObjectWrapper::wrap(v4, d->contentItem);
     }
 }
 
@@ -170,6 +172,26 @@ void QQuickWindowQmlImpl::setWindowVisibility()
     }
 }
 
+QObject *QQuickWindowQmlImpl::targetScreen() const
+{
+    Q_D(const QQuickWindowQmlImpl);
+    return d->targetScreen;
+}
+
+void QQuickWindowQmlImpl::setTargetScreen(QObject *screen)
+{
+    Q_D(QQuickWindowQmlImpl);
+    if (d->targetScreen != screen) {
+        d->targetScreen = screen;
+        emit targetScreenChanged();
+        QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
+        if (screenWrapper)
+            setScreen(screenWrapper->wrappedScreen());
+        else
+            setScreen(nullptr);
+    }
+}
+
 void QQuickWindowModule::defineModule()
 {
     const char uri[] = "QtQuick.Window";
@@ -181,7 +203,10 @@ void QQuickWindowModule::defineModule()
     qmlRegisterRevision<QQuickWindow,2>(uri, 2, 2);
     qmlRegisterType<QQuickWindowQmlImpl>(uri, 2, 1, "Window");
     qmlRegisterType<QQuickWindowQmlImpl,1>(uri, 2, 2, "Window");
+    qmlRegisterType<QQuickWindowQmlImpl,2>(uri, 2, 3, "Window");
     qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreen,1>(uri, 2, 3, "Screen", QStringLiteral("Screen can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreenInfo,2>(uri, 2, 3, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
 }
 
 QT_END_NAMESPACE

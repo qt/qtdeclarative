@@ -70,7 +70,7 @@
 
 using namespace QV4;
 
-#if !defined(QT_NO_XMLSTREAMREADER) && !defined(QT_NO_NETWORK)
+#if !defined(QT_NO_XMLSTREAMREADER) && QT_CONFIG(qml_network)
 
 #define V4THROW_REFERENCE(string) { \
         ScopedObject error(scope, ctx->engine()->newReferenceErrorObject(QStringLiteral(string))); \
@@ -831,7 +831,8 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
             }
             nodeStack.append(node);
 
-            foreach (const QXmlStreamAttribute &a, reader.attributes()) {
+            const auto attributes = reader.attributes();
+            for (const QXmlStreamAttribute &a : attributes) {
                 NodeImpl *attr = new NodeImpl;
                 attr->document = document;
                 attr->type = NodeImpl::Attr;
@@ -1185,10 +1186,10 @@ QString QQmlXMLHttpRequest::headers() const
 
 void QQmlXMLHttpRequest::fillHeadersList()
 {
-    QList<QByteArray> headerList = m_network->rawHeaderList();
+    const QList<QByteArray> headerList = m_network->rawHeaderList();
 
     m_headersList.clear();
-    foreach (const QByteArray &header, headerList) {
+    for (const QByteArray &header : headerList) {
         HeaderPair pair (header.toLower(), m_network->rawHeader(header));
         if (pair.first == "set-cookie" ||
             pair.first == "set-cookie2")
@@ -1446,7 +1447,7 @@ void QQmlXMLHttpRequest::finished()
 
 void QQmlXMLHttpRequest::readEncoding()
 {
-    foreach (const HeaderPair &header, m_headersList) {
+    for (const HeaderPair &header : qAsConst(m_headersList)) {
         if (header.first == "content-type") {
             int separatorIdx = header.second.indexOf(';');
             if (separatorIdx == -1) {
@@ -2056,6 +2057,6 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_XMLSTREAMREADER && QT_NO_NETWORK
+#endif // QT_NO_XMLSTREAMREADER && qml_network
 
 #include <qqmlxmlhttprequest.moc>

@@ -86,13 +86,13 @@ public:
     void setFrom(qreal from);
 
 protected:
-    ThreadingModel threadingModel() const { return RenderThread; }
+    ThreadingModel threadingModel() const override { return RenderThread; }
     virtual QQuickAnimatorJob *createJob() const = 0;
     virtual QString propertyName() const = 0;
     QAbstractAnimationJob *transition(QQuickStateActions &actions,
                                       QQmlProperties &modified,
                                       TransitionDirection,
-                                      QObject *);
+                                      QObject *) override;
 
     QQuickAnimator(QQuickAnimatorPrivate &dd, QObject *parent = 0);
     QQuickAnimator(QObject *parent = 0);
@@ -112,8 +112,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimator : public QQuickAnimator
 public:
     QQuickScaleAnimator(QObject *parent = 0);
 protected:
-    QQuickAnimatorJob *createJob() const;
-    QString propertyName() const { return QStringLiteral("scale"); }
+    QQuickAnimatorJob *createJob() const override;
+    QString propertyName() const override { return QStringLiteral("scale"); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickXAnimator : public QQuickAnimator
@@ -122,8 +122,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickXAnimator : public QQuickAnimator
 public:
     QQuickXAnimator(QObject *parent = 0);
 protected:
-    QQuickAnimatorJob *createJob() const;
-    QString propertyName() const{ return QStringLiteral("x"); }
+    QQuickAnimatorJob *createJob() const override;
+    QString propertyName() const override { return QStringLiteral("x"); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickYAnimator : public QQuickAnimator
@@ -132,8 +132,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickYAnimator : public QQuickAnimator
 public:
     QQuickYAnimator(QObject *parent = 0);
 protected:
-    QQuickAnimatorJob *createJob() const;
-    QString propertyName() const { return QStringLiteral("y"); }
+    QQuickAnimatorJob *createJob() const override;
+    QString propertyName() const override { return QStringLiteral("y"); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimator : public QQuickAnimator
@@ -142,8 +142,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimator : public QQuickAnimator
 public:
     QQuickOpacityAnimator(QObject *parent = 0);
 protected:
-    QQuickAnimatorJob *createJob() const;
-    QString propertyName() const { return QStringLiteral("opacity"); }
+    QQuickAnimatorJob *createJob() const override;
+    QString propertyName() const override { return QStringLiteral("opacity"); }
 };
 
 class QQuickRotationAnimatorPrivate;
@@ -166,10 +166,11 @@ Q_SIGNALS:
     void directionChanged(RotationDirection dir);
 
 protected:
-    QQuickAnimatorJob *createJob() const;
-    QString propertyName() const { return QStringLiteral("rotation"); }
+    QQuickAnimatorJob *createJob() const override;
+    QString propertyName() const override { return QStringLiteral("rotation"); }
 };
-#ifndef QT_NO_OPENGL
+
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 class QQuickUniformAnimatorPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
@@ -187,8 +188,8 @@ Q_SIGNALS:
     void uniformChanged(const QString &);
 
 protected:
-    QQuickAnimatorJob *createJob() const;
-    QString propertyName() const;
+    QQuickAnimatorJob *createJob() const override;
+    QString propertyName() const override;
 };
 #endif
 
@@ -200,7 +201,7 @@ QML_DECLARE_TYPE(QQuickYAnimator)
 QML_DECLARE_TYPE(QQuickScaleAnimator)
 QML_DECLARE_TYPE(QQuickRotationAnimator)
 QML_DECLARE_TYPE(QQuickOpacityAnimator)
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 QML_DECLARE_TYPE(QQuickUniformAnimator)
 #endif
 #endif // QQUICKANIMATOR_P_H

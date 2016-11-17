@@ -285,7 +285,7 @@ void QQuickAnchorsPrivate::clearItem(QQuickItem *item)
     }
 }
 
-QQuickGeometryChange QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
+QQuickGeometryChange QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem) const
 {
     QQuickGeometryChange dependency;
 
@@ -588,7 +588,7 @@ bool QQuickAnchorsPrivate::calcStretch(QQuickItem *edge1Item,
                                        qreal offset1,
                                        qreal offset2,
                                        QQuickAnchors::Anchor line,
-                                       qreal &stretch)
+                                       qreal &stretch) const
 {
     bool edge1IsParent = (edge1Item == readParentItem(item));
     bool edge2IsParent = (edge2Item == readParentItem(item));

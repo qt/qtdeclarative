@@ -56,7 +56,7 @@ QQuickDirection::QQuickDirection(QObject *parent) :
 {
 }
 
-const QPointF QQuickDirection::sample(const QPointF &from)
+QPointF QQuickDirection::sample(const QPointF &from)
 {
     Q_UNUSED(from);
     return QPointF();

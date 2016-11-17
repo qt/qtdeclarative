@@ -91,15 +91,15 @@ Q_SIGNALS:
 
 private:
     void connectSignals();
-    void classBegin();
-    void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 };
 
 class QQmlConnectionsParser : public QQmlCustomParser
 {
 public:
-    virtual void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props);
-    virtual void applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings);
+    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
 

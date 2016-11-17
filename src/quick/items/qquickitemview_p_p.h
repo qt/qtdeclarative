@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_itemview);
+
 #include "qquickitemview_p.h"
 #include "qquickitemviewtransition_p.h"
 #include "qquickflickable_p_p.h"
@@ -205,8 +209,8 @@ public:
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
     virtual bool releaseItem(FxViewItem *item);
 
-    QQuickItem *createHighlightItem();
-    QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false);
+    QQuickItem *createHighlightItem() const;
+    QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
 
     void updateCurrent(int modelIndex);
     void updateTrackedItem();

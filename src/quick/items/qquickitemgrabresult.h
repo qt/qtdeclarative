@@ -64,10 +64,13 @@ public:
     QImage image() const;
     QUrl url() const;
 
-    Q_INVOKABLE bool saveToFile(const QString &fileName);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    Q_INVOKABLE bool saveToFile(const QString &fileName); // ### Qt 6: remove
+#endif
+    Q_INVOKABLE bool saveToFile(const QString &fileName) const;
 
 protected:
-    bool event(QEvent *);
+    bool event(QEvent *) override;
 
 Q_SIGNALS:
     void ready();

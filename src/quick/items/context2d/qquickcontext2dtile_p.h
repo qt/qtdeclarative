@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_canvas);
+
 #include "qquickcontext2d_p.h"
 #ifndef QT_NO_OPENGL
 # include <QOpenGLFramebufferObject>
@@ -89,12 +93,12 @@ class QQuickContext2DFBOTile : public QQuickContext2DTile
 public:
     QQuickContext2DFBOTile();
     ~QQuickContext2DFBOTile();
-    virtual void setRect(const QRect& r);
+    virtual void setRect(const QRect& r) override;
     QOpenGLFramebufferObject* fbo() const {return m_fbo;}
-    void drawFinished();
+    void drawFinished() override;
 
 protected:
-    void aboutToDraw();
+    void aboutToDraw() override;
 private:
 
 
@@ -106,7 +110,7 @@ class QQuickContext2DImageTile : public QQuickContext2DTile
 public:
     QQuickContext2DImageTile();
     ~QQuickContext2DImageTile();
-    void setRect(const QRect& r);
+    void setRect(const QRect& r) override;
     const QImage& image() const {return m_image;}
 private:
     QImage m_image;

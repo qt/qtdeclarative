@@ -95,9 +95,8 @@ bool QQuickGridMesh::validateAttributes(const QVector<QByteArray> &attributes, i
         return false;
     case 1:
         if (positionIndex != 0) {
-            m_log = QLatin1String("Error: Missing \'");
-            m_log += QLatin1String(qtPositionAttributeName());
-            m_log += QLatin1String("\' attribute.\n");
+            m_log = QLatin1String("Error: Missing \'") + QLatin1String(qtPositionAttributeName())
+                    + QLatin1String("\' attribute.\n");
             return false;
         }
         break;
@@ -105,14 +104,12 @@ bool QQuickGridMesh::validateAttributes(const QVector<QByteArray> &attributes, i
         if (positionIndex == -1 || texCoordIndex == -1) {
             m_log.clear();
             if (positionIndex == -1) {
-                m_log = QLatin1String("Error: Missing \'");
-                m_log += QLatin1String(qtPositionAttributeName());
-                m_log += QLatin1String("\' attribute.\n");
+                m_log = QLatin1String("Error: Missing \'") + QLatin1String(qtPositionAttributeName())
+                        + QLatin1String("\' attribute.\n");
             }
             if (texCoordIndex == -1) {
-                m_log += QLatin1String("Error: Missing \'");
-                m_log += QLatin1String(qtTexCoordAttributeName());
-                m_log += QLatin1String("\' attribute.\n");
+                m_log += QLatin1String("Error: Missing \'") + QLatin1String(qtTexCoordAttributeName())
+                         + QLatin1String("\' attribute.\n");
             }
             return false;
         }
@@ -140,7 +137,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount
                                    ? QSGGeometry::defaultAttributes_Point2D()
                                    : QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                    (vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2),
-                                   QSGGeometry::TypeUnsignedShort);
+                                   QSGGeometry::UnsignedShortType);
 
     } else {
         geometry->allocate((vmesh + 1) * (hmesh + 1), vmesh * 2 * (hmesh + 2));
@@ -367,7 +364,7 @@ QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, int at
     }
     \endqml
 */
-QQuickScaleGrid *QQuickBorderImageMesh::border()
+QQuickScaleGrid *QQuickBorderImageMesh::border() const
 {
     return m_border;
 }

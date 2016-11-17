@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_listview);
+
 #include "qquickitemview_p.h"
 
 #include <private/qtquickglobal_p.h>
@@ -84,7 +88,7 @@ public:
 
     enum LabelPositioning { InlineLabels = 0x01, CurrentLabelAtStart = 0x02, NextLabelAtEnd = 0x04 };
     Q_ENUM(LabelPositioning)
-    int labelPositioning() { return m_labelPositioning; }
+    int labelPositioning() const { return m_labelPositioning; }
     void setLabelPositioning(int pos);
 
 Q_SIGNALS:

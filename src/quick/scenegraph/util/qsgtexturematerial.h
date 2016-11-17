@@ -50,9 +50,9 @@ class Q_QUICK_EXPORT QSGOpaqueTextureMaterial : public QSGMaterial
 public:
     QSGOpaqueTextureMaterial();
 
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    virtual int compare(const QSGMaterial *other) const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    int compare(const QSGMaterial *other) const override;
 
     void setTexture(QSGTexture *texture);
     QSGTexture *texture() const { return m_texture; }
@@ -84,8 +84,8 @@ protected:
 class Q_QUICK_EXPORT QSGTextureMaterial : public QSGOpaqueTextureMaterial
 {
 public:
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 };
 
 QT_END_NAMESPACE

@@ -434,7 +434,7 @@ void QQmlExpressionPrivate::expressionChanged()
     emit q->valueChanged();
 }
 
-QString QQmlExpressionPrivate::expressionIdentifier()
+QString QQmlExpressionPrivate::expressionIdentifier() const
 {
     return QLatin1Char('"') + expression + QLatin1Char('"');
 }

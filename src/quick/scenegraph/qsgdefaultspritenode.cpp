@@ -150,8 +150,8 @@ QSGMaterialShader *QQuickSpriteMaterial::createShader() const
 }
 
 static QSGGeometry::Attribute Sprite_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, QSGGeometry::TypeFloat, true),   // pos
-    QSGGeometry::Attribute::create(1, 2, QSGGeometry::TypeFloat),         // tex
+    QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, true),   // pos
+    QSGGeometry::Attribute::create(1, 2, QSGGeometry::FloatType),         // tex
 };
 
 static QSGGeometry::AttributeSet Sprite_AttributeSet =

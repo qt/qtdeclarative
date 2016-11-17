@@ -61,7 +61,9 @@
 #ifndef QT_NO_OPENGL
 # include <QtGui/QOpenGLContext>
 # include <private/qsgdefaultrendercontext_p.h>
+#if QT_CONFIG(quick_shadereffect)
 # include <private/qquickopenglshadereffectnode_p.h>
+#endif
 #endif
 
 #ifdef Q_OS_WIN
@@ -209,11 +211,11 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
             if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_RENDER_LOOP"))) {
                 const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
-                if (loopName == QByteArrayLiteral("windows"))
+                if (loopName == "windows")
                     loopType = WindowsRenderLoop;
-                else if (loopName == QByteArrayLiteral("basic"))
+                else if (loopName == "basic")
                     loopType = BasicRenderLoop;
-                else if (loopName == QByteArrayLiteral("threaded"))
+                else if (loopName == "threaded")
                     loopType = ThreadedRenderLoop;
             }
 
@@ -326,7 +328,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     if (Q_UNLIKELY(!current))
         qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
     QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 

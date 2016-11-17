@@ -510,9 +510,9 @@ void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)
         QSGShaderEffectNode::VariableData &vd(m_shaders[shaderType].varData[i]);
         const bool isSpecial = v.name.startsWith("qt_"); // special names not mapped to properties
         if (isSpecial) {
-            if (v.name == QByteArrayLiteral("qt_Opacity"))
+            if (v.name == "qt_Opacity")
                 vd.specialType = QSGShaderEffectNode::VariableData::Opacity;
-            else if (v.name == QByteArrayLiteral("qt_Matrix"))
+            else if (v.name == "qt_Matrix")
                 vd.specialType = QSGShaderEffectNode::VariableData::Matrix;
             else if (v.name.startsWith("qt_SubRect_"))
                 vd.specialType = QSGShaderEffectNode::VariableData::SubRect;

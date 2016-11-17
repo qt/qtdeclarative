@@ -80,7 +80,7 @@ public:
     void clear();
     void clear(QObject *);
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     bool connectFinished(QObject *, const char *);
     bool connectFinished(QObject *, int);
     bool connectDownloadProgress(QObject *, const char *);

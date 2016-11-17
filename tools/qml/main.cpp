@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
     QString dummyDir;
 
     //Handle main arguments
-    QStringList argList = app->arguments();
+    const QStringList argList = app->arguments();
     for (int i = 1; i < argList.count(); i++) {
         const QString &arg = argList[i];
         if (arg == QLatin1String("-quiet"))

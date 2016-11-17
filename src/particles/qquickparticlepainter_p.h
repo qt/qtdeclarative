@@ -98,7 +98,7 @@ public:
         return m_groupIds;
     }
 
-    void itemChange(ItemChange, const ItemChangeData &);
+    void itemChange(ItemChange, const ItemChangeData &) override;
 
 Q_SIGNALS:
     void countChanged();
@@ -123,7 +123,7 @@ protected:
     */
     virtual void reset();
 
-    virtual void componentComplete();
+    void componentComplete() override;
     virtual void initialize(int gIdx, int pIdx){//Called from main thread
         Q_UNUSED(gIdx);
         Q_UNUSED(pIdx);

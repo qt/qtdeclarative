@@ -259,8 +259,8 @@ public:
     int minimumMinorVersion() const;
     int maximumMinorVersion() const;
 
-    QQmlType *type(const QHashedStringRef &, int);
-    QQmlType *type(const QV4::String *, int);
+    QQmlType *type(const QHashedStringRef &, int) const;
+    QQmlType *type(const QV4::String *, int) const;
 
     QList<QQmlType*> singletonTypes(int) const;
 

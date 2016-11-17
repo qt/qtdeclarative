@@ -86,7 +86,9 @@
 #include "qv4isel_masm_p.h"
 #endif // V4_ENABLE_JIT
 
+#if QT_CONFIG(qml_interpreter)
 #include "qv4isel_moth_p.h"
+#endif
 
 #if USE(PTHREADS)
 #  include <pthread.h>
@@ -160,6 +162,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
+#if QT_CONFIG(qml_interpreter)
         bool jitDisabled = true;
 
 #ifdef V4_ENABLE_JIT
@@ -180,6 +183,9 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                      "very slow. Visit https://wiki.qt.io/V4 to learn about possible "
                      "solutions for your platform.");
         }
+#else
+        factory = new JIT::ISelFactory;
+#endif
     }
     iselFactory.reset(factory);
 
@@ -457,7 +463,7 @@ ExecutionEngine::~ExecutionEngine()
 
     QSet<QV4::CompiledData::CompilationUnit*> remainingUnits;
     qSwap(compilationUnits, remainingUnits);
-    foreach (QV4::CompiledData::CompilationUnit *unit, remainingUnits)
+    for (QV4::CompiledData::CompilationUnit *unit : qAsConst(remainingUnits))
         unit->unlink();
 
     emptyClass->destroy();
@@ -1022,7 +1028,7 @@ ReturnedValue ExecutionEngine::throwURIError(const Value &msg)
 ReturnedValue ExecutionEngine::throwUnimplemented(const QString &message)
 {
     Scope scope(this);
-    ScopedValue v(scope, newString(QStringLiteral("Unimplemented ") + message));
+    ScopedValue v(scope, newString(QLatin1String("Unimplemented ") + message));
     v = newErrorObject(v);
     return throwError(v);
 }

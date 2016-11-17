@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_flipable);
+
 #include "qquickitem.h"
 
 #include <QtGui/qtransform.h>
@@ -73,7 +77,7 @@ public:
     QQuickFlipable(QQuickItem *parent=0);
     ~QQuickFlipable();
 
-    QQuickItem *front();
+    QQuickItem *front() const;
     void setFront(QQuickItem *);
 
     QQuickItem *back();

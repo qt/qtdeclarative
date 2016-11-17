@@ -19,7 +19,6 @@ SOURCES += \
     $$PWD/qsgsoftwarerenderloop.cpp \
     $$PWD/qsgsoftwarelayer.cpp \
     $$PWD/qsgsoftwareadaptation.cpp \
-    $$PWD/qsgsoftwarespritenode.cpp \
     $$PWD/qsgsoftwarethreadedrenderloop.cpp
 
 HEADERS += \
@@ -39,5 +38,11 @@ HEADERS += \
     $$PWD/qsgsoftwarerenderloop_p.h \
     $$PWD/qsgsoftwarelayer_p.h \
     $$PWD/qsgsoftwareadaptation_p.h \
-    $$PWD/qsgsoftwarespritenode_p.h \
     $$PWD/qsgsoftwarethreadedrenderloop_p.h
+
+qtConfig(quick-sprite) {
+    SOURCES += \
+        $$PWD/qsgsoftwarespritenode.cpp
+    HEADERS += \
+        $$PWD/qsgsoftwarespritenode_p.h
+}

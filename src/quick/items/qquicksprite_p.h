@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_sprite);
+
 #include <QObject>
 #include <QUrl>
 #include <QVariantMap>
@@ -325,4 +329,5 @@ private:
 };
 
 QT_END_NAMESPACE
+
 #endif // QQUICKSPRITE_P_H

@@ -90,9 +90,9 @@ public:
     void setDelayed(bool);
 
 protected:
-    virtual void setTarget(const QQmlProperty &);
-    virtual void classBegin();
-    virtual void componentComplete();
+    void setTarget(const QQmlProperty &) override;
+    void classBegin() override;
+    void componentComplete() override;
 
 private:
     void prepareEval();

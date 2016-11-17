@@ -55,7 +55,7 @@ public:
     QQmlThreadPrivate(QQmlThread *);
     QQmlThread *q;
 
-    virtual void run();
+    void run() override;
 
     inline void lock() { _mutex.lock(); }
     inline void unlock() { _mutex.unlock(); }
@@ -81,12 +81,12 @@ public:
     void threadEvent();
 
 protected:
-    virtual bool event(QEvent *);
+    bool event(QEvent *) override;
 
 private:
     struct MainObject : public QObject {
         MainObject(QQmlThreadPrivate *p);
-        virtual bool event(QEvent *e);
+        bool event(QEvent *e) override;
         QQmlThreadPrivate *p;
     };
     MainObject m_mainObject;

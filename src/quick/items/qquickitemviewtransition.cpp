@@ -246,7 +246,7 @@ void QQuickItemViewTransitioner::resetTargetLists()
     moveTransitionTargets.clear();
 }
 
-QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget)
+QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
 {
     if (type == QQuickItemViewTransitioner::NoTransition)
         return 0;

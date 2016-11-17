@@ -471,7 +471,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         QQmlJS::MemoryPool *pool = compiler->memoryPool();
 
         QQmlJS::AST::FormalParameterList *paramList = 0;
-        foreach (const QString &param, parameters) {
+        for (const QString &param : qAsConst(parameters)) {
             QStringRef paramNameRef = compiler->newStringRef(param);
 
             if (paramList)
@@ -1348,9 +1348,9 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
             functionsToCompile << *foe;
         }
         const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
-        QList<QQmlError> jsErrors = v4CodeGen->qmlErrors();
+        const QList<QQmlError> jsErrors = v4CodeGen->qmlErrors();
         if (!jsErrors.isEmpty()) {
-            foreach (const QQmlError &e, jsErrors)
+            for (const QQmlError &e : jsErrors)
                 compiler->recordError(e);
             return false;
         }
@@ -1733,7 +1733,7 @@ void QQmlIRFunctionCleanser::clean()
 
     module->functions = newFunctions;
 
-    foreach (QV4::IR::Function *function, module->functions) {
+    for (QV4::IR::Function *function : qAsConst(module->functions)) {
         for (QV4::IR::BasicBlock *block : function->basicBlocks()) {
             for (QV4::IR::Stmt *s : block->statements()) {
                 visit(s);
@@ -1741,7 +1741,7 @@ void QQmlIRFunctionCleanser::clean()
         }
     }
 
-    foreach (QmlIR::Object *obj, *compiler->qmlObjects()) {
+    for (QmlIR::Object *obj : qAsConst(*compiler->qmlObjects())) {
         for (int i = 0; i < obj->runtimeFunctionIndices.count; ++i)
             obj->runtimeFunctionIndices[i] = newFunctionIndices[obj->runtimeFunctionIndices.at(i)];
     }

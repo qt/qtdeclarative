@@ -148,9 +148,9 @@ public:
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
-    QV4::ReturnedValue vmeMethod(int index);
+    QV4::ReturnedValue vmeMethod(int index) const;
     void setVmeMethod(int index, const QV4::Value &function);
-    QV4::ReturnedValue vmeProperty(int index);
+    QV4::ReturnedValue vmeProperty(int index) const;
     void setVMEProperty(int index, const QV4::Value &v);
 
     void connectAliasSignal(int index, bool indexInSignalRange);
@@ -174,20 +174,20 @@ public:
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
     QV4::WeakValue propertyAndMethodStorage;
-    QV4::MemberData *propertyAndMethodStorageAsMemberData();
+    QV4::MemberData *propertyAndMethodStorageAsMemberData() const;
 
-    int readPropertyAsInt(int id);
-    bool readPropertyAsBool(int id);
-    double readPropertyAsDouble(int id);
-    QString readPropertyAsString(int id);
-    QSizeF readPropertyAsSizeF(int id);
-    QPointF readPropertyAsPointF(int id);
-    QUrl readPropertyAsUrl(int id);
-    QDate readPropertyAsDate(int id);
+    int readPropertyAsInt(int id) const;
+    bool readPropertyAsBool(int id) const;
+    double readPropertyAsDouble(int id) const;
+    QString readPropertyAsString(int id) const;
+    QSizeF readPropertyAsSizeF(int id) const;
+    QPointF readPropertyAsPointF(int id) const;
+    QUrl readPropertyAsUrl(int id) const;
+    QDate readPropertyAsDate(int id) const;
     QDateTime readPropertyAsDateTime(int id);
-    QRectF readPropertyAsRectF(int id);
-    QObject *readPropertyAsQObject(int id);
-    QList<QObject *> *readPropertyAsList(int id);
+    QRectF readPropertyAsRectF(int id) const;
+    QObject *readPropertyAsQObject(int id) const;
+    QList<QObject *> *readPropertyAsList(int id) const;
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);
@@ -207,11 +207,11 @@ public:
 
     void connectAlias(int aliasId);
 
-    QV4::ReturnedValue method(int);
+    QV4::ReturnedValue method(int) const;
 
-    QV4::ReturnedValue readVarProperty(int);
+    QV4::ReturnedValue readVarProperty(int) const;
     void writeVarProperty(int, const QV4::Value &);
-    QVariant readPropertyAsVariant(int);
+    QVariant readPropertyAsVariant(int) const;
     void writeProperty(int, const QVariant &);
 
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;

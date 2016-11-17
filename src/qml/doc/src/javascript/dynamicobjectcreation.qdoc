@@ -143,7 +143,7 @@ If the string of QML imports files using relative paths, the path should be
 relative to the file in which the parent object (the second argument to the
 method) is defined.
 
-\important When building static QML applications, which is enforced on platforms like iOS,
+\important When building static QML applications,
 QML files are scanned to detect import dependencies. That way, all
 necessary plugins and resources are resolved at compile time.
 However, only explicit import statements are considered (those found at

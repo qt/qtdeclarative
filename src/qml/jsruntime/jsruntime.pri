@@ -38,7 +38,6 @@ SOURCES += \
     $$PWD/qv4sequenceobject.cpp \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
-    $$PWD/qv4vme_moth.cpp \
     $$PWD/qv4arraybuffer.cpp \
     $$PWD/qv4typedarray.cpp \
     $$PWD/qv4dataview.cpp
@@ -83,16 +82,21 @@ HEADERS += \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4scopedvalue_p.h \
-    $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4sequenceobject_p.h \
     $$PWD/qv4include_p.h \
     $$PWD/qv4qobjectwrapper_p.h \
-    $$PWD/qv4vme_moth_p.h \
     $$PWD/qv4profiling_p.h \
     $$PWD/qv4arraybuffer_p.h \
     $$PWD/qv4typedarray_p.h \
     $$PWD/qv4dataview_p.h
+
+qtConfig(qml-interpreter) {
+    HEADERS += \
+        $$PWD/qv4vme_moth_p.h
+    SOURCES += \
+        $$PWD/qv4vme_moth.cpp
+}
 
 }
 
@@ -102,6 +106,7 @@ HEADERS += \
     $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4string_p.h \
+    $$PWD/qv4util_p.h \
     $$PWD/qv4value_p.h
 
 SOURCES += \

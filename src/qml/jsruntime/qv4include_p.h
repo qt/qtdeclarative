@@ -62,7 +62,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 class QNetworkAccessManager;
 #endif
 class QNetworkReply;
@@ -94,7 +94,7 @@ private:
     QV4::ExecutionEngine *v4;
     QUrl m_url;
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     int m_redirectCount;
     QNetworkAccessManager *m_network;
     QPointer<QNetworkReply> m_reply;

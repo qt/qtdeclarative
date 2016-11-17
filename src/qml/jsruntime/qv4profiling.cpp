@@ -96,7 +96,7 @@ void Profiler::reportData(bool trackLocations)
     FunctionLocationHash locations;
     properties.reserve(m_data.size());
 
-    foreach (const FunctionCall &call, m_data) {
+    for (const FunctionCall &call : qAsConst(m_data)) {
         properties.append(call.properties());
         Function *function = call.function();
         SentMarker &marker = m_sentLocations[reinterpret_cast<quintptr>(function)];

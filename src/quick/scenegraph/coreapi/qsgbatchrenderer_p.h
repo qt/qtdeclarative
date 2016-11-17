@@ -499,7 +499,7 @@ public:
     void updateRootTransforms(Node *n);
     void updateRootTransforms(Node *n, Node *root, const QMatrix4x4 &combined);
 
-    void updateStates(QSGNode *n);
+    void updateStates(QSGNode *n) override;
     void visitNode(Node *n);
     void registerWithParentRoot(QSGNode *subRoot, QSGNode *parentRoot);
 

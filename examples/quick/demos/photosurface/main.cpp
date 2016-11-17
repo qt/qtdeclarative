@@ -59,9 +59,11 @@ static QStringList imageNameFilters()
 {
     QStringList result;
     QMimeDatabase mimeDatabase;
-    foreach (const QByteArray &m, QImageReader::supportedMimeTypes()) {
-        foreach (const QString &suffix, mimeDatabase.mimeTypeForName(m).suffixes())
-            result.append(QStringLiteral("*.") + suffix);
+    const auto supportedMimeTypes = QImageReader::supportedMimeTypes();
+    for (const QByteArray &m : supportedMimeTypes) {
+        const auto suffixes = mimeDatabase.mimeTypeForName(m).suffixes();
+        for (const QString &suffix : suffixes)
+            result.append(QLatin1String("*.") + suffix);
     }
     return result;
 }

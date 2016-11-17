@@ -209,7 +209,7 @@ void InstructionSelection::run(int functionIndex)
         ConvertTemps().toStackSlots(_function);
     }
 
-    QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    BitVector removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
     IR::Stmt *cs = 0;
@@ -292,7 +292,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backend
 {
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
-    foreach (IR::Function *irFunction, irModule->functions)
+    for (IR::Function *irFunction : qAsConst(irModule->functions))
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
     result.adopt(compilationUnit.take());
@@ -950,7 +950,7 @@ void InstructionSelection::visitJump(IR::Jump *s)
 {
     if (s->target == _nextBlock)
         return;
-    if (_removableJumps.contains(s))
+    if (_removableJumps.at(_block->index()))
         return;
 
     addDebugInstruction();
@@ -1477,6 +1477,17 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 
     QByteArray padding;
 
+#ifdef MOTH_THREADED_INTERPRETER
+    // Map from instruction label back to instruction type. Only needed when persisting
+    // already linked compilation units;
+    QHash<void*, int> reverseInstructionMapping;
+    if (engine) {
+        void **instructions = VME::instructionJumpTable();
+        for (int i = 0; i < Instr::LastInstruction; ++i)
+            reverseInstructionMapping.insert(instructions[i], i);
+    }
+#endif
+
     for (int i = 0; i < codeRefs.size(); ++i) {
         const CompiledData::Function *compiledFunction = unit->functionAt(i);
 
@@ -1493,8 +1504,30 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
             return false;
         }
 
-        const void *codePtr = codeRefs.at(i).constData();
-        written = device->write(reinterpret_cast<const char *>(codePtr), compiledFunction->codeSize);
+        QByteArray code = codeRefs.at(i);
+
+#ifdef MOTH_THREADED_INTERPRETER
+        if (!reverseInstructionMapping.isEmpty()) {
+            char *codePtr = code.data(); // detaches
+            int index = 0;
+            while (index < code.size()) {
+                Instr *genericInstr = reinterpret_cast<Instr *>(codePtr + index);
+
+                genericInstr->common.instructionType = reverseInstructionMapping.value(genericInstr->common.code);
+
+                switch (genericInstr->common.instructionType) {
+    #define REVERSE_INSTRUCTION(InstructionType, Member) \
+                case Instr::InstructionType: \
+                    index += InstrMeta<(int)Instr::InstructionType>::Size; \
+                break;
+
+                FOR_EACH_MOTH_INSTR(REVERSE_INSTRUCTION)
+                }
+            }
+        }
+#endif
+
+        written = device->write(code.constData(), compiledFunction->codeSize);
         if (written != qint64(compiledFunction->codeSize)) {
             *errorString = device->errorString();
             return false;

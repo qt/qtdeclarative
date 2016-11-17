@@ -125,6 +125,7 @@ private slots:
     void jsIncDecNonObjectProperty();
     void JSONparse();
     void arraySort();
+    void lookupOnDisappearingProperty();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -139,6 +140,7 @@ private slots:
 
     void arrayPop_QTBUG_35979();
     void array_unshift_QTBUG_52065();
+    void array_join_QTBUG_53672();
 
     void regexpLastMatch();
     void indexedAccesses();
@@ -190,6 +192,9 @@ private slots:
     void v4FunctionWithoutQML();
 
     void withNoContext();
+    void holeInPropertyData();
+
+    void basicBlockMergeAfterLoopPeeling();
 
 signals:
     void testSignal();
@@ -1033,6 +1038,8 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("Array.prototype.toString") << QString("Array.prototype.toString") << QString("toString");
     QTest::newRow("Array.prototype.toLocaleString") << QString("Array.prototype.toLocaleString") << QString("toLocaleString");
     QTest::newRow("Array.prototype.concat") << QString("Array.prototype.concat") << QString("concat");
+    QTest::newRow("Array.prototype.find") << QString("Array.prototype.find") << QString("find");
+    QTest::newRow("Array.prototype.findIndex") << QString("Array.prototype.findIndex") << QString("findIndex");
     QTest::newRow("Array.prototype.join") << QString("Array.prototype.join") << QString("join");
     QTest::newRow("Array.prototype.pop") << QString("Array.prototype.pop") << QString("pop");
     QTest::newRow("Array.prototype.push") << QString("Array.prototype.push") << QString("push");
@@ -2142,12 +2149,27 @@ void tst_QJSEngine::jsNumberClass()
         QJSValue ret = eng.evaluate("new Number(123).toExponential()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("1.23e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.2e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.23e+2"));
+        ret = eng.evaluate("new Number(123).toExponential(3)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("1.230e+2"));
     }
     QVERIFY(proto.property("toFixed").isCallable());
     {
         QJSValue ret = eng.evaluate("new Number(123).toFixed()");
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("123"));
+        ret = eng.evaluate("new Number(123).toFixed(1)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("123.0"));
+        ret = eng.evaluate("new Number(123).toFixed(2)");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("123.00"));
     }
     QVERIFY(proto.property("toPrecision").isCallable());
     {
@@ -2962,6 +2984,22 @@ void tst_QJSEngine::arraySort()
                  "crashMe();");
 }
 
+void tst_QJSEngine::lookupOnDisappearingProperty()
+{
+    QJSEngine eng;
+    QJSValue func = eng.evaluate("(function(){\"use strict\"; return eval(\"function(obj) { return obj.someProperty; }\")})()");
+    QVERIFY(func.isCallable());
+
+    QJSValue o = eng.newObject();
+    o.setProperty(QStringLiteral("someProperty"), 42);
+
+    QCOMPARE(func.call(QJSValueList()<< o).toInt(), 42);
+
+    o = eng.newObject();
+    QVERIFY(func.call(QJSValueList()<< o).isUndefined());
+    QVERIFY(func.call(QJSValueList()<< o).isUndefined());
+}
+
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }
 
 void tst_QJSEngine::qRegExpInport_data()
@@ -3169,6 +3207,14 @@ void tst_QJSEngine::array_unshift_QTBUG_52065()
 
     for (int i = 0; i < len; ++i)
         QCOMPARE(result.property(i).toInt(), i);
+}
+
+void tst_QJSEngine::array_join_QTBUG_53672()
+{
+    QJSEngine eng;
+    QJSValue result = eng.evaluate("Array.prototype.join.call(0)");
+    QVERIFY(result.isString());
+    QCOMPARE(result.toString(), QString(""));
 }
 
 void tst_QJSEngine::regexpLastMatch()
@@ -4002,6 +4048,35 @@ void tst_QJSEngine::withNoContext()
     // Don't crash (QTBUG-53794)
     QJSEngine engine;
     engine.evaluate("with (noContext) true");
+}
+
+void tst_QJSEngine::holeInPropertyData()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+                "var o = {};\n"
+                "o.bar = 0xcccccccc;\n"
+                "o.foo = 0x55555555;\n"
+                "Object.defineProperty(o, 'bar', { get: function() { return 0xffffffff }});\n"
+                "o.bar === 0xffffffff && o.foo === 0x55555555;");
+    QVERIFY(ok.isBool());
+    QVERIFY(ok.toBool());
+}
+
+void tst_QJSEngine::basicBlockMergeAfterLoopPeeling()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+    "function crashMe() {\n"
+    "    var seen = false;\n"
+    "    while (globalVar) {\n"
+    "        if (seen)\n"
+    "            return;\n"
+    "        seen = true;\n"
+    "    }\n"
+    "}\n");
+    QVERIFY(!ok.isCallable());
+
 }
 
 QTEST_MAIN(tst_QJSEngine)

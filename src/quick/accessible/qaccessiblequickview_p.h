@@ -63,20 +63,20 @@ class QAccessibleQuickWindow : public QAccessibleObject
 public:
     QAccessibleQuickWindow(QQuickWindow *object);
 
-    QAccessibleInterface *parent() const;
-    QAccessibleInterface *child(int index) const;
+    QAccessibleInterface *parent() const override;
+    QAccessibleInterface *child(int index) const override;
 
-    QAccessible::Role role() const;
-    QAccessible::State state() const;
-    QRect rect() const;
+    QAccessible::Role role() const override;
+    QAccessible::State state() const override;
+    QRect rect() const override;
 
-    int childCount() const;
-    int indexOfChild(const QAccessibleInterface *iface) const;
-    QString text(QAccessible::Text text) const;
-    QAccessibleInterface *childAt(int x, int y) const;
+    int childCount() const override;
+    int indexOfChild(const QAccessibleInterface *iface) const override;
+    QString text(QAccessible::Text text) const override;
+    QAccessibleInterface *childAt(int x, int y) const override;
 
 private:
-    QQuickWindow *window() const { return static_cast<QQuickWindow*>(object()); }
+    QQuickWindow *window() const override { return static_cast<QQuickWindow*>(object()); }
     QList<QQuickItem *> rootItems() const;
 };
 

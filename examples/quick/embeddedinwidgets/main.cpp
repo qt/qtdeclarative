@@ -103,7 +103,8 @@ void MainWindow::quickViewStatusChanged(QQuickView::Status status)
 {
     if (status == QQuickView::Error) {
         QStringList errors;
-        foreach (const QQmlError &error, m_quickView->errors())
+        const auto viewErrors = m_quickView->errors();
+        for (const QQmlError &error : viewErrors)
             errors.append(error.toString());
         statusBar()->showMessage(errors.join(QStringLiteral(", ")));
     }

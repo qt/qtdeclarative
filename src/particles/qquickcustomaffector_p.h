@@ -69,7 +69,7 @@ class QQuickCustomAffector : public QQuickParticleAffector
 
 public:
     explicit QQuickCustomAffector(QQuickItem *parent = 0);
-    virtual void affectSystem(qreal dt);
+    void affectSystem(qreal dt) override;
 
     QQuickDirection * position() const
     {
@@ -153,7 +153,8 @@ public Q_SLOTS:
 
 protected:
     bool isAffectConnected();
-    virtual bool affectParticle(QQuickParticleData *d, qreal dt);
+    bool affectParticle(QQuickParticleData *d, qreal dt) override;
+
 private:
     void affectProperties(const QList<QQuickParticleData*> particles, qreal dt);
     QQuickDirection * m_position;

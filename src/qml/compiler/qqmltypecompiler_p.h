@@ -285,7 +285,8 @@ protected:
     // indices of the objects that are actually Component {}
     QVector<quint32> componentRoots;
 
-    QHash<int, int> _idToObjectIndex;
+    // Deliberate choice of map over hash here to ensure stable generated output.
+    QMap<int, int> _idToObjectIndex;
     QVector<int> _objectsWithAliases;
 
     QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes;

@@ -190,7 +190,7 @@ public:
     bool isAtYEnd() const;
     bool isAtYBeginning() const;
 
-    QQuickItem *contentItem();
+    QQuickItem *contentItem() const;
 
     enum FlickableDirection { AutoFlickDirection=0x0, HorizontalFlick=0x1, VerticalFlick=0x2, HorizontalAndVerticalFlick=0x3,
                               AutoFlickIfNeeded=0xc };

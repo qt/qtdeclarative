@@ -192,7 +192,7 @@ public:
 
     ActionList actions() Q_DECL_OVERRIDE;
 
-    QQuickAnchorSet *anchors();
+    QQuickAnchorSet *anchors() const;
 
     QQuickItem *object() const;
     void setObject(QQuickItem *);
@@ -210,7 +210,7 @@ public:
     void rewind() Q_DECL_OVERRIDE;
     void saveCurrentValues() Q_DECL_OVERRIDE;
 
-    QList<QQuickStateAction> additionalActions();
+    QList<QQuickStateAction> additionalActions() const;
     void saveTargetValues() Q_DECL_OVERRIDE;
 };
 

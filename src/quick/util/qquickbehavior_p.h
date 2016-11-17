@@ -75,8 +75,8 @@ public:
     QQuickBehavior(QObject *parent=0);
     ~QQuickBehavior();
 
-    virtual void setTarget(const QQmlProperty &);
-    virtual void write(const QVariant &value);
+    void setTarget(const QQmlProperty &) override;
+    void write(const QVariant &value) override;
 
     QQuickAbstractAnimation *animation();
     void setAnimation(QQuickAbstractAnimation *);

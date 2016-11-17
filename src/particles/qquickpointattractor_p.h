@@ -160,7 +160,8 @@ void setProportionalToDistance(Proportion arg)
 }
 
 protected:
-    virtual bool affectParticle(QQuickParticleData *d, qreal dt);
+    bool affectParticle(QQuickParticleData *d, qreal dt) override;
+
 private:
 qreal m_strength;
 qreal m_x;

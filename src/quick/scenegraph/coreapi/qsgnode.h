@@ -325,7 +325,7 @@ public:
     void setCombinedOpacity(qreal opacity);
     qreal combinedOpacity() const { return m_combined_opacity; }
 
-    bool isSubtreeBlocked() const;
+    bool isSubtreeBlocked() const override;
 
 private:
     qreal m_opacity;

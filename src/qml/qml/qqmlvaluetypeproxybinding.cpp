@@ -72,7 +72,7 @@ bool QQmlValueTypeProxyBinding::isValueTypeProxy() const
     return true;
 }
 
-QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(QQmlPropertyIndex propertyIndex)
+QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(QQmlPropertyIndex propertyIndex) const
 {
     QQmlAbstractBinding *binding = m_bindings.data();
 

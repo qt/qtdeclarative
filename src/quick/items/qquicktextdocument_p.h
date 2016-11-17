@@ -75,10 +75,10 @@ public:
     void setText(const QString &);
     int resourcesLoading() const { return outstanding; }
 
-    QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format);
-    void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format);
+    QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format) override;
+    void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format) override;
 
-    QImage image(const QTextImageFormat &format);
+    QImage image(const QTextImageFormat &format) const;
 
 public Q_SLOTS:
     void clearResources();
@@ -87,7 +87,7 @@ Q_SIGNALS:
     void imagesLoaded();
 
 protected:
-    QVariant loadResource(int type, const QUrl &name);
+    QVariant loadResource(int type, const QUrl &name) override;
 
     QQuickPixmap *loadPixmap(QQmlContext *context, const QUrl &name);
 

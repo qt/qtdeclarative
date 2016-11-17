@@ -513,7 +513,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     easily be translated into a QByteArray. \a format should be one contained in the \l formats property.
 */
 
-QObject *QQuickDropEvent::source()
+QObject *QQuickDropEvent::source() const
 {
     if (const QQuickDragMimeData *dragMime = qobject_cast<const QQuickDragMimeData *>(event->mimeData()))
         return dragMime->source();

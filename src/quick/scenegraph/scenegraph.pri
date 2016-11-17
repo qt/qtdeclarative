@@ -113,7 +113,6 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/qsgdefaultinternalrectanglenode.cpp \
         $$PWD/qsgdefaultrendercontext.cpp \
         $$PWD/qsgdefaultcontext.cpp \
-        $$PWD/qsgdefaultspritenode.cpp \
         $$PWD/util/qsgdefaultpainternode.cpp \
         $$PWD/util/qsgdefaultrectanglenode.cpp \
         $$PWD/util/qsgdefaultimagenode.cpp \
@@ -129,7 +128,6 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/qsgdefaultglyphnode_p_p.h \
         $$PWD/qsgdefaultinternalimagenode_p.h \
         $$PWD/qsgdefaultinternalrectanglenode_p.h \
-        $$PWD/qsgdefaultspritenode_p.h \
         $$PWD/qsgdefaultrendercontext_p.h \
         $$PWD/qsgdefaultcontext_p.h \
         $$PWD/util/qsgdefaultpainternode_p.h \
@@ -139,6 +137,13 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/qsgdefaultlayer_p.h \
         $$PWD/qsgthreadedrenderloop_p.h \
         $$PWD/qsgwindowsrenderloop_p.h
+
+    qtConfig(quick-sprite) {
+        SOURCES += \
+            $$PWD/qsgdefaultspritenode.cpp
+        HEADERS += \
+            $$PWD/qsgdefaultspritenode_p.h
+    }
 }
 
 # Built-in, non-plugin-based adaptations

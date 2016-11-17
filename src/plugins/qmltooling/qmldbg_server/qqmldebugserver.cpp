@@ -589,12 +589,12 @@ void QQmlDebugServerImpl::addEngine(QJSEngine *engine)
     QMutexLocker locker(&m_helloMutex);
     Q_ASSERT(!m_engineConditions.contains(engine));
 
-    foreach (QQmlDebugService *service, m_plugins)
+    for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineAboutToBeAdded(engine);
 
     m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.count());
 
-    foreach (QQmlDebugService *service, m_plugins)
+    for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineAdded(engine);
 }
 
@@ -606,12 +606,12 @@ void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
     QMutexLocker locker(&m_helloMutex);
     Q_ASSERT(m_engineConditions.contains(engine));
 
-    foreach (QQmlDebugService *service, m_plugins)
+    for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineAboutToBeRemoved(engine);
 
     m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.count());
 
-    foreach (QQmlDebugService *service, m_plugins)
+    for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineRemoved(engine);
 
     m_engineConditions.remove(engine);
@@ -703,11 +703,11 @@ void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArr
         if (m_clientSupportsMultiPackets) {
             QQmlDebugPacket out;
             out << name;
-            foreach (const QByteArray &message, messages)
+            for (const QByteArray &message : messages)
                 out << message;
             m_protocol->send(out.data());
         } else {
-            foreach (const QByteArray &message, messages)
+            for (const QByteArray &message : messages)
                 doSendMessage(name, message);
         }
         m_connection->flush();

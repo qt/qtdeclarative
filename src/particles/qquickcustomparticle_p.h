@@ -84,18 +84,18 @@ Q_SIGNALS:
     void vertexShaderChanged();
 
 protected:
-    virtual void initialize(int gIdx, int pIdx);
-    virtual void commit(int gIdx, int pIdx);
+    void initialize(int gIdx, int pIdx) override;
+    void commit(int gIdx, int pIdx) override;
 
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     QQuickOpenGLShaderEffectNode *prepareNextFrame(QQuickOpenGLShaderEffectNode *rootNode);
-    void reset();
+    void reset() override;
     void resize(int oldCount, int newCount);
-    virtual void componentComplete();
+    void componentComplete() override;
     QQuickOpenGLShaderEffectNode *buildCustomNodes();
 
-    void sceneGraphInvalidated();
-    void itemChange(ItemChange change, const ItemChangeData &value);
+    void sceneGraphInvalidated() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private Q_SLOTS:
     void sourceDestroyed(QObject *object);

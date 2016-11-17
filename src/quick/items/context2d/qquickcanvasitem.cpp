@@ -1095,6 +1095,27 @@ QImage QQuickCanvasItem::toImage(const QRectF& rect) const
     return QImage();
 }
 
+static const char* mimeToType(const QString &mime)
+{
+    const QLatin1String imagePrefix("image/");
+    if (!mime.startsWith(imagePrefix))
+        return nullptr;
+    const QStringRef mimeExt = mime.midRef(imagePrefix.size());
+    if (mimeExt == QLatin1String("png"))
+        return "png";
+    else if (mimeExt == QLatin1String("bmp"))
+        return "bmp";
+    else if (mimeExt == QLatin1String("jpeg"))
+        return "jpeg";
+    else if (mimeExt == QLatin1String("x-portable-pixmap"))
+        return "ppm";
+    else if (mimeExt == QLatin1String("tiff"))
+        return "tiff";
+    else if (mimeExt == QLatin1String("xpm"))
+        return "xpm";
+    return nullptr;
+}
+
 /*!
   \qmlmethod string QtQuick::Canvas::toDataURL(string mimeType)
 
@@ -1112,27 +1133,14 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
         QByteArray ba;
         QBuffer buffer(&ba);
         buffer.open(QIODevice::WriteOnly);
-        QString mime = mimeType.toLower();
-        QString type;
-        if (mime == QLatin1String("image/png")) {
-            type = QStringLiteral("PNG");
-        } else if (mime == QLatin1String("image/bmp"))
-            type = QStringLiteral("BMP");
-        else if (mime == QLatin1String("image/jpeg"))
-            type = QStringLiteral("JPEG");
-        else if (mime == QLatin1String("image/x-portable-pixmap"))
-            type = QStringLiteral("PPM");
-        else if (mime == QLatin1String("image/tiff"))
-            type = QStringLiteral("TIFF");
-        else if (mime == QLatin1String("image/xpm"))
-            type = QStringLiteral("XPM");
-        else
+        const QString mime = mimeType.toLower();
+        const char* type = mimeToType(mime);
+        if (!type)
             return QStringLiteral("data:,");
 
-        image.save(&buffer, type.toLatin1());
+        image.save(&buffer, type);
         buffer.close();
-        QString dataUrl = QStringLiteral("data:%1;base64,%2");
-        return dataUrl.arg(mime).arg(QLatin1String(ba.toBase64().constData()));
+        return QLatin1String("data:") + mime + QLatin1String(";base64,") + QLatin1String(ba.toBase64().constData());
     }
     return QStringLiteral("data:,");
 }

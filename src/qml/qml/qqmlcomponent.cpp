@@ -376,7 +376,7 @@ QQmlComponent::~QQmlComponent()
 
         if (isError()) {
             qWarning() << "This may have been caused by one of the following errors:";
-            foreach (const QQmlError &error, d->state.errors)
+            for (const QQmlError &error : qAsConst(d->state.errors))
                 qWarning().nospace().noquote() << QLatin1String("    ") << error;
         }
 
@@ -709,7 +709,7 @@ QString QQmlComponent::errorString() const
     QString ret;
     if(!isError())
         return ret;
-    foreach(const QQmlError &e, d->state.errors) {
+    for (const QQmlError &e : d->state.errors) {
         ret += e.url().toString() + QLatin1Char(':') +
                QString::number(e.line()) + QLatin1Char(' ') +
                e.description() + QLatin1Char('\n');
@@ -1098,13 +1098,13 @@ public:
         , incubatorObject(inc)
     {}
 
-    virtual void statusChanged(Status s) {
+    void statusChanged(Status s) override {
         QV4::Scope scope(incubatorObject->internalClass->engine);
         QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
         i->statusChanged(s);
     }
 
-    virtual void setInitialState(QObject *o) {
+    void setInitialState(QObject *o) override {
         QV4::Scope scope(incubatorObject->internalClass->engine);
         QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
         i->setInitialState(o);

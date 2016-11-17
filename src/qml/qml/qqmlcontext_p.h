@@ -235,7 +235,7 @@ public:
     inline QQmlGuardedContextData(QQmlContextData *);
     inline ~QQmlGuardedContextData();
 
-    inline QQmlContextData *contextData();
+    inline QQmlContextData *contextData() const;
     inline void setContextData(QQmlContextData *);
 
     inline bool isNull() const { return !m_contextData; }
@@ -285,7 +285,7 @@ void QQmlGuardedContextData::setContextData(QQmlContextData *contextData)
     }
 }
 
-QQmlContextData *QQmlGuardedContextData::contextData()
+QQmlContextData *QQmlGuardedContextData::contextData() const
 {
     return m_contextData;
 }

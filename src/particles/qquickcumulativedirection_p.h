@@ -62,7 +62,7 @@ class QQuickCumulativeDirection : public QQuickDirection
 public:
     explicit QQuickCumulativeDirection(QObject *parent = 0);
     QQmlListProperty<QQuickDirection> directions();
-    const QPointF sample(const QPointF &from);
+    QPointF sample(const QPointF &from) override;
 private:
     QList<QQuickDirection*> m_directions;
 };

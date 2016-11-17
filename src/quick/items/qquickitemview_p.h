@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_itemview);
+
 #include "qquickflickable_p.h"
 #include <qpointer.h>
 #include <QtCore/QLoggingCategory>
@@ -312,7 +316,7 @@ public:
         : QObject(parent), m_isCurrent(false), m_delayRemove(false) {}
     ~QQuickItemViewAttached() {}
 
-    QQuickItemView *view() { return m_view; }
+    QQuickItemView *view() const { return m_view; }
     void setView(QQuickItemView *view) {
         if (view != m_view) {
             m_view = view;

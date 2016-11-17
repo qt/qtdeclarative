@@ -98,7 +98,9 @@ public:
     QSGRectangleNode *createRectangleNode() override;
     QSGImageNode *createImageNode() override;
     QSGNinePatchNode *createNinePatchNode() override;
+#if QT_CONFIG(quick_sprite)
     QSGSpriteNode *createSpriteNode() override;
+#endif
 
     GraphicsApi graphicsApi() const override;
     ShaderType shaderType() const override;

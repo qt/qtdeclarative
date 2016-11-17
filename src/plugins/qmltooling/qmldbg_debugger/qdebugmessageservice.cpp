@@ -70,7 +70,7 @@ void QDebugMessageServiceImpl::sendDebugMessage(QtMsgType type,
     //We just eavesdrop and forward the messages to a port
     //only if a client is connected to it.
     QQmlDebugPacket ws;
-    ws << QByteArray("MESSAGE") << type << buf.toUtf8();
+    ws << QByteArray("MESSAGE") << int(type) << buf.toUtf8();
     ws << QByteArray(ctxt.file) << ctxt.line << QByteArray(ctxt.function);
     ws << QByteArray(ctxt.category) << timer.nsecsElapsed();
 

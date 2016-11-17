@@ -63,7 +63,7 @@ class QQuickV4ParticleData {
 public:
     QQuickV4ParticleData(QV8Engine*, QQuickParticleData*, QQuickParticleSystem *system);
     ~QQuickV4ParticleData();
-    QQmlV4Handle v4Value();
+    QQmlV4Handle v4Value() const;
 private:
     QV4::PersistentValue m_v4Value;
 };

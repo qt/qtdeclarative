@@ -51,14 +51,16 @@
 // We mean it.
 //
 
-#include "qquickimage_p_p.h"
+#include <QtQuick/qtquickglobal.h>
 
-#ifndef QT_NO_MOVIE
+QT_REQUIRE_CONFIG(quick_animatedimage);
+
+#include "qquickimage_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QMovie;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 class QNetworkReply;
 #endif
 
@@ -69,7 +71,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 public:
     QQuickAnimatedImagePrivate()
       : playing(true), paused(false), preset_currentframe(0), _movie(0), oldPlaying(false)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         , reply(0), redirectCount(0)
 #endif
         , currentSourceSize(0, 0)
@@ -83,7 +85,7 @@ public:
     int preset_currentframe;
     QMovie *_movie;
     bool oldPlaying;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkReply *reply;
     int redirectCount;
 #endif
@@ -92,7 +94,5 @@ public:
 };
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_MOVIE
 
 #endif // QQUICKANIMATEDIMAGE_P_P_H

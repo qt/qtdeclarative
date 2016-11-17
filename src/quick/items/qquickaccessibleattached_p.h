@@ -203,7 +203,7 @@ public:
         return object;
     }
 
-    QAccessible::State state() { return m_state; }
+    QAccessible::State state() const { return m_state; }
     bool ignored() const;
     bool doAction(const QString &actionName);
     void availableActions(QStringList *actions) const;

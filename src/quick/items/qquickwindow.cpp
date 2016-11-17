@@ -1808,6 +1808,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     if (item->contains(p)) {
         QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
                           event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
+        wheel.setTimestamp(event->timestamp());
         wheel.accept();
         QCoreApplication::sendEvent(item, &wheel);
         if (wheel.isAccepted()) {
@@ -1908,8 +1909,6 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
     deliverPointerEvent(pointerEventInstance(e.data()));
 }
 
-static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
-
 bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
@@ -1985,6 +1984,8 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
         lastMousePosition = event->touchPoints().at(0).pos();
 
     qCDebug(DBG_TOUCH) << event;
+
+    static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
 
     if (qquickwindow_no_touch_compression || pointerEventRecursionGuard) {
         deliverPointerEvent(pointerEventInstance(event));
@@ -2111,7 +2112,7 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
     There is a unique instance per QQuickPointerDevice, which is determined
     from \a event's device.
 */
-QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event)
+QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) const
 {
     QQuickPointerDevice *dev = nullptr;
     switch (event->type()) {
@@ -4199,6 +4200,28 @@ void QQuickWindow::resetOpenGLState()
     The default value is 1.0.
 
     \since 5.1
+ */
+
+/*!
+    \qmlproperty variant Window::targetScreen
+
+    Specifies the screen the window should be placed on. Equivalent to
+    QWindow::setScreen().
+
+    The value must be an element from the Qt.application.screens array.
+
+    By default the value is null which leads to using the primary screen.
+
+    \note To ensure that the window is associated with the desired screen right
+    upon the underlying native window's initial creation, make sure this
+    property is set as early as possible and that the setting of its value is
+    not deferred. This can be particularly important on embedded platforms
+    without a windowing system, where only one window per screen is allowed at a
+    time.
+
+    \since 5.9
+
+    \sa QWindow::setScreen(), QScreen, Qt.application
  */
 
 /*!

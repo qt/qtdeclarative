@@ -119,7 +119,7 @@ public:
     virtual ~QSGDefaultDepthStencilBuffer();
 
 protected:
-    virtual void free();
+    void free() override;
 };
 
 

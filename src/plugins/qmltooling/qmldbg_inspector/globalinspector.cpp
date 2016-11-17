@@ -92,7 +92,7 @@ void GlobalInspector::setSelectedItems(const QList<QQuickItem *> &items)
 
     QList<QObject*> objectList;
     objectList.reserve(items.count());
-    foreach (QQuickItem *item, items)
+    for (QQuickItem *item : items)
         objectList << item;
 
     sendCurrentObjects(objectList);
@@ -113,7 +113,7 @@ void GlobalInspector::sendCurrentObjects(const QList<QObject*> &objects)
 
     QList<int> debugIds;
     debugIds.reserve(objects.count());
-    foreach (QObject *object, objects)
+    for (QObject *object : objects)
         debugIds << QQmlDebugService::idForObject(object);
     ds << debugIds;
 
@@ -194,7 +194,7 @@ bool GlobalInspector::createQmlObject(int requestId, const QString &qml, QObject
         return false;
 
     QString imports;
-    foreach (const QString &s, importList)
+    for (const QString &s : importList)
         imports += s + QLatin1Char('\n');
 
     ObjectCreator *objectCreator = new ObjectCreator(requestId, parentContext->engine(), parent);
@@ -223,7 +223,7 @@ void GlobalInspector::removeWindow(QQuickWindow *window)
 
 void GlobalInspector::setParentWindow(QQuickWindow *window, QWindow *parentWindow)
 {
-    foreach (QmlJSDebugger::QQuickWindowInspector *inspector, m_windowInspectors) {
+    for (QmlJSDebugger::QQuickWindowInspector *inspector : qAsConst(m_windowInspectors)) {
         if (inspector->quickWindow() == window)
             inspector->setParentWindow(parentWindow);
     }
@@ -234,7 +234,8 @@ bool GlobalInspector::syncSelectedItems(const QList<QQuickItem *> &items)
     bool selectionChanged = false;
 
     // Disconnect and remove items that are no longer selected
-    foreach (const QPointer<QQuickItem> &item, m_selectedItems) {
+    const auto selectedItemsCopy = m_selectedItems;
+    for (const QPointer<QQuickItem> &item : selectedItemsCopy) {
         if (!item) // Don't see how this can happen due to handling of destroyed()
             continue;
         if (items.contains(item))
@@ -247,14 +248,14 @@ bool GlobalInspector::syncSelectedItems(const QList<QQuickItem *> &items)
     }
 
     // Connect and add newly selected items
-    foreach (QQuickItem *item, items) {
+    for (QQuickItem *item : items) {
         if (m_selectedItems.contains(item))
             continue;
 
         selectionChanged = true;
         connect(item, &QObject::destroyed, this, &GlobalInspector::removeFromSelectedItems);
         m_selectedItems.append(item);
-        foreach (QQuickWindowInspector *inspector, m_windowInspectors) {
+        for (QQuickWindowInspector *inspector : qAsConst(m_windowInspectors)) {
             if (inspector->isEnabled() && inspector->quickWindow() == item->window()) {
                 m_highlightItems.insert(item, new SelectionHighlight(titleForItem(item), item,
                                                                      inspector->overlay()));
@@ -314,12 +315,12 @@ void GlobalInspector::processMessage(const QByteArray &message)
         ds >> requestId >> command;
 
         if (command == ENABLE) {
-            foreach (QQuickWindowInspector *inspector, m_windowInspectors)
+            for (QQuickWindowInspector *inspector : qAsConst(m_windowInspectors))
                 inspector->setEnabled(true);
             success = !m_windowInspectors.isEmpty();
         } else if (command == DISABLE) {
             setSelectedItems(QList<QQuickItem*>());
-            foreach (QQuickWindowInspector *inspector, m_windowInspectors)
+            for (QQuickWindowInspector *inspector : qAsConst(m_windowInspectors))
                 inspector->setEnabled(false);
             success = !m_windowInspectors.isEmpty();
         } else if (command == SELECT) {
@@ -327,7 +328,7 @@ void GlobalInspector::processMessage(const QByteArray &message)
             ds >> debugIds;
 
             QList<QQuickItem *> selectedObjects;
-            foreach (int debugId, debugIds) {
+            for (int debugId : qAsConst(debugIds)) {
                 if (QQuickItem *obj =
                         qobject_cast<QQuickItem *>(QQmlDebugService::objectForId(debugId)))
                     selectedObjects << obj;
@@ -341,7 +342,7 @@ void GlobalInspector::processMessage(const QByteArray &message)
         } else if (command == SHOW_APP_ON_TOP) {
             bool showOnTop;
             ds >> showOnTop;
-            foreach (QmlJSDebugger::QQuickWindowInspector *inspector, m_windowInspectors)
+            for (QmlJSDebugger::QQuickWindowInspector *inspector : qAsConst(m_windowInspectors))
                 inspector->setShowAppOnTop(showOnTop);
             success = !m_windowInspectors.isEmpty();
         } else if (command == CREATE_OBJECT) {

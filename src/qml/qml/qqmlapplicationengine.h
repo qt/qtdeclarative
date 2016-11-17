@@ -58,7 +58,11 @@ public:
     QQmlApplicationEngine(const QString &filePath, QObject *parent = Q_NULLPTR);
     ~QQmlApplicationEngine();
 
-    QList<QObject*> rootObjects();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    QList<QObject*> rootObjects(); // ### Qt 6: remove
+#endif
+    QList<QObject*> rootObjects() const;
+
 public Q_SLOTS:
     void load(const QUrl &url);
     void load(const QString &filePath);

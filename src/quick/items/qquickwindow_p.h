@@ -161,7 +161,7 @@ public:
     void deliverDelayedTouchEvent();
 
     // delivery of pointer events:
-    QQuickPointerEvent *pointerEventInstance(QEvent *ev);
+    QQuickPointerEvent *pointerEventInstance(QEvent *ev) const;
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
@@ -198,7 +198,7 @@ public:
     void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = 0);
     void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = 0);
     static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
-    void clearFocusObject();
+    void clearFocusObject() override;
 
     void updateFocusItemTransform();
 

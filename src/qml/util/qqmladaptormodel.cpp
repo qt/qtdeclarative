@@ -146,7 +146,7 @@ public:
         bool changed = roles.isEmpty() && !watchedRoles.isEmpty();
         if (!changed && !watchedRoles.isEmpty() && watchedRoleIds.isEmpty()) {
             QList<int> roleIds;
-            foreach (const QByteArray &r, watchedRoles) {
+            for (const QByteArray &r : watchedRoles) {
                 QHash<QByteArray, int>::const_iterator it = roleNames.find(r);
                 if (it != roleNames.end())
                     roleIds << it.value();
@@ -190,7 +190,7 @@ public:
         VDMModelDelegateDataType *dataType = const_cast<VDMModelDelegateDataType *>(this);
 
         dataType->watchedRoleIds.clear();
-        foreach (const QByteArray &oldRole, oldRoles)
+        for (const QByteArray &oldRole : oldRoles)
             dataType->watchedRoles.removeOne(oldRole);
         dataType->watchedRoles += newRoles;
     }

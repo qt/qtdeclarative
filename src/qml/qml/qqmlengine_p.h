@@ -162,7 +162,7 @@ public:
     void registerFinalizeCallback(QObject *obj, int index);
 
     QQmlObjectCreator *activeObjectCreator;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;
     QNetworkAccessManager *getNetworkAccessManager() const;
     mutable QNetworkAccessManager *networkAccessManager;

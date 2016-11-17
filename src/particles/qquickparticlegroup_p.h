@@ -104,8 +104,8 @@ Q_SIGNALS:
     void systemChanged(QQuickParticleSystem* arg);
 
 protected:
-    virtual void componentComplete();
-    virtual void classBegin(){;}
+    void componentComplete() override;
+    void classBegin() override {}
 
 private:
 

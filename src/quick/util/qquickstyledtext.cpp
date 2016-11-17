@@ -721,8 +721,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
     QString padding(qFloor(imgWidth / spaceWidth), QChar::Nbsp);
     if (!trailingSpace)
         textOut += QLatin1Char(' ');
-    textOut += padding;
-    textOut += QLatin1Char(' ');
+    textOut += padding + QLatin1Char(' ');
 }
 
 QPair<QStringRef,QStringRef> QQuickStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)

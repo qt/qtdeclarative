@@ -60,8 +60,8 @@ public:
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true), awaitingTick(false) {}
 
-    virtual void animationFinished(QAbstractAnimationJob *);
-    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { maybeTick(); }
+    void animationFinished(QAbstractAnimationJob *) override;
+    void animationCurrentLoopChanged(QAbstractAnimationJob *) override { maybeTick(); }
 
     void maybeTick() {
         Q_Q(QQmlTimer);

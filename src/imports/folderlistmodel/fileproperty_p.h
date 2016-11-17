@@ -57,17 +57,17 @@
 class FileProperty
 {
 public:
-    FileProperty(const QFileInfo &info)
+    FileProperty(const QFileInfo &info) :
+        mFileName(info.fileName()),
+        mFilePath(info.filePath()),
+        mBaseName(info.baseName()),
+        mSuffix(info.completeSuffix()),
+        mSize(info.size()),
+        mIsDir(info.isDir()),
+        mIsFile(info.isFile()),
+        mLastModified(info.lastModified()),
+        mLastRead(info.lastRead())
     {
-        mFileName = info.fileName();
-        mFilePath = info.filePath();
-        mBaseName = info.baseName();
-        mSize = info.size();
-        mSuffix = info.completeSuffix();
-        mIsDir = info.isDir();
-        mIsFile = info.isFile();
-        mLastModified = info.lastModified();
-        mLastRead = info.lastRead();
     }
     ~FileProperty()
     {}

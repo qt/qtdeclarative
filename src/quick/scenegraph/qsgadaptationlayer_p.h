@@ -108,8 +108,10 @@ public:
     virtual void endVisit(QSGGlyphNode *) = 0;
     virtual bool visit(QSGRootNode *) = 0;
     virtual void endVisit(QSGRootNode *) = 0;
+#if QT_CONFIG(quick_sprite)
     virtual bool visit(QSGSpriteNode *) = 0;
     virtual void endVisit(QSGSpriteNode *) = 0;
+#endif
     virtual bool visit(QSGRenderNode *) = 0;
     virtual void endVisit(QSGRenderNode *) = 0;
 
@@ -213,6 +215,8 @@ Q_SIGNALS:
     void scheduledUpdateCompleted();
 };
 
+#if QT_CONFIG(quick_sprite)
+
 class Q_QUICK_PRIVATE_EXPORT QSGSpriteNode : public QSGVisitableNode
 {
 public:
@@ -229,6 +233,8 @@ public:
 
     virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
+
+#endif
 
 class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
 {

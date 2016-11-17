@@ -54,6 +54,7 @@
 #include "private/qv4jsir_p.h"
 #include "private/qv4isel_p.h"
 #include "private/qv4isel_util_p.h"
+#include "private/qv4util_p.h"
 #include "private/qv4value_p.h"
 #include "private/qv4lookup_p.h"
 
@@ -171,8 +172,8 @@ protected:
     bool visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                           IR::BasicBlock *iftrue, IR::BasicBlock *iffalse);
     void visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
-    bool visitCJumpStrictNullUndefined(IR::Type nullOrUndef, IR::Binop *binop,
-                                       IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
+    bool visitCJumpStrictNull(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
+    bool visitCJumpStrictUndefined(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
     bool visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
     bool visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Binop *binop,
                                  IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
@@ -272,7 +273,7 @@ private:
     }
 
     IR::BasicBlock *_block;
-    QSet<IR::Jump *> _removableJumps;
+    BitVector _removableJumps;
     Assembler* _as;
 
     QScopedPointer<CompilationUnit> compilationUnit;

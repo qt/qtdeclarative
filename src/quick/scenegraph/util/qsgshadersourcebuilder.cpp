@@ -310,13 +310,10 @@ void QSGShaderSourceBuilder::addDefinition(const QByteArray &definition)
     const char *insertionPos = extensionPos ? extensionPos : (versionPos ? versionPos : input);
 
     // Construct a new shader string, inserting the definition
-    QByteArray newSource;
-    newSource.reserve(m_source.size() + definition.size() + 9);
-    newSource += QByteArray::fromRawData(input, insertionPos - input);
-    newSource += QByteArrayLiteral("#define ") + definition + QByteArrayLiteral("\n");
-    newSource += QByteArray::fromRawData(insertionPos, m_source.size() - (insertionPos - input));
-
-    m_source = newSource;
+    QByteArray newSource = QByteArray::fromRawData(input, insertionPos - input)
+            + "#define " + definition + '\n'
+            + QByteArray::fromRawData(insertionPos, m_source.size() - (insertionPos - input));
+    m_source = std::move(newSource);
 }
 
 void QSGShaderSourceBuilder::removeVersion()

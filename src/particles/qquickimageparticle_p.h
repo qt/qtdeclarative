@@ -347,15 +347,15 @@ public Q_SLOTS:
     void setEntryEffect(EntryEffect arg);
 
 protected:
-    void reset();
-    virtual void initialize(int gIdx, int pIdx);
-    virtual void commit(int gIdx, int pIdx);
+    void reset() override;
+    void initialize(int gIdx, int pIdx) override;
+    void commit(int gIdx, int pIdx) override;
 
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     void prepareNextFrame(QSGNode**);
     void buildParticleNodes(QSGNode**);
 
-    void sceneGraphInvalidated();
+    void sceneGraphInvalidated() override;
 
 private Q_SLOTS:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
@@ -440,7 +440,7 @@ private:
     }
 
     template<class MaterialData>
-    MaterialData* getState(QSGMaterial* m){
+    static MaterialData* getState(QSGMaterial* m) {
         return static_cast<QSGSimpleMaterial<MaterialData> *>(m)->state();
     }
     EntryEffect m_entryEffect;

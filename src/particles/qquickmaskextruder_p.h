@@ -63,8 +63,8 @@ class QQuickMaskExtruder : public QQuickParticleExtruder
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
 public:
     explicit QQuickMaskExtruder(QObject *parent = 0);
-    virtual QPointF extrude(const QRectF &);
-    virtual bool contains(const QRectF &bounds, const QPointF &point);
+    QPointF extrude(const QRectF &) override;
+    bool contains(const QRectF &bounds, const QPointF &point) override;
 
     QUrl source() const
     {

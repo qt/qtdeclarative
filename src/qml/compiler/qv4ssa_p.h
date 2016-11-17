@@ -53,6 +53,7 @@
 
 #include "qv4jsir_p.h"
 #include "qv4isel_util_p.h"
+#include <private/qv4util_p.h>
 #include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
@@ -246,7 +247,7 @@ public:
 
     LifeTimeIntervals::Ptr lifeTimeIntervals() const;
 
-    QSet<IR::Jump *> calculateOptionalJumps();
+    BitVector calculateOptionalJumps();
 
     static void showMeTheCode(Function *function, const char *marker);
 
@@ -340,7 +341,7 @@ public:
     }
 
 protected:
-    virtual int allocateFreeSlot()
+    int allocateFreeSlot() override
     {
         for (int i = 0, ei = _slotIsInUse.size(); i != ei; ++i) {
             if (!_slotIsInUse[i]) {
@@ -357,7 +358,7 @@ protected:
         return -1;
     }
 
-    virtual void process(IR::Stmt *s)
+    void process(IR::Stmt *s) override
     {
 //        qDebug("L%d statement %d:", _currentBasicBlock->index, s->id);
 
@@ -411,8 +412,8 @@ protected:
                 }
             }
             moves.order();
-            QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
-            foreach (IR::Move *move, newMoves)
+            const QList<IR::Move *> newMoves = moves.insertMoves(_currentBasicBlock, _function, true);
+            for (IR::Move *move : newMoves)
                 visit(move);
         }
     }
@@ -437,13 +438,13 @@ protected:
 //        qDebug() << "\t - force activating temp" << t.index << "on slot" << _stackSlotForTemp[t.index];
     }
 
-    virtual void visitPhi(IR::Phi *phi)
+    void visitPhi(IR::Phi *phi) override
     {
         Q_UNUSED(phi);
 #if !defined(QT_NO_DEBUG)
         Q_ASSERT(_stackSlotForTemp.contains(phi->targetTemp->index));
         Q_ASSERT(_slotIsInUse[_stackSlotForTemp[phi->targetTemp->index]]);
-        foreach (IR::Expr *e, phi->incoming) {
+        for (IR::Expr *e : phi->incoming) {
             if (IR::Temp *t = e->asTemp())
                 Q_ASSERT(_stackSlotForTemp.contains(t->index));
         }

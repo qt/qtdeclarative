@@ -74,9 +74,9 @@ public:
     void setValue(const QVariant &);
 
     // ---- dynamic meta object data interface
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *);
-    virtual void objectDestroyed(QObject *);
-    virtual int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv);
+    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *) override;
+    void objectDestroyed(QObject *) override;
+    int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv) override;
     // ----
 
 private:

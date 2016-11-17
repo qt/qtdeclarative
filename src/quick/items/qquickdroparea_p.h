@@ -86,7 +86,7 @@ public:
     qreal x() const { return event->pos().x(); }
     qreal y() const { return event->pos().y(); }
 
-    QObject *source();
+    QObject *source() const;
 
     Qt::DropActions supportedActions() const { return event->possibleActions(); }
     Qt::DropActions proposedAction() const { return event->proposedAction(); }

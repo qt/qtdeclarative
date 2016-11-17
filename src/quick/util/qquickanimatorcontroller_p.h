@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Gunnar Sletta <gunnar@sletta.org>
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -60,8 +61,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAnimatorControllerGuiThreadEntity;
-
 class QQuickAnimatorController : public QObject, public QAnimationJobChangeListener
 {
     Q_OBJECT
@@ -74,54 +73,37 @@ public:
     void beforeNodeSync();
     void afterNodeSync();
 
-    void animationFinished(QAbstractAnimationJob *job);
-    void animationStateChanged(QAbstractAnimationJob *job, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void animationFinished(QAbstractAnimationJob *job) override;
+    void animationStateChanged(QAbstractAnimationJob *job, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 
     void requestSync();
 
     // These are called from the GUI thread (the proxy)
-    void startJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job);
-    void stopJob(QQuickAnimatorProxyJob *proxy, QAbstractAnimationJob *job);
-    void deleteJob(QAbstractAnimationJob *job);
+    void start(const QSharedPointer<QAbstractAnimationJob> &job);
+    void cancel(const QSharedPointer<QAbstractAnimationJob> &job);
+    bool isPendingStart(const QSharedPointer<QAbstractAnimationJob> &job) const { return m_rootsPendingStart.contains(job); }
 
     void lock() { m_mutex.lock(); }
     void unlock() { m_mutex.unlock(); }
-
 
     void proxyWasDestroyed(QQuickAnimatorProxyJob *proxy);
     void stopProxyJobs();
     void windowNodesDestroyed();
 
-public Q_SLOTS:
-    void itemDestroyed(QObject *);
+    QQuickWindow *window() const { return m_window; }
+
+private:
+    void start_helper(QAbstractAnimationJob *job);
+    void cancel_helper(QAbstractAnimationJob *job);
 
 public:
-    // These are manipulated from the GUI thread and should only
-    // be updated during the sync() phase.
-    QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *> m_starting;
-    QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *> m_stopping;
-    QSet<QAbstractAnimationJob *> m_deleting;
+    QSet<QQuickAnimatorJob * > m_runningAnimators;
+    QHash<QAbstractAnimationJob *, QSharedPointer<QAbstractAnimationJob> > m_animationRoots;
+    QSet<QSharedPointer<QAbstractAnimationJob> > m_rootsPendingStop;
+    QSet<QSharedPointer<QAbstractAnimationJob> > m_rootsPendingStart;
 
-    QHash<QAbstractAnimationJob *, QQuickAnimatorProxyJob *> m_animatorRoots;
-    QSet<QQuickAnimatorJob *> m_activeLeafAnimations;
-    QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *> m_transforms;
-    QSet<QQuickItem *> m_deletedSinceLastFrame;
     QQuickWindow *m_window;
-    QQuickAnimatorControllerGuiThreadEntity *m_guiEntity;
-    QSet<QQuickAnimatorProxyJob *> m_proxiesToStop;
     QMutex m_mutex;
-
-    bool m_nodesAreInvalid;
-};
-
-class QQuickAnimatorControllerGuiThreadEntity : public QObject
-{
-    Q_OBJECT
-public:
-    QPointer<QQuickAnimatorController> controller;
-
-public Q_SLOTS:
-    void frameSwapped();
 };
 
 

@@ -1049,7 +1049,7 @@ void QQmlTypeModulePrivate::add(QQmlType *type)
     list.append(type);
 }
 
-QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
+QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor) const
 {
     QMutexLocker lock(metaTypeDataLock());
 
@@ -1063,7 +1063,7 @@ QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
     return 0;
 }
 
-QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor)
+QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor) const
 {
     QMutexLocker lock(metaTypeDataLock());
 
@@ -1444,11 +1444,11 @@ bool qmlProtectModule(const char *uri, int majVersion)
 
 bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri, int majorVersion)
 {
-    QQmlMetaTypeData *data = metaTypeData();
+    const QQmlMetaTypeData *data = metaTypeData();
 
     // Has any type previously been installed to this namespace?
     QHashedString nameSpace(uri);
-    foreach (const QQmlType *type, data->types)
+    for (const QQmlType *type : data->types)
         if (type->module() == nameSpace && type->majorVersion() == majorVersion)
             return true;
 
@@ -1957,7 +1957,7 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
 
         marker = typeName.indexOf(QLatin1String("_QML_"));
         if (marker != -1) {
-            typeName = typeName.left(marker) + QLatin1Char('*');
+            typeName = typeName.leftRef(marker) + QLatin1Char('*');
             type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
             if (type) {
                 typeName = type->qmlTypeName();

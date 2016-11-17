@@ -68,7 +68,7 @@ static char assets_string[] = "assets";
 
 class QQmlFilePrivate;
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 class QQmlFileNetworkReply : public QObject
 {
 Q_OBJECT
@@ -117,12 +117,12 @@ public:
 
     Error error;
     QString errorString;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QQmlFileNetworkReply *reply;
 #endif
 };
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 int QQmlFileNetworkReply::finishedIndex = -1;
 int QQmlFileNetworkReply::downloadProgressIndex = -1;
 int QQmlFileNetworkReply::networkFinishedIndex = -1;
@@ -205,11 +205,11 @@ void QQmlFileNetworkReply::networkDownloadProgress(qint64 a, qint64 b)
 {
     emit downloadProgress(a, b);
 }
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
 QQmlFilePrivate::QQmlFilePrivate()
 : error(None)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 , reply(0)
 #endif
 {
@@ -233,7 +233,7 @@ QQmlFile::QQmlFile(QQmlEngine *e, const QString &url)
 
 QQmlFile::~QQmlFile()
 {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     delete d->reply;
 #endif
     delete d;
@@ -273,7 +273,7 @@ QQmlFile::Status QQmlFile::status() const
 {
     if (d->url.isEmpty() && d->urlString.isEmpty())
         return Null;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     else if (d->reply)
         return Loading;
 #endif
@@ -333,7 +333,7 @@ void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
             d->error = QQmlFilePrivate::NotFound;
         }
     } else {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         d->reply = new QQmlFileNetworkReply(engine, d, url);
 #else
         d->error = QQmlFilePrivate::NotFound;
@@ -364,7 +364,7 @@ void QQmlFile::load(QQmlEngine *engine, const QString &url)
             d->error = QQmlFilePrivate::NotFound;
         }
     } else {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
         QUrl qurl(url);
         d->url = qurl;
         d->urlString = QString();
@@ -388,7 +388,7 @@ void QQmlFile::clear(QObject *)
     clear();
 }
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 bool QQmlFile::connectFinished(QObject *object, const char *method)
 {
     if (!d || !d->reply) {

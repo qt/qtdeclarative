@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_sprite);
+
 #include <QtQuick/QQuickItem>
 #include <private/qquicksprite_p.h>
 #include <QtCore/qelapsedtimer.h>
@@ -168,6 +172,7 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
 private:
+    void maybeUpdate();
     bool isCurrentFrameChangedConnected();
     void prepareNextFrame(QSGSpriteNode *node);
     void reloadImage();

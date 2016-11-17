@@ -114,8 +114,8 @@ public:
     void setDisableUserControl();
     void setEnableUserControl();
     bool userControlDisabled() const;
-    void classBegin();
-    void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
     virtual ThreadingModel threadingModel() const;
 
@@ -150,7 +150,7 @@ public:
 private Q_SLOTS:
     void componentFinalized();
 private:
-    virtual void setTarget(const QQmlProperty &);
+    void setTarget(const QQmlProperty &) override;
     void notifyRunningChanged(bool running);
     friend class QQuickBehavior;
     friend class QQuickBehaviorPrivate;
@@ -179,7 +179,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                                           QQmlProperties &modified,
                                           TransitionDirection direction,
-                                          QObject *defaultTarget = 0);
+                                          QObject *defaultTarget = 0) override;
 };
 
 class QQuickScriptActionPrivate;
@@ -202,10 +202,10 @@ public:
     void setStateChangeScriptName(const QString &);
 
 protected:
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 };
 
 class QQuickPropertyActionPrivate;
@@ -247,10 +247,10 @@ Q_SIGNALS:
     void propertyChanged();
 
 protected:
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 };
 
 class QQuickPropertyAnimationPrivate;
@@ -303,10 +303,10 @@ protected:
                                                      QObject *defaultTarget = 0);
 
     QQuickPropertyAnimation(QQuickPropertyAnimationPrivate &dd, QObject *parent);
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 Q_SIGNALS:
     void durationChanged(int);
     void fromChanged(const QVariant &);
@@ -438,11 +438,11 @@ public:
     virtual ~QQuickSequentialAnimation();
 
 protected:
-    virtual ThreadingModel threadingModel() const;
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    ThreadingModel threadingModel() const override;
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickParallelAnimation : public QQuickAnimationGroup
@@ -455,11 +455,11 @@ public:
     virtual ~QQuickParallelAnimation();
 
 protected:
-    virtual ThreadingModel threadingModel() const;
-    virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
+    ThreadingModel threadingModel() const override;
+    QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = 0) override;
 };
 
 

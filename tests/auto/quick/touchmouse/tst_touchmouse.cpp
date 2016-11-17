@@ -71,7 +71,7 @@ Q_SIGNALS:
 
 public:
     EventItem(QQuickItem *parent = 0)
-        : QQuickItem(parent), acceptMouse(false), acceptTouch(false), filterTouch(false)
+        : QQuickItem(parent), acceptMouse(false), acceptTouch(false), filterTouch(false), point0(-1)
     {
         setAcceptedMouseButtons(Qt::LeftButton);
     }
@@ -79,6 +79,9 @@ public:
     void touchEvent(QTouchEvent *event)
     {
         eventList.append(Event(event->type(), event->touchPoints()));
+        QList<QTouchEvent::TouchPoint> tps = event->touchPoints();
+        Q_ASSERT(!tps.isEmpty());
+        point0 = tps.first().id();
         event->setAccepted(acceptTouch);
         emit onTouchEvent(this);
     }
@@ -125,12 +128,16 @@ public:
                 event->type() == QEvent::TouchEnd) {
             QTouchEvent *touch = static_cast<QTouchEvent*>(event);
             eventList.append(Event(event->type(), touch->touchPoints()));
+            QList<QTouchEvent::TouchPoint> tps = touch->touchPoints();
+            Q_ASSERT(!tps.isEmpty());
+            point0 = tps.first().id();
             if (filterTouch)
                 event->accept();
             return true;
         }
         return false;
     }
+    int point0;
 };
 
 class tst_TouchMouse : public QQmlDataTest
@@ -581,7 +588,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-    QCOMPARE(windowPriv->touchMouseId, 0);
+    QVERIFY(windowPriv->touchMouseId != -1);
     auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
     QCOMPARE(pointerEvent->point(0)->grabber(), eventItem1);
     QCOMPARE(window->mouseGrabberItem(), eventItem1);
@@ -603,7 +610,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseMove);
 
     QCOMPARE(window->mouseGrabberItem(), flickable);
-    QCOMPARE(windowPriv->touchMouseId, 0);
+    QVERIFY(windowPriv->touchMouseId != -1);
     QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
     QVERIFY(flickable->isMovingVertically());
 
@@ -710,7 +717,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     // flickable should have the mouse grab, and have moved the itemForTouchPointId
     // for the touchMouseId to the new grabber.
     QCOMPARE(window->mouseGrabberItem(), flickable);
-    QCOMPARE(windowPriv->touchMouseId, 0);
+    QVERIFY(windowPriv->touchMouseId != -1);
     auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
     QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
 
@@ -1246,7 +1253,7 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     rightItem->acceptTouch = true;
     {
         QVector<int> ids;
-        ids.append(0);
+        ids.append(leftItem->point0);
         rightItem->grabTouchPoints(ids);
     }
 

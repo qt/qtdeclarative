@@ -935,9 +935,11 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
         return;
 
     applyPendingChanges();
-    int idx = qMax(qMin(index, model->count()-1), 0);
+    const int modelCount = model->count();
+    int idx = qMax(qMin(index, modelCount - 1), 0);
 
-    qreal pos = isContentFlowReversed() ? -position() - size() : position();
+    const auto viewSize = size();
+    qreal pos = isContentFlowReversed() ? -position() - viewSize : position();
     FxViewItem *item = visibleItem(idx);
     qreal maxExtent = calculatedMaxExtent();
     if (!item) {
@@ -961,22 +963,22 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
                 pos -= headerSize();
             break;
         case QQuickItemView::Center:
-            pos = itemPos - (size() - item->size())/2;
+            pos = itemPos - (viewSize - item->size())/2;
             break;
         case QQuickItemView::End:
-            pos = itemPos - size() + item->size();
-            if (footer && (index >= model->count() || hasStickyFooter()))
+            pos = itemPos - viewSize + item->size();
+            if (footer && (index >= modelCount || hasStickyFooter()))
                 pos += footerSize();
             break;
         case QQuickItemView::Visible:
-            if (itemPos > pos + size())
-                pos = itemPos - size() + item->size();
+            if (itemPos > pos + viewSize)
+                pos = itemPos - viewSize + item->size();
             else if (item->endPosition() <= pos)
                 pos = itemPos;
             break;
         case QQuickItemView::Contain:
-            if (item->endPosition() >= pos + size())
-                pos = itemPos - size() + item->size();
+            if (item->endPosition() >= pos + viewSize)
+                pos = itemPos - viewSize + item->size();
             if (itemPos < pos)
                 pos = itemPos;
             break;
@@ -1025,28 +1027,27 @@ void QQuickItemView::positionViewAtEnd()
     d->positionViewAtIndex(d->model->count(), End);
 }
 
+static FxViewItem * fxViewItemAtPosition(const QList<FxViewItem *> &items, qreal x, qreal y)
+{
+    for (FxViewItem *item : items) {
+        if (item->contains(x, y))
+            return item;
+    }
+    return nullptr;
+}
+
 int QQuickItemView::indexAt(qreal x, qreal y) const
 {
     Q_D(const QQuickItemView);
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        const FxViewItem *item = d->visibleItems.at(i);
-        if (item->contains(x, y))
-            return item->index;
-    }
-
-    return -1;
+    const FxViewItem *item = fxViewItemAtPosition(d->visibleItems, x, y);
+    return item ? item->index : -1;
 }
 
 QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
 {
     Q_D(const QQuickItemView);
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        const FxViewItem *item = d->visibleItems.at(i);
-        if (item->contains(x, y))
-            return item->item;
-    }
-
-    return 0;
+    const FxViewItem *item = fxViewItemAtPosition(d->visibleItems, x, y);
+    return item ? item->item : nullptr;
 }
 
 void QQuickItemView::forceLayout()
@@ -1787,10 +1788,11 @@ void QQuickItemViewPrivate::animationFinished(QAbstractAnimationJob *)
 void QQuickItemViewPrivate::refill()
 {
     qreal s = qMax(size(), qreal(0.));
+    const auto pos = position();
     if (isContentFlowReversed())
-        refill(-position()-displayMarginBeginning-s, -position()+displayMarginEnd);
+        refill(-pos - displayMarginBeginning-s, -pos + displayMarginEnd);
     else
-        refill(position()-displayMarginBeginning, position()+displayMarginEnd+s);
+        refill(pos - displayMarginBeginning, pos + displayMarginEnd+s);
 }
 
 void QQuickItemViewPrivate::refill(qreal from, qreal to)
@@ -2428,14 +2430,14 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     return flags != QQmlInstanceModel::Referenced;
 }
 
-QQuickItem *QQuickItemViewPrivate::createHighlightItem()
+QQuickItem *QQuickItemViewPrivate::createHighlightItem() const
 {
     return createComponentItem(highlightComponent, 0.0, true);
 }
 
-QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault)
+QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault) const
 {
-    Q_Q(QQuickItemView);
+    Q_Q(const QQuickItemView);
 
     QQuickItem *item = 0;
     if (component) {

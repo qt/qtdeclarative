@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 
 class QNetworkAccessManager;
 class Q_QML_EXPORT QQmlNetworkAccessManagerFactory
@@ -56,7 +56,7 @@ public:
 
 };
 
-#endif //QT_NO_NETWORK
+#endif // qml_network
 
 QT_END_NAMESPACE
 

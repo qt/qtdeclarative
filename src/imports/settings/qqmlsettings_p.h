@@ -74,10 +74,10 @@ public:
     void setCategory(const QString &category);
 
 protected:
-    void timerEvent(QTimerEvent *event);
+    void timerEvent(QTimerEvent *event) override;
 
-    void classBegin();
-    void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQmlSettings)

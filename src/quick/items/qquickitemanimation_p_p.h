@@ -53,7 +53,9 @@
 
 #include "qquickitemanimation_p.h"
 
+#if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
+#endif
 #include <private/qquickanimation_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -84,6 +86,8 @@ public:
     QList<QQuickItem*> targets;
 };
 
+#if QT_CONFIG(quick_path)
+
 class QQuickPathAnimationUpdater : public QQuickBulkValueUpdater
 {
 public:
@@ -93,7 +97,7 @@ public:
         entryInterval(0), exitInterval(0) {}
     ~QQuickPathAnimationUpdater() {}
 
-    void setValue(qreal v);
+    void setValue(qreal v) override;
 
     QQuickPath *path;
 
@@ -129,7 +133,7 @@ public:
 
     void clearTemplate() { animationTemplate = 0; }
 
-    QQuickPathAnimationUpdater *pathUpdater() { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
+    QQuickPathAnimationUpdater *pathUpdater() const { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
 private:
     QQuickPathAnimationPrivate *animationTemplate;
 };
@@ -153,6 +157,7 @@ public:
     QHash<QQuickItem*, QQuickPathAnimationAnimator* > activeAnimations;
 };
 
+#endif
 
 QT_END_NAMESPACE
 

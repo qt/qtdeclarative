@@ -58,8 +58,8 @@ class State : public QState, public QQmlParserStatus
 public:
     explicit State(QState *parent = 0);
 
-    void classBegin() {}
-    void componentComplete();
+    void classBegin() override {}
+    void componentComplete() override;
 
     QQmlListProperty<QObject> children();
 

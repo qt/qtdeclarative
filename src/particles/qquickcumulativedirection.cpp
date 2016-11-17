@@ -59,7 +59,7 @@ QQmlListProperty<QQuickDirection> QQuickCumulativeDirection::directions()
     return QQmlListProperty<QQuickDirection>(this, m_directions);//TODO: Proper list property
 }
 
-const QPointF QQuickCumulativeDirection::sample(const QPointF &from)
+QPointF QQuickCumulativeDirection::sample(const QPointF &from)
 {
     QPointF ret;
     foreach (QQuickDirection* dir, m_directions)

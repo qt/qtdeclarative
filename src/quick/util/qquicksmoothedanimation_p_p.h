@@ -93,7 +93,7 @@ public:
 
     QQmlProperty target;
 
-    int duration() const;
+    int duration() const override;
     void restart();
     void init();
 
@@ -101,9 +101,9 @@ public:
     void clearTemplate() { animationTemplate = 0; }
 
 protected:
-    virtual void updateCurrentTime(int);
-    virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int) override;
+    void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State) override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     qreal easeFollow(qreal);

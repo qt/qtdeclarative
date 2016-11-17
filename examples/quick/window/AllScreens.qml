@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,63 +39,37 @@
 ****************************************************************************/
 
 import QtQuick 2.3
-import QtQuick.Window 2.1
+import QtQuick.Window 2.3
+import "../shared" as Shared
 
-Item {
+Column {
     id: root
-    width: 400
-    height: propertyGrid.implicitHeight + 16
+    spacing: 8
 
-    function orientationToString(o) {
-        switch (o) {
-        case Qt.PrimaryOrientation:
-            return "primary";
-        case Qt.PortraitOrientation:
-            return "portrait";
-        case Qt.LandscapeOrientation:
-            return "landscape";
-        case Qt.InvertedPortraitOrientation:
-            return "inverted portrait";
-        case Qt.InvertedLandscapeOrientation:
-            return "inverted landscape";
-        }
-        return "unknown";
+    Shared.Label {
+        text: "Total number of screens: " + screenInfo.count
+        font.bold: true
     }
 
-    Grid {
-        id: propertyGrid
-        columns: 2
-        spacing: 8
-        x: spacing
-        y: spacing
+    Flow {
+        spacing: 12
+        width: parent.width
 
-        //! [screen]
-        Text {
-            text: "Screen \"" + Screen.name + "\":"
-            font.bold: true
+        Repeater {
+            id: screenInfo
+            model: Qt.application.screens
+            Shared.Label {
+                lineHeight: 1.5
+                text: name + "\n" + virtualX + ", " + virtualY + " " + modelData.width + "x" + modelData.height
+            }
         }
-        Item { width: 1; height: 1 } // spacer
+    }
 
-        Text { text: "dimensions" }
-        Text { text: Screen.width + "x" + Screen.height }
-
-        Text { text: "pixel density" }
-        Text { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
-
-        Text { text: "logical pixel density" }
-        Text { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
-
-        Text { text: "device pixel ratio" }
-        Text { text: Screen.devicePixelRatio.toFixed(2) }
-
-        Text { text: "available virtual desktop" }
-        Text { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
-
-        Text { text: "orientation" }
-        Text { text: orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
-
-        Text { text: "primary orientation" }
-        Text { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
-        //! [screen]
+    Component.onCompleted: {
+        var screens = Qt.application.screens;
+        for (var i = 0; i < screens.length; ++i)
+            console.log("screen " + screens[i].name + " has geometry " +
+                        screens[i].virtualX + ", " + screens[i].virtualY + " " +
+                        screens[i].width + "x" + screens[i].height)
     }
 }

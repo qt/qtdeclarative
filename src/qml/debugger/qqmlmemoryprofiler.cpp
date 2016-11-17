@@ -38,18 +38,11 @@
 ****************************************************************************/
 
 #include "qqmlmemoryprofiler_p.h"
-#include <QUrl>
 
 QT_BEGIN_NAMESPACE
 
-enum LibraryState
-{
-    Unloaded,
-    Failed,
-    Loaded
-};
 
-static LibraryState state = Unloaded;
+QQmlMemoryScope::LibraryState QQmlMemoryScope::state = QQmlMemoryScope::Unloaded;
 
 typedef void (qmlmemprofile_stats)(int *allocCount, int *bytesAllocated);
 typedef void (qmlmemprofile_clear)();
@@ -73,7 +66,7 @@ static qmlmemprofile_is_enabled *memprofile_is_enabled;
 extern QFunctionPointer qt_linux_find_symbol_sys(const char *symbol);
 #endif
 
-static bool openLibrary()
+bool QQmlMemoryScope::doOpenLibrary()
 {
 #if defined(Q_OS_LINUX) && !defined(QT_NO_LIBRARY)
     if (state == Unloaded) {
@@ -97,28 +90,22 @@ static bool openLibrary()
     return state == Loaded;
 }
 
-QQmlMemoryScope::QQmlMemoryScope(const QUrl &url)
-    : QQmlMemoryScope(url.path().toUtf8().constData())
+void QQmlMemoryScope::init(const char *string)
 {
-}
-
-QQmlMemoryScope::QQmlMemoryScope(const char *string) : pushed(false)
-{
-    if (openLibrary() && memprofile_is_enabled()) {
+    if (memprofile_is_enabled()) {
         memprofile_push_location(string, 0);
         pushed = true;
     }
 }
 
-QQmlMemoryScope::~QQmlMemoryScope()
+void QQmlMemoryScope::done()
 {
-    if (pushed)
-        memprofile_pop_location();
+    memprofile_pop_location();
 }
 
 bool QQmlMemoryProfiler::isEnabled()
 {
-    if (openLibrary())
+    if (QQmlMemoryScope::openLibrary())
         return memprofile_is_enabled();
 
     return false;
@@ -126,31 +113,31 @@ bool QQmlMemoryProfiler::isEnabled()
 
 void QQmlMemoryProfiler::enable()
 {
-    if (openLibrary())
+    if (QQmlMemoryScope::openLibrary())
         memprofile_enable();
 }
 
 void QQmlMemoryProfiler::disable()
 {
-    if (openLibrary())
+    if (QQmlMemoryScope::openLibrary())
         memprofile_disable();
 }
 
 void QQmlMemoryProfiler::clear()
 {
-    if (openLibrary())
+    if (QQmlMemoryScope::openLibrary())
         memprofile_clear();
 }
 
 void QQmlMemoryProfiler::stats(int *allocCount, int *bytesAllocated)
 {
-    if (openLibrary())
+    if (QQmlMemoryScope::openLibrary())
         memprofile_stats(allocCount, bytesAllocated);
 }
 
 void QQmlMemoryProfiler::save(const char *filename)
 {
-    if (openLibrary())
+    if (QQmlMemoryScope::openLibrary())
         memprofile_save(filename);
 }
 

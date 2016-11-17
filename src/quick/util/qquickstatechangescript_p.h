@@ -69,9 +69,9 @@ public:
     QQuickStateChangeScript(QObject *parent=0);
     ~QQuickStateChangeScript();
 
-    virtual ActionList actions();
+    ActionList actions() override;
 
-    virtual EventType type() const;
+    EventType type() const override;
 
     QQmlScriptString script() const;
     void setScript(const QQmlScriptString &);
@@ -79,7 +79,7 @@ public:
     QString name() const;
     void setName(const QString &);
 
-    virtual void execute();
+    void execute() override;
 };
 
 

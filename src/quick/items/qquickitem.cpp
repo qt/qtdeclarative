@@ -776,7 +776,7 @@ const SigMap sigMap[] = {
     { 0, 0 }
 };
 
-const QByteArray QQuickKeysAttached::keyToSignal(int key)
+QByteArray QQuickKeysAttached::keyToSignal(int key)
 {
     QByteArray keySignal;
     if (key >= Qt::Key_0 && key <= Qt::Key_9) {
@@ -791,9 +791,9 @@ const QByteArray QQuickKeysAttached::keyToSignal(int key)
     return keySignal;
 }
 
-bool QQuickKeysAttached::isConnected(const char *signalName)
+bool QQuickKeysAttached::isConnected(const char *signalName) const
 {
-    Q_D(QQuickKeysAttached);
+    Q_D(const QQuickKeysAttached);
     int signal_index = d->signalIndex(signalName);
     return d->isSignalConnected(signal_index);
 }
@@ -2346,7 +2346,9 @@ QQuickItem::~QQuickItem()
 
     if (d->extra.isAllocated()) {
         delete d->extra->contents; d->extra->contents = 0;
+#if QT_CONFIG(quick_shadereffect)
         delete d->extra->layer; d->extra->layer = 0;
+#endif
     }
 
     delete d->_anchors; d->_anchors = 0;
@@ -4299,12 +4301,12 @@ void QQuickItem::polish()
   */
 void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
+    QV4::ExecutionEngine *v4 = args->v4engine();
     if (args->length() != 3 && args->length() != 5) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
-    QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue item(scope, (*args)[0]);
 
@@ -4318,7 +4320,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     if (!itemObj && !item->isNull()) {
         qmlInfo(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4326,7 +4328,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     QV4::ScopedValue vy(scope, (*args)[2]);
 
     if (!vx->isNumber() || !vy->isNumber()) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4339,7 +4341,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
         QV4::ScopedValue vw(scope, (*args)[3]);
         QV4::ScopedValue vh(scope, (*args)[4]);
         if (!vw->isNumber() || !vh->isNumber()) {
-            args->v4engine()->throwTypeError();
+            v4->throwTypeError();
             return;
         }
         qreal w = vw->asDouble();
@@ -4387,12 +4389,12 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
   */
 void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
+    QV4::ExecutionEngine *v4 = args->v4engine();
     if (args->length() != 3 && args->length() != 5) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
-    QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue item(scope, (*args)[0]);
 
@@ -4406,7 +4408,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     if (!itemObj && !item->isNull()) {
         qmlInfo(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4414,7 +4416,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     QV4::ScopedValue vy(scope, (*args)[2]);
 
     if (!vx->isNumber() || !vy->isNumber()) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4427,7 +4429,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
         QV4::ScopedValue vw(scope, (*args)[3]);
         QV4::ScopedValue vh(scope, (*args)[4]);
         if (!vw->isNumber() || !vh->isNumber()) {
-            args->v4engine()->throwTypeError();
+            v4->throwTypeError();
             return;
         }
         qreal w = vw->asDouble();
@@ -4437,6 +4439,76 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     } else {
         result = mapToItem(itemObj, QPointF(x, y));
     }
+
+    QV4::ScopedObject rv(scope, v4->fromVariant(result));
+    args->setReturnValue(rv.asReturnedValue());
+}
+
+/*!
+    \since 5.7
+    \qmlmethod object QtQuick::Item::mapFromGlobal(real x, real y)
+
+    Maps the point (\a x, \a y), which is in the global coordinate system, to the
+    item's coordinate system, and returns a \l point  matching the mapped coordinate.
+*/
+/*!
+    \internal
+  */
+void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2) {
+        v4->throwTypeError();
+        return;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue vx(scope, (*args)[0]);
+    QV4::ScopedValue vy(scope, (*args)[1]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        v4->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+    QVariant result = mapFromGlobal(QPointF(x, y));
+
+    QV4::ScopedObject rv(scope, v4->fromVariant(result));
+    args->setReturnValue(rv.asReturnedValue());
+}
+
+/*!
+    \since 5.7
+    \qmlmethod object QtQuick::Item::mapToGlobal(real x, real y)
+
+    Maps the point (\a x, \a y), which is in this item's coordinate system, to the
+    global coordinate system, and returns a \l point  matching the mapped coordinate.
+*/
+/*!
+    \internal
+  */
+void QQuickItem::mapToGlobal(QQmlV4Function *args) const
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2) {
+        v4->throwTypeError();
+        return;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue vx(scope, (*args)[0]);
+    QV4::ScopedValue vy(scope, (*args)[1]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        v4->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+    QVariant result = mapToGlobal(QPointF(x, y));
 
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());
@@ -4778,8 +4850,10 @@ void QQuickItem::classBegin()
         d->_stateGroup->classBegin();
     if (d->_anchors)
         d->_anchors->classBegin();
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated() && d->extra->layer)
         d->extra->layer->classBegin();
+#endif
 }
 
 /*!
@@ -4799,8 +4873,10 @@ void QQuickItem::componentComplete()
     }
 
     if (d->extra.isAllocated()) {
+#if QT_CONFIG(quick_shadereffect)
         if (d->extra->layer)
             d->extra->layer->componentComplete();
+#endif
 
         if (d->extra->keyHandler)
             d->extra->keyHandler->componentComplete();
@@ -4856,8 +4932,10 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
 
 void QQuickItemPrivate::transformChanged()
 {
+#if QT_CONFIG(quick_shadereffect)
     if (extra.isAllocated() && extra->layer)
         extra->layer->updateMatrix();
+#endif
 }
 
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
@@ -5250,8 +5328,10 @@ void QQuickItem::setZ(qreal v)
 
     emit zChanged();
 
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated() && d->extra->layer)
         d->extra->layer->updateZ();
+#endif
 }
 
 /*!
@@ -6238,7 +6318,7 @@ QPointF QQuickItem::position() const
 void QQuickItem::setX(qreal v)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(v))
+    if (qt_is_nan(v))
         return;
     if (d->x == v)
         return;
@@ -6255,7 +6335,7 @@ void QQuickItem::setX(qreal v)
 void QQuickItem::setY(qreal v)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(v))
+    if (qt_is_nan(v))
         return;
     if (d->y == v)
         return;
@@ -7038,15 +7118,6 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     }
 }
 
-void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
-{
-    Q_Q(QQuickItem);
-    QV4::QObjectWrapper::markWrapper(q, e);
-
-    for (QQuickItem *child : qAsConst(childItems))
-        QQuickItemPrivate::get(child)->markObjects(e);
-}
-
 #ifndef QT_NO_CURSOR
 
 /*!
@@ -7662,9 +7733,13 @@ QDebug operator<<(QDebug debug, QQuickItem *item)
 
 bool QQuickItem::isTextureProvider() const
 {
+#if QT_CONFIG(quick_shadereffect)
     Q_D(const QQuickItem);
     return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
            d->extra->layer->effectSource()->isTextureProvider() : false;
+#else
+    return false;
+#endif
 }
 
 /*!
@@ -7678,9 +7753,13 @@ bool QQuickItem::isTextureProvider() const
 
 QSGTextureProvider *QQuickItem::textureProvider() const
 {
+#if QT_CONFIG(quick_shadereffect)
     Q_D(const QQuickItem);
     return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
            d->extra->layer->effectSource()->textureProvider() : 0;
+#else
+    return 0;
+#endif
 }
 
 /*!
@@ -7689,14 +7768,19 @@ QSGTextureProvider *QQuickItem::textureProvider() const
   */
 QQuickItemLayer *QQuickItemPrivate::layer() const
 {
+#if QT_CONFIG(quick_shadereffect)
     if (!extra.isAllocated() || !extra->layer) {
         extra.value().layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
         if (!componentComplete)
             extra->layer->classBegin();
     }
     return extra->layer;
+#else
+    return 0;
+#endif
 }
 
+#if QT_CONFIG(quick_shadereffect)
 QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     : m_item(item)
     , m_enabled(false)
@@ -8184,12 +8268,16 @@ void QQuickItemLayer::updateMatrix()
         ld->extra.value().origin = QQuickItemPrivate::get(m_item)->origin();
     ld->dirty(QQuickItemPrivate::Transform);
 }
+#endif // quick_shadereffect
 
 QQuickItemPrivate::ExtraData::ExtraData()
 : z(0), scale(1), rotation(0), opacity(1),
   contents(0), screenAttached(0), layoutDirectionAttached(0),
   enterKeyAttached(0),
-  keyHandler(0), layer(0),
+  keyHandler(0),
+#if QT_CONFIG(quick_shadereffect)
+  layer(0),
+#endif
   effectRefCount(0), hideRefCount(0),
   opacityNode(0), clipNode(0), rootNode(0),
   acceptedMouseButtons(0), origin(QQuickItem::Center),
@@ -8209,6 +8297,37 @@ QAccessible::Role QQuickItemPrivate::accessibleRole() const
     return QAccessible::NoRole;
 }
 #endif
+
+// helper code to let a visual parent mark its visual children for the garbage collector
+
+namespace QV4 {
+namespace Heap {
+struct QQuickItemWrapper : public QObjectWrapper {
+};
+}
+}
+
+struct QQuickItemWrapper : public QV4::QObjectWrapper {
+    V4_OBJECT2(QQuickItemWrapper, QV4::QObjectWrapper)
+    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickItemWrapper);
+
+void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+{
+    QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
+    if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
+        foreach (QQuickItem *child, QQuickItemPrivate::get(item)->childItems)
+            QV4::QObjectWrapper::markWrapper(child, e);
+    }
+    QV4::QObjectWrapper::markObjects(that, e);
+}
+
+quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
+{
+    return (engine->memoryManager->allocObject<QQuickItemWrapper>(q_func()))->asReturnedValue();
+}
 
 QT_END_NAMESPACE
 

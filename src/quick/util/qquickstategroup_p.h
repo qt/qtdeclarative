@@ -81,8 +81,8 @@ public:
     QQuickState *findState(const QString &name) const;
     void removeState(QQuickState *state);
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 Q_SIGNALS:
     void stateChanged(const QString &);
 

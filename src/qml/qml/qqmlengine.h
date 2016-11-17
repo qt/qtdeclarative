@@ -87,7 +87,7 @@ class QQmlExpression;
 class QQmlContext;
 class QQmlType;
 class QUrl;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 class QNetworkAccessManager;
 class QQmlNetworkAccessManagerFactory;
 #endif
@@ -117,7 +117,7 @@ public:
 
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     void setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *);
     QQmlNetworkAccessManagerFactory *networkAccessManagerFactory() const;
 
@@ -151,7 +151,7 @@ public:
     static ObjectOwnership objectOwnership(QObject *);
 protected:
     QQmlEngine(QQmlEnginePrivate &dd, QObject *p);
-    virtual bool event(QEvent *);
+    bool event(QEvent *) override;
 
 Q_SIGNALS:
     void quit();

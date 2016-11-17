@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     // As the render threads make use of our QGuiApplication object
     // to clean up gracefully, wait for them to finish before
     // QGuiApp is taken off the heap.
-    foreach (QThread *t, ThreadRenderer::threads) {
+    for (QThread *t : qAsConst(ThreadRenderer::threads)) {
         t->wait();
         delete t;
     }

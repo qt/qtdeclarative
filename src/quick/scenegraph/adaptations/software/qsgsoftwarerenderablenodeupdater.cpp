@@ -181,6 +181,7 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGRootNode *)
 {
 }
 
+#if QT_CONFIG(quick_sprite)
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGSpriteNode *node)
 {
     return updateRenderableNode(QSGSoftwareRenderableNode::SpriteNode, node);
@@ -190,6 +191,7 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGSpriteNode *)
 {
 
 }
+#endif
 
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGRenderNode *node)
 {

@@ -76,7 +76,7 @@ qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &m
 
     while (memoryData.length() > m_memoryPos && memoryData[m_memoryPos].timestamp <= until) {
         const QV4::Profiling::MemoryAllocationProperties &props = memoryData[m_memoryPos];
-        d << props.timestamp << MemoryAllocation << props.type << props.size;
+        d << props.timestamp << int(MemoryAllocation) << int(props.type) << props.size;
         ++m_memoryPos;
         messages.append(d.squeezedData());
         d.clear();
@@ -120,7 +120,7 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
                 return finalizeMessages(until, messages, m_stack.top(), d);
 
             appendMemoryEvents(m_stack.top(), messages, d);
-            d << m_stack.pop() << RangeEnd << Javascript;
+            d << m_stack.pop() << int(RangeEnd) << int(Javascript);
             messages.append(d.squeezedData());
             d.clear();
         }
@@ -134,19 +134,19 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             appendMemoryEvents(props.start, messages, d);
             auto location = m_functionLocations.find(props.id);
 
-            d << props.start << RangeStart << Javascript;
+            d << props.start << int(RangeStart) << int(Javascript);
             if (trackLocations)
                 d << static_cast<qint64>(props.id);
             if (location != m_functionLocations.end()) {
                 messages.push_back(d.squeezedData());
                 d.clear();
-                d << props.start << RangeLocation << Javascript << location->file << location->line
+                d << props.start << int(RangeLocation) << int(Javascript) << location->file << location->line
                   << location->column;
                 if (trackLocations)
                     d << static_cast<qint64>(props.id);
                 messages.push_back(d.squeezedData());
                 d.clear();
-                d << props.start << RangeData << Javascript << location->name;
+                d << props.start << int(RangeData) << int(Javascript) << location->name;
 
                 if (trackLocations) {
                     d << static_cast<qint64>(props.id);

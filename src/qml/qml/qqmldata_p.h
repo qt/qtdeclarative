@@ -207,8 +207,7 @@ public:
         } else if (priv->declarativeData) {
             return static_cast<QQmlData *>(priv->declarativeData);
         } else if (create) {
-            priv->declarativeData = new QQmlData;
-            return static_cast<QQmlData *>(priv->declarativeData);
+            return createQQmlData(priv);
         } else {
             return 0;
         }
@@ -231,11 +230,21 @@ public:
 
     static inline void flushPendingBinding(QObject *, QQmlPropertyIndex propertyIndex);
 
-    static QQmlPropertyCache *ensurePropertyCache(QJSEngine *engine, QObject *object);
+    static QQmlPropertyCache *ensurePropertyCache(QJSEngine *engine, QObject *object)
+    {
+        Q_ASSERT(engine);
+        QQmlData *ddata = QQmlData::get(object, /*create*/true);
+        if (Q_LIKELY(ddata->propertyCache))
+            return ddata->propertyCache;
+        return createPropertyCache(engine, object);
+    }
 
 private:
     // For attachedProperties
     mutable QQmlDataExtended *extendedData;
+
+    Q_NEVER_INLINE static QQmlData *createQQmlData(QObjectPrivate *priv);
+    Q_NEVER_INLINE static QQmlPropertyCache *createPropertyCache(QJSEngine *engine, QObject *object);
 
     void flushPendingBindingImpl(QQmlPropertyIndex index);
 

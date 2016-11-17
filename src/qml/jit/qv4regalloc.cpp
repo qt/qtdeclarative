@@ -272,32 +272,32 @@ public:
     }
 
 protected: // IRDecoder
-    virtual void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Expr *) {}
-    virtual void callBuiltinTypeofQmlContextProperty(IR::Expr *, IR::Member::MemberKind, int, IR::Expr *) {}
-    virtual void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Expr *) {}
-    virtual void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Expr *) {}
-    virtual void callBuiltinTypeofName(const QString &, IR::Expr *) {}
-    virtual void callBuiltinTypeofValue(IR::Expr *, IR::Expr *) {}
-    virtual void callBuiltinDeleteMember(IR::Expr *, const QString &, IR::Expr *) {}
-    virtual void callBuiltinDeleteSubscript(IR::Expr *, IR::Expr *, IR::Expr *) {}
-    virtual void callBuiltinDeleteName(const QString &, IR::Expr *) {}
-    virtual void callBuiltinDeleteValue(IR::Expr *) {}
-    virtual void callBuiltinThrow(IR::Expr *) {}
-    virtual void callBuiltinReThrow() {}
-    virtual void callBuiltinUnwindException(IR::Expr *) {}
-    virtual void callBuiltinPushCatchScope(const QString &) {};
-    virtual void callBuiltinForeachIteratorObject(IR::Expr *, IR::Expr *) {}
+    void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Expr *) override {}
+    void callBuiltinTypeofQmlContextProperty(IR::Expr *, IR::Member::MemberKind, int, IR::Expr *) override {}
+    void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Expr *) override {}
+    void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Expr *) override {}
+    void callBuiltinTypeofName(const QString &, IR::Expr *) override {}
+    void callBuiltinTypeofValue(IR::Expr *, IR::Expr *) override {}
+    void callBuiltinDeleteMember(IR::Expr *, const QString &, IR::Expr *) override {}
+    void callBuiltinDeleteSubscript(IR::Expr *, IR::Expr *, IR::Expr *) override {}
+    void callBuiltinDeleteName(const QString &, IR::Expr *) override {}
+    void callBuiltinDeleteValue(IR::Expr *) override {}
+    void callBuiltinThrow(IR::Expr *) override {}
+    void callBuiltinReThrow() override {}
+    void callBuiltinUnwindException(IR::Expr *) override {}
+    void callBuiltinPushCatchScope(const QString &) override {};
+    void callBuiltinForeachIteratorObject(IR::Expr *, IR::Expr *) override {}
     virtual void callBuiltinForeachNextProperty(IR::Temp *, IR::Temp *) {}
-    virtual void callBuiltinForeachNextPropertyname(IR::Expr *, IR::Expr *) {}
-    virtual void callBuiltinPushWithScope(IR::Expr *) {}
-    virtual void callBuiltinPopScope() {}
-    virtual void callBuiltinDeclareVar(bool , const QString &) {}
-    virtual void callBuiltinDefineArray(IR::Expr *, IR::ExprList *) {}
-    virtual void callBuiltinDefineObjectLiteral(IR::Expr *, int, IR::ExprList *, IR::ExprList *, bool) {}
-    virtual void callBuiltinSetupArgumentObject(IR::Expr *) {}
-    virtual void callBuiltinConvertThisToObject() {}
+    void callBuiltinForeachNextPropertyname(IR::Expr *, IR::Expr *) override {}
+    void callBuiltinPushWithScope(IR::Expr *) override {}
+    void callBuiltinPopScope() override {}
+    void callBuiltinDeclareVar(bool , const QString &) override {}
+    void callBuiltinDefineArray(IR::Expr *, IR::ExprList *) override {}
+    void callBuiltinDefineObjectLiteral(IR::Expr *, int, IR::ExprList *, IR::ExprList *, bool) override {}
+    void callBuiltinSetupArgumentObject(IR::Expr *) override {}
+    void callBuiltinConvertThisToObject() override {}
 
-    virtual void callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
+    void callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result) override
     {
         addDef(result);
         if (IR::Temp *tempValue = value->asTemp())
@@ -306,7 +306,8 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void callQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int propertyIndex, IR::ExprList *args, IR::Expr *result)
+    void callQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int propertyIndex,
+                                        IR::ExprList *args, IR::Expr *result) override
     {
         Q_UNUSED(propertyIndex)
 
@@ -316,8 +317,8 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
-                              IR::Expr *result)
+    void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
+                      IR::Expr *result) override
     {
         Q_UNUSED(name)
 
@@ -327,8 +328,8 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
-                               IR::Expr *result)
+    void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
+                       IR::Expr *result) override
     {
         addDef(result);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -337,7 +338,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void convertType(IR::Expr *source, IR::Expr *target)
+    void convertType(IR::Expr *source, IR::Expr *target) override
     {
         addDef(target);
 
@@ -410,14 +411,14 @@ protected: // IRDecoder
             addHint(target->asTemp(), sourceTemp);
     }
 
-    virtual void constructActivationProperty(IR::Name *, IR::ExprList *args, IR::Expr *result)
+    void constructActivationProperty(IR::Name *, IR::ExprList *args, IR::Expr *result) override
     {
         addDef(result);
         addUses(args, Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void constructProperty(IR::Expr *base, const QString &, IR::ExprList *args, IR::Expr *result)
+    void constructProperty(IR::Expr *base, const QString &, IR::ExprList *args, IR::Expr *result) override
     {
         addDef(result);
         addUses(base, Use::CouldHaveRegister);
@@ -425,7 +426,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
+    void constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result) override
     {
         addDef(result);
         addUses(value, Use::CouldHaveRegister);
@@ -433,24 +434,24 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadThisObject(IR::Expr *temp)
+    void loadThisObject(IR::Expr *temp) override
     {
         addDef(temp);
     }
 
-    virtual void loadQmlContext(IR::Expr *temp)
-    {
-        addDef(temp);
-        addCall();
-    }
-
-    virtual void loadQmlImportedScripts(IR::Expr *temp)
+    void loadQmlContext(IR::Expr *temp) override
     {
         addDef(temp);
         addCall();
     }
 
-    virtual void loadQmlSingleton(const QString &/*name*/, Expr *temp)
+    void loadQmlImportedScripts(IR::Expr *temp) override
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    void loadQmlSingleton(const QString &/*name*/, Expr *temp) override
     {
         Q_UNUSED(temp);
 
@@ -458,21 +459,21 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadConst(IR::Const *sourceConst, Expr *targetTemp)
+    void loadConst(IR::Const *sourceConst, Expr *targetTemp) override
     {
         Q_UNUSED(sourceConst);
 
         addDef(targetTemp);
     }
 
-    virtual void loadString(const QString &str, Expr *targetTemp)
+    void loadString(const QString &str, Expr *targetTemp) override
     {
         Q_UNUSED(str);
 
         addDef(targetTemp);
     }
 
-    virtual void loadRegexp(IR::RegExp *sourceRegexp, Expr *targetTemp)
+    void loadRegexp(IR::RegExp *sourceRegexp, Expr *targetTemp) override
     {
         Q_UNUSED(sourceRegexp);
 
@@ -480,19 +481,19 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getActivationProperty(const IR::Name *, Expr *temp)
+    void getActivationProperty(const IR::Name *, Expr *temp) override
     {
         addDef(temp);
         addCall();
     }
 
-    virtual void setActivationProperty(IR::Expr *source, const QString &)
+    void setActivationProperty(IR::Expr *source, const QString &) override
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void initClosure(IR::Closure *closure, Expr *target)
+    void initClosure(IR::Closure *closure, Expr *target) override
     {
         Q_UNUSED(closure);
 
@@ -500,49 +501,52 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getProperty(IR::Expr *base, const QString &, Expr *target)
+    void getProperty(IR::Expr *base, const QString &, Expr *target) override
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &)
+    void setProperty(IR::Expr *source, IR::Expr *targetBase, const QString &) override
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind /*kind*/, int /*propertyIndex*/)
+    void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase,
+                               IR::Member::MemberKind /*kind*/, int /*propertyIndex*/) override
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int /*propertyIndex*/)
+    void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int /*propertyIndex*/) override
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, bool /*captureRequired*/, IR::Expr *target)
+    void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/,
+                               bool /*captureRequired*/, IR::Expr *target) override
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/, bool /*isSingleton*/, int /*attachedPropertiesId*/, IR::Expr *target)
+    void getQObjectProperty(IR::Expr *base, int /*propertyIndex*/, bool /*captureRequired*/,
+                            bool /*isSingleton*/, int /*attachedPropertiesId*/, IR::Expr *target) override
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getElement(IR::Expr *base, IR::Expr *index, Expr *target)
+    void getElement(IR::Expr *base, IR::Expr *index, Expr *target) override
     {
         addDef(target);
         addUses(base->asTemp(), Use::CouldHaveRegister);
@@ -550,7 +554,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex)
+    void setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex) override
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
@@ -558,7 +562,7 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void copyValue(Expr *source, Expr *target)
+    void copyValue(Expr *source, Expr *target) override
     {
         addDef(target);
         Temp *sourceTemp = source->asTemp();
@@ -570,13 +574,13 @@ protected: // IRDecoder
             addHint(targetTemp, sourceTemp);
     }
 
-    virtual void swapValues(Expr *, Expr *)
+    void swapValues(Expr *, Expr *) override
     {
         // Inserted by the register allocator, so it cannot occur here.
         Q_UNREACHABLE();
     }
 
-    virtual void unop(AluOp oper, Expr *source, Expr *target)
+    void unop(AluOp oper, Expr *source, Expr *target) override
     {
         addDef(target);
 
@@ -612,7 +616,7 @@ protected: // IRDecoder
         }
     }
 
-    virtual void binop(AluOp oper, Expr *leftSource, Expr *rightSource, Expr *target)
+    void binop(AluOp oper, Expr *leftSource, Expr *rightSource, Expr *target) override
     {
         bool needsCall = true;
 
@@ -675,8 +679,8 @@ protected: // IRDecoder
         }
     }
 
-    virtual void visitJump(IR::Jump *) {}
-    virtual void visitCJump(IR::CJump *s)
+    void visitJump(IR::Jump *) override {}
+    void visitCJump(IR::CJump *s) override
     {
         if (Temp *t = s->cond->asTemp()) {
 #if 0 // TODO: change masm to generate code
@@ -696,10 +700,10 @@ protected: // IRDecoder
         }
     }
 
-    virtual void visitRet(IR::Ret *s)
+    void visitRet(IR::Ret *s) override
     { addUses(s->expr->asTemp(), Use::CouldHaveRegister); }
 
-    virtual void visitPhi(IR::Phi *s)
+    void visitPhi(IR::Phi *s) override
     {
         addDef(s->targetTemp, true);
         for (int i = 0, ei = s->incoming.size(); i < ei; ++i) {
@@ -716,7 +720,7 @@ protected: // IRDecoder
     }
 
 protected:
-    virtual void callBuiltin(IR::Call *c, IR::Expr *result)
+    void callBuiltin(IR::Call *c, IR::Expr *result) override
     {
         addDef(result);
         addUses(c->base, Use::CouldHaveRegister);

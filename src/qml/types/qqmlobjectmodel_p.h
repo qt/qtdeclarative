@@ -109,16 +109,16 @@ class Q_QML_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
 
 public:
     QQmlObjectModel(QObject *parent=0);
-    virtual ~QQmlObjectModel() {}
+    ~QQmlObjectModel() {}
 
-    virtual int count() const;
-    virtual bool isValid() const;
-    virtual QObject *object(int index, bool asynchronous=false);
-    virtual ReleaseFlags release(QObject *object);
-    virtual QString stringValue(int index, const QString &role);
-    virtual void setWatchedRoles(const QList<QByteArray> &) {}
+    int count() const override;
+    bool isValid() const override;
+    QObject *object(int index, bool asynchronous = false) override;
+    ReleaseFlags release(QObject *object) override;
+    QString stringValue(int index, const QString &role) override;
+    void setWatchedRoles(const QList<QByteArray> &) override {}
 
-    virtual int indexOf(QObject *object, QObject *objectContext) const;
+    int indexOf(QObject *object, QObject *objectContext) const override;
 
     QQmlListProperty<QObject> children();
 

@@ -94,10 +94,10 @@ public:
         FileUrlRole = Qt::UserRole + 9
     };
 
-    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-    virtual QHash<int, QByteArray> roleNames() const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
 //![abslistmodel]
 
 //![count]
@@ -144,8 +144,8 @@ public:
     Q_INVOKABLE int indexOf(const QUrl &file) const;
 
 //![parserstatus]
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 //![parserstatus]
 
     int roleFromString(const QString &roleName) const;

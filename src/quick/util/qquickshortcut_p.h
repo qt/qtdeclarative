@@ -52,17 +52,21 @@
 //
 
 #include <QtCore/qobject.h>
+#include <QtCore/qvector.h>
 #include <QtCore/qvariant.h>
 #include <QtGui/qkeysequence.h>
 #include <QtQml/qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
+class QShortcutEvent;
+
 class QQuickShortcut : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QVariant sequence READ sequence WRITE setSequence NOTIFY sequenceChanged FINAL)
+    Q_PROPERTY(QVariantList sequences READ sequences WRITE setSequences NOTIFY sequencesChanged FINAL REVISION 9)
     Q_PROPERTY(QString nativeText READ nativeText NOTIFY sequenceChanged FINAL REVISION 1)
     Q_PROPERTY(QString portableText READ portableText NOTIFY sequenceChanged FINAL REVISION 1)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
@@ -75,6 +79,9 @@ public:
 
     QVariant sequence() const;
     void setSequence(const QVariant &sequence);
+
+    QVariantList sequences() const;
+    void setSequences(const QVariantList &sequences);
 
     QString nativeText() const;
     QString portableText() const;
@@ -90,6 +97,7 @@ public:
 
 Q_SIGNALS:
     void sequenceChanged();
+    Q_REVISION(9) void sequencesChanged();
     void enabledChanged();
     void autoRepeatChanged();
     void contextChanged();
@@ -102,17 +110,26 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
     bool event(QEvent *event) Q_DECL_OVERRIDE;
 
-    void grabShortcut(const QKeySequence &sequence, Qt::ShortcutContext context);
-    void ungrabShortcut();
+    struct Shortcut {
+        bool matches(QShortcutEvent *event) const;
+        int id;
+        QVariant userValue;
+        QKeySequence keySequence;
+    };
+
+    void setEnabled(Shortcut &shortcut, bool enabled);
+    void setAutoRepeat(Shortcut &shortcut, bool repeat);
+
+    void grabShortcut(Shortcut &shortcut, Qt::ShortcutContext context);
+    void ungrabShortcut(Shortcut &shortcut);
 
 private:
-    int m_id;
     bool m_enabled;
     bool m_completed;
     bool m_autorepeat;
-    QKeySequence m_shortcut;
     Qt::ShortcutContext m_context;
-    QVariant m_sequence;
+    Shortcut m_shortcut;
+    QVector<Shortcut> m_shortcuts;
 };
 
 QT_END_NAMESPACE

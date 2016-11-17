@@ -193,9 +193,11 @@ class QQuickTextEditMimeData : public QMimeData
 public:
     inline QQuickTextEditMimeData(const QTextDocumentFragment &aFragment) : fragment(aFragment) {}
 
-    virtual QStringList formats() const;
+    QStringList formats() const override;
+
 protected:
-    virtual QVariant retrieveData(const QString &mimeType, QVariant::Type type) const;
+    QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+
 private:
     void setup() const;
 

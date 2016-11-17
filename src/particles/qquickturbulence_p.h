@@ -65,7 +65,7 @@ class QQuickTurbulenceAffector : public QQuickParticleAffector
     public:
     explicit QQuickTurbulenceAffector(QQuickItem *parent = 0);
     ~QQuickTurbulenceAffector();
-    virtual void affectSystem(qreal dt);
+    void affectSystem(qreal dt) override;
 
     qreal strength() const
     {
@@ -102,8 +102,8 @@ public Q_SLOTS:
     }
 
 protected:
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
+    void geometryChanged(const QRectF &newGeometry,
+                         const QRectF &oldGeometry) override;
 private:
     void ensureInit();
     void mapUpdate();

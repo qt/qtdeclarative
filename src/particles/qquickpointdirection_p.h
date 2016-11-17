@@ -63,7 +63,7 @@ class QQuickPointDirection : public QQuickDirection
     Q_PROPERTY(qreal yVariation READ yVariation WRITE setYVariation NOTIFY yVariationChanged)
 public:
     explicit QQuickPointDirection(QObject *parent = 0);
-    virtual const QPointF sample(const QPointF &from);
+    QPointF sample(const QPointF &from) override;
     qreal x() const
     {
         return m_x;

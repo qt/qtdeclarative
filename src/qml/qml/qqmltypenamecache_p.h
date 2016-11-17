@@ -87,10 +87,10 @@ public:
         const void *importNamespace;
         int scriptIndex;
     };
-    Result query(const QHashedStringRef &);
-    Result query(const QHashedStringRef &, const void *importNamespace);
-    Result query(const QV4::String *);
-    Result query(const QV4::String *, const void *importNamespace);
+    Result query(const QHashedStringRef &) const;
+    Result query(const QHashedStringRef &, const void *importNamespace) const;
+    Result query(const QV4::String *) const;
+    Result query(const QV4::String *, const void *importNamespace) const;
 
 private:
     friend class QQmlImports;
@@ -108,7 +108,7 @@ private:
     };
 
     template<typename Key>
-    Result query(const QStringHash<Import> &imports, Key key)
+    Result query(const QStringHash<Import> &imports, Key key) const
     {
         Import *i = imports.value(key);
         if (i) {
@@ -123,7 +123,7 @@ private:
     }
 
     template<typename Key>
-    Result query(const QStringHash<QUrl> &urls, Key key)
+    Result query(const QStringHash<QUrl> &urls, Key key) const
     {
         QUrl *url = urls.value(key);
         if (url) {
@@ -136,7 +136,7 @@ private:
     }
 
     template<typename Key>
-    Result typeSearch(const QVector<QQmlTypeModuleVersion> &modules, Key key)
+    Result typeSearch(const QVector<QQmlTypeModuleVersion> &modules, Key key) const
     {
         QVector<QQmlTypeModuleVersion>::const_iterator end = modules.constEnd();
         for (QVector<QQmlTypeModuleVersion>::const_iterator it = modules.constBegin(); it != end; ++it) {

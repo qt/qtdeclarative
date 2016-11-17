@@ -56,6 +56,7 @@ class QSGTexture;
 class QInputMethodEvent;
 class QQuickWindowPrivate;
 class QQuickWindowAttached;
+class QOpenGLContext;
 class QOpenGLFramebufferObject;
 class QQmlIncubationController;
 class QInputMethodEvent;

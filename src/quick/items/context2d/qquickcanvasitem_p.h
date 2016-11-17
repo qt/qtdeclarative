@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_canvas);
+
 #include <QtQuick/qquickitem.h>
 #include <private/qv8engine_p.h>
 #include <private/qqmlrefcount_p.h>
@@ -191,7 +195,7 @@ private:
     Q_INVOKABLE void delayedCreate();
     bool createContext(const QString &contextType);
     void initializeContext(QQuickCanvasContext *context, const QVariantMap &args = QVariantMap());
-    QRect tiledRect(const QRectF &window, const QSize &tileSize);
+    static QRect tiledRect(const QRectF &window, const QSize &tileSize);
     bool isPaintConnected();
 };
 

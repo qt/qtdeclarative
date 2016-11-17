@@ -289,10 +289,12 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
                 if (scope) {
-                    QString methodName = QString::fromLatin1(QMetaObjectPrivate::signal(scope->metaObject(), signalHandler->signalIndex()).name());
-                    if (!methodName.isEmpty()) {
-                        prop.name = QLatin1String("on") + methodName[0].toUpper()
-                                + methodName.mid(1);
+                    const QByteArray methodName = QMetaObjectPrivate::signal(scope->metaObject(),
+                                                                             signalHandler->signalIndex()).name();
+                    const QLatin1String methodNameStr(methodName);
+                    if (methodNameStr.size() != 0) {
+                        prop.name = QLatin1String("on") + QChar(methodNameStr.at(0)).toUpper()
+                                + methodNameStr.mid(1);
                     }
                 }
             }
@@ -520,12 +522,12 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
         ds >> file >> lineNumber >> columnNumber >> recurse >> dumpProperties;
 
-        QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
+        const QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
 
         rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
            << objects.count();
 
-        foreach (QObject *object, objects) {
+        for (QObject *object : objects) {
             if (recurse)
                 prepareDeferredObjects(object);
             buildObjectDump(rs, object, recurse, dumpProperties);

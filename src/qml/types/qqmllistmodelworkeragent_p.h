@@ -108,7 +108,7 @@ public:
 
     void modelDestroyed();
 protected:
-    virtual bool event(QEvent *);
+    bool event(QEvent *) override;
 
 private:
     friend class QQuickWorkerScriptEnginePrivate;

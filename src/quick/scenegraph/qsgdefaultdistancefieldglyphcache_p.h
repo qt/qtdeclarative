@@ -116,9 +116,8 @@ private:
     {
         m_blitProgram = new QOpenGLShaderProgram;
         {
-            QString source;
-            source.append(QLatin1String(qopenglslMainWithTexCoordsVertexShader));
-            source.append(QLatin1String(qopenglslUntransformedPositionVertexShader));
+            const QString source = QLatin1String(qopenglslMainWithTexCoordsVertexShader)
+                                 + QLatin1String(qopenglslUntransformedPositionVertexShader);
 
             QOpenGLShader *vertexShader = new QOpenGLShader(QOpenGLShader::Vertex, m_blitProgram);
             vertexShader->compileSourceCode(source);
@@ -126,9 +125,8 @@ private:
             m_blitProgram->addShader(vertexShader);
         }
         {
-            QString source;
-            source.append(QLatin1String(qopenglslMainFragmentShader));
-            source.append(QLatin1String(qopenglslImageSrcFragmentShader));
+            const QString source = QLatin1String(qopenglslMainFragmentShader)
+                                 + QLatin1String(qopenglslImageSrcFragmentShader);
 
             QOpenGLShader *fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, m_blitProgram);
             fragmentShader->compileSourceCode(source);

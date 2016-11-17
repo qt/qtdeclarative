@@ -51,9 +51,10 @@
 // We mean it.
 //
 
+#include <QtQml/qtqmlglobal.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qatomic.h>
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkreply.h>
 #endif
 #include <QtQml/qqmlerror.h>
@@ -154,7 +155,7 @@ protected:
     virtual void dataReceived(const Data &) = 0;
     virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*) = 0;
     virtual void done();
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     virtual void networkError(QNetworkReply::NetworkError);
 #endif
     virtual void dependencyError(QQmlDataBlob *);
@@ -242,8 +243,8 @@ public:
 
         virtual void scriptImported(QQmlScriptBlob *, const QV4::CompiledData::Location &, const QString &, const QString &) {}
 
-        virtual void dependencyError(QQmlDataBlob *);
-        virtual void dependencyComplete(QQmlDataBlob *);
+        void dependencyError(QQmlDataBlob *) override;
+        void dependencyComplete(QQmlDataBlob *) override;
 
     protected:
         virtual QString stringAt(int) const { return QString(); }
@@ -286,7 +287,7 @@ public:
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
-    QQmlImportDatabase *importDatabase();
+    QQmlImportDatabase *importDatabase() const;
 
     QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
     QQmlTypeData *getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
@@ -320,16 +321,16 @@ public:
 private:
     friend class QQmlDataBlob;
     friend class QQmlTypeLoaderThread;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     friend class QQmlTypeLoaderNetworkReplyProxy;
-#endif // QT_NO_NETWORK
+#endif // qml_network
 
     void shutdownThread();
 
     void loadThread(QQmlDataBlob *);
     void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
     void loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     void networkReplyFinished(QNetworkReply *);
     void networkReplyProgress(QNetworkReply *, qint64, qint64);
 
@@ -366,7 +367,7 @@ private:
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     NetworkReplies m_networkReplies;
 #endif
     TypeCache m_typeCache;
@@ -433,14 +434,14 @@ public:
     void unregisterCallback(TypeDataCallback *);
 
 protected:
-    virtual void done();
-    virtual void completed();
-    virtual void dataReceived(const Data &);
-    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit);
-    virtual void allDependenciesDone();
-    virtual void downloadProgressChanged(qreal);
+    void done() override;
+    void completed() override;
+    void dataReceived(const Data &) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
+    void allDependenciesDone() override;
+    void downloadProgressChanged(qreal) override;
 
-    virtual QString stringAt(int index) const;
+    QString stringAt(int index) const override;
 
 private:
     bool tryLoadFromDiskCache();
@@ -457,7 +458,7 @@ private:
                                       const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
 
-    virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
+    void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
 
 
     qint64 m_sourceTimeStamp = 0;
@@ -509,7 +510,7 @@ public:
     QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
 
 protected:
-    virtual void clear(); // From QQmlCleanup
+    void clear() override; // From QQmlCleanup
 
 private:
     friend class QQmlScriptBlob;
@@ -545,14 +546,14 @@ public:
     QQmlScriptData *scriptData() const;
 
 protected:
-    virtual void dataReceived(const Data &);
-    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit);
-    virtual void done();
+    void dataReceived(const Data &) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
+    void done() override;
 
-    virtual QString stringAt(int index) const;
+    QString stringAt(int index) const override;
 
 private:
-    virtual void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace);
+    void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
     void initializeFromCompilationUnit(QV4::CompiledData::CompilationUnit *unit);
 
     QList<ScriptReference> m_scripts;

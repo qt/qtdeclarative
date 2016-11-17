@@ -94,7 +94,7 @@ public Q_SLOTS:
 #endif
 
 protected:
-    void run();
+    void run() override;
     void getFileInfos(const QString &path);
     void findChangeRange(const QList<FileProperty> &list, int &fromIndex, int &toIndex);
 

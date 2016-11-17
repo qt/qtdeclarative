@@ -403,23 +403,23 @@ void QmlProfilerData::computeQmlTime()
     int level = minimumLevel;
 
     for (int i = 0; i < d->startInstanceList.count(); i++) {
-        qint64 st = d->startInstanceList[i].startTime;
+        qint64 st = d->startInstanceList.at(i).startTime;
 
-        if (d->startInstanceList[i].data->rangeType == QQmlProfilerDefinitions::Painting) {
+        if (d->startInstanceList.at(i).data->rangeType == QQmlProfilerDefinitions::Painting) {
             continue;
         }
 
         // general level
-        if (endtimesPerLevel[level] > st) {
+        if (endtimesPerLevel.value(level) > st) {
             level++;
         } else {
             while (level > minimumLevel && endtimesPerLevel[level-1] <= st)
                 level--;
         }
-        endtimesPerLevel[level] = st + d->startInstanceList[i].duration;
+        endtimesPerLevel[level] = st + d->startInstanceList.at(i).duration;
 
         if (level == minimumLevel) {
-            d->qmlMeasuredTime += d->startInstanceList[i].duration;
+            d->qmlMeasuredTime += d->startInstanceList.at(i).duration;
         }
     }
 }

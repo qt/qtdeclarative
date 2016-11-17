@@ -81,7 +81,7 @@
     \note This property needs to be set when declaring the LoggingCategory
     and cannot be changed later.
 
-    \sa QLoggingCategory::name()
+    \sa QLoggingCategory::categoryName()
 */
 
 QQmlLoggingCategory::QQmlLoggingCategory(QObject *parent)

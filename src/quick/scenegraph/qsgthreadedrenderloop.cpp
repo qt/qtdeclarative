@@ -63,7 +63,9 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 
+#if QT_CONFIG(quick_shadereffect)
 #include <private/qquickopenglshadereffectnode_p.h>
+#endif
 #include <private/qsgdefaultrendercontext_p.h>
 
 /*
@@ -487,7 +489,9 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
 
     QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
 
+#if QT_CONFIG(quick_shadereffect)
     QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#endif
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {

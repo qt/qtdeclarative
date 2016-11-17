@@ -61,13 +61,13 @@ class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialShader : public QSGMaterial
 public:
     QSGOpaqueTextureMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
 
     static QSGMaterialType type;
 
 protected:
-    virtual void initialize();
+    void initialize() override;
 
     int m_matrix_id;
 };
@@ -77,8 +77,8 @@ class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
 public:
     QSGTextureMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual void initialize();
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    void initialize() override;
 
     static QSGMaterialType type;
 

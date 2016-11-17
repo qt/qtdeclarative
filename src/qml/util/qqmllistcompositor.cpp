@@ -964,7 +964,7 @@ void QQmlListCompositor::listItemsInserted(
             it.incrementIndexes(it->count);
             continue;
         }
-        foreach (const QQmlChangeSet::Change &insertion, insertions) {
+        for (const QQmlChangeSet::Change &insertion : insertions) {
             int offset = insertion.index - it->index;
             if ((offset > 0 && offset < it->count)
                     || (offset == 0 && it->prepend())
@@ -1301,7 +1301,7 @@ void QQmlListCompositor::listItemsChanged(
         } else if (!it->inGroup()) {
             continue;
         }
-        foreach (const QQmlChangeSet::Change &change, changes) {
+        for (const QQmlChangeSet::Change &change : changes) {
             const int offset = change.index - it->index;
             if (offset + change.count > 0 && offset < it->count) {
                 const int changeOffset = qMax(0, offset);

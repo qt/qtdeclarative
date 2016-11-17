@@ -77,8 +77,13 @@ namespace Heap {
 
 struct QQmlValueTypeWrapper;
 
-struct QObjectWrapper : Object {
-    void init(QObject *object);
+struct Q_QML_EXPORT QObjectWrapper : Object {
+    void init(QObject *object)
+    {
+        Object::init();
+        qObj.init(object);
+    }
+
     void destroy() {
         qObj.destroy();
         Object::destroy();
@@ -196,7 +201,7 @@ protected:
     static ReturnedValue method_disconnect(CallContext *ctx);
 
 private:
-    static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
+    Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
 };
 
 inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)

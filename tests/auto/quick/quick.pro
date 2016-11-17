@@ -6,6 +6,7 @@ PUBLICTESTS += \
 
 qtConfig(opengl(es1|es2)?) {
     PUBLICTESTS += \
+        drawingmodes \
         rendernode
     qtHaveModule(widgets): PUBLICTESTS += nodes
 

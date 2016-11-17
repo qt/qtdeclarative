@@ -78,7 +78,7 @@ QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
     static bool envChecked = false;
     if (!envChecked) {
         envChecked = true;
-        threaded = qgetenv("QSG_RENDER_LOOP") == QByteArrayLiteral("threaded");
+        threaded = qgetenv("QSG_RENDER_LOOP") == "threaded";
     }
 
     if (threaded)

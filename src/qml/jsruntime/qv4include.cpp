@@ -41,7 +41,7 @@
 #include "qv4scopedvalue_p.h"
 
 #include <QtQml/qjsengine.h>
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
 #endif
@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
                        QV4::QmlContext *qmlContext, const QV4::Value &callback)
     : v4(engine), m_url(url)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     , m_redirectCount(0), m_network(0) , m_reply(0)
 #endif
 {
@@ -71,7 +71,7 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
 
     m_resultObject.set(v4, resultValue(v4));
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     m_network = engine->v8Engine->networkAccessManager();
 
     QNetworkRequest request;
@@ -86,7 +86,7 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
 
 QV4Include::~QV4Include()
 {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     delete m_reply;
     m_reply = 0;
 #endif
@@ -135,7 +135,7 @@ QV4::ReturnedValue QV4Include::result()
 #define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15
 void QV4Include::finished()
 {
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     m_redirectCount++;
 
     if (m_redirectCount < INCLUDE_MAXIMUM_REDIRECT_RECURSION) {
@@ -184,7 +184,7 @@ void QV4Include::finished()
     QV4::ScopedObject resultObj(scope, m_resultObject.value());
     QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
     resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(NetworkError)));
-#endif //QT_NO_NETWORK
+#endif // qml_network
 
     QV4::ScopedValue cb(scope, m_callbackFunction.value());
     callback(cb, resultObj);
@@ -211,7 +211,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
     if (ctx->argc() >= 2 && ctx->args()[1].as<QV4::FunctionObject>())
         callbackFunction = ctx->args()[1];
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QUrl url(scope.engine->resolvedUrl(ctx->args()[0].toQStringNoThrow()));
     if (scope.engine->qmlEngine() && scope.engine->qmlEngine()->urlInterceptor())
         url = scope.engine->qmlEngine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::JavaScriptFile);

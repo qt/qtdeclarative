@@ -46,6 +46,11 @@
 #include <QtTest/private/qtestlog_p.h>
 #include "qtestoptions_p.h"
 #include <QtTest/qbenchmark.h>
+// qbenchmark_p.h pulls windows.h via 3rd party; prevent it from defining
+// the min/max macros which would clash with qnumeric_p.h's usage of min()/max().
+#if defined(Q_OS_WIN32) && !defined(NOMINMAX)
+#  define NOMINMAX
+#endif
 #include <QtTest/private/qbenchmark_p.h>
 #include <QtCore/qset.h>
 #include <QtCore/qmap.h>
@@ -519,7 +524,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     if (result.isEmpty()) {
         QString tmp = value->toQStringNoThrow();
         if (value->as<QV4::ArrayObject>())
-            result.append(QString::fromLatin1("[%1]").arg(tmp));
+            result += QLatin1Char('[') + tmp + QLatin1Char(']');
         else
             result.append(tmp);
     }

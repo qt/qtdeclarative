@@ -60,11 +60,11 @@ class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 public:
     QQmlValueTypeProxyBinding(QObject *o, QQmlPropertyIndex coreIndex);
 
-    QQmlAbstractBinding *binding(QQmlPropertyIndex targetPropertyIndex);
+    QQmlAbstractBinding *binding(QQmlPropertyIndex targetPropertyIndex) const;
     void removeBindings(quint32 mask);
 
-    virtual void setEnabled(bool, QQmlPropertyData::WriteFlags);
-    virtual bool isValueTypeProxy() const;
+    void setEnabled(bool, QQmlPropertyData::WriteFlags) override;
+    bool isValueTypeProxy() const override;
 
 protected:
     ~QQmlValueTypeProxyBinding();

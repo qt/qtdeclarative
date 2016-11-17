@@ -67,7 +67,7 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
                 break;
 #endif
             case QSGRendererInterface::Direct3D12:
-#ifdef HAS_D3D12
+#if QT_CONFIG(d3d12)
                 n = new D3D12RenderNode(this);
                 break;
 #endif

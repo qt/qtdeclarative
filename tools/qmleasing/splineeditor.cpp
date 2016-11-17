@@ -620,7 +620,7 @@ void SplineEditor::mouseMoveEvent(QMouseEvent *e)
         if (indexIsRealPoint(m_activeControlPoint)) {
             //move also the tangents
             QPointF targetPoint = p;
-            QPointF distance = targetPoint - m_controlPoints[m_activeControlPoint];
+            QPointF distance = targetPoint - m_controlPoints.at(m_activeControlPoint);
             m_controlPoints[m_activeControlPoint] = targetPoint;
             m_controlPoints[m_activeControlPoint - 1] += distance;
             m_controlPoints[m_activeControlPoint + 1] += distance;
@@ -629,7 +629,7 @@ void SplineEditor::mouseMoveEvent(QMouseEvent *e)
                 m_controlPoints[m_activeControlPoint] = p;
             } else {
                 QPointF targetPoint = p;
-                QPointF distance = targetPoint - m_controlPoints[m_activeControlPoint];
+                QPointF distance = targetPoint - m_controlPoints.at(m_activeControlPoint);
                 m_controlPoints[m_activeControlPoint] = p;
 
                 if ((m_activeControlPoint > 1) && (m_activeControlPoint % 3) == 0) { //right control point

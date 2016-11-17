@@ -81,7 +81,8 @@ public:
     }
 
 protected:
-    virtual bool affectParticle(QQuickParticleData *d, qreal dt);
+    bool affectParticle(QQuickParticleData *d, qreal dt) override;
+
 Q_SIGNALS:
 
     void goalStateChanged(const QString &arg);
