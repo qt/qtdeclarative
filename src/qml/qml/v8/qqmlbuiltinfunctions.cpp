@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -932,7 +932,7 @@ ReturnedValue QtObject::method_quit(CallContext *ctx)
 /*!
 \qmlmethod object Qt::createQmlObject(string qml, object parent, string filepath)
 
-Returns a new object created from the given \a string of QML which will have the specified \a parent,
+Returns a new object created from the given \a qml string which will have the specified \a parent,
 or \c null if there was an error in creating the object.
 
 If \a filepath is specified, it will be used for error reporting for the created object.
