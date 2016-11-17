@@ -51,13 +51,13 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "addressmodel.h"
+#include "contactmodel.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<AddressModel>("Backend", 1, 0, "AddressModel");
+    qmlRegisterType<ContactModel>("Backend", 1, 0, "ContactModel");
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/contactlist.qml")));

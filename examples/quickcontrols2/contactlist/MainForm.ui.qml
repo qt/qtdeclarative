@@ -96,7 +96,7 @@ Page {
             }
         }
 
-        model: AddressModel {
+        model: ContactModel {
         }
 
         ScrollBar.vertical: ScrollBar {

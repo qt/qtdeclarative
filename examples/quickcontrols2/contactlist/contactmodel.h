@@ -48,25 +48,25 @@
 **
 ****************************************************************************/
 
-#ifndef ADDRESSMODEL_H
-#define ADDRESSMODEL_H
+#ifndef CONTACTMODEL_H
+#define CONTACTMODEL_H
 
 #include <QAbstractListModel>
 
-class AddressModel : public QAbstractListModel
+class ContactModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
-    enum AdressModelRoles {
+    enum ContactRole {
         FullNameRole = Qt::DisplayRole,
         AddressRole = Qt::UserRole,
         CityRole,
         NumberRole
     };
-    Q_ENUM(AdressModelRoles)
+    Q_ENUM(ContactRole)
 
-    AddressModel(QObject *parent = nullptr);
+    ContactModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex & = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
@@ -81,14 +81,14 @@ public:
     Q_INVOKABLE void removeContact(int row);
 
 private:
-    struct Data {
+    struct Contact {
         QString fullName;
         QString address;
         QString city;
         QString number;
     };
 
-    QList<Data> m_data;
+    QList<Contact> m_contacts;
 };
 
-#endif // ADDRESSMODEL_H
+#endif // CONTACTMODEL_H

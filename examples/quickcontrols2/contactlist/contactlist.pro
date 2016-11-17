@@ -3,11 +3,11 @@ TARGET = contactlist
 QT += quick
 
 HEADERS += \
-    addressmodel.h
+    contactmodel.h
 
 SOURCES += \
     main.cpp \
-    addressmodel.cpp
+    contactmodel.cpp
 
 RESOURCES += \
    $$files(*.qml)

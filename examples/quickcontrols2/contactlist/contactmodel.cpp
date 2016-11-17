@@ -48,42 +48,42 @@
 **
 ****************************************************************************/
 
-#include "addressmodel.h"
+#include "contactmodel.h"
 
-AddressModel::AddressModel(QObject *parent ) : QAbstractListModel(parent)
+ContactModel::ContactModel(QObject *parent ) : QAbstractListModel(parent)
 {
-    m_data.append({ "Angel Hogan", "Chapel St. 368 ", "Clearwater" , "0311 1823993" });
-    m_data.append({ "Felicia Patton", "Annadale Lane 2", "Knoxville" , "0368 1244494" });
-    m_data.append({ "Grant Crawford", "Windsor Drive 34", "Riverdale" , "0351 7826892" });
-    m_data.append({ "Gretchen Little", "Sunset Drive 348", "Virginia Beach" , "0343 1234991" });
-    m_data.append({ "Geoffrey Richards", "University Lane 54", "Trussville" , "0423 2144944" });
-    m_data.append({ "Henrietta Chavez", "Via Volto San Luca 3", "Piobesi Torinese" , "0399 2826994" });
-    m_data.append({ "Harvey Chandler", "North Squaw Creek 11", "Madisonville" , "0343 1244492" });
-    m_data.append({ "Miguel Gomez", "Wild Rose Street 13", "Trussville" , "0343 9826996" });
-    m_data.append({ "Norma Rodriguez", " Glen Eagles Street  53", "Buffalo" , "0241 5826596" });
-    m_data.append({ "Shelia Ramirez", "East Miller Ave 68", "Pickerington" , "0346 4844556" });
-    m_data.append({ "Stephanie Moss", "Piazza Trieste e Trento 77", "Roata Chiusani" , "0363 0510490" });
+    m_contacts.append({ "Angel Hogan", "Chapel St. 368 ", "Clearwater" , "0311 1823993" });
+    m_contacts.append({ "Felicia Patton", "Annadale Lane 2", "Knoxville" , "0368 1244494" });
+    m_contacts.append({ "Grant Crawford", "Windsor Drive 34", "Riverdale" , "0351 7826892" });
+    m_contacts.append({ "Gretchen Little", "Sunset Drive 348", "Virginia Beach" , "0343 1234991" });
+    m_contacts.append({ "Geoffrey Richards", "University Lane 54", "Trussville" , "0423 2144944" });
+    m_contacts.append({ "Henrietta Chavez", "Via Volto San Luca 3", "Piobesi Torinese" , "0399 2826994" });
+    m_contacts.append({ "Harvey Chandler", "North Squaw Creek 11", "Madisonville" , "0343 1244492" });
+    m_contacts.append({ "Miguel Gomez", "Wild Rose Street 13", "Trussville" , "0343 9826996" });
+    m_contacts.append({ "Norma Rodriguez", " Glen Eagles Street  53", "Buffalo" , "0241 5826596" });
+    m_contacts.append({ "Shelia Ramirez", "East Miller Ave 68", "Pickerington" , "0346 4844556" });
+    m_contacts.append({ "Stephanie Moss", "Piazza Trieste e Trento 77", "Roata Chiusani" , "0363 0510490" });
 }
 
-int AddressModel::rowCount(const QModelIndex &) const
+int ContactModel::rowCount(const QModelIndex &) const
 {
-    return m_data.count();
+    return m_contacts.count();
 }
 
-QVariant AddressModel::data(const QModelIndex &index, int role) const
+QVariant ContactModel::data(const QModelIndex &index, int role) const
 {
     if (index.row() < rowCount())
         switch (role) {
-        case FullNameRole: return m_data.at(index.row()).fullName;
-        case AddressRole: return m_data.at(index.row()).address;
-        case CityRole: return m_data.at(index.row()).city;
-        case NumberRole: return m_data.at(index.row()).number;
+        case FullNameRole: return m_contacts.at(index.row()).fullName;
+        case AddressRole: return m_contacts.at(index.row()).address;
+        case CityRole: return m_contacts.at(index.row()).city;
+        case NumberRole: return m_contacts.at(index.row()).number;
         default: return QVariant();
     }
     return QVariant();
 }
 
-QHash<int, QByteArray> AddressModel::roleNames() const
+QHash<int, QByteArray> ContactModel::roleNames() const
 {
     static QHash<int, QByteArray> roleNames {
         { FullNameRole, "fullName" },
@@ -94,56 +94,56 @@ QHash<int, QByteArray> AddressModel::roleNames() const
     return roleNames;
 }
 
-void AddressModel::updateContact(int row,
+void ContactModel::updateContact(int row,
                                  const QString &fullName,
                                  const QString &address,
                                  const QString &city,
                                  const QString &number)
 {
     if (row >= 0 && row < rowCount()) {
-        m_data.replace(row, { fullName, address, city, number });
+        m_contacts.replace(row, { fullName, address, city, number });
         dataChanged(index(row, 0), index(row, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
     } else if (row < 0) {
         beginInsertRows(QModelIndex(), rowCount() - 1, rowCount() - 1);
-        m_data.append({fullName, address, city, number});
+        m_contacts.append({fullName, address, city, number});
         endInsertRows();
         dataChanged(index(rowCount() - 1, 0), index(rowCount() - 1, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
     }
 }
 
-void AddressModel::removeContact(int row)
+void ContactModel::removeContact(int row)
 {
     if (row >= 0 && row < rowCount()) {
         beginRemoveRows(QModelIndex(), row, row);
-        m_data.removeAt(row);
+        m_contacts.removeAt(row);
         endRemoveRows();
     }
 }
 
-QString AddressModel::getFullName(int row) const
+QString ContactModel::getFullName(int row) const
 {
     if (row >= 0 && row < rowCount())
-        return m_data.at(row).fullName;
+        return m_contacts.at(row).fullName;
     return QString();
 }
 
-QString AddressModel::getAddress(int row) const
+QString ContactModel::getAddress(int row) const
 {
     if (row >= 0 && row < rowCount())
-        return m_data.at(row).address;
+        return m_contacts.at(row).address;
     return QString();
 }
 
-QString AddressModel::getCity(int row) const
+QString ContactModel::getCity(int row) const
 {
     if (row >= 0 && row < rowCount())
-        return m_data.at(row).city;
+        return m_contacts.at(row).city;
     return QString();
 }
 
-QString AddressModel::getNumber(int row) const
+QString ContactModel::getNumber(int row) const
 {
     if (row >= 0 && row < rowCount())
-        return m_data.at(row).number;
+        return m_contacts.at(row).number;
     return QString();
 }
