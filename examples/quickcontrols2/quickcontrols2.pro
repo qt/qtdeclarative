@@ -4,4 +4,5 @@ SUBDIRS += \
     chattutorial \
     texteditor \
     contactlist \
-    sidepanel
+    sidepanel \
+    swipetoremove

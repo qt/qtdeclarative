@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-swipedelegate-behind.gif
 
-    \sa {Customizing SwipeDelegate}, {Delegate Controls}
+    \sa {Customizing SwipeDelegate}, {Delegate Controls}, {Qt Quick Controls 2 - Swipe to Remove}{Swipe to Remove Example}
 */
 
 namespace {
