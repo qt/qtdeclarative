@@ -209,6 +209,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
     , allowVerticalResize(true)
     , allowHorizontalResize(true)
     , hadActiveFocusBeforeExitTransition(false)
+    , interactive(true)
     , x(0)
     , y(0)
     , effectiveX(0)
@@ -257,6 +258,9 @@ void QQuickPopupPrivate::closeOrReject()
 
 bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
 {
+    if (!interactive)
+        return false;
+
     const bool isPress = event->type() == QEvent::MouseButtonPress;
     const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutside : QQuickPopup::CloseOnReleaseOutside);
     const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutsideParent : QQuickPopup::CloseOnReleaseOutsideParent);

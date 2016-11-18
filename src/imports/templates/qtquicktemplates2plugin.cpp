@@ -225,6 +225,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // QtQuick.Templates 2.2 (new types and revisions in Qt 5.9)
     qmlRegisterType<QQuickComboBox, 2>(uri, 2, 2, "ComboBox");
     qmlRegisterType<QQuickDial, 2>(uri, 2, 2, "Dial");
+    qmlRegisterType<QQuickDrawer, 2>(uri, 2, 2, "Drawer");
     qmlRegisterType<QQuickRangeSlider, 2>(uri, 2, 2, "RangeSlider");
     qmlRegisterType<QQuickSlider, 2>(uri, 2, 2, "Slider");
     qmlRegisterType<QQuickSwipeDelegate, 2>(uri, 2, 2, "SwipeDelegate");

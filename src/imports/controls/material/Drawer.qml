@@ -58,7 +58,7 @@ T.Drawer {
     enter: Transition { SmoothedAnimation { velocity: 5 } }
     exit: Transition { SmoothedAnimation { velocity: 5 } }
 
-    Material.elevation: 16
+    Material.elevation: !interactive && !dim ? 0 : 16
 
     background: Rectangle {
         color: control.Material.dialogColor

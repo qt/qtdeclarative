@@ -138,6 +138,7 @@ public:
     bool allowVerticalResize;
     bool allowHorizontalResize;
     bool hadActiveFocusBeforeExitTransition;
+    bool interactive;
     qreal x;
     qreal y;
     qreal effectiveX;

@@ -84,6 +84,9 @@ private slots:
     void touch();
 
     void grabber();
+
+    void interactive_data();
+    void interactive();
 };
 
 void tst_Drawer::visible_data()
@@ -797,6 +800,60 @@ void tst_Drawer::grabber()
 
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 300));
     QTRY_COMPARE(popupClosedSpy.count(), 1);
+}
+
+void tst_Drawer::interactive_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::newRow("Window") << "window.qml";
+    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+}
+
+void tst_Drawer::interactive()
+{
+    QFETCH(QString, source);
+    QQuickApplicationHelper helper(this, source);
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
+    QVERIFY(drawer);
+
+    drawer->setInteractive(false);
+
+    QSignalSpy openedSpy(drawer, SIGNAL(opened()));
+    QSignalSpy aboutToHideSpy(drawer, SIGNAL(aboutToHide()));
+    QVERIFY(openedSpy.isValid());
+    QVERIFY(aboutToHideSpy.isValid());
+
+    drawer->open();
+    QVERIFY(openedSpy.wait());
+
+    // click outside
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(300, 100));
+    QCOMPARE(aboutToHideSpy.count(), 0);
+
+    // drag inside
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(drawer->width(), 0));
+    QTest::mouseMove(window, QPoint(0, 0));
+    QCOMPARE(drawer->position(), 1.0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(0, 0));
+    QCOMPARE(drawer->position(), 1.0);
+    QCOMPARE(aboutToHideSpy.count(), 0);
+
+    // drag outside
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - 1, 0));
+    QTest::mouseMove(window, QPoint(0, 0));
+    QCOMPARE(drawer->position(), 1.0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(0, 0));
+    QCOMPARE(drawer->position(), 1.0);
+    QCOMPARE(aboutToHideSpy.count(), 0);
+
+    // close on escape
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(aboutToHideSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_Drawer)

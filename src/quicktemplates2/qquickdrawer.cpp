@@ -239,7 +239,7 @@ static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int th
 
 bool QQuickDrawerPrivate::startDrag(QQuickWindow *window, QMouseEvent *event)
 {
-    if (!window || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
+    if (!window || !interactive || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
         return false;
 
     bool drag = false;
@@ -272,7 +272,7 @@ bool QQuickDrawerPrivate::startDrag(QQuickWindow *window, QMouseEvent *event)
 bool QQuickDrawerPrivate::grabMouse(QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    if (!window || popupItem->keepMouseGrab())
+    if (!window || !interactive || popupItem->keepMouseGrab())
         return false;
 
     const QPointF movePoint = event->windowPos();
@@ -542,6 +542,8 @@ void QQuickDrawer::setPosition(qreal position)
     prevents opening the drawer by dragging.
 
     The default value is \c Qt.styleHints.startDragDistance.
+
+    \sa interactive
 */
 qreal QQuickDrawer::dragMargin() const
 {
@@ -562,6 +564,34 @@ void QQuickDrawer::setDragMargin(qreal margin)
 void QQuickDrawer::resetDragMargin()
 {
     setDragMargin(QGuiApplication::styleHints()->startDragDistance());
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::Drawer::interactive
+
+    This property holds whether the drawer is interactive. A non-interactive
+    drawer does not react to swipes.
+
+    The default value is \c true.
+
+    \sa dragMargin
+*/
+bool QQuickDrawer::isInteractive() const
+{
+    Q_D(const QQuickDrawer);
+    return d->interactive;
+}
+
+void QQuickDrawer::setInteractive(bool interactive)
+{
+    Q_D(QQuickDrawer);
+    if (d->interactive == interactive)
+        return;
+
+    setFiltersChildMouseEvents(interactive);
+    d->interactive = interactive;
+    emit interactiveChanged();
 }
 
 bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
