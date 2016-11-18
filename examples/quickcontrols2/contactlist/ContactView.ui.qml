@@ -49,27 +49,26 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import Backend 1.0
 import QtQuick.Controls 2.1
+import Backend 1.0
 
 Page {
-    id: form
+    id: page
+
+    signal addContact()
+    signal editContact(int index)
+    signal removeContact(int index)
+
+    property alias model: contactModel
 
     width: 320
     height: 480
 
-    property alias button: button
-    property alias listView: listView
-
-    property ContactDialog dialog: ContactDialog {
-    }
-
     ListView {
         id: listView
+        anchors.fill: parent
 
         focus: true
-        anchors.fill: parent
-        snapMode: ListView.SnapToItem
         boundsBehavior: Flickable.StopAtBounds
 
         section.property: "fullName"
@@ -84,27 +83,34 @@ Page {
 
             Connections {
                 target: delegate.edit
-                onClicked: dialog.editContact(listView.model, index)
+                onClicked: page.editContact(index)
             }
 
             Connections {
                 target: delegate.remove
-                onClicked: listView.model.removeContact(index)
+                onClicked: page.removeContact(index)
             }
         }
 
         model: ContactModel {
+            id: contactModel
         }
 
-        ScrollBar.vertical: ScrollBar {
-        }
+        ScrollBar.vertical: ScrollBar { }
     }
 
     footer: ToolBar {
+        id: footer
+
         ToolButton {
-            id: button
-            text: "Add Contact"
+            id: addButton
+            text: qsTr("Add Contact")
             anchors.right: parent.right
+
+            Connections {
+                target: addButton
+                onClicked: page.addContact()
+            }
         }
     }
 }

@@ -85,59 +85,46 @@ QVariant ContactModel::data(const QModelIndex &index, int role) const
 
 QHash<int, QByteArray> ContactModel::roleNames() const
 {
-    static QHash<int, QByteArray> roleNames {
+    static const QHash<int, QByteArray> roles {
         { FullNameRole, "fullName" },
         { AddressRole, "address" },
         { CityRole, "city" },
         { NumberRole, "number" }
     };
-    return roleNames;
+    return roles;
 }
 
-void ContactModel::updateContact(int row,
-                                 const QString &fullName,
-                                 const QString &address,
-                                 const QString &city,
-                                 const QString &number)
+QVariantMap ContactModel::get(int row) const
 {
-    if (row >= 0 && row < rowCount()) {
-        m_contacts.replace(row, { fullName, address, city, number });
-        dataChanged(index(row, 0), index(row, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
-    } else if (row < 0) {
-        row = 0;
-        while (row < m_contacts.count() && fullName > m_contacts.at(row).fullName)
-            ++row;
-        beginInsertRows(QModelIndex(), row, row);
-        m_contacts.insert(row, {fullName, address, city, number});
-        endInsertRows();
-    }
+    const Contact contact = m_contacts.value(row);
+    return { {"fullName", contact.fullName}, {"address", contact.address}, {"city", contact.city}, {"number", contact.number} };
 }
 
-void ContactModel::removeContact(int row)
+void ContactModel::append(const QString &fullName, const QString &address, const QString &city, const QString &number)
 {
-    if (row >= 0 && row < rowCount()) {
-        beginRemoveRows(QModelIndex(), row, row);
-        m_contacts.removeAt(row);
-        endRemoveRows();
-    }
+    int row = 0;
+    while (row < m_contacts.count() && fullName > m_contacts.at(row).fullName)
+        ++row;
+    beginInsertRows(QModelIndex(), row, row);
+    m_contacts.insert(row, {fullName, address, city, number});
+    endInsertRows();
 }
 
-QString ContactModel::getFullName(int row) const
+void ContactModel::set(int row, const QString &fullName, const QString &address, const QString &city, const QString &number)
 {
-    return m_contacts.value(row).fullName;
+    if (row < 0 || row >= m_contacts.count())
+        return;
+
+    m_contacts.replace(row, { fullName, address, city, number });
+    dataChanged(index(row, 0), index(row, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
 }
 
-QString ContactModel::getAddress(int row) const
+void ContactModel::remove(int row)
 {
-    return m_contacts.value(row).address;
-}
+    if (row < 0 || row >= m_contacts.count())
+        return;
 
-QString ContactModel::getCity(int row) const
-{
-    return m_contacts.value(row).city;
-}
-
-QString ContactModel::getNumber(int row) const
-{
-    return m_contacts.value(row).number;
+    beginRemoveRows(QModelIndex(), row, row);
+    m_contacts.removeAt(row);
+    endRemoveRows();
 }

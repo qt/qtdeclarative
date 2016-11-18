@@ -72,13 +72,10 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QHash<int, QByteArray> roleNames() const;
 
-    Q_INVOKABLE QString getFullName(int row) const;
-    Q_INVOKABLE QString getAddress(int row) const;
-    Q_INVOKABLE QString getCity(int row) const;
-    Q_INVOKABLE QString getNumber(int row) const;
-
-    Q_INVOKABLE void updateContact(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
-    Q_INVOKABLE void removeContact(int row);
+    Q_INVOKABLE QVariantMap get(int row) const;
+    Q_INVOKABLE void append(const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void set(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void remove(int row);
 
 private:
     struct Contact {

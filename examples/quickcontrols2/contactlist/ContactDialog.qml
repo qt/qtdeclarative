@@ -49,52 +49,47 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Window 2.2
 import QtQuick.Controls 2.1
 
 Dialog {
     id: dialog
 
-    x: parent.width / 2 - width / 2
-    y: parent.height / 2 - height / 2
-    standardButtons: Dialog.Ok | Dialog.Cancel
-    modal: true
-    focus: true
+    property int index: -1
+    signal finished(string fullName, string address, string city, string number)
 
-    property int lastIndex
-    property QtObject lastModel
-
-    property alias form: form
-
-    function addContact(model) {
+    function createContact() {
         form.fullName.clear();
         form.address.clear();
         form.city.clear();
         form.number.clear();
-        lastIndex = -1;
-        lastModel = model;
 
-        dialog.title = qsTr("Add Contact")
+        dialog.title = qsTr("Add Contact");
+        dialog.index = -1;
         dialog.open();
     }
 
-    function editContact(model, index) {
-        form.fullName.text = model.getFullName(index);
-        form.address.text = model.getAddress(index);
-        form.city.text = model.getCity(index);
-        form.number.text = model.getNumber(index);
-        lastIndex = index;
-        lastModel = model;
+    function editContact(index, contact) {
+        form.fullName.text = contact.fullName;
+        form.address.text = contact.address;
+        form.city.text = contact.city;
+        form.number.text = contact.number;
 
-        dialog.title = qsTr("Edit Contact")
+        dialog.title = qsTr("Edit Contact");
+        dialog.index = index;
         dialog.open();
     }
 
-    contentItem: ContactDialogForm {
+    x: parent.width / 2 - width / 2
+    y: parent.height / 2 - height / 2
+
+    focus: true
+    modal: true
+    title: qsTr("Add Contact")
+    standardButtons: Dialog.Ok | Dialog.Cancel
+
+    contentItem: ContactForm {
         id: form
     }
 
-    onAccepted: lastModel.updateContact(lastIndex, form.fullName.text,
-                                        form.address.text, form.city.text,
-                                        form.number.text)
+    onAccepted: finished(form.fullName.text, form.address.text, form.city.text, form.number.text)
 }
