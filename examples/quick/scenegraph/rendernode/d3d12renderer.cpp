@@ -78,7 +78,7 @@ void D3D12RenderNode::releaseResources()
 void D3D12RenderNode::init()
 {
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    m_device = static_cast<ID3D12Device *>(rif->getResource(m_item->window(), QSGRendererInterface::Device));
+    m_device = static_cast<ID3D12Device *>(rif->getResource(m_item->window(), QSGRendererInterface::DeviceResource));
     Q_ASSERT(m_device);
 
     D3D12_ROOT_PARAMETER rootParameter;
@@ -235,7 +235,8 @@ void D3D12RenderNode::render(const RenderState *state)
         init();
 
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(rif->getResource(m_item->window(), QSGRendererInterface::CommandList));
+    ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(
+        rif->getResource(m_item->window(), QSGRendererInterface::CommandListResource));
     Q_ASSERT(commandList);
 
     const int msize = 16 * sizeof(float);

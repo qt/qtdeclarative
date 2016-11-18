@@ -57,10 +57,10 @@ public:
     };
 
     enum Resource {
-        Device,
-        CommandQueue,
-        CommandList,
-        Painter
+        DeviceResource,
+        CommandQueueResource,
+        CommandListResource,
+        PainterResource
     };
 
     enum ShaderType {

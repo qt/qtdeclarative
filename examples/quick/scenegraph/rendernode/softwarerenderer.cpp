@@ -61,7 +61,7 @@ void SoftwareRenderNode::releaseResources()
 void SoftwareRenderNode::render(const RenderState *renderState)
 {
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    QPainter *p = static_cast<QPainter *>(rif->getResource(m_item->window(), QSGRendererInterface::Painter));
+    QPainter *p = static_cast<QPainter *>(rif->getResource(m_item->window(), QSGRendererInterface::PainterResource));
     Q_ASSERT(p);
 
     p->setTransform(matrix()->toTransform());
