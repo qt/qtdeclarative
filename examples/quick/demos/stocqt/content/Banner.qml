@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,40 +39,48 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "."
+import QtQuick.Layouts 1.1
 
 Rectangle {
-    id: root
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
-    color: "white"
+    id: banner
+    height: 80
+    color: "#000000"
 
-    property string currentStockId: ""
-    property string currentStockName: ""
-
-    ListView {
-        id: view
+    GridLayout {
         anchors.fill: parent
-        clip: true
-        keyNavigationWraps: true
-        highlightMoveDuration: 0
-        focus: true
-        snapMode: ListView.SnapToItem
-        model: StockListModel {}
-        currentIndex: -1 // Don't pre-select any item
+        rows: 1
+        columns: 3
+        Rectangle {
+            Layout.leftMargin: 10
+            Layout.topMargin: 20
+            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            Image {
+                id: arrow
+                source: "./images/icon-left-arrow.png"
+                visible: root.currentIndex == 1 ? true : false
 
-        onCurrentIndexChanged: {
-            if (currentItem) {
-                root.currentStockId = model.get(currentIndex).stockId;
-                root.currentStockName = model.get(currentIndex).name;
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.currentIndex = 0;
+                }
             }
         }
-
-        delegate: StockListDelegate {}
-
-        highlight: Rectangle {
-            width: view.width
-            color: "#eeeeee"
+        Text {
+            id: stocText
+            color: "#ffffff"
+            font.family: "Abel"
+            font.pointSize: 40
+            text: "Stoc"
+            Layout.alignment: Qt.AlignRight
+            Layout.leftMargin: parent.width / 2.5
+        }
+        Text {
+            id: qtText
+            color: "#5caa15"
+            font.family: "Abel"
+            font.pointSize: 40
+            text: "Qt"
+            Layout.fillWidth: true
         }
     }
 }

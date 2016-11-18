@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 import QtQuick.Window 2.1
+import QtQuick.Layouts 1.1
 
 Rectangle {
     id: root
@@ -60,42 +61,40 @@ Rectangle {
         color: "transparent"
         anchors.fill: parent
 
-        StockInfo {
-            id: stockInfo
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.top: parent.top
-            anchors.topMargin: 15
-            height: 160
-            anchors.right: Screen.primaryOrientation === Qt.PortraitOrientation ? parent.right : chart.left
-            anchors.rightMargin: 20
-            stock: root.stock
-        }
+        GridLayout {
+            anchors.fill: parent
+            rows: 2
+            columns: Screen.primaryOrientation === Qt.PortraitOrientation ? 1 : 2
 
-        StockChart {
-            id: chart
-            anchors.bottom: Screen.primaryOrientation === Qt.PortraitOrientation ? settingsPanel.top : parent.bottom
-            anchors.bottomMargin: 20
-            anchors.top : Screen.primaryOrientation === Qt.PortraitOrientation ? stockInfo.bottom : parent.top
-            anchors.topMargin: 20
-            anchors.right: parent.right
-            anchors.rightMargin: 20
-            width: Screen.primaryOrientation === Qt.PortraitOrientation ? parent.width - 40 : 0.6 * parent.width
-            stockModel: root.stock
-            settings: settingsPanel
-        }
+            StockInfo {
+                id: stockInfo
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: 400
+                Layout.preferredHeight: 160
+                stock: root.stock
+            }
 
-        StockSettingsPanel {
-            id: settingsPanel
-            anchors.left: parent.left
-            anchors.leftMargin: 20
-            anchors.right: Screen.primaryOrientation === Qt.PortraitOrientation ? parent.right : chart.left
-            anchors.rightMargin: 20
-            anchors.bottom: parent.bottom
-            onDrawOpenPriceChanged: root.update()
-            onDrawClosePriceChanged: root.update();
-            onDrawHighPriceChanged: root.update();
-            onDrawLowPriceChanged: root.update();
+            StockChart {
+                id: chart
+                Layout.alignment: Qt.AlignRight
+                Layout.margins: 5
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.rowSpan: 2
+                stockModel: root.stock
+                settings: settingsPanel
+            }
+            StockSettingsPanel {
+                id: settingsPanel
+                Layout.alignment: Qt.AlignBottom
+                Layout.fillHeight: true
+                Layout.preferredWidth: 400
+                Layout.bottomMargin: 5
+                onDrawOpenPriceChanged: root.update()
+                onDrawClosePriceChanged: root.update();
+                onDrawHighPriceChanged: root.update();
+                onDrawLowPriceChanged: root.update();
+            }
         }
     }
 }
