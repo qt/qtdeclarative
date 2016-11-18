@@ -57,6 +57,11 @@ Item {
             acceptedButtons: (leftAllowedCB.checked ? Qt.LeftButton : Qt.NoButton) |
                              (middleAllowedCB.checked ? Qt.MiddleButton : Qt.NoButton) |
                              (rightAllowedCB.checked ? Qt.RightButton : Qt.NoButton)
+            onPressedButtonsChanged: switch (pressedButtons) {
+                case Qt.MiddleButton: borderBlink.blinkColor = "orange"; break;
+                case Qt.RightButton: borderBlink.blinkColor = "magenta"; break;
+                default: borderBlink.blinkColor = "green"; break;
+            }
             onCanceled: {
                 console.log("canceled @ " + pos)
                 borderBlink.blinkColor = "red"
@@ -68,14 +73,13 @@ Item {
                     tapCountLabel.text = tapCount
                     flashAnimation.start()
                 } else {
-                    switch (point.event.button) {
-                        case Qt.LeftButton: borderBlink.blinkColor = "green"; break;
-                        case Qt.MiddleButton: borderBlink.blinkColor = "orange"; break;
-                        case Qt.RightButton: borderBlink.blinkColor = "magenta"; break;
-                    }
                     borderBlink.start()
                 }
             }
+            onLongPressed: longPressFeedback.createObject(rect,
+                {"x": pos.x, "y": pos.y,
+                 "text": "long press",
+                 "color": borderBlink.blinkColor})
         }
 
         Text {
@@ -103,6 +107,11 @@ Item {
                     }
                 }
             }
+        }
+
+        Component {
+            id: longPressFeedback
+            Text { }
         }
 
         SequentialAnimation {

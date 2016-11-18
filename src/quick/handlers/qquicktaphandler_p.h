@@ -54,6 +54,7 @@
 #include "qquickitem.h"
 #include "qevent.h"
 #include "qquickpointersinglehandler_p.h"
+#include <QtCore/qbasictimer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickTapHandler : public QQuickPointerSingleHandler
     Q_OBJECT
     Q_PROPERTY(bool isPressed READ isPressed NOTIFY pressedChanged)
     Q_PROPERTY(int tapCount READ tapCount NOTIFY tapCountChanged)
+    Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged)
 
 public:
     QQuickTapHandler(QObject *parent = 0);
@@ -74,20 +76,29 @@ public:
 
     int tapCount() const { return m_tapCount; }
 
+    qreal longPressThreshold() const;
+    void setLongPressThreshold(qreal longPressThreshold);
+
 Q_SIGNALS:
     void pressedChanged();
     void tapCountChanged();
+    void longPressThresholdChanged();
     void tapped(QQuickEventPoint *point);
+    void longPressed();
 
 protected:
     void handleGrabCancel(QQuickEventPoint *point) override;
+    void timerEvent(QTimerEvent *event) override;
 
 private:
     void setPressed(bool press, bool cancel, QQuickEventPoint *point);
+    int longPressThresholdMilliseconds() const;
 
 private:
     bool m_pressed;
     int m_tapCount;
+    int m_longPressThreshold;
+    QBasicTimer m_longPressTimer;
     QPointF m_lastTapPos;
     qreal m_lastTapTimestamp;
 

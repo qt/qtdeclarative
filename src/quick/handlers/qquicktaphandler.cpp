@@ -83,6 +83,7 @@ QQuickTapHandler::QQuickTapHandler(QObject *parent)
     : QQuickPointerSingleHandler(parent)
     , m_pressed(false)
     , m_tapCount(0)
+    , m_longPressThreshold(-1)
     , m_lastTapTimestamp(0.0)
 {
     setAcceptedButtons(Qt::LeftButton);
@@ -127,11 +128,52 @@ void QQuickTapHandler::handleEventPoint(QQuickEventPoint *point)
     }
 }
 
+/*!
+    \qmlproperty longPressThreshold
+
+    The time in seconds that an event point must be pressed in order to
+    trigger a long press gesture and emit the \l longPressed() signal.
+    If the point is released before this time limit, a tap can be detected
+    if the other constraints are satisfied. The default value is
+    QStyleHints::mousePressAndHoldInterval() converted to seconds.
+*/
+qreal QQuickTapHandler::longPressThreshold() const
+{
+    return longPressThresholdMilliseconds() / 1000.0;
+}
+
+void QQuickTapHandler::setLongPressThreshold(qreal longPressThreshold)
+{
+    int ms = qRound(longPressThreshold * 1000);
+    if (m_longPressThreshold == ms)
+        return;
+
+    m_longPressThreshold = ms;
+    emit longPressThresholdChanged();
+}
+
+int QQuickTapHandler::longPressThresholdMilliseconds() const
+{
+    return (m_longPressThreshold < 0 ? QGuiApplication::styleHints()->mousePressAndHoldInterval() : m_longPressThreshold);
+}
+
+void QQuickTapHandler::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_longPressTimer.timerId()) {
+        m_longPressTimer.stop();
+        emit longPressed();
+    }
+}
+
 void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *point)
 {
     if (m_pressed != press) {
         m_pressed = press;
-        if (!cancel && !press && point->timeHeld() < m_multiTapInterval) {
+        if (press)
+            m_longPressTimer.start(longPressThresholdMilliseconds(), this);
+        else
+            m_longPressTimer.stop();
+        if (!cancel && !press && point->timeHeld() < longPressThreshold()) {
             // Assuming here that pointerEvent()->timestamp() is in ms.
             qreal ts = point->pointerEvent()->timestamp() / 1000.0;
             if (ts - m_lastTapTimestamp < m_multiTapInterval &&
