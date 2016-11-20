@@ -978,7 +978,8 @@ int QQmlPropertyCache::originalClone(QObject *object, int index)
     return index;
 }
 
-static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QStringRef &property)
+template<typename T>
+static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const T& propertyName)
 {
     Q_ASSERT(metaObject);
 
@@ -994,8 +995,6 @@ static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, c
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
     // These indices don't apply to gadgets, so don't block them.
     const bool preventDestruction = metaObject->superClass() || metaObject == &QObject::staticMetaObject;
-
-    const QByteArray propertyName = property.toUtf8();
 
     int methodCount = metaObject->methodCount();
     for (int ii = methodCount - 1; ii >= 0; --ii) {
@@ -1038,19 +1037,19 @@ static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, c
     return rv;
 }
 
-static inline QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QString &property)
+static inline const char *qQmlPropertyCacheToString(QLatin1String string)
 {
-    return qQmlPropertyCacheCreate(metaObject, QStringRef(&property));
+    return string.data();
 }
 
-static inline const QStringRef &qQmlPropertyCacheToString(const QStringRef &string)
+static inline QByteArray qQmlPropertyCacheToString(const QStringRef &string)
 {
-    return string;
+    return string.toUtf8();
 }
 
-static inline QString qQmlPropertyCacheToString(const QV4::String *string)
+static inline QByteArray qQmlPropertyCacheToString(const QV4::String *string)
 {
-    return string->toQString();
+    return string->toQString().toUtf8();
 }
 
 template<typename T>
