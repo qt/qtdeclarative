@@ -52,7 +52,6 @@ namespace {
 static const int RIPPLE_ENTER_DELAY = 80;
 static const int OPACITY_ENTER_DURATION_FAST = 120;
 static const int WAVE_OPACITY_DECAY_DURATION = 333;
-static const qreal WAVE_TOUCH_UP_ACCELERATION = 3400.0;
 static const qreal WAVE_TOUCH_DOWN_ACCELERATION = 1024.0;
 
 class QQuickMaterialRippleWaveNode : public QQuickAnimatedNode
@@ -68,7 +67,6 @@ private:
     qreal m_from;
     qreal m_to;
     qreal m_value;
-    qreal m_diameter;
     WavePhase m_phase;
     QPointF m_anchor;
     QRectF m_bounds;
