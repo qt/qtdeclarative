@@ -98,7 +98,6 @@ QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
     \note The indicator is only visible when this property is set to \c true.
 
     The default value is \c true.
-
 */
 bool QQuickBusyIndicator::isRunning() const
 {

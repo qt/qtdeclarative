@@ -60,7 +60,7 @@
     in Qt Quick Designer. For this to work we add the following line to \e contactlist.pro.
 
     \code
-    QML_DESIGNER_IMPORT_PATH=$$PWD/designer
+    QML_DESIGNER_IMPORT_PATH = $$PWD/designer
     \endcode
 
     Because Qt Quick Designer cannot instantiate the ContactModel C++ class, we define

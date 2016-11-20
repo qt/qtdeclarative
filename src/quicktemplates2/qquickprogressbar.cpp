@@ -234,7 +234,6 @@ qreal QQuickProgressBar::visualPosition() const
     doesn't show how much progress has been made.
 
     \image qtquickcontrols2-progressbar-indeterminate.gif
-
 */
 bool QQuickProgressBar::isIndeterminate() const
 {
