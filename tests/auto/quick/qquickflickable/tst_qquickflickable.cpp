@@ -2216,6 +2216,7 @@ Q_DECLARE_METATYPE(QQuickFlickable::BoundsBehavior)
 void tst_qquickflickable::overshoot()
 {
     QFETCH(QQuickFlickable::BoundsBehavior, boundsBehavior);
+    QFETCH(int, boundsMovement);
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("overshoot.qml"));
@@ -2232,6 +2233,7 @@ void tst_qquickflickable::overshoot()
     QCOMPARE(flickable->contentHeight(), 400.0);
 
     flickable->setBoundsBehavior(boundsBehavior);
+    flickable->setBoundsMovement(QQuickFlickable::BoundsMovement(boundsMovement));
 
     // drag past the beginning
     QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(10, 10));
@@ -2240,23 +2242,30 @@ void tst_qquickflickable::overshoot()
     QTest::mouseMove(window.data(), QPoint(40, 40));
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(50, 50));
 
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) && (boundsBehavior & QQuickFlickable::DragOverBounds)) {
+        QVERIFY(flickable->property("minContentX").toReal() < 0.0);
+        QVERIFY(flickable->property("minContentY").toReal() < 0.0);
+    } else {
+        QCOMPARE(flickable->property("minContentX").toReal(), 0.0);
+        QCOMPARE(flickable->property("minContentY").toReal(), 0.0);
+    }
     if (boundsBehavior & QQuickFlickable::DragOverBounds) {
-        QVERIFY(flickable->property("minVerticalOvershoot").toReal() < 0.0);
         QVERIFY(flickable->property("minHorizontalOvershoot").toReal() < 0.0);
-        QCOMPARE(flickable->property("minContentY").toReal(),
-                 flickable->property("minVerticalOvershoot").toReal());
+        QVERIFY(flickable->property("minVerticalOvershoot").toReal() < 0.0);
+    } else {
+        QCOMPARE(flickable->property("minHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
+    }
+    if (bool(boundsMovement == QQuickFlickable::FollowBoundsBehavior) == bool(boundsBehavior & QQuickFlickable::DragOverBounds)) {
         QCOMPARE(flickable->property("minContentX").toReal(),
                  flickable->property("minHorizontalOvershoot").toReal());
-    } else {
-        QCOMPARE(flickable->property("minContentY").toReal(), 0.0);
-        QCOMPARE(flickable->property("minContentX").toReal(), 0.0);
-        QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
-        QCOMPARE(flickable->property("minHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("minContentY").toReal(),
+                 flickable->property("minVerticalOvershoot").toReal());
     }
-    QCOMPARE(flickable->property("maxContentY").toReal(), 0.0);
     QCOMPARE(flickable->property("maxContentX").toReal(), 0.0);
-    QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("maxContentY").toReal(), 0.0);
     QCOMPARE(flickable->property("maxHorizontalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
 
     flickable->setContentX(20.0);
     flickable->setContentY(20.0);
@@ -2266,23 +2275,30 @@ void tst_qquickflickable::overshoot()
     flick(window.data(), QPoint(10, 10), QPoint(50, 50), 100);
     QTRY_VERIFY(!flickable->property("flicking").toBool());
 
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) && (boundsBehavior & QQuickFlickable::OvershootBounds)) {
+        QVERIFY(flickable->property("minContentX").toReal() < 0.0);
+        QVERIFY(flickable->property("minContentY").toReal() < 0.0);
+    } else {
+        QCOMPARE(flickable->property("minContentX").toReal(), 0.0);
+        QCOMPARE(flickable->property("minContentY").toReal(), 0.0);
+    }
     if (boundsBehavior & QQuickFlickable::OvershootBounds) {
-        QVERIFY(flickable->property("minVerticalOvershoot").toReal() < 0.0);
         QVERIFY(flickable->property("minHorizontalOvershoot").toReal() < 0.0);
-        QCOMPARE(flickable->property("minContentY").toReal(),
-                 flickable->property("minVerticalOvershoot").toReal());
+        QVERIFY(flickable->property("minVerticalOvershoot").toReal() < 0.0);
+    } else {
+        QCOMPARE(flickable->property("minHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
+    }
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) == (boundsBehavior & QQuickFlickable::OvershootBounds)) {
         QCOMPARE(flickable->property("minContentX").toReal(),
                  flickable->property("minHorizontalOvershoot").toReal());
-    } else {
-        QCOMPARE(flickable->property("minContentY").toReal(), 0.0);
-        QCOMPARE(flickable->property("minContentX").toReal(), 0.0);
-        QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
-        QCOMPARE(flickable->property("minHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("minContentY").toReal(),
+                 flickable->property("minVerticalOvershoot").toReal());
     }
-    QCOMPARE(flickable->property("maxContentY").toReal(), 20.0);
     QCOMPARE(flickable->property("maxContentX").toReal(), 20.0);
-    QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("maxContentY").toReal(), 20.0);
     QCOMPARE(flickable->property("maxHorizontalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
 
     flickable->setContentX(200.0);
     flickable->setContentY(200.0);
@@ -2295,23 +2311,30 @@ void tst_qquickflickable::overshoot()
     QTest::mouseMove(window.data(), QPoint(20, 20));
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(10, 10));
 
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) && (boundsBehavior & QQuickFlickable::DragOverBounds)) {
+        QVERIFY(flickable->property("maxContentX").toReal() > 200.0);
+        QVERIFY(flickable->property("maxContentX").toReal() > 200.0);
+    } else {
+        QCOMPARE(flickable->property("maxContentX").toReal(), 200.0);
+        QCOMPARE(flickable->property("maxContentY").toReal(), 200.0);
+    }
     if (boundsBehavior & QQuickFlickable::DragOverBounds) {
-        QVERIFY(flickable->property("maxVerticalOvershoot").toReal() > 0.0);
         QVERIFY(flickable->property("maxHorizontalOvershoot").toReal() > 0.0);
-        QCOMPARE(flickable->property("maxContentY").toReal() - 200.0,
-                 flickable->property("maxVerticalOvershoot").toReal());
+        QVERIFY(flickable->property("maxVerticalOvershoot").toReal() > 0.0);
+    } else {
+        QCOMPARE(flickable->property("maxHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
+    }
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) == (boundsBehavior & QQuickFlickable::DragOverBounds)) {
         QCOMPARE(flickable->property("maxContentX").toReal() - 200.0,
                  flickable->property("maxHorizontalOvershoot").toReal());
-    } else {
-        QCOMPARE(flickable->property("maxContentY").toReal(), 200.0);
-        QCOMPARE(flickable->property("maxContentX").toReal(), 200.0);
-        QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
-        QCOMPARE(flickable->property("maxHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("maxContentY").toReal() - 200.0,
+                 flickable->property("maxVerticalOvershoot").toReal());
     }
-    QCOMPARE(flickable->property("minContentY").toReal(), 200.0);
     QCOMPARE(flickable->property("minContentX").toReal(), 200.0);
-    QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("minContentY").toReal(), 200.0);
     QCOMPARE(flickable->property("minHorizontalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
 
     flickable->setContentX(180.0);
     flickable->setContentY(180.0);
@@ -2321,37 +2344,59 @@ void tst_qquickflickable::overshoot()
     flick(window.data(), QPoint(50, 50), QPoint(10, 10), 100);
     QTRY_VERIFY(!flickable->property("flicking").toBool());
 
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) && (boundsBehavior & QQuickFlickable::OvershootBounds)) {
+        QVERIFY(flickable->property("maxContentX").toReal() > 200.0);
+        QVERIFY(flickable->property("maxContentY").toReal() > 200.0);
+    } else {
+        QCOMPARE(flickable->property("maxContentX").toReal(), 200.0);
+        QCOMPARE(flickable->property("maxContentY").toReal(), 200.0);
+    }
     if (boundsBehavior & QQuickFlickable::OvershootBounds) {
-        QVERIFY(flickable->property("maxVerticalOvershoot").toReal() > 0.0);
         QVERIFY(flickable->property("maxHorizontalOvershoot").toReal() > 0.0);
-        QCOMPARE(flickable->property("maxContentY").toReal() - 200.0,
-                 flickable->property("maxVerticalOvershoot").toReal());
+        QVERIFY(flickable->property("maxVerticalOvershoot").toReal() > 0.0);
+    } else {
+        QCOMPARE(flickable->property("maxHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
+    }
+    if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) == (boundsBehavior & QQuickFlickable::OvershootBounds)) {
         QCOMPARE(flickable->property("maxContentX").toReal() - 200.0,
                  flickable->property("maxHorizontalOvershoot").toReal());
-    } else {
-        QCOMPARE(flickable->property("maxContentY").toReal(), 200.0);
-        QCOMPARE(flickable->property("maxContentX").toReal(), 200.0);
-        QCOMPARE(flickable->property("maxVerticalOvershoot").toReal(), 0.0);
-        QCOMPARE(flickable->property("maxHorizontalOvershoot").toReal(), 0.0);
+        QCOMPARE(flickable->property("maxContentY").toReal() - 200.0,
+                 flickable->property("maxVerticalOvershoot").toReal());
     }
-    QCOMPARE(flickable->property("minContentY").toReal(), 180.0);
     QCOMPARE(flickable->property("minContentX").toReal(), 180.0);
-    QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("minContentY").toReal(), 180.0);
     QCOMPARE(flickable->property("minHorizontalOvershoot").toReal(), 0.0);
+    QCOMPARE(flickable->property("minVerticalOvershoot").toReal(), 0.0);
 }
 
 void tst_qquickflickable::overshoot_data()
 {
     QTest::addColumn<QQuickFlickable::BoundsBehavior>("boundsBehavior");
+    QTest::addColumn<int>("boundsMovement");
 
-    QTest::newRow("StopAtBounds")
-            << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds);
-    QTest::newRow("DragOverBounds")
-            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds);
-    QTest::newRow("OvershootBounds")
-            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds);
-    QTest::newRow("DragAndOvershootBounds")
-            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
+    QTest::newRow("StopAtBounds,FollowBoundsBehavior")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior);
+    QTest::newRow("DragOverBounds,FollowBoundsBehavior")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior);
+    QTest::newRow("OvershootBounds,FollowBoundsBehavior")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior);
+    QTest::newRow("DragAndOvershootBounds,FollowBoundsBehavior")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior);
+
+    QTest::newRow("DragOverBounds,StopAtBounds")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds)
+            << int(QQuickFlickable::StopAtBounds);
+    QTest::newRow("OvershootBounds,StopAtBounds")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds)
+            << int(QQuickFlickable::StopAtBounds);
+    QTest::newRow("DragAndOvershootBounds,StopAtBounds")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds)
+            << int(QQuickFlickable::StopAtBounds);
 }
 
 void tst_qquickflickable::overshoot_reentrant()
