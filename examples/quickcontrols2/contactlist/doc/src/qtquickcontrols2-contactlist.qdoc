@@ -38,7 +38,7 @@
 
     \section1 C++ Backend
 
-    \borderedimage image qtquickcontrols2-contactlist.png
+    \borderedimage qtquickcontrols2-contactlist.png
 
     The contact list application allows the user to add, edit, and remove contacts.
     The actual implementation is done in C++ and exposed as a QAbstractListModel.
