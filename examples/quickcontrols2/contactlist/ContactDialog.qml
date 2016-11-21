@@ -54,7 +54,6 @@ import QtQuick.Controls 2.1
 Dialog {
     id: dialog
 
-    property int index: -1
     signal finished(string fullName, string address, string city, string number)
 
     function createContact() {
@@ -64,18 +63,16 @@ Dialog {
         form.number.clear();
 
         dialog.title = qsTr("Add Contact");
-        dialog.index = -1;
         dialog.open();
     }
 
-    function editContact(index, contact) {
+    function editContact(contact) {
         form.fullName.text = contact.fullName;
         form.address.text = contact.address;
         form.city.text = contact.city;
         form.number.text = contact.number;
 
         dialog.title = qsTr("Edit Contact");
-        dialog.index = index;
         dialog.open();
     }
 

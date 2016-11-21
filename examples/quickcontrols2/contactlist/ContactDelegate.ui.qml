@@ -49,110 +49,67 @@
 ****************************************************************************/
 
 import QtQuick 2.7
+import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.1
 
-AbstractButton {
+ItemDelegate {
     id: delegate
 
-    property alias remove: remove
-    property alias edit: edit
-
-    width: 300
-    height: 50
-    clip: true
     checkable: true
-    autoExclusive: true
 
-    Column {
-        id: column1
-        height: 400
-        width: parent.width - 20
-        spacing: 4
+    contentItem: ColumnLayout {
+        spacing: 10
 
-        Row {
-            id: row1
-            spacing: 10
-
-            Label {
-                text: fullName
-                font.pointSize: 16
-                anchors.verticalCenter: parent.verticalCenter
-                font.bold: true
-            }
+        Label {
+            text: fullName
+            font.bold: true
+            elide: Text.ElideRight
+            Layout.fillWidth: true
         }
 
-        Grid {
+        GridLayout {
             id: grid
-            opacity: 0
+            visible: false
 
-            x: 60
-            spacing: 10
             columns: 2
+            rowSpacing: 10
+            columnSpacing: 10
+
             Label {
                 text: qsTr("Address:")
-                font.bold: true
-                font.pixelSize: 16
+                Layout.leftMargin: 60
             }
 
             Label {
                 text: address
-                font.pixelSize: 16
                 font.bold: true
+                elide: Text.ElideRight
+                Layout.fillWidth: true
             }
 
             Label {
                 text: qsTr("City:")
-                font.pixelSize: 16
-                font.bold: true
+                Layout.leftMargin: 60
             }
 
             Label {
                 text: city
-                font.pixelSize: 16
                 font.bold: true
+                elide: Text.ElideRight
+                Layout.fillWidth: true
             }
 
             Label {
                 text: qsTr("Number:")
-                font.pixelSize: 16
-                font.bold: true
+                Layout.leftMargin: 60
             }
 
             Label {
                 text: number
-                font.pixelSize: 16
                 font.bold: true
+                elide: Text.ElideRight
+                Layout.fillWidth: true
             }
-        }
-
-        Row {
-            id: row
-            spacing: 12
-            anchors.right: parent.right
-
-            Button {
-                id: remove
-                width: 60
-                height: 20
-                text: "Remove"
-            }
-
-            Button {
-                id: edit
-                width: 60
-                height: 20
-                text: "Edit"
-            }
-        }
-
-        MenuSeparator {
-            id: separator
-            opacity: 0
-            padding: 0
-            anchors.right: parent.right
-            anchors.rightMargin: 4
-            anchors.left: parent.left
-            anchors.leftMargin: 4
         }
     }
 
@@ -162,18 +119,8 @@ AbstractButton {
             when: delegate.checked
 
             PropertyChanges {
-                target: delegate
-                height: 160
-            }
-
-            PropertyChanges {
-                target: separator
-                opacity: 1
-            }
-
-            PropertyChanges {
                 target: grid
-                opacity: 1
+                visible: true
             }
         }
     ]

@@ -36,9 +36,9 @@
     For the declarative parts of the UI, .ui.qml files are used that can be edited
     visually in the Qt Quick Designer.
 
-    \section1 C++ Backend
+    \image qtquickcontrols2-contactlist.png
 
-    \borderedimage qtquickcontrols2-contactlist.png
+    \section1 C++ Backend
 
     The contact list application allows the user to add, edit, and remove contacts.
     The actual implementation is done in C++ and exposed as a QAbstractListModel.
