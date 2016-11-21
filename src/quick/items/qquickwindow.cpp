@@ -2081,11 +2081,12 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
             ut->startAnimations();
     }
 
-    // Once per frame, send a synthetic hover, in case items have changed position.
+    // Once per frame, if any items are dirty, send a synthetic hover,
+    // in case items have changed position, visibility, etc.
     // For instance, during animation (including the case of a ListView
     // whose delegates contain MouseAreas), a MouseArea needs to know
     // whether it has moved into a position where it is now under the cursor.
-    if (!q->mouseGrabberItem() && !lastMousePosition.isNull()) {
+    if (!q->mouseGrabberItem() && !lastMousePosition.isNull() && dirtyItemList) {
         bool accepted = false;
         bool delivered = deliverHoverEvent(contentItem, lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), 0, accepted);
         if (!delivered)
