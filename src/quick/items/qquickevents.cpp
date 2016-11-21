@@ -625,6 +625,13 @@ void QQuickEventPoint::setAccepted(bool accepted)
     }
 }
 
+bool QQuickEventPoint::isDraggedOverThreshold() const
+{
+    QPointF delta = scenePos() - scenePressPos();
+    return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, this) ||
+            QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, this));
+}
+
 QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
     : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)
 {}

@@ -292,6 +292,7 @@ public:
     qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
     bool isAccepted() const { return m_accept; }
     void setAccepted(bool accepted = true);
+    bool isDraggedOverThreshold() const;
     QObject *grabber() const;
     void setGrabber(QObject *grabber);
 
