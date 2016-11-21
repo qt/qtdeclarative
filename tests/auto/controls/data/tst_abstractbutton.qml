@@ -60,6 +60,11 @@ TestCase {
         Item { }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     function test_text() {
         var control = button.createObject(testCase);
         verify(control);
@@ -100,6 +105,23 @@ TestCase {
         control.padding = 100
         compare(control.implicitWidth, 210)
         compare(control.implicitHeight, 220)
+
+        control.destroy()
+    }
+
+    function test_pressAndHold() {
+        var control = button.createObject(testCase, {checkable: true})
+        verify(control)
+
+        var pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
+        verify(pressAndHoldSpy.valid)
+
+        mousePress(control)
+        pressAndHoldSpy.wait()
+        compare(control.checked, false)
+
+        mouseRelease(control)
+        compare(control.checked, false)
 
         control.destroy()
     }
