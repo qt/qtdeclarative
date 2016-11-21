@@ -48,66 +48,44 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import Backend 1.0
-import QtQuick.Controls 2.1
+#ifndef CONTACTMODEL_H
+#define CONTACTMODEL_H
 
-Page {
-    id: form
+#include <QAbstractListModel>
 
-    width: 320
-    height: 480
+class ContactModel : public QAbstractListModel
+{
+    Q_OBJECT
 
-    property alias button: button
-    property alias listView: listView
+public:
+    enum ContactRole {
+        FullNameRole = Qt::DisplayRole,
+        AddressRole = Qt::UserRole,
+        CityRole,
+        NumberRole
+    };
+    Q_ENUM(ContactRole)
 
-    property ContactDialog dialog: ContactDialog {
-    }
+    ContactModel(QObject *parent = nullptr);
 
-    ListView {
-        id: listView
+    int rowCount(const QModelIndex & = QModelIndex()) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    QHash<int, QByteArray> roleNames() const;
 
-        currentIndex: -1
-        boundsBehavior: Flickable.StopAtBounds
-        clip: true
-        focus: true
-        anchors.fill: parent
-        section.criteria: ViewSection.FirstCharacter
-        section.property: "fullName"
-        snapMode: ListView.SnapToItem
+    Q_INVOKABLE QVariantMap get(int row) const;
+    Q_INVOKABLE void append(const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void set(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void remove(int row);
 
-        section.delegate: SectionDelegate {
-            width: listView.width
-        }
+private:
+    struct Contact {
+        QString fullName;
+        QString address;
+        QString city;
+        QString number;
+    };
 
-        delegate: ContactDelegate {
-            id: delegate
-            width: listView.width
-            x: 5
+    QList<Contact> m_contacts;
+};
 
-            Connections {
-                target: delegate.edit
-                onClicked: dialog.editContact(listView.model, index)
-            }
-
-            Connections {
-                target: delegate.remove
-                onClicked: listView.model.removeContact(index)
-            }
-        }
-
-        model: AddressModel {
-        }
-
-        ScrollBar.vertical: ScrollBar {
-        }
-    }
-
-    footer: ToolBar {
-        ToolButton {
-            id: button
-            text: "Add Contact"
-            anchors.right: parent.right
-        }
-    }
-}
+#endif // CONTACTMODEL_H

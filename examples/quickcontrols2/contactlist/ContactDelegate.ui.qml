@@ -52,16 +52,16 @@ import QtQuick 2.7
 import QtQuick.Controls 2.1
 
 AbstractButton {
+    id: delegate
+
+    property alias remove: remove
+    property alias edit: edit
+
+    width: 300
+    height: 50
     clip: true
     checkable: true
     autoExclusive: true
-
-    id: delegate
-
-    height: 50
-    property alias remove: remove
-    property alias edit: edit
-    width: 300
 
     Column {
         id: column1
@@ -157,10 +157,6 @@ AbstractButton {
     }
 
     states: [
-        State {
-            name: "collapsed"
-            when: !delegate.checked
-        },
         State {
             name: "expanded"
             when: delegate.checked

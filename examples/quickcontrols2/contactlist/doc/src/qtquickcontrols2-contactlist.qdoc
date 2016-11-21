@@ -38,32 +38,32 @@
 
     \section1 C++ Backend
 
-    \borderedimage image qtquickcontrols2-contactlist.png
+    \borderedimage qtquickcontrols2-contactlist.png
 
     The contact list application allows the user to add, edit, and remove contacts.
     The actual implementation is done in C++ and exposed as a QAbstractListModel.
 
-    The AdressModel C++ class is registered under a namespace and later
+    The ContactModel C++ class is registered under a namespace and later
     imported and instantiated by \e MainForm.ui.qml. For more information about registering C++
     classes as QML types, see \l {Defining QML Types from C++}.
 
     \code
     #include <QtQml/qqml.h>
     ...
-    qmlRegisterType<AdressModel>("Backend", 1, 0, "AdressModel");
+    qmlRegisterType<ContactModel>("Backend", 1, 0, "ContactModel");
     ...
     \endcode
 
     \section1 Designer Support
 
-    In the designer subdirectory, we create a plugin that replaces the AdressModel
+    In the designer subdirectory, we create a plugin that replaces the ContactModel
     in Qt Quick Designer. For this to work we add the following line to \e contactlist.pro.
 
     \code
-    QML_DESIGNER_IMPORT_PATH=$$PWD/designer
+    QML_DESIGNER_IMPORT_PATH = $$PWD/designer
     \endcode
 
-    Because Qt Quick Designer cannot instantiate the AdressModel C++ class, we define
+    Because Qt Quick Designer cannot instantiate the ContactModel C++ class, we define
     a mockup using a ListModel. This ensures that the ListView using the model shows something
     in Qt Quick Designer.
 

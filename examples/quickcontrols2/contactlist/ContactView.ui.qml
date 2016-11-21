@@ -48,48 +48,69 @@
 **
 ****************************************************************************/
 
-#ifndef ADDRESSMODEL_H
-#define ADDRESSMODEL_H
+import QtQuick 2.7
+import QtQuick.Controls 2.1
+import Backend 1.0
 
-#include <QAbstractListModel>
+Page {
+    id: page
 
-class AddressModel : public QAbstractListModel
-{
-    Q_OBJECT
+    signal addContact()
+    signal editContact(int index)
+    signal removeContact(int index)
 
-public:
-    enum AdressModelRoles {
-        FullNameRole = Qt::DisplayRole,
-        AddressRole = Qt::UserRole,
-        CityRole,
-        NumberRole
-    };
+    property alias model: contactModel
 
-    Q_ENUM(AdressModelRoles)
+    width: 320
+    height: 480
 
-    AddressModel(QObject *parent = nullptr);
+    ListView {
+        id: listView
+        anchors.fill: parent
 
-    int rowCount(const QModelIndex & = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-    QHash<int, QByteArray> roleNames() const;
+        focus: true
+        boundsBehavior: Flickable.StopAtBounds
 
-    Q_INVOKABLE QString getFullName(int row) const;
-    Q_INVOKABLE QString getAddress(int row) const;
-    Q_INVOKABLE QString getCity(int row) const;
-    Q_INVOKABLE QString getNumber(int row) const;
+        section.property: "fullName"
+        section.criteria: ViewSection.FirstCharacter
+        section.delegate: SectionDelegate {
+            width: listView.width
+        }
 
-    Q_INVOKABLE void updateContact(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
-    Q_INVOKABLE void removeContact(int row);
+        delegate: ContactDelegate {
+            id: delegate
+            width: listView.width
 
-private:
-    struct Data {
-        QString fullName;
-        QString address;
-        QString city;
-        QString number;
-    };
+            Connections {
+                target: delegate.edit
+                onClicked: page.editContact(index)
+            }
 
-    QList<Data> m_data;
-};
+            Connections {
+                target: delegate.remove
+                onClicked: page.removeContact(index)
+            }
+        }
 
-#endif // ADDRESSMODEL_H
+        model: ContactModel {
+            id: contactModel
+        }
+
+        ScrollBar.vertical: ScrollBar { }
+    }
+
+    footer: ToolBar {
+        id: footer
+
+        ToolButton {
+            id: addButton
+            text: qsTr("Add Contact")
+            anchors.right: parent.right
+
+            Connections {
+                target: addButton
+                onClicked: page.addContact()
+            }
+        }
+    }
+}

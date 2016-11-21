@@ -52,13 +52,29 @@ import QtQuick 2.7
 import QtQuick.Controls 2.1
 
 ApplicationWindow {
-    visible: true
+    id: window
+
     width: 320
     height: 480
+    visible: true
     title: qsTr("Contact List")
 
-    MainForm {
-        button.onClicked: dialog.addContact(listView.model)
+    ContactDialog {
+        id: contactDialog
+        onFinished: {
+            if (index === -1)
+                contactView.model.append(fullName, address, city, number)
+            else
+                contactView.model.set(index, fullName, address, city, number)
+        }
+    }
+
+    ContactView {
+        id: contactView
         anchors.fill: parent
+
+        onAddContact: contactDialog.createContact()
+        onEditContact: contactDialog.editContact(index, model.get(index))
+        onRemoveContact: model.remove(index)
     }
 }
