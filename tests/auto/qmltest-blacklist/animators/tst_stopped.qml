@@ -37,7 +37,7 @@ Item {
     TestCase {
         id: testcase
         name: "animators-stopped"
-        when: root.done
+        when: false
         function test_endresult() {
             verify(true);
         }
