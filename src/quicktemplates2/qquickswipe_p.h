@@ -63,6 +63,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
     Q_OBJECT
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
     Q_PROPERTY(bool complete READ isComplete NOTIFY completeChanged FINAL)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL /*REVISION 2*/)
     Q_PROPERTY(QQmlComponent *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
     Q_PROPERTY(QQmlComponent *behind READ behind WRITE setBehind NOTIFY behindChanged FINAL)
     Q_PROPERTY(QQmlComponent *right READ right WRITE setRight NOTIFY rightChanged FINAL)
@@ -78,6 +79,9 @@ public:
 
     bool isComplete() const;
     void setComplete(bool complete);
+
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
 
     QQmlComponent *left() const;
     void setLeft(QQmlComponent *left);
@@ -102,6 +106,7 @@ public:
 Q_SIGNALS:
     void positionChanged();
     void completeChanged();
+    /*Q_REVISION(2)*/ void enabledChanged();
     /*Q_REVISION(1)*/ void completed();
     void leftChanged();
     void behindChanged();

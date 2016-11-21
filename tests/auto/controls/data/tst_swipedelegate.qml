@@ -1367,4 +1367,87 @@ TestCase {
 
         control.destroy();
     }
+
+    Component {
+        id: swipeDelegateDisabledComponent
+
+        SwipeDelegate {
+            id: swipeDelegate
+            text: "SwipeDelegate"
+            width: parent.width
+            height: checked ? implicitHeight * 2 : implicitHeight
+            checkable: true
+
+            swipe.enabled: false
+            swipe.right: Label {
+                text: swipeDelegate.checked ? qsTr("Expanded") : qsTr("Collapsed")
+                width: parent.width
+                height: parent.height
+                padding: 12
+                color: "white"
+                verticalAlignment: Label.AlignVCenter
+                horizontalAlignment: Label.AlignRight
+            }
+        }
+    }
+
+    function test_swipeEnabled() {
+        var control = swipeDelegateDisabledComponent.createObject(testCase);
+
+        mousePress(control, control.width / 2, control.height / 2);
+        verify(control.pressed);
+        compare(control.swipe.position, 0.0);
+        verify(!control.swipe.complete);
+        verify(!control.swipe.leftItem);
+        verify(!control.swipe.rightItem);
+
+        // It shouldn't be possible to swipe.
+        var overDragDistance = Math.round(dragDistance * 1.1);
+        mouseMove(control, control.width / 2 - overDragDistance, control.height / 2);
+        verify(control.pressed);
+        compare(control.swipe.position, 0.0);
+        verify(!control.swipe.complete);
+        verify(!control.swipe.leftItem);
+        verify(!control.swipe.rightItem);
+
+        // Now move outside the right edge of the control and release.
+        mouseMove(control, control.width * 1.1, control.height / 2);
+        verify(control.pressed);
+        compare(control.swipe.position, 0.0);
+        verify(!control.swipe.complete);
+        verify(!control.swipe.leftItem);
+        verify(!control.swipe.rightItem);
+
+        mouseRelease(control, control.width / 2, control.height / 2);
+        verify(!control.pressed);
+        compare(control.swipe.position, 0.0);
+        verify(!control.swipe.complete);
+        verify(!control.swipe.leftItem);
+        verify(!control.swipe.rightItem);
+
+        // Now enabled swiping so that we can swipe to the left.
+        control.swipe.enabled = true;
+        swipe(control, 0, -1);
+        verify(control.swipe.complete);
+
+        // Now that the swipe is complete, disable swiping and then try to swipe again.
+        // It should stay at its position of -1.
+        control.swipe.enabled = false;
+
+        mousePress(control, control.width / 2, control.height / 2);
+        verify(control.pressed);
+        compare(control.swipe.position, -1.0);
+
+        mouseMove(control, control.width / 2 + overDragDistance, control.height / 2);
+        verify(control.pressed);
+        compare(control.swipe.position, -1.0);
+        verify(control.swipe.complete);
+
+        mouseRelease(control, control.width / 2 + overDragDistance, control.height / 2);
+        verify(!control.pressed);
+        compare(control.swipe.position, -1.0);
+        verify(control.swipe.complete);
+
+        control.destroy();
+    }
 }

@@ -124,6 +124,7 @@ public:
         position(0),
         wasComplete(false),
         complete(false),
+        enabled(true),
         left(nullptr),
         behind(nullptr),
         right(nullptr),
@@ -160,6 +161,7 @@ public:
     // before the last press event.
     bool wasComplete;
     bool complete;
+    bool enabled;
     QQuickVelocityCalculator velocityCalculator;
     QQmlComponent *left;
     QQmlComponent *behind;
@@ -574,6 +576,22 @@ void QQuickSwipe::setComplete(bool complete)
         emit completed();
 }
 
+bool QQuickSwipe::isEnabled() const
+{
+    Q_D(const QQuickSwipe);
+    return d->enabled;
+}
+
+void QQuickSwipe::setEnabled(bool enabled)
+{
+    Q_D(QQuickSwipe);
+    if (enabled == d->enabled)
+        return;
+
+    d->enabled = enabled;
+    emit enabledChanged();
+}
+
 void QQuickSwipe::close()
 {
     Q_D(QQuickSwipe);
@@ -633,12 +651,17 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
             stopPressAndHold();
     }
 
+    // The delegate can still be pressed when swipe.enabled is false,
+    // but the mouse moving shouldn't have any effect on swipe.position.
+    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
+    if (!swipePrivate->enabled)
+        return false;
+
     // Protect against division by zero.
     if (width == 0)
         return false;
 
     // Don't bother reacting to events if we don't have any delegates.
-    QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     if (!swipePrivate->left && !swipePrivate->right && !swipePrivate->behind)
         return false;
 
@@ -819,6 +842,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
     \qmlpropertygroup QtQuick.Controls::SwipeDelegate::swipe
     \qmlproperty real QtQuick.Controls::SwipeDelegate::swipe.position
     \qmlproperty bool QtQuick.Controls::SwipeDelegate::swipe.complete
+    \qmlproperty bool QtQuick.Controls::SwipeDelegate::swipe.enabled
     \qmlproperty Component QtQuick.Controls::SwipeDelegate::swipe.left
     \qmlproperty Component QtQuick.Controls::SwipeDelegate::swipe.behind
     \qmlproperty Component QtQuick.Controls::SwipeDelegate::swipe.right
@@ -843,6 +867,11 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 
             When complete is \c true, any interactive items declared in \c left,
             \c right, or \c behind will receive mouse events.
+    \row
+        \li enabled
+        \li This property determines whether or not the control can be swiped.
+
+            This property was added in QtQuick.Controls 2.2.
     \row
         \li left
         \li This property holds the left delegate.
@@ -963,7 +992,11 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwipeDelegate);
     QQuickItemDelegate::mousePressEvent(event);
+
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);
+    if (!swipePrivate->enabled)
+        return;
+
     swipePrivate->positionBeforePress = swipePrivate->position;
     swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
 }
