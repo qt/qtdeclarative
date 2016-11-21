@@ -154,6 +154,7 @@ private slots:
     void multipleTransitions_data();
     void multipleDisplaced();
     void regression_QTBUG_57225();
+    void regression_QTBUG_57225_data();
 
     void inserted_leftToRight_RtL_TtB();
     void inserted_leftToRight_RtL_TtB_data();
@@ -5801,10 +5802,15 @@ void tst_QQuickGridView::multipleDisplaced()
 
 void tst_QQuickGridView::regression_QTBUG_57225()
 {
+    QFETCH(int, initialCount);
+    QFETCH(int, removeIndex);
+    QFETCH(int, removeCount);
+    QFETCH(int, expectedDisplaceTransitions);
+
     // deleting all visible items should not cause a repositioning of said items.
 
     QaimModel model;
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < initialCount; i++)
         model.addItem("Original item" + QString::number(i), "");
 
     QQuickView *window = createView();
@@ -5818,7 +5824,7 @@ void tst_QQuickGridView::regression_QTBUG_57225()
     QVERIFY(gridview != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-    model.removeItems(0, 8);
+    model.removeItems(removeIndex, removeCount);
     QTRY_VERIFY(gridview->property("animationDone").toBool());
 
     // verify that none of the removed items has moved to a negative position
@@ -5826,7 +5832,31 @@ void tst_QQuickGridView::regression_QTBUG_57225()
     QVERIFY(minimumPosition.x() >= 0);
     QVERIFY(minimumPosition.y() >= 0);
 
+    // wait some more time to let the displaced transition happen
+    QTest::qWait(window->rootObject()->property("duration").toInt());
+    QTRY_VERIFY2(gridview->property("displaceTransitionsDone").toInt() >= expectedDisplaceTransitions,
+                 QByteArray::number(gridview->property("displaceTransitionsDone").toInt()).constData());
+
     delete window;
+}
+
+void tst_QQuickGridView::regression_QTBUG_57225_data()
+{
+    QTest::addColumn<int>("initialCount");
+    QTest::addColumn<int>("removeIndex");
+    QTest::addColumn<int>("removeCount");
+    QTest::addColumn<int>("expectedDisplaceTransitions");
+
+    // no displace transitions should happen
+    QTest::newRow("remove all visible items") <<
+        20 << 0 << 8 << 0;
+
+    // check that the removal animation is performed
+    QTest::newRow("remove items in between") <<
+        20 << 1 << 2 << 3;
+
+    QTest::newRow("remove items in between - 2") <<
+        20 << 2 << 3 << 1;
 }
 
 void tst_QQuickGridView::cacheBuffer()

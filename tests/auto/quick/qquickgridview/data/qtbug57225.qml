@@ -52,6 +52,7 @@ Rectangle {
     GridView {
         id: grid
 
+        property int displaceTransitionsDone: 0
         property bool animationDone: false
         property point minimumPosition: Qt.point(0, 0)
 
@@ -73,8 +74,8 @@ Rectangle {
                     properties: "x,y"
                     duration: root.duration
                     easing.type: Easing.OutBounce
-                    easing.amplitude: 10.0      // longer-lasting bounce to trigger bug
                 }
+                ScriptAction { script: grid.displaceTransitionsDone += 1 }
             }
         }
 
