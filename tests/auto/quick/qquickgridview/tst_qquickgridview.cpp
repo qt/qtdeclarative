@@ -153,6 +153,7 @@ private slots:
     void multipleTransitions();
     void multipleTransitions_data();
     void multipleDisplaced();
+    void regression_QTBUG_57225();
 
     void inserted_leftToRight_RtL_TtB();
     void inserted_leftToRight_RtL_TtB_data();
@@ -5794,6 +5795,36 @@ void tst_QQuickGridView::multipleDisplaced()
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
     }
+
+    delete window;
+}
+
+void tst_QQuickGridView::regression_QTBUG_57225()
+{
+    // deleting all visible items should not cause a repositioning of said items.
+
+    QaimModel model;
+    for (int i = 0; i < 20; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("qtbug57225.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
+    QVERIFY(gridview != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    model.removeItems(0, 8);
+    QTRY_VERIFY(gridview->property("animationDone").toBool());
+
+    // verify that none of the removed items has moved to a negative position
+    QPoint minimumPosition = gridview->property("minimumPosition").toPoint();
+    QVERIFY(minimumPosition.x() >= 0);
+    QVERIFY(minimumPosition.y() >= 0);
 
     delete window;
 }
