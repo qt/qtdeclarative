@@ -2692,6 +2692,7 @@ void convertConst(Const *c, Type targetType)
     case UndefinedType:
         c->value = qt_qnan();
         c->type = targetType;
+        break;
     default:
         Q_UNIMPLEMENTED();
         Q_ASSERT(!"Unimplemented!");
