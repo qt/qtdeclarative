@@ -549,7 +549,6 @@ void tst_qmldiskcache::cacheResources()
 
     {
         CleanlyLoadingComponent component(&engine, QUrl("qrc:/test.qml"));
-        qDebug() << component.errorString();
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("value").toInt(), 20);
@@ -558,16 +557,36 @@ void tst_qmldiskcache::cacheResources()
     const QStringList entries = QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files);
     QCOMPARE(entries.count(), 1);
 
+    QDateTime cacheFileTimeStamp;
+
     {
         QFile cacheFile(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst());
         QVERIFY2(cacheFile.open(QIODevice::ReadOnly), qPrintable(cacheFile.errorString()));
         QV4::CompiledData::Unit unit;
         QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));
 
+        cacheFileTimeStamp = QFileInfo(cacheFile.fileName()).lastModified();
+
         QDateTime referenceTimeStamp = QFileInfo(":/test.qml").lastModified();
         if (!referenceTimeStamp.isValid())
             referenceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
         QCOMPARE(qint64(unit.sourceTimeStamp), referenceTimeStamp.toMSecsSinceEpoch());
+    }
+
+    waitForFileSystem();
+
+    {
+        CleanlyLoadingComponent component(&engine, QUrl("qrc:///test.qml"));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 20);
+    }
+
+    {
+        const QStringList entries = QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files);
+        QCOMPARE(entries.count(), 1);
+
+        QCOMPARE(QFileInfo(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst()).lastModified().toMSecsSinceEpoch(), cacheFileTimeStamp.toMSecsSinceEpoch());
     }
 }
 
