@@ -69,13 +69,6 @@ using namespace QV4::JIT;
 
 
 namespace {
-inline bool isPregOrConst(IR::Expr *e)
-{
-    if (IR::Temp *t = e->asTemp())
-        return t->kind == IR::Temp::PhysicalRegister;
-    return e->asConst() != 0;
-}
-
 class QIODevicePrintStream: public FilePrintStream
 {
     Q_DISABLE_COPY(QIODevicePrintStream)
@@ -1720,9 +1713,6 @@ QT_END_NAMESPACE
 bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
-    if (!isPregOrConst(left) || !isPregOrConst(right))
-        return false;
-
     if (_as->nextBlock() == iftrue) {
         Assembler::Jump target = _as->branchDouble(true, op, left, right);
         _as->addPatch(iffalse, target);
@@ -1737,9 +1727,6 @@ bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Ex
 bool InstructionSelection::visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
-    if (!isPregOrConst(left) || !isPregOrConst(right))
-        return false;
-
     if (_as->nextBlock() == iftrue) {
         Assembler::Jump target = _as->branchInt32(true, op, left, right);
         _as->addPatch(iffalse, target);
