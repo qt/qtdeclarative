@@ -230,8 +230,14 @@ Item {
             qtest_prevSignalName = ""
         }
         if (target != null && signalName != "") {
-            var handlerName = qtest_signalHandlerName(signalName)
-            var func = target[handlerName]
+            // Look for the signal name in the object
+            var func = target[signalName]
+            if (typeof func !== "function") {
+                // If it is not a function, try looking for signal handler
+                // i.e. (onSignal) this is needed for cases where there is a property
+                // and a signal with the same name, e.g. Mousearea.pressed
+                func = target[qtest_signalHandlerName(signalName)]
+            }
             if (func === undefined) {
                 spy.qtest_valid = false
                 console.log("Signal '" + signalName + "' not found")
