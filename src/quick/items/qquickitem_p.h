@@ -559,6 +559,7 @@ public:
 #if QT_CONFIG(im)
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
+    void deliverShortcutOverrideEvent(QKeyEvent *);
 
     bool isTransparentForPositioner() const;
     void setTransparentForPositioner(bool trans);
@@ -622,6 +623,7 @@ public:
     virtual void inputMethodEvent(QInputMethodEvent *event, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 #endif
+    virtual void shortcutOverride(QKeyEvent *event);
     virtual void componentComplete();
 
     bool m_processPost;
@@ -813,6 +815,7 @@ Q_SIGNALS:
     void priorityChanged();
     void pressed(QQuickKeyEvent *event);
     void released(QQuickKeyEvent *event);
+    void shortcutOverride(QQuickKeyEvent *event);
     void digit0Pressed(QQuickKeyEvent *event);
     void digit1Pressed(QQuickKeyEvent *event);
     void digit2Pressed(QQuickKeyEvent *event);
@@ -861,6 +864,7 @@ private:
     void inputMethodEvent(QInputMethodEvent *, bool post) Q_DECL_OVERRIDE;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const Q_DECL_OVERRIDE;
 #endif
+    void shortcutOverride(QKeyEvent *event) override;
     static QByteArray keyToSignal(int key);
 
     bool isConnected(const char *signalName) const;

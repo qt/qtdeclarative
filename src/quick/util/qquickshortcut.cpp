@@ -73,7 +73,7 @@
     It is also possible to set multiple shortcut \l sequences, so that the shortcut
     can be \l activated via several different sequences of key presses.
 
-    \sa Keys
+    \sa Keys, {Keys::}{shortcutOverride()}
 */
 
 /*! \qmlsignal QtQuick::Shortcut::activated()
