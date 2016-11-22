@@ -563,7 +563,11 @@ void tst_qmldiskcache::cacheResources()
         QVERIFY2(cacheFile.open(QIODevice::ReadOnly), qPrintable(cacheFile.errorString()));
         QV4::CompiledData::Unit unit;
         QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));
-        QCOMPARE(qint64(unit.sourceTimeStamp), QFileInfo(QCoreApplication::applicationFilePath()).lastModified().toMSecsSinceEpoch());
+
+        QDateTime referenceTimeStamp = QFileInfo(":/test.qml").lastModified();
+        if (!referenceTimeStamp.isValid())
+            referenceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+        QCOMPARE(qint64(unit.sourceTimeStamp), referenceTimeStamp.toMSecsSinceEpoch());
     }
 }
 
