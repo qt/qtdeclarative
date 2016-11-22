@@ -592,6 +592,21 @@ void QQuickSwipe::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
+void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
+{
+    Q_D(QQuickSwipe);
+    if ((side != QQuickSwipeDelegate::Left && side != QQuickSwipeDelegate::Right)
+            || (!d->left && !d->behind && side == QQuickSwipeDelegate::Left)
+            || (!d->right && !d->behind && side == QQuickSwipeDelegate::Right))
+        return;
+
+    setPosition(side);
+    setComplete(true);
+    d->wasComplete = true;
+    d->velocityCalculator.reset();
+    d->positionBeforePress = d->position;
+}
+
 void QQuickSwipe::close()
 {
     Q_D(QQuickSwipe);
@@ -828,6 +843,27 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 }
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlmethod void QtQuick.Controls::SwipeDelegate::swipe.open(enumeration side)
+
+    This method sets the \c position of the swipe so that it opens
+    from the specified \a side.
+
+    Available values:
+    \value SwipeDelegate.Left  The \c position is set to \c 1, which makes the swipe open
+                               from the left. Either \c swipe.left or \c swipe.behind must
+                               have been specified; otherwise the call is ignored.
+    \value SwipeDelegate.Right The \c position is set to \c -1, which makes the swipe open
+                               from the right. Either \c swipe.right or \c swipe.behind must
+                               have been specified; otherwise the call is ignored.
+
+    Any animations defined for the \l {Item::}{x} position of \l {Control::}{contentItem}
+    and \l {Control::}{background} will be triggered.
+
+    \sa swipe, swipe.close()
+*/
+
+/*!
     \since QtQuick.Controls 2.1
     \qmlmethod void QtQuick.Controls::SwipeDelegate::swipe.close()
 
@@ -835,7 +871,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
     defined for the \l {Item::}{x} position of \l {Control::}{contentItem}
     and \l {Control::}{background} will be triggered.
 
-    \sa swipe
+    \sa swipe, swipe.open()
 */
 
 /*!
@@ -930,7 +966,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
             This signal was added in QtQuick.Controls 2.1.
     \endtable
 
-    \sa {Control::}{contentItem}, {Control::}{background}, swipe.close()
+    \sa {Control::}{contentItem}, {Control::}{background}, swipe.open(), swipe.close()
 */
 QQuickSwipe *QQuickSwipeDelegate::swipe() const
 {

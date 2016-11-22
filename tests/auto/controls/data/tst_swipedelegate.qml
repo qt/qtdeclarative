@@ -1450,4 +1450,66 @@ TestCase {
 
         control.destroy();
     }
+
+    function test_side() {
+        compare(SwipeDelegate.Left, 1.0);
+        compare(SwipeDelegate.Right, -1.0);
+    }
+
+    function test_open_side_data() {
+        return [
+            { tag: "left", side: SwipeDelegate.Left, position: 1, complete: true, left: greenLeftComponent, right: null, behind: null },
+            { tag: "right", side: SwipeDelegate.Right, position: -1, complete: true, left: null, right: redRightComponent, behind: null },
+            { tag: "behind,left", side: SwipeDelegate.Left, position: 1, complete: true, left: null, right: null, behind: greenLeftComponent },
+            { tag: "behind,right", side: SwipeDelegate.Right, position: -1, complete: true, left: null, right: null, behind: redRightComponent },
+            { tag: "left,behind", side: SwipeDelegate.Left, position: 1, complete: true, left: null, right: null, behind: greenLeftComponent },
+            { tag: "right,behind", side: SwipeDelegate.Right, position: -1, complete: true, left: null, right: null, behind: redRightComponent },
+            { tag: "left,null", side: SwipeDelegate.Left, position: 0, complete: false, left: null, right: null, behind: null },
+            { tag: "right,null", side: SwipeDelegate.Right, position: 0, complete: false, left: null, right: null, behind: null },
+            { tag: "invalid", side: 0, position: 0, complete: false, left: greenLeftComponent, right: null, behind: null }
+        ]
+    }
+
+    function test_open_side(data) {
+        var control = emptySwipeDelegateComponent.createObject(testCase, {"swipe.left": data.left, "swipe.right": data.right, "swipe.behind": data.behind});
+        verify(control);
+
+        control.swipe.open(data.side);
+        compare(control.swipe.position, data.position);
+        compare(control.swipe.complete, data.complete);
+
+        control.destroy();
+    }
+
+    Component {
+        id: openSwipeDelegateComponent
+
+        SwipeDelegate {
+            text: "SwipeDelegate"
+            width: 150
+
+            onClicked: swipe.open(SwipeDelegate.Right)
+
+            swipe.right: Item {
+                width: parent.width
+                height: parent.height
+            }
+        }
+    }
+
+    function test_open() {
+        var control = openSwipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        mouseClick(control);
+        compare(control.swipe.position, SwipeDelegate.Right);
+        tryCompare(control.background, "x", -control.background.width);
+
+        // Swiping after opening should work as normal.
+        swipe(control, SwipeDelegate.Right, 0.0);
+        compare(control.swipe.position, 0.0);
+        tryCompare(control.background, "x", 0);
+
+        control.destroy();
+    }
 }

@@ -67,6 +67,9 @@ public:
 
     QQuickSwipe *swipe() const;
 
+    enum Side { Left = 1, Right = -1 };
+    Q_ENUM(Side)
+
     static QQuickSwipeDelegateAttached *qmlAttachedProperties(QObject *object);
 
 protected:
@@ -112,5 +115,6 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickSwipeDelegate)
 QML_DECLARE_TYPEINFO(QQuickSwipeDelegate, QML_HAS_ATTACHED_PROPERTIES)
+Q_DECLARE_METATYPE(QQuickSwipeDelegate::Side)
 
 #endif // QQUICKSWIPEDELEGATE_P_H

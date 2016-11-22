@@ -50,12 +50,12 @@
 
 #include <QtCore/qobject.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
+#include <QtQuickTemplates2/private/qquickswipedelegate_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
 class QQuickItem;
-class QQuickSwipeDelegate;
 class QQuickSwipePrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
@@ -101,6 +101,7 @@ public:
     QQuickItem *rightItem() const;
     void setRightItem(QQuickItem *item);
 
+    Q_REVISION(2) Q_INVOKABLE void open(QQuickSwipeDelegate::Side side);
     Q_REVISION(1) Q_INVOKABLE void close();
 
 Q_SIGNALS:
