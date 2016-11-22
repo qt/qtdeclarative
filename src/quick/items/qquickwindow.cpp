@@ -2272,13 +2272,21 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
 {
     const auto grabbers = event->grabbers();
     for (auto grabber : grabbers) {
-        // The grabber is guaranteed to be either an item or a handler, but
-        // we need the item in order to call deliverMatchingPointsToItem().
+        // The grabber is guaranteed to be either an item or a handler.
         QQuickItem *receiver = qmlobject_cast<QQuickItem *>(grabber);
-        if (!receiver)
+        if (!receiver) {
+            // The grabber is not an item? It's a handler then.  Let it have the event first.
+            QQuickPointerHandler *handler = static_cast<QQuickPointerHandler *>(grabber);
             receiver = static_cast<QQuickPointerHandler *>(grabber)->parentItem();
-        if (allowChildEventFiltering && sendFilteredPointerEvent(event, receiver))
-            return true;
+            if (allowChildEventFiltering && sendFilteredPointerEvent(event, receiver))
+                return true;
+            event->localize(receiver);
+            handler->handlePointerEvent(event);
+            if (event->allPointsAccepted())
+                return true;
+        }
+        // If the grabber is an item or the grabbing handler didn't handle it,
+        // then deliver the event to the item (which may have multiple handlers).
         deliverMatchingPointsToItem(receiver, event, hasFiltered);
     }
 
