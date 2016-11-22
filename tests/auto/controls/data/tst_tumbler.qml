@@ -83,16 +83,10 @@ TestCase {
     }
 
     function cleanup() {
-        var destroyed = false;
-        cleanupItem.Component.destruction.connect(function() { destroyed = true; });
-
         cleanupItem.destroy();
-
         // Waiting until it's deleted before continuing makes debugging
         // test failures much easier, because there aren't unrelated items hanging around.
-        // TODO: Replace with tryVerify(!tumbler) in 5.8.
-        while (!destroyed)
-            wait(0)
+        tryVerify(function() { return !tumbler; });
     }
 
     function createTumbler(args) {
