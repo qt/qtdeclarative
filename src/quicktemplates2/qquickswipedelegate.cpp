@@ -562,8 +562,12 @@ void QQuickSwipe::setComplete(bool complete)
 
 void QQuickSwipe::close()
 {
+    Q_D(QQuickSwipe);
     setPosition(0);
     setComplete(false);
+    d->wasComplete = false;
+    d->positionBeforePress = 0.0;
+    d->velocityCalculator.reset();
 }
 
 class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate

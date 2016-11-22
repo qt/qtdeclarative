@@ -1054,17 +1054,17 @@ TestCase {
             text: "SwipeDelegate"
             width: 150
 
-            onClicked: close()
-
             swipe.right: Item {
                 width: parent.width
                 height: parent.height
+
+                SwipeDelegate.onClicked: swipe.close()
             }
         }
     }
 
     function test_close() {
-        var control = swipeDelegateComponent.createObject(testCase);
+        var control = closeSwipeDelegateComponent.createObject(testCase);
         verify(control);
 
         swipe(control, 0.0, -1.0);
@@ -1072,6 +1072,16 @@ TestCase {
         // Should animate, so it shouldn't change right away.
         compare(control.swipe.rightItem.x, 0);
         tryCompare(control.swipe.rightItem, "x", control.background.x + control.background.width);
+
+        mousePress(control);
+        verify(control.swipe.rightItem.SwipeDelegate.pressed);
+
+        mouseRelease(control);
+        verify(!control.swipe.rightItem.SwipeDelegate.pressed);
+        tryCompare(control.swipe, "position", 0);
+
+        // Swiping after closing should work as normal.
+        swipe(control, 0.0, -1.0);
 
         control.destroy();
     }
