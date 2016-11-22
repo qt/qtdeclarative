@@ -96,6 +96,7 @@ protected:
     qreal averageStartingAngle(const QPointF &ref);
     QVector<PointData> angles(const QPointF &ref) const;
     static qreal averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles);
+    void acceptPoints(const QVector<QQuickEventPoint *> &points);
     void grabPoints(QVector<QQuickEventPoint *> points);
 
 protected:

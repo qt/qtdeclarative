@@ -285,6 +285,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         m_translation = QPointF(mat.constData()[12], mat.constData()[13]);
     }
 
+    acceptPoints(m_currentPoints);
     emit updated();
 }
 

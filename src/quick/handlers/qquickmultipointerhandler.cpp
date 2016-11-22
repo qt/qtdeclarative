@@ -200,6 +200,12 @@ qreal QQuickMultiPointerHandler::averageAngleDelta(const QVector<PointData> &old
     return avgAngleDelta;
 }
 
+void QQuickMultiPointerHandler::acceptPoints(const QVector<QQuickEventPoint *> &points)
+{
+    for (QQuickEventPoint* point : points)
+        point->setAccepted();
+}
+
 void QQuickMultiPointerHandler::grabPoints(QVector<QQuickEventPoint *> points)
 {
     for (QQuickEventPoint* point : points)
