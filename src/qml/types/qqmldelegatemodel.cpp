@@ -213,6 +213,7 @@ QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
     , m_reset(false)
     , m_transaction(false)
     , m_incubatorCleanupScheduled(false)
+    , m_waitingToFetchMore(false)
     , m_cacheItems(0)
     , m_items(0)
     , m_persistedItems(0)
@@ -225,6 +226,15 @@ QQmlDelegateModelPrivate::~QQmlDelegateModelPrivate()
 
     if (m_cacheMetaType)
         m_cacheMetaType->release();
+}
+
+void QQmlDelegateModelPrivate::requestMoreIfNecessary()
+{
+    Q_Q(QQmlDelegateModel);
+    if (!m_waitingToFetchMore && m_adaptorModel.canFetchMore()) {
+        m_waitingToFetchMore = true;
+        QCoreApplication::postEvent(q, new QEvent(QEvent::UpdateRequest));
+    }
 }
 
 void QQmlDelegateModelPrivate::init()
@@ -334,9 +344,7 @@ void QQmlDelegateModel::componentComplete()
             &inserts);
     d->itemsInserted(inserts);
     d->emitChanges();
-
-    if (d->m_adaptorModel.canFetchMore())
-        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+    d->requestMoreIfNecessary();
 }
 
 /*!
@@ -375,8 +383,7 @@ void QQmlDelegateModel::setModel(const QVariant &model)
 
     if (d->m_complete) {
         _q_itemsInserted(0, d->m_adaptorModel.count());
-        if (d->m_adaptorModel.canFetchMore())
-            QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+        d->requestMoreIfNecessary();
     }
 }
 
@@ -922,7 +929,6 @@ void QQmlDelegateModelPrivate::setInitialState(QQDMIncubationTask *incubationTas
 
 QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bool asynchronous)
 {
-    Q_Q(QQmlDelegateModel);
     if (!m_delegate || index < 0 || index >= m_compositor.count(group)) {
         qWarning() << "DelegateModel::item: index out range" << index << m_compositor.count(group);
         return 0;
@@ -989,8 +995,8 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
                     QQmlContextData::get(m_context));
     }
 
-    if (index == m_compositor.count(group) - 1 && m_adaptorModel.canFetchMore())
-        QCoreApplication::postEvent(q, new QEvent(QEvent::UpdateRequest));
+    if (index == m_compositor.count(group) - 1)
+        requestMoreIfNecessary();
 
     // Remove the temporary reference count.
     cacheItem->scriptRef -= 1;
@@ -1110,6 +1116,7 @@ bool QQmlDelegateModel::event(QEvent *e)
 {
     Q_D(QQmlDelegateModel);
     if (e->type() == QEvent::UpdateRequest) {
+        d->m_waitingToFetchMore = false;
         d->m_adaptorModel.fetchMore();
     } else if (e->type() == QEvent::User) {
         d->m_incubatorCleanupScheduled = false;
