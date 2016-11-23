@@ -133,7 +133,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
-    // QtQuick.Templates 2.0 (Qt 5.7)
+    // QtQuick.Templates 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 2, 0, "ApplicationWindow");
     qmlRegisterType<QQuickApplicationWindowAttached>();
@@ -199,7 +199,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickTextInput, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
 
-    // QtQuick.Templates 2.1 (Qt 5.8)
+    // QtQuick.Templates 2.1 (new types and revisions in Qt 5.8)
     qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
     qmlRegisterType<QQuickComboBox, 1>(uri, 2, 1, "ComboBox");
     qmlRegisterType<QQuickContainer, 1>(uri, 2, 1, "Container");
@@ -221,12 +221,12 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickToolSeparator>(uri, 2, 1, "ToolSeparator");
     qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
 
-    // QtQuick.Templates 2.2 (Qt 5.9)
-    qmlRegisterRevision<QQuickComboBox, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickDial, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickRangeSlider, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickSlider, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickTumbler, 2>(uri, 2, 2);
+    // QtQuick.Templates 2.2 (new types and revisions in Qt 5.9)
+    qmlRegisterType<QQuickComboBox, 2>(uri, 2, 2, "ComboBox");
+    qmlRegisterType<QQuickDial, 2>(uri, 2, 2, "Dial");
+    qmlRegisterType<QQuickRangeSlider, 2>(uri, 2, 2, "RangeSlider");
+    qmlRegisterType<QQuickSlider, 2>(uri, 2, 2, "Slider");
+    qmlRegisterType<QQuickTumbler, 2>(uri, 2, 2, "Tumbler");
 }
 
 QT_END_NAMESPACE

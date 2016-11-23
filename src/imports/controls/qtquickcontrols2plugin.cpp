@@ -90,7 +90,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
-    // QtQuick.Controls 2.0 (Qt 5.7)
+    // QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType(selector.select(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
@@ -136,7 +136,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ToolTip.qml")), uri, 2, 0, "ToolTip");
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 2, 0, "Tumbler");
 
-    // QtQuick.Controls 2.1 (Qt 5.8)
+    // QtQuick.Controls 2.1 (new types in Qt 5.8)
     qmlRegisterType<QQuickButtonGroup,1 >(uri, 2, 1, "ButtonGroup");
     qmlRegisterType(selector.select(QStringLiteral("Dialog.qml")), uri, 2, 1, "Dialog");
     qmlRegisterType(selector.select(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
@@ -144,11 +144,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("RoundButton.qml")), uri, 2, 1, "RoundButton");
     qmlRegisterType(selector.select(QStringLiteral("ToolSeparator.qml")), uri, 2, 1, "ToolSeparator");
 
-    // QtQuick.Controls 2.2 (Qt 5.9)
-    qmlRegisterRevision<QQuickDial, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickRangeSlider, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickSlider, 2>(uri, 2, 2);
-    qmlRegisterRevision<QQuickTumbler, 2>(uri, 2, 2);
+    // QtQuick.Controls 2.2 (new types in Qt 5.9)
 }
 
 static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
