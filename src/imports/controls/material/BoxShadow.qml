@@ -35,8 +35,8 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Controls.Material 2.1
-import QtQuick.Controls.Material.impl 2.1
+import QtQuick.Controls.Material 2.2
+import QtQuick.Controls.Material.impl 2.2
 
 /*
    A implementation of CSS's box-shadow, used by ElevationEffect for a Material Design
