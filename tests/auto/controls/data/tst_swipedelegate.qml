@@ -1292,4 +1292,79 @@ TestCase {
         mouseRelease(control, control.width + 10, control.height / 2, Qt.LeftButton);
         verify(mouseSignalSequenceSpy.success);
     }
+
+    Component {
+        id: leftRightWithLabelsComponent
+
+        SwipeDelegate {
+            id: delegate
+            text: "SwipeDelegate"
+            width: 150
+
+            background.opacity: 0.5
+
+            swipe.left: Rectangle {
+                width: parent.width
+                height: parent.height
+                color: SwipeDelegate.pressed ? Qt.darker("green") : "green"
+
+                property alias label: label
+
+                Label {
+                    id: label
+                    text: "Left"
+                    color: "white"
+                    anchors.margins: 10
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                SwipeDelegate.onClicked: delegate.swipe.close()
+            }
+
+            swipe.right: Rectangle {
+                width: parent.width
+                height: parent.height
+                anchors.right: parent.right
+                color: SwipeDelegate.pressed ? Qt.darker("green") : "red"
+
+                property alias label: label
+
+                Label {
+                    id: label
+                    text: "Right"
+                    color: "white"
+                    anchors.margins: 10
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                SwipeDelegate.onClicked: delegate.swipe.close()
+            }
+        }
+    }
+
+    function test_beginSwipeOverRightItem() {
+        var control = leftRightWithLabelsComponent.createObject(testCase);
+        verify(control);
+
+        // Swipe to the left, exposing the right item.
+        swipe(control, 0.0, -1.0);
+
+        // Click to close it and go back to a position of 0.
+        mouseClick(control);
+
+        // TODO: Swipe to the left, with the mouse over the Label in the right item.
+        // The left item should not become visible at any point.
+        var rightLabel = control.swipe.rightItem.label;
+        var overDragDistance = Math.round(dragDistance * 1.1);
+        mousePress(rightLabel, rightLabel.width / 2, rightLabel.height / 2, Qt.rightButton);
+        mouseMove(rightLabel, rightLabel.width / 2 - overDragDistance, rightLabel.height / 2, Qt.LeftButton);
+        verify(!control.swipe.leftItem);
+
+        mouseRelease(rightLabel, rightLabel.width / 2 - overDragDistance, control.height / 2, Qt.LeftButton);
+        verify(!control.swipe.leftItem);
+
+        control.destroy();
+    }
 }

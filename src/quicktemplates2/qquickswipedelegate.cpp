@@ -598,6 +598,10 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
     // events will go through the regular channels (mousePressEvent()) until then.
     if (qFuzzyIsNull(swipePrivate->position)) {
         q->mousePressEvent(event);
+        // The press point could be incorrect if the press happened over a child item,
+        // so we correct it after calling the base class' mousePressEvent(), rather
+        // than having to duplicate its code just so we can set the pressPoint.
+        pressPoint = item->mapToItem(q, event->pos());
         return true;
     }
 
