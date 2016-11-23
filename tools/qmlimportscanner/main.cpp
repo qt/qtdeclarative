@@ -485,6 +485,7 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QString
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
     QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
     if (args.size() < 2) {
@@ -529,7 +530,12 @@ int main(int argc, char *argv[])
             if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;
             ++i;
-            *argReceiver += arg;
+            if (!QFile::exists(arg)) {
+                std::cerr << "No such file or directory: \"" << qPrintable(arg) << "\"\n";
+                return 1;
+            } else {
+                *argReceiver += arg;
+            }
         }
     }
 

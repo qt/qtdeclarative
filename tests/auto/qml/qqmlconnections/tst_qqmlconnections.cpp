@@ -52,6 +52,7 @@ private slots:
     void rewriteErrors();
     void singletonTypeTarget();
     void enableDisable_QTBUG_36350();
+    void clearImplicitTarget();
 
 private:
     QQmlEngine engine;
@@ -348,6 +349,32 @@ void tst_qqmlconnections::enableDisable_QTBUG_36350()
     emit item->setWidth(50.);
     QCOMPARE(item->width(), 50.);
     QCOMPARE(item->property("tested").toBool(), true); //Should have received signal to change property
+
+    delete item;
+}
+
+//QTBUG-56499
+void tst_qqmlconnections::clearImplicitTarget()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("test-connection-implicit.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+
+    QVERIFY(item != 0);
+
+    // normal case: fire Connections
+    item->setWidth(100.);
+    QCOMPARE(item->property("tested").toBool(), true);
+
+    item->setProperty("tested", false);
+    // clear the implicit target
+    QQmlConnections *connections = item->findChild<QQmlConnections*>();
+    QVERIFY(connections);
+    connections->setTarget(0);
+
+    // target cleared: no longer fire Connections
+    item->setWidth(150.);
+    QCOMPARE(item->property("tested").toBool(), false);
 
     delete item;
 }

@@ -46,6 +46,7 @@
 #include "qv4stringobject_p.h"
 #endif
 #include <QtCore/QHash>
+#include <QtCore/private/qnumeric_p.h>
 
 using namespace QV4;
 

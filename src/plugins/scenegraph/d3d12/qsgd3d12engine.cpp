@@ -3236,11 +3236,11 @@ void QSGD3D12EnginePrivate::DeviceLossTester::killDevice()
 void *QSGD3D12EnginePrivate::getResource(QSGRendererInterface::Resource resource) const
 {
     switch (resource) {
-    case QSGRendererInterface::Device:
+    case QSGRendererInterface::DeviceResource:
         return device;
-    case QSGRendererInterface::CommandQueue:
+    case QSGRendererInterface::CommandQueueResource:
         return commandQueue.Get();
-    case QSGRendererInterface::CommandList:
+    case QSGRendererInterface::CommandListResource:
         return commandList;
     default:
         break;

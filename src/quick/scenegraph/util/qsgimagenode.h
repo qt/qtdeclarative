@@ -79,6 +79,12 @@ public:
 
     virtual void setOwnsTexture(bool owns) = 0;
     virtual bool ownsTexture() const = 0;
+
+    static void rebuildGeometry(QSGGeometry *g,
+                                QSGTexture *texture,
+                                const QRectF &rect,
+                                QRectF sourceRect,
+                                TextureCoordinatesTransformMode texCoordMode);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGImageNode::TextureCoordinatesTransformMode)

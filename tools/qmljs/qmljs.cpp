@@ -135,6 +135,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exceptio
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
     QStringList args = app.arguments();
     args.removeFirst();
 

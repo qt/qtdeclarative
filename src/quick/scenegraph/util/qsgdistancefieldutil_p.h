@@ -80,9 +80,7 @@ public:
     void setAntialiasingSpreadFunc(AntialiasingSpreadFunc func) { m_antialiasingSpread_func = func; }
 
 private:
-    static QString fontKey(const QRawFont &font);
-
-    QHash<QString, QSGDistanceFieldGlyphCache *> m_caches;
+    QHash<QRawFont, QSGDistanceFieldGlyphCache *> m_caches;
 
     ThresholdFunc m_threshold_func;
     AntialiasingSpreadFunc m_antialiasingSpread_func;

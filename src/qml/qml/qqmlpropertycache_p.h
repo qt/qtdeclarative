@@ -408,6 +408,8 @@ public:
 
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QStringRef &,
                                               QQmlContextData *, QQmlPropertyData &);
+    static QQmlPropertyData *property(QJSEngine *, QObject *, const QLatin1String &,
+                                      QQmlContextData *, QQmlPropertyData &);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
                                               QQmlContextData *, QQmlPropertyData &);
 

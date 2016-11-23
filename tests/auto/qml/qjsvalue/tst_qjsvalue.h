@@ -92,6 +92,8 @@ private slots:
     void hasProperty_basic();
     void hasProperty_globalObject();
     void hasProperty_changePrototype();
+    void hasProperty_QTBUG56830_data();
+    void hasProperty_QTBUG56830();
 
     void deleteProperty_basic();
     void deleteProperty_globalObject();

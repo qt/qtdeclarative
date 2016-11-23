@@ -33,6 +33,7 @@
 int main(int argc, char ** argv)
 {
     QApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
     MainWindow mainWindow;
     mainWindow.show();

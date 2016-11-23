@@ -453,6 +453,7 @@ int main(int argc, char *argv[])
     app->setApplicationName("Qml Runtime");
     app->setOrganizationName("QtProject");
     app->setOrganizationDomain("qt-project.org");
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
     qmlRegisterType<Config>("QmlRuntime.Config", 1, 0, "Configuration");
     qmlRegisterType<PartialScene>("QmlRuntime.Config", 1, 0, "PartialScene");

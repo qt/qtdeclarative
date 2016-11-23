@@ -81,10 +81,10 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \enum QSGRendererInterface::Resource
-    \value Device The graphics device, when applicable.
-    \value CommandQueue The graphics command queue used by the scenegraph, when applicable.
-    \value CommandList The command list or buffer used by the scenegraph, when applicable.
-    \value Painter The active QPainter used by the scenegraph, when running with the software backend.
+    \value DeviceResource The graphics device, when applicable.
+    \value CommandQueueResource The graphics command queue used by the scenegraph, when applicable.
+    \value CommandListResource The command list or buffer used by the scenegraph, when applicable.
+    \value PainterResource The active QPainter used by the scenegraph, when running with the software backend.
  */
 
 /*!

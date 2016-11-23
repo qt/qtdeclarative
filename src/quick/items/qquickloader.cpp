@@ -65,12 +65,12 @@ QQuickLoaderPrivate::~QQuickLoaderPrivate()
     disposeInitialPropertyValues();
 }
 
-void QQuickLoaderPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change
-                                              , const QRectF &diff)
+void QQuickLoaderPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
+                                              const QRectF &oldGeometry)
 {
     if (resizeItem == item)
         _q_updateSize(false);
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, oldGeometry);
 }
 
 void QQuickLoaderPrivate::itemImplicitWidthChanged(QQuickItem *)
