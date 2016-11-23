@@ -40,12 +40,8 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
-#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
-#include <QtQuickTemplates2/private/qquickdial_p.h>
-#include <QtQuickTemplates2/private/qquickrangeslider_p.h>
-#include <QtQuickTemplates2/private/qquickslider_p.h>
-#include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
+#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultprogressbar_p.h"
