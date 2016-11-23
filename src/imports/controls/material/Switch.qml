@@ -37,7 +37,7 @@
 import QtQuick 2.8
 import QtQuick.Controls.Material 2.2
 import QtQuick.Controls.Material.impl 2.2
-import QtQuick.Templates 2.1 as T
+import QtQuick.Templates 2.2 as T
 
 T.Switch {
     id: control
