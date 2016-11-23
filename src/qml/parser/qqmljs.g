@@ -1026,6 +1026,23 @@ case $rule_number: {
 }   break;
 ./
 
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_AUTOMATIC_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_SEMICOLON ;
+/.
+case $rule_number: {
+    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(stringRef(5), stringRef(7));
+    node->isDefaultMember = true;
+    node->defaultToken = loc(1);
+    node->typeModifier = stringRef(3);
+    node->propertyToken = loc(2);
+    node->typeModifierToken = loc(2);
+    node->typeToken = loc(4);
+    node->identifierToken = loc(7);
+    node->semicolonToken = loc(8);
+    sym(1).Node = node;
+}   break;
+./
+
 UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
