@@ -39,11 +39,6 @@
 #ifndef MASM_EXECUTABLEALLOCATOR_H
 #define MASM_EXECUTABLEALLOCATOR_H
 
-// Defined via mkspec
-#if _MSC_VER >= 1900
-#include <windows.h>
-#endif
-
 #include <RefPtr.h>
 #include <RefCounted.h>
 #include <wtf/PageBlock.h>
@@ -117,13 +112,11 @@ struct ExecutableAllocator {
         DWORD oldProtect;
 #    if !OS(WINRT)
         VirtualProtect(addr, size, PAGE_READWRITE, &oldProtect);
-#    elif _MSC_VER >= 1900
+#    else
         bool hr = VirtualProtectFromApp(addr, size, PAGE_READWRITE, &oldProtect);
         if (!hr) {
             Q_UNREACHABLE();
         }
-#    else
-        (void)oldProtect;
 #    endif
 #  else
         int mode = PROT_READ | PROT_WRITE;
@@ -152,13 +145,11 @@ struct ExecutableAllocator {
         DWORD oldProtect;
 #    if !OS(WINRT)
         VirtualProtect(addr, size, PAGE_EXECUTE_READ, &oldProtect);
-#    elif _MSC_VER >= 1900
+#    else
         bool hr = VirtualProtectFromApp(addr, size, PAGE_EXECUTE_READ, &oldProtect);
         if (!hr) {
             Q_UNREACHABLE();
         }
-#    else
-        (void)oldProtect;
 #    endif
 #  else
         int mode = PROT_READ | PROT_EXEC;
