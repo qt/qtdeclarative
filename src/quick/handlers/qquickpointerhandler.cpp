@@ -162,4 +162,16 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     m_currentEvent = event;
 }
 
+/*!
+    \qmlproperty QQuickPointerHandler::parent
+
+    The \l Item which is the scope of the handler; the Item in which it was declared.
+    The handler will handle events on behalf of this Item, which means a
+    pointer event is relevant if at least one of its event points occurs within
+    the Item's interior.  Initially \l target() is the same, but target()
+    can be reassigned.
+
+    \sa QQuickPointerHandler::target(), QObject::parent()
+*/
+
 QT_END_NAMESPACE

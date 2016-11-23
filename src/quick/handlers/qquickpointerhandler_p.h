@@ -66,6 +66,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QQuickItem * parent READ parentItem CONSTANT)
 
 public:
     QQuickPointerHandler(QObject *parent = 0);
@@ -79,6 +80,8 @@ public:
 
     QQuickItem *target() const { return m_target; }
     void setTarget(QQuickItem *target);
+
+    QQuickItem * parentItem() const { return static_cast<QQuickItem *>(QObject::parent()); }
 
     void handlePointerEvent(QQuickPointerEvent *event);
 
