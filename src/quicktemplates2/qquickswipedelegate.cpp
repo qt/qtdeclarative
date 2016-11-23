@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickswipedelegate_p.h"
+#include "qquickswipedelegate_p_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickitemdelegate_p_p.h"
 #include "qquickvelocitycalculator_p_p.h"
@@ -147,6 +148,8 @@ public:
 
     void warnAboutMixingDelegates();
     void warnAboutSettingDelegatesWhileVisible();
+
+    bool hasDelegates() const;
 
     QQuickSwipeDelegate *control;
     // Same range as position, but is set before press events so that we can
@@ -348,6 +351,11 @@ void QQuickSwipePrivate::warnAboutSettingDelegatesWhileVisible()
     qmlInfo(control) << "left/right/behind properties may only be set when swipe.position is 0";
 }
 
+bool QQuickSwipePrivate::hasDelegates() const
+{
+    return left || right || behind;
+}
+
 QQuickSwipe::QQuickSwipe(QQuickSwipeDelegate *control) :
     QObject(*(new QQuickSwipePrivate(control)))
 {
@@ -382,6 +390,8 @@ void QQuickSwipe::setLeft(QQmlComponent *left)
         d->leftItem = nullptr;
     }
 
+    d->control->setFiltersChildMouseEvents(d->hasDelegates());
+
     emit leftChanged();
 }
 
@@ -414,6 +424,8 @@ void QQuickSwipe::setBehind(QQmlComponent *behind)
         d->behindItem = nullptr;
     }
 
+    d->control->setFiltersChildMouseEvents(d->hasDelegates());
+
     emit behindChanged();
 }
 
@@ -445,6 +457,8 @@ void QQuickSwipe::setRight(QQmlComponent *right)
         delete d->rightItem;
         d->rightItem = nullptr;
     }
+
+    d->control->setFiltersChildMouseEvents(d->hasDelegates());
 
     emit rightChanged();
 }
@@ -570,24 +584,10 @@ void QQuickSwipe::close()
     d->velocityCalculator.reset();
 }
 
-class QQuickSwipeDelegatePrivate : public QQuickItemDelegatePrivate
+QQuickSwipeDelegatePrivate::QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *control) :
+    swipe(control)
 {
-    Q_DECLARE_PUBLIC(QQuickSwipeDelegate)
-
-public:
-    QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *control) :
-        swipe(control)
-    {
-    }
-
-    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
-
-    void resizeContent() override;
-
-    QQuickSwipe swipe;
-};
+}
 
 bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
@@ -708,6 +708,13 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
 
             swipe.setPosition(position);
         }
+    } else {
+        // The swipe wasn't initiated.
+        if (event->pos().y() < 0 || event->pos().y() > height) {
+            // The mouse went outside the vertical bounds of the control, so
+            // we should no longer consider it pressed.
+            q->setPressed(false);
+        }
     }
 
     event->accept();
@@ -791,7 +798,6 @@ void QQuickSwipeDelegatePrivate::resizeContent()
 QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
     QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
 {
-    setFiltersChildMouseEvents(true);
 }
 
 /*!
@@ -961,14 +967,17 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
 void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwipeDelegate);
-    d->handleMouseMoveEvent(this, event);
+    if (filtersChildMouseEvents())
+        d->handleMouseMoveEvent(this, event);
+    else
+        QQuickItemDelegate::mouseMoveEvent(event);
 }
 
 void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwipeDelegate);
-    QQuickItemDelegate::mouseReleaseEvent(event);
-    d->handleMouseReleaseEvent(this, event);
+    if (!filtersChildMouseEvents() || !d->handleMouseReleaseEvent(this, event))
+        QQuickItemDelegate::mouseReleaseEvent(event);
 }
 
 void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

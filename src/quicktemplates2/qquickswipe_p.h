@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSWIPEDELEGATE_P_H
-#define QQUICKSWIPEDELEGATE_P_H
+#ifndef QQUICKSWIPE_P_H
+#define QQUICKSWIPE_P_H
 
 //
 //  W A R N I N G
@@ -48,69 +48,73 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
+#include <QtCore/qobject.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSwipe;
-class QQuickSwipeDelegatePrivate;
-class QQuickSwipeDelegateAttached;
-class QQuickSwipeDelegateAttachedPrivate;
+class QQmlComponent;
+class QQuickItem;
+class QQuickSwipeDelegate;
+class QQuickSwipePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT)
+    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(bool complete READ isComplete NOTIFY completeChanged FINAL)
+    Q_PROPERTY(QQmlComponent *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
+    Q_PROPERTY(QQmlComponent *behind READ behind WRITE setBehind NOTIFY behindChanged FINAL)
+    Q_PROPERTY(QQmlComponent *right READ right WRITE setRight NOTIFY rightChanged FINAL)
+    Q_PROPERTY(QQuickItem *leftItem READ leftItem NOTIFY leftItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *behindItem READ behindItem NOTIFY behindItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *rightItem READ rightItem NOTIFY rightItemChanged FINAL)
 
 public:
-    explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);
+    explicit QQuickSwipe(QQuickSwipeDelegate *control);
 
-    QQuickSwipe *swipe() const;
+    qreal position() const;
+    void setPosition(qreal position);
 
-    static QQuickSwipeDelegateAttached *qmlAttachedProperties(QObject *object);
+    bool isComplete() const;
+    void setComplete(bool complete);
 
-protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
+    QQmlComponent *left() const;
+    void setLeft(QQmlComponent *left);
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    QQmlComponent *behind() const;
+    void setBehind(QQmlComponent *behind);
 
-    QFont defaultFont() const override;
+    QQmlComponent *right() const;
+    void setRight(QQmlComponent *right);
 
-#ifndef QT_NO_ACCESSIBILITY
-    QAccessible::Role accessibleRole() const override;
-#endif
+    QQuickItem *leftItem() const;
+    void setLeftItem(QQuickItem *item);
 
-private:
-    Q_DISABLE_COPY(QQuickSwipeDelegate)
-    Q_DECLARE_PRIVATE(QQuickSwipeDelegate)
-};
+    QQuickItem *behindItem() const;
+    void setBehindItem(QQuickItem *item);
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegateAttached : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+    QQuickItem *rightItem() const;
+    void setRightItem(QQuickItem *item);
 
-public:
-    explicit QQuickSwipeDelegateAttached(QObject *object = nullptr);
-
-    bool isPressed() const;
-    void setPressed(bool pressed);
+    Q_REVISION(1) Q_INVOKABLE void close();
 
 Q_SIGNALS:
-    void pressedChanged();
-    void clicked();
+    void positionChanged();
+    void completeChanged();
+    /*Q_REVISION(1)*/ void completed();
+    void leftChanged();
+    void behindChanged();
+    void rightChanged();
+    void leftItemChanged();
+    void behindItemChanged();
+    void rightItemChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickSwipeDelegateAttached)
-    Q_DECLARE_PRIVATE(QQuickSwipeDelegateAttached)
+    Q_DISABLE_COPY(QQuickSwipe)
+    Q_DECLARE_PRIVATE(QQuickSwipe)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwipeDelegate)
-QML_DECLARE_TYPEINFO(QQuickSwipeDelegate, QML_HAS_ATTACHED_PROPERTIES)
-
-#endif // QQUICKSWIPEDELEGATE_P_H
+#endif // QQUICKSWIPE_P_H

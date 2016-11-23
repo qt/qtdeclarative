@@ -377,7 +377,7 @@ TestCase {
         verify(control.swipe.rightItem);
         verify(!control.swipe.rightItem.visible);
 
-        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
         compare(control.swipe.position, 1.0);
@@ -407,7 +407,8 @@ TestCase {
         compare(completedSpy.count, 1);
         compare(control.swipe.position, 1.0 - overDragDistance / control.width);
 
-        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        // Since we went over the drag distance, we should expect canceled() to be emitted.
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width * 0.4, control.height / 2);
         verify(!control.pressed);
         compare(control.swipe.position, 1.0);
@@ -431,7 +432,7 @@ TestCase {
         compare(completedSpy.count, 2);
         compare(control.swipe.position, 0.4);
 
-        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width * -0.1, control.height / 2);
         verify(!control.pressed);
         compare(control.swipe.position, 0.0);
@@ -1251,5 +1252,44 @@ TestCase {
         compare(control.contentItem.y, control.topPadding);
 
         control.destroy();
+    }
+
+    function test_releaseOutside_data() {
+        return [
+            { tag: "no delegates", component: emptySwipeDelegateComponent },
+            { tag: "delegates", component: swipeDelegateComponent },
+        ];
+    }
+
+    function test_releaseOutside(data) {
+        var control = data.component.createObject(testCase);
+        verify(control);
+
+        // Press and then release below the control.
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed", ["pressedChanged", { "pressed": false }]];
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2, control.height + 10, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
+
+        mouseSignalSequenceSpy.expectedSequence = ["canceled"];
+        mouseRelease(control, control.width / 2, control.height + 10, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
+
+        // Press and then release to the right of the control.
+        var hasDelegates = control.swipe.left || control.swipe.right || control.swipe.behind;
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = hasDelegates
+            ? [["pressedChanged", { "pressed": true }], "pressed"]
+            : [["pressedChanged", { "pressed": true }], "pressed", ["pressedChanged", { "pressed": false }]];
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width + 10, control.height / 2, Qt.LeftButton);
+        if (hasDelegates)
+            verify(control.swipe.position > 0);
+        verify(mouseSignalSequenceSpy.success);
+
+        mouseSignalSequenceSpy.expectedSequence = hasDelegates ? [["pressedChanged", { "pressed": false }], "canceled"] : ["canceled"];
+        mouseRelease(control, control.width + 10, control.height / 2, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
     }
 }
