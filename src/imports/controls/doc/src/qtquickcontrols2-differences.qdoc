@@ -179,191 +179,487 @@
     This works with both modules, and will reduce the amount of work needed
     when the migration begins.
 
-    \section3 Type Comparison Table
+    \section2 Type Comparison Table
+
+    The first column lists all types available in \l {Qt Quick Controls}
+    {Qt Quick Controls 1}, \l {Qt Quick Dialogs}, and \l {Qt Quick Extras}.
+    The second column documents the respective type in Qt Quick Controls 2.
+    When a direct alternative is not available, the third column contains
+    an alternative that provides related functionality. The last column
+    contains some remarks about the differences between the types in the
+    different modules.
 
     \table
     \header
-        \li Qt Quick Controls 1, Qt Quick Extras
-        \li Qt Quick Controls 2, Qt Labs Calendar
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {AbstractButton}
+        \li Qt Quick Controls 1
+        \li Qt Quick Controls 2
+        \li Alternatives
+        \li Remarks
     \row
         \li \l [QML QtQuickControls] {Action}
-        \li \span {} {\mdash \nbsp \sub {(see \l [QML QtQuick] {Shortcut} instead)}}
+        \li \mdash
+        \li \l [QML QtQuick] {Shortcut} \br\sup {(Qt Quick)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c Action is an abstract user interface
+                    action that is bound to buttons and menu items, and can provide
+                    shortcuts.
+                \li \b {Qt Quick}: \c Shortcut provides the shortcut functionality that
+                    was previously only provided by \c Action.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {ApplicationWindow}
         \li \l [QML QtQuickControls2] {ApplicationWindow}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {BusyIndicator}
         \li \l [QML QtQuickControls2] {BusyIndicator}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {Button}
         \li \l [QML QtQuickControls2] {Button}
-    \row
-        \li \l [QML QtQuickExtras] {CircularGauge}
-        \li \mdash
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {Control}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {Container}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {Calendar}
-        \li \l [QML QtLabsCalendar] {MonthGrid},
-            \l [QML QtLabsCalendar] {DayOfWeekRow},
-            \l [QML QtLabsCalendar] {WeekNumberColumn}
+        \li \mdash
+        \li \l [QML QtLabsCalendar] {MonthGrid},\br
+            \l [QML QtLabsCalendar] {DayOfWeekRow},\br
+            \l [QML QtLabsCalendar] {WeekNumberColumn} \br\sup {(Qt Labs Calendar)}
+        \li \list
+                \li \b {Qt Labs Calendar}: \c MonthGrid, \c DayOfWeek, and \c WeekNumberColumn
+                    are \e experimental unstyled building blocks for calendar views.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {CheckBox}
         \li \l [QML QtQuickControls2] {CheckBox}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {CheckDelegate}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {ComboBox}
         \li \l [QML QtQuickControls2] {ComboBox}
-    \row
-        \li \l [QML QtQuickExtras] {DelayButton}
-        \li \mdash
-    \row
-        \li \l [QML QtQuickExtras] {Dial}
-        \li \l [QML QtQuickControls2] {Dial}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {Drawer}
+        \li
+        \li \list
+                \li \b {Qt Quick Controls 2}: \c ComboBox is not editable.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {ExclusiveGroup}
-        \li \l [QML QtQuickControls2] {ButtonGroup}
-    \row
         \li \mdash
-        \li \l [QML QtQuickControls2] {Frame}
-    \row
-        \li \l [QML QtQuickExtras] {Gauge}
-        \li \mdash
+        \li \l [QML QtQuickControls2] {ButtonGroup} \br\sup {(Qt Quick Controls 2)}
+        \li \list
+                \li \b {Qt Quick Controls 2}: \c ButtonGroup offers similar functionality.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {GroupBox}
         \li \l [QML QtQuickControls2] {GroupBox}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {ItemDelegate}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {Label}
         \li \l [QML QtQuickControls2] {Label}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {Menu}
         \li \l [QML QtQuickControls2] {Menu}
+        \li \l [QML QtLabsPlatform] {Menu} \br\sup {(Qt Labs Platform)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c Menu is native on platforms where an
+                    implementation is available in the Qt Platform Abstraction Layer.
+                    Other platforms use a QML-based top-level menu popup window. \c Menu
+                    supports traditional desktop style cascading submenus, but does not
+                    work on Embedded Linux because \l EGLFS does not support multiple
+                    top-level windows.
+                \li \b {Qt Quick Controls 2}: \c Menu is a non-native \c Item-based popup
+                    that is stacked above the application content. Due to this, menu popups
+                    are restricted within window boundaries. \c Menu is fully customizable
+                    using QML and Qt Quick, and allows adding any \c Items. Traditional
+                    desktop oriented features, such as cascading submenus and visualizing
+                    keyboard shortcuts are missing.
+                \li \b {Qt Labs Platform}: \c Menu is an \e experimental native menu that
+                    uses Qt Widgets as a fallback on platforms where a native implementation
+                    is not available in the Qt Platform Abstraction Layer.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {MenuBar}
         \li \mdash
+        \li \l [QML QtLabsPlatform] {MenuBar} \br\sup {(Qt Labs Platform)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c MenuBar is native on platforms where an
+                    implementation is available in the Qt Platform Abstraction Layer. Other
+                    platforms use a QML-based menubar item stacked at the top of the window.
+                \li \b {Qt Labs Platform}: \c MenuBar is an \e experimental native menubar.
+                    It is only available on platforms where a native implementation is available
+                    in the Qt Platform Abstraction Layer.
+            \endlist
     \row
-        \li \l [QML QtQuickControls] {MenuItem}
-        \li \l [QML QtQuickControls2] {MenuItem}
-    \row
-        \li \l [QML QtQuickControls] {MenuSeparator}
-        \li \l [QML QtQuickControls2] {MenuSeparator}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {Page}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {PageIndicator}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {Pane}
-    \row
-        \li \l [QML QtQuickExtras] {Picture}
-        \li \mdash
-    \row
-        \li \l [QML QtQuickExtras] {PieMenu}
-        \li \mdash
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {Popup}
+        \li \l [QML QtQuickControls] {MenuItem},\br
+            \l [QML QtQuickControls] {MenuSeparator}
+        \li \l [QML QtQuickControls2] {MenuItem},\br
+            \l [QML QtQuickControls2] {MenuSeparator}
+        \li \l [QML QtLabsPlatform] {MenuItem},\br
+            \l [QML QtLabsPlatform] {MenuSeparator} \br\sup {(Qt Labs Platform)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c MenuItem and \c MenuSeparator are native
+                    on platforms where an implementation is available in the Qt Platform
+                    Abstraction Layer. Other platforms use QML-based menu items and separators.
+                \li \b {Qt Quick Controls 2}: \c MenuItem and \c MenuSeparator are a non-native
+                    QML-based menu items and separators that can be fully customized using QML
+                    and Qt Quick.
+                \li \b {Qt Labs Platform}: \c MenuItem and \c MenuSeparator are \e experimental
+                    native menu items and separators.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {ProgressBar}
         \li \l [QML QtQuickControls2] {ProgressBar}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {RadioButton}
         \li \l [QML QtQuickControls2] {RadioButton}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {RadioDelegate}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {RangeSlider}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {ScrollView}
-        \li \l [QML QtQuickControls2] {ScrollBar},
-            \l [QML QtQuickControls2] {ScrollIndicator}
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ScrollBar},\br
+            \l [QML QtQuickControls2] {ScrollIndicator} \br\sup {(Qt Quick Controls 2)}
+        \li \list
+                \li \b {Qt Quick Controls 2}: \c ScrollBar and \c ScrollIndicator offer
+                    similar functionality. They can be attached to any \c Flickable to
+                    build scrollable views.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {Slider}
         \li \l [QML QtQuickControls2] {Slider}
-    \row
-        \li \l [QML QtQuickControls] {SplitView}
-        \li \mdash
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {SpinBox}
         \li \l [QML QtQuickControls2] {SpinBox}
+        \li
+        \li
     \row
-        \li \l [QML QtQuickControls] {StackView},
-            \l [QML QtQuickControls] {StackViewDelegate},
+        \li \l [QML QtQuickControls] {SplitView}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickControls] {StackView},\br
+            \l [QML QtQuickControls] {StackViewDelegate},\br
             \l [QML QtQuickControls] {Stack}
         \li \l [QML QtQuickControls2] {StackView}
+        \li
+        \li \list
+                \li \b {Qt Quick Controls 2}: \c StackView provides customizable transitions
+                    and attached properties via a single \c StackView type.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {StatusBar}
         \li \mdash
-    \row
-        \li \l [QML QtQuickExtras] {StatusIndicator}
-        \li \mdash
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {SwipeDelegate}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {SwipeView}
+        \li \l [QML QtQuickControls2] {ToolBar} \br\sup {(Qt Quick Controls 2)}
+        \li \list
+                \li \b {Qt Quick Controls 2}: \c ApplicationWindow allows assigning any
+                    item or control, such as \c ToolBar, as a header or footer.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {Switch}
         \li \l [QML QtQuickControls2] {Switch}
+        \li
+        \li
     \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {SwitchDelegate}
-    \row
-        \li \l [QML QtQuickControls] {TabView},
+        \li \l [QML QtQuickControls] {TabView},\br
             \l [QML QtQuickControls] {Tab}
-        \li \l [QML QtQuickControls2] {TabBar},
-            \l [QML QtQuickControls2] {TabButton}
+        \li \mdash
+        \li \l [QML QtQuickControls2] {TabBar},\br
+            \l [QML QtQuickControls2] {TabButton} \br\sup {(Qt Quick Controls 2)}
+        \li \list
+                \li \b {Qt Quick Controls 2}: \c TabBar and \c TabButton offer similar
+                    functionality, and can be used to build tabbed views.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {TableView}
         \li \mdash
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {TextArea}
         \li \l [QML QtQuickControls2] {TextArea}
+        \li
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c TextArea inherits \c ScrollView and is therefore
+                    always a scrollable editor.
+                \li \b {Qt Quick Controls 2}: \c TextArea is a simpler multi-line editor that can
+                    be optionally attached to a \c Flickable to provide scrolling functionality.
+                    This allows using \c TextArea in a scrollable page without having two nested
+                    scrollable areas, which can be problematic and cause usability issues.
+            \endlist
     \row
         \li \l [QML QtQuickControls] {TextField}
         \li \l [QML QtQuickControls2] {TextField}
-    \row
-        \li \l [QML QtQuickExtras] {ToggleButton}
-        \li \mdash
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {ToolBar}
         \li \l [QML QtQuickControls2] {ToolBar}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {ToolButton}
         \li \l [QML QtQuickControls2] {ToolButton}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {ToolSeparator}
-    \row
-        \li \mdash
-        \li \l [QML QtQuickControls2] {ToolTip}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {TreeView}
         \li \mdash
+        \li
+        \li
+
+    \header
+        \li Qt Quick Dialogs
+        \li Qt Quick Controls 2
+        \li Alternatives
+        \li Remarks
     \row
-        \li \l [QML QtQuickExtras] {Tumbler},
+        \li \l [QML QtQuickDialogs] {Dialog}
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Dialog}
+        \li \list
+                \li \b {Qt Quick Dialogs}: \c Dialog is either a top-level window or an \c Item-based popup
+                    depending on whether the underlying platform supports multiple top-level windows.
+                \li \b {Qt Quick Controls 2}: \c Dialog is not a top-level window, but an \c Item-based
+                    popup that is stacked above the application content. Due to this, dialogs are restricted
+                    within window boundaries.
+            \endlist
+    \row
+        \li \l [QML QtQuickDialogs] {ColorDialog},\br
+            \l [QML QtQuickDialogs] {FileDialog},\br
+            \l [QML QtQuickDialogs] {FontDialog},\br
+            \l [QML QtQuickDialogs] {MessageDialog}
+        \li \mdash
+        \li \l [QML QtLabsPlatform] {ColorDialog},\br
+            \l [QML QtLabsPlatform] {FileDialog},\br
+            \l [QML QtLabsPlatform] {FolderDialog},\br
+            \l [QML QtLabsPlatform] {FontDialog},\br
+            \l [QML QtLabsPlatform] {MessageDialog} \br\sup {(Qt Labs Platform)}
+        \li \list
+                \li \b {Qt Quick Dialogs}: Dialogs are native on platforms where an implementation
+                    is available in the Qt Platform Abstraction Layer. Other platforms use either
+                    Qt Widgets or QML-based dialogs depending on whether the underlying platform
+                    supports multiple top-level windows.
+                \li \b {Qt Labs Platform}: \e Experimental native dialogs that use Qt Widgets as
+                    a fallback on platforms where a native implementation is not available in the
+                    Qt Platform Abstraction Layer.
+            \endlist
+
+    \header
+        \li Qt Quick Extras
+        \li Qt Quick Controls 2
+        \li Alternatives
+        \li Remarks
+    \row
+        \li \l [QML QtQuickExtras] {CircularGauge}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {DelayButton}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {Dial}
+        \li \l [QML QtQuickControls2] {Dial}
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {Gauge}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {Picture}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {PieMenu}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {StatusIndicator}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {ToggleButton}
+        \li \mdash
+        \li
+        \li
+    \row
+        \li \l [QML QtQuickExtras] {Tumbler},\br
             \l [QML QtQuickExtras] {TumblerColumn}
         \li \l [QML QtQuickControls2] {Tumbler}
+        \li
+        \li \list
+                \li \b {Qt Quick Extras}: \c Tumbler can consist of multiple columns.
+                \li \b {Qt Quick Controls 2}: \c Tumbler presents a single spinnable wheel.
+                    Multiple columns can be created by placing multiple \c Tumblers next
+                    to each other.
+            \endlist
+
+    \header
+        \li No Predecessor
+        \li Qt Quick Controls 2
+        \li Alternatives
+        \li Remarks
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {AbstractButton}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ButtonGroup}
+        \li \l [QML QtQuickControls] {ExclusiveGroup} \br\sup {(Qt Quick Controls 1)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c ExclusiveGroup offers similar functionality.
+            \endlist
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {CheckDelegate}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Container}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Control}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Drawer}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Frame}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ItemDelegate}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Page}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {PageIndicator}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Pane}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {Popup}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {RadioDelegate}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {RangeSlider}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {RoundButton}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ScrollBar},\br
+            \l [QML QtQuickControls2] {ScrollIndicator}
+        \li \l [QML QtQuickControls] {ScrollView} \br\sup {(Qt Quick Controls 1)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c ScrollView offers similar functionality.
+                    It combines horizontal and vertical scrollbars, and the background and
+                    frame around the scrollable view.
+            \endlist
+    \row
+        \li \mdash
+        \li \mdash
+        \li \l [QML QtLabsPlatform] {StandardPaths} \br\sup {(Qt Labs Platform)}
+        \li \list
+                \li \b {Qt Quick Dialogs}: \c FileDialog offers a shortcut property that can be used
+                    to access the most common standard paths.
+                \li \b {Qt Labs Platform}: \c StandardPaths offers a separate type to give full access
+                    to the standard paths.
+            \endlist
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {SwipeDelegate}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {SwipeView}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {SwitchDelegate}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \mdash
+        \li \l [QML QtLabsPlatform] {SystemTrayIcon} \br\sup {(Qt Labs Platform)}
+        \li \list
+                \li \b {Qt Labs Platform}: \c SystemTrayIcon is an \e experimental native
+                    system tray icon that uses Qt Widgets as a fallback on platforms where
+                    a native implementation is not available in the Qt Platform Abstraction
+                    Layer.
+            \endlist
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {TabBar},\br
+            \l [QML QtQuickControls2] {TabButton}
+        \li \l [QML QtQuickControls] {TabView} \br\sup {(Qt Quick Controls 1)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c TabView offers similar functionality.
+                    It combines the tab bar, background and frame around the tabs.
+            \endlist
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ToolSeparator}
+        \li
+        \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ToolTip}
+        \li
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c Button and \c Action have built-in
+                    Qt Widgets-based tooltips.
+                \li \b {Qt Quick Controls 2}: \c ToolTip can be attached to any \c Item.
+            \endlist
     \endtable
 
     \section1 Related Information
@@ -373,5 +669,7 @@
       \li \l{Qt Quick Controls 2 QML Types}
       \li \l{Qt Quick Controls QML Types}
       \li \l{Qt Quick Extras QML Types}
+      \li \l{Qt Labs Calendar QML Types}
+      \li \l{Qt Labs Platform QML Types}
     \endlist
 */
