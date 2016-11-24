@@ -1164,11 +1164,41 @@ void InstructionSelection::convertTypeToBool(IR::Expr *source, IR::Expr *target)
         _as->storeBool(false, target);
         break;
     case IR::StringType:
+        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
+                            Assembler::PointerToValue(source));
+        _as->storeBool(Assembler::ReturnValueRegister, target);
     case IR::VarType:
     default:
+        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer tagAddr = addr;
+        tagAddr.offset += 4;
+        _as->load32(tagAddr, Assembler::ReturnValueRegister);
+
+        // checkif it's a bool:
+        Assembler::Jump notBool = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
+                                                Assembler::TrustedImm32(Value::Boolean_Type_Internal));
+        _as->load32(addr, Assembler::ReturnValueRegister);
+        Assembler::Jump boolDone = _as->jump();
+        // check if it's an int32:
+        notBool.link(_as);
+        Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
+                                                 Assembler::TrustedImm32(Value::Integer_Type_Internal));
+        _as->load32(addr, Assembler::ReturnValueRegister);
+        Assembler::Jump isZero = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister,
+                                               Assembler::TrustedImm32(0));
+        _as->move(Assembler::TrustedImm32(1), Assembler::ReturnValueRegister);
+        Assembler::Jump intDone = _as->jump();
+
+        // not an int:
+        fallback.link(_as);
         generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
-                             Assembler::PointerToValue(source));
+                            Assembler::PointerToValue(source));
+
+        isZero.link(_as);
+        intDone.link(_as);
+        boolDone.link(_as);
         _as->storeBool(Assembler::ReturnValueRegister, target);
+
         break;
     }
 }
