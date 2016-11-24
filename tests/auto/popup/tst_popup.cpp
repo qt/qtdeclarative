@@ -71,6 +71,7 @@ private slots:
     void wheel();
     void parentDestroyed();
     void nested();
+    void grabber();
 };
 
 void tst_popup::visible_data()
@@ -667,6 +668,57 @@ void tst_popup::nested()
 
     QTRY_COMPARE(modelessPopup->isVisible(), false);
     QCOMPARE(modalPopup->isVisible(), true);
+}
+
+// QTBUG-56697
+void tst_popup::grabber()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *menu = window->property("menu").value<QQuickPopup *>();
+    QVERIFY(menu);
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    QQuickPopup *combo = window->property("combo").value<QQuickPopup *>();
+    QVERIFY(combo);
+
+    menu->open();
+    QCOMPARE(menu->isVisible(), true);
+    QCOMPARE(popup->isVisible(), false);
+    QCOMPARE(combo->isVisible(), false);
+
+    // click a menu item to open the popup
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(menu->width() / 2, menu->height() / 2));
+    QCOMPARE(menu->isVisible(), false);
+    QCOMPARE(popup->isVisible(), true);
+    QCOMPARE(combo->isVisible(), false);
+
+    combo->open();
+    QCOMPARE(menu->isVisible(), false);
+    QCOMPARE(popup->isVisible(), true);
+    QCOMPARE(combo->isVisible(), true);
+
+    // click outside to close both the combo popup and the parent popup
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - 1, window->height() - 1));
+    QCOMPARE(menu->isVisible(), false);
+    QCOMPARE(popup->isVisible(), false);
+    QCOMPARE(combo->isVisible(), false);
+
+    menu->open();
+    QCOMPARE(menu->isVisible(), true);
+    QCOMPARE(popup->isVisible(), false);
+    QCOMPARE(combo->isVisible(), false);
+
+    // click outside the menu to close it (QTBUG-56697)
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - 1, window->height() - 1));
+    QCOMPARE(menu->isVisible(), false);
+    QCOMPARE(popup->isVisible(), false);
+    QCOMPARE(combo->isVisible(), false);
 }
 
 QTEST_MAIN(tst_popup)

@@ -193,6 +193,13 @@ void QQuickOverlayPrivate::removePopup(QQuickPopup *popup)
         q->setVisible(!allDrawers.isEmpty() || !q->childItems().isEmpty());
 }
 
+void QQuickOverlayPrivate::setMouseGrabberPopup(QQuickPopup *popup)
+{
+    if (popup && !popup->isVisible())
+        popup = nullptr;
+    mouseGrabberPopup = popup;
+}
+
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
@@ -326,7 +333,7 @@ void QQuickOverlay::mousePressEvent(QMouseEvent *event)
         for (QQuickDrawer *drawer : drawers) {
             QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
             if (p->startDrag(window(), event)) {
-                d->mouseGrabberPopup = drawer;
+                d->setMouseGrabberPopup(drawer);
                 return;
             }
         }
@@ -336,7 +343,7 @@ void QQuickOverlay::mousePressEvent(QMouseEvent *event)
         const auto popups = d->stackingOrderPopups();
         for (QQuickPopup *popup : popups) {
             if (popup->overlayEvent(this, event)) {
-                d->mouseGrabberPopup = popup;
+                d->setMouseGrabberPopup(popup);
                 return;
             }
         }
@@ -359,7 +366,7 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
 
     if (d->mouseGrabberPopup) {
         d->mouseGrabberPopup->overlayEvent(this, event);
-        d->mouseGrabberPopup = nullptr;
+        d->setMouseGrabberPopup(nullptr);
     } else {
         const auto popups = d->stackingOrderPopups();
         for (QQuickPopup *popup : popups) {
@@ -405,7 +412,7 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             case QEvent::MouseButtonPress:
                 emit pressed();
                 if (popup->overlayEvent(item, event)) {
-                    d->mouseGrabberPopup = popup;
+                    d->setMouseGrabberPopup(popup);
                     return true;
                 }
                 break;
@@ -413,7 +420,7 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
                 return popup->overlayEvent(item, event);
             case QEvent::MouseButtonRelease:
                 emit released();
-                d->mouseGrabberPopup = nullptr;
+                d->setMouseGrabberPopup(nullptr);
                 return popup->overlayEvent(item, event);
             default:
                 break;
