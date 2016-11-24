@@ -374,17 +374,17 @@ public:
     QML_NEARLY_ALWAYS_INLINE String *stringValue() const {
         if (!isString())
             return nullptr;
-        return m() ? reinterpret_cast<String*>(const_cast<Value *>(this)) : 0;
+        return reinterpret_cast<String*>(const_cast<Value *>(this));
     }
     QML_NEARLY_ALWAYS_INLINE Object *objectValue() const {
         if (!isObject())
             return nullptr;
-        return m() ? reinterpret_cast<Object*>(const_cast<Value *>(this)) : 0;
+        return reinterpret_cast<Object*>(const_cast<Value *>(this));
     }
     QML_NEARLY_ALWAYS_INLINE Managed *managed() const {
         if (!isManaged())
             return nullptr;
-        return m() ? reinterpret_cast<Managed*>(const_cast<Value *>(this)) : 0;
+        return reinterpret_cast<Managed*>(const_cast<Value *>(this));
     }
     QML_NEARLY_ALWAYS_INLINE Heap::Base *heapObject() const {
         return isManaged() ? m() : nullptr;
@@ -420,7 +420,7 @@ public:
 
     template <typename T>
     const T *as() const {
-        if (!m() || !isManaged())
+        if (!isManaged())
             return 0;
 
         Q_ASSERT(m()->vtable());
@@ -487,13 +487,13 @@ inline bool Value::isString() const
 {
     if (!isManaged())
         return false;
-    return m() && m()->vtable()->isString;
+    return m()->vtable()->isString;
 }
 inline bool Value::isObject() const
 {
     if (!isManaged())
         return false;
-    return m() && m()->vtable()->isObject;
+    return m()->vtable()->isObject;
 }
 
 inline bool Value::isPrimitive() const

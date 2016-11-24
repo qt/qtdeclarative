@@ -345,11 +345,11 @@ ReturnedValue Lookup::getterFallback(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getter0(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass())
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass)
             return o->propertyData(l->index)->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
@@ -357,25 +357,24 @@ ReturnedValue Lookup::getter0(Lookup *l, ExecutionEngine *engine, const Value &o
 
 ReturnedValue Lookup::getter1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index)->asReturnedValue();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass && l->classList[1] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index)->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
 }
 
 ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass()) {
-            Heap::Object *p = o->prototype();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass) {
+            Heap::Object *p = o->prototype;
             if (l->classList[1] == p->internalClass) {
                 p = p->prototype;
                 if (l->classList[2] == p->internalClass)
@@ -389,13 +388,13 @@ ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const Value &o
 
 ReturnedValue Lookup::getter0getter0(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass())
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass)
             return o->propertyData(l->index)->asReturnedValue();
-        if (l->classList[2] == o->internalClass())
+        if (l->classList[2] == o->internalClass)
             return o->propertyData(l->index2)->asReturnedValue();
     }
     l->getter = getterFallback;
@@ -404,15 +403,14 @@ ReturnedValue Lookup::getter0getter0(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getter0getter1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass())
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass)
             return o->propertyData(l->index)->asReturnedValue();
-        if (l->classList[2] == o->internalClass() &&
-            l->classList[3] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index2)->asReturnedValue();
+        if (l->classList[2] == o->internalClass && l->classList[3] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index2)->asReturnedValue();
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -420,16 +418,16 @@ ReturnedValue Lookup::getter0getter1(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getter1getter1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index)->asReturnedValue();
-        if (l->classList[2] == o->internalClass() &&
-            l->classList[3] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index2)->asReturnedValue();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index)->asReturnedValue();
+        if (l->classList[2] == o->internalClass &&
+            l->classList[3] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index2)->asReturnedValue();
         return getterFallback(l, engine, object);
     }
     l->getter = getterFallback;
@@ -439,12 +437,12 @@ ReturnedValue Lookup::getter1getter1(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass()) {
-            Scope scope(o->engine());
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass) {
+            Scope scope(o->internalClass->engine);
             ScopedFunctionObject getter(scope, o->propertyData(l->index + Object::GetterOffset));
             if (!getter)
                 return Encode::undefined();
@@ -461,10 +459,10 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const 
 
 ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Heap::Object *o = object.objectValue()->d();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype->internalClass) {
             Scope scope(o->internalClass->engine);
@@ -484,10 +482,10 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
 
 ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Heap::Object *o = object.objectValue()->d();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
         if (l->classList[0] == o->internalClass) {
             o = o->prototype;
             if (l->classList[1] == o->internalClass) {

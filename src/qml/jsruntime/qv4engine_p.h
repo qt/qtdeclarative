@@ -584,9 +584,6 @@ void Heap::Base::mark(QV4::ExecutionEngine *engine)
 
 inline void Value::mark(ExecutionEngine *e)
 {
-    if (!isManaged())
-        return;
-
     Heap::Base *o = heapObject();
     if (o)
         o->mark(e);

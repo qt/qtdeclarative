@@ -885,14 +885,16 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 
 static bool js_equal(const QString &string, const QV4::Value &value)
 {
-    if (value.isString())
-        return string == value.stringValue()->toQString();
+    String *s = value.stringValue();
+    if (s)
+        return string == s->toQString();
     if (value.isNumber())
         return RuntimeHelpers::stringToNumber(string) == value.asDouble();
     if (value.isBoolean())
         return RuntimeHelpers::stringToNumber(string) == double(value.booleanValue());
-    if (value.isObject()) {
-        Scope scope(value.objectValue()->engine());
+    Object *o = value.objectValue();
+    if (o) {
+        Scope scope(o->engine());
         ScopedValue p(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
         return js_equal(string, p);
     }

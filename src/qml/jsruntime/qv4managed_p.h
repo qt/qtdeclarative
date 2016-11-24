@@ -215,14 +215,12 @@ private:
 
 template<>
 inline const Managed *Value::as() const {
-    if (isManaged())
-        return managed();
-    return 0;
+    return managed();
 }
 
 template<>
 inline const Object *Value::as() const {
-    return isManaged() && m() && m()->vtable()->isObject ? objectValue() : 0;
+    return objectValue();
 }
 
 }
