@@ -1151,8 +1151,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return value.integerValue();
     if (value.isNumber())
         return value.asDouble();
-    if (value.isString()) {
-        const QString &str = value.toQString();
+    if (String *s = value.stringValue()) {
+        const QString &str = s->toQString();
         // QChars are stored as a strings
         if (typeHint == QVariant::Char && str.size() == 1)
             return str.at(0);
@@ -1591,8 +1591,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
         *reinterpret_cast<unsigned char*>(data) = (unsigned char)(value->toInt32());
         return true;
     case QMetaType::QChar:
-        if (value->isString()) {
-            QString str = value->stringValue()->toQString();
+        if (String *s = value->stringValue()) {
+            QString str = s->toQString();
             *reinterpret_cast<QChar*>(data) = str.isEmpty() ? QChar() : str.at(0);
         } else {
             *reinterpret_cast<QChar*>(data) = QChar(ushort(value->toUInt16()));

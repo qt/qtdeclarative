@@ -492,8 +492,8 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
         else
             return engine->id_false()->d();
     case Value::Managed_Type:
-        if (value.isString())
-            return value.stringValue()->d();
+        if (String *s = value.stringValue())
+            return s->d();
         {
             Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, STRING_HINT));
@@ -523,8 +523,8 @@ static Heap::String *convert_to_string_add(ExecutionEngine *engine, const Value 
         else
             return engine->id_false()->d();
     case Value::Managed_Type:
-        if (value.isString())
-            return value.stringValue()->d();
+        if (String *s = value.stringValue())
+            return s->d();
         {
             Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
@@ -543,19 +543,25 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
 
     ScopedValue pleft(scope, RuntimeHelpers::toPrimitive(left, PREFERREDTYPE_HINT));
     ScopedValue pright(scope, RuntimeHelpers::toPrimitive(right, PREFERREDTYPE_HINT));
-    if (pleft->isString() || pright->isString()) {
-        if (!pleft->isString())
+    String *sleft = pleft->stringValue();
+    String *sright = pright->stringValue();
+    if (sleft || sright) {
+        if (!sleft) {
             pleft = convert_to_string_add(engine, pleft);
-        if (!pright->isString())
+            sleft = static_cast<String *>(pleft.ptr);
+        }
+        if (!sright) {
             pright = convert_to_string_add(engine, pright);
+            sright = static_cast<String *>(pright.ptr);
+        }
         if (scope.engine->hasException)
             return Encode::undefined();
-        if (!pleft->stringValue()->d()->length())
-            return pright->asReturnedValue();
-        if (!pright->stringValue()->d()->length())
-            return pleft->asReturnedValue();
+        if (!sleft->d()->length())
+            return sright->asReturnedValue();
+        if (!sright->d()->length())
+            return sleft->asReturnedValue();
         MemoryManager *mm = engine->memoryManager;
-        return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
+        return (mm->alloc<String>(mm, sleft->d(), sright->d()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -566,31 +572,28 @@ QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Valu
 {
     Q_ASSERT(left.isString() || right.isString());
 
-    if (left.isString() && right.isString()) {
-        if (!left.stringValue()->d()->length())
-            return right.asReturnedValue();
-        if (!right.stringValue()->d()->length())
-            return left.asReturnedValue();
-        MemoryManager *mm = engine->memoryManager;
-        return (mm->alloc<String>(mm, left.stringValue()->d(), right.stringValue()->d()))->asReturnedValue();
-    }
-
     Scope scope(engine);
     ScopedValue pleft(scope, left);
     ScopedValue pright(scope, right);
+    String *sleft = pleft->stringValue();
+    String *sright = pright->stringValue();
 
-    if (!pleft->isString())
-        pleft = convert_to_string_add(engine, left);
-    if (!pright->isString())
-        pright = convert_to_string_add(engine, right);
+    if (!sleft) {
+        pleft = convert_to_string_add(engine, pleft);
+        sleft = static_cast<String *>(pleft.ptr);
+    }
+    if (!sright) {
+        pright = convert_to_string_add(engine, pright);
+        sright = static_cast<String *>(pright.ptr);
+    }
     if (scope.engine->hasException)
         return Encode::undefined();
-    if (!pleft->stringValue()->d()->length())
+    if (!sleft->d()->length())
         return pright->asReturnedValue();
-    if (!pright->stringValue()->d()->length())
+    if (!sright->d()->length())
         return pleft->asReturnedValue();
     MemoryManager *mm = engine->memoryManager;
-    return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
+    return (mm->alloc<String>(mm, sleft->d(), sright->d()))->asReturnedValue();
 }
 
 void Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
@@ -787,12 +790,14 @@ QV4::Bool Runtime::method_compareGreaterThan(const Value &l, const Value &r)
         return l.integerValue() > r.integerValue();
     if (l.isNumber() && r.isNumber())
         return l.asDouble() > r.asDouble();
-    if (l.isString() && r.isString()) {
+    String *sl = l.stringValue();
+    String *sr = r.stringValue();
+    if (sl && sr) {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return r.stringValue()->compare(l.stringValue());
+        return sr->compare(sl);
 #endif
     }
 
@@ -820,12 +825,14 @@ QV4::Bool Runtime::method_compareLessThan(const Value &l, const Value &r)
         return l.integerValue() < r.integerValue();
     if (l.isNumber() && r.isNumber())
         return l.asDouble() < r.asDouble();
-    if (l.isString() && r.isString()) {
+    String *sl = l.stringValue();
+    String *sr = r.stringValue();
+    if (sl && sr) {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return l.stringValue()->compare(r.stringValue());
+        return sl->compare(sr);
 #endif
     }
 
@@ -853,12 +860,14 @@ QV4::Bool Runtime::method_compareGreaterEqual(const Value &l, const Value &r)
         return l.integerValue() >= r.integerValue();
     if (l.isNumber() && r.isNumber())
         return l.asDouble() >= r.asDouble();
-    if (l.isString() && r.isString()) {
+    String *sl = l.stringValue();
+    String *sr = r.stringValue();
+    if (sl && sr) {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return !l.stringValue()->compare(r.stringValue());
+        return !sl->compare(sr);
 #endif
     }
 
@@ -886,12 +895,14 @@ QV4::Bool Runtime::method_compareLessEqual(const Value &l, const Value &r)
         return l.integerValue() <= r.integerValue();
     if (l.isNumber() && r.isNumber())
         return l.asDouble() <= r.asDouble();
-    if (l.isString() && r.isString()) {
+    String *sl = l.stringValue();
+    String *sr = r.stringValue();
+    if (sl && sr) {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return !r.stringValue()->compare(l.stringValue());
+        return !sr->compare(sl);
 #endif
     }
 

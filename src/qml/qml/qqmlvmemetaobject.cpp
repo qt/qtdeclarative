@@ -489,9 +489,9 @@ QString QQmlVMEMetaObject::readPropertyAsString(int id)
 
     QV4::Scope scope(cache->engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
-    if (!sv->isString())
-        return QString();
-    return sv->stringValue()->toQString();
+    if (QV4::String *s = sv->stringValue())
+        return s->toQString();
+    return QString();
 }
 
 QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)

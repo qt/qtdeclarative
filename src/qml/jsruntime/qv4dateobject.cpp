@@ -689,8 +689,8 @@ void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
         } else {
             arg = RuntimeHelpers::toPrimitive(arg, PREFERREDTYPE_HINT);
 
-            if (arg->isString())
-                t = ParseString(arg->stringValue()->toQString());
+            if (String *s = arg->stringValue())
+                t = ParseString(s->toQString());
             else
                 t = TimeClip(arg->toNumber());
         }

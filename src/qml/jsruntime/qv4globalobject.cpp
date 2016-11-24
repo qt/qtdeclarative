@@ -357,12 +357,13 @@ void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) c
         ctx = v4->pushGlobalContext();
     }
 
-    if (!callData->args[0].isString()) {
+    String *scode = callData->args[0].stringValue();
+    if (!scode) {
         scope.result = callData->args[0].asReturnedValue();
         return;
     }
 
-    const QString code = callData->args[0].stringValue()->toQString();
+    const QString code = scode->toQString();
     bool inheritContext = !ctx->d()->strictMode;
 
     Script script(ctx, code, QStringLiteral("eval code"));

@@ -505,10 +505,10 @@ void ListModel::set(int elementIndex, QV4::Object *object)
             break;
 
         // Add the value now
-        if (propertyValue->isString()) {
+        if (QV4::String *s = propertyValue->stringValue()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
             if (r.type == ListLayout::Role::String)
-                e->setStringPropertyFast(r, propertyValue->stringValue()->toQString());
+                e->setStringPropertyFast(r, s->toQString());
         } else if (propertyValue->isNumber()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
             if (r.type == ListLayout::Role::Number) {

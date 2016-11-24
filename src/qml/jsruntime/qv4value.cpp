@@ -88,8 +88,8 @@ bool Value::toBoolean() const
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
 #else
-        if (isString())
-            return stringValue()->toQString().length() > 0;
+        if (String *s = stringValue())
+            return s->toQString().length() > 0;
 #endif
         return true;
     default: // double
@@ -114,8 +114,8 @@ double Value::toNumberImpl() const
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
 #else
-        if (isString())
-            return RuntimeHelpers::stringToNumber(stringValue()->toQString());
+        if (String *s = stringValue())
+            return RuntimeHelpers::stringToNumber(s->toQString());
     {
         Q_ASSERT(isObject());
         Scope scope(objectValue()->engine());
@@ -150,8 +150,8 @@ QString Value::toQStringNoThrow() const
         else
             return QStringLiteral("false");
     case Value::Managed_Type:
-        if (isString())
-            return stringValue()->toQString();
+        if (String *s = stringValue())
+            return s->toQString();
         {
             Q_ASSERT(isObject());
             Scope scope(objectValue()->engine());
@@ -203,8 +203,8 @@ QString Value::toQString() const
         else
             return QStringLiteral("false");
     case Value::Managed_Type:
-        if (isString())
-            return stringValue()->toQString();
+        if (String *s = stringValue())
+            return s->toQString();
         {
             Q_ASSERT(isObject());
             Scope scope(objectValue()->engine());
@@ -228,8 +228,10 @@ QString Value::toQString() const
 bool Value::sameValue(Value other) const {
     if (_val == other._val)
         return true;
-    if (isString() && other.isString())
-        return stringValue()->isEqualTo(other.stringValue());
+    String *s = stringValue();
+    String *os = other.stringValue();
+    if (s && os)
+        return s->isEqualTo(os);
     if (isInteger() && other.isDouble())
         return int_32() ? (double(int_32()) == other.doubleValue()) : (other._val == 0);
     if (isDouble() && other.isInteger())
@@ -298,8 +300,8 @@ double Primitive::toInteger(double number)
 #ifndef V4_BOOTSTRAP
 Heap::String *Value::toString(ExecutionEngine *e) const
 {
-    if (isString())
-        return stringValue()->d();
+    if (String *s = stringValue())
+        return s->d();
     return RuntimeHelpers::convertToString(e, *this);
 }
 
@@ -330,8 +332,8 @@ uint Value::asArrayLength(bool *ok) const
         }
         return idx;
     }
-    if (isString())
-        return stringValue()->toUInt(ok);
+    if (String *s = stringValue())
+        return s->toUInt(ok);
 
     uint idx = toUInt32();
     double d = toNumber();
