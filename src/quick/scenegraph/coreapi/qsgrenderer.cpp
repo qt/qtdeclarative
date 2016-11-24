@@ -199,7 +199,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     bindable.bind();
     if (profileFrames)
         bindTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererBinding);
 
     // Sanity check that attribute registers are disabled
     if (qsg_sanity_check) {
@@ -217,7 +218,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     render();
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRendererFrame,
+                           QQuickProfiler::SceneGraphRendererRender);
 
     m_is_rendering = false;
     m_changed_emitted = false;
@@ -281,13 +283,15 @@ void QSGRenderer::preprocess()
     bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled();
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererPreprocess);
 
     nodeUpdater()->updateStates(root);
 
     if (profileFrames)
         updatePassTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererUpdate);
 }
 
 void QSGRenderer::addNodesToPreprocess(QSGNode *node)

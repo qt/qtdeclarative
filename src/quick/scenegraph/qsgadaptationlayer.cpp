@@ -179,7 +179,8 @@ void QSGDistanceFieldGlyphCache::update()
     int count = m_pendingGlyphs.size();
     if (profileFrames)
         renderTime = qsg_render_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphAdaptationLayerFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
+                              QQuickProfiler::SceneGraphAdaptationLayerGlyphRender);
 
     m_pendingGlyphs.reset();
 
@@ -200,6 +201,7 @@ void QSGDistanceFieldGlyphCache::update()
                 int((now - (renderTime / 1000000))));
     }
     Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
+                                        QQuickProfiler::SceneGraphAdaptationLayerGlyphStore,
                                         (qint64)count);
 }
 

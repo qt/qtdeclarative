@@ -64,37 +64,52 @@ QT_BEGIN_NAMESPACE
 #define Q_QUICK_PROFILE(feature, Method)\
     Q_QUICK_PROFILE_IF_ENABLED(feature, QQuickProfiler::Method)
 
+// Record current timestamp for \a Type at position 0.
 #define Q_QUICK_SG_PROFILE_START(Type)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
                                (QQuickProfiler::startSceneGraphFrame<Type>()))
 
-#define Q_QUICK_SG_PROFILE_RECORD(Type)\
+// Record current timestamp for \a Type at \a position.
+#define Q_QUICK_SG_PROFILE_RECORD(Type, position)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
-                               (QQuickProfiler::recordSceneGraphTimestamp<Type>()))
+                               (QQuickProfiler::recordSceneGraphTimestamp<Type>(position)))
 
-#define Q_QUICK_SG_PROFILE_SKIP(Type, Skip)\
+// Use the timestamp for \a Type at position \a position and repeat it \a Skip times in subsequent
+// positions.
+#define Q_QUICK_SG_PROFILE_SKIP(Type, position, Skip)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
-                               (QQuickProfiler::skipSceneGraphTimestamps<Type, Skip>()))
+                               (QQuickProfiler::skipSceneGraphTimestamps<Type, Skip>(position)))
 
+// Record current timestamp for both \a Type1 and \a Type2 at position 0.
 #define Q_QUICK_SG_PROFILE_START_SYNCHRONIZED(Type1, Type2)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
                                (QQuickProfiler::startSceneGraphFrame<Type1, Type2>()))
 
-#define Q_QUICK_SG_PROFILE_SWITCH(Type1, Type2) \
+// report \a Type1, using the current timestamp at \a position, and switch to \a Typ2, using
+// the current timestamp at position 0.
+#define Q_QUICK_SG_PROFILE_SWITCH(Type1, Type2, position)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
-                               (QQuickProfiler::reportSceneGraphFrame<Type1, true, Type2>()))
+                               (QQuickProfiler::reportSceneGraphFrame<Type1, true, Type2>(\
+                                    position)))
 
-#define Q_QUICK_SG_PROFILE_REPORT(Type)\
+// report \a Type, using data points 0 to \a position, including \a position.
+#define Q_QUICK_SG_PROFILE_REPORT(Type, position)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
-                               (QQuickProfiler::reportSceneGraphFrame<Type, false>()))
+                               (QQuickProfiler::reportSceneGraphFrame<Type, false>(position)))
 
-#define Q_QUICK_SG_PROFILE_END(Type)\
+// report \a Type, using data points 0 to \a position, including \a position, and setting the
+// timestamp at \a position to the current one.
+#define Q_QUICK_SG_PROFILE_END(Type, position)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
-                               (QQuickProfiler::reportSceneGraphFrame<Type, true>()))
+                               (QQuickProfiler::reportSceneGraphFrame<Type, true>(position)))
 
-#define Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(Type, Payload)\
+// report \a Type, using data points 0 to \a position, including \a position, and setting the
+// timestamp at \a position to the current one. Remaining data points up to position 5 are filled
+// with \a Payload.
+#define Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(Type, position, Payload)\
     Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileSceneGraph,\
-                               (QQuickProfiler::reportSceneGraphFrame<Type, true>(Payload)))
+                               (QQuickProfiler::reportSceneGraphFrame<Type, true>(position,\
+                                                                                  Payload)))
 
 
 #define Q_QUICK_INPUT_PROFILE(Method)\
@@ -173,7 +188,6 @@ private:
     template<uint size>
     struct TimingData {
         qint64 values[size][s_numSceneGraphTimings + 1];
-        int offsets[size];
     };
 
     QThreadStorage<TimingData<NumRenderThreadFrameTypes> > renderThreadTimings;
@@ -188,15 +202,6 @@ public:
         else
             return guiThreadTimings.values[type - NumRenderThreadFrameTypes];
     }
-
-    template<SceneGraphFrameType type>
-    int &offset()
-    {
-        if (type < NumRenderThreadFrameTypes)
-            return renderThreadTimings.localData().offsets[type];
-        else
-            return guiThreadTimings.offsets[type - NumRenderThreadFrameTypes];
-    }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QQmlAbstractProfilerAdapter {
@@ -206,6 +211,59 @@ public:
     enum AnimationThread {
         GuiThread,
         RenderThread
+    };
+
+    enum SceneGraphContextStage {
+        SceneGraphContextStart,
+        SceneGraphContextMaterialCompile
+    };
+
+    enum SceneGraphRendererStage {
+        SceneGraphRendererStart,
+        SceneGraphRendererPreprocess,
+        SceneGraphRendererUpdate,
+        SceneGraphRendererBinding,
+        SceneGraphRendererRender
+    };
+
+    enum SceneGraphAdaptationLayerStage {
+        SceneGraphAdaptationLayerStart,
+        SceneGraphAdaptationLayerGlyphRender,
+        SceneGraphAdaptationLayerGlyphStore
+    };
+
+    enum SceneGraphRenderLoopStage {
+        SceneGraphRenderLoopStart,
+        SceneGraphRenderLoopSync,
+        SceneGraphRenderLoopRender,
+        SceneGraphRenderLoopSwap
+    };
+
+    enum SceneGraphPolishStage {
+        SceneGraphPolishStart,
+        SceneGraphPolishPolish
+    };
+
+    enum SceneGraphPolishAndSyncStage {
+        SceneGraphPolishAndSyncStart,
+        SceneGraphPolishAndSyncPolish,
+        SceneGraphPolishAndSyncWait,
+        SceneGraphPolishAndSyncSync,
+        SceneGraphPolishAndSyncAnimations
+    };
+
+    enum SceneGraphTexturePrepareStage {
+        SceneGraphTexturePrepareStart,
+        SceneGraphTexturePrepareBind,
+        SceneGraphTexturePrepareConvert,
+        SceneGraphTexturePrepareSwizzle,
+        SceneGraphTexturePrepareUpload,
+        SceneGraphTexturePrepareMipmap
+    };
+
+    enum SceneGraphTextureDeletionStage {
+        SceneGraphTextureDeletionStart,
+        SceneGraphTextureDeletionDelete
     };
 
     template<EventType DetailType>
@@ -230,7 +288,6 @@ public:
     static void startSceneGraphFrame()
     {
         startSceneGraphFrame<FrameType1>();
-        s_instance->m_sceneGraphData.offset<FrameType2>() = 0;
         s_instance->m_sceneGraphData.timings<FrameType2>()[0] =
                 s_instance->m_sceneGraphData.timings<FrameType1>()[0];
     }
@@ -238,50 +295,45 @@ public:
     template<SceneGraphFrameType FrameType>
     static void startSceneGraphFrame()
     {
-        s_instance->m_sceneGraphData.offset<FrameType>() = 0;
         s_instance->m_sceneGraphData.timings<FrameType>()[0] = s_instance->timestamp();
     }
 
     template<SceneGraphFrameType FrameType>
-    static void recordSceneGraphTimestamp()
+    static void recordSceneGraphTimestamp(uint position)
     {
-        s_instance->m_sceneGraphData.timings<FrameType>()
-            [++s_instance->m_sceneGraphData.offset<FrameType>()] = s_instance->timestamp();
+        s_instance->m_sceneGraphData.timings<FrameType>()[position] = s_instance->timestamp();
     }
 
     template<SceneGraphFrameType FrameType, uint Skip>
-    static void skipSceneGraphTimestamps()
+    static void skipSceneGraphTimestamps(uint position)
     {
         qint64 *timings = s_instance->m_sceneGraphData.timings<FrameType>();
-        const qint64 last = timings[s_instance->m_sceneGraphData.offset<FrameType>()];
+        const qint64 last = timings[position];
         for (uint i = 0; i < Skip; ++i)
-            timings[++s_instance->m_sceneGraphData.offset<FrameType>()] = last;
+            timings[++position] = last;
     }
 
     template<SceneGraphFrameType FrameType, bool Record>
-    static void reportSceneGraphFrame(quint64 payload = ~0)
+    static void reportSceneGraphFrame(uint position, quint64 payload = ~0)
     {
         qint64 *timings = s_instance->m_sceneGraphData.timings<FrameType>();
-        int &offset = s_instance->m_sceneGraphData.offset<FrameType>();
         if (Record)
-            timings[++offset] = s_instance->timestamp();
+            timings[position] = s_instance->timestamp();
         s_instance->processMessage(QQuickProfilerData(
-                timings[offset], 1 << SceneGraphFrame, 1 << FrameType,
-                offset > 0 ? timings[1] - timings[0] : payload,
-                offset > 1 ? timings[2] - timings[1] : payload,
-                offset > 2 ? timings[3] - timings[2] : payload,
-                offset > 3 ? timings[4] - timings[3] : payload,
-                offset > 4 ? timings[5] - timings[4] : payload));
+                timings[position], 1 << SceneGraphFrame, 1 << FrameType,
+                position > 0 ? timings[1] - timings[0] : payload,
+                position > 1 ? timings[2] - timings[1] : payload,
+                position > 2 ? timings[3] - timings[2] : payload,
+                position > 3 ? timings[4] - timings[3] : payload,
+                position > 4 ? timings[5] - timings[4] : payload));
     }
 
     template<SceneGraphFrameType FrameType, bool Record, SceneGraphFrameType SwitchTo>
-    static void reportSceneGraphFrame(quint64 payload = ~0)
+    static void reportSceneGraphFrame(uint position, quint64 payload = ~0)
     {
-        reportSceneGraphFrame<FrameType, Record>(payload);
-        s_instance->m_sceneGraphData.offset<SwitchTo>() = 0;
+        reportSceneGraphFrame<FrameType, Record>(position, payload);
         s_instance->m_sceneGraphData.timings<SwitchTo>()[0] =
-                s_instance->m_sceneGraphData.timings<FrameType>()
-                [s_instance->m_sceneGraphData.offset<FrameType>()];
+                s_instance->m_sceneGraphData.timings<FrameType>()[position];
     }
 
     template<PixmapEventType PixmapState>
