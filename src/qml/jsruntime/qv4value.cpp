@@ -77,14 +77,13 @@ int Value::toUInt16() const
 
 bool Value::toBoolean() const
 {
-    switch (type()) {
-    case Value::Undefined_Type:
-    case Value::Null_Type:
+    if (isInteger() || isBoolean())
+        return static_cast<bool>(int_32());
+
+    if (isUndefined() || isNull())
         return false;
-    case Value::Boolean_Type:
-    case Value::Integer_Type:
-        return (bool)int_32();
-    case Value::Managed_Type:
+
+    if (isManaged()) {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
 #else
@@ -92,9 +91,10 @@ bool Value::toBoolean() const
             return s->toQString().length() > 0;
 #endif
         return true;
-    default: // double
-        return doubleValue() && !std::isnan(doubleValue());
     }
+
+    // double
+    return doubleValue() && !std::isnan(doubleValue());
 }
 
 double Value::toInteger() const
