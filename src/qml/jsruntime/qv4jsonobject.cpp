@@ -917,7 +917,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
                 Value *v = stringify.propertyList + i;
                 *v = o->getIndexed(i);
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
-                    *v = RuntimeHelpers::toString(scope.engine, *v);
+                    *v = v->toString(scope.engine);
                 if (!v->isString()) {
                     v->setM(0);
                 } else {

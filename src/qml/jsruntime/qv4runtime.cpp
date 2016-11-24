@@ -1367,29 +1367,6 @@ QV4::ReturnedValue Runtime::method_decrement(const Value &value)
     }
 }
 
-#ifndef V4_BOOTSTRAP
-
-QV4::ReturnedValue RuntimeHelpers::toString(ExecutionEngine *engine, const Value &value)
-{
-    if (value.isString())
-        return value.asReturnedValue();
-    return RuntimeHelpers::convertToString(engine, value)->asReturnedValue();
-}
-
-QV4::ReturnedValue RuntimeHelpers::toObject(ExecutionEngine *engine, const Value &value)
-{
-    if (value.isObject())
-        return value.asReturnedValue();
-
-    Heap::Object *o = RuntimeHelpers::convertToObject(engine, value);
-    if (!o) // type error
-        return Encode::undefined();
-
-    return Encode(o);
-}
-
-#endif // V4_BOOTSTRAP
-
 ReturnedValue Runtime::method_toDouble(const Value &value)
 {
     TRACE1(value);

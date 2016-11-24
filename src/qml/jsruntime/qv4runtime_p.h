@@ -106,10 +106,7 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static double toNumber(const Value &value);
     static void numberToString(QString *result, double num, int radix = 10);
 
-    static ReturnedValue toString(ExecutionEngine *engine, const Value &value);
     static Heap::String *convertToString(ExecutionEngine *engine, const Value &value);
-
-    static ReturnedValue toObject(ExecutionEngine *engine, const Value &value);
     static Heap::Object *convertToObject(ExecutionEngine *engine, const Value &value);
 
     static Bool equalHelper(const Value &x, const Value &y);

@@ -262,7 +262,7 @@ void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
     bool ignoreCase = false;
     bool multiLine = false;
     if (!f->isUndefined()) {
-        f = RuntimeHelpers::toString(scope.engine, f);
+        f = f->toString(scope.engine);
         if (scope.hasException()) {
             scope.result = Encode::undefined();
             return;
@@ -356,7 +356,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(0));
-    arg = RuntimeHelpers::toString(scope.engine, arg);
+    arg = arg->toString(scope.engine);
     if (scope.hasException())
         return Encode::undefined();
     QString s = arg->stringValue()->toQString();
