@@ -53,12 +53,14 @@ T.Drawer {
     enter: Transition { SmoothedAnimation { velocity: 5 } }
     exit: Transition { SmoothedAnimation { velocity: 5 } }
 
+    Material.elevation: 16
+
     background: Rectangle {
         color: control.Material.dialogColor
 
         layer.enabled: control.position > 0
         layer.effect: ElevationEffect {
-            elevation: 16
+            elevation: control.Material.elevation
             fullHeight: true
         }
     }
