@@ -69,7 +69,7 @@ QQuickDragHandler::~QQuickDragHandler()
 bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
 {
     // If we've already been interested in a point, stay interested, even if it has strayed outside bounds.
-    return ((point->state() != QQuickEventPoint::Pressed && currentPointId() == point->pointId())
+    return ((point->state() != QQuickEventPoint::Pressed && pointId() == point->pointId())
             || QQuickPointerSingleHandler::wantsEventPoint(point));
 }
 

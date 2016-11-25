@@ -58,33 +58,66 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
+    Q_PROPERTY(quint64 pointId READ pointId NOTIFY pointIdChanged)
+    Q_PROPERTY(QPointingDeviceUniqueId uniquePointId READ uniquePointId NOTIFY pointIdChanged)
+    Q_PROPERTY(QPointF pos READ pos NOTIFY eventPointHandled)
+    Q_PROPERTY(QPointF scenePos READ scenePos NOTIFY eventPointHandled)
+    Q_PROPERTY(QPointF pressPos READ pressPos NOTIFY pressedButtonsChanged)
+    Q_PROPERTY(QPointF scenePressPos READ scenePressPos NOTIFY pressedButtonsChanged)
+    Q_PROPERTY(QPointF sceneGrabPos READ sceneGrabPos NOTIFY singlePointGrabChanged)
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
+    Q_PROPERTY(QVector2D velocity READ velocity NOTIFY eventPointHandled)
+    Q_PROPERTY(qreal rotation READ rotation NOTIFY eventPointHandled)
+    Q_PROPERTY(qreal pressure READ pressure NOTIFY eventPointHandled)
+    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY eventPointHandled)
 
 public:
     QQuickPointerSingleHandler(QObject *parent = 0);
     virtual ~QQuickPointerSingleHandler() { }
 
     Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }
+    QPointF pressPos() const { return m_pressPos; }
+    QPointF scenePressPos() const { return parentItem()->mapToScene(m_pressPos); }
+    QPointF sceneGrabPos() const { return m_sceneGrabPos; }
+    QPointF pos() const { return m_pos; }
+    QPointF scenePos() const { return parentItem()->mapToScene(m_pos); }
+    QVector2D velocity() const { return m_velocity; }
+    qreal rotation() const { return m_rotation; }
+    qreal pressure() const { return m_pressure; }
+    QSizeF ellipseDiameters() const { return m_ellipseDiameters; }
+    QPointingDeviceUniqueId uniquePointId() const { return m_uniquePointId; }
 
 signals:
+    void pointIdChanged();
     void pressedButtonsChanged();
+    void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
+    void eventPointHandled();
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
     virtual bool wantsEventPoint(QQuickEventPoint *point);
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
-    quint64 currentPointId() const { return m_currentPointId; }
-    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
+    quint64 pointId() const { return m_pointId; }
+    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointId); }
     void handleGrabCancel(QQuickEventPoint *point) override;
     void onGrabChanged(QQuickEventPoint *point) override;
 
 private:
     void setPressedButtons(Qt::MouseButtons buttons);
+    void reset();
 
 private:
-    quint64 m_currentPointId;
+    quint64 m_pointId;
+    QPointingDeviceUniqueId m_uniquePointId;
     Qt::MouseButtons m_pressedButtons;
+    QPointF m_pos;
+    QPointF m_pressPos;
+    QPointF m_sceneGrabPos;
+    QVector2D m_velocity;
+    qreal m_rotation;
+    qreal m_pressure;
+    QSizeF m_ellipseDiameters;
 };
 
 QT_END_NAMESPACE

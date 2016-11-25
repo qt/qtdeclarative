@@ -5,9 +5,16 @@
         <file>map.qml</file>
         <file>mixer.qml</file>
         <file>pinchHandler.qml</file>
+        <file>singlePointHandlerProperties.qml</file>
         <file>content/Slider.qml</file>
+        <file>resources/arrowhead.png</file>
+        <file>resources/grabbing-location.svg</file>
         <file>resources/map.svgz</file>
         <file>resources/mixer-knob.png</file>
+        <file>resources/mouse.png</file>
+        <file>resources/mouse_left.png</file>
+        <file>resources/mouse_middle.png</file>
+        <file>resources/mouse_right.png</file>
         <file>resources/redball.png</file>
         <file>map2.qml</file>
     </qresource>

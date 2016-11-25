@@ -52,7 +52,9 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
 
 QQuickPointerSingleHandler::QQuickPointerSingleHandler(QObject *parent)
   : QQuickPointerDeviceHandler(parent)
-  , m_currentPointId(0)
+  , m_pointId(0)
+  , m_rotation(0)
+  , m_pressure(0)
 {
 }
 
@@ -60,11 +62,11 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
-    if (m_currentPointId) {
+    if (m_pointId) {
         // We already know which one we want, so check whether it's there.
         // It's expected to be an update or a release.
         // If we no longer want it, cancel the grab.
-        if (auto point = event->pointById(m_currentPointId)) {
+        if (auto point = event->pointById(m_pointId)) {
             if (wantsEventPoint(point)) {
                 point->setAccepted();
                 return true;
@@ -72,45 +74,62 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
                 point->cancelGrab();
             }
         } else {
-            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << m_currentPointId
+            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << m_pointId
                 << "is missing from current event, but was neither canceled nor released";
             return false;
         }
     } else {
         // We have not yet chosen a point; choose the first one for which wantsEventPoint() returns true.
         int c = event->pointCount();
-        for (int i = 0; i < c && !m_currentPointId; ++i) {
+        for (int i = 0; i < c && !m_pointId; ++i) {
             QQuickEventPoint *p = event->point(i);
             if (!p->grabber() && wantsEventPoint(p)) {
-                m_currentPointId = p->pointId();
+                m_pointId = p->pointId();
                 p->setAccepted();
             }
         }
     }
-    return m_currentPointId;
+    return m_pointId;
 }
 
 void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
-    QQuickEventPoint *currentPoint = event->pointById(m_currentPointId);
+    QQuickEventPoint *currentPoint = event->pointById(m_pointId);
     Q_ASSERT(currentPoint);
-    if (!m_currentPointId || !currentPoint->isAccepted()) {
-        m_currentPointId = 0;
-        setPressedButtons(Qt::NoButton);
+    bool grab = false;
+    if (!m_pointId || !currentPoint->isAccepted() || currentPoint->state() == QQuickEventPoint::Released) {
+        reset();
+        grab = false;
     } else {
-        setPressedButtons(event->buttons());
-        handleEventPoint(currentPoint);
-        if (currentPoint->state() == QQuickEventPoint::Released) {
-            m_currentPointId = 0;
-            setPressedButtons(Qt::NoButton);
-            setGrab(currentPoint, false);
+        if (event->asPointerTouchEvent()) {
+            QQuickEventTouchPoint *tp = static_cast<QQuickEventTouchPoint *>(currentPoint);
+            m_uniquePointId = tp->uniqueId();
+            m_rotation = tp->rotation();
+            m_pressure = tp->pressure();
+            m_ellipseDiameters = tp->ellipseDiameters();
+        } else if (event->asPointerTabletEvent()) {
+            // TODO
+        } else {
+            m_uniquePointId = event->device()->uniqueId();
+            m_rotation = 0;
+            m_pressure = event->buttons() ? 1 : 0;
+            m_ellipseDiameters = QSizeF();
         }
+        m_pos = currentPoint->pos();
+        m_velocity = currentPoint->velocity();
+        handleEventPoint(currentPoint);
+        if (currentPoint->state() == QQuickEventPoint::Pressed) {
+            m_pressPos = currentPoint->pos();
+            emit pointIdChanged();
+        }
+        setPressedButtons(event->buttons());
+        grab = true;
     }
-    bool grab = currentPoint->isAccepted() && currentPoint->state() != QQuickEventPoint::Released;
+    emit eventPointHandled();
+    // TODO don't call setGrab(true) here, only setGrab(false), because concrete subclasses may
+    // wait for the drag threshold to be exceeded, for example
     setGrab(currentPoint, grab);
-    if (!grab)
-        m_currentPointId = 0;
 }
 
 bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
@@ -121,14 +140,16 @@ bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
 void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)
 {
     QQuickPointerHandler::handleGrabCancel(point);
-    m_currentPointId = 0;
-    setPressedButtons(Qt::NoButton);
+    reset();
 }
 
 void QQuickPointerSingleHandler::onGrabChanged(QQuickEventPoint *point)
 {
     bool grabbing = (point->grabber() == this);
     setActive(grabbing);
+    if (grabbing)
+        m_sceneGrabPos = point->sceneGrabPos();
+    emit singlePointGrabChanged();
 }
 
 void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
@@ -137,6 +158,23 @@ void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
         m_pressedButtons = buttons;
         emit pressedButtonsChanged();
     }
+}
+
+void QQuickPointerSingleHandler::reset()
+{
+    bool pointIdChange = m_pointId != 0;
+    m_pointId = 0;
+    m_uniquePointId = QPointingDeviceUniqueId();
+    m_pos = QPointF();
+    m_pressPos = QPointF();
+    m_sceneGrabPos = QPointF();
+    m_velocity = QVector2D();
+    m_rotation = 0;
+    m_pressure = 0;
+    m_ellipseDiameters = QSizeF();
+    setPressedButtons(Qt::NoButton);
+    if (pointIdChange)
+        emit pointIdChanged();
 }
 
 QT_END_NAMESPACE
