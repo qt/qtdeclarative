@@ -192,6 +192,8 @@ private slots:
     void withNoContext();
     void holeInPropertyData();
 
+    void malformedExpression();
+
 signals:
     void testSignal();
 };
@@ -3874,6 +3876,12 @@ void tst_QJSEngine::holeInPropertyData()
                 "o.bar === 0xffffffff && o.foo === 0x55555555;");
     QVERIFY(ok.isBool());
     QVERIFY(ok.toBool());
+}
+
+void tst_QJSEngine::malformedExpression()
+{
+    QJSEngine engine;
+    engine.evaluate("5%55555&&5555555\n7-0");
 }
 
 QTEST_MAIN(tst_QJSEngine)

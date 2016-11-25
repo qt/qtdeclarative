@@ -1857,11 +1857,6 @@ public:
         return *this;
     }
 
-    bool isEmpty() const
-    {
-        return worklistSize == 0;
-    }
-
     unsigned size() const
     {
         return worklistSize;
@@ -1869,7 +1864,7 @@ public:
 
     Stmt *takeNext(Stmt *last)
     {
-        if (isEmpty())
+        if (worklistSize == 0)
             return 0;
 
         const int startAt = last ? last->id() + 1 : 0;
@@ -1885,6 +1880,10 @@ public:
         --worklistSize;
         Stmt *s = stmts.at(pos);
         Q_ASSERT(s);
+
+        if (removed.at(s->id()))
+            return takeNext(s);
+
         return s;
     }
 
@@ -3857,9 +3856,7 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
     ExprReplacer replaceUses(defUses, function);
 
     Stmt *s = 0;
-    while (!W.isEmpty()) {
-        s = W.takeNext(s);
-        Q_ASSERT(s);
+    while ((s = W.takeNext(s))) {
 
         if (Phi *phi = s->asPhi()) {
             // dead code elimination:

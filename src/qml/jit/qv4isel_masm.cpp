@@ -1877,7 +1877,7 @@ bool InstructionSelection::visitCJumpStrictUndefined(IR::Binop *binop,
 
     Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
                                                                          : Assembler::NotEqual;
-    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
     Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
     _as->load64(addr, tagReg);
@@ -1976,7 +1976,7 @@ bool InstructionSelection::visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Bin
 
     Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
     tagAddr.offset += 4;
-    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
     _as->load32(tagAddr, tagReg);
 
     if (binop->op == IR::OpNotEqual)
