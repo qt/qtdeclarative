@@ -61,6 +61,8 @@
 #include <windows.ui.xaml.media.dxinterop.h>
 #endif
 
+#include <comdef.h>
+
 QT_BEGIN_NAMESPACE
 
 // NOTE: Avoid categorized logging. It is slow.
@@ -98,6 +100,19 @@ static const int BUCKETS_PER_HEAP = 8; // must match freeMap
 static const int DESCRIPTORS_PER_BUCKET = 32; // the bit map (freeMap) is quint32
 static const int MAX_DESCRIPTORS_PER_HEAP = BUCKETS_PER_HEAP * DESCRIPTORS_PER_BUCKET;
 
+static QString comErrorMessage(HRESULT hr)
+{
+#ifndef Q_OS_WINRT
+    const _com_error comError(hr);
+#else
+    const _com_error comError(hr, nullptr);
+#endif
+    QString result = QLatin1String("Error 0x") + QString::number(ulong(hr), 16);
+    if (const wchar_t *msg = comError.ErrorMessage())
+        result += QLatin1String(": ") + QString::fromWCharArray(msg);
+    return result;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12CPUDescriptorHeapManager::allocate(D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE h = {};
@@ -128,7 +143,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE QSGD3D12CPUDescriptorHeapManager::allocate(D3D12_DES
 
     HRESULT hr = m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap.heap));
     if (FAILED(hr)) {
-        qWarning("Failed to create heap with type 0x%x: %x", type, hr);
+        qWarning("Failed to create heap with type 0x%x: %s",
+                 type, qPrintable(comErrorMessage(hr)));
         return h;
     }
 
@@ -211,7 +227,8 @@ static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapte
                 *outAdapter = adapter.Detach();
                 return;
             } else {
-                qWarning("Failed to create device for requested adapter '%s': 0x%x", qPrintable(name), hr);
+                qWarning("Failed to create device for requested adapter '%s': %s",
+                         qPrintable(name), qPrintable(comErrorMessage(hr)));
             }
         }
     }
@@ -270,7 +287,7 @@ void QSGD3D12DeviceManager::ensureCreated()
 
     HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&m_factory));
     if (FAILED(hr)) {
-        qWarning("Failed to create DXGI: 0x%x", hr);
+        qWarning("Failed to create DXGI: %s", qPrintable(comErrorMessage(hr)));
         return;
     }
 
@@ -283,7 +300,7 @@ void QSGD3D12DeviceManager::ensureCreated()
         if (SUCCEEDED(hr))
             warp = false;
         else
-            qWarning("Failed to create device: 0x%x", hr);
+            qWarning("Failed to create device: %s", qPrintable(comErrorMessage(hr)));
     }
 
     if (warp) {
@@ -291,7 +308,7 @@ void QSGD3D12DeviceManager::ensureCreated()
         m_factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
         HRESULT hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
         if (FAILED(hr)) {
-            qWarning("Failed to create WARP device: 0x%x", hr);
+            qWarning("Failed to create WARP device: %s", qPrintable(comErrorMessage(hr)));
             return;
         }
     }
@@ -798,15 +815,18 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
             if (SUCCEEDED(hr)) {
                 hr = dcompDevice->CreateVisual(&dcompVisual);
                 if (FAILED(hr)) {
-                    qWarning("Failed to create DirectComposition visual: 0x%x", hr);
+                    qWarning("Failed to create DirectComposition visual: %s",
+                             qPrintable(comErrorMessage(hr)));
                     windowAlpha = false;
                 }
             } else {
-                qWarning("Failed to create DirectComposition target: 0x%x", hr);
+                qWarning("Failed to create DirectComposition target: %s",
+                         qPrintable(comErrorMessage(hr)));
                 windowAlpha = false;
             }
         } else {
-            qWarning("Failed to create DirectComposition device: 0x%x", hr);
+            qWarning("Failed to create DirectComposition device: %s",
+                     qPrintable(comErrorMessage(hr)));
             windowAlpha = false;
         }
     }
@@ -833,11 +853,13 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
                 if (SUCCEEDED(hr)) {
                     hr = dcompTarget->SetRoot(dcompVisual.Get());
                     if (FAILED(hr)) {
-                        qWarning("SetRoot failed for DirectComposition target: 0x%x", hr);
+                        qWarning("SetRoot failed for DirectComposition target: %s",
+                                 qPrintable(comErrorMessage(hr)));
                         windowAlpha = false;
                     }
                 } else {
-                    qWarning("SetContent failed for DirectComposition visual: 0x%x", hr);
+                    qWarning("SetContent failed for DirectComposition visual: %s",
+                             qPrintable(comErrorMessage(hr)));
                     windowAlpha = false;
                 }
             } else {
@@ -867,11 +889,12 @@ void QSGD3D12EnginePrivate::initialize(WId w, const QSize &size, float dpr, int 
         ComPtr<IDXGISwapChain> baseSwapChain;
         HRESULT hr = dev->dxgi()->CreateSwapChain(commandQueue.Get(), &swapChainDesc, &baseSwapChain);
         if (FAILED(hr)) {
-            qWarning("Failed to create swap chain: 0x%x", hr);
+            qWarning("Failed to create swap chain: %s", qPrintable(comErrorMessage(hr)));
             return;
         }
-        if (FAILED(baseSwapChain.As(&swapChain))) {
-            qWarning("Failed to cast swap chain");
+        hr = baseSwapChain.As(&swapChain);
+        if (FAILED(hr)) {
+            qWarning("Failed to cast swap chain: %s", qPrintable(comErrorMessage(hr)));
             return;
         }
     }
@@ -1165,7 +1188,7 @@ void QSGD3D12EnginePrivate::setWindowSize(const QSize &size, float dpr)
         deviceManager()->deviceLossDetected();
         return;
     } else if (FAILED(hr)) {
-        qWarning("Failed to resize buffers: 0x%x", hr);
+        qWarning("Failed to resize buffers: %s", qPrintable(comErrorMessage(hr)));
         return;
     }
 
@@ -1188,7 +1211,7 @@ QSGD3D12CPUWaitableFence *QSGD3D12EnginePrivate::createCPUWaitableFence() const
     QSGD3D12CPUWaitableFence *f = new QSGD3D12CPUWaitableFence;
     HRESULT hr = device->CreateFence(f->value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f->fence));
     if (FAILED(hr)) {
-        qWarning("Failed to create fence: 0x%x", hr);
+        qWarning("Failed to create fence: %s", qPrintable(comErrorMessage(hr)));
         return f;
     }
     f->event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -1202,7 +1225,7 @@ void QSGD3D12EnginePrivate::waitForGPU(QSGD3D12CPUWaitableFence *f) const
     if (f->fence->GetCompletedValue() < newValue) {
         HRESULT hr = f->fence->SetEventOnCompletion(newValue, f->event);
         if (FAILED(hr)) {
-            qWarning("SetEventOnCompletion failed: 0x%x", hr);
+            qWarning("SetEventOnCompletion failed: %s", qPrintable(comErrorMessage(hr)));
             return;
         }
         WaitForSingleObject(f->event, INFINITE);
@@ -1283,7 +1306,7 @@ ID3D12Resource *QSGD3D12EnginePrivate::createBuffer(int size)
     HRESULT hr = device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufDesc,
                                                  D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buf));
     if (FAILED(hr))
-        qWarning("Failed to create buffer resource: 0x%x", hr);
+        qWarning("Failed to create buffer resource: %s", qPrintable(comErrorMessage(hr)));
 
     return buf;
 }
@@ -1640,7 +1663,7 @@ void QSGD3D12EnginePrivate::endDrawCalls(bool lastInFrame)
     // Go!
     HRESULT hr = frameCommandList->Close();
     if (FAILED(hr)) {
-        qWarning("Failed to close command list: 0x%x", hr);
+        qWarning("Failed to close command list: %s", qPrintable(comErrorMessage(hr)));
         if (hr == E_INVALIDARG)
             qWarning("Invalid arguments. Some of the commands in the list is invalid in some way.");
     }
@@ -1874,7 +1897,8 @@ void QSGD3D12EnginePrivate::finalizePipeline(const QSGD3D12PipelineState &pipeli
 
         HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&cachedPso->pso));
         if (FAILED(hr)) {
-            qWarning("Failed to create graphics pipeline state");
+            qWarning("Failed to create graphics pipeline state: %s",
+                     qPrintable(comErrorMessage(hr)));
             return;
         }
 
@@ -2179,7 +2203,7 @@ void QSGD3D12EnginePrivate::present()
         deviceManager()->deviceLossDetected();
         return;
     } else if (FAILED(hr)) {
-        qWarning("Present failed: 0x%x", hr);
+        qWarning("Present failed: %s", qPrintable(comErrorMessage(hr)));
         return;
     }
 
@@ -2433,7 +2457,7 @@ void QSGD3D12EnginePrivate::createTexture(uint id, const QSize &size, QImage::Fo
     HRESULT hr = device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &textureDesc,
                                                  D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&t.texture));
     if (FAILED(hr)) {
-        qWarning("Failed to create texture resource: 0x%x", hr);
+        qWarning("Failed to create texture resource: %s", qPrintable(comErrorMessage(hr)));
         return;
     }
 
@@ -2498,7 +2522,8 @@ void QSGD3D12EnginePrivate::queueTextureResize(uint id, const QSize &size)
     HRESULT hr = device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &textureDesc,
                                                  D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&t.texture));
     if (FAILED(hr)) {
-        qWarning("Failed to create resized texture resource: 0x%x", hr);
+        qWarning("Failed to create resized texture resource: %s",
+                 qPrintable(comErrorMessage(hr)));
         return;
     }
 
@@ -2954,7 +2979,8 @@ void QSGD3D12EnginePrivate::createRenderTarget(uint id, const QSize &size, const
         HRESULT hr = device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &textureDesc,
                                                      D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&rt.colorResolve));
         if (FAILED(hr)) {
-            qWarning("Failed to create resolve buffer: 0x%x", hr);
+            qWarning("Failed to create resolve buffer: %s",
+                     qPrintable(comErrorMessage(hr)));
             return;
         }
 
