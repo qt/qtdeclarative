@@ -307,8 +307,8 @@ Heap::String *Value::toString(ExecutionEngine *e) const
 
 Heap::Object *Value::toObject(ExecutionEngine *e) const
 {
-    if (isObject())
-        return objectValue()->d();
+    if (Object *o = objectValue())
+        return o->d();
     return RuntimeHelpers::convertToObject(e, *this);
 }
 

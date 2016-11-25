@@ -206,6 +206,11 @@ public:
     bool markBit() const { return d()->isMarked(); }
 
     static void destroy(Heap::Base *) {}
+
+    Q_ALWAYS_INLINE Heap::Base *heapObject() const {
+        return m();
+    }
+
 private:
     friend class MemoryManager;
     friend struct Identifiers;

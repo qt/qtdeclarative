@@ -174,15 +174,15 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, const Value &index)
 {
     uint idx = index.asArrayIndex();
-    if (idx == UINT_MAX || !object.isObject())
-        return indexedGetterFallback(l, object, index);
-
-    Object *o = object.objectValue();
-    if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-        Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (idx < s->len)
-            if (!s->data(idx).isEmpty())
-                return s->data(idx).asReturnedValue();
+    if (idx != UINT_MAX) {
+        if (Object *o = object.objectValue()) {
+            if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
+                Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
+                if (idx < s->len)
+                    if (!s->data(idx).isEmpty())
+                        return s->data(idx).asReturnedValue();
+            }
+        }
     }
 
     return indexedGetterFallback(l, object, index);
@@ -190,8 +190,7 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
 
 void Lookup::indexedSetterGeneric(Lookup *l, const Value &object, const Value &index, const Value &v)
 {
-    if (object.isObject()) {
-        Object *o = object.objectValue();
+    if (Object *o = object.objectValue()) {
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex() < UINT_MAX) {
             l->indexedSetter = indexedSetterObjectInt;
             indexedSetterObjectInt(l, object, index, v);
@@ -228,17 +227,15 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
 void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value &index, const Value &v)
 {
     uint idx = index.asArrayIndex();
-    if (idx == UINT_MAX || !object.isObject()) {
-        indexedSetterGeneric(l, object, index, v);
-        return;
-    }
-
-    Object *o = object.objectValue();
-    if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-        Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (idx < s->len) {
-            s->data(idx) = v;
-            return;
+    if (idx != UINT_MAX) {
+        if (Object *o = object.objectValue()) {
+            if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
+                Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
+                if (idx < s->len) {
+                    s->data(idx) = v;
+                    return;
+                }
+            }
         }
     }
     indexedSetterFallback(l, object, index, v);

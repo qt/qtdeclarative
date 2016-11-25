@@ -1704,10 +1704,10 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
-        } else if (value->isObject()) {
+        } else if (Object *o = value->objectValue()) {
             // Look in the prototype chain.
             QV4::Scope scope(this);
-            QV4::ScopedObject proto(scope, value->objectValue()->prototype());
+            QV4::ScopedObject proto(scope, o->prototype());
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
