@@ -50,15 +50,32 @@ T.Drawer {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
+    topPadding: !dim && edge === Qt.BottomEdge && Material.elevation === 0
+    leftPadding: !dim && edge === Qt.RightEdge && Material.elevation === 0
+    rightPadding: !dim && edge === Qt.LeftEdge && Material.elevation === 0
+    bottomPadding: !dim && edge === Qt.TopEdge && Material.elevation === 0
+
     enter: Transition { SmoothedAnimation { velocity: 5 } }
     exit: Transition { SmoothedAnimation { velocity: 5 } }
+
+    Material.elevation: 16
 
     background: Rectangle {
         color: control.Material.dialogColor
 
+        Rectangle {
+            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
+            width: horizontal ? 1 : parent.width
+            height: horizontal ? parent.height : 1
+            color: control.Material.dividerColor
+            x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
+            y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
+            visible: !control.dim && control.Material.elevation === 0
+        }
+
         layer.enabled: control.position > 0
         layer.effect: ElevationEffect {
-            elevation: 16
+            elevation: control.Material.elevation
             fullHeight: true
         }
     }

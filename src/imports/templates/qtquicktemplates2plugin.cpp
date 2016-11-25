@@ -73,6 +73,7 @@
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquickspinbox_p.h>
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
+#include <QtQuickTemplates2/private/qquickswipe_p.h>
 #include <QtQuickTemplates2/private/qquickswipedelegate_p.h>
 #include <QtQuickTemplates2/private/qquickswipeview_p.h>
 #include <QtQuickTemplates2/private/qquickswitch_p.h>

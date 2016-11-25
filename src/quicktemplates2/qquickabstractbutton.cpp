@@ -555,7 +555,7 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     bool wasPressed = d->pressed;
     setPressed(false);
 
-    if (d->keepPressed || contains(event->pos()))
+    if (!d->wasHeld && (d->keepPressed || contains(event->pos())))
         nextCheckState();
 
     if (wasPressed) {

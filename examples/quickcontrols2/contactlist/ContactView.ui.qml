@@ -52,65 +52,36 @@ import QtQuick 2.7
 import QtQuick.Controls 2.1
 import Backend 1.0
 
-Page {
-    id: page
+ListView {
+    id: listView
 
-    signal addContact()
-    signal editContact(int index)
-    signal removeContact(int index)
-
-    property alias model: contactModel
+    signal pressAndHold(int index)
 
     width: 320
     height: 480
 
-    ListView {
-        id: listView
-        anchors.fill: parent
+    focus: true
+    boundsBehavior: Flickable.StopAtBounds
 
-        focus: true
-        boundsBehavior: Flickable.StopAtBounds
-
-        section.property: "fullName"
-        section.criteria: ViewSection.FirstCharacter
-        section.delegate: SectionDelegate {
-            width: listView.width
-        }
-
-        delegate: ContactDelegate {
-            id: delegate
-            width: listView.width
-
-            Connections {
-                target: delegate.edit
-                onClicked: page.editContact(index)
-            }
-
-            Connections {
-                target: delegate.remove
-                onClicked: page.removeContact(index)
-            }
-        }
-
-        model: ContactModel {
-            id: contactModel
-        }
-
-        ScrollBar.vertical: ScrollBar { }
+    section.property: "fullName"
+    section.criteria: ViewSection.FirstCharacter
+    section.delegate: SectionDelegate {
+        width: listView.width
     }
 
-    footer: ToolBar {
-        id: footer
+    delegate: ContactDelegate {
+        id: delegate
+        width: listView.width
 
-        ToolButton {
-            id: addButton
-            text: qsTr("Add Contact")
-            anchors.right: parent.right
-
-            Connections {
-                target: addButton
-                onClicked: page.addContact()
-            }
+        Connections {
+            target: delegate
+            onPressAndHold: listView.pressAndHold(index)
         }
     }
+
+    model: ContactModel {
+        id: contactModel
+    }
+
+    ScrollBar.vertical: ScrollBar { }
 }

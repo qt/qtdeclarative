@@ -59,7 +59,9 @@ HEADERS += \
     $$PWD/qquickstacktransition_p_p.h \
     $$PWD/qquickstackview_p.h \
     $$PWD/qquickstackview_p_p.h \
+    $$PWD/qquickswipe_p.h \
     $$PWD/qquickswipedelegate_p.h \
+    $$PWD/qquickswipedelegate_p_p.h \
     $$PWD/qquickswipeview_p.h \
     $$PWD/qquickswitch_p.h \
     $$PWD/qquickswitchdelegate_p.h \

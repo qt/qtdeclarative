@@ -377,7 +377,7 @@ TestCase {
         verify(control.swipe.rightItem);
         verify(!control.swipe.rightItem.visible);
 
-        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
         compare(control.swipe.position, 1.0);
@@ -407,7 +407,8 @@ TestCase {
         compare(completedSpy.count, 1);
         compare(control.swipe.position, 1.0 - overDragDistance / control.width);
 
-        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        // Since we went over the drag distance, we should expect canceled() to be emitted.
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width * 0.4, control.height / 2);
         verify(!control.pressed);
         compare(control.swipe.position, 1.0);
@@ -431,7 +432,7 @@ TestCase {
         compare(completedSpy.count, 2);
         compare(control.swipe.position, 0.4);
 
-        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"];
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width * -0.1, control.height / 2);
         verify(!control.pressed);
         compare(control.swipe.position, 0.0);
@@ -1054,17 +1055,17 @@ TestCase {
             text: "SwipeDelegate"
             width: 150
 
-            onClicked: close()
-
             swipe.right: Item {
                 width: parent.width
                 height: parent.height
+
+                SwipeDelegate.onClicked: swipe.close()
             }
         }
     }
 
     function test_close() {
-        var control = swipeDelegateComponent.createObject(testCase);
+        var control = closeSwipeDelegateComponent.createObject(testCase);
         verify(control);
 
         swipe(control, 0.0, -1.0);
@@ -1072,6 +1073,16 @@ TestCase {
         // Should animate, so it shouldn't change right away.
         compare(control.swipe.rightItem.x, 0);
         tryCompare(control.swipe.rightItem, "x", control.background.x + control.background.width);
+
+        mousePress(control);
+        verify(control.swipe.rightItem.SwipeDelegate.pressed);
+
+        mouseRelease(control);
+        verify(!control.swipe.rightItem.SwipeDelegate.pressed);
+        tryCompare(control.swipe, "position", 0);
+
+        // Swiping after closing should work as normal.
+        swipe(control, 0.0, -1.0);
 
         control.destroy();
     }
@@ -1239,6 +1250,120 @@ TestCase {
         compare(control.contentItem.height, control.availableHeight);
         verify(control.contentItem.height < originalContentItemHeight);
         compare(control.contentItem.y, control.topPadding);
+
+        control.destroy();
+    }
+
+    function test_releaseOutside_data() {
+        return [
+            { tag: "no delegates", component: emptySwipeDelegateComponent },
+            { tag: "delegates", component: swipeDelegateComponent },
+        ];
+    }
+
+    function test_releaseOutside(data) {
+        var control = data.component.createObject(testCase);
+        verify(control);
+
+        // Press and then release below the control.
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed", ["pressedChanged", { "pressed": false }]];
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2, control.height + 10, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
+
+        mouseSignalSequenceSpy.expectedSequence = ["canceled"];
+        mouseRelease(control, control.width / 2, control.height + 10, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
+
+        // Press and then release to the right of the control.
+        var hasDelegates = control.swipe.left || control.swipe.right || control.swipe.behind;
+        mouseSignalSequenceSpy.target = control;
+        mouseSignalSequenceSpy.expectedSequence = hasDelegates
+            ? [["pressedChanged", { "pressed": true }], "pressed"]
+            : [["pressedChanged", { "pressed": true }], "pressed", ["pressedChanged", { "pressed": false }]];
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width + 10, control.height / 2, Qt.LeftButton);
+        if (hasDelegates)
+            verify(control.swipe.position > 0);
+        verify(mouseSignalSequenceSpy.success);
+
+        mouseSignalSequenceSpy.expectedSequence = hasDelegates ? [["pressedChanged", { "pressed": false }], "canceled"] : ["canceled"];
+        mouseRelease(control, control.width + 10, control.height / 2, Qt.LeftButton);
+        verify(mouseSignalSequenceSpy.success);
+    }
+
+    Component {
+        id: leftRightWithLabelsComponent
+
+        SwipeDelegate {
+            id: delegate
+            text: "SwipeDelegate"
+            width: 150
+
+            background.opacity: 0.5
+
+            swipe.left: Rectangle {
+                width: parent.width
+                height: parent.height
+                color: SwipeDelegate.pressed ? Qt.darker("green") : "green"
+
+                property alias label: label
+
+                Label {
+                    id: label
+                    text: "Left"
+                    color: "white"
+                    anchors.margins: 10
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                SwipeDelegate.onClicked: delegate.swipe.close()
+            }
+
+            swipe.right: Rectangle {
+                width: parent.width
+                height: parent.height
+                anchors.right: parent.right
+                color: SwipeDelegate.pressed ? Qt.darker("green") : "red"
+
+                property alias label: label
+
+                Label {
+                    id: label
+                    text: "Right"
+                    color: "white"
+                    anchors.margins: 10
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                SwipeDelegate.onClicked: delegate.swipe.close()
+            }
+        }
+    }
+
+    function test_beginSwipeOverRightItem() {
+        var control = leftRightWithLabelsComponent.createObject(testCase);
+        verify(control);
+
+        // Swipe to the left, exposing the right item.
+        swipe(control, 0.0, -1.0);
+
+        // Click to close it and go back to a position of 0.
+        mouseClick(control);
+
+        // TODO: Swipe to the left, with the mouse over the Label in the right item.
+        // The left item should not become visible at any point.
+        var rightLabel = control.swipe.rightItem.label;
+        var overDragDistance = Math.round(dragDistance * 1.1);
+        mousePress(rightLabel, rightLabel.width / 2, rightLabel.height / 2, Qt.rightButton);
+        mouseMove(rightLabel, rightLabel.width / 2 - overDragDistance, rightLabel.height / 2, Qt.LeftButton);
+        verify(!control.swipe.leftItem);
+
+        mouseRelease(rightLabel, rightLabel.width / 2 - overDragDistance, control.height / 2, Qt.LeftButton);
+        verify(!control.swipe.leftItem);
 
         control.destroy();
     }

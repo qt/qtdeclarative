@@ -240,8 +240,7 @@ TestCase {
         else
             control.visible = false
         verify(control.exit.running)
-        wait(100) // TODO: replace with tryVerify() in 5.8
-        verify(control.opacity < 1)
+        tryVerify(function() { return control.opacity < 1; })
 
         if (data.imperative)
             control.open()
