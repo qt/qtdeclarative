@@ -128,7 +128,8 @@ public:
         --jsStackTop;
         return jsStackTop->heapObject();
     }
-    Value *jsAlloca(int nValues) {
+
+    QML_NEARLY_ALWAYS_INLINE Value *jsAlloca(int nValues) {
         Value *ptr = jsStackTop;
         jsStackTop = ptr + nValues;
         for (int i = 0; i < nValues; ++i)
