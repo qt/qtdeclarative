@@ -109,26 +109,32 @@
         \li Yes
         \li No
     \row
-        \li Runtime style changes
-        \li Yes
-        \li Yes
+        \li Runtime style/theme changes
+        \li Yes \sup 1
+        \li Yes \sup 2
     \row
         \li Can be used on Desktop
         \li Yes
         \li Yes
     \row
         \li Can be used on Mobile
-        \li Yes
+        \li Yes \sup 3
         \li Yes
     \row
         \li Can be used on Embedded
-        \li Yes
+        \li Yes \sup 3
         \li Yes
     \row
         \li Internal event handling
         \li QML
         \li C++
     \endtable
+
+    \list 1
+    \li Not officially supported, but technically possible via private APIs
+    \li Only themes for specific styles can be changed at runtime, styles are fixed
+    \li Performance may not be optimal
+    \endlist
 
     \section2 Porting Qt Quick Controls Code
 
