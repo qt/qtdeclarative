@@ -170,7 +170,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
+                           QQuickProfiler::SceneGraphContextMaterialCompile);
 
     rewrittenShaders[type] = shader;
     return shader;
@@ -201,7 +202,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms (no rewrite)", (int) qsg_renderer_timer.elapsed());
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
+                           QQuickProfiler::SceneGraphContextMaterialCompile);
     return shader;
 }
 
