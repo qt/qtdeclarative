@@ -929,7 +929,6 @@ void tst_qquicktextedit::hAlignVisual()
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
         const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
         const int right = numberOfNonWhitePixels(centeredSection3, centeredSection3End, image);
-        image.save("test3.png");
         QVERIFY2(left < mid, msgNotLessThan(left, mid).constData());
         QVERIFY2(mid < right, msgNotLessThan(mid, right).constData());
     }
