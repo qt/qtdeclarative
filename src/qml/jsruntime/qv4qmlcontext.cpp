@@ -81,29 +81,6 @@ void Heap::QmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *ctxt, QObject *scope)
-{
-    Scope valueScope(v4);
-
-    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->allocObject<QmlContextWrapper>(ctxt, scope));
-    return w.asReturnedValue();
-}
-
-ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
-{
-    Scope scope(v4);
-
-    QQmlContextData *context = new QQmlContextData;
-    context->baseUrl = url;
-    context->baseUrlString = url.toString();
-    context->isInternal = true;
-    context->isJSContext = true;
-
-    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->allocObject<QmlContextWrapper>(context, (QObject*)0, true));
-    w->d()->isNullWrapper = true;
-    return w.asReturnedValue();
-}
-
 ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
@@ -338,8 +315,14 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
 {
     Scope scope(parent);
 
-    QV4::Scoped<QV4::QmlContextWrapper> qml(scope, QV4::QmlContextWrapper::urlScope(scope.engine, source));
-    Q_ASSERT(!!qml);
+    QQmlContextData *context = new QQmlContextData;
+    context->baseUrl = source;
+    context->baseUrlString = source.toString();
+    context->isInternal = true;
+    context->isJSContext = true;
+
+    Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, (QObject*)0, true));
+    qml->d()->isNullWrapper = true;
 
     qml->setReadOnly(false);
     QV4::ScopedObject api(scope, scope.engine->newObject());
@@ -354,7 +337,8 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
 Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject)
 {
     Scope scope(parent);
-    Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
+
+    Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, scopeObject));
     Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
     return c;
 }

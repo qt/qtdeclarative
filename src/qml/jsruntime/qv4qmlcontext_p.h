@@ -90,9 +90,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     V4_OBJECT2(QmlContextWrapper, Object)
     V4_NEEDS_DESTROY
 
-    static ReturnedValue qmlScope(ExecutionEngine *e, QQmlContextData *ctxt, QObject *scope);
-    static ReturnedValue urlScope(ExecutionEngine *v4, const QUrl &);
-
     void takeContextOwnership() {
         d()->ownsContext = true;
     }
