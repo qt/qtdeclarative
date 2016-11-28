@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickstyleattached_p.h"
+#include "qquickstyle_p.h"
 
 #include <QtCore/qfile.h>
 #include <QtCore/qsettings.h>
@@ -167,18 +168,6 @@ static QList<QQuickStyleAttached *> findChildStyles(const QMetaObject *type, QOb
     return children;
 }
 
-static QString resolveConfigFile()
-{
-    QString filePath = QFile::decodeName(qgetenv("QT_QUICK_CONTROLS_CONF"));
-    if (!QFile::exists(filePath)) {
-        if (!filePath.isEmpty())
-            qWarning("QT_QUICK_CONTROLS_CONF=%s: No such file", qPrintable(filePath));
-
-        filePath = QStringLiteral(":/qtquickcontrols2.conf");
-    }
-    return filePath;
-}
-
 QQuickStyleAttached::QQuickStyleAttached(QObject *parent) : QObject(parent)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
@@ -208,7 +197,7 @@ QQuickStyleAttached::~QQuickStyleAttached()
 QSharedPointer<QSettings> QQuickStyleAttached::settings(const QString &group)
 {
 #ifndef QT_NO_SETTINGS
-    static const QString filePath = resolveConfigFile();
+    const QString filePath = QQuickStylePrivate::configFilePath();
     if (QFile::exists(filePath)) {
         QFileSelector selector;
         QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
