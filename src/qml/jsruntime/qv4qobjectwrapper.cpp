@@ -493,8 +493,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
 
 ReturnedValue QObjectWrapper::wrap_slowPath(ExecutionEngine *engine, QObject *object)
 {
-    if (QQmlData::wasDeleted(object))
-        return QV4::Encode::null();
+    Q_ASSERT(!QQmlData::wasDeleted(object));
 
     QQmlData *ddata = QQmlData::get(object, true);
     if (!ddata)
