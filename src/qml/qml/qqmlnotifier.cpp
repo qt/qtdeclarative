@@ -71,6 +71,12 @@ namespace {
     };
 }
 
+void QQmlNotifier::notify(QQmlData *ddata, int notifierIndex)
+{
+    if (QQmlNotifierEndpoint *ep = ddata->notify(notifierIndex))
+        emitNotify(ep, Q_NULLPTR);
+}
+
 void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
 {
     QVarLengthArray<NotifyListTraversalData> stack;

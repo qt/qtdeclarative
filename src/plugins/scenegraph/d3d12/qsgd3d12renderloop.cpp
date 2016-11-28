@@ -421,7 +421,8 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     if (profileFrames)
         polishTime = renderTimer.nsecsElapsed();
     Q_QUICK_SG_PROFILE_SWITCH(QQuickProfiler::SceneGraphPolishFrame,
-                              QQuickProfiler::SceneGraphRenderLoopFrame);
+                              QQuickProfiler::SceneGraphRenderLoopFrame,
+                              QQuickProfiler::SceneGraphPolishPolish);
 
     emit window->afterAnimating();
 
@@ -463,13 +464,15 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
+                              QQuickProfiler::SceneGraphRenderLoopSync);
 
     wd->renderSceneGraph(window->size());
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
+                              QQuickProfiler::SceneGraphRenderLoopRender);
 
     if (!data.grabOnly) {
         // The engine is able to have multiple frames in flight. This in effect is
@@ -496,7 +499,8 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     qint64 swapTime = 0;
     if (profileFrames)
         swapTime = renderTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
+                           QQuickProfiler::SceneGraphRenderLoopSwap);
 
     if (Q_UNLIKELY(debug_time())) {
         static QTime lastFrameTime = QTime::currentTime();

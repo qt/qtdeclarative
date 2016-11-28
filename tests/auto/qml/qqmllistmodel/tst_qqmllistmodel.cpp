@@ -122,6 +122,7 @@ private slots:
     void datetime_data();
     void about_to_be_signals();
     void modify_through_delegate();
+    void bindingsOnGetResult();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1467,6 +1468,18 @@ void tst_qqmllistmodel::modify_through_delegate()
 
     QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("age")).toInt(), 18);
     QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("age")).toInt(), 18);
+}
+
+void tst_qqmllistmodel::bindingsOnGetResult()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingsOnGetResult.qml"));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QVERIFY(obj->property("success").toBool());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
