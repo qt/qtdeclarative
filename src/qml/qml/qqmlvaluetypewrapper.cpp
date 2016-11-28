@@ -43,7 +43,6 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 
 #include <private/qv4engine_p.h>

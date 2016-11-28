@@ -55,8 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlContextData;
 class QObject;
+class QQmlContextData;
 
 namespace QV4 {
 
@@ -65,11 +65,12 @@ struct CompilationUnit;
 struct Function;
 }
 
-struct QmlContextWrapper;
 struct Identifier;
 struct CallContext;
 struct CatchContext;
 struct WithContext;
+struct QmlContext;
+struct QmlContextWrapper;
 
 struct CallData
 {
@@ -90,6 +91,8 @@ struct CallData
 };
 
 namespace Heap {
+
+struct QmlContext;
 
 struct ExecutionContext : Base {
     enum ContextType {
@@ -177,14 +180,6 @@ struct WithContext : ExecutionContext {
 };
 V4_ASSERT_IS_TRIVIAL(WithContext)
 
-struct QmlContextWrapper;
-
-struct QmlContext : ExecutionContext {
-    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
-
-    Pointer<QmlContextWrapper> qml;
-};
-
 }
 
 struct Q_QML_EXPORT ExecutionContext : public Managed
@@ -201,8 +196,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Heap::CallContext *newCallContext(const FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
-    Heap::QmlContext *newQmlContext(QmlContextWrapper *qml);
-    Heap::QmlContext *newQmlContext(QQmlContextData *context, QObject *scopeObject);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -266,16 +259,6 @@ struct CatchContext : public ExecutionContext
 struct WithContext : public ExecutionContext
 {
     V4_MANAGED(WithContext, ExecutionContext)
-};
-
-struct Q_QML_EXPORT QmlContext : public ExecutionContext
-{
-    V4_MANAGED(QmlContext, ExecutionContext)
-
-    QObject *qmlScope() const;
-    QQmlContextData *qmlContext() const;
-
-    void takeContextOwnership();
 };
 
 inline CallContext *ExecutionContext::asCallContext()

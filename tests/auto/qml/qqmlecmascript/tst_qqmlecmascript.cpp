@@ -36,7 +36,7 @@
 #include <QtCore/qnumeric.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
-#include <private/qqmlcontextwrapper_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../../shared/util.h"

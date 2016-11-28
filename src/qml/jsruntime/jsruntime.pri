@@ -27,6 +27,7 @@ SOURCES += \
     $$PWD/qv4numberobject.cpp \
     $$PWD/qv4object.cpp \
     $$PWD/qv4objectproto.cpp \
+    $$PWD/qv4qmlcontext.cpp \
     $$PWD/qv4regexpobject.cpp \
     $$PWD/qv4stringobject.cpp \
     $$PWD/qv4variantobject.cpp \
@@ -48,7 +49,6 @@ HEADERS += \
     $$PWD/qv4global_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4context_p.h \
-    $$PWD/qv4context_p_p.h \
     $$PWD/qv4math_p.h \
     $$PWD/qv4persistent_p.h \
     $$PWD/qv4debugging_p.h \
@@ -73,6 +73,7 @@ HEADERS += \
     $$PWD/qv4numberobject_p.h \
     $$PWD/qv4object_p.h \
     $$PWD/qv4objectproto_p.h \
+    $$PWD/qv4qmlcontext_p.h \
     $$PWD/qv4regexpobject_p.h \
     $$PWD/qv4stringobject_p.h \
     $$PWD/qv4variantobject_p.h \

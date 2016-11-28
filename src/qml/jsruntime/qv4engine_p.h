@@ -548,27 +548,6 @@ inline ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *contex
     return o ? context - o : 0;
 }
 
-inline Heap::QmlContext *ExecutionEngine::qmlContext() const
-{
-    Heap::ExecutionContext *ctx = current;
-
-    // get the correct context when we're within a builtin function
-    if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = parentContext(currentContext)->d();
-
-    if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
-        return 0;
-
-    while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
-        ctx = ctx->outer;
-
-    Q_ASSERT(ctx);
-    if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
-        return 0;
-
-    return static_cast<Heap::QmlContext *>(ctx);
-}
-
 inline
 void Heap::Base::mark(QV4::ExecutionEngine *engine)
 {

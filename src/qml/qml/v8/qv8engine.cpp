@@ -52,7 +52,6 @@
 #include <private/qqmlplatform_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qqmltypewrapper_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qv4scopedvalue_p.h>

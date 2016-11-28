@@ -42,7 +42,6 @@
 #include "qqmllistmodelworkeragent_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlexpression_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qcoreapplication.h>
@@ -318,19 +317,8 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
         QV4::Scope scope(v4);
-
-        QV4::Scoped<QV4::QmlContextWrapper> w(scope, QV4::QmlContextWrapper::urlScope(v4, script->source));
-        Q_ASSERT(!!w);
-        w->setReadOnly(false);
-
-        QV4::ScopedObject api(scope, v4->newObject());
-        api->put(QV4::ScopedString(scope, v4->newString(QStringLiteral("sendMessage"))), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
-
-        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString(QStringLiteral("WorkerScript"))), api);
-
-        w->setReadOnly(true);
-
-        script->qmlContext.set(v4, v4->rootContext()->newQmlContext(w));
+        QV4::ScopedValue v(scope, workerEngine->sendFunction(script->id));
+        script->qmlContext.set(v4, QV4::QmlContext::createWorkerContext(v4->rootContext(), script->source, v));
     }
 
     return script->qmlContext.value();

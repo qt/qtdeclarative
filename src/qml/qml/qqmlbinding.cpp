@@ -46,7 +46,6 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>

@@ -208,7 +208,7 @@ Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlCont
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
     ExecutionContext *global = valueScope.engine->rootContext();
-    QV4::Scoped<QmlContext> wrapperContext(valueScope, global->newQmlContext(qmlContext, scopeObject));
+    QV4::Scoped<QmlContext> wrapperContext(valueScope, QmlContext::create(global, qmlContext, scopeObject));
 
     if (!signalParameters.isEmpty()) {
         if (error)

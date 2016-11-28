@@ -41,6 +41,7 @@
 
 #include <private/qv4script_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 #include <QtQml/qqmlengine.h>
@@ -81,7 +82,7 @@ void JavaScriptJob::run()
                 }
             }
             if (!engine->qmlContext()) {
-                engine->pushContext(ctx->newQmlContext(QQmlContextData::get(qmlRootContext),
+                engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext),
                                                        &scopeObject));
                 ctx = engine->currentContext;
             }
@@ -201,7 +202,7 @@ void ValueLookupJob::run()
     QV4::ExecutionEngine *engine = collector->engine();
     if (engine->qmlEngine() && !engine->qmlContext()) {
         scopeObject.reset(new QObject);
-        engine->pushContext(engine->currentContext->newQmlContext(
+        engine->pushContext(QV4::QmlContext::create(engine->currentContext,
                                 QQmlContextData::get(engine->qmlEngine()->rootContext()),
                                 scopeObject.data()));
     }

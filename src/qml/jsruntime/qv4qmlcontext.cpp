@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qqmlcontextwrapper_p.h"
+#include "qv4qmlcontext_p.h"
 #include <private/qv8engine_p.h>
 
 #include <private/qqmlengine_p.h>
@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
+DEFINE_MANAGED_VTABLE(QmlContext);
 
 void Heap::QmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
 {
@@ -318,6 +319,44 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     }
 
     Object::put(m, name, value);
+}
+
+void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
+{
+    Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
+    outer = outerContext->d();
+    strictMode = false;
+    callData = outer->callData;
+    lookups = outer->lookups;
+    constantTable = outer->constantTable;
+    compilationUnit = outer->compilationUnit;
+
+    this->qml = qml->d();
+}
+
+Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, const QUrl &source, Value *sendFunction)
+{
+    Scope scope(parent);
+
+    QV4::Scoped<QV4::QmlContextWrapper> qml(scope, QV4::QmlContextWrapper::urlScope(scope.engine, source));
+    Q_ASSERT(!!qml);
+
+    qml->setReadOnly(false);
+    QV4::ScopedObject api(scope, scope.engine->newObject());
+    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), *sendFunction);
+    qml->QV4::Object::put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
+    qml->setReadOnly(true);
+
+    Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    return c;
+}
+
+Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject)
+{
+    Scope scope(parent);
+    Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
+    Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    return c;
 }
 
 QT_END_NAMESPACE

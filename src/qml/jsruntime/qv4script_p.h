@@ -53,7 +53,7 @@
 #include "qv4global_p.h"
 #include "qv4engine_p.h"
 #include "qv4functionobject_p.h"
-#include "qv4context_p.h"
+#include "qv4qmlcontext_p.h"
 
 #include <QQmlError>
 

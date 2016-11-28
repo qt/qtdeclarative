@@ -44,7 +44,6 @@
 #include <private/qv4function_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4qobjectwrapper_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmlboundsignal_p.h>
@@ -1017,7 +1016,7 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
 QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
 {
     if (!_qmlContext->isObject())
-        _qmlContext->setM(v4->rootContext()->newQmlContext(context, _scopeObject));
+        _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 
     return _qmlContext->d();
 }

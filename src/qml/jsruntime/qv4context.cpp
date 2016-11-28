@@ -39,7 +39,7 @@
 
 #include <QString>
 #include "qv4debugging_p.h"
-#include <qv4context_p_p.h>
+#include <qv4context_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
@@ -47,6 +47,7 @@
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
+#include "qv4qmlcontext_p.h"
 
 using namespace QV4;
 
@@ -55,7 +56,6 @@ DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(WithContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
-DEFINE_MANAGED_VTABLE(QmlContext);
 
 Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *function, CallData *callData)
 {
@@ -100,20 +100,6 @@ Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVar
     Scope scope(this);
     ScopedValue e(scope, exceptionValue);
     return d()->engine->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
-}
-
-Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
-{
-    Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
-    return c;
-}
-
-Heap::QmlContext *ExecutionContext::newQmlContext(QQmlContextData *context, QObject *scopeObject)
-{
-    Scope scope(this);
-    Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
-    Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
-    return c;
 }
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
@@ -180,19 +166,6 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
-}
-
-void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
-{
-    Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
-    outer = outerContext->d();
-    strictMode = false;
-    callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
-
-    this->qml = qml->d();
 }
 
 
