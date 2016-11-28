@@ -52,6 +52,8 @@ T.SwipeDelegate {
     padding: 12
     spacing: 12
 
+    swipe.rebound: Transition { SmoothedAnimation { velocity: 3; easing.type: Easing.InOutCubic } }
+
     contentItem: Text {
         leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -63,27 +65,11 @@ T.SwipeDelegate {
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-
-        Behavior on x {
-            enabled: !control.down
-            NumberAnimation {
-                easing.type: Easing.InOutCubic
-                duration: 400
-            }
-        }
     }
 
     background: Rectangle {
         color: control.visualFocus
             ? (control.down ? Default.focusPressedColor : Default.delegateFocusColor)
             : (control.down ? Default.delegatePressedColor : Default.backgroundColor)
-
-        Behavior on x {
-            enabled: !control.down
-            NumberAnimation {
-                easing.type: Easing.InOutCubic
-                duration: 400
-            }
-        }
     }
 }

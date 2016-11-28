@@ -56,12 +56,13 @@ QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
 class QQuickItem;
+class QQuickTransition;
 class QQuickSwipePrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(bool complete READ isComplete NOTIFY completeChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL) // REVISION 2
     Q_PROPERTY(QQmlComponent *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
@@ -70,6 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
     Q_PROPERTY(QQuickItem *leftItem READ leftItem NOTIFY leftItemChanged FINAL)
     Q_PROPERTY(QQuickItem *behindItem READ behindItem NOTIFY behindItemChanged FINAL)
     Q_PROPERTY(QQuickItem *rightItem READ rightItem NOTIFY rightItemChanged FINAL)
+    Q_PROPERTY(QQuickTransition *rebound READ rebound WRITE setRebound NOTIFY reboundChanged FINAL) // REVISION 2
 
 public:
     explicit QQuickSwipe(QQuickSwipeDelegate *control);
@@ -101,6 +103,9 @@ public:
     QQuickItem *rightItem() const;
     void setRightItem(QQuickItem *item);
 
+    QQuickTransition *rebound() const;
+    void setRebound(QQuickTransition *rebound);
+
     Q_REVISION(2) Q_INVOKABLE void open(QQuickSwipeDelegate::Side side);
     Q_REVISION(1) Q_INVOKABLE void close();
 
@@ -115,6 +120,7 @@ Q_SIGNALS:
     void leftItemChanged();
     void behindItemChanged();
     void rightItemChanged();
+    /*Q_REVISION(2)*/ void reboundChanged();
 
 private:
     Q_DISABLE_COPY(QQuickSwipe)

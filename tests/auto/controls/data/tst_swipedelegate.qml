@@ -40,7 +40,7 @@
 
 import QtQuick 2.6
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 
 TestCase {
@@ -380,8 +380,8 @@ TestCase {
         mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
-        compare(control.swipe.position, 1.0);
-        verify(control.swipe.complete);
+        tryCompare(control.swipe, "position", 1.0);
+        tryCompare(control.swipe, "complete", true);
         compare(completedSpy.count, 1);
         verify(mouseSignalSequenceSpy.success);
         verify(control.swipe.leftItem);
@@ -411,8 +411,8 @@ TestCase {
         mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width * 0.4, control.height / 2);
         verify(!control.pressed);
-        compare(control.swipe.position, 1.0);
-        verify(control.swipe.complete);
+        tryCompare(control.swipe, "position", 1.0);
+        tryCompare(control.swipe, "complete", true);
         compare(completedSpy.count, 2);
         verify(mouseSignalSequenceSpy.success);
         tryCompare(control.contentItem, "x", control.width + control.leftPadding);
@@ -435,7 +435,7 @@ TestCase {
         mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
         mouseRelease(control, control.width * -0.1, control.height / 2);
         verify(!control.pressed);
-        compare(control.swipe.position, 0.0);
+        tryCompare(control.swipe, "position", 0.0);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 2);
         verify(mouseSignalSequenceSpy.success);
@@ -572,7 +572,7 @@ TestCase {
         // Returning back to a position of 0 and pressing on the control should
         // result in the control being pressed.
         mouseDrag(control, control.width / 2, control.height / 2, control.width * 0.6, 0);
-        compare(control.swipe.position, 0);
+        tryCompare(control.swipe, "position", 0);
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
         verify(!button.pressed);
@@ -730,8 +730,8 @@ TestCase {
 
         mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.pressed);
-        compare(firstItem.swipe.position, 1.0);
-        verify(firstItem.swipe.complete);
+        tryCompare(firstItem.swipe, "position", 1.0);
+        tryCompare(firstItem.swipe, "complete", true);
         compare(listView.count, 3);
 
         // Wait for it to settle down.
@@ -1032,7 +1032,7 @@ TestCase {
         mouseMove(control, control.width / 2 + control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
         compare(control.swipe.position, -0.2);
         mouseRelease(control, control.width / 2 + control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
-        compare(control.swipe.position, 0.0);
+        tryCompare(control.swipe, "position", 0.0);
 
         // Try wrapping the other way.
         swipe(control, 0.0, -1.0);
@@ -1043,7 +1043,7 @@ TestCase {
         mouseMove(control, control.width / 2 - control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
         compare(control.swipe.position, 0.2);
         mouseRelease(control, control.width / 2 - control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
-        compare(control.swipe.position, 0.0);
+        tryCompare(control.swipe, "position", 0.0);
 
         control.destroy();
     }
@@ -1475,8 +1475,8 @@ TestCase {
         verify(control);
 
         control.swipe.open(data.side);
-        compare(control.swipe.position, data.position);
-        compare(control.swipe.complete, data.complete);
+        tryCompare(control.swipe, "position", data.position);
+        tryCompare(control.swipe, "complete", data.complete);
 
         control.destroy();
     }
@@ -1502,12 +1502,12 @@ TestCase {
         verify(control);
 
         mouseClick(control);
-        compare(control.swipe.position, SwipeDelegate.Right);
+        tryCompare(control.swipe, "position", SwipeDelegate.Right);
         tryCompare(control.background, "x", -control.background.width);
 
         // Swiping after opening should work as normal.
         swipe(control, SwipeDelegate.Right, 0.0);
-        compare(control.swipe.position, 0.0);
+        tryCompare(control.swipe, "position", 0.0);
         tryCompare(control.background, "x", 0);
 
         control.destroy();
@@ -1522,6 +1522,7 @@ TestCase {
             width: 150
             swipe.left: greenLeftComponent
             swipe.right: redRightComponent
+            swipe.rebound: null
 
             property alias behavior: xBehavior
             property alias animation: numberAnimation

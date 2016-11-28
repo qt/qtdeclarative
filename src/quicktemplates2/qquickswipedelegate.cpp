@@ -44,6 +44,9 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtQuick/private/qquickanimation_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -113,6 +116,48 @@ namespace {
     };
 }
 
+class QQuickSwipeTransitionManager : public QQuickTransitionManager
+{
+public:
+    QQuickSwipeTransitionManager(QQuickSwipe *swipe);
+
+    void transition(QQuickTransition *rebound, qreal position);
+
+protected:
+    void finished() override;
+
+private:
+    QQuickSwipe *m_swipe;
+};
+
+QQuickSwipeTransitionManager::QQuickSwipeTransitionManager(QQuickSwipe *swipe)
+    : m_swipe(swipe)
+{
+}
+
+void QQuickSwipeTransitionManager::transition(QQuickTransition *rebound, qreal position)
+{
+    qmlExecuteDeferred(rebound);
+
+    QQmlProperty defaultTarget(m_swipe, QLatin1String("position"));
+    QQmlListProperty<QQuickAbstractAnimation> animations = rebound->animations();
+    const int count = animations.count(&animations);
+    for (int i = 0; i < count; ++i) {
+        QQuickAbstractAnimation *anim = animations.at(&animations, i);
+        anim->setDefaultTarget(defaultTarget);
+    }
+
+    QList<QQuickStateAction> actions;
+    actions << QQuickStateAction(m_swipe, QLatin1String("position"), position);
+    QQuickTransitionManager::transition(actions, rebound, m_swipe);
+}
+
+void QQuickSwipeTransitionManager::finished()
+{
+    const qreal pos = m_swipe->position();
+    m_swipe->setComplete(qFuzzyCompare(qAbs(pos), 1.0));
+}
+
 class QQuickSwipePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwipe)
@@ -130,7 +175,9 @@ public:
         right(nullptr),
         leftItem(nullptr),
         behindItem(nullptr),
-        rightItem(nullptr)
+        rightItem(nullptr),
+        rebound(nullptr),
+        transitionManager(nullptr)
     {
     }
 
@@ -152,6 +199,9 @@ public:
 
     bool hasDelegates() const;
 
+    bool isTransitioning() const;
+    void transition(qreal position);
+
     QQuickSwipeDelegate *control;
     // Same range as position, but is set before press events so that we can
     // keep track of which direction the user must swipe when using left and right delegates.
@@ -169,6 +219,8 @@ public:
     QQuickItem *leftItem;
     QQuickItem *behindItem;
     QQuickItem *rightItem;
+    QQuickTransition *rebound;
+    QScopedPointer<QQuickSwipeTransitionManager> transitionManager;
 };
 
 QQuickSwipePrivate *QQuickSwipePrivate::get(QQuickSwipe *swipe)
@@ -356,6 +408,26 @@ void QQuickSwipePrivate::warnAboutSettingDelegatesWhileVisible()
 bool QQuickSwipePrivate::hasDelegates() const
 {
     return left || right || behind;
+}
+
+bool QQuickSwipePrivate::isTransitioning() const
+{
+    return transitionManager && transitionManager->isRunning();
+}
+
+void QQuickSwipePrivate::transition(qreal position)
+{
+    Q_Q(QQuickSwipe);
+    if (!rebound) {
+        q->setPosition(position);
+        q->setComplete(qFuzzyCompare(qAbs(position), 1.0));
+        return;
+    }
+
+    if (!transitionManager)
+        transitionManager.reset(new QQuickSwipeTransitionManager(q));
+
+    transitionManager->transition(rebound, position);
 }
 
 QQuickSwipe::QQuickSwipe(QQuickSwipeDelegate *control) :
@@ -592,6 +664,22 @@ void QQuickSwipe::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
+QQuickTransition *QQuickSwipe::rebound() const
+{
+    Q_D(const QQuickSwipe);
+    return d->rebound;
+}
+
+void QQuickSwipe::setRebound(QQuickTransition *rebound)
+{
+    Q_D(QQuickSwipe);
+    if (rebound == d->rebound)
+        return;
+
+    d->rebound = rebound;
+    emit reboundChanged();
+}
+
 void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
 {
     Q_D(QQuickSwipe);
@@ -600,8 +688,7 @@ void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
             || (!d->right && !d->behind && side == QQuickSwipeDelegate::Right))
         return;
 
-    setPosition(side);
-    setComplete(true);
+    d->transition(side);
     d->wasComplete = true;
     d->velocityCalculator.reset();
     d->positionBeforePress = d->position;
@@ -610,8 +697,7 @@ void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
 void QQuickSwipe::close()
 {
     Q_D(QQuickSwipe);
-    setPosition(0);
-    setComplete(false);
+    d->transition(0.0);
     d->wasComplete = false;
     d->positionBeforePress = 0.0;
     d->velocityCalculator.reset();
@@ -748,6 +834,8 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
                 position = distance > 0 ? normalizedDistance - 1.0 : normalizedDistance + 1.0;
             }
 
+            if (swipePrivate->isTransitioning())
+                swipePrivate->transitionManager->cancel();
             swipe.setPosition(position);
         }
     } else {
@@ -794,17 +882,14 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
     const qreal swipeVelocity = swipePrivate->velocityCalculator.velocity().x();
     if (swipePrivate->position > 0.5 ||
         (swipePrivate->position > 0.0 && swipeVelocity > exposeVelocityThreshold)) {
-        swipe.setPosition(1.0);
-        swipe.setComplete(true);
+        swipePrivate->transition(1.0);
         swipePrivate->wasComplete = true;
     } else if (swipePrivate->position < -0.5 ||
         (swipePrivate->position < 0.0 && swipeVelocity < -exposeVelocityThreshold)) {
-        swipe.setPosition(-1.0);
-        swipe.setComplete(true);
+        swipePrivate->transition(-1.0);
         swipePrivate->wasComplete = true;
-    } else {
-        swipe.setPosition(0.0);
-        swipe.setComplete(false);
+    } else if (!swipePrivate->isTransitioning()) {
+        swipePrivate->transition(0.0);
         swipePrivate->wasComplete = false;
     }
 
