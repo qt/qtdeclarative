@@ -146,7 +146,10 @@ QQmlDebugConnectorFactory::~QQmlDebugConnectorFactory()
 {
     // This is triggered when the plugin is unloaded.
     QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
-    if (params && params->instance) {
+    if (params) {
+        params->pluginKey.clear();
+        params->arguments.clear();
+        params->services.clear();
         delete params->instance;
         params->instance = 0;
     }
