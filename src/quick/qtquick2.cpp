@@ -130,6 +130,7 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
                                                             const QString &fileName, int line, int column,
                                                             bool *inBaseState)
 {
+    Q_UNUSED(column);
     typedef QPointer<QQuickState> QuickStatePointer;
     QObject *object = property.object();
     QString propertyName = property.name();
@@ -144,7 +145,7 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
                     newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
                                                      expression.toString(), object,
                                                      QQmlContextData::get(context), fileName,
-                                                     line, column);
+                                                     line);
                     newBinding->setTarget(property);
                 }
 

@@ -72,11 +72,9 @@ class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
 {
     friend class QQmlAbstractBinding;
 public:
-    static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContext *);
     static QQmlBinding *create(const QQmlPropertyData *, const QQmlScriptString &, QObject *, QQmlContext *);
-    static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *);
     static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *,
-                               const QString &url, quint16 lineNumber, quint16 columnNumber);
+                               const QString &url = QString(), quint16 lineNumber = 0);
     static QQmlBinding *create(const QQmlPropertyData *, const QV4::Value &, QObject *, QQmlContextData *);
     ~QQmlBinding();
 

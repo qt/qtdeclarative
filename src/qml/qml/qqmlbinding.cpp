@@ -57,18 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj, QQmlContext *ctxt)
-{
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
-    b->setNotifyOnValueChanged(true);
-    b->QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
-    b->setScopeObject(obj);
-
-    b->createQmlBinding(b->context(), obj, str, QString(), 0);
-
-    return b;
-}
-
 QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
 {
     QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
@@ -106,26 +94,11 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
     return b;
 }
 
-QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj, QQmlContextData *ctxt)
-{
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
-
-    b->setNotifyOnValueChanged(true);
-    b->QQmlJavaScriptExpression::setContext(ctxt);
-    b->setScopeObject(obj);
-
-    b->createQmlBinding(ctxt, obj, str, QString(), 0);
-
-    return b;
-}
-
 QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj,
-                                 QQmlContextData *ctxt, const QString &url, quint16 lineNumber,
-                                 quint16 columnNumber)
+                                 QQmlContextData *ctxt, const QString &url, quint16 lineNumber)
 {
     QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
 
-    Q_UNUSED(columnNumber);
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);

@@ -37,6 +37,7 @@
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <private/qv8engine_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <qcolor.h>
