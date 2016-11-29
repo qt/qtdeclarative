@@ -55,6 +55,11 @@ TestCase {
         Dial {}
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy {}
+    }
+
     property var dial: null
 
     function init() {
@@ -189,6 +194,9 @@ TestCase {
         valueSpy.target = dial;
         verify(valueSpy.valid);
 
+        var moveSpy = signalSpy.createObject(testCase, {target: dial, signalName: "moved"});
+        verify(moveSpy.valid);
+
         var minimumExpectedValueCount = data.live ? 2 : 1;
 
         // drag to the left
@@ -196,24 +204,32 @@ TestCase {
         fuzzyCompare(dial.value, data.leftValue, 0.1);
         verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
+        verify(moveSpy.count > 0);
+        moveSpy.clear();
 
         // drag to the top
         mouseDrag(dial, dial.width / 2, dial.height / 2, 0, -dial.height / 2, Qt.LeftButton);
         fuzzyCompare(dial.value, data.topValue, 0.1);
         verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
+        verify(moveSpy.count > 0);
+        moveSpy.clear();
 
         // drag to the right
         mouseDrag(dial, dial.width / 2, dial.height / 2, dial.width / 2, 0, Qt.LeftButton);
         fuzzyCompare(dial.value, data.rightValue, 0.1);
         verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
+        verify(moveSpy.count > 0);
+        moveSpy.clear();
 
         // drag to the bottom (* 0.6 to ensure we don't go over to the minimum position)
         mouseDrag(dial, dial.width / 2, dial.height / 2, 10, dial.height / 2, Qt.LeftButton);
         fuzzyCompare(dial.value, data.bottomValue, 0.1);
         verify(valueSpy.count >= minimumExpectedValueCount);
         valueSpy.clear();
+        verify(moveSpy.count > 0);
+        moveSpy.clear();
     }
 
     function test_nonWrapping() {
@@ -271,9 +287,14 @@ TestCase {
         var focusScope = focusTest.createObject(testCase);
         verify(focusScope);
 
+        var moveCount = 0;
+
         // Tests that we've accepted events that we're interested in.
         parentEventSpy.target = focusScope;
         parentEventSpy.signalName = "receivedKeyPress";
+
+        var moveSpy = signalSpy.createObject(testCase, {target: dial, signalName: "moved"});
+        verify(moveSpy.valid);
 
         dial.parent = focusScope;
         compare(dial.activeFocusOnTab, true);
@@ -285,43 +306,54 @@ TestCase {
 
         keyClick(Qt.Key_Left);
         compare(parentEventSpy.count, 0);
+        compare(moveSpy.count, moveCount);
         compare(dial.value, 0);
 
-
+        var oldValue = 0.0;
         var keyPairs = [[Qt.Key_Left, Qt.Key_Right], [Qt.Key_Down, Qt.Key_Up]];
         for (var keyPairIndex = 0; keyPairIndex < 2; ++keyPairIndex) {
             for (var i = 1; i <= 10; ++i) {
+                oldValue = dial.value;
                 keyClick(keyPairs[keyPairIndex][1]);
                 compare(parentEventSpy.count, 0);
+                if (oldValue !== dial.value)
+                    compare(moveSpy.count, ++moveCount);
                 compare(dial.value, dial.stepSize * i);
             }
 
             compare(dial.value, dial.to);
 
             for (i = 10; i > 0; --i) {
+                oldValue = dial.value;
                 keyClick(keyPairs[keyPairIndex][0]);
                 compare(parentEventSpy.count, 0);
+                if (oldValue !== dial.value)
+                    compare(moveSpy.count, ++moveCount);
                 compare(dial.value, dial.stepSize * (i - 1));
             }
         }
 
+        dial.value = 0.5;
+
+        keyClick(Qt.Key_Home);
+        compare(parentEventSpy.count, 0);
+        compare(moveSpy.count, ++moveCount);
         compare(dial.value, dial.from);
 
         keyClick(Qt.Key_Home);
         compare(parentEventSpy.count, 0);
+        compare(moveSpy.count, moveCount);
         compare(dial.value, dial.from);
 
         keyClick(Qt.Key_End);
         compare(parentEventSpy.count, 0);
+        compare(moveSpy.count, ++moveCount);
         compare(dial.value, dial.to);
 
         keyClick(Qt.Key_End);
         compare(parentEventSpy.count, 0);
+        compare(moveSpy.count, moveCount);
         compare(dial.value, dial.to);
-
-        keyClick(Qt.Key_Home);
-        compare(parentEventSpy.count, 0);
-        compare(dial.value, dial.from);
 
         focusScope.destroy();
     }

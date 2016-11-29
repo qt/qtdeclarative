@@ -77,6 +77,14 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Dial}, {Input Controls}
 */
 
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal QtQuick.Controls::Dial::moved()
+
+    This signal is emitted when the dial has been interactively moved
+    by the user by using either touch, mouse, or keys.
+*/
+
 static const qreal startAngleRadians = (M_PI * 2.0) * (4.0 / 6.0);
 static const qreal startAngle = -140;
 static const qreal endAngleRadians = (M_PI * 2.0) * (5.0 / 6.0);
@@ -535,6 +543,7 @@ void QQuickDial::setHandle(QQuickItem *handle)
 void QQuickDial::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickDial);
+    const qreal oldValue = d->value;
     switch (event->key()) {
     case Qt::Key_Left:
     case Qt::Key_Down:
@@ -569,6 +578,8 @@ void QQuickDial::keyPressEvent(QKeyEvent *event)
         QQuickControl::keyPressEvent(event);
         break;
     }
+    if (!qFuzzyCompare(d->value, oldValue))
+        emit moved();
 }
 
 void QQuickDial::keyReleaseEvent(QKeyEvent *event)
@@ -599,6 +610,7 @@ void QQuickDial::mouseMoveEvent(QMouseEvent *event)
         }
     }
     if (keepMouseGrab()) {
+        const qreal oldPos = d->position;
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
@@ -608,6 +620,8 @@ void QQuickDial::mouseMoveEvent(QMouseEvent *event)
                 setValue(d->valueAt(pos));
             else
                 d->setPosition(pos);
+            if (!qFuzzyCompare(pos, oldPos))
+                emit moved();
         }
     }
 }
@@ -618,12 +632,15 @@ void QQuickDial::mouseReleaseEvent(QMouseEvent *event)
     QQuickControl::mouseReleaseEvent(event);
 
     if (keepMouseGrab()) {
+        const qreal oldPos = d->position;
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
 
         if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos)))
             setValue(d->valueAt(pos));
+        if (!qFuzzyCompare(pos, oldPos))
+            emit moved();
 
         setKeepMouseGrab(false);
     }
