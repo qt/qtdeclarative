@@ -75,6 +75,14 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Slider}, {Input Controls}
 */
 
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal QtQuick.Controls::Slider::moved()
+
+    This signal is emitted when the slider has been interactively moved
+    by the user by using either touch, mouse, wheel, or keys.
+*/
+
 class QQuickSliderPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSlider)
@@ -120,23 +128,25 @@ qreal QQuickSliderPrivate::snapPosition(qreal position) const
 qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
 {
     Q_Q(const QQuickSlider);
+    qreal pos = 0.0;
     if (orientation == Qt::Horizontal) {
         const qreal hw = handle ? handle->width() : 0;
         const qreal offset = hw / 2;
         const qreal extent = q->availableWidth() - hw;
         if (!qFuzzyIsNull(extent)) {
             if (q->isMirrored())
-                return (q->width() - point.x() - q->rightPadding() - offset) / extent;
-            return (point.x() - q->leftPadding() - offset) / extent;
+                pos = (q->width() - point.x() - q->rightPadding() - offset) / extent;
+            else
+                pos = (point.x() - q->leftPadding() - offset) / extent;
         }
     } else {
         const qreal hh = handle ? handle->height() : 0;
         const qreal offset = hh / 2;
         const qreal extent = q->availableHeight() - hh;
         if (!qFuzzyIsNull(extent))
-            return (q->height() - point.y() - q->bottomPadding() - offset) / extent;
+            pos = (q->height() - point.y() - q->bottomPadding() - offset) / extent;
     }
-    return 0;
+    return qBound<qreal>(0.0, pos, 1.0);
 }
 
 void QQuickSliderPrivate::setPosition(qreal pos)
@@ -507,6 +517,8 @@ void QQuickSlider::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickSlider);
     QQuickControl::keyPressEvent(event);
+
+    const qreal oldValue = d->value;
     if (d->orientation == Qt::Horizontal) {
         if (event->key() == Qt::Key_Left) {
             setPressed(true);
@@ -534,6 +546,8 @@ void QQuickSlider::keyPressEvent(QKeyEvent *event)
             event->accept();
         }
     }
+    if (!qFuzzyCompare(d->value, oldValue))
+        emit moved();
 }
 
 void QQuickSlider::keyReleaseEvent(QKeyEvent *event)
@@ -561,6 +575,7 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().y() - d->pressPoint.y(), Qt::YAxis, event));
     }
     if (keepMouseGrab()) {
+        const qreal oldPos = d->position;
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
@@ -568,6 +583,8 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
             setValue(valueAt(pos));
         else
             d->setPosition(pos);
+        if (!qFuzzyCompare(pos, oldPos))
+            emit moved();
     }
 }
 
@@ -576,6 +593,7 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
     Q_D(QQuickSlider);
     QQuickControl::mouseReleaseEvent(event);
     d->pressPoint = QPoint();
+    const qreal oldPos = d->position;
     qreal pos = d->positionAt(event->pos());
     if (d->snapMode != NoSnap)
         pos = d->snapPosition(pos);
@@ -584,6 +602,8 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
         setValue(val);
     else if (d->snapMode != NoSnap)
         d->setPosition(pos);
+    if (!qFuzzyCompare(pos, oldPos))
+        emit moved();
     setKeepMouseGrab(false);
     setPressed(false);
 }
@@ -606,7 +626,10 @@ void QQuickSlider::wheelEvent(QWheelEvent *event)
         const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
         const qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
         setValue(oldValue + step * delta);
-        event->setAccepted(!qFuzzyCompare(d->value, oldValue));
+        const bool wasMoved = !qFuzzyCompare(d->value, oldValue);
+        if (wasMoved)
+            emit moved();
+        event->setAccepted(wasMoved);
     }
 }
 

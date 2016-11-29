@@ -127,6 +127,7 @@ Q_SIGNALS:
     void pressedChanged();
     void orientationChanged();
     void handleChanged();
+    Q_REVISION(2) void moved();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

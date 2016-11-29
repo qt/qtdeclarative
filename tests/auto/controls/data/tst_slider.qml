@@ -224,55 +224,69 @@ TestCase {
         var control = slider.createObject(testCase, {orientation: data.orientation, live: data.live})
         verify(control)
 
+        var pressedCount = 0
+        var movedCount = 0
+
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
+        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        verify(movedSpy.valid)
+
         mousePress(control, 0, 0, Qt.LeftButton)
-        compare(pressedSpy.count, 1)
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
         compare(control.value, 0.0)
         compare(control.position, 0.0)
 
         // mininum on the left in horizontal vs. at the bottom in vertical
         mouseMove(control, -control.width, 2 * control.height, 0, Qt.LeftButton)
-        compare(pressedSpy.count, 1)
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
         compare(control.value, 0.0)
         compare(control.position, 0.0)
 
         mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
-        compare(pressedSpy.count, 1)
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
         compare(control.value, data.live ? 0.5 : 0.0)
         compare(control.position, 0.5)
 
         mouseRelease(control, control.width * 0.5, control.height * 0.5, Qt.LeftButton)
-        compare(pressedSpy.count, 2)
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, movedCount)
         compare(control.pressed, false)
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
         mousePress(control, control.width, control.height, Qt.LeftButton)
-        compare(pressedSpy.count, 3)
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
         // maximum on the right in horizontal vs. at the top in vertical
         mouseMove(control, control.width * 2, -control.height, 0, Qt.LeftButton)
-        compare(pressedSpy.count, 3)
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
         compare(control.value, data.live ? 1.0 : 0.5)
         compare(control.position, 1.0)
 
         mouseMove(control, control.width * 0.75, control.height * 0.25, 0, Qt.LeftButton)
-        compare(pressedSpy.count, 3)
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
         compare(control.value, data.live ? control.position : 0.5)
         verify(control.position >= 0.75)
 
         mouseRelease(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
-        compare(pressedSpy.count, 4)
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, ++movedCount)
         compare(control.pressed, false)
         compare(control.value, control.position)
         verify(control.value <= 0.25 && control.value >= 0.0)
@@ -280,7 +294,8 @@ TestCase {
 
         // QTBUG-53846
         mouseClick(control, control.width * 0.5, control.height * 0.5, Qt.LeftButton)
-        compare(pressedSpy.count, 6)
+        compare(movedSpy.count, ++movedCount)
+        compare(pressedSpy.count, pressedCount += 2)
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
@@ -299,19 +314,27 @@ TestCase {
         verify(control)
 
         var pressedCount = 0
+        var movedCount = 0
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
+        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        verify(movedSpy.valid)
+
         control.forceActiveFocus()
         verify(control.activeFocus)
 
+        var oldValue = 0.0
         control.value = 0.5
 
         for (var d1 = 1; d1 <= 10; ++d1) {
+            oldValue = control.value
             keyPress(data.decrease)
             compare(control.pressed, true)
             compare(pressedSpy.count, ++pressedCount)
+            if (oldValue !== control.value)
+                compare(movedSpy.count, ++movedCount)
 
             compare(control.value, Math.max(0.0, 0.5 - d1 * 0.1))
             compare(control.value, control.position)
@@ -319,12 +342,16 @@ TestCase {
             keyRelease(data.decrease)
             compare(control.pressed, false)
             compare(pressedSpy.count, ++pressedCount)
+            compare(movedSpy.count, movedCount)
         }
 
         for (var i1 = 1; i1 <= 20; ++i1) {
+            oldValue = control.value
             keyPress(data.increase)
             compare(control.pressed, true)
             compare(pressedSpy.count, ++pressedCount)
+            if (oldValue !== control.value)
+                compare(movedSpy.count, ++movedCount)
 
             compare(control.value, Math.min(1.0, 0.0 + i1 * 0.1))
             compare(control.value, control.position)
@@ -332,14 +359,18 @@ TestCase {
             keyRelease(data.increase)
             compare(control.pressed, false)
             compare(pressedSpy.count, ++pressedCount)
+            compare(movedSpy.count, movedCount)
         }
 
         control.stepSize = 0.25
 
         for (var d2 = 1; d2 <= 10; ++d2) {
+            oldValue = control.value
             keyPress(data.decrease)
             compare(control.pressed, true)
             compare(pressedSpy.count, ++pressedCount)
+            if (oldValue !== control.value)
+                compare(movedSpy.count, ++movedCount)
 
             compare(control.value, Math.max(0.0, 1.0 - d2 * 0.25))
             compare(control.value, control.position)
@@ -347,12 +378,16 @@ TestCase {
             keyRelease(data.decrease)
             compare(control.pressed, false)
             compare(pressedSpy.count, ++pressedCount)
+            compare(movedSpy.count, movedCount)
         }
 
         for (var i2 = 1; i2 <= 10; ++i2) {
+            oldValue = control.value
             keyPress(data.increase)
             compare(control.pressed, true)
             compare(pressedSpy.count, ++pressedCount)
+            if (oldValue !== control.value)
+                compare(movedSpy.count, ++movedCount)
 
             compare(control.value, Math.min(1.0, 0.0 + i2 * 0.25))
             compare(control.value, control.position)
@@ -360,6 +395,7 @@ TestCase {
             keyRelease(data.increase)
             compare(control.pressed, false)
             compare(pressedSpy.count, ++pressedCount)
+            compare(movedSpy.count, movedCount)
         }
 
         control.destroy()
@@ -487,21 +523,34 @@ TestCase {
         var control = slider.createObject(testCase, {wheelEnabled: true, orientation: data.orientation})
         verify(control)
 
+        var movedCount = 0
+        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        verify(movedSpy.valid)
+
         compare(control.value, 0.0)
 
         mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(movedSpy.count, ++movedCount)
         compare(control.value, 0.1)
         compare(control.position, 0.1)
 
         control.stepSize = 0.2
 
         mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(movedSpy.count, ++movedCount)
         compare(control.value, 0.3)
         compare(control.position, 0.3)
 
         control.stepSize = 10.0
 
         mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(movedSpy.count, ++movedCount)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+
+        // no change
+        mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(movedSpy.count, movedCount)
         compare(control.value, 0.0)
         compare(control.position, 0.0)
 
@@ -509,14 +558,17 @@ TestCase {
         control.stepSize = 5.0
 
         mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(movedSpy.count, ++movedCount)
         compare(control.value, 5.0)
         compare(control.position, 0.5)
 
         mouseWheel(control, control.width / 2, control.height / 2, 0.5 * data.dx, 0.5 * data.dy)
+        compare(movedSpy.count, ++movedCount)
         compare(control.value, 7.5)
         compare(control.position, 0.75)
 
         mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(movedSpy.count, ++movedCount)
         compare(control.value, 2.5)
         compare(control.position, 0.25)
 
