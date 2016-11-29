@@ -539,6 +539,7 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.function = f->d();
     QV4::Function *ff = ctx.function->function;
+    ctx.v4Function = ff;
     ctx.strictMode = ff->isStrict();
     ctx.callData = callData;
     ctx.compilationUnit = ff->compilationUnit;
@@ -580,6 +581,7 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
     CallContext::Data ctx = CallContext::Data::createOnStack(v4);
     ctx.function = f->d();
     QV4::Function *ff = ctx.function->function;
+    ctx.v4Function = ff;
     ctx.strictMode = ff->isStrict();
     ctx.callData = callData;
     ctx.compilationUnit = ff->compilationUnit;

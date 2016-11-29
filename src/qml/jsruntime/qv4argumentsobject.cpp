@@ -39,7 +39,8 @@
 #include <qv4argumentsobject_p.h>
 #include <qv4alloca_p.h>
 #include <qv4scopedvalue_p.h>
-#include "qv4string_p.h"
+#include <qv4string_p.h>
+#include <qv4function_p.h>
 
 using namespace QV4;
 
@@ -83,7 +84,7 @@ void ArgumentsObject::fullyCreate()
         return;
 
     uint argCount = context()->callData->argc;
-    uint numAccessors = qMin(context()->function->formalParameterCount(), argCount);
+    uint numAccessors = qMin(context()->formalParameterCount(), argCount);
     ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
     context()->engine->requireArgumentsAccessors(numAccessors);
 
@@ -110,7 +111,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
     bool isMapped = false;
-    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->callData->argc);
+    uint numAccessors = qMin((int)context()->formalParameterCount(), context()->callData->argc);
     if (pd && index < (uint)numAccessors)
         isMapped = arrayData()->attributes(index).isAccessor() &&
                 pd->getter() == context()->engine->argumentsAccessors[index].getter();
@@ -193,7 +194,7 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     if (args->fullyCreated())
         return Object::queryIndexed(m, index);
 
-    uint numAccessors = qMin((int)args->context()->function->formalParameterCount(), args->context()->callData->argc);
+    uint numAccessors = qMin((int)args->context()->formalParameterCount(), args->context()->callData->argc);
     uint argCount = args->context()->callData->argc;
     if (index >= argCount)
         return PropertyAttributes();

@@ -65,6 +65,7 @@ struct CompilationUnit;
 struct Function;
 }
 
+struct Function;
 struct Identifier;
 struct CallContext;
 struct CatchContext;
@@ -140,11 +141,15 @@ struct CallContext : ExecutionContext {
     {
         ExecutionContext::init(engine, t);
         function = 0;
+        v4Function = 0;
         locals = 0;
         activation = 0;
     }
 
+    inline unsigned int formalParameterCount() const;
+
     Pointer<FunctionObject> function;
+    QV4::Function *v4Function;
     Value *locals;
     Pointer<Object> activation;
 };

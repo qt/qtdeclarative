@@ -53,6 +53,7 @@
 #include "qv4global_p.h"
 #include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4context_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -96,6 +97,13 @@ struct Q_QML_EXPORT Function {
     }
 
 };
+
+
+inline unsigned int Heap::CallContext::formalParameterCount() const
+{
+    return v4Function ? v4Function->nFormals : 0;
+}
+
 
 }
 
