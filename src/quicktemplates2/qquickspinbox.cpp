@@ -43,6 +43,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/private/qqmllocale_p.h>
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -98,7 +99,7 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
 
 public:
     QQuickSpinBoxPrivate() : editable(false), from(0), to(99), value(0), stepSize(1),
-        delayTimer(0), repeatTimer(0), up(nullptr), down(nullptr), validator(nullptr) { }
+        delayTimer(0), repeatTimer(0), up(nullptr), down(nullptr), validator(nullptr), inputMethodHints(Qt::ImhDigitsOnly) { }
 
     int boundValue(int value) const;
     void updateValue();
@@ -132,6 +133,7 @@ public:
     QValidator *validator;
     mutable QJSValue textFromValue;
     mutable QJSValue valueFromText;
+    Qt::InputMethodHints inputMethodHints;
 };
 
 int QQuickSpinBoxPrivate::boundValue(int value) const
@@ -594,6 +596,50 @@ QQuickSpinButton *QQuickSpinBox::down() const
 }
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty flags QtQuick.Controls::SpinBox::inputMethodHints
+
+    This property provides hints to the input method about the expected content
+    of the spin box and how it should operate.
+
+    The default value is \c Qt.ImhDigitsOnly.
+
+    \include inputmethodhints.qdocinc
+*/
+Qt::InputMethodHints QQuickSpinBox::inputMethodHints() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->inputMethodHints;
+}
+
+void QQuickSpinBox::setInputMethodHints(Qt::InputMethodHints hints)
+{
+    Q_D(QQuickSpinBox);
+    if (d->inputMethodHints == hints)
+        return;
+
+    d->inputMethodHints = hints;
+    emit inputMethodHintsChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::SpinBox::inputMethodComposing
+    \readonly
+
+    This property holds whether an editable spin box has partial text input from an input method.
+
+    While it is composing, an input method may rely on mouse or key events from the spin box to
+    edit or commit the partial text. This property can be used to determine when to disable event
+    handlers that may interfere with the correct operation of an input method.
+*/
+bool QQuickSpinBox::isInputMethodComposing() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->contentItem && d->contentItem->property("inputMethodComposing").toBool();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::SpinBox::increase()
 
     Increases the value by \l stepSize, or \c 1 if stepSize is not defined.
@@ -773,9 +819,15 @@ void QQuickSpinBox::itemChange(ItemChange change, const ItemChangeData &value)
 
 void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
-    Q_UNUSED(oldItem);
-    if (newItem)
+    if (QQuickTextInput *oldInput = qobject_cast<QQuickTextInput *>(oldItem))
+        disconnect(oldInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);
+
+    if (newItem) {
         newItem->setActiveFocusOnTab(true);
+
+        if (QQuickTextInput *newInput = qobject_cast<QQuickTextInput *>(newItem))
+            connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);
+    }
 }
 
 QFont QQuickSpinBox::defaultFont() const

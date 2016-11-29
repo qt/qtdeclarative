@@ -71,6 +71,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
     Q_PROPERTY(QQuickSpinButton *up READ up CONSTANT FINAL)
     Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
+    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = nullptr);
@@ -102,6 +104,11 @@ public:
     QQuickSpinButton *up() const;
     QQuickSpinButton *down() const;
 
+    Qt::InputMethodHints inputMethodHints() const;
+    void setInputMethodHints(Qt::InputMethodHints hints);
+
+    bool isInputMethodComposing() const;
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -115,6 +122,8 @@ Q_SIGNALS:
     void validatorChanged();
     void textFromValueChanged();
     void valueFromTextChanged();
+    Q_REVISION(2) void inputMethodHintsChanged();
+    Q_REVISION(2) void inputMethodComposingChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
