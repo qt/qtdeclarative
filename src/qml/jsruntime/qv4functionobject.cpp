@@ -237,10 +237,8 @@ QQmlSourceLocation FunctionObject::sourceLocation() const
         Q_ASSERT(as<const QV4::QQmlBindingFunction>());
         return *static_cast<QV4::Heap::QQmlBindingFunction *>(d())->bindingLocation;
     }
-    QV4::Function *function = d()->function;
-    Q_ASSERT(function);
 
-    return QQmlSourceLocation(function->sourceFile(), function->compiledFunction->location.line, function->compiledFunction->location.column);
+    return d()->function->sourceLocation();
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
