@@ -76,7 +76,7 @@ T.SpinBox {
 
         readOnly: !control.editable
         validator: control.validator
-        inputMethodHints: Qt.ImhFormattedNumbersOnly
+        inputMethodHints: Qt.ImhDigitsOnly
 
         Rectangle {
             x: -6 - (down.indicator ? 1 : 0)

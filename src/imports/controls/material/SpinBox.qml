@@ -101,7 +101,7 @@ T.SpinBox {
 
         readOnly: !control.editable
         validator: control.validator
-        inputMethodHints: Qt.ImhFormattedNumbersOnly
+        inputMethodHints: Qt.ImhDigitsOnly
     }
 
     up.indicator: Item {
