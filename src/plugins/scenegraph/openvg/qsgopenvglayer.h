@@ -44,6 +44,7 @@
 #include <private/qsgcontext_p.h>
 
 #include "qopenvgcontext_p.h"
+#include "qopenvgoffscreensurface.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -103,11 +104,7 @@ private:
     bool m_recursive;
     bool m_dirtyTexture;
 
-    QOpenVGContext *m_vgContext;
-    VGImage m_image;
-    QSize m_imageSize;
-    EGLSurface m_renderTarget;
-    EGLContext m_layerContext;
+    QOpenVGOffscreenSurface *m_offscreenSurface;
 };
 
 QT_END_NAMESPACE

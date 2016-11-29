@@ -193,6 +193,10 @@ void QSGOpenVGPainterNode::render()
     else
         vgSeti(VG_IMAGE_QUALITY, VG_IMAGE_QUALITY_NONANTIALIASED);
 
+    // Set Transform
+    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+    vgLoadMatrix(transform().constData());
+
     vgDrawImage(static_cast<VGImage>(m_texture->textureId()));
 }
 

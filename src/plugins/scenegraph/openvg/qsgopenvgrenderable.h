@@ -44,6 +44,8 @@
 
 #include <VG/openvg.h>
 
+#include "qopenvgmatrix.h"
+
 QT_BEGIN_NAMESPACE
 
 class QSGOpenVGRenderable
@@ -58,9 +60,13 @@ public:
     float opacity() const;
     VGPaint opacityPaint() const;
 
+    virtual void setTransform(const QOpenVGMatrix &transform);
+    const QOpenVGMatrix &transform() const;
+
 private:
     float m_opacity;
     VGPaint m_opacityPaint;
+    QOpenVGMatrix m_transform;
 
 };
 

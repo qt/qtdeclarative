@@ -42,6 +42,7 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include "qsgopenvgrenderable.h"
+#include "qopenvgoffscreensurface.h"
 
 #include <VG/openvg.h>
 
@@ -64,6 +65,7 @@ public:
 
     void render() override;
     void setOpacity(float opacity) override;
+    void setTransform(const QOpenVGMatrix &transform) override;
 
 private:
     void createVGResources();
@@ -89,6 +91,8 @@ private:
     VGPath m_borderPath;
     VGPaint m_rectanglePaint;
     VGPaint m_borderPaint;
+
+    QOpenVGOffscreenSurface *m_offscreenSurface = nullptr;
 };
 
 QT_END_NAMESPACE

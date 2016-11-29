@@ -72,6 +72,9 @@ void QSGOpenVGInternalImageNode::render()
         vgSeti(VG_IMAGE_MODE, VG_DRAW_IMAGE_NORMAL);
     }
 
+    // Set Transform
+    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+    vgLoadMatrix(transform().constData());
 
     VGImage image = static_cast<VGImage>(m_texture->textureId());
     QSize textureSize = m_texture->textureSize();

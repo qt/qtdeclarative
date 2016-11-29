@@ -74,4 +74,14 @@ VGPaint QSGOpenVGRenderable::opacityPaint() const
     return m_opacityPaint;
 }
 
+void QSGOpenVGRenderable::setTransform(const QOpenVGMatrix &transform)
+{
+    m_transform = transform;
+}
+
+const QOpenVGMatrix &QSGOpenVGRenderable::transform() const
+{
+    return m_transform;
+}
+
 QT_END_NAMESPACE

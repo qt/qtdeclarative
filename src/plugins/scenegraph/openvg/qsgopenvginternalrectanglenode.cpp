@@ -193,6 +193,33 @@ void QSGOpenVGInternalRectangleNode::update()
 
 void QSGOpenVGInternalRectangleNode::render()
 {
+    // Set Transform
+    if (transform().isAffine()) {
+        // Use current transform matrix
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+        vgLoadMatrix(transform().constData());
+        if (m_offscreenSurface) {
+            delete m_offscreenSurface;
+            m_offscreenSurface = nullptr;
+        }
+    } else {
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+        vgLoadIdentity();
+        if (m_radius > 0) {
+            // Fallback to rendering to an image for rounded rects with perspective transforms
+            if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != QSize(ceil(m_rect.width()), ceil(m_rect.height()))) {
+                delete m_offscreenSurface;
+                m_offscreenSurface = new QOpenVGOffscreenSurface(QSize(ceil(m_rect.width()), ceil(m_rect.height())));
+            }
+
+            m_offscreenSurface->makeCurrent();
+        } else if (m_offscreenSurface) {
+            delete m_offscreenSurface;
+            m_offscreenSurface = nullptr;
+        }
+    }
+
+
     // If path is dirty
     if (m_pathDirty) {
         vgClearPath(m_rectanglePath, VG_PATH_CAPABILITY_APPEND_TO);
@@ -257,6 +284,14 @@ void QSGOpenVGInternalRectangleNode::render()
         vgSetPaint(m_rectanglePaint, VG_FILL_PATH);
         vgDrawPath(m_rectanglePath, VG_FILL_PATH);
     }
+
+    if (!transform().isAffine() && m_radius > 0) {
+        m_offscreenSurface->doneCurrent();
+        //  Render offscreen surface
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+        vgLoadMatrix(transform().constData());
+        vgDrawImage(m_offscreenSurface->image());
+    }
 }
 
 void QSGOpenVGInternalRectangleNode::setOpacity(float opacity)
@@ -266,6 +301,15 @@ void QSGOpenVGInternalRectangleNode::setOpacity(float opacity)
         m_strokeDirty = true;
         m_fillDirty = true;
     }
+}
+
+void QSGOpenVGInternalRectangleNode::setTransform(const QOpenVGMatrix &transform)
+{
+    // if there transform matrix is not affine, regenerate the path
+    if (transform.isAffine())
+        m_pathDirty = true;
+
+    QSGOpenVGRenderable::setTransform(transform);
 }
 
 void QSGOpenVGInternalRectangleNode::createVGResources()
@@ -280,6 +324,9 @@ void QSGOpenVGInternalRectangleNode::createVGResources()
 
 void QSGOpenVGInternalRectangleNode::destroyVGResources()
 {
+    if (m_offscreenSurface)
+        delete m_offscreenSurface;
+
     vgDestroyPaint(m_rectanglePaint);
     vgDestroyPaint(m_borderPaint);
     vgDestroyPath(m_rectanglePath);
@@ -290,25 +337,50 @@ void QSGOpenVGInternalRectangleNode::generateRectanglePath(const QRectF &rect, f
 {
     if (radius == 0) {
         // Generate a rectangle
+        if (transform().isAffine()) {
+            // Create command list
+            static const VGubyte rectCommands[] = {
+                VG_MOVE_TO_ABS,
+                VG_HLINE_TO_REL,
+                VG_VLINE_TO_REL,
+                VG_HLINE_TO_REL,
+                VG_CLOSE_PATH
+            };
 
-        // Create command list
-        static const VGubyte rectCommands[] = {
-            VG_MOVE_TO_ABS,
-            VG_HLINE_TO_REL,
-            VG_VLINE_TO_REL,
-            VG_HLINE_TO_REL,
-            VG_CLOSE_PATH
-        };
+            // Create command data
+            QVector<VGfloat> coordinates(5);
+            coordinates[0] = rect.x();
+            coordinates[1] = rect.y();
+            coordinates[2] = rect.width();
+            coordinates[3] = rect.height();
+            coordinates[4] = -rect.width();
+            vgAppendPathData(path, 5, rectCommands, coordinates.constData());
+        } else {
+            // Pre-transform path
+            static const VGubyte rectCommands[] = {
+                VG_MOVE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_CLOSE_PATH
+            };
 
-        // Create command data
-        QVector<VGfloat> coordinates(5);
-        coordinates[0] = rect.x();
-        coordinates[1] = rect.y();
-        coordinates[2] = rect.width();
-        coordinates[3] = rect.height();
-        coordinates[4] = -rect.width();
+            QVector<VGfloat> coordinates(8);
+            const QPointF topLeft = transform().map(rect.topLeft());
+            const QPointF topRight = transform().map(rect.topRight());
+            const QPointF bottomLeft = transform().map(rect.bottomLeft());
+            const QPointF bottomRight = transform().map(rect.bottomRight());
+            coordinates[0] = bottomLeft.x();
+            coordinates[1] = bottomLeft.y();
+            coordinates[2] = bottomRight.x();
+            coordinates[3] = bottomRight.y();
+            coordinates[4] = topRight.x();
+            coordinates[5] = topRight.y();
+            coordinates[6] = topLeft.x();
+            coordinates[7] = topLeft.y();
 
-        vgAppendPathData(path, 5, rectCommands, coordinates.constData());
+            vgAppendPathData(path, 5, rectCommands, coordinates.constData());
+        }
     } else {
         // Generate a rounded rectangle
         //Radius should never exceeds half of the width or half of the height
@@ -377,35 +449,82 @@ void QSGOpenVGInternalRectangleNode::generateBorderPath(const QRectF &rect, floa
 {
     if (radius == 0) {
         // squared frame
-        // Create command list
-        static const VGubyte squaredBorderCommands[] = {
-            VG_MOVE_TO_ABS,
-            VG_HLINE_TO_REL,
-            VG_VLINE_TO_REL,
-            VG_HLINE_TO_REL,
-            VG_MOVE_TO_ABS,
-            VG_VLINE_TO_REL,
-            VG_HLINE_TO_REL,
-            VG_VLINE_TO_REL,
-            VG_CLOSE_PATH
-        };
+        if (transform().isAffine()) {
+            // Create command list
+            static const VGubyte squaredBorderCommands[] = {
+                VG_MOVE_TO_ABS,
+                VG_HLINE_TO_REL,
+                VG_VLINE_TO_REL,
+                VG_HLINE_TO_REL,
+                VG_MOVE_TO_ABS,
+                VG_VLINE_TO_REL,
+                VG_HLINE_TO_REL,
+                VG_VLINE_TO_REL,
+                VG_CLOSE_PATH
+            };
 
-        // Create command data
-        QVector<VGfloat> coordinates(10);
-        // Outside Square
-        coordinates[0] = rect.x();
-        coordinates[1] = rect.y();
-        coordinates[2] = rect.width();
-        coordinates[3] = rect.height();
-        coordinates[4] = -rect.width();
-        // Inside Square (opposite direction)
-        coordinates[5] = rect.x() + borderWidth;
-        coordinates[6] = rect.y() + borderHeight;
-        coordinates[7] = rect.height() - (borderHeight * 2);
-        coordinates[8] = rect.width() - (borderWidth * 2);
-        coordinates[9] = -(rect.height() - (borderHeight * 2));
+            // Create command data
+            QVector<VGfloat> coordinates(10);
+            // Outside Square
+            coordinates[0] = rect.x();
+            coordinates[1] = rect.y();
+            coordinates[2] = rect.width();
+            coordinates[3] = rect.height();
+            coordinates[4] = -rect.width();
+            // Inside Square (opposite direction)
+            coordinates[5] = rect.x() + borderWidth;
+            coordinates[6] = rect.y() + borderHeight;
+            coordinates[7] = rect.height() - (borderHeight * 2);
+            coordinates[8] = rect.width() - (borderWidth * 2);
+            coordinates[9] = -(rect.height() - (borderHeight * 2));
 
-        vgAppendPathData(path, 9, squaredBorderCommands, coordinates.constData());
+            vgAppendPathData(path, 9, squaredBorderCommands, coordinates.constData());
+        } else {
+            // persepective transform
+            static const VGubyte squaredBorderCommands[] = {
+                VG_MOVE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_MOVE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_CLOSE_PATH
+            };
+
+            QVector<VGfloat> coordinates(16);
+            QRectF insideRect = rect.marginsRemoved(QMarginsF(borderWidth, borderHeight, borderWidth, borderHeight));
+            QPointF outsideBottomLeft = transform().map(rect.bottomLeft());
+            QPointF outsideBottomRight = transform().map(rect.bottomRight());
+            QPointF outsideTopRight = transform().map(rect.topRight());
+            QPointF outsideTopLeft = transform().map(rect.topLeft());
+            QPointF insideBottomLeft = transform().map(insideRect.bottomLeft());
+            QPointF insideTopLeft = transform().map(insideRect.topLeft());
+            QPointF insideTopRight = transform().map(insideRect.topRight());
+            QPointF insideBottomRight = transform().map(insideRect.bottomRight());
+
+            // Outside
+            coordinates[0] = outsideBottomLeft.x();
+            coordinates[1] = outsideBottomLeft.y();
+            coordinates[2] = outsideBottomRight.x();
+            coordinates[3] = outsideBottomRight.y();
+            coordinates[4] = outsideTopRight.x();
+            coordinates[5] = outsideTopRight.y();
+            coordinates[6] = outsideTopLeft.x();
+            coordinates[7] = outsideTopLeft.y();
+            // Inside
+            coordinates[8] = insideBottomLeft.x();
+            coordinates[9] = insideBottomLeft.y();
+            coordinates[10] = insideTopLeft.x();
+            coordinates[11] = insideTopLeft.y();
+            coordinates[12] = insideTopRight.x();
+            coordinates[13] = insideTopRight.y();
+            coordinates[14] = insideBottomRight.x();
+            coordinates[15] = insideBottomRight.y();
+
+            vgAppendPathData(path, 9, squaredBorderCommands, coordinates.constData());
+        }
     } else if (radius < qMax(borderWidth, borderHeight)){
         // rounded outside, squared inside
         // Create command list

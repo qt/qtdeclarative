@@ -64,6 +64,8 @@ public:
     void setColor(const QColor &color) override;
     QColor color() const override { return m_color; }
 
+    void setTransform(const QOpenVGMatrix &transform) override;
+
     void render() override;
 
 private:

@@ -97,6 +97,19 @@ void QOpenVGMatrix::setToIdentity()
     m[2][2] = 1.0f;
 }
 
+bool QOpenVGMatrix::isAffine() const
+{
+    if (m[0][2] == 0.0f && m[1][2] == 0.0f && m[2][2] == 1.0f)
+        return true;
+
+    return false;
+}
+
+QPointF QOpenVGMatrix::map(const QPointF &point) const
+{
+    return *this * point;
+}
+
 void QOpenVGMatrix::fill(float value)
 {
     m[0][0] = value;
@@ -285,6 +298,46 @@ QOpenVGMatrix operator*(const QOpenVGMatrix &m1, const QOpenVGMatrix &m2)
                    + m1.m[1][2] * m2.m[2][1]
                    + m1.m[2][2] * m2.m[2][2];
     return matrix;
+}
+
+QPointF operator*(const QPointF& point, const QOpenVGMatrix& matrix)
+{
+    float xin = point.x();
+    float yin = point.y();
+    float x = xin * matrix.m[0][0] +
+              yin * matrix.m[0][1] +
+              matrix.m[0][2];
+    float y = xin * matrix.m[1][0] +
+              yin * matrix.m[1][1] +
+              matrix.m[1][2];
+    float w = xin * matrix.m[2][0] +
+              yin * matrix.m[2][1] +
+              matrix.m[2][2];
+    if (w == 1.0f) {
+        return QPointF(float(x), float(y));
+    } else {
+        return QPointF(float(x / w), float(y / w));
+    }
+}
+
+QPointF operator*(const QOpenVGMatrix& matrix, const QPointF& point)
+{
+    float xin = point.x();
+    float yin = point.y();
+    float x = xin * matrix.m[0][0] +
+              yin * matrix.m[1][0] +
+              matrix.m[2][0];
+    float y = xin * matrix.m[0][1] +
+              yin * matrix.m[1][1] +
+              matrix.m[2][1];
+    float w = xin * matrix.m[0][2] +
+              yin * matrix.m[1][2] +
+              matrix.m[2][2];
+    if (w == 1.0f) {
+        return QPointF(float(x), float(y));
+    } else {
+        return QPointF(float(x / w), float(y / w));
+    }
 }
 
 QDebug operator<<(QDebug dbg, const QOpenVGMatrix &m)

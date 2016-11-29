@@ -37,56 +37,37 @@
 **
 ****************************************************************************/
 
-#ifndef QSGOPENVGNODEVISITOR_H
-#define QSGOPENVGNODEVISITOR_H
+#ifndef QOPENVGOFFSCREENSURFACE_H
+#define QOPENVGOFFSCREENSURFACE_H
 
-#include <private/qsgadaptationlayer_p.h>
-#include <QtCore/QStack>
-
-#include "qopenvgmatrix.h"
-
-#include <VG/openvg.h>
+#include "qopenvgcontext_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGOpenVGRenderable;
-class QSGOpenVGNodeVisitor : public QSGNodeVisitorEx
+class QOpenVGOffscreenSurface
 {
 public:
-    QSGOpenVGNodeVisitor();
+    QOpenVGOffscreenSurface(const QSize &size);
+    ~QOpenVGOffscreenSurface();
 
-    bool visit(QSGTransformNode *) override;
-    void endVisit(QSGTransformNode *) override;
-    bool visit(QSGClipNode *) override;
-    void endVisit(QSGClipNode *) override;
-    bool visit(QSGGeometryNode *) override;
-    void endVisit(QSGGeometryNode *) override;
-    bool visit(QSGOpacityNode *) override;
-    void endVisit(QSGOpacityNode *) override;
-    bool visit(QSGInternalImageNode *) override;
-    void endVisit(QSGInternalImageNode *) override;
-    bool visit(QSGPainterNode *) override;
-    void endVisit(QSGPainterNode *) override;
-    bool visit(QSGInternalRectangleNode *) override;
-    void endVisit(QSGInternalRectangleNode *) override;
-    bool visit(QSGGlyphNode *) override;
-    void endVisit(QSGGlyphNode *) override;
-    bool visit(QSGRootNode *) override;
-    void endVisit(QSGRootNode *) override;
-    bool visit(QSGSpriteNode *) override;
-    void endVisit(QSGSpriteNode *) override;
-    bool visit(QSGRenderNode *) override;
-    void endVisit(QSGRenderNode *) override;
+    void makeCurrent();
+    void doneCurrent();
+    void swapBuffers();
+
+    VGImage image() { return m_image; }
+    QSize size() const { return m_size; }
 
 private:
-    VGPath generateClipPath(const QRectF &rect) const;
-    void renderRenderableNode(QSGOpenVGRenderable *node);
-
-    QStack<QOpenVGMatrix> m_transformStack;
-    QStack<float> m_opacityState;
-    QStack<VGPath> m_clipStack;
+    VGImage m_image;
+    QSize m_size;
+    EGLContext m_context;
+    EGLSurface m_renderTarget;
+    EGLContext m_previousContext = EGL_NO_CONTEXT;
+    EGLSurface m_previousReadSurface = EGL_NO_SURFACE;
+    EGLSurface m_previousDrawSurface = EGL_NO_SURFACE;
+    EGLDisplay m_display;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGOPENVGNODEVISITOR_H
+#endif // QOPENVGOFFSCREENSURFACE_H

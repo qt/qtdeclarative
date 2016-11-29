@@ -138,6 +138,10 @@ void QSGOpenVGSpriteNode::render()
         vgSeti(VG_IMAGE_MODE, VG_DRAW_IMAGE_NORMAL);
     }
 
+    // Set Image Matrix
+    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+    vgLoadMatrix(transform().constData());
+
     if (sourceRect != targetRect) {
         // Scale
         float scaleX = targetRect.width() / sourceRect.width();

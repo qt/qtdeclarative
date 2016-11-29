@@ -42,6 +42,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/QDataStream>
+#include <QtCore/QPointF>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,6 +58,10 @@ public:
     bool isIdentity() const;
     void setToIdentity();
 
+    bool isAffine() const;
+
+    QPointF map(const QPointF& point) const;
+
     void fill(float value);
 
     QOpenVGMatrix transposed() const;
@@ -67,6 +72,8 @@ public:
     QOpenVGMatrix& operator*=(float factor);
     QOpenVGMatrix& operator/=(float divisor);
     friend QOpenVGMatrix operator*(const QOpenVGMatrix& m1, const QOpenVGMatrix& m2);
+    friend QPointF operator*(const QPointF& point, const QOpenVGMatrix& matrix);
+    friend QPointF operator*(const QOpenVGMatrix& matrix, const QPointF& point);
 #ifndef QT_NO_DEBUG_STREAM
     friend QDebug operator<<(QDebug dbg, const QOpenVGMatrix &m);
 #endif
@@ -84,6 +91,8 @@ private:
 };
 
 QOpenVGMatrix operator*(const QOpenVGMatrix& m1, const QOpenVGMatrix& m2);
+QPointF operator*(const QPointF& point, const QOpenVGMatrix& matrix);
+QPointF operator*(const QOpenVGMatrix& matrix, const QPointF& point);
 
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug dbg, const QOpenVGMatrix &m);

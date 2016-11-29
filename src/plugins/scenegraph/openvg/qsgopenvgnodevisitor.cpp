@@ -93,12 +93,11 @@ bool QSGOpenVGNodeVisitor::visit(QSGClipNode *node)
 
     // Render clip node geometry to mask
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
+    vgLoadIdentity();
     VGPath clipPath = generateClipPath(node->clipRect());
     vgRenderToMask(clipPath, VG_FILL_PATH, maskOperation);
 
-    auto clipState = new ClipState(clipPath, m_transformStack.top());
-    m_clipStack.push(clipState);
+    m_clipStack.push(clipPath);
 
     return true;
 }
@@ -107,29 +106,23 @@ void QSGOpenVGNodeVisitor::endVisit(QSGClipNode *)
 {
     // Remove clip node geometry from mask
     auto clipState = m_clipStack.pop();
-    vgDestroyPath(clipState->path);
+    vgDestroyPath(clipState);
 
     if (m_clipStack.count() == 0) {
         vgSeti(VG_MASKING, VG_FALSE);
     } else {
         // Recreate the mask
         vgMask(0,VG_FILL_MASK, 0, 0, VG_MAXINT, VG_MAXINT);
-        for (auto state : m_clipStack) {
-            vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
-            vgLoadMatrix(state->transform.constData());
-            vgRenderToMask(state->path, VG_FILL_PATH, VG_INTERSECT_MASK);
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+        vgLoadIdentity();
+        for (auto path : qAsConst(m_clipStack)) {
+            vgRenderToMask(path, VG_FILL_PATH, VG_INTERSECT_MASK);
         }
     }
-
-    delete clipState;
 }
 
 bool QSGOpenVGNodeVisitor::visit(QSGGeometryNode *node)
 {
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
     if (QSGSimpleRectNode *rectNode = dynamic_cast<QSGSimpleRectNode *>(node)) {
         // TODO: Try and render the QSGSimpleRectNode
         Q_UNUSED(rectNode)
@@ -169,8 +162,6 @@ void QSGOpenVGNodeVisitor::endVisit(QSGOpacityNode *)
 
 bool QSGOpenVGNodeVisitor::visit(QSGInternalImageNode *node)
 {
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
     renderRenderableNode(static_cast<QSGOpenVGInternalImageNode*>(node));
     return true;
 }
@@ -181,8 +172,6 @@ void QSGOpenVGNodeVisitor::endVisit(QSGInternalImageNode *)
 
 bool QSGOpenVGNodeVisitor::visit(QSGPainterNode *node)
 {
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
     renderRenderableNode(static_cast<QSGOpenVGPainterNode*>(node));
     return true;
 }
@@ -193,8 +182,6 @@ void QSGOpenVGNodeVisitor::endVisit(QSGPainterNode *)
 
 bool QSGOpenVGNodeVisitor::visit(QSGInternalRectangleNode *node)
 {
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
     renderRenderableNode(static_cast<QSGOpenVGInternalRectangleNode*>(node));
     return true;
 }
@@ -205,8 +192,6 @@ void QSGOpenVGNodeVisitor::endVisit(QSGInternalRectangleNode *)
 
 bool QSGOpenVGNodeVisitor::visit(QSGGlyphNode *node)
 {
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
     renderRenderableNode(static_cast<QSGOpenVGGlyphNode*>(node));
     return true;
 }
@@ -226,8 +211,6 @@ void QSGOpenVGNodeVisitor::endVisit(QSGRootNode *)
 
 bool QSGOpenVGNodeVisitor::visit(QSGSpriteNode *node)
 {
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
-    vgLoadMatrix(m_transformStack.top().constData());
     renderRenderableNode(static_cast<QSGOpenVGSpriteNode*>(node));
     return true;
 }
@@ -253,19 +236,28 @@ VGPath QSGOpenVGNodeVisitor::generateClipPath(const QRectF &rect) const
     // Create command list
     static const VGubyte rectCommands[] = {
         VG_MOVE_TO_ABS,
-        VG_HLINE_TO_REL,
-        VG_VLINE_TO_REL,
-        VG_HLINE_TO_REL,
+        VG_LINE_TO_ABS,
+        VG_LINE_TO_ABS,
+        VG_LINE_TO_ABS,
         VG_CLOSE_PATH
     };
 
+    const QOpenVGMatrix &transform = m_transformStack.top();
+
     // Create command data
-    QVector<VGfloat> coordinates(5);
-    coordinates[0] = rect.x();
-    coordinates[1] = rect.y();
-    coordinates[2] = rect.width();
-    coordinates[3] = rect.height();
-    coordinates[4] = -rect.width();
+    QVector<VGfloat> coordinates(8);
+    const QPointF topLeft = transform.map(rect.topLeft());
+    const QPointF topRight = transform.map(rect.topRight());
+    const QPointF bottomLeft = transform.map(rect.bottomLeft());
+    const QPointF bottomRight = transform.map(rect.bottomRight());
+    coordinates[0] = bottomLeft.x();
+    coordinates[1] = bottomLeft.y();
+    coordinates[2] = bottomRight.x();
+    coordinates[3] = bottomRight.y();
+    coordinates[4] = topRight.x();
+    coordinates[5] = topRight.y();
+    coordinates[6] = topLeft.x();
+    coordinates[7] = topLeft.y();
 
     vgAppendPathData(clipPath, 5, rectCommands, coordinates.constData());
     return clipPath;
@@ -275,7 +267,7 @@ void QSGOpenVGNodeVisitor::renderRenderableNode(QSGOpenVGRenderable *node)
 {
     if (!node)
         return;
-
+    node->setTransform(m_transformStack.top());
     node->setOpacity(m_opacityState.top());
     node->render();
 }

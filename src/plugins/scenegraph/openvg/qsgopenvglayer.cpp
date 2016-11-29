@@ -53,12 +53,9 @@ QSGOpenVGLayer::QSGOpenVGLayer(QSGRenderContext *renderContext)
     , m_grab(true)
     , m_recursive(false)
     , m_dirtyTexture(true)
-    , m_image(0)
-    , m_renderTarget(0)
-    , m_layerContext(0)
+    , m_offscreenSurface(nullptr)
 {
     m_context = static_cast<QSGOpenVGRenderContext*>(renderContext);
-    m_vgContext = m_context->vgContext();
 }
 
 QSGOpenVGLayer::~QSGOpenVGLayer()
@@ -68,15 +65,16 @@ QSGOpenVGLayer::~QSGOpenVGLayer()
 
 int QSGOpenVGLayer::textureId() const
 {
-    return static_cast<int>(m_image);
+    if (m_offscreenSurface)
+        return static_cast<int>(m_offscreenSurface->image());
+    else
+        return 0;
 }
 
 QSize QSGOpenVGLayer::textureSize() const
 {
-    if (m_image != 0) {
-        VGint imageWidth = vgGetParameteri(m_image, VG_IMAGE_WIDTH);
-        VGint imageHeight = vgGetParameteri(m_image, VG_IMAGE_HEIGHT);
-        return QSize(imageWidth, imageHeight);
+    if (m_offscreenSurface) {
+        return m_offscreenSurface->size();
     }
 
     return QSize();
@@ -84,42 +82,7 @@ QSize QSGOpenVGLayer::textureSize() const
 
 bool QSGOpenVGLayer::hasAlphaChannel() const
 {
-    VGImageFormat format = static_cast<VGImageFormat>(vgGetParameteri(m_image, VG_IMAGE_FORMAT));
-
-    switch (format) {
-    case VG_sRGBA_8888:
-    case VG_sRGBA_8888_PRE:
-    case VG_sRGBA_5551:
-    case VG_sRGBA_4444:
-    case VG_lRGBA_8888:
-    case VG_lRGBA_8888_PRE:
-    case VG_A_8:
-    case VG_A_1:
-    case VG_A_4:
-    case VG_sARGB_8888:
-    case VG_sARGB_8888_PRE:
-    case VG_sARGB_1555:
-    case VG_sARGB_4444:
-    case VG_lARGB_8888:
-    case VG_lARGB_8888_PRE:
-    case VG_sBGRA_8888:
-    case VG_sBGRA_8888_PRE:
-    case VG_sBGRA_5551:
-    case VG_sBGRA_4444:
-    case VG_lBGRA_8888:
-    case VG_lBGRA_8888_PRE:
-    case VG_sABGR_8888:
-    case VG_sABGR_8888_PRE:
-    case VG_sABGR_1555:
-    case VG_sABGR_4444:
-    case VG_lABGR_8888:
-    case VG_lABGR_8888_PRE:
-        return true;
-        break;
-    default:
-        break;
-    }
-    return false;
+    return true;
 }
 
 bool QSGOpenVGLayer::hasMipmaps() const
@@ -149,8 +112,8 @@ void QSGOpenVGLayer::setItem(QSGNode *item)
     m_item = item;
 
     if (m_live && !m_item) {
-        vgDestroyImage(m_image);
-        m_image = 0;
+        delete m_offscreenSurface;
+        m_offscreenSurface = nullptr;
     }
 
     markDirtyTexture();
@@ -171,8 +134,8 @@ void QSGOpenVGLayer::setSize(const QSize &size)
     m_size = size;
 
     if (m_live && m_size.isNull()) {
-        vgDestroyImage(m_image);
-        m_image = 0;
+        delete m_offscreenSurface;
+        m_offscreenSurface = nullptr;
     }
 
     markDirtyTexture();
@@ -201,8 +164,8 @@ void QSGOpenVGLayer::setLive(bool live)
     m_live = live;
 
     if (m_live && (!m_item || m_size.isNull())) {
-        vgDestroyImage(m_image);
-        m_image = 0;
+        delete m_offscreenSurface;
+        m_offscreenSurface = nullptr;
     }
 
     markDirtyTexture();
@@ -254,15 +217,17 @@ void QSGOpenVGLayer::markDirtyTexture()
 
 void QSGOpenVGLayer::invalidated()
 {
+    delete m_offscreenSurface;
     delete m_renderer;
-    m_renderer = 0;
+    m_renderer = nullptr;
+    m_offscreenSurface = nullptr;
 }
 
 void QSGOpenVGLayer::grab()
 {
     if (!m_item || m_size.isNull()) {
-        vgDestroyImage(m_image);
-        m_image = 0;
+        delete m_offscreenSurface;
+        m_offscreenSurface = nullptr;
         m_dirtyTexture = false;
         return;
     }
@@ -279,47 +244,12 @@ void QSGOpenVGLayer::grab()
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
-    if (m_image == 0 || m_imageSize != m_size ) {
-        if (m_image != 0)
-            vgDestroyImage(m_image);
 
-        m_image = vgCreateImage(VG_lARGB_8888_PRE, m_size.width(), m_size.height(), VG_IMAGE_QUALITY_BETTER);
-        m_imageSize = m_size;
+    if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != m_size ) {
+        if (m_offscreenSurface != nullptr)
+            delete m_offscreenSurface;
 
-        //Destroy old RenderTarget
-        if (m_renderTarget != 0)
-            eglDestroySurface(m_vgContext->eglDisplay(), m_renderTarget);
-
-        const EGLint configAttribs[] = {
-            EGL_CONFORMANT, EGL_OPENVG_BIT,
-            EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-            EGL_RED_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_BLUE_SIZE, 8,
-            EGL_ALPHA_SIZE, 8,
-            EGL_ALPHA_MASK_SIZE, 8,
-            EGL_NONE
-        };
-
-        EGLConfig pbufferConfig;
-        EGLint numConfig;
-        eglChooseConfig(m_vgContext->eglDisplay(), configAttribs, &pbufferConfig, 1, &numConfig);
-
-        if (m_layerContext == 0) {
-            // Create new context
-            m_layerContext = eglCreateContext(m_vgContext->eglDisplay(), pbufferConfig, m_vgContext->eglContext(), 0);
-        }
-
-        m_renderTarget = eglCreatePbufferFromClientBuffer(m_vgContext->eglDisplay(),
-                                                          EGL_OPENVG_IMAGE,
-                                                          (EGLClientBuffer)m_image,
-                                                          pbufferConfig,
-                                                          0);
-    }
-
-    if (m_renderTarget == EGL_NO_SURFACE) {
-        qDebug() << "invalid renderTarget!";
-        return;
+        m_offscreenSurface = new QOpenVGOffscreenSurface(m_size);
     }
 
     // Render texture.
@@ -337,7 +267,7 @@ void QSGOpenVGLayer::grab()
     m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
-    eglMakeCurrent(m_vgContext->eglDisplay(), m_renderTarget, m_renderTarget, m_layerContext);
+    m_offscreenSurface->makeCurrent();
 
     // Before Rendering setup context for adjusting to Qt Coordinates to PixelBuffer
     // Should already be inverted by default
@@ -346,10 +276,8 @@ void QSGOpenVGLayer::grab()
 
     m_renderer->renderScene();
 
-    eglSwapBuffers(m_vgContext->eglDisplay(), m_renderTarget);
-
-    // make the default surface current again
-    m_vgContext->makeCurrent();
+    // Make the previous surface and context active again
+    m_offscreenSurface->doneCurrent();
 
     root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip, opacity and render list update.
 

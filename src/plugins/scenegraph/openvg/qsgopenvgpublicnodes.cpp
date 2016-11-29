@@ -73,10 +73,33 @@ void QSGOpenVGRectangleNode::setColor(const QColor &color)
     markDirty(DirtyMaterial);
 }
 
+void QSGOpenVGRectangleNode::setTransform(const QOpenVGMatrix &transform)
+{
+    // if there transform matrix is not affine, regenerate the path
+    if (transform.isAffine())
+        m_pathDirty = true;
+    markDirty(DirtyGeometry);
+
+    QSGOpenVGRenderable::setTransform(transform);
+}
+
 void QSGOpenVGRectangleNode::render()
 {
+    // Set Transform
+    if (transform().isAffine()) {
+        // Use current transform matrix
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+        vgLoadMatrix(transform().constData());
+    } else {
+        // map the path's to handle the perspective matrix
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+        vgLoadIdentity();
+    }
+
     if (m_pathDirty) {
         vgClearPath(m_rectPath, VG_PATH_CAPABILITY_APPEND_TO);
+
+        if (transform().isAffine()) {
         // Create command list
         static const VGubyte rectCommands[] = {
             VG_MOVE_TO_ABS,
@@ -95,6 +118,34 @@ void QSGOpenVGRectangleNode::render()
         coordinates[4] = -m_rect.width();
 
         vgAppendPathData(m_rectPath, 5, rectCommands, coordinates.constData());
+
+        } else {
+            // Pre-transform path
+            static const VGubyte rectCommands[] = {
+                VG_MOVE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_LINE_TO_ABS,
+                VG_CLOSE_PATH
+            };
+
+            QVector<VGfloat> coordinates(8);
+            const QPointF topLeft = transform().map(m_rect.topLeft());
+            const QPointF topRight = transform().map(m_rect.topRight());
+            const QPointF bottomLeft = transform().map(m_rect.bottomLeft());
+            const QPointF bottomRight = transform().map(m_rect.bottomRight());
+            coordinates[0] = bottomLeft.x();
+            coordinates[1] = bottomLeft.y();
+            coordinates[2] = bottomRight.x();
+            coordinates[3] = bottomRight.y();
+            coordinates[4] = topRight.x();
+            coordinates[5] = topRight.y();
+            coordinates[6] = topLeft.x();
+            coordinates[7] = topLeft.y();
+
+            vgAppendPathData(m_rectPath, 5, rectCommands, coordinates.constData());
+        }
+
         m_pathDirty = false;
     }
 
@@ -154,6 +205,10 @@ void QSGOpenVGImageNode::render()
     } else {
         vgSeti(VG_IMAGE_MODE, VG_DRAW_IMAGE_NORMAL);
     }
+
+    // Set Transform
+    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+    vgLoadMatrix(transform().constData());
 
     VGImage image = static_cast<VGImage>(m_texture->textureId());
 
@@ -250,6 +305,10 @@ void QSGOpenVGNinePatchNode::render()
     } else {
         vgSeti(VG_IMAGE_MODE, VG_DRAW_IMAGE_NORMAL);
     }
+
+    // Set Transform
+    vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+    vgLoadMatrix(transform().constData());
 
     VGImage image = static_cast<VGImage>(m_texture->textureId());
 

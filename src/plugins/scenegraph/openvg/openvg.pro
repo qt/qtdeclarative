@@ -31,7 +31,8 @@ HEADERS += \
     qsgopenvgfontglyphcache.h \
     qsgopenvgpainternode.h \
     qsgopenvgspritenode.h \
-    qsgopenvgrenderable.h
+    qsgopenvgrenderable.h \
+    qopenvgoffscreensurface.h
 
 SOURCES += \
     qsgopenvgadaptation.cpp \
@@ -51,4 +52,5 @@ SOURCES += \
     qsgopenvgfontglyphcache.cpp \
     qsgopenvgpainternode.cpp \
     qsgopenvgspritenode.cpp \
-    qsgopenvgrenderable.cpp
+    qsgopenvgrenderable.cpp \
+    qopenvgoffscreensurface.cpp

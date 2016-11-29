@@ -42,6 +42,7 @@
 #include "qsgopenvgcontext_p.h"
 #include "qsgopenvghelpers.h"
 #include "qsgopenvgfontglyphcache.h"
+#include "qopenvgoffscreensurface.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,7 @@ void QSGOpenVGGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &gly
 
     m_position = position;
     m_glyphRun = glyphs;
+    m_bounding_rect = glyphs.boundingRect().translated(m_position - QPointF(0.0, glyphs.rawFont().ascent()));
 
     // Recreate ajustments
     m_xAdjustments.clear();
@@ -133,7 +135,21 @@ void QSGOpenVGGlyphNode::render()
     // Rendering Style
     qreal offset = 1.0;
 
+    QOpenVGOffscreenSurface *offscreenSurface = nullptr;
+
+    // Set Transform
+    vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
+    if (transform().isAffine()) {
+        vgLoadMatrix(transform().constData());
+    } else {
+        vgLoadIdentity();
+        offscreenSurface = new QOpenVGOffscreenSurface(QSize(ceil(m_bounding_rect.width()), ceil(m_bounding_rect.height())));
+        offscreenSurface->makeCurrent();
+    }
+
+    // Set Quality
     vgSeti(VG_RENDERING_QUALITY, VG_RENDERING_QUALITY_BETTER);
+
 
     switch (m_style) {
     case QQuickText::Normal: break;
@@ -159,6 +175,13 @@ void QSGOpenVGGlyphNode::render()
     vgSetPaint(m_fontColorPaint, VG_FILL_PATH);
     drawGlyphsAtOffset(QPointF(0.0, 0.0));
 
+    if (!transform().isAffine()) {
+        vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
+        vgLoadMatrix(transform().constData());
+        offscreenSurface->doneCurrent();
+        vgDrawImage(offscreenSurface->image());
+        delete offscreenSurface;
+    }
 }
 
 void QSGOpenVGGlyphNode::setOpacity(float opacity)
