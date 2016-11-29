@@ -102,6 +102,7 @@ Q_SIGNALS:
     void released();
     void canceled();
     void clicked();
+    Q_REVISION(2) void toggled();
     void pressAndHold();
     void doubleClicked();
     void textChanged();

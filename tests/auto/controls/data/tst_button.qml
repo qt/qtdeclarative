@@ -58,7 +58,7 @@ TestCase {
     Component {
         id: signalSequenceSpy
         SignalSequenceSpy {
-            signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged", "downChanged", "checkedChanged"]
+            signals: ["pressed", "released", "canceled", "clicked", "toggled", "doubleClicked", "pressedChanged", "downChanged", "checkedChanged"]
         }
     }
 
@@ -306,6 +306,7 @@ TestCase {
                                         ["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }],
                                         ["checkedChanged", { "checked": true }],
+                                        "toggled",
                                         "released",
                                         "clicked"]
         control.checkable = true
@@ -319,6 +320,7 @@ TestCase {
                                         ["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }],
                                         ["checkedChanged", { "checked": false }],
+                                        "toggled",
                                         "released",
                                         "clicked"]
         mouseClick(control)

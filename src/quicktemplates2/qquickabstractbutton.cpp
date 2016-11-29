@@ -93,6 +93,13 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal QtQuick.Controls::AbstractButton::toggled()
+
+    This signal is emitted when a checkable button is interactively toggled by the user.
+*/
+
+/*!
     \qmlsignal QtQuick.Controls::AbstractButton::pressAndHold()
 
     This signal is emitted when the button is interactively pressed and held down by the user.
@@ -160,6 +167,15 @@ void QQuickAbstractButtonPrivate::stopPressRepeat()
         q->killTimer(repeatTimer);
         repeatTimer = 0;
     }
+}
+
+void QQuickAbstractButtonPrivate::toggle(bool value)
+{
+    Q_Q(QQuickAbstractButton);
+    const bool wasChecked = checked;
+    q->setChecked(value);
+    if (wasChecked != checked)
+        emit q->toggled();
 }
 
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
@@ -621,7 +637,7 @@ void QQuickAbstractButton::nextCheckState()
 {
     Q_D(QQuickAbstractButton);
     if (d->checkable && (!d->checked || d->findCheckedButton() != this))
-        setChecked(!d->checked);
+        d->toggle(!d->checked);
 }
 
 void QQuickAbstractButton::checkableChange()

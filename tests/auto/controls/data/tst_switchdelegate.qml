@@ -58,7 +58,7 @@ TestCase {
     Component {
         id: signalSequenceSpy
         SignalSequenceSpy {
-            signals: ["pressed", "released", "canceled", "clicked", "pressedChanged", "checkedChanged"]
+            signals: ["pressed", "released", "canceled", "clicked", "toggled", "pressedChanged", "checkedChanged"]
         }
     }
 
@@ -127,6 +127,7 @@ TestCase {
         verify(spy.success)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -142,6 +143,7 @@ TestCase {
         verify(spy.success)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
                                 ["checkedChanged", { "pressed": false, "checked": false }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -159,6 +161,7 @@ TestCase {
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control, control.width * 2, control.height / 2, Qt.LeftButton)
@@ -176,6 +179,7 @@ TestCase {
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
                                 ["checkedChanged", { "pressed": false, "checked": false }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control, -control.width, control.height / 2, Qt.LeftButton)
@@ -221,6 +225,7 @@ TestCase {
 
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control.indicator, control.indicator.width)
@@ -255,6 +260,7 @@ TestCase {
 
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
                                 ["checkedChanged", { "pressed": false, "checked": false }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control, control.width)
@@ -289,6 +295,7 @@ TestCase {
 
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
                                 "released",
                                 "clicked"]
         mouseRelease(control, control.width)

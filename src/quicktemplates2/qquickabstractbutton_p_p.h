@@ -78,6 +78,8 @@ public:
     QQuickAbstractButton *findCheckedButton() const;
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
+    void toggle(bool value);
+
     QString text;
     bool down;
     bool explicitDown;

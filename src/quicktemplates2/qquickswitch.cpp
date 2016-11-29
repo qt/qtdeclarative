@@ -187,7 +187,7 @@ void QQuickSwitch::nextCheckState()
 {
     Q_D(QQuickSwitch);
     if (keepMouseGrab())
-        setChecked(d->position > 0.5);
+        d->toggle(d->position > 0.5);
     else
         QQuickAbstractButton::nextCheckState();
 }

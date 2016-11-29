@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
@@ -58,7 +58,7 @@ TestCase {
     Component {
         id: signalSequenceSpy
         SignalSequenceSpy {
-            signals: ["pressed", "released", "canceled", "clicked", "pressedChanged", "checkedChanged", "checkStateChanged"]
+            signals: ["pressed", "released", "canceled", "clicked", "toggled", "pressedChanged", "checkedChanged", "checkStateChanged"]
         }
     }
 
@@ -147,6 +147,7 @@ TestCase {
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
                                         ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
                                         ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        "toggled",
                                         "released",
                                         "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -164,6 +165,7 @@ TestCase {
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
                                         ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
                                         ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "toggled",
                                         "released",
                                         "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -219,6 +221,7 @@ TestCase {
                                         ["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
                                         ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
                                         ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        "toggled",
                                         "released",
                                         "clicked"]
         keyClick(Qt.Key_Space)
@@ -232,6 +235,7 @@ TestCase {
                                         ["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
                                         ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
                                         ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "toggled",
                                         "released",
                                         "clicked"]
         keyClick(Qt.Key_Space)

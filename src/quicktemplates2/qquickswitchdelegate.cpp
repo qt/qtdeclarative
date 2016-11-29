@@ -192,7 +192,7 @@ void QQuickSwitchDelegate::nextCheckState()
 {
     Q_D(QQuickSwitchDelegate);
     if (keepMouseGrab())
-        setChecked(d->position > 0.5);
+        d->toggle(d->position > 0.5);
     else
         QQuickItemDelegate::nextCheckState();
 }
