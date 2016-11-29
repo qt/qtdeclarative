@@ -85,12 +85,6 @@ public:
     void setOwnsTexture(bool owns) override;
     bool ownsTexture() const override;
 
-    static void rebuildGeometry(QSGGeometry *g,
-                                QSGTexture *texture,
-                                const QRectF &rect,
-                                QRectF sourceRect,
-                                TextureCoordinatesTransformMode texCoordMode);
-
 private:
     QSGGeometry m_geometry;
     QSGOpaqueTextureMaterial m_opaque_material;

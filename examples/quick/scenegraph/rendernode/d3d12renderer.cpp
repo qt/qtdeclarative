@@ -42,11 +42,9 @@
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QFile>
 
 #if QT_CONFIG(d3d12)
-
-#include "vs_shader.hlslh"
-#include "ps_shader.hlslh"
 
 D3D12RenderNode::D3D12RenderNode(QQuickItem *item)
     : m_item(item)
@@ -111,12 +109,25 @@ void D3D12RenderNode::init()
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
 
+    QFile f(QStringLiteral(":/scenegraph/rendernode/shader_vert.cso"));
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning("Failed to open file with vertex shader bytecode");
+        return;
+    }
+    QByteArray vshader_cso = f.readAll();
+    f.close();
+    f.setFileName(QStringLiteral(":/scenegraph/rendernode/shader_frag.cso"));
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning("Failed to open file with fragment shader bytecode");
+        return;
+    }
+    QByteArray fshader_cso = f.readAll();
     D3D12_SHADER_BYTECODE vshader;
-    vshader.pShaderBytecode = g_VS_Simple;
-    vshader.BytecodeLength = sizeof(g_VS_Simple);
+    vshader.pShaderBytecode = vshader_cso.constData();
+    vshader.BytecodeLength = vshader_cso.size();
     D3D12_SHADER_BYTECODE pshader;
-    pshader.pShaderBytecode = g_PS_Simple;
-    pshader.BytecodeLength = sizeof(g_PS_Simple);
+    pshader.pShaderBytecode = fshader_cso.constData();
+    pshader.BytecodeLength = fshader_cso.size();
 
     D3D12_RASTERIZER_DESC rastDesc = {};
     rastDesc.FillMode = D3D12_FILL_MODE_SOLID;

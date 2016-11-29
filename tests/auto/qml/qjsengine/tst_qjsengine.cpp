@@ -196,6 +196,8 @@ private slots:
 
     void basicBlockMergeAfterLoopPeeling();
 
+    void malformedExpression();
+
 signals:
     void testSignal();
 };
@@ -4060,6 +4062,12 @@ void tst_QJSEngine::basicBlockMergeAfterLoopPeeling()
     "}\n");
     QVERIFY(!ok.isCallable());
 
+}
+
+void tst_QJSEngine::malformedExpression()
+{
+    QJSEngine engine;
+    engine.evaluate("5%55555&&5555555\n7-0");
 }
 
 QTEST_MAIN(tst_QJSEngine)

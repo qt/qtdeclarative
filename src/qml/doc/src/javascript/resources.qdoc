@@ -78,13 +78,13 @@ Rectangle {
 
 \code
 // my_button_impl.js
-property var clickCount = 0;   // this state is separate for each instance of MyButton
-function onClicked(btn) {
+var clickCount = 0;   // this state is separate for each instance of MyButton
+function onClicked(button) {
     clickCount += 1;
     if ((clickCount % 5) == 0) {
-        obj.color = Qt.rgba(1,0,0,1);
+        button.color = Qt.rgba(1,0,0,1);
     } else {
-        obj.color = Qt.rgba(0,1,0,1);
+        button.color = Qt.rgba(0,1,0,1);
     }
 }
 \endcode

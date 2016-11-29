@@ -70,9 +70,6 @@ public:
     void setPadding(qreal left, qreal top, qreal right, qreal bottom) override;
     void update() override;
 
-    static void rebuildGeometry(QSGTexture *texture, QSGGeometry *geometry, const QVector4D &padding,
-                                const QRectF &bounds, qreal dpr);
-
 private:
     QRectF m_bounds;
     qreal m_devicePixelRatio;

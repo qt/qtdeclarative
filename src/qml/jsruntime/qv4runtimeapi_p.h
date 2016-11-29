@@ -63,11 +63,6 @@ template <typename T>
 struct ExceptionCheck {
     enum { NeedsCheck = 1 };
 };
-// push_catch and pop context methods shouldn't check for exceptions
-template <>
-struct ExceptionCheck<void (*)(QV4::ExecutionEngine *)> {
-    enum { NeedsCheck = 0 };
-};
 template <typename A>
 struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
     enum { NeedsCheck = 0 };
@@ -244,9 +239,9 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     // exceptions & scopes
     RUNTIME_METHOD(void, throwException, (ExecutionEngine *engine, const Value &value));
     RUNTIME_METHOD(ReturnedValue, unwindException, (ExecutionEngine *engine));
-    RUNTIME_METHOD(void, pushWithScope, (const Value &o, ExecutionEngine *engine));
+    RUNTIME_METHOD(void, pushWithScope, (const Value &o, NoThrowEngine *engine));
     RUNTIME_METHOD(void, pushCatchScope, (NoThrowEngine *engine, int exceptionVarNameIndex));
-    RUNTIME_METHOD(void, popScope, (ExecutionEngine *engine));
+    RUNTIME_METHOD(void, popScope, (NoThrowEngine *engine));
 
     // closures
     RUNTIME_METHOD(ReturnedValue, closure, (ExecutionEngine *engine, int functionId));

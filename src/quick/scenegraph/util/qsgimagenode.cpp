@@ -187,4 +187,33 @@ QT_BEGIN_NAMESPACE
     \return \c true if the node takes ownership of the texture; otherwise \c false.
  */
 
+void QSGImageNode::rebuildGeometry(QSGGeometry *g,
+                                   QSGTexture *texture,
+                                   const QRectF &rect,
+                                   QRectF sourceRect,
+                                   TextureCoordinatesTransformMode texCoordMode)
+{
+    if (!texture)
+        return;
+
+    if (!sourceRect.width() || !sourceRect.height()) {
+        QSize ts = texture->textureSize();
+        sourceRect = QRectF(0, 0, ts.width(), ts.height());
+    }
+
+    // Maybe transform the texture coordinates
+    if (texCoordMode.testFlag(QSGImageNode::MirrorHorizontally)) {
+        float tmp = sourceRect.left();
+        sourceRect.setLeft(sourceRect.right());
+        sourceRect.setRight(tmp);
+    }
+    if (texCoordMode.testFlag(QSGImageNode::MirrorVertically)) {
+        float tmp = sourceRect.top();
+        sourceRect.setTop(sourceRect.bottom());
+        sourceRect.setBottom(tmp);
+    }
+
+    QSGGeometry::updateTexturedRectGeometry(g, rect, texture->convertToNormalizedSourceRect(sourceRect));
+}
+
 QT_END_NAMESPACE

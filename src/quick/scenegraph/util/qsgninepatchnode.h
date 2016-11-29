@@ -55,6 +55,10 @@ public:
     virtual void setDevicePixelRatio(qreal ratio) = 0;
     virtual void setPadding(qreal left, qreal top, qreal right, qreal bottom) = 0;
     virtual void update() = 0;
+
+    static void rebuildGeometry(QSGTexture *texture, QSGGeometry *geometry,
+                                const QVector4D &padding,
+                                const QRectF &bounds, qreal dpr);
 };
 
 QT_END_NAMESPACE
