@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -80,6 +80,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
     case QQuickEventPoint::Pressed:
         if (target() && target()->parentItem())
             m_startPos = target()->parentItem()->mapToScene(target()->position());
+        setPassiveGrab(point);
         break;
     case QQuickEventPoint::Updated: {
         QPointF delta = point->scenePos() - point->scenePressPos();
@@ -96,7 +97,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
             }
         } else if ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point))) {
-            setGrab(point, true);
+            setExclusiveGrab(point);
         }
     } break;
     default:

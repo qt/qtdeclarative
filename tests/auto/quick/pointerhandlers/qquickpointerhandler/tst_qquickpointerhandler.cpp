@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -161,9 +161,9 @@ class EventHandler : public QQuickPointerHandler
         for (int i = 0; i < c; ++i) {
             QQuickEventPoint *point = event->point(i);
             if (item->acceptPointer)
-                point->setAccepted(item->acceptPointer); // non-exclusive grab
+                point->setAccepted(item->acceptPointer); // does NOT imply a grab
             if (item->grabPointer)
-                setGrab(point, true);   // exclusive grab
+                setExclusiveGrab(point, true);
             qCDebug(lcPointerTests) << "        " << i << ":" << point << "accepted?" << item->acceptPointer << "grabbed?" << (point->grabber() == this);
             item->eventList.append(Event(QEvent::Pointer, eventPos(point), point->scenePos()));
         }

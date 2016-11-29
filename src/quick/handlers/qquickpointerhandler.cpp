@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -42,6 +42,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")
+Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 
 /*!
     \qmltype PointerHandler
@@ -73,20 +74,40 @@ QQuickPointerHandler::~QQuickPointerHandler()
     }
 }
 
-void QQuickPointerHandler::setGrab(QQuickEventPoint *point, bool grab)
+void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
+{
+    if (grab) {
+        point->setGrabberPointerHandler(this, false);
+        emit grabChanged(point);
+    } else if (point->grabberPointerHandler() == this) {
+        // TODO should giving up passive grab imply giving up exclusive grab too?
+        // we're being inconsistent here: check whether the exclusive grabber is this,
+        // then say that the passive grab was canceled.
+        point->cancelPassiveGrab(this);
+        emit grabChanged(point);
+    }
+}
+
+void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
 {
     QQuickPointerHandler *oldGrabber = point->grabberPointerHandler();
     if (grab && oldGrabber != this) {
         if (oldGrabber)
             oldGrabber->handleGrabCancel(point);
-        point->setGrabberPointerHandler(this);
+        point->setGrabberPointerHandler(this, true);
         onGrabChanged(point);
-        emit grabChanged(point);
+//        emit grabChanged(point); // TODO maybe
     } else if (!grab && oldGrabber == this) {
-        point->setGrabberPointerHandler(nullptr);
+        point->setGrabberPointerHandler(nullptr, true);
         onGrabChanged(point);
-        emit grabChanged(point);
+//        emit grabChanged(point); // TODO maybe
     }
+}
+
+void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
+{
+    point->cancelAllGrabs(this);
+    emit grabChanged(point);
 }
 
 QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
@@ -164,6 +185,7 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 void QQuickPointerHandler::setActive(bool active)
 {
     if (m_active != active) {
+        qCDebug(lcPointerHandlerActive) << this << m_active << "->" << active;
         m_active = active;
         onActiveChanged();
         emit activeChanged();

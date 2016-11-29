@@ -1680,8 +1680,10 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             auto handler = point->grabberPointerHandler();
             pointerEvent->localize(handler->parentItem());
             handler->handlePointerEvent(pointerEvent);
-            if (mouseIsReleased)
-                point->setGrabberPointerHandler(nullptr);
+            if (mouseIsReleased) {
+                point->setGrabberPointerHandler(nullptr, true);
+                point->clearPassiveGrabbers();
+            }
         }
     } else {
         bool delivered = false;

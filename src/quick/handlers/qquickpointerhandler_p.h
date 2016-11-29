@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -99,7 +99,9 @@ protected:
     void setActive(bool active);
     virtual void onActiveChanged() { }
     virtual void onGrabChanged(QQuickEventPoint *) { }
-    void setGrab(QQuickEventPoint *point, bool grab);
+    void setPassiveGrab(QQuickEventPoint *point, bool grab = true);
+    void setExclusiveGrab(QQuickEventPoint *point, bool grab = true);
+    void cancelAllGrabs(QQuickEventPoint *point);
     virtual void handleGrabCancel(QQuickEventPoint *point);
     QPointF eventPos(const QQuickEventPoint *point) const;
     bool parentContains(const QQuickEventPoint *point) const;

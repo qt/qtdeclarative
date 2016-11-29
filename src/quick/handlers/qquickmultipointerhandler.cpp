@@ -213,7 +213,7 @@ void QQuickMultiPointerHandler::acceptPoints(const QVector<QQuickEventPoint *> &
 void QQuickMultiPointerHandler::grabPoints(QVector<QQuickEventPoint *> points)
 {
     for (QQuickEventPoint* point : points)
-        setGrab(point, true);
+        setExclusiveGrab(point);
 }
 
 QT_END_NAMESPACE

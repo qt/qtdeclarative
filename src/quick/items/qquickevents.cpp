@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -519,9 +519,9 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
 {
     m_scenePos = scenePos;
     if (m_pointId != pointId) {
-        if (m_grabber) {
-            qWarning() << m_grabber << "failed to ungrab previous point" << m_pointId;
-            cancelGrab();
+        if (m_exclusiveGrabber) {
+            qWarning() << m_exclusiveGrabber << "failed to ungrab previous point" << m_pointId;
+            cancelExclusiveGrab();
         }
         m_pointId = pointId;
     }
@@ -552,34 +552,34 @@ void QQuickEventPoint::invalidate()
 
 QObject *QQuickEventPoint::grabber() const
 {
-    return m_grabber.data();
+    return m_exclusiveGrabber.data();
 }
 
 void QQuickEventPoint::setGrabber(QObject *grabber)
 {
     if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber))
-        setGrabberPointerHandler(phGrabber);
+        setGrabberPointerHandler(phGrabber, true);
     else
         setGrabberItem(static_cast<QQuickItem *>(grabber));
 }
 
 QQuickItem *QQuickEventPoint::grabberItem() const
 {
-    return (m_grabberIsHandler ? nullptr : static_cast<QQuickItem *>(m_grabber.data()));
+    return (m_grabberIsHandler ? nullptr : static_cast<QQuickItem *>(m_exclusiveGrabber.data()));
 }
 
 void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
 {
-    if (grabber != m_grabber.data()) {
+    if (grabber != m_exclusiveGrabber.data()) {
         if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
             auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
             static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
             QString deviceName = (device ? device->name() : QLatin1String("null device"));
             deviceName.resize(16, ' '); // shorten, and align in case of sequential output
             qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
-                                   << ": grab" << m_grabber << "->" << grabber;
+                                   << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
-        m_grabber = QPointer<QObject>(grabber);
+        m_exclusiveGrabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
     }
@@ -587,35 +587,76 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
 
 QQuickPointerHandler *QQuickEventPoint::grabberPointerHandler() const
 {
-    return (m_grabberIsHandler ? static_cast<QQuickPointerHandler *>(m_grabber.data()) : nullptr);
+    return (m_grabberIsHandler ? static_cast<QQuickPointerHandler *>(m_exclusiveGrabber.data()) : nullptr);
 }
 
-void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber)
+void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, bool exclusive)
 {
-    if (grabber != m_grabber.data()) {
-        if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
-            auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
-            static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
-            QString deviceName = (device ? device->name() : QLatin1String("null device"));
-            deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+    if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
+        auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
+        static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
+        QString deviceName = (device ? device->name() : QLatin1String("null device"));
+        deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+        if (exclusive) {
+            if (m_exclusiveGrabber != grabber)
+                qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
+                                       << ": grab (exclusive)" << m_exclusiveGrabber << "->" << grabber;
+        } else {
             qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
-                                   << ": grab" << m_grabber << "->" << grabber;
+                                   << ": grab (passive)" << grabber;
         }
-        m_grabber = QPointer<QObject>(grabber);
-        m_grabberIsHandler = true;
-        m_sceneGrabPos = m_scenePos;
+    }
+    if (exclusive) {
+        if (grabber != m_exclusiveGrabber.data()) {
+            m_exclusiveGrabber = QPointer<QObject>(grabber);
+            m_grabberIsHandler = true;
+            m_sceneGrabPos = m_scenePos;
+            m_passiveGrabbers.removeAll(QPointer<QQuickPointerHandler>(grabber));
+        }
+    } else {
+        if (!grabber) {
+            qDebug() << "can't set passive grabber to null";
+            return;
+        }
+        auto ptr = QPointer<QQuickPointerHandler>(grabber);
+        if (!m_passiveGrabbers.contains(ptr))
+            m_passiveGrabbers.append(ptr);
     }
 }
 
-void QQuickEventPoint::cancelGrab()
+void QQuickEventPoint::cancelExclusiveGrab()
 {
-    if (m_grabber.isNull()) {
+    if (m_exclusiveGrabber.isNull()) {
         qWarning("cancelGrab: no grabber");
         return;
     }
+    if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
+        // TODO somehow avoid duplicating this code from setGrabberPointerHandler
+        auto device = static_cast<const QQuickPointerEvent *>(parent())->device();
+        static const QMetaEnum stateMetaEnum = metaObject()->enumerator(metaObject()->indexOfEnumerator("State"));
+        QString deviceName = (device ? device->name() : QLatin1String("null device"));
+        deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+        qCDebug(lcPointerGrab) << deviceName << "point" << hex << m_pointId << stateMetaEnum.valueToKey(state())
+                               << ": grab (exclusive)" << m_exclusiveGrabber << "-> nullptr";
+    }
     if (auto handler = grabberPointerHandler())
         handler->handleGrabCancel(this);
-    m_grabber.clear();
+    m_exclusiveGrabber.clear();
+}
+
+void QQuickEventPoint::cancelPassiveGrab(QQuickPointerHandler *handler)
+{
+    if (m_passiveGrabbers.removeOne(QPointer<QQuickPointerHandler>(handler)))
+        handler->handleGrabCancel(this);
+}
+
+void QQuickEventPoint::cancelAllGrabs(QQuickPointerHandler *handler)
+{
+    if (m_exclusiveGrabber == handler) {
+        handler->handleGrabCancel(this);
+        m_exclusiveGrabber.clear();
+    }
+    cancelPassiveGrab(handler);
 }
 
 void QQuickEventPoint::setAccepted(bool accepted)
@@ -738,6 +779,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     switch (ev->type()) {
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonDblClick:
+        m_mousePoint->clearPassiveGrabbers();
         state = Qt::TouchPointPressed;
         break;
     case QEvent::MouseButtonRelease:
@@ -779,13 +821,19 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
 
     // Make sure the grabbers are right from one event to the next
     QVector<QObject*> grabbers;
+    QVector<QVector <QPointer <QQuickPointerHandler> > > passiveGrabberses;
+    passiveGrabberses.reserve(newPointCount);
     // Copy all grabbers, because the order of points might have changed in the event.
     // The ID is all that we can rely on (release might remove the first point etc).
     for (int i = 0; i < newPointCount; ++i) {
         QObject *grabber = nullptr;
-        if (auto point = pointById(tps.at(i).id()))
+        QVector <QPointer <QQuickPointerHandler> > passiveGrabbers;
+        if (auto point = pointById(tps.at(i).id())) {
             grabber = point->grabber();
+            passiveGrabbers = point->passiveGrabbers();
+        }
         grabbers.append(grabber);
+        passiveGrabberses.append(passiveGrabbers);
     }
 
     for (int i = 0; i < newPointCount; ++i) {
@@ -795,8 +843,10 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
             if (grabbers.at(i))
                 qWarning() << "TouchPointPressed without previous release event" << point;
             point->setGrabberItem(nullptr);
+            point->clearPassiveGrabbers();
         } else {
             point->setGrabber(grabbers.at(i));
+            point->setPassiveGrabbers(passiveGrabberses.at(i));
         }
     }
     m_pointCount = newPointCount;
@@ -822,7 +872,7 @@ QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
 }
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
-  : QObject(parent), m_pointId(0), m_grabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
+  : QObject(parent), m_pointId(0), m_exclusiveGrabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
     m_state(QQuickEventPoint::Released), m_valid(false), m_accept(false), m_grabberIsHandler(false)
 {
     Q_UNUSED(m_reserved);
@@ -859,6 +909,7 @@ QVector<QObject *> QQuickPointerMouseEvent::grabbers() const
 
 void QQuickPointerMouseEvent::clearGrabbers() const {
     m_mousePoint->setGrabberItem(nullptr);
+    m_mousePoint->clearPassiveGrabbers();
 }
 
 bool QQuickPointerMouseEvent::hasGrabber(const QQuickPointerHandler *handler) const
@@ -904,8 +955,10 @@ QVector<QObject *> QQuickPointerTouchEvent::grabbers() const
 }
 
 void QQuickPointerTouchEvent::clearGrabbers() const {
-    for (auto point: m_touchPoints)
+    for (auto point: m_touchPoints) {
         point->setGrabber(nullptr);
+        point->clearPassiveGrabbers();
+    }
 }
 
 bool QQuickPointerTouchEvent::hasGrabber(const QQuickPointerHandler *handler) const

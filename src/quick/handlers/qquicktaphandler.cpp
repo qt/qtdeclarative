@@ -253,8 +253,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             m_longPressTimer.stop();
             m_holdTimer.invalidate();
         }
-        if (m_gesturePolicy != DragThreshold)
-            setGrab(point, press);
+        setPassiveGrab(point, press);
         if (!cancel && !press && point->timeHeld() < longPressThreshold()) {
             // Assuming here that pointerEvent()->timestamp() is in ms.
             qreal ts = point->pointerEvent()->timestamp() / 1000.0;

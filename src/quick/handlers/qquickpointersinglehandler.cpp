@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -70,8 +70,8 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
             if (wantsEventPoint(point)) {
                 point->setAccepted();
                 return true;
-            } else if (point->grabber() == this) {
-                point->cancelGrab();
+            } else {
+                point->cancelAllGrabs(this);
             }
         } else {
             qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << m_pointId
@@ -125,7 +125,7 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
             emit pointIdChanged();
             break;
         case QQuickEventPoint::Released:
-            setGrab(currentPoint, false);
+            setExclusiveGrab(currentPoint, false);
             reset();
             break;
         default:

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -302,9 +302,15 @@ public:
     void setGrabberItem(QQuickItem *grabber);
 
     QQuickPointerHandler *grabberPointerHandler() const;
-    void setGrabberPointerHandler(QQuickPointerHandler *grabber);
+    void setGrabberPointerHandler(QQuickPointerHandler *grabber, bool exclusive = false);
 
-    Q_INVOKABLE void cancelGrab();
+    Q_INVOKABLE void cancelExclusiveGrab();
+    Q_INVOKABLE void cancelPassiveGrab(QQuickPointerHandler *handler);
+    void cancelAllGrabs(QQuickPointerHandler *handler);
+
+    QVector<QPointer <QQuickPointerHandler> > passiveGrabbers() const { return m_passiveGrabbers; }
+    void setPassiveGrabbers(const QVector<QPointer <QQuickPointerHandler> > &grabbers) { m_passiveGrabbers = grabbers; }
+    void clearPassiveGrabbers() { m_passiveGrabbers.clear(); }
 
 private:
     QVector2D estimatedVelocity() const;
@@ -316,7 +322,8 @@ private:
     QPointF m_sceneGrabPos;
     QVector2D m_velocity;
     quint64 m_pointId;
-    QPointer<QObject> m_grabber;
+    QPointer<QObject> m_exclusiveGrabber;
+    QVector<QPointer <QQuickPointerHandler> > m_passiveGrabbers;
     ulong m_timestamp;
     ulong m_pressTimestamp;
     State m_state;
