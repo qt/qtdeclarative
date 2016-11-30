@@ -169,10 +169,8 @@ static Breakpoint qt_v4LastStop;
 
 static QV4::Function *qt_v4ExtractFunction(QV4::ExecutionContext *context)
 {
-    QV4::Scope scope(context->engine());
-    QV4::ScopedFunctionObject function(scope, context->getFunctionObject());
-    if (function)
-        return function->function();
+    if (QV4::Function *function = context->getFunction())
+        return function;
     else
         return context->d()->engine->globalCode;
 }

@@ -780,21 +780,17 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     QVector<StackFrame> stack;
 
     ExecutionContext *c = currentContext;
-    ScopedFunctionObject function(scope);
     while (c && frameLimit) {
-        function = c->getFunctionObject();
+        QV4::Function *function = c->getFunction();
         if (function) {
             StackFrame frame;
-            if (const Function *f = function->function())
-                frame.source = f->sourceFile();
+            frame.source = function->sourceFile();
             name = function->name();
             frame.function = name->toQString();
-            frame.line = -1;
-            frame.column = -1;
 
-            if (function->function())
-                // line numbers can be negative for places where you can't set a real breakpoint
-                frame.line = qAbs(c->d()->lineNumber);
+            // line numbers can be negative for places where you can't set a real breakpoint
+            frame.line = qAbs(c->d()->lineNumber);
+            frame.column = -1;
 
             stack.append(frame);
             --frameLimit;

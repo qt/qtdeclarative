@@ -214,7 +214,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     inline const CatchContext *asCatchContext() const;
     inline const WithContext *asWithContext() const;
 
-    Heap::FunctionObject *getFunctionObject() const;
+    Function *getFunction() const;
 
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 
