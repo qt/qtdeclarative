@@ -809,13 +809,14 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             // the result is written to a value type virtual property, that contains the sub-index
             // of the "x" property.
             QQmlBinding *qmlBinding;
+            const QQmlPropertyData *prop = property;
+            const QQmlPropertyData *subprop = nullptr;
             if (_valueTypeProperty) {
-                qmlBinding = QQmlBinding::create(_valueTypeProperty, function, _scopeObject, context);
-                qmlBinding->setTarget(_bindingTarget, *_valueTypeProperty, property);
-            } else {
-                qmlBinding = QQmlBinding::create(property, function, _scopeObject, context);
-                qmlBinding->setTarget(_bindingTarget, *property, nullptr);
+                prop = _valueTypeProperty;
+                subprop = property;
             }
+            qmlBinding = QQmlBinding::create(prop, function, _scopeObject, context);
+            qmlBinding->setTarget(_bindingTarget, *prop, subprop);
 
             sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));
 
