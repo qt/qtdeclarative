@@ -86,7 +86,6 @@ public:
     void evaluate(void **a);
     void evaluate(const QList<QVariant> &args);
 
-    QQmlSourceLocation sourceLocation() const;
     QString expression() const;
     QV4::Function *function() const;
     QObject *target() const { return m_target; }

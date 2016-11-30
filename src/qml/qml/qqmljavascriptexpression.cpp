@@ -128,6 +128,11 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
     setNotifyOnValueChanged(false);
 }
 
+QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
+{
+    return m_function.valueRef()->as<QV4::FunctionObject>()->sourceLocation();
+}
+
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
 {
     if (m_prevExpression) {

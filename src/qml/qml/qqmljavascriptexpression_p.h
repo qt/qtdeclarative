@@ -113,6 +113,8 @@ public:
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
 
+    QQmlSourceLocation sourceLocation() const;
+
     bool isValid() const { return context() != 0; }
 
     QQmlContextData *context() const { return m_context; }

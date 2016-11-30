@@ -157,19 +157,6 @@ void QQmlBoundSignalExpression::expressionChanged()
     // bound signals do not notify on change.
 }
 
-QQmlSourceLocation QQmlBoundSignalExpression::sourceLocation() const
-{
-    QV4::Function *f = function();
-    if (f) {
-        QQmlSourceLocation loc;
-        loc.sourceFile = f->sourceFile();
-        loc.line = f->compiledFunction->location.line;
-        loc.column = f->compiledFunction->location.column;
-        return loc;
-    }
-    return QQmlSourceLocation();
-}
-
 QString QQmlBoundSignalExpression::expression() const
 {
     if (expressionFunctionValid()) {

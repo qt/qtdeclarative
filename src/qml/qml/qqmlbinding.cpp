@@ -197,6 +197,7 @@ protected:
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
                   const QV4::ScopedFunctionObject &f) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
+        Q_UNUSED(f);
         auto ep = QQmlEnginePrivate::get(scope.engine);
         ep->referenceScarceResources();
 
@@ -212,7 +213,7 @@ protected:
         if (!watcher.wasDeleted()) {
 
             if (error) {
-                delayedError()->setErrorLocation(f->sourceLocation());
+                delayedError()->setErrorLocation(sourceLocation());
                 delayedError()->setErrorObject(m_target.data());
             }
 
