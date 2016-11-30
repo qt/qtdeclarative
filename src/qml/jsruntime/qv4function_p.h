@@ -91,6 +91,15 @@ struct Q_QML_EXPORT Function {
     inline bool needsActivation() const
     { return activationRequired; }
 
+    inline bool canUseSimpleFunction() const {
+        if (needsActivation() ||
+            compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
+            compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
+            isNamedExpression())
+            return false;
+        return true;
+    }
+
     QQmlSourceLocation sourceLocation() const
     {
         return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);

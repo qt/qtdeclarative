@@ -195,12 +195,9 @@ void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
 {
-    if (function->needsActivation() ||
-        function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
-        function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
-        function->isNamedExpression())
-        return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
-    return scope->d()->engine->memoryManager->allocObject<SimpleScriptFunction>(scope, function, createProto);
+    if (function->canUseSimpleFunction())
+        return scope->d()->engine->memoryManager->allocObject<SimpleScriptFunction>(scope, function, createProto);
+    return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
 }
 
 Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
