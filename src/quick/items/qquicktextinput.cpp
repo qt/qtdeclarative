@@ -1152,6 +1152,17 @@ bool QQuickTextInput::hasAcceptableInput() const
     The corresponding handler is \c onEditingFinished.
 */
 
+/*!
+    \qmlsignal QtQuick::TextInput::textEdited()
+    \since 5.9
+
+    This signal is emitted whenever the text is edited. Unlike \c textChanged(),
+    this signal is not emitted when the text is changed programmatically, for example,
+    by changing the value of the \c text property or by calling \c clear().
+
+    The corresponding handler is \c onTextEdited.
+*/
+
 #if QT_CONFIG(im)
 Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
 {
@@ -3499,7 +3510,7 @@ void QQuickTextInputPrivate::selectWordAtPos(int cursor)
 
     The \a update value is currently unused.
 */
-bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bool /*edited*/)
+bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bool edited)
 {
     Q_Q(QQuickTextInput);
 
@@ -3570,6 +3581,8 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             m_preeditDirty = false;
 #endif
             alignmentChanged = determineHorizontalAlignment();
+            if (edited)
+                emit q->textEdited();
             emit q->textChanged();
         }
 

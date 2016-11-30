@@ -376,6 +376,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickFlickable, 9>(uri, 2, 9, "Flickable");
     qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
+    qmlRegisterType<QQuickTextInput, 9>(uri, 2, 9, "TextInput");
 }
 
 static void initResources()
