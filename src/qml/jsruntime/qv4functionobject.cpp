@@ -435,7 +435,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
 void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
         return;
     }
@@ -458,7 +458,7 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
     if (f->function()->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
     } else if (!scope.result.isObject()) {
         scope.result = obj.asReturnedValue();
@@ -468,7 +468,7 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
         return;
     }
@@ -524,7 +524,7 @@ void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *fu
 void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
         return;
     }
@@ -559,7 +559,7 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     if (ff->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
     } else if (!scope.result.isObject()) {
         scope.result = callData->thisObject;

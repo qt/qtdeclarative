@@ -1067,7 +1067,8 @@ ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, uint i
     Lookup *l = engine->current->lookups + index;
     Value v;
     v = l->getter(l, engine, callData->thisObject);
-    if (Object *o = v.objectValue()) {
+    Object *o = v.objectValue();
+    if (Q_LIKELY(o)) {
         Scope scope(engine);
         o->call(scope, callData);
         return scope.result.asReturnedValue();
@@ -1170,9 +1171,9 @@ ReturnedValue Runtime::method_constructPropertyLookup(ExecutionEngine *engine, u
     Lookup *l = engine->current->lookups + index;
     Value v;
     v = l->getter(l, engine, callData->thisObject);
-    if (Object *o = v.objectValue()) {
+    Object *o = v.objectValue();
+    if (Q_LIKELY(o)) {
         Scope scope(engine);
-        ScopedValue result(scope);
         o->construct(scope, callData);
         return scope.result.asReturnedValue();
     }
