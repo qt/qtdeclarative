@@ -298,11 +298,11 @@ struct Scoped
     }
 
     T *operator->() {
-        return ptr->cast<T>();
+        return getPointer();
     }
 
     const T *operator->() const {
-        return ptr->cast<T>();
+        return getPointer();
     }
 
     bool operator!() const {
@@ -313,8 +313,13 @@ struct Scoped
     }
 
     T *getPointer() {
-        return ptr->cast<T>();
+        return reinterpret_cast<T *>(ptr);
     }
+
+    const T *getPointer() const {
+        return reinterpret_cast<T *>(ptr);
+    }
+
     Value *getRef() {
         return ptr;
     }
