@@ -72,7 +72,9 @@ struct QmlBindingWrapper : FunctionObject {
 struct QmlBindingWrapper : FunctionObject {
     V4_OBJECT2(QmlBindingWrapper, FunctionObject)
 
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static void call(const Managed *that, Scope &scope, CallData *callData) {
+        QV4::ScriptFunction::call(that, scope, callData);
+    }
 };
 
 }
@@ -92,30 +94,6 @@ void Heap::QmlBindingWrapper::init(QV4::QmlContext *scope, Function *f)
     function = f;
     if (function)
         function->compilationUnit->addref();
-}
-
-void QmlBindingWrapper::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
-    ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    ExecutionContextSaver ctxSaver(scope);
-
-    QV4::Function *f = This->function();
-    if (!f) {
-        scope.result = QV4::Encode::undefined();
-        return;
-    }
-
-    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(This, callData));
-    v4->pushContext(ctx);
-
-    scope.result = Q_V4_PROFILE(v4, f);
 }
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
@@ -228,10 +206,12 @@ ReturnedValue Script::run()
         return Q_V4_PROFILE(engine, vmFunction);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        ScopedFunctionObject f(valueScope, engine->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
-        f->call(valueScope, callData);
+        if (vmFunction->canUseSimpleFunction())
+            qml->simpleCall(valueScope, callData, vmFunction);
+        else
+            qml->call(valueScope, callData, vmFunction);
         return valueScope.result.asReturnedValue();
     }
 }

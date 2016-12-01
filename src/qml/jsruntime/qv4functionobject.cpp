@@ -441,15 +441,13 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
     InternalClass *ic = v4->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
-
     callData->thisObject = obj.asReturnedValue();
-    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(f, callData));
-    v4->pushContext(ctx);
 
-    scope.result = Q_V4_PROFILE(v4, f->function());
+    QV4::Function *v4Function = f->function();
+    Q_ASSERT(v4Function);
 
-    if (f->function()->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
+    ScopedContext c(scope, f->scope());
+    c->call(scope, callData, v4Function, f);
 
     if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
@@ -467,16 +465,13 @@ void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
     }
     CHECK_STACK_LIMITS(v4, scope);
 
-    ExecutionContextSaver ctxSaver(scope);
-
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
-    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(f, callData));
-    v4->pushContext(ctx);
 
-    scope.result = Q_V4_PROFILE(v4, f->function());
+    QV4::Function *v4Function = f->function();
+    Q_ASSERT(v4Function);
 
-    if (f->function()->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
+    ScopedContext c(scope, f->scope());
+    c->call(scope, callData, v4Function, f);
 }
 
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
@@ -523,35 +518,17 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     }
     CHECK_STACK_LIMITS(v4, scope);
 
-    ExecutionContextSaver ctxSaver(scope);
-
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     callData->thisObject = v4->newObject(ic, proto);
 
-    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
-    ctx.function = f->d();
-    QV4::Function *ff = ctx.function->function;
-    ctx.v4Function = ff;
-    ctx.strictMode = ff->isStrict();
-    ctx.callData = callData;
-    ctx.compilationUnit = ff->compilationUnit;
-    ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.constantTable = ctx.compilationUnit->constants;
-    ctx.outer = ctx.function->scope;
-    if (unsigned varCount = f->varCount())
-        ctx.locals = scope.alloc(varCount);
-    for (int i = callData->argc; i < static_cast<int>(ff->nFormals); ++i)
-        callData->args[i] = Encode::undefined();
-    v4->pushContext(&ctx);
-    Q_ASSERT(v4->current == &ctx);
+    QV4::Function *v4Function = f->function();
+    Q_ASSERT(v4Function);
 
-    scope.result = Q_V4_PROFILE(v4, ff);
-
-    if (ff->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
+    ScopedContext c(scope, f->scope());
+    c->simpleCall(scope, callData, v4Function);
 
     if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
@@ -569,31 +546,13 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
     }
     CHECK_STACK_LIMITS(v4, scope);
 
-    ExecutionContextSaver ctxSaver(scope);
-
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
-    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
-    ctx.function = f->d();
-    QV4::Function *ff = ctx.function->function;
-    ctx.v4Function = ff;
-    ctx.strictMode = ff->isStrict();
-    ctx.callData = callData;
-    ctx.compilationUnit = ff->compilationUnit;
-    ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.constantTable = ctx.compilationUnit->constants;
-    ctx.outer = ctx.function->scope;
-    if (unsigned varCount = f->varCount())
-        ctx.locals = scope.alloc(varCount);
-    for (int i = callData->argc; i < static_cast<int>(ff->nFormals); ++i)
-        callData->args[i] = Encode::undefined();
-    v4->pushContext(&ctx);
-    Q_ASSERT(v4->current == &ctx);
+    QV4::Function *v4Function = f->function();
+    Q_ASSERT(v4Function);
 
-    scope.result = Q_V4_PROFILE(v4, ff);
-
-    if (ff->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
+    ScopedContext c(scope, f->scope());
+    c->simpleCall(scope, callData, v4Function);
 }
 
 Heap::Object *SimpleScriptFunction::protoForConstructor() const

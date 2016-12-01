@@ -866,9 +866,8 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     ExecutionContext *c = currentContext;
     while (c) {
         CallContext *callCtx = c->asCallContext();
-        if (callCtx && callCtx->d()->function) {
-            if (callCtx->d()->function->function)
-                base.setUrl(callCtx->d()->function->function->sourceFile());
+        if (callCtx && callCtx->d()->v4Function) {
+            base.setUrl(callCtx->d()->v4Function->sourceFile());
             break;
         }
         c = parentContext(c);

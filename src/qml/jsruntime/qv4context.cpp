@@ -48,6 +48,8 @@
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
 #include "qv4qmlcontext_p.h"
+#include "qv4profiling_p.h"
+#include <private/qqmljavascriptexpression_p.h>
 
 using namespace QV4;
 
@@ -57,28 +59,30 @@ DEFINE_MANAGED_VTABLE(WithContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
 
-Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *function, CallData *callData)
-{
-    Q_ASSERT(function->function());
+/* Function *f, int argc */
+#define requiredMemoryForExecutionContect(f, argc) \
+    ((sizeof(CallContext::Data) + 7) & ~7) + \
+    sizeof(Value) * (f->compiledFunction->nLocals + qMax((uint)argc, f->nFormals)) + sizeof(CallData)
 
+Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData *callData)
+{
     Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(
                 requiredMemoryForExecutionContect(function, callData->argc));
     c->init(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
-    c->function = function->d();
-    c->v4Function = function->d()->function;
+    c->v4Function = function;
 
-    c->strictMode = function->strictMode();
-    c->outer = function->scope();
+    c->strictMode = function->isStrict();
+    c->outer = this->d();
 
     c->activation = 0;
 
-    c->compilationUnit = function->function()->compilationUnit;
+    c->compilationUnit = function->compilationUnit;
     c->lookups = c->compilationUnit->runtimeLookups;
     c->constantTable = c->compilationUnit->constants;
     c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
-    const CompiledData::Function *compiledFunction = function->function()->compiledFunction;
+    const CompiledData::Function *compiledFunction = function->compiledFunction;
     int nLocals = compiledFunction->nLocals;
     if (nLocals)
         std::fill(c->locals, c->locals + nLocals, Primitive::undefinedValue());
@@ -278,7 +282,7 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
         break;
     case Heap::ExecutionContext::Type_CallContext: {
         QV4::Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-        Q_ASSERT(c->v4Function && c->function);
+        Q_ASSERT(c->v4Function);
         ctx->callData->thisObject.mark(engine);
         for (int arg = 0; arg < qMax(ctx->callData->argc, (int)c->v4Function->nFormals); ++arg)
             ctx->callData->args[arg].mark(engine);
@@ -286,7 +290,8 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
             c->locals[local].mark(engine);
         if (c->activation)
             c->activation->mark(engine);
-        c->function->mark(engine);
+        if (c->function)
+            c->function->mark(engine);
         break;
     }
     case Heap::ExecutionContext::Type_QmlContext: {
@@ -295,6 +300,51 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
         break;
     }
     }
+}
+
+// Do a standard call with this execution context as the outer scope
+void ExecutionContext::call(Scope &scope, CallData *callData, Function *function, const FunctionObject *f)
+{
+    ExecutionContextSaver ctxSaver(scope);
+
+    Scoped<CallContext> ctx(scope, newCallContext(function, callData));
+    if (f)
+        ctx->d()->function = f->d();
+    scope.engine->pushContext(ctx);
+
+    scope.result = Q_V4_PROFILE(scope.engine, function);
+
+    if (function->hasQmlDependencies)
+        QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
+}
+
+// Do a simple, fast call with this execution context as the outer scope
+void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Function *function)
+{
+    Q_ASSERT(function->canUseSimpleFunction());
+
+    ExecutionContextSaver ctxSaver(scope);
+
+    CallContext::Data ctx = CallContext::Data::createOnStack(scope.engine);
+
+    ctx.strictMode = function->isStrict();
+    ctx.callData = callData;
+    ctx.v4Function = function;
+    ctx.compilationUnit = function->compilationUnit;
+    ctx.lookups = function->compilationUnit->runtimeLookups;
+    ctx.constantTable = function->compilationUnit->constants;
+    ctx.outer = this->d();
+    ctx.locals = scope.alloc(function->compiledFunction->nLocals);
+    for (int i = callData->argc; i < (int)function->nFormals; ++i)
+        callData->args[i] = Encode::undefined();
+
+    scope.engine->pushContext(&ctx);
+    Q_ASSERT(scope.engine->current == &ctx);
+
+    scope.result = Q_V4_PROFILE(scope.engine, function);
+
+    if (function->compiledFunction->hasQmlDependencies())
+        QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
 }
 
 void ExecutionContext::setProperty(String *name, const Value &value)
@@ -425,7 +475,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 if (hasProperty)
                     return v->asReturnedValue();
             }
-            if (c->v4Function && c->v4Function->isNamedExpression()
+            if (c->function && c->v4Function->isNamedExpression()
                 && name->equals(ScopedString(scope, c->v4Function->name())))
                 return c->function->asReturnedValue();
             break;
@@ -503,7 +553,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
                 if (hasProperty)
                     return v->asReturnedValue();
             }
-            if (c->v4Function && c->v4Function->isNamedExpression()
+            if (c->function && c->v4Function->isNamedExpression()
                 && name->equals(ScopedString(scope, c->v4Function->name())))
                 return c->function->asReturnedValue();
             break;

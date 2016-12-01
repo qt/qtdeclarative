@@ -198,7 +198,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     ExecutionEngine *engine() const { return d()->engine; }
 
-    Heap::CallContext *newCallContext(const FunctionObject *f, CallData *callData);
+    Heap::CallContext *newCallContext(Function *f, CallData *callData);
     Heap::WithContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
 
@@ -230,6 +230,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue argument(int i) const {
         return d()->callData->argument(i);
     }
+
+    void call(Scope &scope, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
+    void simpleCall(Scope &scope, CallData *callData, QV4::Function *function);
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext
@@ -295,10 +298,6 @@ inline Heap::CallContext Heap::CallContext::createOnStack(ExecutionEngine *v4)
     ctxt.init(v4);
     return ctxt;
 }
-
-/* Function *f, int argc */
-#define requiredMemoryForExecutionContect(f, argc) \
-    ((sizeof(CallContext::Data) + 7) & ~7) + sizeof(Value) * (f->varCount() + qMax((uint)argc, f->formalParameterCount())) + sizeof(CallData)
 
 } // namespace QV4
 
