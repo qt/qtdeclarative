@@ -538,22 +538,24 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
     callData->thisObject = v4->newObject(ic, proto);
 
     CallContext::Data ctx = CallContext::Data::createOnStack(v4);
-    ctx.strictMode = f->strictMode();
-    ctx.callData = callData;
     ctx.function = f->d();
-    ctx.compilationUnit = f->function()->compilationUnit;
+    QV4::Function *ff = ctx.function->function;
+    ctx.strictMode = ff->isStrict();
+    ctx.callData = callData;
+    ctx.compilationUnit = ff->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.constantTable = ctx.compilationUnit->constants;
-    ctx.outer = f->scope();
-    ctx.locals = scope.alloc(f->varCount());
-    for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
+    ctx.outer = ctx.function->scope;
+    if (unsigned varCount = f->varCount())
+        ctx.locals = scope.alloc(varCount);
+    for (int i = callData->argc; i < static_cast<int>(ff->nFormals); ++i)
         callData->args[i] = Encode::undefined();
     v4->pushContext(&ctx);
     Q_ASSERT(v4->current == &ctx);
 
-    scope.result = Q_V4_PROFILE(v4, f->function());
+    scope.result = Q_V4_PROFILE(v4, ff);
 
-    if (f->function()->hasQmlDependencies)
+    if (ff->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
     if (v4->hasException) {
@@ -577,22 +579,24 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     CallContext::Data ctx = CallContext::Data::createOnStack(v4);
-    ctx.strictMode = f->strictMode();
-    ctx.callData = callData;
     ctx.function = f->d();
-    ctx.compilationUnit = f->function()->compilationUnit;
+    QV4::Function *ff = ctx.function->function;
+    ctx.strictMode = ff->isStrict();
+    ctx.callData = callData;
+    ctx.compilationUnit = ff->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.constantTable = ctx.compilationUnit->constants;
-    ctx.outer = f->scope();
-    ctx.locals = scope.alloc(f->varCount());
-    for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
+    ctx.outer = ctx.function->scope;
+    if (unsigned varCount = f->varCount())
+        ctx.locals = scope.alloc(varCount);
+    for (int i = callData->argc; i < static_cast<int>(ff->nFormals); ++i)
         callData->args[i] = Encode::undefined();
     v4->pushContext(&ctx);
     Q_ASSERT(v4->current == &ctx);
 
-    scope.result = Q_V4_PROFILE(v4, f->function());
+    scope.result = Q_V4_PROFILE(v4, ff);
 
-    if (f->function()->hasQmlDependencies)
+    if (ff->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 }
 
