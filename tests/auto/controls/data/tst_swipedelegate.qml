@@ -1367,4 +1367,53 @@ TestCase {
 
         control.destroy();
     }
+
+    Component {
+        id: animationSwipeDelegateComponent
+
+        SwipeDelegate {
+            id: control
+            text: "SwipeDelegate"
+            width: 150
+            swipe.left: greenLeftComponent
+            swipe.right: redRightComponent
+
+            property alias behavior: xBehavior
+            property alias animation: numberAnimation
+
+            background: Rectangle {
+                color: control.down ? "#ccc" : "#fff"
+
+                Behavior on x {
+                    id: xBehavior
+                    enabled: !control.down
+
+                    NumberAnimation {
+                        id: numberAnimation
+                        easing.type: Easing.InOutCubic
+                        duration: 400
+                    }
+                }
+            }
+        }
+    }
+
+    function test_animations() {
+        // Test that animations are run when releasing from a drag.
+        var control = animationSwipeDelegateComponent.createObject(testCase);
+        verify(control);
+
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width - 1, control.height / 2, Qt.LeftButton);
+        verify(control.down);
+        verify(!control.behavior.enabled);
+        verify(!control.animation.running);
+
+        mouseRelease(control, control.width - 1, control.height / 2, Qt.LeftButton);
+        verify(!control.down);
+        verify(control.behavior.enabled);
+        verify(control.animation.running);
+
+        control.destroy();
+    }
 }

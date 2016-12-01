@@ -737,6 +737,21 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
     const bool hadGrabbedMouse = q->keepMouseGrab();
     q->setKeepMouseGrab(false);
 
+    // Animations for the background and contentItem delegates are typically
+    // only enabled when !control.down, so that the animations aren't running
+    // when the user is swiping. To ensure that the animations are enabled
+    // *before* the positions of these delegates change (via the swipe.setPosition() calls below),
+    // we must cancel the press. QQuickAbstractButton::mouseUngrabEvent() does this
+    // for us, but by then it's too late.
+    if (hadGrabbedMouse) {
+        // TODO: this is copied from QQuickAbstractButton::mouseUngrabEvent().
+        // Eventually it should be moved into a private helper so that we don't have to duplicate it.
+        q->setPressed(false);
+        stopPressRepeat();
+        stopPressAndHold();
+        emit q->canceled();
+    }
+
     // The control can be exposed by either swiping past the halfway mark, or swiping fast enough.
     const qreal swipeVelocity = swipePrivate->velocityCalculator.velocity().x();
     if (swipePrivate->position > 0.5 ||
