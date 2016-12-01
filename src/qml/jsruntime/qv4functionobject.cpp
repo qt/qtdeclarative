@@ -367,17 +367,18 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->arrayType() != Heap::ArrayData::Simple || arr->protoHasArray()) {
-            for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = arr->getIndexed(i);
-        } else {
-            uint alen = arr->arrayData() ? arr->arrayData()->len : 0;
+        if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
+            auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
+            uint alen = sad ? sad->len : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
-                callData->args[i] = static_cast<Heap::SimpleArrayData *>(arr->arrayData())->data(i);
+                callData->args[i] = sad->data(i);
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
+        } else {
+            for (quint32 i = 0; i < len; ++i)
+                callData->args[i] = arr->getIndexed(i);
         }
     }
 
