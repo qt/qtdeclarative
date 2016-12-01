@@ -244,11 +244,11 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
     Identifier * const *variables() const;
     unsigned int variableCount() const;
 
-    inline ReturnedValue argument(int i);
+    inline ReturnedValue argument(int i) const;
     bool needsOwnArguments() const;
 };
 
-inline ReturnedValue CallContext::argument(int i) {
+inline ReturnedValue CallContext::argument(int i) const {
     return i < argc() ? args()[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 
