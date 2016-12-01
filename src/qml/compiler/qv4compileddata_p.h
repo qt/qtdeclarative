@@ -207,9 +207,9 @@ struct String
 struct Function
 {
     enum Flags : unsigned int {
-        HasDirectEval       = 0x1,
-        UsesArgumentsObject = 0x2,
-        IsStrict            = 0x4,
+        IsStrict            = 0x1,
+        HasDirectEval       = 0x2,
+        UsesArgumentsObject = 0x4,
         IsNamedExpression   = 0x8,
         HasCatchOrWith      = 0x10
     };
