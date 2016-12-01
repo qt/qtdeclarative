@@ -61,6 +61,7 @@ public:
     static bool isCustomStyle();
     static void init(const QUrl &baseUrl);
     static void reset();
+    static QString configFilePath();
 };
 
 QT_END_NAMESPACE

@@ -392,4 +392,51 @@ TestCase {
         fuzzyCompare(dial.value, data.values[2], fuzz);
         fuzzyCompare(dial.position, data.positions[2], fuzz);
     }
+
+    function test_wheel_data() {
+        return [
+            { tag: "horizontal", orientation: Qt.Horizontal, dx: 120, dy: 0 },
+            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 }
+        ]
+    }
+
+    function test_wheel(data) {
+        var control = dialComponent.createObject(testCase, {wheelEnabled: true, orientation: data.orientation})
+        verify(control)
+
+        compare(control.value, 0.0)
+
+        mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(control.value, 0.1)
+        compare(control.position, 0.1)
+
+        control.stepSize = 0.2
+
+        mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(control.value, 0.3)
+        compare(control.position, 0.3)
+
+        control.stepSize = 10.0
+
+        mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+
+        control.to = 10.0
+        control.stepSize = 5.0
+
+        mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(control.value, 5.0)
+        compare(control.position, 0.5)
+
+        mouseWheel(control, control.width / 2, control.height / 2, 0.5 * data.dx, 0.5 * data.dy)
+        compare(control.value, 7.5)
+        compare(control.position, 0.75)
+
+        mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(control.value, 2.5)
+        compare(control.position, 0.25)
+
+        control.destroy()
+    }
 }

@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     The Qt Labs Calendar module uses 0-based month numbers to be consistent
     with the JavaScript Date type, that is used by the QML language. This
     means that \c Date::getMonth() can be assigned to MonthGrid::month and
-    WeekNumberColumn::month as is. When dealing with dealing with month numbers
+    WeekNumberColumn::month as is. When dealing with month numbers
     directly, it is highly recommended to use the following enumeration values
     to avoid confusion.
 

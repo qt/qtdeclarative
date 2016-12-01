@@ -183,6 +183,15 @@ struct QQuickStyleSpec
                     setFallbackStyle(settings->value(QStringLiteral("FallbackStyle")).toString(), ":/qtquickcontrols2.conf");
             }
         }
+
+        // resolve a path relative to the config
+        QString configPath = QFileInfo(resolveConfigFilePath()).path();
+        QString stylePath = findStyle(configPath, style);
+        if (!stylePath.isEmpty()) {
+            style = stylePath;
+            resolved = true;
+        }
+
         custom = style.contains(QLatin1Char('/'));
 
         if (baseUrl.isValid()) {
@@ -220,11 +229,26 @@ struct QQuickStyleSpec
         fallbackMethod.clear();
     }
 
+    QString resolveConfigFilePath()
+    {
+        if (configFilePath.isEmpty()) {
+            configFilePath = QFile::decodeName(qgetenv("QT_QUICK_CONTROLS_CONF"));
+            if (!QFile::exists(configFilePath)) {
+                if (!configFilePath.isEmpty())
+                    qWarning("QT_QUICK_CONTROLS_CONF=%s: No such file", qPrintable(configFilePath));
+
+                configFilePath = QStringLiteral(":/qtquickcontrols2.conf");
+            }
+        }
+        return configFilePath;
+    }
+
     bool custom;
     bool resolved;
     QString style;
     QString fallbackStyle;
     QByteArray fallbackMethod;
+    QString configFilePath;
 };
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
@@ -280,6 +304,11 @@ void QQuickStylePrivate::init(const QUrl &baseUrl)
 void QQuickStylePrivate::reset()
 {
     styleSpec()->reset();
+}
+
+QString QQuickStylePrivate::configFilePath()
+{
+    return styleSpec()->resolveConfigFilePath();
 }
 
 /*!
