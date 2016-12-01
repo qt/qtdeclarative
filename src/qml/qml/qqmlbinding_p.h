@@ -101,8 +101,7 @@ public:
 
 protected:
     virtual void doUpdate(const DeleteWatcher &watcher,
-                          QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
-                          const QV4::ScopedFunctionObject &f) = 0;
+                          QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) = 0;
 
     void getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const;
     int getPropertyType() const;

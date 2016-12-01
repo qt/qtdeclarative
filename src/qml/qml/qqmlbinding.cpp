@@ -162,7 +162,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         flags.setFlag(QQmlPropertyData::BypassInterceptor);
 
     QQmlBindingProfiler prof(ep->profiler, this, f);
-    doUpdate(watcher, flags, scope, f);
+    doUpdate(watcher, flags, scope);
 
     if (!watcher.wasDeleted())
         setUpdatingFlag(false);
@@ -177,8 +177,7 @@ class QQmlBindingBinding: public QQmlBinding
 {
 protected:
     void doUpdate(const DeleteWatcher &,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &,
-                  const QV4::ScopedFunctionObject &) Q_DECL_OVERRIDE Q_DECL_FINAL
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         Q_ASSERT(!m_targetIndex.hasValueTypeIndex());
         QQmlPropertyData *pd = nullptr;
@@ -194,10 +193,8 @@ class QQmlNonbindingBinding: public QQmlBinding
 {
 protected:
     void doUpdate(const DeleteWatcher &watcher,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope,
-                  const QV4::ScopedFunctionObject &f) Q_DECL_OVERRIDE Q_DECL_FINAL
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
-        Q_UNUSED(f);
         auto ep = QQmlEnginePrivate::get(scope.engine);
         ep->referenceScarceResources();
 
