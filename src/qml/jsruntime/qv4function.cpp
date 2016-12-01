@@ -55,6 +55,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , compilationUnit(unit)
         , code(codePtr)
         , codeData(0)
+        , hasQmlDependencies(function->hasQmlDependencies())
 {
     Q_UNUSED(engine);
 

@@ -68,6 +68,7 @@ struct Q_QML_EXPORT Function {
     InternalClass *internalClass;
     uint nFormals;
     bool activationRequired;
+    bool hasQmlDependencies;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
              ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));

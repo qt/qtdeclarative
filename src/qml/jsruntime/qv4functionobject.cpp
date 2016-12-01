@@ -454,7 +454,7 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 
     scope.result = Q_V4_PROFILE(v4, f->function());
 
-    if (f->function()->compiledFunction->hasQmlDependencies())
+    if (f->function()->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
     if (v4->hasException) {
@@ -481,7 +481,7 @@ void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
 
     scope.result = Q_V4_PROFILE(v4, f->function());
 
-    if (f->function()->compiledFunction->hasQmlDependencies())
+    if (f->function()->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 }
 
@@ -553,7 +553,7 @@ void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData
 
     scope.result = Q_V4_PROFILE(v4, f->function());
 
-    if (f->function()->compiledFunction->hasQmlDependencies())
+    if (f->function()->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 
     if (v4->hasException) {
@@ -592,7 +592,7 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
 
     scope.result = Q_V4_PROFILE(v4, f->function());
 
-    if (f->function()->compiledFunction->hasQmlDependencies())
+    if (f->function()->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 }
 
