@@ -420,11 +420,6 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
-void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
-{
-    Heap::SimpleScriptFunction::init(scope, function, true);
-}
-
 void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = scope.engine;

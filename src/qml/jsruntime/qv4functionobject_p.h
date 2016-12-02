@@ -110,11 +110,10 @@ struct SimpleScriptFunction : FunctionObject {
         Index_Name = FunctionObject::Index_Prototype + 1,
         Index_Length
     };
-    void init(QV4::ExecutionContext *scope, Function *function, bool createProto);
+    void init(QV4::ExecutionContext *scope, Function *function, bool createProto = true);
 };
 
 struct ScriptFunction : SimpleScriptFunction {
-    void init(QV4::ExecutionContext *scope, Function *function);
 };
 
 struct BoundFunction : FunctionObject {
