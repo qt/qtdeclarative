@@ -159,6 +159,7 @@ protected:
     }
 
     void setFunctionObject(const QV4::FunctionObject *o);
+    void setupFunction(QV4::QmlContext *qmlContext, QV4::Function *f);
 
 private:
     friend class QQmlContextData;

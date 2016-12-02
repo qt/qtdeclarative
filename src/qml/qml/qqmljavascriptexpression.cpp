@@ -467,6 +467,15 @@ void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
     m_compilationUnit = m_v4Function->compilationUnit;
 }
 
+void QQmlJavaScriptExpression::setupFunction(QV4::QmlContext *qmlContext, QV4::Function *f)
+{
+    if (!qmlContext || !f)
+        return;
+    m_qmlScope.set(qmlContext->engine(), *qmlContext);
+    m_v4Function = f;
+    m_compilationUnit = m_v4Function->compilationUnit;
+}
+
 void QQmlJavaScriptExpression::clearActiveGuards()
 {
     while (QQmlJavaScriptExpressionGuard *g = activeGuards.takeFirst())

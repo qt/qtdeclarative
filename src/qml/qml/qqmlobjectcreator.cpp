@@ -792,10 +792,10 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
 
         QV4::Scope scope(v4);
-        QV4::ScopedContext qmlContext(scope, currentQmlContext());
-        QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false));
+        QV4::Scoped<QV4::QmlContext> qmlContext(scope, currentQmlContext());
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
+            QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false));
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex());
             QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_bindingTarget, signalIndex,
@@ -815,7 +815,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 prop = _valueTypeProperty;
                 subprop = property;
             }
-            qmlBinding = QQmlBinding::create(prop, function, _scopeObject, context);
+            qmlBinding = QQmlBinding::create(prop, runtimeFunction, _scopeObject, context, qmlContext);
             qmlBinding->setTarget(_bindingTarget, *prop, subprop);
 
             sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));

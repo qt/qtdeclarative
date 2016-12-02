@@ -123,6 +123,21 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::Fu
     return b;
 }
 
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, QV4::Function *function,
+                                 QObject *obj, QQmlContextData *ctxt, QV4::QmlContext *sharedContext)
+{
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(ctxt);
+    b->setScopeObject(obj);
+
+    Q_ASSERT(sharedContext);
+    b->setupFunction(sharedContext, function);
+
+    return b;
+}
+
 QQmlBinding::~QQmlBinding()
 {
 }
