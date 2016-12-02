@@ -56,36 +56,13 @@ QSGOpenVGFontGlyphCacheManager::~QSGOpenVGFontGlyphCacheManager()
 
 QSGOpenVGFontGlyphCache *QSGOpenVGFontGlyphCacheManager::cache(const QRawFont &font)
 {
-    return m_caches.value(fontKey(font), nullptr);
+    return m_caches.value(font, nullptr);
 }
 
 void QSGOpenVGFontGlyphCacheManager::insertCache(const QRawFont &font, QSGOpenVGFontGlyphCache *cache)
 {
-    m_caches.insert(fontKey(font), cache);
+    m_caches.insert(font, cache);
 }
-
-QString QSGOpenVGFontGlyphCacheManager::fontKey(const QRawFont &font)
-{
-    QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-    if (!fe->faceId().filename.isEmpty()) {
-        QByteArray keyName = fe->faceId().filename;
-        if (font.style() != QFont::StyleNormal)
-            keyName += QByteArray(" I");
-        if (font.weight() != QFont::Normal)
-            keyName += ' ' + QByteArray::number(font.weight());
-        keyName += " " + QString::number(font.pixelSize());
-        keyName += QByteArray(" DF");
-        return QString::fromUtf8(keyName);
-    } else {
-        return QString::fromLatin1("%1_%2_%3_%4_%5")
-                  .arg(font.familyName())
-                  .arg(font.styleName())
-                  .arg(font.weight())
-                  .arg(font.style())
-                  .arg(font.pixelSize());
-    }
-}
-
 
 QSGOpenVGFontGlyphCache::QSGOpenVGFontGlyphCache(QSGOpenVGFontGlyphCacheManager *manager, const QRawFont &font)
     : m_manager(manager)

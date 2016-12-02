@@ -59,9 +59,7 @@ public:
     void insertCache(const QRawFont &font, QSGOpenVGFontGlyphCache *cache);
 
 private:
-    static QString fontKey(const QRawFont &font);
-
-    QHash<QString, QSGOpenVGFontGlyphCache *> m_caches;
+    QHash<QRawFont, QSGOpenVGFontGlyphCache *> m_caches;
 };
 
 class QSGOpenVGFontGlyphCache
