@@ -176,13 +176,14 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
 {
     Q_ASSERT(m_context && m_context->engine);
 
-    QV4::Value *f = m_function.valueRef();
-    if (!f || f->isUndefined()) {
+    QV4::Function *v4Function = function();
+    if (!v4Function) {
         if (isUndefined)
             *isUndefined = true;
         return;
     }
 
+    QV4::FunctionObject *f = static_cast<QV4::FunctionObject *>(m_function.valueRef());
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine);
 
     // All code that follows must check with watcher before it accesses data members
@@ -208,7 +209,13 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
             callData->thisObject = value;
     }
 
-    f->as<QV4::FunctionObject>()->call(scope, callData);
+    QV4::ScopedContext outer(scope, f->scope());
+    if (v4Function->canUseSimpleFunction()) {
+        outer->simpleCall(scope, callData, v4Function);
+    } else {
+        outer->call(scope, callData, v4Function);
+    }
+
     if (scope.hasException()) {
         if (watcher.wasDeleted())
             scope.engine->catchException(); // ignore exception
