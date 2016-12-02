@@ -99,10 +99,6 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 
     function += QLatin1String(") { ") + expression + QLatin1String(" })");
     m_function.set(v4, evalFunction(context(), scopeObject(), function, fileName, line));
-
-    if (m_function.isNullOrUndefined())
-        return; // could not evaluate function.  Not valid.
-
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
