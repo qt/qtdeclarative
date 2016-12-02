@@ -208,8 +208,10 @@ Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlCont
     QV4::Scoped<QmlContext> wrapperContext(valueScope, QmlContext::create(global, qmlContext, scopeObject));
 
     if (!signalParameters.isEmpty()) {
-        if (error)
+        if (error) {
             QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, error);
+            return 0;
+        }
         runtimeFunction->updateInternalClass(engine, signalParameters);
     }
 

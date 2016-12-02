@@ -122,10 +122,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     QString error;
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
     m_function.set(engine, QV4::FunctionObject::createQmlFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
-    if (!error.isEmpty()) {
+    if (!error.isEmpty())
         qmlInfo(scopeObject()) << error;
-        m_function.clear();
-    }
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
