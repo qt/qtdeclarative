@@ -48,6 +48,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -131,6 +132,9 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
 {
     return m_function.valueRef()->as<QV4::FunctionObject>()->sourceLocation();
+    // Can't use the below yet, as the source location for bindings gnerated with Qt.binding() would be wrong.
+//    auto f = function();
+//    return f ? f->sourceLocation() : QQmlSourceLocation();
 }
 
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
@@ -152,6 +156,14 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
         m_prevExpression = &context->expressions;
         context->expressions = this;
     }
+}
+
+QV4::Function *QQmlJavaScriptExpression::function() const
+{
+    QV4::FunctionObject *f = m_function.valueRef()->as<QV4::FunctionObject>();
+    if (f && f->isBinding())
+        return static_cast<QV4::QQmlBindingFunction *>(f)->d()->originalFunction->function;
+    return f ? f->function() : 0;
 }
 
 void QQmlJavaScriptExpression::refresh()

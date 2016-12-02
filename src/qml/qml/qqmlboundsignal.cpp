@@ -159,24 +159,9 @@ void QQmlBoundSignalExpression::expressionChanged()
 
 QString QQmlBoundSignalExpression::expression() const
 {
-    if (expressionFunctionValid()) {
-        Q_ASSERT (context() && engine());
-        QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::ScopedValue v(scope, m_function.value());
-        return v->toQStringNoThrow();
-    }
+    if (expressionFunctionValid())
+        return QStringLiteral("function() { [code] }");
     return QString();
-}
-
-QV4::Function *QQmlBoundSignalExpression::function() const
-{
-    if (expressionFunctionValid()) {
-        Q_ASSERT (context() && engine());
-        QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::ScopedFunctionObject v(scope, m_function.value());
-        return v ? v->function() : 0;
-    }
-    return 0;
 }
 
 // Parts of this function mirror code in QQmlExpressionPrivate::value() and v8value().

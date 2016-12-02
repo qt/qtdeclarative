@@ -204,6 +204,11 @@ public:
             ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
         {}
 
+        RefLocation(QQmlBinding *binding, QV4::Function *function) :
+            Location(function->sourceLocation()), locationType(Binding),
+            ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
+        {}
+
         RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
                     const QString &type) :
             Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
@@ -231,7 +236,7 @@ public:
 
     typedef QHash<quintptr, Location> LocationHash;
 
-    void startBinding(QQmlBinding *binding, QV4::FunctionObject *function)
+    void startBinding(QQmlBinding *binding, QV4::Function *function)
     {
         quintptr locationId(id(binding));
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
@@ -326,7 +331,7 @@ struct QQmlProfilerHelper : public QQmlProfilerDefinitions {
 
 struct QQmlBindingProfiler : public QQmlProfilerHelper {
     QQmlBindingProfiler(QQmlProfiler *profiler, QQmlBinding *binding,
-                        QV4::FunctionObject *function) :
+                        QV4::Function *function) :
         QQmlProfilerHelper(profiler)
     {
         Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileBinding, profiler,

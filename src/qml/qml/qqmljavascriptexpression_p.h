@@ -120,6 +120,8 @@ public:
     QQmlContextData *context() const { return m_context; }
     void setContext(QQmlContextData *context);
 
+    QV4::Function *function() const;
+
     virtual void refresh();
 
     class DeleteWatcher {
