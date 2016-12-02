@@ -85,7 +85,9 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
 
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(b->context()->engine)->v4engine();
     if (runtimeFunction) {
-        b->m_function.set(v4, QV4::FunctionObject::createQmlFunction(ctxtdata, b->scopeObject(), runtimeFunction));
+        QV4::Scope scope(v4);
+        QV4::ScopedFunctionObject f(scope, QV4::FunctionObject::createQmlFunction(ctxtdata, b->scopeObject(), runtimeFunction));
+        b->setFunctionObject(f);
     } else {
         QString code = scriptPrivate->script;
         b->createQmlBinding(b->context(), b->scopeObject(), code, url, scriptPrivate->lineNumber);
@@ -116,7 +118,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::Fu
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);
 
-    b->m_function.set(function->engine(), *function);
+    b->setFunctionObject(function);
 
     return b;
 }

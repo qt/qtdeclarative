@@ -160,7 +160,10 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
 
 QV4::Function *QQmlJavaScriptExpression::function() const
 {
-    QV4::FunctionObject *f = m_function.valueRef()->as<QV4::FunctionObject>();
+    QV4::Value *v = m_function.valueRef();
+    if (!v)
+        return 0;
+    QV4::FunctionObject *f = v->as<QV4::FunctionObject>();
     if (f && f->isBinding())
         return static_cast<QV4::QQmlBindingFunction *>(f)->d()->originalFunction->function;
     return f ? f->function() : 0;
@@ -430,7 +433,7 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, qmlScope));
     QV4::Script script(v4, qmlContext, code, filename, line);
-    QV4::ScopedValue result(scope);
+    QV4::ScopedFunctionObject result(scope);
     script.parse();
     if (!v4->hasException)
         result = script.qmlBinding();
@@ -446,7 +449,13 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
         ep->warning(error);
         result = QV4::Encode::undefined();
     }
-    m_function.set(v4, result);
+    setFunctionObject(result);
+}
+
+void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
+{
+    if (o)
+        m_function.set(o->engine(), o->d());
 }
 
 

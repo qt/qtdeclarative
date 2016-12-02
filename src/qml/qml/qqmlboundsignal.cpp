@@ -98,7 +98,9 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
         function += parameterString;
 
     function += QLatin1String(") { ") + expression + QLatin1String(" })");
-    m_function.set(v4, evalFunction(context(), scopeObject(), function, fileName, line));
+    QV4::Scope valueScope(v4);
+    QV4::ScopedFunctionObject f(valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
+    setFunctionObject(f);
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
@@ -106,7 +108,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
       m_index(index),
       m_target(target)
 {
-    m_function.set(function.as<QV4::Object>()->engine(), function);
+    setFunctionObject(function.as<QV4::FunctionObject>());
     init(ctxt, scope);
 }
 
@@ -121,7 +123,9 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
     QString error;
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
-    m_function.set(engine, QV4::FunctionObject::createQmlFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
+    QV4::Scope valueScope(engine);
+    QV4::ScopedFunctionObject f(valueScope, QV4::FunctionObject::createQmlFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
+    setFunctionObject(f);
     if (!error.isEmpty())
         qmlInfo(scopeObject()) << error;
 }

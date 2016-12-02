@@ -158,6 +158,8 @@ protected:
         }
     }
 
+    void setFunctionObject(const QV4::FunctionObject *o);
+
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
@@ -177,7 +179,6 @@ private:
     QQmlJavaScriptExpression  *m_nextExpression;
     bool m_permanentDependenciesRegistered = false;
 
-protected:
     QV4::PersistentValue m_function;
 };
 
