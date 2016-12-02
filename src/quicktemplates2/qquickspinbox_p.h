@@ -122,6 +122,7 @@ Q_SIGNALS:
     void validatorChanged();
     void textFromValueChanged();
     void valueFromTextChanged();
+    Q_REVISION(2) void valueModified();
     Q_REVISION(2) void inputMethodHintsChanged();
     Q_REVISION(2) void inputMethodComposingChanged();
 

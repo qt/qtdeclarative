@@ -177,12 +177,16 @@ TestCase {
         var downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
         verify(downPressedSpy.valid)
 
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
+
         mousePress(control.up.indicator)
         compare(upPressedSpy.count, 1)
         compare(control.up.pressed, true)
         compare(downPressedSpy.count, 0)
         compare(control.down.pressed, false)
         compare(control.value, 0)
+        compare(valueModifiedSpy.count, 0)
 
         mouseRelease(control.up.indicator)
         compare(upPressedSpy.count, 2)
@@ -190,6 +194,7 @@ TestCase {
         compare(downPressedSpy.count, 0)
         compare(control.down.pressed, false)
         compare(control.value, 50)
+        compare(valueModifiedSpy.count, 1)
 
         // Disable the up button and try again.
         control.value = control.to
@@ -201,6 +206,7 @@ TestCase {
         compare(downPressedSpy.count, 0)
         compare(control.down.pressed, false)
         compare(control.value, control.to)
+        compare(valueModifiedSpy.count, 1)
 
         mouseRelease(control.up.indicator)
         compare(upPressedSpy.count, 2)
@@ -208,6 +214,7 @@ TestCase {
         compare(downPressedSpy.count, 0)
         compare(control.down.pressed, false)
         compare(control.value, control.to)
+        compare(valueModifiedSpy.count, 1)
 
         control.value = 50;
         mousePress(control.down.indicator)
@@ -216,6 +223,7 @@ TestCase {
         compare(upPressedSpy.count, 2)
         compare(control.up.pressed, false)
         compare(control.value, 50)
+        compare(valueModifiedSpy.count, 1)
 
         mouseRelease(control.down.indicator)
         compare(downPressedSpy.count, 2)
@@ -223,6 +231,7 @@ TestCase {
         compare(upPressedSpy.count, 2)
         compare(control.up.pressed, false)
         compare(control.value, 0)
+        compare(valueModifiedSpy.count, 2)
 
         // Disable the down button and try again.
         control.value = control.from
@@ -234,6 +243,7 @@ TestCase {
         compare(upPressedSpy.count, 2)
         compare(control.up.pressed, false)
         compare(control.value, control.from)
+        compare(valueModifiedSpy.count, 2)
 
         mouseRelease(control.down.indicator)
         compare(downPressedSpy.count, 2)
@@ -241,6 +251,7 @@ TestCase {
         compare(upPressedSpy.count, 2)
         compare(control.up.pressed, false)
         compare(control.value, control.from)
+        compare(valueModifiedSpy.count, 2)
 
         control.destroy()
     }
@@ -251,12 +262,16 @@ TestCase {
 
         var upPressedCount = 0
         var downPressedCount = 0
+        var valueModifiedCount = 0
 
         var upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
         verify(upPressedSpy.valid)
 
         var downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
         verify(downPressedSpy.valid)
+
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
@@ -269,6 +284,7 @@ TestCase {
             compare(control.down.pressed, true)
             compare(control.up.pressed, false)
             compare(downPressedSpy.count, ++downPressedCount)
+            compare(valueModifiedSpy.count, ++valueModifiedCount)
 
             compare(control.value, 50 - d1)
 
@@ -276,6 +292,7 @@ TestCase {
             compare(control.down.pressed, false)
             compare(control.up.pressed, false)
             compare(downPressedSpy.count, ++downPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
         }
         compare(control.value, 40)
 
@@ -284,6 +301,7 @@ TestCase {
             compare(control.up.pressed, true)
             compare(control.down.pressed, false)
             compare(upPressedSpy.count, ++upPressedCount)
+            compare(valueModifiedSpy.count, ++valueModifiedCount)
 
             compare(control.value, 40 + i1)
 
@@ -291,6 +309,7 @@ TestCase {
             compare(control.down.pressed, false)
             compare(control.up.pressed, false)
             compare(upPressedSpy.count, ++upPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
         }
         compare(control.value, 50)
 
@@ -302,9 +321,12 @@ TestCase {
             keyPress(Qt.Key_Down)
             compare(control.down.pressed, wasDownEnabled)
             compare(control.up.pressed, false)
-            if (wasDownEnabled)
+            if (wasDownEnabled) {
                 ++downPressedCount
+                ++valueModifiedCount
+            }
             compare(downPressedSpy.count, downPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
 
             compare(control.value, Math.max(0, 50 - d2 * 25))
 
@@ -314,6 +336,7 @@ TestCase {
             if (wasDownEnabled)
                 ++downPressedCount
             compare(downPressedSpy.count, downPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
         }
         compare(control.value, 0)
 
@@ -322,9 +345,12 @@ TestCase {
             keyPress(Qt.Key_Up)
             compare(control.up.pressed, wasUpEnabled)
             compare(control.down.pressed, false)
-            if (wasUpEnabled)
+            if (wasUpEnabled) {
                 ++upPressedCount
+                ++valueModifiedCount
+            }
             compare(upPressedSpy.count, upPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
 
             compare(control.value, Math.min(99, i2 * 25))
 
@@ -334,6 +360,7 @@ TestCase {
             if (wasUpEnabled)
                 ++upPressedCount
             compare(upPressedSpy.count, upPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
         }
         compare(control.value, 99)
 
@@ -410,33 +437,42 @@ TestCase {
         var control = spinBox.createObject(testCase, {wheelEnabled: true})
         verify(control)
 
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
+
         var delta = 120
 
         compare(control.value, 0)
 
         mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
         compare(control.value, 1)
+        compare(valueModifiedSpy.count, 1)
 
         control.stepSize = 2
 
         mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
         compare(control.value, 3)
+        compare(valueModifiedSpy.count, 2)
 
         control.stepSize = 10
 
         mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
         compare(control.value, 0)
+        compare(valueModifiedSpy.count, 3)
 
         control.stepSize = 5
 
         mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
         compare(control.value, 5)
+        compare(valueModifiedSpy.count, 4)
 
         mouseWheel(control, control.width / 2, control.height / 2, 0.5 * delta, 0.5 * delta)
         compare(control.value, 8)
+        compare(valueModifiedSpy.count, 5)
 
         mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
         compare(control.value, 3)
+        compare(valueModifiedSpy.count, 6)
 
         control.destroy()
     }

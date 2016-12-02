@@ -93,6 +93,14 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \sa Tumbler, {Customizing SpinBox}
 */
 
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal QtQuick.Controls::SpinBox::valueModified()
+
+    This signal is emitted when the spin box value has been interactively
+    modified by the user by either touch, mouse, wheel, or keys.
+*/
+
 class QQuickSpinBoxPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSpinBox)
@@ -152,7 +160,10 @@ void QQuickSpinBoxPrivate::updateValue()
                 QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
                 QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
                 QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
+                const int oldValue = value;
                 q->setValue(val.toInt());
+                if (oldValue != value)
+                    emit q->valueModified();
             }
         }
     }
@@ -264,6 +275,8 @@ bool QQuickSpinBoxPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEven
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
+
+    int oldValue = value;
     bool wasPressed = up->isPressed() || down->isPressed();
     if (up->isPressed()) {
         up->setPressed(false);
@@ -274,6 +287,8 @@ bool QQuickSpinBoxPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEven
         if (repeatTimer <= 0 && di && di->contains(di->mapFromItem(child, event->pos())))
             q->decrease();
     }
+    if (value != oldValue)
+        emit q->valueModified();
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
@@ -692,6 +707,7 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickSpinBox);
     QQuickControl::keyPressEvent(event);
 
+    const int oldValue = d->value;
     switch (event->key()) {
     case Qt::Key_Up:
         if (d->upEnabled()) {
@@ -712,6 +728,8 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
+    if (d->value != oldValue)
+        emit valueModified();
 
     setAccessibleProperty("pressed", d->up->isPressed() || d->down->isPressed());
 }
@@ -797,6 +815,8 @@ void QQuickSpinBox::wheelEvent(QWheelEvent *event)
         const QPointF angle = event->angleDelta();
         const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
         setValue(oldValue + qRound(d->effectiveStepSize() * delta));
+        if (d->value != oldValue)
+            emit valueModified();
         event->setAccepted(d->value != oldValue);
     }
 }
