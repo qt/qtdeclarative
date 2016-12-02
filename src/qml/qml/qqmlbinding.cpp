@@ -108,7 +108,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString
     return b;
 }
 
-QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
+QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::FunctionObject *function, QObject *obj, QQmlContextData *ctxt)
 {
     QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
 
@@ -116,7 +116,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::Va
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);
 
-    b->m_function.set(functionPtr.as<QV4::Object>()->engine(), functionPtr);
+    b->m_function.set(function->engine(), *function);
 
     return b;
 }
