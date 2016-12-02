@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::Slider::moved()
 
     This signal is emitted when the slider has been interactively moved
-    by the user by using either touch, mouse, wheel, or keys.
+    by the user by either touch, mouse, wheel, or keys.
 */
 
 class QQuickSliderPrivate : public QQuickControlPrivate

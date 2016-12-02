@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::Dial::moved()
 
     This signal is emitted when the dial has been interactively moved
-    by the user by using either touch, mouse, or keys.
+    by the user by either touch, mouse, or keys.
 */
 
 static const qreal startAngleRadians = (M_PI * 2.0) * (4.0 / 6.0);
