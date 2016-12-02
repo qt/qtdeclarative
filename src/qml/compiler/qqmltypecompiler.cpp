@@ -1570,19 +1570,15 @@ bool QQmlJavaScriptBindingExpressionSimplificationPass::simplifyBinding(QV4::IR:
             if (!_canSimplify)
                 return false;
         }
-        if (!_canSimplify)
-            return false;
     }
 
     if (_returnValueOfBindingExpression == -1)
         return false;
 
-    if (_canSimplify) {
-        if (_nameOfFunctionCalled) {
-            if (_functionCallReturnValue != _returnValueOfBindingExpression)
-                return false;
-            return detectTranslationCallAndConvertBinding(binding);
-        }
+    if (_nameOfFunctionCalled) {
+        if (_functionCallReturnValue != _returnValueOfBindingExpression)
+            return false;
+        return detectTranslationCallAndConvertBinding(binding);
     }
 
     return false;
