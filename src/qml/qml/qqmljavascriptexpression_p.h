@@ -179,7 +179,10 @@ private:
     QQmlJavaScriptExpression  *m_nextExpression;
     bool m_permanentDependenciesRegistered = false;
 
-    QV4::PersistentValue m_function;
+    QV4::PersistentValue m_qmlScope;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
+    QV4::Function *m_v4Function;
+    QQmlSourceLocation *m_sourceLocation; // used for Qt.binding() created functions
 };
 
 class QQmlPropertyCapture

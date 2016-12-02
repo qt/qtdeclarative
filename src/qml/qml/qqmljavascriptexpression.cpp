@@ -95,7 +95,9 @@ QQmlJavaScriptExpression::QQmlJavaScriptExpression()
     : m_error(0),
       m_context(0),
       m_prevExpression(0),
-      m_nextExpression(0)
+      m_nextExpression(0),
+      m_v4Function(0),
+      m_sourceLocation(0)
 {
 }
 
@@ -111,6 +113,8 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
     clearPermanentGuards();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = 0;
+
+    delete m_sourceLocation;
 }
 
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
@@ -131,10 +135,11 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 
 QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
 {
-    return m_function.valueRef()->as<QV4::FunctionObject>()->sourceLocation();
-    // Can't use the below yet, as the source location for bindings gnerated with Qt.binding() would be wrong.
-//    auto f = function();
-//    return f ? f->sourceLocation() : QQmlSourceLocation();
+    if (m_sourceLocation)
+        return *m_sourceLocation;
+    if (m_v4Function)
+        return m_v4Function->sourceLocation();
+    return QQmlSourceLocation();
 }
 
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
@@ -160,13 +165,7 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
 
 QV4::Function *QQmlJavaScriptExpression::function() const
 {
-    QV4::Value *v = m_function.valueRef();
-    if (!v)
-        return 0;
-    QV4::FunctionObject *f = v->as<QV4::FunctionObject>();
-    if (f && f->isBinding())
-        return static_cast<QV4::QQmlBindingFunction *>(f)->d()->originalFunction->function;
-    return f ? f->function() : 0;
+    return m_v4Function;
 }
 
 void QQmlJavaScriptExpression::refresh()
@@ -186,7 +185,6 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
         return;
     }
 
-    QV4::FunctionObject *f = static_cast<QV4::FunctionObject *>(m_function.valueRef());
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine);
 
     // All code that follows must check with watcher before it accesses data members
@@ -212,7 +210,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
             callData->thisObject = value;
     }
 
-    QV4::ScopedContext outer(scope, f->scope());
+    QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
     if (v4Function->canUseSimpleFunction()) {
         outer->simpleCall(scope, callData, v4Function);
     } else {
@@ -454,10 +452,20 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
 
 void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
 {
-    if (o)
-        m_function.set(o->engine(), o->d());
-}
+    if (!o)
+        return;
 
+    m_qmlScope.set(o->engine(), o->d()->scope);
+
+    m_v4Function = o->d()->function;
+    if (o->isBinding()) {
+        const QV4::QQmlBindingFunction *b = static_cast<const QV4::QQmlBindingFunction *>(o);
+        m_sourceLocation = new QQmlSourceLocation(*b->d()->bindingLocation);
+        m_v4Function = b->d()->originalFunction->function;
+    }
+    Q_ASSERT(m_v4Function);
+    m_compilationUnit = m_v4Function->compilationUnit;
+}
 
 void QQmlJavaScriptExpression::clearActiveGuards()
 {
