@@ -66,7 +66,7 @@ struct MemberData : Base {
     };
     Value data[1];
 };
-Q_STATIC_ASSERT(std::is_trivial<MemberData>::value);
+V4_ASSERT_IS_TRIVIAL(MemberData)
 
 }
 

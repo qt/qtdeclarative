@@ -73,15 +73,17 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
-Heap::StringObject::StringObject()
+void Heap::StringObject::init()
 {
+    Object::init();
     Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
     string = internalClass->engine->id_empty()->d();
     *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0);
 }
 
-Heap::StringObject::StringObject(const QV4::String *str)
+void Heap::StringObject::init(const QV4::String *str)
 {
+    Object::init();
     string = str->d();
     *propertyData(LengthPropertyIndex) = Primitive::fromInt32(length());
 }
@@ -152,9 +154,9 @@ void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 DEFINE_OBJECT_VTABLE(StringCtor);
 
-Heap::StringCtor::StringCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("String"))
+void Heap::StringCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
 void StringCtor::construct(const Managed *m, Scope &scope, CallData *callData)
@@ -715,7 +717,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
 
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
-        if (re->value()->pattern.isEmpty()) {
+        if (re->value()->pattern->isEmpty()) {
             re = (RegExpObject *)0;
             separatorValue = ctx->d()->engine->newString();
         }

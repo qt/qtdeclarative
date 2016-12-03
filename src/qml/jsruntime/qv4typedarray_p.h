@@ -86,7 +86,7 @@ struct TypedArray : Object {
         NTypes
     };
 
-    TypedArray(Type t);
+    void init(Type t);
 
     const TypedArrayOperations *type;
     Pointer<ArrayBuffer> buffer;
@@ -96,13 +96,13 @@ struct TypedArray : Object {
 };
 
 struct TypedArrayCtor : FunctionObject {
-    TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::Type t);
+    void init(QV4::ExecutionContext *scope, TypedArray::Type t);
 
     TypedArray::Type type;
 };
 
 struct TypedArrayPrototype : Object {
-    inline TypedArrayPrototype(TypedArray::Type t);
+    inline void init(TypedArray::Type t);
     TypedArray::Type type;
 };
 
@@ -160,10 +160,11 @@ struct TypedArrayPrototype : Object
     static ReturnedValue method_subarray(CallContext *ctx);
 };
 
-inline
-Heap::TypedArrayPrototype::TypedArrayPrototype(TypedArray::Type t)
-    : type(t)
+inline void
+Heap::TypedArrayPrototype::init(TypedArray::Type t)
 {
+    Object::init();
+    type = t;
 }
 
 } // namespace QV4

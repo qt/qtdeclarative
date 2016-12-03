@@ -91,10 +91,11 @@ struct StaticQtMetaObject : public QObject
         { return &staticQtMetaObject; }
 };
 
-Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
-    : enumeratorIterator(0)
-    , keyIterator(0)
+void Heap::QtObject::init(QQmlEngine *qmlEngine)
 {
+    Heap::Object::init();
+    enumeratorIterator = 0;
+    keyIterator = 0;
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
@@ -1302,17 +1303,18 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
     return QQmlLocale::locale(ctx->engine(), code);
 }
 
-Heap::QQmlBindingFunction::QQmlBindingFunction(const QV4::FunctionObject *originalFunction)
-    : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
+void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction)
 {
+    QV4::Heap::FunctionObject::init(originalFunction->scope(), originalFunction->name());
+    bindingLocation = new QQmlSourceLocation;
     this->originalFunction = originalFunction->d();
 }
 
 void QQmlBindingFunction::initBindingLocation()
 {
     QV4::StackFrame frame = engine()->currentStackFrame();
-    d()->bindingLocation.sourceFile = frame.source;
-    d()->bindingLocation.line = frame.line;
+    d()->bindingLocation->sourceFile = frame.source;
+    d()->bindingLocation->line = frame.line;
 }
 
 void QQmlBindingFunction::call(const Managed *that, Scope &scope, CallData *callData)
@@ -1436,8 +1438,9 @@ ReturnedValue QtObject::method_get_styleHints(CallContext *ctx)
 }
 
 
-QV4::Heap::ConsoleObject::ConsoleObject()
+void QV4::Heap::ConsoleObject::init()
 {
+    Object::init();
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
 
@@ -1558,6 +1561,8 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
 
     return QV4::Encode::undefined();
 }
+
+DEFINE_OBJECT_VTABLE(ConsoleObject);
 
 QV4::ReturnedValue ConsoleObject::method_error(CallContext *ctx)
 {

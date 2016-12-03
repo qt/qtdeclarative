@@ -76,7 +76,9 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qelapsedtimer.h>
 
+#if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -135,6 +137,7 @@ public:
     QList<QQuickItem *> items;
 };
 
+#if QT_CONFIG(quick_shadereffect)
 
 class QQuickItemLayer : public QObject, public QQuickItemChangeListener
 {
@@ -236,6 +239,8 @@ private:
     QQuickShaderEffectSource::TextureMirroring m_textureMirroring;
 };
 
+#endif
+
 class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickItem)
@@ -300,6 +305,7 @@ public:
 
     void _q_resourceObjectDeleted(QObject *);
     void _q_windowChanged(QQuickWindow *w);
+    quint64 _q_createJSWrapper(QV4::ExecutionEngine *engine);
 
     enum ChangeType {
         Geometry = 0x01,
@@ -338,7 +344,9 @@ public:
         QQuickLayoutMirroringAttached* layoutDirectionAttached;
         QQuickEnterKeyAttached *enterKeyAttached;
         QQuickItemKeyFilter *keyHandler;
+#if QT_CONFIG(quick_shadereffect)
         mutable QQuickItemLayer *layer;
+#endif
 #ifndef QT_NO_CURSOR
         QCursor cursor;
 #endif
@@ -592,9 +600,6 @@ public:
 
     void setHasCursorInChild(bool hasCursor);
     void setHasHoverInChild(bool hasHover);
-
-    // recursive helper to let a visual parent mark its visual children
-    void markObjects(QV4::ExecutionEngine *e);
 
     virtual void updatePolish() { }
 };
@@ -925,7 +930,9 @@ Q_DECLARE_TYPEINFO(QQuickItemPrivate::ChangeListener, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 
+#if QT_CONFIG(quick_shadereffect)
 QML_DECLARE_TYPE(QQuickItemLayer)
+#endif
 QML_DECLARE_TYPE(QQuickKeysAttached)
 QML_DECLARE_TYPEINFO(QQuickKeysAttached, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickKeyNavigationAttached)

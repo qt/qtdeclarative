@@ -60,13 +60,13 @@ namespace QV4 {
 namespace Heap {
 
 struct ArrayBufferCtor : FunctionObject {
-    ArrayBufferCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object {
-    ArrayBuffer(size_t length);
-    ArrayBuffer(const QByteArray& array);
-    ~ArrayBuffer();
+    void init(size_t length);
+    void init(const QByteArray& array);
+    void destroy();
     QTypedArrayData<char> *data;
 
     uint byteLength() const { return data->size; }

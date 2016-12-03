@@ -42,11 +42,9 @@
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QFile>
 
-#ifdef HAS_D3D12
-
-#include "vs_shader.hlslh"
-#include "ps_shader.hlslh"
+#if QT_CONFIG(d3d12)
 
 D3D12RenderNode::D3D12RenderNode(QQuickItem *item)
     : m_item(item)
@@ -78,7 +76,7 @@ void D3D12RenderNode::releaseResources()
 void D3D12RenderNode::init()
 {
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    m_device = static_cast<ID3D12Device *>(rif->getResource(m_item->window(), QSGRendererInterface::Device));
+    m_device = static_cast<ID3D12Device *>(rif->getResource(m_item->window(), QSGRendererInterface::DeviceResource));
     Q_ASSERT(m_device);
 
     D3D12_ROOT_PARAMETER rootParameter;
@@ -111,12 +109,25 @@ void D3D12RenderNode::init()
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
 
+    QFile f(QStringLiteral(":/scenegraph/rendernode/shader_vert.cso"));
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning("Failed to open file with vertex shader bytecode");
+        return;
+    }
+    QByteArray vshader_cso = f.readAll();
+    f.close();
+    f.setFileName(QStringLiteral(":/scenegraph/rendernode/shader_frag.cso"));
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning("Failed to open file with fragment shader bytecode");
+        return;
+    }
+    QByteArray fshader_cso = f.readAll();
     D3D12_SHADER_BYTECODE vshader;
-    vshader.pShaderBytecode = g_VS_Simple;
-    vshader.BytecodeLength = sizeof(g_VS_Simple);
+    vshader.pShaderBytecode = vshader_cso.constData();
+    vshader.BytecodeLength = vshader_cso.size();
     D3D12_SHADER_BYTECODE pshader;
-    pshader.pShaderBytecode = g_PS_Simple;
-    pshader.BytecodeLength = sizeof(g_PS_Simple);
+    pshader.pShaderBytecode = fshader_cso.constData();
+    pshader.BytecodeLength = fshader_cso.size();
 
     D3D12_RASTERIZER_DESC rastDesc = {};
     rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
@@ -235,7 +246,8 @@ void D3D12RenderNode::render(const RenderState *state)
         init();
 
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(rif->getResource(m_item->window(), QSGRendererInterface::CommandList));
+    ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(
+        rif->getResource(m_item->window(), QSGRendererInterface::CommandListResource));
     Q_ASSERT(commandList);
 
     const int msize = 16 * sizeof(float);
@@ -280,4 +292,4 @@ QRectF D3D12RenderNode::rect() const
     return QRect(0, 0, m_item->width(), m_item->height());
 }
 
-#endif // HAS_D3D12
+#endif // d3d12

@@ -346,7 +346,7 @@ void QQmlDebugServerImpl::parseArguments()
     QString fileName;
     QStringList services;
 
-    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','));
+    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','), QString::SkipEmptyParts);
     for (auto argsIt = lstjsDebugArguments.begin(), argsItEnd = lstjsDebugArguments.end(); argsIt != argsItEnd; ++argsIt) {
         const QStringRef &strArgument = *argsIt;
         if (strArgument.startsWith(QLatin1String("port:"))) {
@@ -377,7 +377,7 @@ void QQmlDebugServerImpl::parseArguments()
             services.append(strArgument.mid(9).toString());
         } else if (!services.isEmpty()) {
             services.append(strArgument.toString());
-        } else {
+        } else if (!strArgument.startsWith(QLatin1String("connector:"))) {
             const QString message = tr("QML Debugger: Invalid argument \"%1\" detected."
                                        " Ignoring the same.").arg(strArgument.toString());
             qWarning("%s", qPrintable(message));

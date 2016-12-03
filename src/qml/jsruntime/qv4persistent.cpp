@@ -139,7 +139,7 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++()
     while (p) {
         while (index < kEntriesPerPage - 1) {
             ++index;
-            if (static_cast<Page *>(p)->values[index].tag() != QV4::Value::Empty_Type)
+            if (!static_cast<Page *>(p)->values[index].isEmpty())
                 return *this;
         }
         index = -1;
@@ -358,14 +358,14 @@ WeakValue::WeakValue(const WeakValue &other)
     : val(0)
 {
     if (other.val) {
-        val = other.engine()->memoryManager->m_weakValues->allocate();
+        allocVal(other.engine());
         *val = *other.val;
     }
 }
 
 WeakValue::WeakValue(ExecutionEngine *engine, const Value &value)
 {
-    val = engine->memoryManager->m_weakValues->allocate();
+    allocVal(engine);
     *val = value;
 }
 
@@ -374,7 +374,7 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
     if (!val) {
         if (!other.val)
             return *this;
-        val = other.engine()->memoryManager->m_weakValues->allocate();
+        allocVal(other.engine());
     }
 
     Q_ASSERT(engine() == other.engine());
@@ -388,25 +388,9 @@ WeakValue::~WeakValue()
     free();
 }
 
-void WeakValue::set(ExecutionEngine *engine, const Value &value)
+void WeakValue::allocVal(ExecutionEngine *engine)
 {
-    if (!val)
-        val = engine->memoryManager->m_weakValues->allocate();
-    *val = value;
-}
-
-void WeakValue::set(ExecutionEngine *engine, ReturnedValue value)
-{
-    if (!val)
-        val = engine->memoryManager->m_weakValues->allocate();
-    *val = value;
-}
-
-void WeakValue::set(ExecutionEngine *engine, Heap::Base *obj)
-{
-    if (!val)
-        val = engine->memoryManager->m_weakValues->allocate();
-    *val = obj;
+    val = engine->memoryManager->m_weakValues->allocate();
 }
 
 void WeakValue::markOnce(ExecutionEngine *e)

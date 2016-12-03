@@ -169,7 +169,8 @@ protected:
     QQuickAnimatorJob *createJob() const override;
     QString propertyName() const override { return QStringLiteral("rotation"); }
 };
-#ifndef QT_NO_OPENGL
+
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 class QQuickUniformAnimatorPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
@@ -200,7 +201,7 @@ QML_DECLARE_TYPE(QQuickYAnimator)
 QML_DECLARE_TYPE(QQuickScaleAnimator)
 QML_DECLARE_TYPE(QQuickRotationAnimator)
 QML_DECLARE_TYPE(QQuickOpacityAnimator)
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 QML_DECLARE_TYPE(QQuickUniformAnimator)
 #endif
 #endif // QQUICKANIMATOR_P_H

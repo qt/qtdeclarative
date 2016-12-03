@@ -449,7 +449,7 @@ QVariant QQmlBinding::evaluate()
     return scope.engine->toVariant(scope.result, qMetaTypeId<QList<QObject*> >());
 }
 
-QString QQmlBinding::expressionIdentifier()
+QString QQmlBinding::expressionIdentifier() const
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
     QV4::Scope scope(ep->v4engine());
@@ -600,7 +600,7 @@ protected:
                 resultMo = resultObject->metaObject();
             }
         } else if (auto variant = result.as<QV4::VariantObject>()) {
-            QVariant value = variant->d()->data;
+            QVariant value = variant->d()->data();
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context());
             resultMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, value.userType());
             if (resultMo.isNull())

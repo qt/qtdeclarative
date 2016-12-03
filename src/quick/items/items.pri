@@ -41,19 +41,10 @@ HEADERS += \
     $$PWD/qquickflickable_p.h \
     $$PWD/qquickflickable_p_p.h \
     $$PWD/qquickflickablebehavior_p.h \
-    $$PWD/qquicklistview_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
-    $$PWD/qquickgridview_p.h \
-    $$PWD/qquickpathview_p.h \
-    $$PWD/qquickpathview_p_p.h \
-    $$PWD/qquickpositioners_p.h \
-    $$PWD/qquickpositioners_p_p.h \
     $$PWD/qquickloader_p.h \
     $$PWD/qquickloader_p_p.h \
-    $$PWD/qquickanimatedimage_p.h \
-    $$PWD/qquickanimatedimage_p_p.h \
-    $$PWD/qquickflipable_p.h \
     $$PWD/qquicktranslate_p.h \
     $$PWD/qquickclipnode_p.h \
     $$PWD/qquickview.h \
@@ -66,26 +57,13 @@ HEADERS += \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
-    $$PWD/qquickitemview_p.h \
-    $$PWD/qquickitemview_p_p.h \
-    $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
     $$PWD/qquickwindowmodule_p.h \
-    $$PWD/qquickshadereffectsource_p.h \
-    $$PWD/qquickshadereffectmesh_p.h \
-    $$PWD/qquickshadereffect_p.h \
-    $$PWD/qquickgenericshadereffect_p.h \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h \
     $$PWD/qquickgraphicsinfo_p.h \
-    $$PWD/qquickitemgrabresult.h \
-    $$PWD/qquickspriteengine_p.h \
-    $$PWD/qquicksprite_p.h \
-    $$PWD/qquickspritesequence_p.h \
-    $$PWD/qquickanimatedsprite_p.h \
-    $$PWD/qquickanimatedsprite_p_p.h \
-    $$PWD/qquickspritesequence_p_p.h
+    $$PWD/qquickitemgrabresult.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -111,14 +89,8 @@ SOURCES += \
     $$PWD/qquickmousearea.cpp \
     $$PWD/qquickpincharea.cpp \
     $$PWD/qquickflickable.cpp \
-    $$PWD/qquicklistview.cpp \
     $$PWD/qquickrepeater.cpp \
-    $$PWD/qquickgridview.cpp \
-    $$PWD/qquickpathview.cpp \
-    $$PWD/qquickpositioners.cpp \
     $$PWD/qquickloader.cpp \
-    $$PWD/qquickanimatedimage.cpp \
-    $$PWD/qquickflipable.cpp \
     $$PWD/qquicktranslate.cpp \
     $$PWD/qquickclipnode.cpp \
     $$PWD/qquickview.cpp \
@@ -129,49 +101,133 @@ SOURCES += \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
-    $$PWD/qquickitemview.cpp \
-    $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowattached.cpp \
-    $$PWD/qquickshadereffectsource.cpp \
-    $$PWD/qquickshadereffectmesh.cpp \
-    $$PWD/qquickshadereffect.cpp \
-    $$PWD/qquickgenericshadereffect.cpp \
     $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickgraphicsinfo.cpp \
-    $$PWD/qquickitemgrabresult.cpp \
-    $$PWD/qquickspriteengine.cpp \
-    $$PWD/qquicksprite.cpp \
-    $$PWD/qquickspritesequence.cpp \
-    $$PWD/qquickanimatedsprite.cpp
+    $$PWD/qquickitemgrabresult.cpp
+
+qtConfig(quick-animatedimage) {
+    HEADERS += \
+        $$PWD/qquickanimatedimage_p.h \
+        $$PWD/qquickanimatedimage_p_p.h
+    SOURCES += \
+        $$PWD/qquickanimatedimage.cpp
+}
+
+qtConfig(quick-gridview) {
+    HEADERS += \
+        $$PWD/qquickgridview_p.h
+    SOURCES += \
+        $$PWD/qquickgridview.cpp
+}
+
+qtConfig(quick-itemview) {
+    HEADERS += \
+        $$PWD/qquickitemview_p.h \
+        $$PWD/qquickitemview_p_p.h
+    SOURCES += \
+        $$PWD/qquickitemview.cpp
+}
+
+qtConfig(quick-viewtransitions) {
+    HEADERS += \
+        $$PWD/qquickitemviewtransition_p.h
+    SOURCES += \
+        $$PWD/qquickitemviewtransition.cpp
+}
+
+qtConfig(quick-listview) {
+    HEADERS += \
+        $$PWD/qquicklistview_p.h
+    SOURCES += \
+        $$PWD/qquicklistview.cpp
+}
+
+qtConfig(quick-pathview) {
+    HEADERS += \
+        $$PWD/qquickpathview_p.h \
+        $$PWD/qquickpathview_p_p.h
+    SOURCES += \
+        $$PWD/qquickpathview.cpp
+}
+
+qtConfig(quick-positioners) {
+    HEADERS += \
+        $$PWD/qquickpositioners_p.h \
+        $$PWD/qquickpositioners_p_p.h
+    SOURCES += \
+        $$PWD/qquickpositioners.cpp
+}
+
+qtConfig(quick-flipable) {
+    HEADERS += \
+        $$PWD/qquickflipable_p.h
+    SOURCES += \
+        $$PWD/qquickflipable.cpp
+}
+
+qtConfig(quick-shadereffect) {
+    HEADERS += \
+        $$PWD/qquickshadereffectsource_p.h \
+        $$PWD/qquickshadereffectmesh_p.h \
+        $$PWD/qquickshadereffect_p.h \
+        $$PWD/qquickgenericshadereffect_p.h
+    SOURCES += \
+        $$PWD/qquickshadereffectsource.cpp \
+        $$PWD/qquickshadereffectmesh.cpp \
+        $$PWD/qquickshadereffect.cpp \
+        $$PWD/qquickgenericshadereffect.cpp
+
+    qtConfig(opengl) {
+        SOURCES += \
+            $$PWD/qquickopenglshadereffect.cpp \
+            $$PWD/qquickopenglshadereffectnode.cpp
+        HEADERS += \
+            $$PWD/qquickopenglshadereffect_p.h \
+            $$PWD/qquickopenglshadereffectnode_p.h
+
+        OTHER_FILES += \
+            $$PWD/shaders/shadereffect.vert \
+            $$PWD/shaders/shadereffect.frag \
+            $$PWD/shaders/shadereffectfallback.vert \
+            $$PWD/shaders/shadereffectfallback.frag \
+            $$PWD/shaders/shadereffect_core.vert \
+            $$PWD/shaders/shadereffect_core.frag \
+            $$PWD/shaders/shadereffectfallback_core.vert \
+            $$PWD/shaders/shadereffectfallback_core.frag
+    }
+}
+
+qtConfig(quick-sprite) {
+    HEADERS += \
+        $$PWD/qquickspriteengine_p.h \
+        $$PWD/qquicksprite_p.h \
+        $$PWD/qquickspritesequence_p.h \
+        $$PWD/qquickanimatedsprite_p.h \
+        $$PWD/qquickanimatedsprite_p_p.h \
+        $$PWD/qquickspritesequence_p_p.h
+    SOURCES += \
+        $$PWD/qquickspriteengine.cpp \
+        $$PWD/qquicksprite.cpp \
+        $$PWD/qquickspritesequence.cpp \
+        $$PWD/qquickanimatedsprite.cpp
+}
 
 # Items that depend on OpenGL Renderer
 qtConfig(opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qquickopenglinfo.cpp \
-        $$PWD/qquickopenglshadereffect.cpp \
-        $$PWD/qquickopenglshadereffectnode.cpp \
         $$PWD/qquickframebufferobject.cpp
 
     HEADERS += \
         $$PWD/qquickopenglinfo_p.h \
-        $$PWD/qquickopenglshadereffect_p.h \
-        $$PWD/qquickopenglshadereffectnode_p.h \
         $$PWD/qquickframebufferobject.h
-
-    OTHER_FILES += \
-        $$PWD/shaders/shadereffect.vert \
-        $$PWD/shaders/shadereffect.frag \
-        $$PWD/shaders/shadereffectfallback.vert \
-        $$PWD/shaders/shadereffectfallback.frag \
-        $$PWD/shaders/shadereffect_core.vert \
-        $$PWD/shaders/shadereffect_core.frag \
-        $$PWD/shaders/shadereffectfallback_core.vert \
-        $$PWD/shaders/shadereffectfallback_core.frag
 }
 
 RESOURCES += \
     $$PWD/items.qrc
 
-include(context2d/context2d.pri)
+qtConfig(quick-canvas): \
+    include(context2d/context2d.pri)

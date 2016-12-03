@@ -51,8 +51,11 @@
 // We mean it.
 //
 
+#include <private/qv4global_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4instr_moth_p.h>
+
+QT_REQUIRE_CONFIG(qml_interpreter);
 
 QT_BEGIN_NAMESPACE
 

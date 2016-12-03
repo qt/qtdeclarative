@@ -140,6 +140,7 @@ private slots:
     void cursorVisible();
     void delegateLoading_data();
     void delegateLoading();
+    void cursorDelegateHeight();
     void navigation();
     void readOnly();
 #ifndef QT_NO_CLIPBOARD
@@ -928,7 +929,6 @@ void tst_qquicktextedit::hAlignVisual()
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
         const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
         const int right = numberOfNonWhitePixels(centeredSection3, centeredSection3End, image);
-        image.save("test3.png");
         QVERIFY2(left < mid, msgNotLessThan(left, mid).constData());
         QVERIFY2(mid < right, msgNotLessThan(mid, right).constData());
     }
@@ -2072,11 +2072,17 @@ void tst_qquicktextedit::mouseSelection()
     else if (clicks == 3)
         QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    if (clicks == 2) {
+        // QTBUG-50022: Since qtbase commit beef975, QTestLib avoids generating
+        // double click events by adding 500ms delta to release event timestamps.
+        // Send a double click event by hand to ensure the correct sequence:
+        // press, release, press, _dbl click_, move, release.
+        QMouseEvent dblClickEvent(QEvent::MouseButtonDblClick, p1, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QGuiApplication::sendEvent(textEditObject, &dblClickEvent);
+    }
     QTest::mouseMove(&window, p2);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p2);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
-
-    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
 
     // Clicking and shift to clicking between the same points should select the same text.
     textEditObject->setCursorPosition(0);
@@ -2086,9 +2092,6 @@ void tst_qquicktextedit::mouseSelection()
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseClick(&window, Qt::LeftButton, Qt::ShiftModifier, p2);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
-
-    // ### This is to prevent double click detection from carrying over to the next test.
-    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
 }
 
 void tst_qquicktextedit::dragMouseSelection()
@@ -2845,6 +2848,43 @@ void tst_qquicktextedit::delegateLoading()
     //QVERIFY(!delegate);
 }
 
+void tst_qquicktextedit::cursorDelegateHeight()
+{
+    QQuickView view(testFileUrl("cursorHeight.qml"));
+    view.show();
+    view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
+    QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
+    QVERIFY(textEditObject);
+    // Delegate creation is deferred until focus in or cursor visibility is forced.
+    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+    QVERIFY(!textEditObject->isCursorVisible());
+
+    // Test that the delegate gets created.
+    textEditObject->setFocus(true);
+    QVERIFY(textEditObject->isCursorVisible());
+    QQuickItem* delegateObject = textEditObject->findChild<QQuickItem*>("cursorInstance");
+    QVERIFY(delegateObject);
+
+    const int largerHeight = textEditObject->cursorRectangle().height();
+
+    textEditObject->setCursorPosition(0);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+    QCOMPARE(delegateObject->height(), textEditObject->cursorRectangle().height());
+
+    // Move the cursor to the next line, which has a smaller font.
+    textEditObject->setCursorPosition(5);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+    QVERIFY(textEditObject->cursorRectangle().height() < largerHeight);
+    QCOMPARE(delegateObject->height(), textEditObject->cursorRectangle().height());
+
+    // Test that the delegate gets deleted
+    textEditObject->setCursorDelegate(0);
+    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+}
+
 /*
 TextEdit element should only handle left/right keys until the cursor reaches
 the extent of the text, then they should ignore the keys.
@@ -3028,9 +3068,6 @@ void tst_qquicktextedit::middleClickPaste()
 
     // Middle click pastes the selected text, assuming the platform supports it.
     QTest::mouseClick(&window, Qt::MiddleButton, Qt::NoModifier, p3);
-
-    // ### This is to prevent double click detection from carrying over to the next test.
-    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
 
     if (QGuiApplication::clipboard()->supportsSelection())
         QCOMPARE(textEditObject->text().mid(1, selectedText.length()), selectedText);

@@ -892,7 +892,7 @@ void QQuickTextEdit::setWrapMode(WrapMode mode)
 /*!
     \qmlproperty int QtQuick::TextEdit::lineCount
 
-    Returns the total number of lines in the textEdit item.
+    Returns the total number of lines in the TextEdit item.
 */
 int QQuickTextEdit::lineCount() const
 {
@@ -2350,6 +2350,7 @@ void QQuickTextEdit::moveCursorDelegate()
     QRectF cursorRect = cursorRectangle();
     d->cursorItem->setX(cursorRect.x());
     d->cursorItem->setY(cursorRect.y());
+    d->cursorItem->setHeight(cursorRect.height());
 }
 
 void QQuickTextEdit::updateSelection()
@@ -2566,7 +2567,7 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 {
     Q_Q(QQuickTextEdit);
     QTextOption opt = document->defaultTextOption();
-    int oldAlignment = opt.alignment();
+    const Qt::Alignment oldAlignment = opt.alignment();
     Qt::LayoutDirection oldTextDirection = opt.textDirection();
 
     QQuickTextEdit::HAlignment horizontalAlignment = q->effectiveHAlign();

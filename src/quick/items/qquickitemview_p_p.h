@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_itemview);
+
 #include "qquickitemview_p.h"
 #include "qquickitemviewtransition_p.h"
 #include "qquickflickable_p_p.h"

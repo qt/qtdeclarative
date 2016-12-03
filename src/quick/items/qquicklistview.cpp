@@ -131,7 +131,7 @@ public:
 
     void updateAverage();
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void fixupPosition() Q_DECL_OVERRIDE;
     void fixup(AxisData &data, qreal minExtent, qreal maxExtent) Q_DECL_OVERRIDE;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
@@ -1401,11 +1401,11 @@ bool QQuickListViewPrivate::hasStickyFooter() const
 }
 
 void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change,
-                                                const QRectF &diff)
+                                                const QRectF &oldGeometry)
 {
     Q_Q(QQuickListView);
 
-    QQuickItemViewPrivate::itemGeometryChanged(item, change, diff);
+    QQuickItemViewPrivate::itemGeometryChanged(item, change, oldGeometry);
     if (!q->isComponentComplete())
         return;
 
@@ -1426,24 +1426,22 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
             // position all subsequent items
             if (visibleItems.count() && item == visibleItems.constFirst()->item) {
                 FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.constFirst());
-                const QRectF oldGeometry(item->x() - diff.x(),
-                                         item->y() - diff.y(),
-                                         item->width() - diff.width(),
-                                         item->height() - diff.height());
                 if (listItem->transitionScheduledOrRunning())
                     return;
                 if (orient == QQuickListView::Vertical) {
                     const qreal oldItemEndPosition = verticalLayoutDirection == QQuickItemView::BottomToTop ? -oldGeometry.y() : oldGeometry.y() + oldGeometry.height();
+                    const qreal heightDiff = item->height() - oldGeometry.height();
                     if (verticalLayoutDirection == QQuickListView::TopToBottom && oldItemEndPosition < q->contentY())
-                        listItem->setPosition(listItem->position() - diff.height(), true);
+                        listItem->setPosition(listItem->position() - heightDiff, true);
                     else if (verticalLayoutDirection == QQuickListView::BottomToTop && oldItemEndPosition > q->contentY())
-                        listItem->setPosition(listItem->position() + diff.height(), true);
+                        listItem->setPosition(listItem->position() + heightDiff, true);
                 } else {
                     const qreal oldItemEndPosition = q->effectiveLayoutDirection() == Qt::RightToLeft ? -oldGeometry.x() : oldGeometry.x() + oldGeometry.width();
+                    const qreal widthDiff = item->width() - oldGeometry.width();
                     if (q->effectiveLayoutDirection() == Qt::LeftToRight && oldItemEndPosition < q->contentX())
-                        listItem->setPosition(listItem->position() - diff.width(), true);
+                        listItem->setPosition(listItem->position() - widthDiff, true);
                     else if (q->effectiveLayoutDirection() == Qt::RightToLeft && oldItemEndPosition > q->contentX())
-                        listItem->setPosition(listItem->position() + diff.width(), true);
+                        listItem->setPosition(listItem->position() + widthDiff, true);
                 }
             }
             forceLayoutPolish();
@@ -1765,7 +1763,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     State should \e never be stored in a delegate.
 
     ListView attaches a number of properties to the root item of the delegate, for example
-    \c {ListView:isCurrentItem}.  In the following example, the root delegate item can access
+    \c ListView.isCurrentItem.  In the following example, the root delegate item can access
     this attached property directly as \c ListView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
 

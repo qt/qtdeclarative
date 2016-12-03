@@ -42,6 +42,8 @@
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QtGui/QOpenGLFunctions>
 #include <private/qquickitem_p.h>
+#include <private/qsgadaptationlayer_p.h>
+#include <qsgtextureprovider.h>
 
 #include <QSGSimpleTextureNode>
 #include <QSGRendererInterface>

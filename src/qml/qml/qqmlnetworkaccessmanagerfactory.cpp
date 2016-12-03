@@ -41,7 +41,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 
 /*!
     \class QQmlNetworkAccessManagerFactory
@@ -103,6 +103,6 @@ QQmlNetworkAccessManagerFactory::~QQmlNetworkAccessManagerFactory()
     implementation of this method is reentrant.
 */
 
-#endif //QT_NO_NETWORK
+#endif // qml_network
 
 QT_END_NAMESPACE

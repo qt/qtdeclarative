@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_sprite);
+
 #include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE

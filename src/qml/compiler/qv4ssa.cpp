@@ -2692,6 +2692,7 @@ void convertConst(Const *c, Type targetType)
     case UndefinedType:
         c->value = qt_qnan();
         c->type = targetType;
+        break;
     default:
         Q_UNIMPLEMENTED();
         Q_ASSERT(!"Unimplemented!");
@@ -5076,6 +5077,10 @@ void mergeBasicBlocks(IR::Function *function, DefUses *du, DominatorTree *dt)
         if (bb->out.size() != 1) continue; // more than one outgoing edge
         BasicBlock *successor = bb->out.first();
         if (successor->in.size() != 1) continue; // more than one incoming edge
+
+        // Loop header? No efficient way to update the other blocks that refer to this as containing group,
+        // so don't do merging yet.
+        if (successor->isGroupStart()) continue;
 
         // Ok, we can merge the two basic blocks.
         if (DebugBlockMerging) {

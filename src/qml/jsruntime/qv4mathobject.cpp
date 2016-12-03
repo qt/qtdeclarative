@@ -51,8 +51,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(MathObject);
 
-Heap::MathObject::MathObject()
+void Heap::MathObject::init()
 {
+    Object::init();
     Scope scope(internalClass->engine);
     ScopedObject m(scope, this);
 

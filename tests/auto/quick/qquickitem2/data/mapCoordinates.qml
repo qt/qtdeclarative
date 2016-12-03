@@ -59,6 +59,16 @@ Item {
         return Qt.point(pos.x, pos.y)
     }
 
+    function mapAToGlobal(x, y) {
+        var pos = itemA.mapToGlobal(x, y)
+        return Qt.point(pos.x, pos.y)
+    }
+
+    function mapAFromGlobal(x, y) {
+        var pos = itemA.mapFromGlobal(x, y)
+        return Qt.point(pos.x, pos.y)
+    }
+
     function checkMapAToInvalid(x, y) {
         try {
             itemA.mapToItem(1122, x, y)

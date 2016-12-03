@@ -58,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
 class QNetworkReply;
 #endif
 class QQuickBorderImagePrivate : public QQuickImageBasePrivate
@@ -69,7 +69,7 @@ public:
     QQuickBorderImagePrivate()
       : border(0), horizontalTileMode(QQuickBorderImage::Stretch),
         verticalTileMode(QQuickBorderImage::Stretch), pixmapChanged(false)
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
       , sciReply(0), redirectCount(0)
 #endif
     {
@@ -108,7 +108,7 @@ public:
     QQuickBorderImage::TileMode verticalTileMode;
     bool pixmapChanged : 1;
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     QNetworkReply *sciReply;
     int redirectCount;
 #endif

@@ -526,6 +526,7 @@ QT_WARNING_POP
 
 //The C++ version of protected namespaces in qmldir
 Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);
+Q_QML_EXPORT void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor);
 
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)

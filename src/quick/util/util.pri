@@ -17,8 +17,6 @@ SOURCES += \
     $$PWD/qquickbehavior.cpp \
     $$PWD/qquickfontloader.cpp \
     $$PWD/qquickstyledtext.cpp \
-    $$PWD/qquickpath.cpp \
-    $$PWD/qquickpathinterpolator.cpp \
     $$PWD/qquickimageprovider.cpp \
     $$PWD/qquicksvgparser.cpp \
     $$PWD/qquickvaluetypes.cpp \
@@ -55,9 +53,6 @@ HEADERS += \
     $$PWD/qquickbehavior_p.h \
     $$PWD/qquickfontloader_p.h \
     $$PWD/qquickstyledtext_p.h \
-    $$PWD/qquickpath_p.h \
-    $$PWD/qquickpath_p_p.h \
-    $$PWD/qquickpathinterpolator_p.h \
     $$PWD/qquickimageprovider.h \
     $$PWD/qquicksvgparser_p.h \
     $$PWD/qquickvaluetypes_p.h \
@@ -70,3 +65,13 @@ HEADERS += \
     $$PWD/qquicktextmetrics_p.h \
     $$PWD/qquickshortcut_p.h \
     $$PWD/qquickvalidator_p.h
+
+qtConfig(quick-path) {
+    SOURCES += \
+        $$PWD/qquickpath.cpp \
+        $$PWD/qquickpathinterpolator.cpp
+    HEADERS += \
+        $$PWD/qquickpath_p.h \
+        $$PWD/qquickpath_p_p.h \
+        $$PWD/qquickpathinterpolator_p.h
+}

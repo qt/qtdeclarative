@@ -15,4 +15,5 @@ print([10, 20, 30].filter(function (v,k,o) { return v >= 20 }));
 print([10,20,30].reduce(function(a,v,k,o) { return a + v }));
 print([10,20,30].reduceRight(function(a,v,k,o) { return a + v }));
 
-
+print([10, 20, 30].find(function (v,k,o) { return v >= 20 }));
+print([10, 20, 30].findIndex(function (v,k,o) { return v >= 20 }));

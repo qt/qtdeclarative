@@ -63,6 +63,7 @@ class Q_QUICK_EXPORT QQuickDesignerSupportMetaInfo
 public:
     static bool isSubclassOf(QObject *object, const QByteArray &superTypeName);
     static void registerNotifyPropertyChangeCallBack(void (*callback)(QObject *, const QQuickDesignerSupport::PropertyName &));
+    static void registerMockupObject(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
 };
 
 QT_END_NAMESPACE

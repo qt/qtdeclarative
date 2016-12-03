@@ -61,7 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 struct ArrayCtor : FunctionObject {
-    ArrayCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }
@@ -82,6 +82,8 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_toString(CallContext *ctx);
     static ReturnedValue method_toLocaleString(CallContext *ctx);
     static ReturnedValue method_concat(CallContext *ctx);
+    static ReturnedValue method_find(CallContext *ctx);
+    static ReturnedValue method_findIndex(CallContext *ctx);
     static ReturnedValue method_join(CallContext *ctx);
     static ReturnedValue method_pop(CallContext *ctx);
     static ReturnedValue method_push(CallContext *ctx);

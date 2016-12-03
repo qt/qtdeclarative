@@ -77,9 +77,17 @@ namespace Heap {
 
 struct QQmlValueTypeWrapper;
 
-struct QObjectWrapper : Object {
-    QObjectWrapper(QObject *object);
-    ~QObjectWrapper() { qObj.destroy(); }
+struct Q_QML_EXPORT QObjectWrapper : Object {
+    void init(QObject *object)
+    {
+        Object::init();
+        qObj.init(object);
+    }
+
+    void destroy() {
+        qObj.destroy();
+        Object::destroy();
+    }
 
     QObject *object() const { return qObj.data(); }
 
@@ -88,10 +96,22 @@ private:
 };
 
 struct QObjectMethod : FunctionObject {
-    QObjectMethod(QV4::ExecutionContext *scope);
-    ~QObjectMethod() { qObj.destroy(); }
-    QQmlRefPointer<QQmlPropertyCache> propertyCache;
-    int index;
+    void init(QV4::ExecutionContext *scope);
+    void destroy()
+    {
+        setPropertyCache(nullptr);
+        qObj.destroy();
+        FunctionObject::destroy();
+    }
+
+    QQmlPropertyCache *propertyCache() const { return _propertyCache; }
+    void setPropertyCache(QQmlPropertyCache *c) {
+        if (c)
+            c->addref();
+        if (_propertyCache)
+            _propertyCache->release();
+        _propertyCache = c;
+    }
 
     Pointer<QQmlValueTypeWrapper> valueTypeWrapper;
 
@@ -101,6 +121,10 @@ struct QObjectMethod : FunctionObject {
 
 private:
     QQmlQPointer<QObject> qObj;
+    QQmlPropertyCache *_propertyCache;
+
+public:
+    int index;
 };
 
 struct QMetaObjectWrapper : FunctionObject {
@@ -108,14 +132,17 @@ struct QMetaObjectWrapper : FunctionObject {
     QQmlPropertyData *constructors;
     int constructorCount;
 
-    QMetaObjectWrapper(const QMetaObject* metaObject);
-    ~QMetaObjectWrapper();
+    void init(const QMetaObject* metaObject);
+    void destroy();
     void ensureConstructorsCache();
 };
 
 struct QmlSignalHandler : Object {
-    QmlSignalHandler(QObject *object, int signalIndex);
-    ~QmlSignalHandler() { qObj.destroy(); }
+    void init(QObject *object, int signalIndex);
+    void destroy() {
+        qObj.destroy();
+        Object::destroy();
+    }
     int signalIndex;
 
     QObject *object() const { return qObj.data(); }
@@ -130,6 +157,7 @@ private:
 struct Q_QML_EXPORT QObjectWrapper : public Object
 {
     V4_OBJECT2(QObjectWrapper, Object)
+    V4_NEEDS_DESTROY
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
 
@@ -173,7 +201,7 @@ protected:
     static ReturnedValue method_disconnect(CallContext *ctx);
 
 private:
-    static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
+    Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
 };
 
 inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)

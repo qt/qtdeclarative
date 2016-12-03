@@ -178,7 +178,9 @@ public:
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
     virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
                                                         QSGGuiThreadShaderEffectManager *mgr);
+#if QT_CONFIG(quick_sprite)
     virtual QSGSpriteNode *createSpriteNode() = 0;
+#endif
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
     virtual QSize minimumFBOSize() const;

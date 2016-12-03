@@ -61,7 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 struct NumberCtor : FunctionObject {
-    NumberCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }

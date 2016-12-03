@@ -148,9 +148,9 @@ QSGAdaptationBackendData *contextFactory()
                 }
             }
 
+#ifndef QT_NO_LIBRARY
             // Then try the plugins.
             if (!backendData->factory) {
-#ifndef QT_NO_LIBRARY
                 const int index = loader()->indexOf(requestedBackend);
                 if (index != -1)
                     backendData->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(index));

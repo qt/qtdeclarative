@@ -1533,6 +1533,8 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
 
     output.jsGenerator.stringTable.serialize(qmlUnit);
 
+    qmlUnit->generateChecksum();
+
     return qmlUnit;
 }
 

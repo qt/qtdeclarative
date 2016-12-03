@@ -273,10 +273,11 @@ QT_BEGIN_NAMESPACE
 struct QV4ParticleData : public QV4::Object
 {
     struct Data : QV4::Object::Data {
-        Data(QQuickParticleData *datum, QQuickParticleSystem* particleSystem)
-            : datum(datum)
-            , particleSystem(particleSystem)
+        void init(QQuickParticleData *datum, QQuickParticleSystem* particleSystem)
         {
+            Object::init();
+            this->datum = datum;
+            this->particleSystem = particleSystem;
         }
         QQuickParticleData* datum;//TODO: Guard needed?
         QQuickParticleSystem* particleSystem;

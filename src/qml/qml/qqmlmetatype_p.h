@@ -259,13 +259,14 @@ public:
     int minimumMinorVersion() const;
     int maximumMinorVersion() const;
 
-    QQmlType *type(const QHashedStringRef &, int);
-    QQmlType *type(const QV4::String *, int);
+    QQmlType *type(const QHashedStringRef &, int) const;
+    QQmlType *type(const QV4::String *, int) const;
 
     QList<QQmlType*> singletonTypes(int) const;
 
 private:
     //Used by register functions and creates the QQmlTypeModule for them
+    friend QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data);
     friend void addTypeToData(QQmlType* type, QQmlMetaTypeData *data);
     friend struct QQmlMetaTypeData;
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();

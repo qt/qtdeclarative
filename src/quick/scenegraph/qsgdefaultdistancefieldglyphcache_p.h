@@ -119,19 +119,13 @@ private:
             const QString source = QLatin1String(qopenglslMainWithTexCoordsVertexShader)
                                  + QLatin1String(qopenglslUntransformedPositionVertexShader);
 
-            QOpenGLShader *vertexShader = new QOpenGLShader(QOpenGLShader::Vertex, m_blitProgram);
-            vertexShader->compileSourceCode(source);
-
-            m_blitProgram->addShader(vertexShader);
+            m_blitProgram->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, source);
         }
         {
             const QString source = QLatin1String(qopenglslMainFragmentShader)
                                  + QLatin1String(qopenglslImageSrcFragmentShader);
 
-            QOpenGLShader *fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, m_blitProgram);
-            fragmentShader->compileSourceCode(source);
-
-            m_blitProgram->addShader(fragmentShader);
+            m_blitProgram->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, source);
         }
         m_blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
         m_blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);

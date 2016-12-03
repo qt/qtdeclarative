@@ -92,13 +92,13 @@ public:
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
     void clear();
 
-    QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
+    QQmlComponentAttached **componentAttachment() const { return &sharedState->componentAttached; }
 
-    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() { return &sharedState->finalizeCallbacks; }
+    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() const { return &sharedState->finalizeCallbacks; }
 
     QList<QQmlError> errors;
 
-    QQmlContextData *parentContextData() { return parentContext.contextData(); }
+    QQmlContextData *parentContextData() const { return parentContext.contextData(); }
     QFiniteStack<QPointer<QObject> > &allCreatedObjects() const { return sharedState->allCreatedObjects; }
 
 private:

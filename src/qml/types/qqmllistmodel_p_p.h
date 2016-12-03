@@ -162,11 +162,13 @@ namespace QV4 {
 namespace Heap {
 
 struct ModelObject : public QObjectWrapper {
-    ModelObject(QObject *object, QQmlListModel *model, int elementIndex)
-        : QObjectWrapper(object)
-        , m_model(model)
-        , m_elementIndex(elementIndex)
-    {}
+    void init(QObject *object, QQmlListModel *model, int elementIndex)
+    {
+        QObjectWrapper::init(object);
+        m_model = model;
+        m_elementIndex = elementIndex;
+    }
+    void destroy() { QObjectWrapper::destroy(); }
     QQmlListModel *m_model;
     int m_elementIndex;
 };
@@ -180,6 +182,7 @@ struct ModelObject : public QObjectWrapper
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     V4_OBJECT2(ModelObject, QObjectWrapper)
+    V4_NEEDS_DESTROY
 };
 
 } // namespace QV4
@@ -227,9 +230,9 @@ public:
     const Role &getRoleOrCreate(QV4::String *key, Role::DataType type);
     const Role &getRoleOrCreate(const QString &key, Role::DataType type);
 
-    const Role &getExistingRole(int index) { return *roles.at(index); }
-    const Role *getExistingRole(const QString &key);
-    const Role *getExistingRole(QV4::String *key);
+    const Role &getExistingRole(int index) const { return *roles.at(index); }
+    const Role *getExistingRole(const QString &key) const;
+    const Role *getExistingRole(QV4::String *key) const;
 
     int roleCount() const { return roles.count(); }
 
@@ -335,12 +338,12 @@ public:
         return m_layout->roleCount();
     }
 
-    const ListLayout::Role &getExistingRole(int index)
+    const ListLayout::Role &getExistingRole(int index) const
     {
         return m_layout->getExistingRole(index);
     }
 
-    const ListLayout::Role *getExistingRole(QV4::String *key)
+    const ListLayout::Role *getExistingRole(QV4::String *key) const
     {
         return m_layout->getExistingRole(key);
     }

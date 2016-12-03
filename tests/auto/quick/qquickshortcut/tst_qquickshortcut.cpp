@@ -43,6 +43,10 @@ private slots:
     void sequence();
     void context_data();
     void context();
+    void matcher_data();
+    void matcher();
+    void multiple_data();
+    void multiple();
 };
 
 Q_DECLARE_METATYPE(Qt::Key)
@@ -342,6 +346,111 @@ void tst_QQuickShortcut::context()
     QCOMPARE(inactiveWindow->property("activatedShortcut").toString(), inactiveWindowActivatedShortcut);
     QVERIFY(activeWindow->property("ambiguousShortcut").toString() == ambiguousShortcut
             || inactiveWindow->property("ambiguousShortcut").toString() == ambiguousShortcut);
+}
+
+typedef bool (*ShortcutContextMatcher)(QObject *, Qt::ShortcutContext);
+extern ShortcutContextMatcher qt_quick_shortcut_context_matcher();
+extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher);
+
+static ShortcutContextMatcher lastMatcher = nullptr;
+
+static bool trueMatcher(QObject *, Qt::ShortcutContext)
+{
+    lastMatcher = trueMatcher;
+    return true;
+}
+
+static bool falseMatcher(QObject *, Qt::ShortcutContext)
+{
+    lastMatcher = falseMatcher;
+    return false;
+}
+
+Q_DECLARE_METATYPE(ShortcutContextMatcher)
+
+void tst_QQuickShortcut::matcher_data()
+{
+    QTest::addColumn<ShortcutContextMatcher>("matcher");
+    QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<QVariant>("shortcut");
+    QTest::addColumn<QString>("activatedShortcut");
+
+    ShortcutContextMatcher tm = trueMatcher;
+    ShortcutContextMatcher fm = falseMatcher;
+
+    QTest::newRow("F1") << tm << Qt::Key_F1 << shortcutMap("F1", Qt::ApplicationShortcut) << "F1";
+    QTest::newRow("F2") << fm << Qt::Key_F2 << shortcutMap("F2", Qt::ApplicationShortcut) << "";
+}
+
+void tst_QQuickShortcut::matcher()
+{
+    QFETCH(ShortcutContextMatcher, matcher);
+    QFETCH(Qt::Key, key);
+    QFETCH(QVariant, shortcut);
+    QFETCH(QString, activatedShortcut);
+
+    ShortcutContextMatcher defaultMatcher = qt_quick_shortcut_context_matcher();
+    QVERIFY(defaultMatcher);
+
+    qt_quick_set_shortcut_context_matcher(matcher);
+    QVERIFY(qt_quick_shortcut_context_matcher() == matcher);
+
+    QQmlApplicationEngine engine(testFileUrl("shortcuts.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    window->setProperty("shortcuts", QVariantList() << shortcut);
+    QTest::keyClick(window, key);
+
+    QVERIFY(lastMatcher == matcher);
+    QCOMPARE(window->property("activatedShortcut").toString(), activatedShortcut);
+
+    qt_quick_set_shortcut_context_matcher(defaultMatcher);
+}
+
+void tst_QQuickShortcut::multiple_data()
+{
+    QTest::addColumn<QStringList>("sequences");
+    QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<Qt::KeyboardModifiers>("modifiers");
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<bool>("activated");
+
+    // first
+    QTest::newRow("Ctrl+X,(Shift+Del)") << (QStringList() << "Ctrl+X" << "Shift+Del") << Qt::Key_X << Qt::KeyboardModifiers(Qt::ControlModifier) << true << true;
+    // second
+    QTest::newRow("(Ctrl+X),Shift+Del") << (QStringList() << "Ctrl+X" << "Shift+Del") << Qt::Key_Delete << Qt::KeyboardModifiers(Qt::ShiftModifier) << true << true;
+    // disabled
+    QTest::newRow("(Ctrl+X,Shift+Del)") << (QStringList() << "Ctrl+X" << "Shift+Del") << Qt::Key_X << Qt::KeyboardModifiers(Qt::ControlModifier) << false << false;
+}
+
+void tst_QQuickShortcut::multiple()
+{
+    QFETCH(QStringList, sequences);
+    QFETCH(Qt::Key, key);
+    QFETCH(Qt::KeyboardModifiers, modifiers);
+    QFETCH(bool, enabled);
+    QFETCH(bool, activated);
+
+    QQmlApplicationEngine engine;
+
+    engine.load(testFileUrl("multiple.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QObject *shortcut = window->property("shortcut").value<QObject *>();
+    QVERIFY(shortcut);
+
+    shortcut->setProperty("enabled", enabled);
+    shortcut->setProperty("sequences", sequences);
+
+    QTest::keyPress(window, key, modifiers);
+
+    QCOMPARE(window->property("activated").toBool(), activated);
 }
 
 QTEST_MAIN(tst_QQuickShortcut)

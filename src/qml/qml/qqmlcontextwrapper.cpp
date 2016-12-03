@@ -61,20 +61,23 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
-Heap::QmlContextWrapper::QmlContextWrapper(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : readOnly(true)
-    , ownsContext(ownsContext)
-    , isNullWrapper(false)
-    , context(context)
+void Heap::QmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
 {
+    Object::init();
+    readOnly = true;
+    this->ownsContext = ownsContext;
+    isNullWrapper = false;
+    this->context = new QQmlGuardedContextData(context);
     this->scopeObject.init(scopeObject);
 }
 
-Heap::QmlContextWrapper::~QmlContextWrapper()
+void Heap::QmlContextWrapper::destroy()
 {
-    if (context && ownsContext)
-        context->destroy();
+    if (*context && ownsContext)
+        (*context)->destroy();
+    delete context;
     scopeObject.destroy();
+    Object::destroy();
 }
 
 ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *ctxt, QObject *scope)
@@ -120,7 +123,7 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
     if (resource->d()->isNullWrapper)
         return Object::get(m, name, hasProperty);
 
-    if (v4->callingQmlContext() != resource->d()->context)
+    if (v4->callingQmlContext() != *resource->d()->context)
         return Object::get(m, name, hasProperty);
 
     result = Object::get(m, name, &hasProp);

@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_itemview);
+
 #include "qquickflickable_p.h"
 #include <qpointer.h>
 #include <QtCore/QLoggingCategory>

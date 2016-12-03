@@ -7,7 +7,8 @@ HEADERS +=  \
    designer/qquickdesignersupportproperties_p.h \
    designer/qquickdesignersupportmetainfo_p.h \
    designer/qqmldesignermetaobject_p.h \
-   designer/qquickdesignersupport_p.h
+   designer/qquickdesignersupport_p.h \
+   designer/qquickdesignercustomparserobject_p.h
 
 SOURCES +=  \
     designer/qquickdesignercustomobjectdata.cpp \
@@ -18,4 +19,5 @@ SOURCES +=  \
     designer/qquickdesignersupportpropertychanges.cpp \
     designer/qquickdesignersupportstates.cpp \
     designer/qquickdesignerwindowmanager.cpp \
-    designer/qqmldesignermetaobject.cpp
+    designer/qqmldesignermetaobject.cpp \
+    designer/qquickdesignercustomparserobject.cpp

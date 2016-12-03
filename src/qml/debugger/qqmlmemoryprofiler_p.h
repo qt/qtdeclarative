@@ -52,6 +52,7 @@
 //
 
 #include <private/qtqmlglobal_p.h>
+#include <QUrl>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,16 +63,53 @@ QT_BEGIN_NAMESPACE
 
 #else
 
-class QUrl;
-
 class Q_QML_PRIVATE_EXPORT QQmlMemoryScope
 {
 public:
-    explicit QQmlMemoryScope(const QUrl &url);
-    explicit QQmlMemoryScope(const char *string);
-    ~QQmlMemoryScope();
+    explicit QQmlMemoryScope(const QUrl &url)
+        : pushed(false)
+    {
+        if (Q_UNLIKELY(openLibrary()))
+            init(url.path().toUtf8().constData());
+    }
+
+    explicit QQmlMemoryScope(const char *string)
+        : pushed(false)
+    {
+        if (Q_UNLIKELY(openLibrary()))
+            init(string);
+    }
+
+    ~QQmlMemoryScope()
+    {
+        if (Q_UNLIKELY(pushed))
+            done();
+    }
+
+    enum LibraryState
+    {
+        Unloaded,
+        Failed,
+        Loaded
+    };
+
+    static bool openLibrary()
+    {
+        if (Q_LIKELY(state == Loaded))
+            return true;
+        if (state == Failed)
+            return false;
+
+        return doOpenLibrary();
+    }
 
 private:
+    Q_NEVER_INLINE void init(const char *string);
+    Q_NEVER_INLINE void done();
+    Q_NEVER_INLINE static bool doOpenLibrary();
+
+    static LibraryState state;
+
     bool pushed;
 };
 

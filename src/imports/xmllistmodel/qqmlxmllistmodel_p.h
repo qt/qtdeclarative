@@ -194,7 +194,7 @@ public:
         Q_EMIT isKeyChanged();
     }
 
-    bool isValid() {
+    bool isValid() const {
         return !m_name.isEmpty() && !m_query.isEmpty();
     }
 

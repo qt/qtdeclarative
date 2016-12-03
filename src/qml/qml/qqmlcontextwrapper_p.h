@@ -64,13 +64,13 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlContextWrapper : Object {
-    QmlContextWrapper(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-    ~QmlContextWrapper();
+    void init(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    void destroy();
     bool readOnly;
     bool ownsContext;
     bool isNullWrapper;
 
-    QQmlGuardedContextData context;
+    QQmlGuardedContextData *context;
     QQmlQPointer<QObject> scopeObject;
 };
 
@@ -89,7 +89,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     }
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
-    inline QQmlContextData *getContext() const { return d()->context; }
+    inline QQmlContextData *getContext() const { return *d()->context; }
 
     void setReadOnly(bool b) { d()->readOnly = b; }
 

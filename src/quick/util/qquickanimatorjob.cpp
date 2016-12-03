@@ -44,7 +44,7 @@
 #include "qquickanimator_p_p.h"
 #include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 # include <private/qquickopenglshadereffectnode_p.h>
 # include <private/qquickopenglshadereffect_p.h>
 #endif
@@ -220,7 +220,6 @@ void QQuickAnimatorProxyJob::readyToAnimate()
 static void qquick_syncback_helper(QAbstractAnimationJob *job)
 {
     if (job->isRenderThreadJob()) {
-        Q_ASSERT(!job->isRunning());
         static_cast<QQuickAnimatorJob *>(job)->writeBack();
 
     } else if (job->isGroup()) {
@@ -264,7 +263,13 @@ qreal QQuickAnimatorJob::progress(int time) const
 
 qreal QQuickAnimatorJob::value() const
 {
-    return m_value;
+    qreal value = m_to;
+    if (m_controller) {
+        m_controller->lock();
+        value = m_value;
+        m_controller->unlock();
+    }
+    return value;
 }
 
 void QQuickAnimatorJob::setTarget(QQuickItem *target)
@@ -362,11 +367,13 @@ void QQuickTransformAnimatorJob::Helper::sync()
             | QQuickItemPrivate::Size;
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated()
             && d->extra->layer
             && d->extra->layer->enabled()) {
         d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
     }
+#endif
 
     quint32 dirty = mask & d->dirtyAttributes;
 
@@ -427,7 +434,9 @@ void QQuickXAnimatorJob::writeBack()
 
 void QQuickXAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
+#endif
     if (!m_helper)
         return;
 
@@ -444,8 +453,9 @@ void QQuickYAnimatorJob::writeBack()
 
 void QQuickYAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-
+#endif
     if (!m_helper)
         return;
 
@@ -462,8 +472,9 @@ void QQuickScaleAnimatorJob::writeBack()
 
 void QQuickScaleAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-
+#endif
     if (!m_helper)
         return;
 
@@ -484,8 +495,9 @@ extern QVariant _q_interpolateCounterclockwiseRotation(qreal &f, qreal &t, qreal
 
 void QQuickRotationAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
-
+#endif
     if (!m_helper)
         return;
 
@@ -534,11 +546,14 @@ void QQuickOpacityAnimatorJob::postSync()
     }
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated()
             && d->extra->layer
             && d->extra->layer->enabled()) {
         d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
     }
+#endif
+
     m_opacityNode = d->opacityNode();
 
     if (!m_opacityNode) {
@@ -587,7 +602,9 @@ void QQuickOpacityAnimatorJob::writeBack()
 
 void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
 {
+#if QT_CONFIG(opengl)
     Q_ASSERT(!m_controller || !m_controller->m_window->openglContext() || m_controller->m_window->openglContext()->thread() == QThread::currentThread());
+#endif
 
     if (!m_opacityNode)
         return;
@@ -597,7 +614,7 @@ void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
 }
 
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 QQuickUniformAnimatorJob::QQuickUniformAnimatorJob()
     : m_node(nullptr)
     , m_uniformIndex(-1)

@@ -128,7 +128,7 @@ struct ExecutionContext : Base {
     bool strictMode : 8;
     int lineNumber;
 };
-Q_STATIC_ASSERT(std::is_trivial<ExecutionContext>::value);
+V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
 struct CallContext : ExecutionContext {
     static CallContext createOnStack(ExecutionEngine *v4);
@@ -145,20 +145,20 @@ struct CallContext : ExecutionContext {
     Value *locals;
     Pointer<Object> activation;
 };
-Q_STATIC_ASSERT(std::is_trivial<CallContext>::value);
+V4_ASSERT_IS_TRIVIAL(CallContext)
 
 struct GlobalContext : ExecutionContext {
     void init(ExecutionEngine *engine);
     Pointer<Object> global;
 };
-Q_STATIC_ASSERT(std::is_trivial<GlobalContext>::value);
+V4_ASSERT_IS_TRIVIAL(GlobalContext)
 
 struct CatchContext : ExecutionContext {
     void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
     Pointer<String> exceptionVarName;
     Value exceptionValue;
 };
-Q_STATIC_ASSERT(std::is_trivial<CatchContext>::value);
+V4_ASSERT_IS_TRIVIAL(CatchContext)
 
 struct WithContext : ExecutionContext {
     void init(ExecutionContext *outerContext, Object *with)
@@ -175,7 +175,7 @@ struct WithContext : ExecutionContext {
 
     Pointer<Object> withObject;
 };
-Q_STATIC_ASSERT(std::is_trivial<WithContext>::value);
+V4_ASSERT_IS_TRIVIAL(WithContext)
 
 struct QmlContextWrapper;
 

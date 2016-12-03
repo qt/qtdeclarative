@@ -68,16 +68,31 @@ public:
         int offset;
     };
 
-    struct Change
+    // The storrage for Change (below). This struct is trivial, which it has to be in order to store
+    // it in a QV4::Heap::Base object. The Change struct doesn't add any storage fields, so it is
+    // safe to cast ChangeData to/from Change.
+    struct ChangeData
     {
-        Change() : index(0), count(0), moveId(-1) {}
-        Change(int index, int count, int moveId = -1, int offset = 0)
-            : index(index), count(count), moveId(moveId), offset(offset) {}
-
         int index;
         int count;
         int moveId;
         int offset;
+    };
+
+    struct Change: ChangeData
+    {
+        Change() {
+            index = 0;
+            count = 0;
+            moveId = -1;
+            offset = 0;
+        }
+        Change(int index, int count, int moveId = -1, int offset = 0) {
+            this->index = index;
+            this->count = count;
+            this->moveId = moveId;
+            this->offset = offset;
+        }
 
         bool isMove() const { return moveId >= 0; }
 

@@ -65,6 +65,12 @@
 
 #include <algorithm>
 
+#if defined(QT_BUILD_INTERNAL)
+#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST)
+#include <dlfcn.h>
+#endif
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -571,6 +577,17 @@ QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine
     }
 }
 
+bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engine)
+{
+    if (type) {
+        bool ok = false;
+        hash->addData(createPropertyCache(engine)->checksum(&ok));
+        return ok;
+    }
+    hash->addData(compilationUnit->data->md5Checksum, sizeof(compilationUnit->data->md5Checksum));
+    return true;
+}
+
 template <typename T>
 bool qtTypeInherits(const QMetaObject *mo) {
     while (mo) {
@@ -593,19 +610,69 @@ void ResolvedTypeReference::doDynamicTypeCheck()
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 
+#if defined(QT_BUILD_INTERNAL)
+
+static QByteArray ownLibraryChecksum()
+{
+    static QByteArray libraryChecksum;
+    static bool checksumInitialized = false;
+    if (checksumInitialized)
+        return libraryChecksum;
+    checksumInitialized = true;
+#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST)
+    Dl_info libInfo;
+    if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
+        QFile library(QFile::decodeName(libInfo.dli_fname));
+        if (library.open(QIODevice::ReadOnly)) {
+            QCryptographicHash hash(QCryptographicHash::Sha1);
+            hash.addData(&library);
+            libraryChecksum = hash.result();
+        }
+    }
+#else
+    // Not implemented.
+#endif
+    return libraryChecksum;
+}
+
+#endif
+
 bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
 {
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
-        QQmlPropertyCache *pc = it.value()->createPropertyCache(engine);
-        bool ok = false;
-        hash->addData(pc->checksum(&ok));
-        if (!ok)
+        if (!it.value()->addToHash(hash, engine))
             return false;
     }
+
+    // This is a bit of a hack to make development easier. When hacking on the code generator
+    // the cache files may end up being re-used. To avoid that we also add the checksum of
+    // the QtQml library.
+#if defined(QT_BUILD_INTERNAL)
+    hash->addData(ownLibraryChecksum());
+#endif
+
     return true;
 }
 
 #endif
+
+void Unit::generateChecksum()
+{
+#ifndef V4_BOOTSTRAP
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    const int checksummableDataOffset = qOffsetOf(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
+
+    const char *dataPtr = reinterpret_cast<const char *>(this) + checksummableDataOffset;
+    hash.addData(dataPtr, unitSize - checksummableDataOffset);
+
+    QByteArray checksum = hash.result();
+    Q_ASSERT(checksum.size() == sizeof(md5Checksum));
+    memcpy(md5Checksum, checksum.constData(), sizeof(md5Checksum));
+#else
+    memset(md5Checksum, 0, sizeof(md5Checksum));
+#endif
+}
 
 }
 

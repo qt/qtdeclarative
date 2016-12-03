@@ -561,10 +561,11 @@ void QSGD3D12Renderer::setInputLayout(const QSGGeometry *g, QSGD3D12PipelineStat
         QSGD3D12InputElement &ie(pipelineState->inputElements[i]);
         static const char *semanticNames[] = { "UNKNOWN", "POSITION", "COLOR", "TEXCOORD", "TEXCOORD", "TEXCOORD" };
         static const int semanticIndices[] = { 0, 0, 0, 0, 1, 2 };
-        Q_ASSERT(attrs[i].semantic >= 1 && attrs[i].semantic < _countof(semanticNames));
+        const int semantic = attrs[i].attributeType;
+        Q_ASSERT(semantic >= 1 && semantic < _countof(semanticNames));
         const int tupleSize = attrs[i].tupleSize;
-        ie.semanticName = semanticNames[attrs[i].semantic];
-        ie.semanticIndex = semanticIndices[attrs[i].semantic];
+        ie.semanticName = semanticNames[semantic];
+        ie.semanticIndex = semanticIndices[semantic];
         ie.offset = offset;
         int bytesPerTuple = 0;
         ie.format = QSGD3D12Engine::toDXGIFormat(QSGGeometry::Type(attrs[i].type), tupleSize, &bytesPerTuple);
@@ -718,7 +719,7 @@ void QSGD3D12Renderer::renderStencilClip(const QSGClipNode *clip, int elementInd
     const QSGGeometry *g = clip->geometry();
     Q_ASSERT(g->attributeCount() == 1);
     Q_ASSERT(g->attributes()[0].tupleSize == 2);
-    Q_ASSERT(g->attributes()[0].type == QSGGeometry::TypeFloat);
+    Q_ASSERT(g->attributes()[0].type == QSGGeometry::FloatType);
 
     setInputLayout(g, &sps);
     m_engine->finalizePipeline(sps);

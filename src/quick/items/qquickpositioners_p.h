@@ -51,6 +51,10 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_positioners);
+
 #include "qquickimplicitsizeitem_p.h"
 #include "qquickitemviewtransition_p.h"
 

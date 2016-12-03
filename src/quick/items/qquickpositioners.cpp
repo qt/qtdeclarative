@@ -872,7 +872,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note This transition is not applied to the items that already part of the positioner
+    \note This transition is not applied to the items that are already part of the positioner
     at the time of its creation. In this case, the \l populate transition is applied instead.
 
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
@@ -1039,7 +1039,7 @@ void QQuickColumn::reportConflictingAnchors()
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note This transition is not applied to the items that already part of the positioner
+    \note This transition is not applied to the items that are already part of the positioner
     at the time of its creation. In this case, the \l populate transition is applied instead.
 
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
@@ -1307,7 +1307,7 @@ void QQuickRow::reportConflictingAnchors()
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note This transition is not applied to the items that already part of the positioner
+    \note This transition is not applied to the items that are already part of the positioner
     at the time of its creation. In this case, the \l populate transition is applied instead.
 
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
@@ -1882,7 +1882,7 @@ void QQuickGrid::reportConflictingAnchors()
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note This transition is not applied to the items that already part of the positioner
+    \note This transition is not applied to the items that are already part of the positioner
     at the time of its creation. In this case, the \l populate transition is applied instead.
 
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}

@@ -81,7 +81,7 @@
     \note This property needs to be set when declaring the LoggingCategory
     and cannot be changed later.
 
-    \sa QLoggingCategory::name()
+    \sa QLoggingCategory::categoryName()
 */
 
 QQmlLoggingCategory::QQmlLoggingCategory(QObject *parent)
@@ -112,13 +112,13 @@ void QQmlLoggingCategory::componentComplete()
 {
     m_initialized = true;
     if (m_name.isNull())
-        qmlInfo(this) << QString(QLatin1String("Declaring the name of the LoggingCategory is mandatory and cannot be changed later !"));
+        qmlInfo(this) << QLatin1String("Declaring the name of the LoggingCategory is mandatory and cannot be changed later !");
 }
 
 void QQmlLoggingCategory::setName(const QString &name)
 {
     if (m_initialized) {
-        qmlInfo(this) << QString(QLatin1String("The name of a LoggingCategory cannot be changed after the Item is created"));
+        qmlInfo(this) << QLatin1String("The name of a LoggingCategory cannot be changed after the Item is created");
         return;
     }
 

@@ -275,7 +275,7 @@ protected:
     void geometryChanged(const QRectF &newGeometry,
                          const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    bool sendMouseEvent(QQuickItem *item, QMouseEvent *event);
+    bool filterMouseEvent(QQuickItem *receiver, QMouseEvent *event);
 
     bool xflick() const;
     bool yflick() const;

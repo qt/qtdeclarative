@@ -585,31 +585,31 @@ QSGD3D12Format QSGD3D12Engine::toDXGIFormat(QSGGeometry::Type sgtype, int tupleS
                                                   FmtFloat4 };
 
     switch (sgtype) {
-    case QSGGeometry::TypeUnsignedByte:
+    case QSGGeometry::UnsignedByteType:
         format = formatMap_ub[tupleSize];
         if (size)
             *size = tupleSize;
         break;
-    case QSGGeometry::TypeFloat:
+    case QSGGeometry::FloatType:
         format = formatMap_f[tupleSize];
         if (size)
             *size = sizeof(float) * tupleSize;
         break;
 
-    case QSGGeometry::TypeUnsignedShort:
+    case QSGGeometry::UnsignedShortType:
         format = FmtUnsignedShort;
         if (size)
             *size = sizeof(ushort) * tupleSize;
         break;
-    case QSGGeometry::TypeUnsignedInt:
+    case QSGGeometry::UnsignedIntType:
         format = FmtUnsignedInt;
         if (size)
             *size = sizeof(uint) * tupleSize;
         break;
 
-    case QSGGeometry::TypeByte:
-    case QSGGeometry::TypeInt:
-    case QSGGeometry::TypeShort:
+    case QSGGeometry::ByteType:
+    case QSGGeometry::IntType:
+    case QSGGeometry::ShortType:
         qWarning("no mapping for GL type 0x%x", sgtype);
         break;
 
@@ -3236,11 +3236,11 @@ void QSGD3D12EnginePrivate::DeviceLossTester::killDevice()
 void *QSGD3D12EnginePrivate::getResource(QSGRendererInterface::Resource resource) const
 {
     switch (resource) {
-    case QSGRendererInterface::Device:
+    case QSGRendererInterface::DeviceResource:
         return device;
-    case QSGRendererInterface::CommandQueue:
+    case QSGRendererInterface::CommandQueueResource:
         return commandQueue.Get();
-    case QSGRendererInterface::CommandList:
+    case QSGRendererInterface::CommandListResource:
         return commandList;
     default:
         break;

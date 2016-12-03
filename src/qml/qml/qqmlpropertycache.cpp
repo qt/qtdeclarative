@@ -193,7 +193,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         _flags.hasArguments = true;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
             _flags.isV4Function = true;
         }
     }
@@ -228,7 +228,7 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     const int paramCount = m.parameterCount();
     if (paramCount) {
         _flags.hasArguments = true;
-        if ((paramCount == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+        if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
             _flags.isV4Function = true;
         }
     }
@@ -246,7 +246,7 @@ Creates a new empty QQmlPropertyCache.
 QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e)
     : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
       signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(0), argumentsCache(0)
+      _metaObject(0), argumentsCache(0), _jsFactoryMethodIndex(-1)
 {
     Q_ASSERT(engine);
 }
@@ -269,8 +269,8 @@ QQmlPropertyCache::~QQmlPropertyCache()
     QQmlPropertyCacheMethodArguments *args = argumentsCache;
     while (args) {
         QQmlPropertyCacheMethodArguments *next = args->next;
-        if (args->signalParameterStringForJS) delete args->signalParameterStringForJS;
-        if (args->names) delete args->names;
+        delete args->signalParameterStringForJS;
+        delete args->names;
         free(args);
         args = next;
     }
@@ -507,6 +507,11 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             const char *name = mci.name();
             if (0 == qstrcmp(name, "DefaultProperty")) {
                 _defaultPropertyName = QString::fromUtf8(mci.value());
+            } else if (0 == qstrcmp(name, "qt_QmlJSWrapperFactoryMethod")) {
+                const char * const factoryMethod = mci.value();
+                _jsFactoryMethodIndex = metaObject->indexOfSlot(factoryMethod);
+                if (_jsFactoryMethodIndex != -1)
+                    _jsFactoryMethodIndex -= metaObject->methodOffset();
             }
         }
     }
@@ -973,7 +978,8 @@ int QQmlPropertyCache::originalClone(QObject *object, int index)
     return index;
 }
 
-QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QString &property)
+template<typename T>
+static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const T& propertyName)
 {
     Q_ASSERT(metaObject);
 
@@ -989,8 +995,6 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
     // These indices don't apply to gadgets, so don't block them.
     const bool preventDestruction = metaObject->superClass() || metaObject == &QObject::staticMetaObject;
-
-    const QByteArray propertyName = property.toUtf8();
 
     int methodCount = metaObject->methodCount();
     for (int ii = methodCount - 1; ii >= 0; --ii) {
@@ -1033,14 +1037,19 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     return rv;
 }
 
-inline const QString &qQmlPropertyCacheToString(const QString &string)
+static inline const char *qQmlPropertyCacheToString(QLatin1String string)
 {
-    return string;
+    return string.data();
 }
 
-inline QString qQmlPropertyCacheToString(const QV4::String *string)
+static inline QByteArray qQmlPropertyCacheToString(const QStringRef &string)
 {
-    return string->toQString();
+    return string.toUtf8();
+}
+
+static inline QByteArray qQmlPropertyCacheToString(const QV4::String *string)
+{
+    return string->toQString().toUtf8();
 }
 
 template<typename T>
@@ -1085,10 +1094,17 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QJSEngine *engine, QObject *obj,
-                                    const QString &name, QQmlContextData *context, QQmlPropertyData &local)
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QStringRef &name,
+                            QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QStringRef &>(engine, obj, name, context, local);
+}
+
+QQmlPropertyData *
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QLatin1String &name,
+                            QQmlContextData *context, QQmlPropertyData &local)
+{
+    return qQmlPropertyCacheProperty<const QLatin1String &>(engine, obj, name, context, local);
 }
 
 // these two functions are copied from qmetaobject.cpp
@@ -1421,6 +1437,12 @@ QByteArray QQmlPropertyCache::checksum(bool *ok)
 {
     if (!_checksum.isEmpty()) {
         *ok = true;
+        return _checksum;
+    }
+
+    // Generate a checksum on the meta-object data only on C++ types.
+    if (!_metaObject || _ownMetaObject) {
+        *ok = false;
         return _checksum;
     }
 

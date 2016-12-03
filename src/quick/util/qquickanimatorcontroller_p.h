@@ -104,8 +104,6 @@ public:
 
     QQuickWindow *m_window;
     QMutex m_mutex;
-
-    bool m_nodesAreInvalid;
 };
 
 

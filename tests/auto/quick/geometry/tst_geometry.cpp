@@ -126,9 +126,9 @@ void GeometryTest::testCustomGeometry()
     };
 
     static QSGGeometry::Attribute attributes[] = {
-        QSGGeometry::Attribute::create(0, 2, QSGGeometry::TypeFloat, false),
-        QSGGeometry::Attribute::create(1, 4, QSGGeometry::TypeUnsignedByte, false),
-        QSGGeometry::Attribute::create(2, 4, QSGGeometry::TypeFloat, false)
+        QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, false),
+        QSGGeometry::Attribute::create(1, 4, QSGGeometry::UnsignedByteType, false),
+        QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType, false)
     };
     static QSGGeometry::AttributeSet set = { 4, 6 * sizeof(float) + 4 * sizeof(unsigned char), attributes };
 

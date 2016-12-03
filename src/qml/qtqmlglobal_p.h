@@ -51,7 +51,9 @@
 // We mean it.
 //
 
-#include "qtqmlglobal.h"
+#include <QtCore/private/qglobal_p.h>
+#include <QtQml/private/qtqml-config_p.h>
+#include <QtQml/qtqmlglobal.h>
 
 #if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
 #    define Q_QML_PRIVATE_EXPORT

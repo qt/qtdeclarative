@@ -105,7 +105,7 @@ ListView {
 
 \section1 Binding Scope Object
 
-An object which has a \l{Property Binding}{property binding} is known has the
+An object which has a \l{Property Binding}{property binding} is known as the
 binding's \e{scope object}.  In the following example, the \l Item object is
 the binding's scope object.
 

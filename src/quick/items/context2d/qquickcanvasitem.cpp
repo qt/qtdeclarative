@@ -1097,18 +1097,22 @@ QImage QQuickCanvasItem::toImage(const QRectF& rect) const
 
 static const char* mimeToType(const QString &mime)
 {
-    if (mime == QLatin1String("image/png"))
-        return "PNG";
-    else if (mime == QLatin1String("image/bmp"))
-        return "BMP";
-    else if (mime == QLatin1String("image/jpeg"))
-        return "JPEG";
-    else if (mime == QLatin1String("image/x-portable-pixmap"))
-        return "PPM";
-    else if (mime == QLatin1String("image/tiff"))
-        return "TIFF";
-    else if (mime == QLatin1String("image/xpm"))
-        return "XPM";
+    const QLatin1String imagePrefix("image/");
+    if (!mime.startsWith(imagePrefix))
+        return nullptr;
+    const QStringRef mimeExt = mime.midRef(imagePrefix.size());
+    if (mimeExt == QLatin1String("png"))
+        return "png";
+    else if (mimeExt == QLatin1String("bmp"))
+        return "bmp";
+    else if (mimeExt == QLatin1String("jpeg"))
+        return "jpeg";
+    else if (mimeExt == QLatin1String("x-portable-pixmap"))
+        return "ppm";
+    else if (mimeExt == QLatin1String("tiff"))
+        return "tiff";
+    else if (mimeExt == QLatin1String("xpm"))
+        return "xpm";
     return nullptr;
 }
 

@@ -43,6 +43,7 @@
 #include <QtQuick/private/qsgdefaultpainternode_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <qsgtextureprovider.h>
 
 #include <qmath.h>
 

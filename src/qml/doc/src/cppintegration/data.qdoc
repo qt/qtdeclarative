@@ -52,8 +52,8 @@ remain with C++ by invoking QQmlEngine::setObjectOwnership() with
 QQmlEngine::CppOwnership specified.
 
 Additionally, the QML engine respects the normal QObject parent ownership
-semantics of Qt C++ objects, and will not ever take ownership of a QObject
-instance which already has a parent.
+semantics of Qt C++ objects, and will never delete a QObject instance which
+has a parent.
 
 
 \section1 Basic Qt Data Types

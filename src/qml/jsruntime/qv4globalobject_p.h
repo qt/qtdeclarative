@@ -60,7 +60,7 @@ namespace QV4 {
 namespace Heap {
 
 struct EvalFunction : FunctionObject {
-    EvalFunction(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }

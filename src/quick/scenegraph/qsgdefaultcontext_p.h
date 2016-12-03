@@ -76,7 +76,9 @@ public:
     QSGRectangleNode *createRectangleNode() override;
     QSGImageNode *createImageNode() override;
     QSGNinePatchNode *createNinePatchNode() override;
+#if QT_CONFIG(quick_sprite)
     QSGSpriteNode *createSpriteNode() override;
+#endif
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;

@@ -117,7 +117,7 @@ class QQmlV4Function
 {
 public:
     int length() const { return callData->argc; }
-    QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
+    QV4::ReturnedValue operator[](int idx) const { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
     void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
     QV4::ExecutionEngine *v4engine() const { return e; }
 private:
@@ -181,14 +181,14 @@ public:
     QV4::ReturnedValue global();
     QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
-    void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
+    void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
 
-    Deletable *listModelData() { return m_listModelData; }
+    Deletable *listModelData() const { return m_listModelData; }
     void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
 
     void freezeObject(const QV4::Value &value);
 
-#ifndef QT_NO_NETWORK
+#if QT_CONFIG(qml_network)
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).

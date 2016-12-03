@@ -45,7 +45,9 @@
 #include "qsgsoftwarepublicnodes_p.h"
 #include "qsgsoftwarepainternode_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
+#if QT_CONFIG(quick_sprite)
 #include "qsgsoftwarespritenode_p.h"
+#endif
 
 #include <qsgsimplerectnode.h>
 #include <qsgsimpletexturenode.h>
@@ -91,9 +93,11 @@ QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *nod
     case QSGSoftwareRenderableNode::SimpleImage:
         m_handle.simpleImageNode = static_cast<QSGImageNode*>(node);
         break;
+#if QT_CONFIG(quick_sprite)
     case QSGSoftwareRenderableNode::SpriteNode:
         m_handle.spriteNode = static_cast<QSGSoftwareSpriteNode*>(node);
         break;
+#endif
     case QSGSoftwareRenderableNode::RenderNode:
         m_handle.renderNode = static_cast<QSGRenderNode*>(node);
         break;
@@ -182,10 +186,12 @@ void QSGSoftwareRenderableNode::update()
 
         boundingRect = m_handle.simpleImageNode->rect().toRect();
         break;
+#if QT_CONFIG(quick_sprite)
     case QSGSoftwareRenderableNode::SpriteNode:
         m_isOpaque = m_handle.spriteNode->isOpaque();
         boundingRect = m_handle.spriteNode->rect().toRect();
         break;
+#endif
     case QSGSoftwareRenderableNode::RenderNode:
         if (m_handle.renderNode->flags().testFlag(QSGRenderNode::OpaqueRendering) && !m_transform.isRotating())
             m_isOpaque = true;
@@ -317,9 +323,11 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
     case QSGSoftwareRenderableNode::SimpleImage:
         static_cast<QSGSoftwareImageNode *>(m_handle.simpleImageNode)->paint(painter);
         break;
+#if QT_CONFIG(quick_sprite)
     case QSGSoftwareRenderableNode::SpriteNode:
         static_cast<QSGSoftwareSpriteNode *>(m_handle.spriteNode)->paint(painter);
         break;
+#endif
     default:
         break;
     }

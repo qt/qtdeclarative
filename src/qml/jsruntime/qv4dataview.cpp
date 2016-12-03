@@ -49,9 +49,9 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(DataViewCtor);
 DEFINE_OBJECT_VTABLE(DataView);
 
-Heap::DataViewCtor::DataViewCtor(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, QStringLiteral("DataView"))
+void Heap::DataViewCtor::init(QV4::ExecutionContext *scope)
 {
+    Heap::FunctionObject::init(scope, QStringLiteral("DataView"));
 }
 
 void DataViewCtor::construct(const Managed *, Scope &scope, CallData *callData)

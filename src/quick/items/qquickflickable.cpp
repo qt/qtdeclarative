@@ -1556,11 +1556,11 @@ void QQuickFlickablePrivate::replayDelayedPress()
 
         // If we have the grab, release before delivering the event
         if (QQuickWindow *w = q->window()) {
+            replayingPressEvent = true;
             if (w->mouseGrabberItem() == q)
                 q->ungrabMouse();
 
             // Use the event handler that will take care of finding the proper item to propagate the event
-            replayingPressEvent = true;
             QCoreApplication::sendEvent(w, mouseEvent.data());
             replayingPressEvent = false;
         }
@@ -1590,7 +1590,7 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         d->movementEndingTimer.stop();
         d->pressed = false;
         d->stealMouse = false;
-        if (!d->velocityTimeline.isActive())
+        if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
             movementEnding(true, true);
     }
 }
@@ -1643,7 +1643,7 @@ void QQuickFlickable::viewportMoved(Qt::Orientations orient)
 void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                                            QQuickTimeLineCallback::Callback fixupCallback)
 {
-    if (pressed || calcVelocity) {
+    if (!scrollingPhase && (pressed || calcVelocity)) {
         int elapsed = data.velocityTime.restart();
         if (elapsed > 0) {
             qreal velocity = (data.lastPos - data.move.value()) * 1000 / elapsed;
@@ -2216,7 +2216,8 @@ void QQuickFlickable::mouseUngrabEvent()
     Q_D(QQuickFlickable);
     // if our mouse grab has been removed (probably by another Flickable),
     // fix our state
-    d->cancelInteraction();
+    if (!d->replayingPressEvent)
+        d->cancelInteraction();
 }
 
 void QQuickFlickablePrivate::cancelInteraction()
@@ -2235,21 +2236,28 @@ void QQuickFlickablePrivate::cancelInteraction()
     }
 }
 
-bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
+/*!
+    QQuickFlickable::filterMouseEvent checks filtered mouse events and potentially steals them.
+
+    This is how flickable takes over events from other items (\a receiver) that are on top of it.
+    It filters their events and may take over (grab) the \a event.
+    Return true if the mouse event will be stolen.
+    \internal
+*/
+bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
     QPointF localPos = mapFromScene(event->windowPos());
 
-    QQuickWindow *c = window();
-    QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
-    if (grabber == this && d->stealMouse) {
+    Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
+    if (receiver == this && d->stealMouse) {
         // we are already the grabber and we do want the mouse event to ourselves.
         return true;
     }
 
-    bool grabberDisabled = grabber && !grabber->isEnabled();
+    bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
+    if ((stealThisEvent || contains(localPos)) && (!receiver || !receiver->keepMouseGrab() || receiverDisabled)) {
         QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
         mouseEvent->setAccepted(false);
 
@@ -2259,7 +2267,7 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
             break;
         case QEvent::MouseButtonPress:
             d->handleMousePressEvent(mouseEvent.data());
-            d->captureDelayedPress(item, event);
+            d->captureDelayedPress(receiver, event);
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
             break;
         case QEvent::MouseButtonRelease:
@@ -2269,15 +2277,14 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
         default:
             break;
         }
-        grabber = qobject_cast<QQuickItem*>(c->mouseGrabberItem());
-        if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled) {
+        if ((receiver && stealThisEvent && !receiver->keepMouseGrab() && receiver != this) || receiverDisabled) {
             d->clearDelayedPress();
             grabMouse();
         } else if (d->delayedPressEvent) {
             grabMouse();
         }
 
-        const bool filtered = stealThisEvent || d->delayedPressEvent || grabberDisabled;
+        const bool filtered = stealThisEvent || d->delayedPressEvent || receiverDisabled;
         if (filtered) {
             event->setAccepted(true);
         }
@@ -2286,7 +2293,7 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
         d->lastPosTime = -1;
         returnToBounds();
     }
-    if (event->type() == QEvent::MouseButtonRelease || (grabber && grabber->keepMouseGrab() && !grabberDisabled)) {
+    if (event->type() == QEvent::MouseButtonRelease || (receiver && receiver->keepMouseGrab() && !receiverDisabled)) {
         // mouse released, or another item has claimed the grab
         d->lastPosTime = -1;
         d->clearDelayedPress();
@@ -2306,7 +2313,7 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
     case QEvent::MouseButtonPress:
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease:
-        return sendMouseEvent(i, static_cast<QMouseEvent *>(e));
+        return filterMouseEvent(i, static_cast<QMouseEvent *>(e));
     case QEvent::UngrabMouse:
         if (d->window && d->window->mouseGrabberItem() && d->window->mouseGrabberItem() != this) {
             // The grab has been taken away from a child and given to some other item.

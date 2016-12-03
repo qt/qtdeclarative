@@ -406,10 +406,18 @@ public:
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
-    static QQmlPropertyData *property(QJSEngine *, QObject *, const QString &,
+    static QQmlPropertyData *property(QJSEngine *, QObject *, const QStringRef &,
                                               QQmlContextData *, QQmlPropertyData &);
+    static QQmlPropertyData *property(QJSEngine *, QObject *, const QLatin1String &,
+                                      QQmlContextData *, QQmlPropertyData &);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
                                               QQmlContextData *, QQmlPropertyData &);
+
+    static QQmlPropertyData *property(QJSEngine *engine, QObject *obj, const QString &name,
+                                      QQmlContextData *context, QQmlPropertyData &local)
+    {
+        return property(engine, obj, QStringRef(&name), context, local);
+    }
 
     //see QMetaObjectPrivate::originalClone
     int originalClone(int index);
@@ -430,6 +438,8 @@ public:
     static bool isDynamicMetaObject(const QMetaObject *);
 
     void toMetaObjectBuilder(QMetaObjectBuilder &);
+
+    inline bool callJSFactoryMethod(QObject *object, void **args) const;
 
     static bool determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount, int *stringCount);
     static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
@@ -466,11 +476,11 @@ private:
 
     QQmlPropertyData *ensureResolved(QQmlPropertyData*) const;
 
-    void resolve(QQmlPropertyData *) const;
+    Q_NEVER_INLINE void resolve(QQmlPropertyData *) const;
     void updateRecur(const QMetaObject *);
 
     template<typename K>
-    QQmlPropertyData *findNamedProperty(const K &key)
+    QQmlPropertyData *findNamedProperty(const K &key) const
     {
         StringCache::mapped_type *it = stringCache.value(key);
         return it ? it->second : 0;
@@ -505,6 +515,7 @@ private:
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
+    int _jsFactoryMethodIndex;
     QByteArray _checksum;
 };
 
@@ -674,7 +685,7 @@ bool QQmlPropertyData::operator==(const QQmlPropertyRawData &other)
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
 {
-    if (p && p->notFullyResolved())
+    if (p && Q_UNLIKELY(p->notFullyResolved()))
         resolve(p);
 
     return p;
@@ -804,6 +815,17 @@ int QQmlPropertyCache::signalCount() const
 int QQmlPropertyCache::signalOffset() const
 {
     return signalHandlerIndexCacheStart;
+}
+
+bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const
+{
+    if (_jsFactoryMethodIndex != -1) {
+        _metaObject->d.static_metacall(object, QMetaObject::InvokeMetaMethod, _jsFactoryMethodIndex, args);
+        return true;
+    }
+    if (_parent)
+        return _parent->callJSFactoryMethod(object, args);
+    return false;
 }
 
 QQmlMetaObject::QQmlMetaObject()

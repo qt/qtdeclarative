@@ -766,7 +766,7 @@ void QQuickTextInput::setMaxLength(int ml)
     (but without actually giving it active focus).
 
     It should not be set directly on the item, like in the below QML,
-    as the specified value will be overridden an lost on focus changes.
+    as the specified value will be overridden and lost on focus changes.
 
     \code
     TextInput {
@@ -1993,7 +1993,7 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
         qmlInfo(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
         return false;
     } else {
-        return text().mid(start, end - start).isRightToLeft();
+        return text().midRef(start, end - start).isRightToLeft();
     }
 }
 
@@ -2340,8 +2340,8 @@ QString QQuickTextInput::preeditText() const
 
     If true, the user can use the mouse to select text in some
     platform-specific way. Note that for some platforms this may
-    not be an appropriate interaction (eg. may conflict with how
-    the text needs to behave inside a Flickable.
+    not be an appropriate interaction (it may conflict with how
+    the text needs to behave inside a \l Flickable, for example).
 */
 bool QQuickTextInput::selectByMouse() const
 {
@@ -3687,9 +3687,10 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
     } else {
         int remaining = m_maxLength - m_text.length();
         if (remaining != 0) {
-            m_text.insert(m_cursor, s.left(remaining));
-            for (int i = 0; i < s.leftRef(remaining).length(); ++i)
-               addCommand(Command(Insert, m_cursor++, s.at(i), -1, -1));
+            const QStringRef remainingStr = s.leftRef(remaining);
+            m_text.insert(m_cursor, remainingStr);
+            for (auto e : remainingStr)
+               addCommand(Command(Insert, m_cursor++, e, -1, -1));
             m_textDirty = true;
         }
     }

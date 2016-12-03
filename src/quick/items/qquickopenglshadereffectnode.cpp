@@ -260,11 +260,11 @@ void QQuickCustomMaterialShader::compile()
 
     m_log.clear();
     m_compiled = true;
-    if (!program()->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShader())) {
+    if (!program()->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexShader())) {
         m_log += QLatin1String("*** Vertex shader ***\n") + program()->log();
         m_compiled = false;
     }
-    if (!program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShader())) {
+    if (!program()->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShader())) {
         m_log += QLatin1String("*** Fragment shader ***\n") + program()->log();
         m_compiled = false;
     }

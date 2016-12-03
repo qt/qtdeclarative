@@ -44,6 +44,7 @@
 #include <qv4objectiterator_p.h>
 #include <qv4scopedvalue_p.h>
 #include <qv4runtime_p.h>
+#include <qv4variantobject_p.h>
 #include "qv4string_p.h"
 
 #include <qstack.h>
@@ -734,6 +735,10 @@ QString Stringify::Str(const QString &key, const Value &v)
         return std::isfinite(d) ? scope.result.toQString() : QStringLiteral("null");
     }
 
+    if (const QV4::VariantObject *v = scope.result.as<QV4::VariantObject>()) {
+        return v->d()->data().toString();
+    }
+
     o = scope.result.asReturnedValue();
     if (o) {
         if (!o->as<FunctionObject>()) {
@@ -867,8 +872,9 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-Heap::JsonObject::JsonObject()
+void Heap::JsonObject::init()
 {
+    Object::init();
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 

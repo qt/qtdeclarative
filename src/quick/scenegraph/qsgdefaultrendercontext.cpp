@@ -99,12 +99,12 @@ void QSGDefaultRenderContext::initialize(void *context)
 
 #ifdef Q_OS_LINUX
     const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
-    if (strstr(vendor, "nouveau"))
+    if (vendor && strstr(vendor, "nouveau"))
         m_brokenIBOs = true;
     const char *renderer = (const char *) funcs->glGetString(GL_RENDERER);
-    if (strstr(renderer, "llvmpipe"))
+    if (renderer && strstr(renderer, "llvmpipe"))
         m_serializedRender = true;
-    if (strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
+    if (vendor && renderer && strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
         m_brokenIBOs = true;
 #endif
 
@@ -262,8 +262,8 @@ void QSGDefaultRenderContext::compileShader(QSGMaterialShader *shader, QSGMateri
                    "QSGRenderContext::compile()",
                    "materials with custom compile step cannot have custom vertex/fragment code");
         QOpenGLShaderProgram *p = shader->program();
-        p->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexCode ? vertexCode : shader->vertexShader());
-        p->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentCode ? fragmentCode : shader->fragmentShader());
+        p->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexCode ? vertexCode : shader->vertexShader());
+        p->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentCode ? fragmentCode : shader->fragmentShader());
         p->link();
         if (!p->isLinked())
             qWarning() << "shader compilation failed:" << endl << p->log();

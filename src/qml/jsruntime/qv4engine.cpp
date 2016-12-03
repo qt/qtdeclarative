@@ -86,7 +86,9 @@
 #include "qv4isel_masm_p.h"
 #endif // V4_ENABLE_JIT
 
+#if QT_CONFIG(qml_interpreter)
 #include "qv4isel_moth_p.h"
+#endif
 
 #if USE(PTHREADS)
 #  include <pthread.h>
@@ -160,6 +162,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
+#if QT_CONFIG(qml_interpreter)
         bool jitDisabled = true;
 
 #ifdef V4_ENABLE_JIT
@@ -180,6 +183,9 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                      "very slow. Visit https://wiki.qt.io/V4 to learn about possible "
                      "solutions for your platform.");
         }
+#else
+        factory = new JIT::ISelFactory;
+#endif
     }
     iselFactory.reset(factory);
 
@@ -744,7 +750,7 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
     if (!ctx)
         return 0;
 
-    return ctx->qml->context.contextData();
+    return ctx->qml->context->contextData();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
@@ -920,7 +926,7 @@ ReturnedValue ExecutionEngine::throwError(const Value &value)
     QV4::Scope scope(this);
     QV4::Scoped<ErrorObject> error(scope, value);
     if (!!error)
-        exceptionStackTrace = error->d()->stackTrace;
+        exceptionStackTrace = *error->d()->stackTrace;
     else
         exceptionStackTrace = stackTrace();
 
@@ -1079,7 +1085,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     QV4::Scope scope(e);
 
     if (const QV4::VariantObject *v = value.as<QV4::VariantObject>())
-        return v->d()->data;
+        return v->d()->data();
 
     if (typeHint == QVariant::Bool)
         return QVariant(value.toBoolean());
@@ -1153,7 +1159,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return str;
     }
     if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
-        return ld->d()->locale;
+        return *ld->d()->locale;
     if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())
@@ -1693,7 +1699,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
         return true;
     if (value->as<QV4::VariantObject>() && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = value->as<QV4::VariantObject>()->d()->data;
+        QVariant &var = value->as<QV4::VariantObject>()->d()->data();
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -1705,7 +1711,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
-                    const QVariant &v = vo->d()->data;
+                    const QVariant &v = vo->d()->data();
                     canCast = (type == v.userType()) || (valueType && (valueType == v.userType()));
                 }
                 else if (proto->as<QV4::QObjectWrapper>()) {
@@ -1760,7 +1766,7 @@ static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const Value &value)
     QV4::Scoped<QV4::VariantObject> v(scope, value);
 
     if (v) {
-        QVariant variant = v->d()->data;
+        QVariant variant = v->d()->data();
         int type = variant.userType();
         if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());

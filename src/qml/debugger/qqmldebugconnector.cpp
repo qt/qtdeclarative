@@ -126,6 +126,16 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
             params->instance = loadQQmlDebugConnector(params->pluginKey);
         } else if (params->arguments.isEmpty()) {
             return 0; // no explicit class name given and no command line arguments
+        } else if (params->arguments.startsWith(QLatin1String("connector:"))) {
+            static const int connectorBegin = int(strlen("connector:"));
+
+            int connectorEnd = params->arguments.indexOf(QLatin1Char(','), connectorBegin);
+            if (connectorEnd == -1)
+                connectorEnd = params->arguments.length();
+
+            params->instance = loadQQmlDebugConnector(params->arguments.mid(
+                                                          connectorBegin,
+                                                          connectorEnd - connectorBegin));
         } else {
             params->instance = loadQQmlDebugConnector(
                         params->arguments.startsWith(QLatin1String("native")) ?

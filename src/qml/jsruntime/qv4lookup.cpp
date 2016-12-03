@@ -306,7 +306,7 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *l, ExecutionEngine *engine, const
             ReturnedValue v = o->getLookup(l);
             Lookup l2 = *l;
 
-            if (l2.getter == Lookup::getter0 || l2.getter == Lookup::getter1) {
+            if (l->index != UINT_MAX && (l2.getter == Lookup::getter0 || l2.getter == Lookup::getter1)) {
                 // if we have a getter0, make sure it comes first
                 if (l2.getter == Lookup::getter0)
                     qSwap(l1, l2);

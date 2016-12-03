@@ -247,7 +247,7 @@ Q_SIGNALS:
 
 protected:
     void touchEvent(QTouchEvent *) Q_DECL_OVERRIDE;
-    bool childMouseEventFilter(QQuickItem *i, QEvent *event) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *receiver, QEvent *event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;

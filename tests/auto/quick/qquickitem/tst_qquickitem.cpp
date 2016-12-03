@@ -48,7 +48,7 @@ public:
     TestItem(QQuickItem *parent = 0)
         : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
         , wheelCount(0), acceptIncomingTouchEvents(true)
-        , touchEventReached(false) {}
+        , touchEventReached(false), timestamp(0) {}
 
     bool focused;
     int pressCount;
@@ -56,6 +56,7 @@ public:
     int wheelCount;
     bool acceptIncomingTouchEvents;
     bool touchEventReached;
+    ulong timestamp;
 protected:
     virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
@@ -65,7 +66,7 @@ protected:
         touchEventReached = true;
         event->setAccepted(acceptIncomingTouchEvents);
     }
-    virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
+    virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; timestamp = event->timestamp(); }
 };
 
 class TestWindow: public QQuickWindow
@@ -1432,12 +1433,14 @@ void tst_qquickitem::wheelEvent()
     item->setVisible(visible);
 
     QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
+    event.setTimestamp(123456UL);
     event.setAccepted(false);
     QGuiApplication::sendEvent(&window, &event);
 
     if (shouldReceiveWheelEvents) {
         QVERIFY(event.isAccepted());
         QCOMPARE(item->wheelCount, 1);
+        QCOMPARE(item->timestamp, 123456UL);
     } else {
         QVERIFY(!event.isAccepted());
         QCOMPARE(item->wheelCount, 0);
@@ -1771,56 +1774,56 @@ static void gc(QQmlEngine &engine)
 
 void tst_qquickitem::visualParentOwnership()
 {
-    QQuickView view;
-    view.setSource(testFileUrl("visualParentOwnership.qml"));
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("visualParentOwnership.qml"));
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QVariant newObject;
     {
-        QVERIFY(QMetaObject::invokeMethod(root, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QVERIFY(QMetaObject::invokeMethod(root.data(), "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
         QPointer<QQuickItem> newItem = qvariant_cast<QQuickItem*>(newObject);
         QVERIFY(!newItem.isNull());
 
         QVERIFY(!newItem->parent());
         QVERIFY(!newItem->parentItem());
 
-        newItem->setParentItem(root);
+        newItem->setParentItem(root.data());
 
-        gc(*view.engine());
+        gc(engine);
 
         QVERIFY(!newItem.isNull());
         newItem->setParentItem(0);
 
-        gc(*view.engine());
+        gc(engine);
         QVERIFY(newItem.isNull());
     }
     {
-        QVERIFY(QMetaObject::invokeMethod(root, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QVERIFY(QMetaObject::invokeMethod(root.data(), "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
         QPointer<QQuickItem> firstItem = qvariant_cast<QQuickItem*>(newObject);
         QVERIFY(!firstItem.isNull());
 
-        firstItem->setParentItem(root);
+        firstItem->setParentItem(root.data());
 
-        QVERIFY(QMetaObject::invokeMethod(root, "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
+        QVERIFY(QMetaObject::invokeMethod(root.data(), "createItemWithoutParent", Q_RETURN_ARG(QVariant, newObject)));
         QPointer<QQuickItem> secondItem = qvariant_cast<QQuickItem*>(newObject);
         QVERIFY(!firstItem.isNull());
 
         secondItem->setParentItem(firstItem);
 
-        gc(*view.engine());
+        gc(engine);
 
         delete firstItem;
 
         root->setProperty("keepAliveProperty", newObject);
 
-        gc(*view.engine());
+        gc(engine);
         QVERIFY(!secondItem.isNull());
 
         root->setProperty("keepAliveProperty", QVariant());
 
-        gc(*view.engine());
+        gc(engine);
         QVERIFY(secondItem.isNull());
     }
 }

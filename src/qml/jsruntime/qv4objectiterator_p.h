@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_EXPORT ObjectIterator
+struct Q_QML_EXPORT ObjectIteratorData
 {
     enum Flags {
         NoFlags = 0,
@@ -72,21 +72,52 @@ struct Q_QML_EXPORT ObjectIterator
     uint arrayIndex;
     uint memberIndex;
     uint flags;
+};
+V4_ASSERT_IS_TRIVIAL(ObjectIteratorData)
 
-    ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags);
-    ObjectIterator(Scope &scope, const Object *o, uint flags);
-    void init(const Object *o);
+struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
+{
+    ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags)
+    {
+        engine = e;
+        object = scratch1;
+        current = scratch2;
+        arrayNode = nullptr;
+        arrayIndex = 0;
+        memberIndex = 0;
+        this->flags = flags;
+        init(o);
+    }
+
+    ObjectIterator(Scope &scope, const Object *o, uint flags)
+    {
+        engine = scope.engine;
+        object = scope.alloc(1);
+        current = scope.alloc(1);
+        arrayNode = nullptr;
+        arrayIndex = 0;
+        memberIndex = 0;
+        this->flags = flags;
+        init(o);
+    }
+
     void next(Value *name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
     ReturnedValue nextPropertyName(Value *value);
     ReturnedValue nextPropertyNameAsString(Value *value);
     ReturnedValue nextPropertyNameAsString();
+
+private:
+    void init(const Object *o);
 };
 
 namespace Heap {
 struct ForEachIteratorObject : Object {
-    ForEachIteratorObject(QV4::Object *o);
-    ObjectIterator it;
+    void init(QV4::Object *o);
+    ObjectIterator &it() { return *reinterpret_cast<ObjectIterator*>(&itData); }
     Value workArea[2];
+
+private:
+    ObjectIteratorData itData;
 };
 
 }
@@ -95,16 +126,18 @@ struct ForEachIteratorObject: Object {
     V4_OBJECT2(ForEachIteratorObject, Object)
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
-    ReturnedValue nextPropertyName() { return d()->it.nextPropertyNameAsString(); }
+    ReturnedValue nextPropertyName() { return d()->it().nextPropertyNameAsString(); }
 
 protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 inline
-Heap::ForEachIteratorObject::ForEachIteratorObject(QV4::Object *o)
-    : it(internalClass->engine, workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
+void Heap::ForEachIteratorObject::init(QV4::Object *o)
 {
+    Object::init();
+    it() = ObjectIterator(internalClass->engine, workArea, workArea + 1, o,
+                          ObjectIterator::EnumerableOnly | ObjectIterator::WithProtoChain);
 }
 
 

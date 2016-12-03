@@ -2308,29 +2308,31 @@ QQuickItem::~QQuickItem()
     while (!d->childItems.isEmpty())
         d->childItems.constFirst()->setParentItem(0);
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-        if (anchor)
-            anchor->clearItem(this);
-    }
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+            if (anchor)
+                anchor->clearItem(this);
+        }
 
-    /*
+        /*
         update item anchors that depended on us unless they are our child (and will also be destroyed),
         or our sibling, and our parent is also being destroyed.
     */
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-        if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
-            anchor->update();
-    }
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+            if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
+                anchor->update();
+        }
 
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Destroyed)
-            change.listener->itemDestroyed(this);
-    }
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::Destroyed)
+                change.listener->itemDestroyed(this);
+        }
 
-    d->changeListeners.clear();
+        d->changeListeners.clear();
+    }
 
     /*
        Remove any references our transforms have to us, in case they try to
@@ -2344,7 +2346,9 @@ QQuickItem::~QQuickItem()
 
     if (d->extra.isAllocated()) {
         delete d->extra->contents; d->extra->contents = 0;
+#if QT_CONFIG(quick_shadereffect)
         delete d->extra->layer; d->extra->layer = 0;
+#endif
     }
 
     delete d->_anchors; d->_anchors = 0;
@@ -2599,7 +2603,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     if (parentItem) {
         QQuickItem *itemAncestor = parentItem;
         while (itemAncestor != 0) {
-            if (itemAncestor == this) {
+            if (Q_UNLIKELY(itemAncestor == this)) {
                 qWarning() << "QQuickItem::setParentItem: Parent" << parentItem << "is already part of the subtree of" << this;
                 return;
             }
@@ -3547,10 +3551,12 @@ QQuickAnchors *QQuickItemPrivate::anchors() const
 void QQuickItemPrivate::siblingOrderChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::SiblingOrder) {
-            change.listener->itemSiblingOrderChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::SiblingOrder) {
+                change.listener->itemSiblingOrderChanged(q);
+            }
         }
     }
 }
@@ -3652,20 +3658,18 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
         QQuickAnchorsPrivate::get(d->_anchors)->updateMe();
 
     QQuickGeometryChange change;
-    QRectF diff(newGeometry.x() - oldGeometry.x(),
-                newGeometry.y() - oldGeometry.y(),
-                newGeometry.width() - oldGeometry.width(),
-                newGeometry.height() - oldGeometry.height());
-    change.setXChange(diff.x() != 0);
-    change.setYChange(diff.y() != 0);
-    change.setWidthChange(diff.width() != 0);
-    change.setHeightChange(diff.height() != 0);
+    change.setXChange(newGeometry.x() != oldGeometry.x());
+    change.setYChange(newGeometry.y() != oldGeometry.y());
+    change.setWidthChange(newGeometry.width() != oldGeometry.width());
+    change.setHeightChange(newGeometry.height() != oldGeometry.height());
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
-        if (listener.types & QQuickItemPrivate::Geometry) {
-            if (change.matches(listener.gTypes))
-                listener.listener->itemGeometryChanged(this, change, diff);
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
+            if (listener.types & QQuickItemPrivate::Geometry) {
+                if (change.matches(listener.gTypes))
+                    listener.listener->itemGeometryChanged(this, change, oldGeometry);
+            }
         }
     }
 
@@ -4222,12 +4226,14 @@ void QQuickItem::setBaselineOffset(qreal offset)
 
     d->baselineOffset = offset;
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Geometry) {
-            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-            if (anchor)
-                anchor->updateVerticalAnchors();
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::Geometry) {
+                QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+                if (anchor)
+                    anchor->updateVerticalAnchors();
+            }
         }
     }
 
@@ -4295,12 +4301,12 @@ void QQuickItem::polish()
   */
 void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
+    QV4::ExecutionEngine *v4 = args->v4engine();
     if (args->length() != 3 && args->length() != 5) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
-    QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue item(scope, (*args)[0]);
 
@@ -4314,7 +4320,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     if (!itemObj && !item->isNull()) {
         qmlInfo(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4322,7 +4328,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     QV4::ScopedValue vy(scope, (*args)[2]);
 
     if (!vx->isNumber() || !vy->isNumber()) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4335,7 +4341,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
         QV4::ScopedValue vw(scope, (*args)[3]);
         QV4::ScopedValue vh(scope, (*args)[4]);
         if (!vw->isNumber() || !vh->isNumber()) {
-            args->v4engine()->throwTypeError();
+            v4->throwTypeError();
             return;
         }
         qreal w = vw->asDouble();
@@ -4383,12 +4389,12 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
   */
 void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
+    QV4::ExecutionEngine *v4 = args->v4engine();
     if (args->length() != 3 && args->length() != 5) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
-    QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue item(scope, (*args)[0]);
 
@@ -4402,7 +4408,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     if (!itemObj && !item->isNull()) {
         qmlInfo(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4410,7 +4416,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     QV4::ScopedValue vy(scope, (*args)[2]);
 
     if (!vx->isNumber() || !vy->isNumber()) {
-        args->v4engine()->throwTypeError();
+        v4->throwTypeError();
         return;
     }
 
@@ -4423,7 +4429,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
         QV4::ScopedValue vw(scope, (*args)[3]);
         QV4::ScopedValue vh(scope, (*args)[4]);
         if (!vw->isNumber() || !vh->isNumber()) {
-            args->v4engine()->throwTypeError();
+            v4->throwTypeError();
             return;
         }
         qreal w = vw->asDouble();
@@ -4433,6 +4439,76 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     } else {
         result = mapToItem(itemObj, QPointF(x, y));
     }
+
+    QV4::ScopedObject rv(scope, v4->fromVariant(result));
+    args->setReturnValue(rv.asReturnedValue());
+}
+
+/*!
+    \since 5.7
+    \qmlmethod object QtQuick::Item::mapFromGlobal(real x, real y)
+
+    Maps the point (\a x, \a y), which is in the global coordinate system, to the
+    item's coordinate system, and returns a \l point  matching the mapped coordinate.
+*/
+/*!
+    \internal
+  */
+void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2) {
+        v4->throwTypeError();
+        return;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue vx(scope, (*args)[0]);
+    QV4::ScopedValue vy(scope, (*args)[1]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        v4->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+    QVariant result = mapFromGlobal(QPointF(x, y));
+
+    QV4::ScopedObject rv(scope, v4->fromVariant(result));
+    args->setReturnValue(rv.asReturnedValue());
+}
+
+/*!
+    \since 5.7
+    \qmlmethod object QtQuick::Item::mapToGlobal(real x, real y)
+
+    Maps the point (\a x, \a y), which is in this item's coordinate system, to the
+    global coordinate system, and returns a \l point  matching the mapped coordinate.
+*/
+/*!
+    \internal
+  */
+void QQuickItem::mapToGlobal(QQmlV4Function *args) const
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2) {
+        v4->throwTypeError();
+        return;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue vx(scope, (*args)[0]);
+    QV4::ScopedValue vy(scope, (*args)[1]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        v4->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+    QVariant result = mapToGlobal(QPointF(x, y));
 
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());
@@ -4774,8 +4850,10 @@ void QQuickItem::classBegin()
         d->_stateGroup->classBegin();
     if (d->_anchors)
         d->_anchors->classBegin();
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated() && d->extra->layer)
         d->extra->layer->classBegin();
+#endif
 }
 
 /*!
@@ -4795,8 +4873,10 @@ void QQuickItem::componentComplete()
     }
 
     if (d->extra.isAllocated()) {
+#if QT_CONFIG(quick_shadereffect)
         if (d->extra->layer)
             d->extra->layer->componentComplete();
+#endif
 
         if (d->extra->keyHandler)
             d->extra->keyHandler->componentComplete();
@@ -4852,8 +4932,10 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
 
 void QQuickItemPrivate::transformChanged()
 {
+#if QT_CONFIG(quick_shadereffect)
     if (extra.isAllocated() && extra->layer)
         extra->layer->updateMatrix();
+#endif
 }
 
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
@@ -5235,8 +5317,10 @@ void QQuickItem::setZ(qreal v)
 
     emit zChanged();
 
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated() && d->extra->layer)
         d->extra->layer->updateZ();
+#endif
 }
 
 /*!
@@ -5897,20 +5981,24 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Children) {
-                change.listener->itemChildAdded(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Children) {
+                    change.listener->itemChildAdded(q, data.item);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemChildRemovedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Children) {
-                change.listener->itemChildRemoved(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Children) {
+                    change.listener->itemChildRemoved(q, data.item);
+                }
             }
         }
         break;
@@ -5920,30 +6008,36 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemVisibleHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Visibility) {
-                change.listener->itemVisibilityChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Visibility) {
+                    change.listener->itemVisibilityChanged(q);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemParentHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Parent) {
-                change.listener->itemParentChanged(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Parent) {
+                    change.listener->itemParentChanged(q, data.item);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemOpacityHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Opacity) {
-                change.listener->itemOpacityChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Opacity) {
+                    change.listener->itemOpacityChanged(q);
+                }
             }
         }
         break;
@@ -5953,10 +6047,12 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemRotationHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Rotation) {
-                change.listener->itemRotationChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Rotation) {
+                    change.listener->itemRotationChanged(q);
+                }
             }
         }
         break;
@@ -6223,7 +6319,7 @@ QPointF QQuickItem::position() const
 void QQuickItem::setX(qreal v)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(v))
+    if (qt_is_nan(v))
         return;
     if (d->x == v)
         return;
@@ -6240,7 +6336,7 @@ void QQuickItem::setX(qreal v)
 void QQuickItem::setY(qreal v)
 {
     Q_D(QQuickItem);
-    if (qIsNaN(v))
+    if (qt_is_nan(v))
         return;
     if (d->y == v)
         return;
@@ -6315,10 +6411,12 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::ImplicitWidth) {
-            change.listener->itemImplicitWidthChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::ImplicitWidth) {
+                change.listener->itemImplicitWidthChanged(q);
+            }
         }
     }
     emit q->implicitWidthChanged();
@@ -6479,10 +6577,12 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::ImplicitHeight) {
-            change.listener->itemImplicitHeightChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::ImplicitHeight) {
+                change.listener->itemImplicitHeightChanged(q);
+            }
         }
     }
     emit q->implicitHeightChanged();
@@ -7021,15 +7121,6 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
         parentPrivate->setHasHoverInChild(hasHover);
     }
-}
-
-void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
-{
-    Q_Q(QQuickItem);
-    QV4::QObjectWrapper::markWrapper(q, e);
-
-    for (QQuickItem *child : qAsConst(childItems))
-        QQuickItemPrivate::get(child)->markObjects(e);
 }
 
 #ifndef QT_NO_CURSOR
@@ -7647,9 +7738,13 @@ QDebug operator<<(QDebug debug, QQuickItem *item)
 
 bool QQuickItem::isTextureProvider() const
 {
+#if QT_CONFIG(quick_shadereffect)
     Q_D(const QQuickItem);
     return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
            d->extra->layer->effectSource()->isTextureProvider() : false;
+#else
+    return false;
+#endif
 }
 
 /*!
@@ -7663,9 +7758,13 @@ bool QQuickItem::isTextureProvider() const
 
 QSGTextureProvider *QQuickItem::textureProvider() const
 {
+#if QT_CONFIG(quick_shadereffect)
     Q_D(const QQuickItem);
     return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
            d->extra->layer->effectSource()->textureProvider() : 0;
+#else
+    return 0;
+#endif
 }
 
 /*!
@@ -7674,14 +7773,19 @@ QSGTextureProvider *QQuickItem::textureProvider() const
   */
 QQuickItemLayer *QQuickItemPrivate::layer() const
 {
+#if QT_CONFIG(quick_shadereffect)
     if (!extra.isAllocated() || !extra->layer) {
         extra.value().layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
         if (!componentComplete)
             extra->layer->classBegin();
     }
     return extra->layer;
+#else
+    return 0;
+#endif
 }
 
+#if QT_CONFIG(quick_shadereffect)
 QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     : m_item(item)
     , m_enabled(false)
@@ -8169,12 +8273,16 @@ void QQuickItemLayer::updateMatrix()
         ld->extra.value().origin = QQuickItemPrivate::get(m_item)->origin();
     ld->dirty(QQuickItemPrivate::Transform);
 }
+#endif // quick_shadereffect
 
 QQuickItemPrivate::ExtraData::ExtraData()
 : z(0), scale(1), rotation(0), opacity(1),
   contents(0), screenAttached(0), layoutDirectionAttached(0),
   enterKeyAttached(0),
-  keyHandler(0), layer(0),
+  keyHandler(0),
+#if QT_CONFIG(quick_shadereffect)
+  layer(0),
+#endif
   effectRefCount(0), hideRefCount(0),
   opacityNode(0), clipNode(0), rootNode(0),
   acceptedMouseButtons(0), origin(QQuickItem::Center),
@@ -8194,6 +8302,37 @@ QAccessible::Role QQuickItemPrivate::accessibleRole() const
     return QAccessible::NoRole;
 }
 #endif
+
+// helper code to let a visual parent mark its visual children for the garbage collector
+
+namespace QV4 {
+namespace Heap {
+struct QQuickItemWrapper : public QObjectWrapper {
+};
+}
+}
+
+struct QQuickItemWrapper : public QV4::QObjectWrapper {
+    V4_OBJECT2(QQuickItemWrapper, QV4::QObjectWrapper)
+    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickItemWrapper);
+
+void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+{
+    QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
+    if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
+        foreach (QQuickItem *child, QQuickItemPrivate::get(item)->childItems)
+            QV4::QObjectWrapper::markWrapper(child, e);
+    }
+    QV4::QObjectWrapper::markObjects(that, e);
+}
+
+quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
+{
+    return (engine->memoryManager->allocObject<QQuickItemWrapper>(q_func()))->asReturnedValue();
+}
 
 QT_END_NAMESPACE
 

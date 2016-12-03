@@ -107,7 +107,7 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickScaleAnimator>("QtQuick", 2, 2, "ScaleAnimator");
     qmlRegisterType<QQuickRotationAnimator>("QtQuick", 2, 2, "RotationAnimator");
     qmlRegisterType<QQuickOpacityAnimator>("QtQuick", 2, 2, "OpacityAnimator");
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
     qmlRegisterType<QQuickUniformAnimator>("QtQuick", 2, 2, "UniformAnimator");
 #endif
     qmlRegisterType<QQuickStateOperation>();
@@ -123,4 +123,6 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickShortcut>("QtQuick", 2, 5, "Shortcut");
 
     qmlRegisterType<QQuickShortcut,1>("QtQuick", 2, 6, "Shortcut");
+
+    qmlRegisterType<QQuickShortcut,9>("QtQuick", 2, 9, "Shortcut");
 }

@@ -364,8 +364,8 @@ void QSGMaterialShader::compile()
 {
     Q_ASSERT_X(!m_program.isLinked(), "QSGSMaterialShader::compile()", "Compile called multiple times!");
 
-    program()->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShader());
-    program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShader());
+    program()->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexShader());
+    program()->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShader());
 
     char const *const *attr = attributeNames();
 #ifndef QT_NO_DEBUG

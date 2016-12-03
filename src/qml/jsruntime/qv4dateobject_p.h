@@ -63,24 +63,26 @@ namespace QV4 {
 namespace Heap {
 
 struct DateObject : Object {
-    DateObject()
+    void init()
     {
+        Object::init();
         date = qt_qnan();
     }
 
-    DateObject(const Value &date)
+    void init(const Value &date)
     {
+        Object::init();
         this->date = date.toNumber();
     }
-    DateObject(const QDateTime &date);
-    double date;
+    void init(const QDateTime &date);
+    void init(const QTime &time);
 
-    DateObject(const QTime &time);
+    double date;
 };
 
 
 struct DateCtor : FunctionObject {
-    DateCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 }

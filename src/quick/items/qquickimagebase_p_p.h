@@ -68,7 +68,6 @@ public:
       : status(QQuickImageBase::Null),
         progress(0.0),
         devicePixelRatio(1.0),
-        autoTransform(UsePluginDefault),
         async(false),
         cache(true),
         mirror(false),
@@ -83,7 +82,7 @@ public:
     QSize sourcesize;
     QSize oldSourceSize;
     qreal devicePixelRatio;
-    AutoTransform autoTransform;
+    QQuickImageProviderOptions providerOptions;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;

@@ -39,10 +39,6 @@
 
 #include "qsgd3d12publicnodes_p.h"
 
-// for rebuildGeometry
-#include <private/qsgdefaultninepatchnode_p.h>
-#include <private/qsgdefaultimagenode_p.h>
-
 QT_BEGIN_NAMESPACE
 
 QSGD3D12RectangleNode::QSGD3D12RectangleNode()
@@ -138,7 +134,7 @@ void QSGD3D12ImageNode::setRect(const QRectF &r)
         return;
 
     m_rect = r;
-    QSGDefaultImageNode::rebuildGeometry(&m_geometry, texture(), m_rect, m_sourceRect, m_texCoordMode);
+    QSGImageNode::rebuildGeometry(&m_geometry, texture(), m_rect, m_sourceRect, m_texCoordMode);
     markDirty(DirtyGeometry);
 }
 
@@ -153,7 +149,7 @@ void QSGD3D12ImageNode::setSourceRect(const QRectF &r)
         return;
 
     m_sourceRect = r;
-    QSGDefaultImageNode::rebuildGeometry(&m_geometry, texture(), m_rect, m_sourceRect, m_texCoordMode);
+    QSGImageNode::rebuildGeometry(&m_geometry, texture(), m_rect, m_sourceRect, m_texCoordMode);
     markDirty(DirtyGeometry);
 }
 
@@ -170,7 +166,7 @@ void QSGD3D12ImageNode::setTexture(QSGTexture *texture)
         delete m_material.texture();
 
     m_material.setTexture(texture);
-    QSGDefaultImageNode::rebuildGeometry(&m_geometry, texture, m_rect, m_sourceRect, m_texCoordMode);
+    QSGImageNode::rebuildGeometry(&m_geometry, texture, m_rect, m_sourceRect, m_texCoordMode);
 
     DirtyState dirty = DirtyMaterial;
     const bool wasAtlas = m_isAtlasTexture;
@@ -192,7 +188,7 @@ void QSGD3D12ImageNode::setTextureCoordinatesTransform(TextureCoordinatesTransfo
         return;
 
     m_texCoordMode = mode;
-    QSGDefaultImageNode::rebuildGeometry(&m_geometry, texture(), m_rect, m_sourceRect, m_texCoordMode);
+    QSGImageNode::rebuildGeometry(&m_geometry, texture(), m_rect, m_sourceRect, m_texCoordMode);
     markDirty(DirtyMaterial);
 }
 
@@ -247,7 +243,7 @@ void QSGD3D12NinePatchNode::setPadding(qreal left, qreal top, qreal right, qreal
 
 void QSGD3D12NinePatchNode::update()
 {
-    QSGDefaultNinePatchNode::rebuildGeometry(m_material.texture(), &m_geometry, m_padding, m_bounds, m_devicePixelRatio);
+    QSGNinePatchNode::rebuildGeometry(m_material.texture(), &m_geometry, m_padding, m_bounds, m_devicePixelRatio);
     markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
 }
 

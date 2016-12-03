@@ -46,6 +46,7 @@
 #include "qv4stringobject_p.h"
 #endif
 #include <QtCore/QHash>
+#include <QtCore/private/qnumeric_p.h>
 
 using namespace QV4;
 
@@ -74,10 +75,10 @@ bool String::isEqualTo(Managed *t, Managed *o)
 }
 
 
-Heap::String::String(MemoryManager *mm, const QString &t)
-    : mm(mm)
+void Heap::String::init(MemoryManager *mm, const QString &t)
 {
     Base::init();
+    this->mm = mm;
 
     subtype = String::StringType_Unknown;
 
@@ -89,10 +90,10 @@ Heap::String::String(MemoryManager *mm, const QString &t)
     len = text->size;
 }
 
-Heap::String::String(MemoryManager *mm, String *l, String *r, bool) // TODO: remove the dummy bool when String is trivial
-    : mm(mm)
+void Heap::String::init(MemoryManager *mm, String *l, String *r)
 {
     Base::init();
+    this->mm = mm;
 
     subtype = String::StringType_Unknown;
 

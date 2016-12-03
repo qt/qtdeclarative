@@ -54,18 +54,18 @@ QT_BEGIN_NAMESPACE
 
 QSGGeometry::Attribute QSGGeometry::Attribute::create(int attributeIndex, int tupleSize, int primitiveType, bool isPrimitive)
 {
-    Attribute a = { attributeIndex, tupleSize, primitiveType, isPrimitive, UNKNOWN, 0 };
+    Attribute a = { attributeIndex, tupleSize, primitiveType, isPrimitive, UnknownAttribute, 0 };
     return a;
 }
 
-QSGGeometry::Attribute QSGGeometry::Attribute::createWithSemantic(int pos, int tupleSize, int type, Semantic semantic)
+QSGGeometry::Attribute QSGGeometry::Attribute::createWithAttributeType(int pos, int tupleSize, int primitiveType, AttributeType attributeType)
 {
     Attribute a;
     a.position = pos;
     a.tupleSize = tupleSize;
-    a.type = type;
-    a.isVertexCoordinate = semantic == POSITION;
-    a.semantic = semantic;
+    a.type = primitiveType;
+    a.isVertexCoordinate = attributeType == PositionAttribute;
+    a.attributeType = attributeType;
     a.reserved = 0;
     return a;
 }
@@ -78,7 +78,7 @@ QSGGeometry::Attribute QSGGeometry::Attribute::createWithSemantic(int pos, int t
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 {
     static Attribute data[] = {
-        Attribute::createWithSemantic(0, 2, TypeFloat, Attribute::POSITION)
+        Attribute::createWithAttributeType(0, 2, FloatType, PositionAttribute)
     };
     static AttributeSet attrs = { 1, sizeof(float) * 2, data };
     return attrs;
@@ -91,8 +91,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D()
 {
     static Attribute data[] = {
-        Attribute::createWithSemantic(0, 2, TypeFloat, Attribute::POSITION),
-        Attribute::createWithSemantic(1, 2, TypeFloat, Attribute::TEXCOORD)
+        Attribute::createWithAttributeType(0, 2, FloatType, PositionAttribute),
+        Attribute::createWithAttributeType(1, 2, FloatType, TexCoordAttribute)
     };
     static AttributeSet attrs = { 2, sizeof(float) * 4, data };
     return attrs;
@@ -105,8 +105,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D(
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 {
     static Attribute data[] = {
-        Attribute::createWithSemantic(0, 2, TypeFloat, Attribute::POSITION),
-        Attribute::createWithSemantic(1, 4, TypeUnsignedByte, Attribute::COLOR)
+        Attribute::createWithAttributeType(0, 2, FloatType, PositionAttribute),
+        Attribute::createWithAttributeType(1, 4, UnsignedByteType, ColorAttribute)
     };
     static AttributeSet attrs = { 2, 2 * sizeof(float) + 4 * sizeof(char), data };
     return attrs;
@@ -134,12 +134,31 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
     \fn QSGGeometry::Attribute QSGGeometry::Attribute::create(int pos, int tupleSize, int primitiveType, bool isPosition)
 
     Creates a new QSGGeometry::Attribute for attribute register \a pos with \a
-    tupleSize. The \a primitiveType can be any of the supported OpenGL types,
-    such as \c GL_FLOAT or \c GL_UNSIGNED_BYTE.
+    tupleSize. The \a primitiveType can be any of the supported types from
+    QSGGeometry::Type, such as QSGGeometry::FloatType or
+    QSGGeometry::UnsignedByteType.
 
-    If the attribute describes the position for the vertex, the \a isPosition hint
-    should be set to \c true. The scene graph renderer may use this information
-    to perform optimizations.
+    If the attribute describes the position for the vertex, the \a isPosition
+    hint should be set to \c true. The scene graph renderer may use this
+    information to perform optimizations.
+
+    \note Scene graph backends for APIs other than OpenGL may require an
+    accurate description of attributes' usage, and therefore it is recommended
+    to use createWithAttributeType() instead.
+
+    Use the create function to construct the attribute, rather than an
+    initialization list, to ensure that all fields are initialized.
+ */
+
+/*!
+    \fn QSGGeometry::Attribute QSGGeometry::Attribute::createWithAttributeType(int pos, int tupleSize, int primitiveType, AttributeType attributeType)
+
+    Creates a new QSGGeometry::Attribute for attribute register \a pos with \a
+    tupleSize. The \a primitiveType can be any of the supported types from
+    QSGGeometry::Type, such as QSGGeometry::FloatType or
+    QSGGeometry::UnsignedByteType.
+
+    \a attributeType describes the intended use of the attribute.
 
     Use the create function to construct the attribute, rather than an
     initialization list, to ensure that all fields are initialized.
@@ -430,9 +449,9 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
                "GL_UNSIGNED_INT is not supported, geometry will not render"
                );
 #endif
-    if (indexType != TypeUnsignedByte
-        && indexType != TypeUnsignedShort
-        && indexType != TypeUnsignedInt) {
+    if (indexType != UnsignedByteType
+        && indexType != UnsignedShortType
+        && indexType != UnsignedIntType) {
         qFatal("QSGGeometry: Unsupported index type, %x.\n", indexType);
     }
 
@@ -549,13 +568,13 @@ const void *QSGGeometry::indexData() const
     GL_UNSIGNED_BYTE, etc. QSGGeometry provies its own type in order to be able
     to provide the same API with non-OpenGL backends as well.
 
-    \value TypeByte
-    \value TypeUnsignedByte
-    \value TypeShort
-    \value TypeUnsignedShort
-    \value TypeInt
-    \value TypeUnsignedInt
-    \value TypeFloat
+    \value ByteType
+    \value UnsignedByteType
+    \value ShortType
+    \value UnsignedShortType
+    \value IntType
+    \value UnsignedIntType
+    \value FloatType
  */
 
 /*!
@@ -653,8 +672,8 @@ void QSGGeometry::allocate(int vertexCount, int indexCount)
         m_index_data_offset = -1;
         m_owns_data = false;
     } else {
-        Q_ASSERT(m_index_type == TypeUnsignedInt || m_index_type == TypeUnsignedShort);
-        int indexByteSize = indexCount * (m_index_type == TypeUnsignedShort ? sizeof(quint16) : sizeof(quint32));
+        Q_ASSERT(m_index_type == UnsignedIntType || m_index_type == UnsignedShortType);
+        int indexByteSize = indexCount * (m_index_type == UnsignedShortType ? sizeof(quint16) : sizeof(quint32));
         m_data = (void *) malloc(vertexByteSize + indexByteSize);
         m_index_data_offset = vertexByteSize;
         m_owns_data = true;

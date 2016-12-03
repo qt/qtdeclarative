@@ -60,11 +60,11 @@ namespace QV4 {
 namespace Heap {
 
 struct DataViewCtor : FunctionObject {
-    DataViewCtor(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope);
 };
 
 struct DataView : Object {
-    DataView() {}
+    void init() { Object::init(); }
     Pointer<ArrayBuffer> buffer;
     uint byteLength;
     uint byteOffset;
