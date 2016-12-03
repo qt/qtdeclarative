@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPath
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a path for use by \l PathView
+    \brief Defines a path for use by \l PathView and \l PathItem
 
     A Path is composed of one or more path segments - PathLine, PathQuad,
     PathCubic, PathArc, PathCurve, PathSvg.
@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
     PathAttribute allows named attributes with values to be defined
     along the path.
 
-    \sa PathView, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    \sa PathView, PathItem, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 QQuickPath::QQuickPath(QObject *parent)
  : QObject(*(new QQuickPathPrivate), parent)
@@ -1017,7 +1017,7 @@ void QQuickPathAttribute::setValue(qreal value)
     }
     \endqml
 
-    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathMove
 */
 
 /*!
@@ -1055,6 +1055,66 @@ inline QPointF positionForCurve(const QQuickPathData &data, const QPointF &prevP
 void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
 {
     path.lineTo(positionForCurve(data, path.currentPosition()));
+}
+
+/****************************************************************************/
+
+/*!
+    \qmltype PathMove
+    \instantiates QQuickPathMove
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Moves the Path's position
+
+    While not relevant with PathView, for Path elements used with PathItem it
+    is important to distinguish between the operations of drawing a straight
+    line and moving the path position without drawing anything.
+
+    \note PathMove should not be used in a Path associated with a PathView. Use
+    PathLine instead.
+
+    The example below creates a path consisting of two horizontal lines with
+    some empty space between them. All three segments have a width of 100:
+
+    \qml
+    Path {
+        startX: 0; startY: 100
+        PathLine { relativeX: 100; y: 100 }
+        PathMove { relativeX: 100; y: 100 }
+        PathLine { relativeX: 100; y: 100 }
+    }
+    \endqml
+
+    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathLine
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathMove::x
+    \qmlproperty real QtQuick::PathMove::y
+
+    Defines the position to move to.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathMove::relativeX
+    \qmlproperty real QtQuick::PathMove::relativeY
+
+    Defines the position to move to relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
+*/
+
+void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
+{
+    path.moveTo(positionForCurve(data, path.currentPosition()));
 }
 
 /****************************************************************************/
@@ -1655,6 +1715,7 @@ void QQuickPathArc::setRadiusX(qreal radius)
 
     _radiusX = radius;
     emit radiusXChanged();
+    emit changed();
 }
 
 qreal QQuickPathArc::radiusY() const
@@ -1669,6 +1730,7 @@ void QQuickPathArc::setRadiusY(qreal radius)
 
     _radiusY = radius;
     emit radiusYChanged();
+    emit changed();
 }
 
 /*!
@@ -1702,6 +1764,7 @@ void QQuickPathArc::setUseLargeArc(bool largeArc)
 
     _useLargeArc = largeArc;
     emit useLargeArcChanged();
+    emit changed();
 }
 
 /*!
@@ -1733,6 +1796,7 @@ void QQuickPathArc::setDirection(ArcDirection direction)
 
     _direction = direction;
     emit directionChanged();
+    emit changed();
 }
 
 void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)

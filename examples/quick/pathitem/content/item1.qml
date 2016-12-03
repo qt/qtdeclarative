@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -37,41 +47,30 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QDir>
-#include <QGuiApplication>
-#include <QQmlEngine>
-#include <QQmlFileSelector>
-#include <QQuickView> //Not using QQmlApplicationEngine because many examples don't have a Window{}
-#define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
-{\
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);\
-    QGuiApplication app(argc,argv);\
-    app.setOrganizationName("QtProject");\
-    app.setOrganizationDomain("qt-project.org");\
-    app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
-    QQuickView view;\
-    if (qgetenv("QT_QUICK_CORE_PROFILE").toInt()) {\
-        QSurfaceFormat f = view.format();\
-        f.setProfile(QSurfaceFormat::CoreProfile);\
-        f.setVersion(4, 4);\
-        view.setFormat(f);\
-    }\
-    if (qgetenv("QT_QUICK_MULTISAMPLE").toInt()) {\
-        QSurfaceFormat f = view.format();\
-        f.setSamples(4);\
-        view.setFormat(f);\
-    }\
-    view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);\
-    new QQmlFileSelector(view.engine(), &view);\
-    view.setSource(QUrl("qrc:///" #NAME ".qml")); \
-    if (view.status() == QQuickView::Error)\
-        return -1;\
-    view.setResizeMode(QQuickView::SizeRootObjectToView);\
-    if (QGuiApplication::platformName() == QLatin1String("qnx") || \
-          QGuiApplication::platformName() == QLatin1String("eglfs")) {\
-        view.showFullScreen();\
-    } else {\
-        view.show();\
-    }\
-    return app.exec();\
+
+import QtQuick 2.9 // to get PathItem
+
+Rectangle {
+    color: "lightGray"
+    PathItem {
+        id: ctr
+        anchors.fill: parent
+
+        strokeColor: "red"
+        fillColor: "blue"
+
+        SequentialAnimation on strokeWidth {
+            loops: Animation.Infinite
+            NumberAnimation { from: 1; to: 30; duration: 5000 }
+            NumberAnimation { from: 30; to: 1; duration: 5000 }
+            PauseAnimation { duration: 2000 }
+        }
+
+        path: Path {
+            startX: 30; startY: 30
+            PathLine { x: ctr.width - 30; y: ctr.height - 30 }
+            PathLine { x: 30; y: ctr.height - 30 }
+            PathLine { x: 30; y: 30 }
+        }
+    }
 }

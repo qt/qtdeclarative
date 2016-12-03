@@ -159,6 +159,15 @@ public:
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPathMove : public QQuickCurve
+{
+    Q_OBJECT
+public:
+    QQuickPathMove(QObject *parent=0) : QQuickCurve(parent) {}
+
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
+};
+
 class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
 {
     Q_OBJECT
@@ -459,6 +468,7 @@ QML_DECLARE_TYPE(QQuickPathElement)
 QML_DECLARE_TYPE(QQuickPathAttribute)
 QML_DECLARE_TYPE(QQuickCurve)
 QML_DECLARE_TYPE(QQuickPathLine)
+QML_DECLARE_TYPE(QQuickPathMove)
 QML_DECLARE_TYPE(QQuickPathQuad)
 QML_DECLARE_TYPE(QQuickPathCubic)
 QML_DECLARE_TYPE(QQuickPathCatmullRomCurve)

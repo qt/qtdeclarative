@@ -37,91 +37,34 @@
 **
 ****************************************************************************/
 
-#ifndef QSGTEXTURE_H
-#define QSGTEXTURE_H
+#ifndef QQUICKNVPRFUNCTIONS_P_P_H
+#define QQUICKNVPRFUNCTIONS_P_P_H
 
-#include <QtQuick/qtquickglobal.h>
-#include <QtCore/QObject>
-#include <QtGui/QImage>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of a number of Qt sources files.  This header file may change from
+// version to version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qquicknvprfunctions_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGTexturePrivate;
-class Q_QUICK_EXPORT QSGTexture : public QObject
+class QQuickNvprFunctionsPrivate
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGTexture)
-
 public:
-    QSGTexture();
-    ~QSGTexture();
+    QQuickNvprFunctionsPrivate(QQuickNvprFunctions *q_ptr) : q(q_ptr) { }
 
-    enum WrapMode {
-        Repeat,
-        ClampToEdge,
-        MirroredRepeat
-    };
+    bool resolve();
 
-    enum Filtering {
-        None,
-        Nearest,
-        Linear
-    };
-
-    virtual int textureId() const = 0;
-    virtual QSize textureSize() const = 0;
-    virtual bool hasAlphaChannel() const = 0;
-    virtual bool hasMipmaps() const = 0;
-
-    virtual QRectF normalizedTextureSubRect() const;
-
-    virtual bool isAtlasTexture() const;
-
-    virtual QSGTexture *removedFromAtlas() const;
-
-    virtual void bind() = 0;
-    void updateBindOptions(bool force = false);
-
-    void setMipmapFiltering(Filtering filter);
-    QSGTexture::Filtering mipmapFiltering() const;
-
-    void setFiltering(Filtering filter);
-    QSGTexture::Filtering filtering() const;
-
-    void setHorizontalWrapMode(WrapMode hwrap);
-    QSGTexture::WrapMode horizontalWrapMode() const;
-
-    void setVerticalWrapMode(WrapMode vwrap);
-    QSGTexture::WrapMode verticalWrapMode() const;
-
-    inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
-
-protected:
-    QSGTexture(QSGTexturePrivate &dd);
-};
-
-QRectF QSGTexture::convertToNormalizedSourceRect(const QRectF &rect) const
-{
-    QSize s = textureSize();
-    QRectF r = normalizedTextureSubRect();
-
-    qreal sx = r.width() / s.width();
-    qreal sy = r.height() / s.height();
-
-    return QRectF(r.x() + rect.x() * sx,
-                  r.y() + rect.y() * sy,
-                  rect.width() * sx,
-                  rect.height() * sy);
-}
-
-
-class Q_QUICK_EXPORT QSGDynamicTexture : public QSGTexture
-{
-    Q_OBJECT
-public:
-    virtual bool updateTexture() = 0;
+    QQuickNvprFunctions *q;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QQUICKNVPRFUNCTIONS_P_P_H
