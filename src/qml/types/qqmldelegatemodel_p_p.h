@@ -294,7 +294,7 @@ public:
             const QVector<Compositor::Remove> &removes, const QVector<Compositor::Insert> &inserts);
     void itemsChanged(const QVector<Compositor::Change> &changes);
     void emitChanges();
-    void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset);
+    void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) override;
 
     bool insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
 

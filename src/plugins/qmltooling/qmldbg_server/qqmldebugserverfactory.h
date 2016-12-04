@@ -63,7 +63,7 @@ class QQmlDebugServerFactory : public QQmlDebugConnectorFactory
     // QQmlDebugServer is for connection plugins.
     Q_PLUGIN_METADATA(IID QQmlDebugConnectorFactory_iid FILE "qqmldebugserver.json")
 public:
-    QQmlDebugConnector *create(const QString &key);
+    QQmlDebugConnector *create(const QString &key) override;
 };
 
 QT_END_NAMESPACE

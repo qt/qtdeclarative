@@ -62,14 +62,14 @@ public:
     QContinuingAnimationGroupJob();
     ~QContinuingAnimationGroupJob();
 
-    int duration() const { return -1; }
+    int duration() const override { return -1; }
 
 protected:
-    void updateCurrentTime(int currentTime);
-    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
-    void updateDirection(QAbstractAnimationJob::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int currentTime) override;
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
+    void updateDirection(QAbstractAnimationJob::Direction direction) override;
+    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation) override;
+    void debugAnimation(QDebug d) const override;
 };
 
 QT_END_NAMESPACE

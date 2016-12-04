@@ -70,31 +70,31 @@ public:
     explicit QSGWindowsRenderLoop();
     ~QSGWindowsRenderLoop();
 
-    void show(QQuickWindow *window);
-    void hide(QQuickWindow *window);
+    void show(QQuickWindow *window) override;
+    void hide(QQuickWindow *window) override;
 
-    void windowDestroyed(QQuickWindow *window);
+    void windowDestroyed(QQuickWindow *window) override;
 
-    void exposureChanged(QQuickWindow *window);
-    QImage grab(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window) override;
+    QImage grab(QQuickWindow *window) override;
 
-    void update(QQuickWindow *window);
-    void maybeUpdate(QQuickWindow *window);
+    void update(QQuickWindow *window) override;
+    void maybeUpdate(QQuickWindow *window) override;
 
-    QAnimationDriver *animationDriver() const { return m_animationDriver; }
+    QAnimationDriver *animationDriver() const override { return m_animationDriver; }
 
-    QSGContext *sceneGraphContext() const { return m_sg; }
-    QSGRenderContext *createRenderContext(QSGContext *) const;
+    QSGContext *sceneGraphContext() const override { return m_sg; }
+    QSGRenderContext *createRenderContext(QSGContext *) const override;
 
-    void releaseResources(QQuickWindow *) { }
+    void releaseResources(QQuickWindow *) override { }
 
     void render();
     void renderWindow(QQuickWindow *window);
 
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
     bool anyoneShowing() const;
 
-    bool interleaveIncubation() const;
+    bool interleaveIncubation() const override;
 
 public Q_SLOTS:
     void started();

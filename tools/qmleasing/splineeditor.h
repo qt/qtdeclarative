@@ -75,12 +75,12 @@ public slots:
     void setEasingCurve(const QString &code);
 
 protected:
-    void paintEvent(QPaintEvent *);
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
+    void paintEvent(QPaintEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
 #ifndef QT_NO_CONTEXTMENU
-    void contextMenuEvent(QContextMenuEvent *);
+    void contextMenuEvent(QContextMenuEvent *) override;
 #endif // QT_NO_CONTEXTMENU
 
     void invalidate();

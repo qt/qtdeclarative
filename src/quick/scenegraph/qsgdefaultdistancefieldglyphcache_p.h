@@ -72,10 +72,10 @@ public:
     QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
     virtual ~QSGDefaultDistanceFieldGlyphCache();
 
-    void requestGlyphs(const QSet<glyph_t> &glyphs);
-    void storeGlyphs(const QList<QDistanceField> &glyphs);
-    void referenceGlyphs(const QSet<glyph_t> &glyphs);
-    void releaseGlyphs(const QSet<glyph_t> &glyphs);
+    void requestGlyphs(const QSet<glyph_t> &glyphs) override;
+    void storeGlyphs(const QList<QDistanceField> &glyphs) override;
+    void referenceGlyphs(const QSet<glyph_t> &glyphs) override;
+    void releaseGlyphs(const QSet<glyph_t> &glyphs) override;
 
     bool useTextureResizeWorkaround() const;
     bool useTextureUploadWorkaround() const;

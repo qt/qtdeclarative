@@ -78,7 +78,7 @@ protected:
     QQmlEngineControlClient(QQmlEngineControlClientPrivate &dd);
 
 private:
-    void messageReceived(const QByteArray &);
+    void messageReceived(const QByteArray &) override;
 };
 
 QT_END_NAMESPACE

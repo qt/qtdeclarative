@@ -48,7 +48,7 @@ template <typename State>
 class QSGSimpleMaterialShader : public QSGMaterialShader
 {
 public:
-    void initialize() {
+    void initialize() override {
         QSGMaterialShader::initialize();
 #ifndef QT_NO_OPENGL
         m_id_matrix = program()->uniformLocation(uniformMatrixName());
@@ -74,7 +74,7 @@ public:
     const char *uniformMatrixName() const { return "qt_Matrix"; }
     const char *uniformOpacityName() const { return "qt_Opacity"; }
 
-    void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
+    void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
     virtual void updateState(const State *newState, const State *oldState) = 0;
 
@@ -82,7 +82,7 @@ public:
 
     virtual QList<QByteArray> attributes() const = 0;
 
-    char const *const *attributeNames() const
+    char const *const *attributeNames() const override
     {
         if (m_attribute_pointers.size())
             return m_attribute_pointers.constData();

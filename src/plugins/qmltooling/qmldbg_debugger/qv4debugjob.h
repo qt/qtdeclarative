@@ -112,7 +112,7 @@ class ScopeJob: public CollectJob
 
 public:
     ScopeJob(QV4DataCollector *collector, int frameNr, int scopeNr);
-    void run();
+    void run() override;
     bool wasSuccessful() const;
 };
 

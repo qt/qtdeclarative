@@ -90,10 +90,10 @@ public:
     explicit QSGContextPlugin(QObject *parent = 0);
     virtual ~QSGContextPlugin();
 
-    virtual QStringList keys() const = 0;
+    virtual QStringList keys() const override = 0;
 
-    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) { return 0; }
-    virtual QSGRenderLoop *createWindowManager() { return 0; }
+    QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) override { return 0; }
+    QSGRenderLoop *createWindowManager() override { return 0; }
 };
 
 QT_END_NAMESPACE

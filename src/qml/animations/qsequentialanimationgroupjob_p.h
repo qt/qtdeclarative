@@ -63,16 +63,16 @@ public:
     QSequentialAnimationGroupJob();
     ~QSequentialAnimationGroupJob();
 
-    int duration() const;
+    int duration() const override;
 
     QAbstractAnimationJob *currentAnimation() const { return m_currentAnimation; }
 
 protected:
-    void updateCurrentTime(int);
-    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
-    void updateDirection(QAbstractAnimationJob::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int) override;
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
+    void updateDirection(QAbstractAnimationJob::Direction direction) override;
+    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation) override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     struct AnimationIndex
@@ -91,8 +91,8 @@ private:
     void setCurrentAnimation(QAbstractAnimationJob *anim, bool intermediate = false);
     void activateCurrentAnimation(bool intermediate = false);
 
-    void animationInserted(QAbstractAnimationJob *anim);
-    void animationRemoved(QAbstractAnimationJob *anim,QAbstractAnimationJob*,QAbstractAnimationJob*);
+    void animationInserted(QAbstractAnimationJob *anim) override;
+    void animationRemoved(QAbstractAnimationJob *anim, QAbstractAnimationJob *, QAbstractAnimationJob *) override;
 
     bool atEnd() const;
 

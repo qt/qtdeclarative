@@ -61,7 +61,7 @@ class QQuickProfilerAdapterFactory : public QQmlAbstractProfilerAdapterFactory
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlAbstractProfilerAdapterFactory_iid FILE "qquickprofileradapter.json")
 public:
-    QQmlAbstractProfilerAdapter *create(const QString &key);
+    QQmlAbstractProfilerAdapter *create(const QString &key) override;
 };
 
 QT_END_NAMESPACE

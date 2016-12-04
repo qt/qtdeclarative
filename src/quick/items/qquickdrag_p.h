@@ -77,7 +77,7 @@ class QQuickDragGrabber
 
         QIntrusiveListNode node;
     protected:
-        void objectDestroyed(QQuickItem *) { delete this; }
+        void objectDestroyed(QQuickItem *) override { delete this; }
     };
 
     typedef QIntrusiveList<Item, &Item::node> ItemList;

@@ -51,9 +51,9 @@ public slots:
     void importData(int result);
 
 protected:
-    virtual void moveEvent(QMoveEvent *event);
-    virtual void resizeEvent(QResizeEvent *event);
-    virtual void closeEvent(QCloseEvent *event);
+    void moveEvent(QMoveEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
     void initQml();
 
 private:

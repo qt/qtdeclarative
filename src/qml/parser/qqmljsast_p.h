@@ -253,7 +253,7 @@ class QML_PARSER_EXPORT ExpressionNode: public Node
 public:
     ExpressionNode() {}
 
-    virtual ExpressionNode *expressionCast();
+    ExpressionNode *expressionCast() override;
 };
 
 class QML_PARSER_EXPORT Statement: public Node
@@ -261,7 +261,7 @@ class QML_PARSER_EXPORT Statement: public Node
 public:
     Statement() {}
 
-    virtual Statement *statementCast();
+    Statement *statementCast() override;
 };
 
 class QML_PARSER_EXPORT NestedExpression: public ExpressionNode

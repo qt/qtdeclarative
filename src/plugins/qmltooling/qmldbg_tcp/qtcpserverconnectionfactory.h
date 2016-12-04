@@ -50,7 +50,7 @@ class QTcpServerConnectionFactory : public QQmlDebugServerConnectionFactory
     Q_PLUGIN_METADATA(IID QQmlDebugServerConnectionFactory_iid FILE "qtcpserverconnection.json")
     Q_INTERFACES(QQmlDebugServerConnectionFactory)
 public:
-    QQmlDebugServerConnection *create(const QString &key);
+    QQmlDebugServerConnection *create(const QString &key) override;
 };
 
 QT_END_NAMESPACE
