@@ -120,14 +120,22 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
     init(ctxt, scope);
 
-    QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
-    QString error;
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+
+    QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
+    if (!signalParameters.isEmpty()) {
+        QString error;
+        QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
+        if (!error.isEmpty()) {
+            qmlInfo(scopeObject()) << error;
+            return;
+        }
+        runtimeFunction->updateInternalClass(engine, signalParameters);
+    }
+
     QV4::Scope valueScope(engine);
-    QV4::ScopedFunctionObject f(valueScope, QV4::FunctionObject::createQmlFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
-    setFunctionObject(f);
-    if (!error.isEmpty())
-        qmlInfo(scopeObject()) << error;
+    QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, QV4::QmlContext::create(engine->rootContext(), ctxt, scope));
+    setupFunction(qmlContext, runtimeFunction);
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)

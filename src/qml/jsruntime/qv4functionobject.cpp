@@ -200,25 +200,6 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
     return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
 }
 
-Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
-{
-    ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
-    QV4::Scope valueScope(engine);
-    ExecutionContext *global = valueScope.engine->rootContext();
-    QV4::Scoped<QmlContext> wrapperContext(valueScope, QmlContext::create(global, qmlContext, scopeObject));
-
-    if (!signalParameters.isEmpty()) {
-        if (error) {
-            QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, error);
-            return 0;
-        }
-        runtimeFunction->updateInternalClass(engine, signalParameters);
-    }
-
-    return QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction);
-}
-
-
 bool FunctionObject::isBinding() const
 {
     return d()->vtable() == QQmlBindingFunction::staticVTable();
