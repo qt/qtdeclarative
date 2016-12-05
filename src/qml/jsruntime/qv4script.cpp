@@ -58,43 +58,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 
-QT_BEGIN_NAMESPACE
-
-namespace QV4 {
-namespace Heap {
-
-struct QmlBindingWrapper : FunctionObject {
-    void init(QV4::QmlContext *scope, Function *f);
-};
-
-}
-
-struct QmlBindingWrapper : FunctionObject {
-    V4_OBJECT2(QmlBindingWrapper, FunctionObject)
-
-    static void call(const Managed *that, Scope &scope, CallData *callData) {
-        QV4::ScriptFunction::call(that, scope, callData);
-    }
-};
-
-}
-
-QT_END_NAMESPACE
-
 using namespace QV4;
-
-DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
-
-void Heap::QmlBindingWrapper::init(QV4::QmlContext *scope, Function *f)
-{
-    Heap::FunctionObject::init(scope, scope->d()->engine->id_eval(), /*createProto = */ false);
-
-    Q_ASSERT(scope->inUse());
-
-    function = f;
-    if (function)
-        function->compilationUnit->addref();
-}
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
@@ -278,17 +242,6 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
     QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, module, unitGenerator));
     isel->setUseFastLookups(false);
     return isel->compile(/*generate unit data*/false);
-}
-
-ReturnedValue Script::qmlBinding()
-{
-    if (!parsed)
-        parse();
-    ExecutionEngine *v4 = scope->engine();
-    Scope valueScope(v4);
-    Scoped<QmlContext> qml(valueScope, qmlContext.value());
-    ScopedObject v(valueScope, v4->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
-    return v.asReturnedValue();
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)

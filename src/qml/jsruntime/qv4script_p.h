@@ -136,7 +136,6 @@ struct Q_QML_EXPORT Script {
 
     void parse();
     ReturnedValue run();
-    ReturnedValue qmlBinding();
 
     Function *function();
 

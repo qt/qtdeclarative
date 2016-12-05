@@ -431,10 +431,7 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, qmlScope));
     QV4::Script script(v4, qmlContext, code, filename, line);
-    QV4::ScopedFunctionObject result(scope);
     script.parse();
-    if (!v4->hasException)
-        result = script.qmlBinding();
     if (v4->hasException) {
         QQmlError error = v4->catchExceptionAsQmlError();
         if (error.description().isEmpty())
@@ -445,9 +442,9 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
             error.setUrl(QUrl::fromLocalFile(filename));
         error.setObject(qmlScope);
         ep->warning(error);
-        result = QV4::Encode::undefined();
+        return;
     }
-    setFunctionObject(result);
+    setupFunction(qmlContext, script.vmFunction);
 }
 
 void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
