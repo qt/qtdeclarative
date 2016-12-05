@@ -466,7 +466,7 @@ void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
     m_compilationUnit = m_v4Function->compilationUnit;
 }
 
-void QQmlJavaScriptExpression::setupFunction(QV4::QmlContext *qmlContext, QV4::Function *f)
+void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f)
 {
     if (!qmlContext || !f)
         return;

@@ -110,21 +110,8 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString
     return b;
 }
 
-QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QV4::FunctionObject *function, QObject *obj, QQmlContextData *ctxt)
-{
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
-
-    b->setNotifyOnValueChanged(true);
-    b->QQmlJavaScriptExpression::setContext(ctxt);
-    b->setScopeObject(obj);
-
-    b->setFunctionObject(function);
-
-    return b;
-}
-
 QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, QV4::Function *function,
-                                 QObject *obj, QQmlContextData *ctxt, QV4::QmlContext *sharedContext)
+                                 QObject *obj, QQmlContextData *ctxt, QV4::ExecutionContext *scope)
 {
     QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
 
@@ -132,8 +119,8 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, QV4::Function
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);
 
-    Q_ASSERT(sharedContext);
-    b->setupFunction(sharedContext, function);
+    Q_ASSERT(scope);
+    b->setupFunction(scope, function);
 
     return b;
 }

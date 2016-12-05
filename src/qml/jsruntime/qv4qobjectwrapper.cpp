@@ -392,7 +392,8 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
 
-            newBinding = QQmlBinding::create(property, f, object, callingQmlContext);
+            QV4::ScopedContext ctx(scope, bindingFunction->scope());
+            newBinding = QQmlBinding::create(property, bindingFunction->function(), object, callingQmlContext, ctx);
             newBinding->setSourceLocation(bindingFunction->currentLocation());
             newBinding->setTarget(object, *property, nullptr);
         }

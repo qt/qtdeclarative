@@ -75,9 +75,8 @@ public:
     static QQmlBinding *create(const QQmlPropertyData *, const QQmlScriptString &, QObject *, QQmlContext *);
     static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *,
                                const QString &url = QString(), quint16 lineNumber = 0);
-    static QQmlBinding *create(const QQmlPropertyData *, const QV4::FunctionObject *function, QObject *, QQmlContextData *);
     static QQmlBinding *create(const QQmlPropertyData *property, QV4::Function *function,
-                               QObject *obj, QQmlContextData *ctxt, QV4::QmlContext *sharedContext);
+                               QObject *obj, QQmlContextData *ctxt, QV4::ExecutionContext *scope);
     ~QQmlBinding();
 
     void setTarget(const QQmlProperty &);
