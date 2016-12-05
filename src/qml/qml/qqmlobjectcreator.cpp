@@ -795,11 +795,10 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, currentQmlContext());
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
-            QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false));
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex());
             QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_bindingTarget, signalIndex,
-                                                                            context, _scopeObject, function);
+                                                                            context, _scopeObject, runtimeFunction, qmlContext);
 
             bs->takeExpression(expr);
         } else {

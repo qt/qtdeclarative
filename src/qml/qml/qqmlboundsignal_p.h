@@ -73,7 +73,7 @@ public:
                               const QString &parameterString = QString());
 
     QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scope, const QV4::Value &function);
+                              QQmlContextData *ctxt, QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope);
 
     QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);

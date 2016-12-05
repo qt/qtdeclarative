@@ -103,13 +103,14 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     setFunctionObject(f);
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scopeObject,
+                                                     QV4::Function *function, QV4::ExecutionContext *scope)
     : QQmlJavaScriptExpression(),
       m_index(index),
       m_target(target)
 {
-    setFunctionObject(function.as<QV4::FunctionObject>());
-    init(ctxt, scope);
+    setupFunction(scope, function);
+    init(ctxt, scopeObject);
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
