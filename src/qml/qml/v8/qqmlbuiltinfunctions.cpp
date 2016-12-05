@@ -1303,28 +1303,15 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 
 void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction)
 {
-    QV4::Heap::FunctionObject::init(originalFunction->scope(), originalFunction->name());
-    this->originalFunction = originalFunction->d();
+    Scope scope(originalFunction->engine());
+    ScopedContext context(scope, originalFunction->scope());
+    FunctionObject::init(context, originalFunction->function());
 }
 
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
     QV4::StackFrame frame = engine()->currentStackFrame();
     return QQmlSourceLocation(frame.source, frame.line, 0);
-}
-
-void QQmlBindingFunction::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    ScopedFunctionObject function(scope, static_cast<const QQmlBindingFunction*>(that)->d()->originalFunction);
-    function->call(scope, callData);
-}
-
-void QQmlBindingFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    QQmlBindingFunction::Data *This = static_cast<QQmlBindingFunction::Data *>(that);
-    if (This->originalFunction)
-        This->originalFunction->mark(e);
-    QV4::FunctionObject::markObjects(that, e);
 }
 
 DEFINE_OBJECT_VTABLE(QQmlBindingFunction);

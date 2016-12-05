@@ -82,7 +82,6 @@ struct ConsoleObject : Object {
 
 struct QQmlBindingFunction : FunctionObject {
     void init(const QV4::FunctionObject *originalFunction);
-    Pointer<FunctionObject> originalFunction;
 };
 
 }
@@ -179,13 +178,8 @@ struct Q_QML_PRIVATE_EXPORT GlobalExtensions {
 struct QQmlBindingFunction : public QV4::FunctionObject
 {
     V4_OBJECT2(QQmlBindingFunction, FunctionObject)
-    V4_NEEDS_DESTROY
 
     QQmlSourceLocation currentLocation() const; // from caller stack trace
-
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 }
