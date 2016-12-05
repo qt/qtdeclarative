@@ -103,6 +103,7 @@ protected:
     void setExclusiveGrab(QQuickEventPoint *point, bool grab = true);
     void cancelAllGrabs(QQuickEventPoint *point);
     virtual void handleGrabCancel(QQuickEventPoint *point);
+    virtual void handleGrab(QQuickEventPoint *point, QQuickPointerHandler *grabber, bool grab);
     QPointF eventPos(const QQuickEventPoint *point) const;
     bool parentContains(const QQuickEventPoint *point) const;
 

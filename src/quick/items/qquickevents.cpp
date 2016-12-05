@@ -619,7 +619,8 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
             m_exclusiveGrabber = QPointer<QObject>(grabber);
             m_grabberIsHandler = true;
             m_sceneGrabPos = m_scenePos;
-            m_passiveGrabbers.removeAll(QPointer<QQuickPointerHandler>(grabber));
+            for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
+                passiveGrabber->handleGrab(this, grabber, true);
         }
     } else {
         if (!grabber) {

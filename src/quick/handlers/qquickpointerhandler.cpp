@@ -176,6 +176,13 @@ void QQuickPointerHandler::handleGrabCancel(QQuickEventPoint *point)
     emit canceled(point);
 }
 
+void QQuickPointerHandler::handleGrab(QQuickEventPoint *point, QQuickPointerHandler *grabber, bool grab)
+{
+    Q_UNUSED(point);
+    Q_UNUSED(grabber);
+    Q_UNUSED(grab);
+}
+
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     Q_UNUSED(event)
