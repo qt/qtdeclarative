@@ -100,7 +100,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     function += QLatin1String(") { ") + expression + QLatin1String(" })");
     QV4::Scope valueScope(v4);
     QV4::ScopedFunctionObject f(valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
-    setFunctionObject(f);
+    QV4::ScopedContext context(valueScope, f->scope());
+    setupFunction(context, f->function());
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scopeObject,

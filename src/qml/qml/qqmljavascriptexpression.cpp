@@ -454,18 +454,6 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
     setupFunction(qmlContext, script.vmFunction);
 }
 
-void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
-{
-    if (!o)
-        return;
-
-    m_qmlScope.set(o->engine(), o->d()->scope);
-
-    m_v4Function = o->d()->function;
-    Q_ASSERT(m_v4Function);
-    m_compilationUnit = m_v4Function->compilationUnit;
-}
-
 void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f)
 {
     if (!qmlContext || !f)
