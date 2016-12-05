@@ -464,7 +464,6 @@ void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
     m_v4Function = o->d()->function;
     if (o->isBinding()) {
         const QV4::QQmlBindingFunction *b = static_cast<const QV4::QQmlBindingFunction *>(o);
-        setSourceLocation(*b->d()->bindingLocation);
         m_v4Function = b->d()->originalFunction->function;
     }
     Q_ASSERT(m_v4Function);

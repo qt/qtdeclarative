@@ -82,13 +82,7 @@ struct ConsoleObject : Object {
 
 struct QQmlBindingFunction : FunctionObject {
     void init(const QV4::FunctionObject *originalFunction);
-    void destroy() {
-        delete bindingLocation;
-        Object::destroy();
-    }
     Pointer<FunctionObject> originalFunction;
-    // Set when the binding is created later
-    QQmlSourceLocation *bindingLocation;
 };
 
 }
@@ -187,7 +181,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
     V4_OBJECT2(QQmlBindingFunction, FunctionObject)
     V4_NEEDS_DESTROY
 
-    void initBindingLocation(); // from caller stack trace
+    QQmlSourceLocation currentLocation() const; // from caller stack trace
 
     static void call(const Managed *that, Scope &scope, CallData *callData);
 

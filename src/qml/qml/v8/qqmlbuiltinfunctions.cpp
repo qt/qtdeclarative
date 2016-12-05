@@ -1304,15 +1304,13 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction)
 {
     QV4::Heap::FunctionObject::init(originalFunction->scope(), originalFunction->name());
-    bindingLocation = new QQmlSourceLocation;
     this->originalFunction = originalFunction->d();
 }
 
-void QQmlBindingFunction::initBindingLocation()
+QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
     QV4::StackFrame frame = engine()->currentStackFrame();
-    d()->bindingLocation->sourceFile = frame.source;
-    d()->bindingLocation->line = frame.line;
+    return QQmlSourceLocation(frame.source, frame.line, 0);
 }
 
 void QQmlBindingFunction::call(const Managed *that, Scope &scope, CallData *callData)

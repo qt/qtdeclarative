@@ -212,11 +212,6 @@ bool FunctionObject::isBoundFunction() const
 
 QQmlSourceLocation FunctionObject::sourceLocation() const
 {
-    if (isBinding()) {
-        Q_ASSERT(as<const QV4::QQmlBindingFunction>());
-        return *static_cast<QV4::Heap::QQmlBindingFunction *>(d())->bindingLocation;
-    }
-
     return d()->function->sourceLocation();
 }
 

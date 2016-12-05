@@ -453,9 +453,9 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             cacheData.setCoreIndex(reference->d()->property);
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
-            bindingFunction->initBindingLocation();
 
             QQmlBinding *newBinding = QQmlBinding::create(&cacheData, f, reference->d()->object, context);
+            newBinding->setSourceLocation(bindingFunction->currentLocation());
             newBinding->setTarget(reference->d()->object, cacheData, pd);
             QQmlPropertyPrivate::setBinding(newBinding);
             return;
