@@ -81,7 +81,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
     Object::init();
-    function = nullptr;
+    this->function = function;
+    function->compilationUnit->addref();
     this->scope = scope->d();
     Scope s(scope->engine());
     ScopedString name(s, function->name());
