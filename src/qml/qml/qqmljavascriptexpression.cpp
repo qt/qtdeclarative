@@ -142,6 +142,13 @@ QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
     return QQmlSourceLocation();
 }
 
+void QQmlJavaScriptExpression::setSourceLocation(const QQmlSourceLocation &location)
+{
+    if (m_sourceLocation)
+        delete m_sourceLocation;
+    m_sourceLocation = new QQmlSourceLocation(location);
+}
+
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
 {
     if (m_prevExpression) {
@@ -457,7 +464,7 @@ void QQmlJavaScriptExpression::setFunctionObject(const QV4::FunctionObject *o)
     m_v4Function = o->d()->function;
     if (o->isBinding()) {
         const QV4::QQmlBindingFunction *b = static_cast<const QV4::QQmlBindingFunction *>(o);
-        m_sourceLocation = new QQmlSourceLocation(*b->d()->bindingLocation);
+        setSourceLocation(*b->d()->bindingLocation);
         m_v4Function = b->d()->originalFunction->function;
     }
     Q_ASSERT(m_v4Function);

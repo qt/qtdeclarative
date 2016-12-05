@@ -114,6 +114,7 @@ public:
     inline void setScopeObject(QObject *v);
 
     QQmlSourceLocation sourceLocation() const;
+    void setSourceLocation(const QQmlSourceLocation &location);
 
     bool isValid() const { return context() != 0; }
 
