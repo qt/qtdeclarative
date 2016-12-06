@@ -2775,8 +2775,13 @@ void Renderer::renderRenderNode(Batch *batch)
 
     updateClip(rd->m_clip_list, batch);
 
-    RenderNodeState state;
     QMatrix4x4 pm = projectionMatrix();
+    if (m_useDepthBuffer) {
+        pm(2, 2) = m_zRange;
+        pm(2, 3) = 1.0f - e->order * m_zRange;
+    }
+
+    RenderNodeState state;
     state.m_projectionMatrix = &pm;
     state.m_scissorEnabled = m_currentClipType & ScissorClip;
     state.m_stencilEnabled = m_currentClipType & StencilClip;
