@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include "debugutil_p.h"
+#include "../../shared/qqmlenginedebugclient.h"
 #include "../../../../shared/util.h"
 
 #include <private/qqmldebugclient_p.h>
@@ -52,6 +53,7 @@ const char *STEPACTION = "stepaction";
 const char *STEPCOUNT = "stepcount";
 const char *EXPRESSION = "expression";
 const char *FRAME = "frame";
+const char *CONTEXT = "context";
 const char *GLOBAL = "global";
 const char *DISABLEBREAK = "disable_break";
 const char *HANDLES = "handles";
@@ -215,6 +217,8 @@ private slots:
     void evaluateInLocalScope_data() { targetData(); }
     void evaluateInLocalScope();
 
+    void evaluateInContext();
+
     void getScripts_data() { targetData(); }
     void getScripts();
 
@@ -257,7 +261,7 @@ public:
     void interrupt();
 
     void continueDebugging(StepAction stepAction);
-    void evaluate(QString expr, int frame = -1);
+    void evaluate(QString expr, int frame = -1, int context = -1);
     void lookup(QList<int> handles, bool includeSource = false);
     void backtrace(int fromFrame = -1, int toFrame = -1, bool bottom = false);
     void frame(int number = -1);
@@ -280,6 +284,7 @@ signals:
     void connected();
     void interruptRequested();
     void result();
+    void failure();
     void stopped();
 
 private:
@@ -340,13 +345,14 @@ void QJSDebugClient::continueDebugging(StepAction action)
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
-void QJSDebugClient::evaluate(QString expr, int frame)
+void QJSDebugClient::evaluate(QString expr, int frame, int context)
 {
     //    { "seq"       : <number>,
     //      "type"      : "request",
     //      "command"   : "evaluate",
     //      "arguments" : { "expression"    : <expression to evaluate>,
-    //                      "frame"         : <number>
+    //                      "frame"         : <number>,
+    //                      "context"       : <object ID>
     //                    }
     //    }
     VARIANTMAPINIT;
@@ -357,6 +363,9 @@ void QJSDebugClient::evaluate(QString expr, int frame)
 
     if (frame != -1)
         args.setProperty(QLatin1String(FRAME),QJSValue(frame));
+
+    if (context != -1)
+        args.setProperty(QLatin1String(CONTEXT), QJSValue(context));
 
     if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
@@ -684,6 +693,7 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
             if (type == "response") {
 
                 if (!value.value("success").toBool()) {
+                    emit failure();
                     qDebug() << "Received success == false response from application";
                     return;
                 }
@@ -1392,6 +1402,58 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
     body = value.value("body").toMap();
 
     QCOMPARE(body.value("value").toInt(),10);
+}
+
+void tst_QQmlDebugJS::evaluateInContext()
+{
+    connection = new QQmlDebugConnection();
+    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                                   + "/qmlscene", this);
+    client = new QJSDebugClient(connection);
+    QScopedPointer<QQmlEngineDebugClient> engineClient(new QQmlEngineDebugClient(connection));
+    process->start(QStringList() << QLatin1String(BLOCKMODE) << testFile(ONCOMPLETED_QMLFILE));
+
+    QVERIFY(process->waitForSessionStart());
+
+    connection->connectToHost("127.0.0.1", process->debugPort());
+    QVERIFY(connection->waitForConnected());
+
+    QTRY_COMPARE(client->state(), QQmlEngineDebugClient::Enabled);
+    QTRY_COMPARE(engineClient->state(), QQmlEngineDebugClient::Enabled);
+    client->connect();
+
+    // "a" not accessible without extra context
+    client->evaluate(QLatin1String("a + 10"), -1, -1);
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(failure())));
+
+    bool success = false;
+    engineClient->queryAvailableEngines(&success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
+
+    QVERIFY(engineClient->engines().count());
+    engineClient->queryRootContexts(engineClient->engines()[0].debugId, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
+
+    auto contexts = engineClient->rootContext().contexts;
+    QCOMPARE(contexts.count(), 1);
+    auto objects = contexts[0].objects;
+    QCOMPARE(objects.count(), 1);
+    engineClient->queryObjectRecursive(objects[0], &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
+    auto object = engineClient->object();
+
+    // "a" accessible in context of surrounding object
+    client->evaluate(QLatin1String("a + 10"), -1, object.debugId);
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
+
+    QString jsonString = client->response;
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+
+    QVariantMap body = value.value("body").toMap();
+    QTRY_COMPARE(body.value("value").toInt(), 20);
 }
 
 void tst_QQmlDebugJS::getScripts()
