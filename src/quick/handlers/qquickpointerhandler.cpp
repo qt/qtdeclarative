@@ -136,6 +136,8 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
     setActive(wants);
     if (wants)
         handlePointerEventImpl(event);
+    else
+        setActive(false);
 }
 
 void QQuickPointerHandler::handleGrabCancel(QQuickEventPoint *point)
