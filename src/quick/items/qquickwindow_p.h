@@ -66,6 +66,8 @@
 #include <qopenglcontext.h>
 #include <QtGui/qopenglframebufferobject.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qstylehints.h>
+#include <QtGui/qguiapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -270,7 +272,19 @@ public:
     static bool defaultAlphaBuffer;
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold = -1);
+
+    template <typename TEventPoint>
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p, int startDragThreshold = -1)
+    {
+        QStyleHints *styleHints = qApp->styleHints();
+        bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
+        const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
+        if (!overThreshold && dragVelocityLimitAvailable) {
+            qreal velocity = axis == Qt::XAxis ? p->velocity().x() : p->velocity().y();
+            overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
+        }
+        return overThreshold;
+    }
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
