@@ -57,6 +57,7 @@
 #endif
 
 #include <QtGui/private/qtextengine_p.h>
+#include <QtGui/private/qinputcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -2559,6 +2560,8 @@ void QQuickTextInputPrivate::init()
         option.setUseDesignMetrics(renderType != QQuickTextInput::NativeRendering);
         m_textLayout.setTextOption(option);
     }
+
+    m_inputControl = new QInputControl(QInputControl::LineEdit, q);
 }
 
 void QQuickTextInput::updateCursorRectangle(bool scroll)
@@ -4381,9 +4384,8 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     }
 
     if (unknown && !m_readOnly) {
-        QString t = event->text();
-        if (!t.isEmpty() && t.at(0).isPrint()) {
-            insert(t);
+        if (m_inputControl->isAcceptableInput(event)) {
+            insert(event->text());
             event->accept();
             return;
         }

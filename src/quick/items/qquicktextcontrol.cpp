@@ -578,7 +578,7 @@ void QQuickTextControl::redo()
 }
 
 QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
-    : QObject(*new QQuickTextControlPrivate, parent)
+    : QInputControl(TextEdit, *new QQuickTextControlPrivate, parent)
 {
     Q_D(QQuickTextControl);
     Q_ASSERT(doc);
@@ -950,9 +950,8 @@ void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
 
 process:
     {
-        QString text = e->text();
-        if (!text.isEmpty() && (text.at(0).isPrint() || text.at(0) == QLatin1Char('\t'))) {
-            cursor.insertText(text);
+        if (q->isAcceptableInput(e)) {
+            cursor.insertText(e->text());
             selectionChanged();
         } else {
             e->ignore();
