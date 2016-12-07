@@ -63,6 +63,7 @@
 #endif
 
 #include <QtGui/private/qtextengine_p.h>
+#include <QtGui/private/qinputcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -2695,6 +2696,8 @@ void QQuickTextInputPrivate::init()
         option.setUseDesignMetrics(renderType != QQuickTextInput::NativeRendering);
         m_textLayout.setTextOption(option);
     }
+
+    m_inputControl = new QInputControl(QInputControl::LineEdit, q);
 }
 
 void QQuickTextInputPrivate::resetInputMethod()
@@ -4528,8 +4531,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     }
 
     if (unknown && !m_readOnly) {
-        QString t = event->text();
-        if (!t.isEmpty() && t.at(0).isPrint()) {
+        if (m_inputControl->isAcceptableInput(event)) {
             if (overwriteMode
                 // no need to call del() if we have a selection, insert
                 // does it already
@@ -4538,7 +4540,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
                 del();
             }
 
-            insert(t);
+            insert(event->text());
             event->accept();
             return;
         }

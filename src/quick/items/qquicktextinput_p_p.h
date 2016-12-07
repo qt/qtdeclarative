@@ -70,6 +70,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTextNode;
+class QInputControl;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
 {
@@ -228,6 +229,7 @@ public:
     QQuickItem *cursorItem;
     QQuickTextNode *textNode;
     MaskInputData *m_maskData;
+    QInputControl *m_inputControl;
 
     QList<int> m_transactions;
     QVector<Command> m_history;

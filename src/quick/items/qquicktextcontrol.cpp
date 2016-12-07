@@ -608,7 +608,7 @@ void QQuickTextControl::clear()
 }
 
 QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
-    : QObject(*new QQuickTextControlPrivate, parent)
+    : QInputControl(TextEdit, *new QQuickTextControlPrivate, parent)
 {
     Q_D(QQuickTextControl);
     Q_ASSERT(doc);
@@ -980,8 +980,7 @@ void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
 
 process:
     {
-        QString text = e->text();
-        if (!text.isEmpty() && (text.at(0).isPrint() || text.at(0) == QLatin1Char('\t'))) {
+        if (q->isAcceptableInput(e)) {
             if (overwriteMode
                 // no need to call deleteChar() if we have a selection, insertText
                 // does it already
@@ -990,7 +989,7 @@ process:
                 cursor.deleteChar();
             }
 
-            cursor.insertText(text);
+            cursor.insertText(e->text());
             selectionChanged();
         } else {
             e->ignore();
