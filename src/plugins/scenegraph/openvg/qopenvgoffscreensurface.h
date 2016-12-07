@@ -57,6 +57,8 @@ public:
     VGImage image() { return m_image; }
     QSize size() const { return m_size; }
 
+    QImage readbackQImage();
+
 private:
     VGImage m_image;
     QSize m_size;

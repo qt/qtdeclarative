@@ -54,6 +54,7 @@ QSGOpenVGLayer::QSGOpenVGLayer(QSGRenderContext *renderContext)
     , m_recursive(false)
     , m_dirtyTexture(true)
     , m_offscreenSurface(nullptr)
+    , m_secondaryOffscreenSurface(nullptr)
 {
     m_context = static_cast<QSGOpenVGRenderContext*>(renderContext);
 }
@@ -113,7 +114,9 @@ void QSGOpenVGLayer::setItem(QSGNode *item)
 
     if (m_live && !m_item) {
         delete m_offscreenSurface;
+        delete m_secondaryOffscreenSurface;
         m_offscreenSurface = nullptr;
+        m_secondaryOffscreenSurface = nullptr;
     }
 
     markDirtyTexture();
@@ -135,7 +138,9 @@ void QSGOpenVGLayer::setSize(const QSize &size)
 
     if (m_live && m_size.isNull()) {
         delete m_offscreenSurface;
+        delete m_secondaryOffscreenSurface;
         m_offscreenSurface = nullptr;
+        m_secondaryOffscreenSurface = nullptr;
     }
 
     markDirtyTexture();
@@ -153,8 +158,7 @@ void QSGOpenVGLayer::scheduleUpdate()
 
 QImage QSGOpenVGLayer::toImage() const
 {
-    // XXX
-    return QImage();
+    return m_offscreenSurface->readbackQImage();
 }
 
 void QSGOpenVGLayer::setLive(bool live)
@@ -165,7 +169,9 @@ void QSGOpenVGLayer::setLive(bool live)
 
     if (m_live && (!m_item || m_size.isNull())) {
         delete m_offscreenSurface;
+        delete m_secondaryOffscreenSurface;
         m_offscreenSurface = nullptr;
+        m_secondaryOffscreenSurface = nullptr;
     }
 
     markDirtyTexture();
@@ -218,16 +224,20 @@ void QSGOpenVGLayer::markDirtyTexture()
 void QSGOpenVGLayer::invalidated()
 {
     delete m_offscreenSurface;
+    delete m_secondaryOffscreenSurface;
     delete m_renderer;
     m_renderer = nullptr;
     m_offscreenSurface = nullptr;
+    m_secondaryOffscreenSurface = nullptr;
 }
 
 void QSGOpenVGLayer::grab()
 {
     if (!m_item || m_size.isNull()) {
         delete m_offscreenSurface;
+        delete m_secondaryOffscreenSurface;
         m_offscreenSurface = nullptr;
+        m_secondaryOffscreenSurface = nullptr;
         m_dirtyTexture = false;
         return;
     }
@@ -244,13 +254,22 @@ void QSGOpenVGLayer::grab()
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
-
+    bool deleteOffscreenSurfaceLater = false;
     if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != m_size ) {
-        if (m_offscreenSurface != nullptr)
+        if (m_recursive) {
+            deleteOffscreenSurfaceLater = true;
+            delete m_secondaryOffscreenSurface;
+            m_secondaryOffscreenSurface = new QOpenVGOffscreenSurface(m_size);
+        } else {
             delete m_offscreenSurface;
-
-        m_offscreenSurface = new QOpenVGOffscreenSurface(m_size);
+            delete m_secondaryOffscreenSurface;
+            m_offscreenSurface = new QOpenVGOffscreenSurface(m_size);
+            m_secondaryOffscreenSurface = nullptr;
+        }
     }
+
+    if (m_recursive && !m_secondaryOffscreenSurface)
+        m_secondaryOffscreenSurface = new QOpenVGOffscreenSurface(m_size);
 
     // Render texture.
     root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
@@ -267,17 +286,25 @@ void QSGOpenVGLayer::grab()
     m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
-    m_offscreenSurface->makeCurrent();
 
-    // Before Rendering setup context for adjusting to Qt Coordinates to PixelBuffer
-    // Should already be inverted by default
-    vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
-    vgLoadIdentity();
+    if (m_recursive)
+        m_secondaryOffscreenSurface->makeCurrent();
+    else
+        m_offscreenSurface->makeCurrent();
 
     m_renderer->renderScene();
 
     // Make the previous surface and context active again
-    m_offscreenSurface->doneCurrent();
+    if (m_recursive) {
+        if (deleteOffscreenSurfaceLater) {
+            delete m_offscreenSurface;
+            m_offscreenSurface = new QOpenVGOffscreenSurface(m_size);
+        }
+        m_secondaryOffscreenSurface->doneCurrent();
+        qSwap(m_offscreenSurface, m_secondaryOffscreenSurface);
+    } else {
+        m_offscreenSurface->doneCurrent();
+    }
 
     root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip, opacity and render list update.
 

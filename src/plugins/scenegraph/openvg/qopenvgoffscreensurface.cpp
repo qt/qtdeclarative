@@ -39,6 +39,9 @@
 
 #include "qopenvgoffscreensurface.h"
 
+#include <QtGui/QImage>
+#include <QDebug>
+
 QT_BEGIN_NAMESPACE
 
 QOpenVGOffscreenSurface::QOpenVGOffscreenSurface(const QSize &size)
@@ -79,6 +82,7 @@ QOpenVGOffscreenSurface::~QOpenVGOffscreenSurface()
 {
     vgDestroyImage(m_image);
     eglDestroySurface(m_display, m_renderTarget);
+    eglDestroyContext(m_display, m_context);
 }
 
 void QOpenVGOffscreenSurface::makeCurrent()
@@ -98,7 +102,6 @@ void QOpenVGOffscreenSurface::doneCurrent()
     EGLContext currentContext = eglGetCurrentContext();
     if (m_context == currentContext) {
         eglMakeCurrent(m_display, m_previousDrawSurface, m_previousReadSurface, m_previousContext);
-        m_context = EGL_NO_CONTEXT;
         m_previousContext = EGL_NO_CONTEXT;
         m_previousReadSurface = EGL_NO_SURFACE;
         m_previousDrawSurface = EGL_NO_SURFACE;
@@ -108,6 +111,13 @@ void QOpenVGOffscreenSurface::doneCurrent()
 void QOpenVGOffscreenSurface::swapBuffers()
 {
     eglSwapBuffers(m_display, m_renderTarget);
+}
+
+QImage QOpenVGOffscreenSurface::readbackQImage()
+{
+    QImage readbackImage(m_size, QImage::Format_ARGB32_Premultiplied);
+    vgGetImageSubData(m_image, readbackImage.bits(), readbackImage.bytesPerLine(), VG_sARGB_8888_PRE, 0, 0, m_size.width(), m_size.height());
+    return readbackImage;
 }
 
 QT_END_NAMESPACE

@@ -105,6 +105,7 @@ private:
     bool m_dirtyTexture;
 
     QOpenVGOffscreenSurface *m_offscreenSurface;
+    QOpenVGOffscreenSurface *m_secondaryOffscreenSurface;
 };
 
 QT_END_NAMESPACE

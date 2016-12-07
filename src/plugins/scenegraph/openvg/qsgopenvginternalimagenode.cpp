@@ -79,6 +79,9 @@ void QSGOpenVGInternalImageNode::render()
     VGImage image = static_cast<VGImage>(m_texture->textureId());
     QSize textureSize = m_texture->textureSize();
 
+    if (image == VG_INVALID_HANDLE || !textureSize.isValid())
+        return;
+
 
     // If Mirrored
     if (m_mirror) {
