@@ -295,8 +295,8 @@ public:
     void invalidateOpenGL(QQuickWindow *window, bool inDestructor, QOffscreenSurface *backupSurface);
     void initializeOpenGL();
 
-    bool event(QEvent *);
-    void run();
+    bool event(QEvent *) override;
+    void run() override;
 
     void syncAndRender();
     void sync(bool inExpose);

@@ -139,25 +139,25 @@ public:
     QSGGuiThreadRenderLoop();
     ~QSGGuiThreadRenderLoop();
 
-    void show(QQuickWindow *window);
-    void hide(QQuickWindow *window);
+    void show(QQuickWindow *window) override;
+    void hide(QQuickWindow *window) override;
 
-    void windowDestroyed(QQuickWindow *window);
+    void windowDestroyed(QQuickWindow *window) override;
 
     void renderWindow(QQuickWindow *window);
-    void exposureChanged(QQuickWindow *window);
-    QImage grab(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window) override;
+    QImage grab(QQuickWindow *window) override;
 
-    void maybeUpdate(QQuickWindow *window);
-    void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
-    void handleUpdateRequest(QQuickWindow *);
+    void maybeUpdate(QQuickWindow *window) override;
+    void update(QQuickWindow *window) override { maybeUpdate(window); } // identical for this implementation.
+    void handleUpdateRequest(QQuickWindow *) override;
 
-    void releaseResources(QQuickWindow *) { }
+    void releaseResources(QQuickWindow *) override { }
 
-    QAnimationDriver *animationDriver() const { return 0; }
+    QAnimationDriver *animationDriver() const override { return 0; }
 
-    QSGContext *sceneGraphContext() const;
-    QSGRenderContext *createRenderContext(QSGContext *) const { return rc; }
+    QSGContext *sceneGraphContext() const override;
+    QSGRenderContext *createRenderContext(QSGContext *) const override { return rc; }
 
     struct WindowData {
         bool updatePending : 1;

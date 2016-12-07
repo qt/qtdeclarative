@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 class QQuickColorProvider : public QQmlColorProvider
 {
 public:
-    QVariant colorFromString(const QString &s, bool *ok)
+    QVariant colorFromString(const QString &s, bool *ok) override
     {
         QColor c(s);
         if (c.isValid()) {
@@ -73,7 +73,7 @@ public:
         return QVariant();
     }
 
-    unsigned rgbaFromString(const QString &s, bool *ok)
+    unsigned rgbaFromString(const QString &s, bool *ok) override
     {
         QColor c(s);
         if (c.isValid()) {
@@ -95,36 +95,36 @@ public:
         return QString();
     }
 
-    QVariant fromRgbF(double r, double g, double b, double a)
+    QVariant fromRgbF(double r, double g, double b, double a) override
     {
         return QVariant(QColor::fromRgbF(r, g, b, a));
     }
 
-    QVariant fromHslF(double h, double s, double l, double a)
+    QVariant fromHslF(double h, double s, double l, double a) override
     {
         return QVariant(QColor::fromHslF(h, s, l, a));
     }
 
-    QVariant fromHsvF(double h, double s, double v, double a)
+    QVariant fromHsvF(double h, double s, double v, double a) override
     {
         return QVariant(QColor::fromHsvF(h, s, v, a));
     }
 
-    QVariant lighter(const QVariant &var, qreal factor)
+    QVariant lighter(const QVariant &var, qreal factor) override
     {
         QColor color = var.value<QColor>();
         color = color.lighter(int(qRound(factor*100.)));
         return QVariant::fromValue(color);
     }
 
-    QVariant darker(const QVariant &var, qreal factor)
+    QVariant darker(const QVariant &var, qreal factor) override
     {
         QColor color = var.value<QColor>();
         color = color.darker(int(qRound(factor*100.)));
         return QVariant::fromValue(color);
     }
 
-    QVariant tint(const QVariant &baseVar, const QVariant &tintVar)
+    QVariant tint(const QVariant &baseVar, const QVariant &tintVar) override
     {
         QColor tintColor = tintVar.value<QColor>();
 
@@ -778,13 +778,13 @@ public:
 class QQuickGuiProvider : public QQmlGuiProvider
 {
 public:
-    QQuickApplication *application(QObject *parent)
+    QQuickApplication *application(QObject *parent) override
     {
         return new QQuickApplication(parent);
     }
 
 #if QT_CONFIG(im)
-    QInputMethod *inputMethod()
+    QInputMethod *inputMethod() override
     {
         QInputMethod *im = qGuiApp->inputMethod();
         QQmlEngine::setObjectOwnership(im, QQmlEngine::CppOwnership);
@@ -792,20 +792,20 @@ public:
     }
 #endif
 
-    QStyleHints *styleHints()
+    QStyleHints *styleHints() override
     {
         QStyleHints *sh = qGuiApp->styleHints();
         QQmlEngine::setObjectOwnership(sh, QQmlEngine::CppOwnership);
         return sh;
     }
 
-    QStringList fontFamilies()
+    QStringList fontFamilies() override
     {
         QFontDatabase database;
         return database.families();
     }
 
-    bool openUrlExternally(QUrl &url)
+    bool openUrlExternally(QUrl &url) override
     {
 #ifndef QT_NO_DESKTOPSERVICES
         return QDesktopServices::openUrl(url);

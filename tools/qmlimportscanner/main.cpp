@@ -291,7 +291,7 @@ struct ImportCollector : public QQmlJS::Directives
 {
     QVariantList imports;
 
-    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
+    void importFile(const QString &jsfile, const QString &module, int line, int column) override
     {
         QVariantMap entry;
         entry[typeLiteral()] = QStringLiteral("javascript");
@@ -303,7 +303,7 @@ struct ImportCollector : public QQmlJS::Directives
         Q_UNUSED(column);
     }
 
-    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
+    void importModule(const QString &uri, const QString &version, const QString &module, int line, int column) override
     {
         QVariantMap entry;
         if (uri.contains(QLatin1Char('/'))) {

@@ -57,15 +57,15 @@ public:
     QLocalClientConnection();
     ~QLocalClientConnection();
 
-    void setServer(QQmlDebugServer *server);
-    bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress);
-    bool setFileName(const QString &filename, bool block);
+    void setServer(QQmlDebugServer *server) override;
+    bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) override;
+    bool setFileName(const QString &filename, bool block) override;
 
-    bool isConnected() const;
-    void disconnect();
+    bool isConnected() const override;
+    void disconnect() override;
 
-    void waitForConnection();
-    void flush();
+    void waitForConnection() override;
+    void flush() override;
 
 private:
     void connectionEstablished();

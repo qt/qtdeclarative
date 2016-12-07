@@ -761,7 +761,7 @@ class QQmlThreadNotifierProxyObject : public QObject
 public:
     QPointer<QObject> target;
 
-    virtual int qt_metacall(QMetaObject::Call, int methodIndex, void **a) {
+    int qt_metacall(QMetaObject::Call, int methodIndex, void **a) override {
         if (!target)
             return -1;
 
