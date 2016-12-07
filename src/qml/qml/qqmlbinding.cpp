@@ -222,9 +222,8 @@ protected:
                 clearError();
             }
 
+            cancelPermanentGuards();
         }
-
-        cancelPermanentGuards();
 
         ep->dereferenceScarceResources();
     }

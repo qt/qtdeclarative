@@ -1015,7 +1015,7 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
 
 QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
 {
-    if (!_qmlContext->isObject())
+    if (!_qmlContext->isManaged())
         _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 
     return _qmlContext->d();

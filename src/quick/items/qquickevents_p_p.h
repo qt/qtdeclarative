@@ -302,7 +302,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
     Q_OBJECT
     Q_PROPERTY(qreal rotation READ rotation)
     Q_PROPERTY(qreal pressure READ pressure)
-    Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
+// TODO rename to QPointingDeviceUniqueId
+//    Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
 
 public:
     QQuickEventTouchPoint(QQuickPointerTouchEvent *parent);
@@ -311,12 +312,12 @@ public:
 
     qreal rotation() const { return m_rotation; }
     qreal pressure() const { return m_pressure; }
-    QPointerUniqueId uniqueId() const { return m_uniqueId; }
+//    QPointerUniqueId uniqueId() const { return m_uniqueId; }
 
 private:
     qreal m_rotation;
     qreal m_pressure;
-    QPointerUniqueId m_uniqueId;
+//    QPointerUniqueId m_uniqueId;
 
     Q_DISABLE_COPY(QQuickEventTouchPoint)
 };
@@ -554,7 +555,7 @@ QML_DECLARE_TYPE(QQuickMouseEvent)
 QML_DECLARE_TYPE(QQuickWheelEvent)
 QML_DECLARE_TYPE(QQuickCloseEvent)
 QML_DECLARE_TYPE(QQuickPointerDevice)
-QML_DECLARE_TYPE(QPointerUniqueId)
+//QML_DECLARE_TYPE(QPointerUniqueId)
 QML_DECLARE_TYPE(QQuickPointerEvent)
 
 #endif // QQUICKEVENTS_P_P_H

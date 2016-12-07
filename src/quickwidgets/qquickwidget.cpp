@@ -1589,9 +1589,6 @@ QQuickWindow *QQuickWidget::quickWindow() const
     return d->offscreenWindow;
 }
 
-QT_END_NAMESPACE
-
-
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
@@ -1612,3 +1609,5 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
         }
     }
 }
+
+QT_END_NAMESPACE

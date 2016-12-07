@@ -118,7 +118,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
 
     bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0;
     if (!needVMEMetaObject) {
-        for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
+        auto binding = obj->bindingsBegin();
+        auto end = obj->bindingsEnd();
+        for ( ; binding != end; ++binding) {
             if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
                 // If the on assignment is inside a group property, we need to distinguish between QObject based
                 // group properties and value type group properties. For the former the base type is derived from
@@ -162,7 +164,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
     }
 
     if (QQmlPropertyCache *thisCache = propertyCaches->at(objectIndex)) {
-        for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding)
+        auto binding = obj->bindingsBegin();
+        auto end = obj->bindingsEnd();
+        for ( ; binding != end; ++binding)
             if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
                 QQmlBindingInstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
                 QQmlCompileError error = buildMetaObjectRecursively(binding->value.objectIndex, context);
@@ -296,7 +300,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
     QmlIR::PropertyResolver resolver(baseTypeCache);
 
-    for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p) {
+    auto p = obj->propertiesBegin();
+    auto pend = obj->propertiesEnd();
+    for ( ; p != pend; ++p) {
         if (p->type == QV4::CompiledData::Property::Var)
             varPropCount++;
 
@@ -306,7 +312,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
             return QQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
     }
 
-    for (auto a = obj->aliasesBegin(), end = obj->aliasesEnd(); a != end; ++a) {
+    auto a = obj->aliasesBegin();
+    auto aend = obj->aliasesEnd();
+    for ( ; a != aend; ++a) {
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
         if (d && d->isFinal())
@@ -340,7 +348,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     }
 
     // Set up notify signals for properties - first normal, then alias
-    for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p) {
+    p = obj->propertiesBegin();
+    pend = obj->propertiesEnd();
+    for (  ; p != pend; ++p) {
         auto flags = QQmlPropertyData::defaultSignalFlags();
 
         QString changedSigName = stringAt(p->nameIndex) + QLatin1String("Changed");
@@ -349,7 +359,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
     }
 
-    for (auto a = obj->aliasesBegin(), end = obj->aliasesEnd(); a != end; ++a) {
+    a = obj->aliasesBegin();
+    aend = obj->aliasesEnd();
+    for ( ; a != aend; ++a) {
         auto flags = QQmlPropertyData::defaultSignalFlags();
 
         QString changedSigName = stringAt(a->nameIndex) + QLatin1String("Changed");
@@ -359,7 +371,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     }
 
     // Dynamic signals
-    for (auto s = obj->signalsBegin(), end = obj->signalsEnd(); s != end; ++s) {
+    auto s = obj->signalsBegin();
+    auto send = obj->signalsEnd();
+    for ( ; s != send; ++s) {
         const int paramCount = s->parameterCount();
 
         QList<QByteArray> names;
@@ -370,7 +384,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
             paramTypes[0] = paramCount;
 
             int i = 0;
-            for (auto param = s->parametersBegin(), end = s->parametersEnd(); param != end; ++param, ++i) {
+            auto param = s->parametersBegin();
+            auto end = s->parametersEnd();
+            for ( ; param != end; ++param, ++i) {
                 names.append(stringAt(param->nameIndex).toUtf8());
                 if (param->type < builtinTypeCount) {
                     // built-in type
@@ -415,7 +431,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
 
     // Dynamic slots
-    for (auto function = objectContainer->objectFunctionsBegin(obj), end = objectContainer->objectFunctionsEnd(obj); function != end; ++function) {
+    auto function = objectContainer->objectFunctionsBegin(obj);
+    auto fend = objectContainer->objectFunctionsEnd(obj);
+    for ( ; function != fend; ++function) {
         auto flags = QQmlPropertyData::defaultSlotFlags();
 
         const QString slotName = stringAt(function->nameIndex);
@@ -425,7 +443,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         // protect against overriding change signals or methods with properties.
 
         QList<QByteArray> parameterNames;
-        for (auto formal = function->formalsBegin(), end = function->formalsEnd(); formal != end; ++formal) {
+        auto formal = function->formalsBegin();
+        auto end = function->formalsEnd();
+        for ( ; formal != end; ++formal) {
             flags.hasArguments = true;
             parameterNames << stringAt(*formal).toUtf8();
         }
@@ -437,7 +457,9 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     // Dynamic properties
     int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
     int propertyIdx = 0;
-    for (auto p = obj->propertiesBegin(), end = obj->propertiesEnd(); p != end; ++p, ++propertyIdx) {
+    p = obj->propertiesBegin();
+    pend = obj->propertiesEnd();
+    for ( ; p != pend; ++p, ++propertyIdx) {
         int propertyType = 0;
         QQmlPropertyData::Flags propertyFlags;
 
@@ -561,7 +583,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
         return;
 
     const auto allAliasTargetsExist = [this, &component](const CompiledObject &object) {
-        for (auto alias = object.aliasesBegin(), end = object.aliasesEnd(); alias != end; ++alias) {
+        auto alias = object.aliasesBegin();
+        auto end = object.aliasesEnd();
+        for ( ; alias != end; ++alias) {
             Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
 
             const int targetObjectIndex = objectForId(component, alias->targetObjectId);
@@ -612,7 +636,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
     if (object.flags & QV4::CompiledData::Object::IsComponent && objectIndex != objectContainer->rootObjectIndex())
         return;
 
-    for (auto binding = object.bindingsBegin(), end = object.bindingsEnd(); binding != end; ++binding) {
+    auto binding = object.bindingsBegin();
+    auto end = object.bindingsEnd();
+    for (; binding != end; ++binding) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object
             && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
             && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
@@ -707,7 +733,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPrope
     int effectivePropertyIndex = propertyCache->propertyIndexCacheStart + propertyCache->propertyIndexCache.count();
 
     int aliasIndex = 0;
-    for (auto alias = object.aliasesBegin(), end = object.aliasesEnd(); alias != end; ++alias, ++aliasIndex) {
+    auto alias = object.aliasesBegin();
+    auto end = object.aliasesEnd();
+    for ( ; alias != end; ++alias, ++aliasIndex) {
         Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
 
         int type = 0;

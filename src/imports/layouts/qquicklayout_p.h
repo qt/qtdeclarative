@@ -99,6 +99,10 @@ public:
 
     /* QQuickItemChangeListener */
     void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemImplicitWidthChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemVisibilityChanged(QQuickItem *item) Q_DECL_OVERRIDE;
 
 protected:
     void updatePolish() Q_DECL_OVERRIDE;

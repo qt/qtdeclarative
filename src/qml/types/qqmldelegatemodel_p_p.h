@@ -149,7 +149,6 @@ public:
     int groups;
     int index;
 
-
 Q_SIGNALS:
     void modelIndexChanged();
 
@@ -261,6 +260,7 @@ public:
     void init();
     void connectModel(QQmlAdaptorModel *model);
 
+    void requestMoreIfNecessary();
     QObject *object(Compositor::Group group, int index, bool asynchronous);
     QQmlDelegateModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
@@ -329,6 +329,7 @@ public:
     bool m_reset : 1;
     bool m_transaction : 1;
     bool m_incubatorCleanupScheduled : 1;
+    bool m_waitingToFetchMore : 1;
 
     union {
         struct {
