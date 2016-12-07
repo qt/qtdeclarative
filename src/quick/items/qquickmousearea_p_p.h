@@ -95,6 +95,7 @@ public:
     bool propagateComposedEvents : 1;
     bool overThreshold : 1;
     Qt::MouseButtons pressed;
+    int pressAndHoldInterval;
 #if QT_CONFIG(draganddrop)
     QQuickDrag *drag;
 #endif
