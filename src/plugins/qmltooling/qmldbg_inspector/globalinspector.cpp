@@ -234,9 +234,7 @@ bool GlobalInspector::syncSelectedItems(const QList<QQuickItem *> &items)
     bool selectionChanged = false;
 
     // Disconnect and remove items that are no longer selected
-    foreach (const QPointer<QQuickItem> &item, m_selectedItems) {
-        if (!item) // Don't see how this can happen due to handling of destroyed()
-            continue;
+    foreach (QQuickItem *item, m_selectedItems) {
         if (items.contains(item))
             continue;
 
