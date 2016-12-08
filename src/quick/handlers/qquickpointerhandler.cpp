@@ -153,6 +153,7 @@ void QQuickPointerHandler::setActive(bool active)
 {
     if (m_active != active) {
         m_active = active;
+        onActiveChanged();
         emit activeChanged();
     }
 }

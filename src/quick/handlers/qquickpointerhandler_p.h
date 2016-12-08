@@ -94,8 +94,9 @@ Q_SIGNALS:
 protected:
     QQuickPointerEvent *currentEvent() { return m_currentEvent; }
     virtual bool wantsPointerEvent(QQuickPointerEvent *event);
-    virtual void setActive(bool active);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
+    void setActive(bool active);
+    virtual void onActiveChanged() { }
     void setGrab(QQuickEventPoint *point, bool grab);
     virtual void handleGrabCancel(QQuickEventPoint *point);
     QPointF eventPos(const QQuickEventPoint *point) const;

@@ -79,7 +79,6 @@ QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
     , m_startScale(1)
     , m_startRotation(0)
 {
-    connect(this, &QQuickPinchHandler::activeChanged, this, &QQuickPinchHandler::onActiveChanged);
     connect(this, &QQuickPinchHandler::targetChanged, this, &QQuickPinchHandler::onTargetChanged);
 }
 
