@@ -216,8 +216,7 @@ Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlCont
         runtimeFunction->updateInternalClass(engine, signalParameters);
     }
 
-    QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction));
-    return function->d();
+    return QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction);
 }
 
 
@@ -344,11 +343,11 @@ ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 
 ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
-    Scope scope(ctx);
-    ScopedFunctionObject o(scope, ctx->thisObject().as<FunctionObject>());
+    FunctionObject *o = ctx->thisObject().as<FunctionObject>();
     if (!o)
         return ctx->engine()->throwTypeError();
 
+    Scope scope(ctx);
     ScopedValue arg(scope, ctx->argument(1));
 
     ScopedObject arr(scope, arg);
@@ -387,12 +386,11 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 
 ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
-    Scope scope(ctx);
-
-    ScopedFunctionObject o(scope, ctx->thisObject().as<FunctionObject>());
+    FunctionObject *o = ctx->thisObject().as<FunctionObject>();
     if (!o)
         return ctx->engine()->throwTypeError();
 
+    Scope scope(ctx);
     ScopedCallData callData(scope, ctx->argc() ? ctx->argc() - 1 : 0);
     if (ctx->argc()) {
         for (int i = 1; i < ctx->argc(); ++i)
@@ -406,11 +404,11 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 
 ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 {
-    Scope scope(ctx);
-    ScopedFunctionObject target(scope, ctx->thisObject());
+    FunctionObject *target = ctx->thisObject().as<FunctionObject>();
     if (!target)
         return ctx->engine()->throwTypeError();
 
+    Scope scope(ctx);
     ScopedValue boundThis(scope, ctx->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
     if (ctx->argc() > 1) {
@@ -601,7 +599,7 @@ void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *cal
         QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
 }
 
-Heap::Object *SimpleScriptFunction::protoForConstructor()
+Heap::Object *SimpleScriptFunction::protoForConstructor() const
 {
     Scope scope(engine());
     ScopedObject p(scope, protoProperty());
