@@ -69,8 +69,12 @@ bool QQuickMultiPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
         return false;
     if (sameAsCurrentPoints(event))
         return true;
-    m_currentPoints = pointsInsideOrNearTarget(event);
-    return (m_currentPoints.size() == m_requiredPointCount);
+
+    const QVector<QQuickEventPoint *> candidatePoints = pointsInsideOrNearTarget(event);
+    const bool ret = (candidatePoints.size() == m_requiredPointCount);
+    if (ret)
+        m_currentPoints = candidatePoints;
+    return ret;
 }
 
 QVector<QQuickEventPoint *> QQuickMultiPointerHandler::pointsInsideOrNearTarget(QQuickPointerEvent *event)
