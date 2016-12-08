@@ -40,6 +40,7 @@
 #include "qquickcustomparticle_p.h"
 #include <QtQuick/private/qquickshadereffectmesh_p.h>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
+#include <QtQml/qqmlinfo.h>
 #include <cstdlib>
 
 QT_BEGIN_NAMESPACE
@@ -90,6 +91,7 @@ struct PlainVertices {
     \brief For specifying shaders to paint particles
     \ingroup qtquick-particles
 
+    \note The maximum number of custom particles is limited to 16383.
 */
 
 QQuickCustomParticle::QQuickCustomParticle(QQuickItem* parent)
@@ -316,13 +318,14 @@ QQuickOpenGLShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
     if (!QOpenGLContext::currentContext())
         return 0;
 
-    if (QOpenGLContext::currentContext()->isOpenGLES() && m_count * 4 > 0xffff) {
-        printf("CustomParticle: Too many particles... \n");
+    if (m_count * 4 > 0xffff) {
+        // Index data is ushort.
+        qmlInfo(this) << "CustomParticle: Too many particles - maximum 16383 per CustomParticle";
         return 0;
     }
 
     if (m_count <= 0) {
-        printf("CustomParticle: Too few particles... \n");
+        qmlInfo(this) << "CustomParticle: Too few particles";
         return 0;
     }
 

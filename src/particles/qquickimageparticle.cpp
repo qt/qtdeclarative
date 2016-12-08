@@ -510,6 +510,8 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     So if you explicitly set an attribute affecting color, such as redVariation, and then reset it (by setting redVariation
     to undefined), all color data will be reset and it will begin to have an implicit value of any shared color from
     other ImageParticles.
+
+    \note The maximum number of image particles is limited to 16383.
 */
 /*!
     \qmlproperty url QtQuick.Particles::ImageParticle::source
@@ -1240,8 +1242,9 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     if (!QOpenGLContext::currentContext())
         return;
 
-    if (QOpenGLContext::currentContext()->isOpenGLES() && m_count * 4 > 0xffff) {
-        printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
+    if (m_count * 4 > 0xffff) {
+        // Index data is ushort.
+        qmlInfo(this) << "ImageParticle: Too many particles - maximum 16383 per ImageParticle";
         return;
     }
 
