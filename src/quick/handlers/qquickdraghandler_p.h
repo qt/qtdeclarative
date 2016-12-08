@@ -96,7 +96,7 @@ public:
     QQuickDragHandler(QObject *parent = 0);
     ~QQuickDragHandler();
 
-    void handleEventPoint(QQuickEventPoint *point) Q_DECL_OVERRIDE;
+    void handleEventPoint(QQuickEventPoint *point) override;
 
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }

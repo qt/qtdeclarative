@@ -70,8 +70,8 @@ signals:
     void pressedButtonsChanged();
 
 protected:
-    bool wantsPointerEvent(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
-    void handlePointerEventImpl(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
+    bool wantsPointerEvent(QQuickPointerEvent *event) override;
+    void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
     void handleGrabCancel(QQuickEventPoint *point) override;

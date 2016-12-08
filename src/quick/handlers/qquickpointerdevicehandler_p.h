@@ -81,7 +81,7 @@ Q_SIGNALS:
     void acceptedButtonsChanged();
 
 protected:
-    bool wantsPointerEvent(QQuickPointerEvent *event) Q_DECL_OVERRIDE;
+    bool wantsPointerEvent(QQuickPointerEvent *event) override;
     void setPressed(bool pressed);
 
 protected:
