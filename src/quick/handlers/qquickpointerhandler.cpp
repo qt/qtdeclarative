@@ -70,8 +70,12 @@ void QQuickPointerHandler::setGrab(QQuickEventPoint *point, bool grab)
         if (oldGrabber && oldGrabber != this)
             oldGrabber->handleGrabCancel(point);
         point->setGrabberPointerHandler(this);
+        onGrabChanged(point);
+        emit grabChanged(point);
     } else if (point->grabberPointerHandler() == this) {
         point->setGrabberPointerHandler(nullptr);
+        onGrabChanged(point);
+        emit grabChanged(point);
     }
 }
 

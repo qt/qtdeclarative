@@ -89,6 +89,7 @@ Q_SIGNALS:
     void enabledChanged();
     void activeChanged();
     void targetChanged();
+    void grabChanged(QQuickEventPoint *point);
     void canceled(QQuickEventPoint *point);
 
 protected:
@@ -97,6 +98,7 @@ protected:
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setActive(bool active);
     virtual void onActiveChanged() { }
+    virtual void onGrabChanged(QQuickEventPoint *) { }
     void setGrab(QQuickEventPoint *point, bool grab);
     virtual void handleGrabCancel(QQuickEventPoint *point);
     QPointF eventPos(const QQuickEventPoint *point) const;
