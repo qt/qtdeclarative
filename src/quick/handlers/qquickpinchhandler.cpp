@@ -224,6 +224,10 @@ void QQuickPinchHandler::onActiveChanged()
 void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     Q_UNUSED(event)
+    // TODO wait for the drag threshold before setting active
+    // but the old behavior was that whenever we "want" all the points, we're active
+    // so that behavior is retained here temporarily
+    setActive(m_currentPoints.count() > 0 && m_currentPoints.at(0)->state() != QQuickEventPoint::Released);
 
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
         for (QQuickEventPoint *point : qAsConst(m_currentPoints))

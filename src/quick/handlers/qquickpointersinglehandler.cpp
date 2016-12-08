@@ -101,6 +101,11 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
     } else {
         setPressedButtons(event->buttons());
         handleEventPoint(currentPoint);
+        if (currentPoint->state() == QQuickEventPoint::Released) {
+            m_currentPointId = 0;
+            setPressedButtons(Qt::NoButton);
+            setGrab(currentPoint, false);
+        }
     }
     bool grab = currentPoint->isAccepted() && currentPoint->state() != QQuickEventPoint::Released;
     setGrab(currentPoint, grab);
@@ -118,6 +123,12 @@ void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)
     QQuickPointerHandler::handleGrabCancel(point);
     m_currentPointId = 0;
     setPressedButtons(Qt::NoButton);
+}
+
+void QQuickPointerSingleHandler::onGrabChanged(QQuickEventPoint *point)
+{
+    bool grabbing = (point->grabber() == this);
+    setActive(grabbing);
 }
 
 void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)

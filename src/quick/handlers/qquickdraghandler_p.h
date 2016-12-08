@@ -90,7 +90,6 @@ class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickPointerSingleHandler
     Q_OBJECT
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
-    Q_PROPERTY(bool dragging READ dragging NOTIFY draggingChanged)
 
 public:
     QQuickDragHandler(QObject *parent = 0);
@@ -101,13 +100,10 @@ public:
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
 
-    bool dragging() const { return m_dragging; }
-
     Q_INVOKABLE void enforceConstraints();
 
 Q_SIGNALS:
 //    void gestureStarted(QQuickGestureEvent *gesture);
-    void draggingChanged();
 
 protected:
     bool wantsEventPoint(QQuickEventPoint *point) override;
@@ -117,7 +113,6 @@ private:
     void enforceAxisConstraints(QPointF *localPos);
 
 private:
-    bool m_dragging;
     QPointF m_startPos;
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;

@@ -77,6 +77,7 @@ protected:
     quint64 currentPointId() const { return m_currentPointId; }
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_currentPointId); }
     void handleGrabCancel(QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickEventPoint *point) override;
 
 private:
     void setPressedButtons(Qt::MouseButtons buttons);

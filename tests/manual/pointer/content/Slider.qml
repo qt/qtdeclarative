@@ -70,7 +70,7 @@ Item {
         anchors.horizontalCenterOffset: 1
         radius: 5
         color: "#4400FFFF"
-        visible: dragHandler.dragging
+        opacity: dragHandler.active ? 1 : 0
     }
     Image {
         id: knob

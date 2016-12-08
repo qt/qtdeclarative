@@ -58,7 +58,7 @@ Rectangle {
         }
         states: [
             State {
-                when: dragHandler.dragging
+                when: dragHandler.active
                 AnchorChanges {
                     target: knob
                     anchors.horizontalCenter: undefined

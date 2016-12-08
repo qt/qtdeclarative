@@ -140,9 +140,7 @@ QQuickItem *QQuickPointerHandler::target() const
 
 void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
 {
-    const bool wants = wantsPointerEvent(event);
-    setActive(wants);
-    if (wants)
+    if (wantsPointerEvent(event))
         handlePointerEventImpl(event);
     else
         setActive(false);

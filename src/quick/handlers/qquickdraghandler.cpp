@@ -59,7 +59,6 @@ QT_BEGIN_NAMESPACE
 
 QQuickDragHandler::QQuickDragHandler(QObject *parent)
     : QQuickPointerSingleHandler(parent)
-    , m_dragging(false)
 {
 }
 
@@ -88,7 +87,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
             delta.setX(0);
         if (!m_yAxis.enabled())
             delta.setY(0);
-        if (m_dragging) {
+        if (active()) {
             if (target() && target()->parentItem()) {
                 QPointF pos = target()->parentItem()->mapFromScene(m_startPos + delta);
                 enforceAxisConstraints(&pos);
@@ -96,17 +95,9 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
             }
         } else if ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point))) {
-            m_dragging = true;
             setGrab(point, true);
-            emit draggingChanged();
         }
     } break;
-    case QQuickEventPoint::Released:
-        if (m_dragging) {
-            m_dragging = false;
-            emit draggingChanged();
-        }
-        break;
     default:
         break;
     }
