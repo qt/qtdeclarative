@@ -92,46 +92,9 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name, bool createProto)
 {
-    Object::init();
-    function = nullptr;
-    this->scope = scope->d();
-    Scope s(scope->engine());
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, s.engine->newString(name));
-    f->init(n, createProto);
-}
-
-void Heap::FunctionObject::init(ExecutionContext *scope, const QString &name, bool createProto)
-{
-    Object::init();
-    function = nullptr;
-    this->scope = scope;
-    Scope s(scope->engine);
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, s.engine->newString(name));
-    f->init(n, createProto);
-}
-
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const ReturnedValue name)
-{
-    Object::init();
-    function = nullptr;
-    this->scope = scope->d();
-    Scope s(scope);
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, name);
-    f->init(n, false);
-}
-
-void Heap::FunctionObject::init(ExecutionContext *scope, const ReturnedValue name)
-{
-    Object::init();
-    function = nullptr;
-    this->scope = scope;
-    Scope s(scope->engine);
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, name);
-    f->init(n, false);
+    Scope valueScope(scope);
+    ScopedString s(valueScope, valueScope.engine->newString(name));
+    init(scope, s, createProto);
 }
 
 void Heap::FunctionObject::init()
@@ -166,8 +129,8 @@ void FunctionObject::init(String *n, bool createProto)
         *propertyData(Heap::FunctionObject::Index_Prototype) = Encode::undefined();
     }
 
-    ScopedValue v(s, n);
-    defineReadonlyProperty(s.engine->id_name(), v);
+    if (n)
+        defineReadonlyProperty(s.engine->id_name(), *n);
 }
 
 ReturnedValue FunctionObject::name() const

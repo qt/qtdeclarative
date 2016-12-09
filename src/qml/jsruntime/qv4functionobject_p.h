@@ -69,12 +69,9 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
         Index_ProtoConstructor = 0
     };
 
-    void init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, QV4::String *name = 0, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
-    void init(QV4::ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
-    void init(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
-    void init(QV4::ExecutionContext *scope, const ReturnedValue name);
-    void init(ExecutionContext *scope, const ReturnedValue name);
+    void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
     void init();
     void destroy();
 
