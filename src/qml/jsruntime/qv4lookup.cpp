@@ -118,7 +118,8 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
 
 ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, const Value &object, const Value &index)
 {
-    if (object.isObject() && index.asArrayIndex() < UINT_MAX) {
+    uint idx;
+    if (object.isObject() && index.asArrayIndex(idx)) {
         l->indexedGetter = indexedGetterObjectInt;
         return indexedGetterObjectInt(l, object, index);
     }
@@ -129,11 +130,12 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 {
     Q_UNUSED(l);
     Scope scope(l->engine);
-    uint idx = index.asArrayIndex();
+    uint idx;
+    bool isInt = index.asArrayIndex(idx);
 
     ScopedObject o(scope, object);
     if (!o) {
-        if (idx < UINT_MAX) {
+        if (isInt) {
             if (const String *str = object.as<String>()) {
                 if (idx >= (uint)str->toQString().length()) {
                     return Encode::undefined();
@@ -153,7 +155,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
             return Encode::undefined();
     }
 
-    if (idx < UINT_MAX) {
+    if (isInt) {
         if (o->d()->arrayData && !o->d()->arrayData->attrs) {
             ScopedValue v(scope, Scoped<ArrayData>(scope, o->arrayData())->get(idx));
             if (!v->isEmpty())
@@ -173,14 +175,17 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 
 ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, const Value &index)
 {
-    uint idx = index.asArrayIndex();
-    if (idx != UINT_MAX) {
-        if (Object *o = object.objectValue()) {
-            if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-                Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-                if (idx < s->len)
-                    if (!s->data(idx).isEmpty())
-                        return s->data(idx).asReturnedValue();
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->vtable()->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->len)
+                        if (!s->data(idx).isEmpty())
+                            return s->data(idx).asReturnedValue();
+                }
             }
         }
     }
@@ -191,7 +196,8 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
 void Lookup::indexedSetterGeneric(Lookup *l, const Value &object, const Value &index, const Value &v)
 {
     if (Object *o = object.objectValue()) {
-        if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex() < UINT_MAX) {
+        uint idx;
+        if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex(idx)) {
             l->indexedSetter = indexedSetterObjectInt;
             indexedSetterObjectInt(l, object, index, v);
             return;
@@ -207,8 +213,8 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
     if (scope.engine->hasException)
         return;
 
-    uint idx = index.asArrayIndex();
-    if (idx < UINT_MAX) {
+    uint idx;
+    if (index.asArrayIndex(idx)) {
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             if (idx < s->len) {
@@ -226,14 +232,17 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
 
 void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value &index, const Value &v)
 {
-    uint idx = index.asArrayIndex();
-    if (idx != UINT_MAX) {
-        if (Object *o = object.objectValue()) {
-            if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-                Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-                if (idx < s->len) {
-                    s->data(idx) = v;
-                    return;
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->vtable()->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->len) {
+                        s->data(idx) = v;
+                        return;
+                    }
                 }
             }
         }

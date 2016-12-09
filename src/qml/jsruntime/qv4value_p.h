@@ -453,6 +453,7 @@ public:
     }
 
     inline uint asArrayIndex() const;
+    inline bool asArrayIndex(uint &idx) const;
 #ifndef V4_BOOTSTRAP
     uint asArrayLength(bool *ok) const;
 #endif
@@ -530,6 +531,20 @@ inline uint Value::asArrayIndex() const
     if (idx != d)
         return UINT_MAX;
     return idx;
+}
+
+inline bool Value::asArrayIndex(uint &idx) const
+{
+    if (!isDouble()) {
+        if (isInteger() && int_32() >= 0) {
+            idx = (uint)int_32();
+            return true;
+        }
+        return false;
+    }
+    double d = doubleValue();
+    idx = (uint)d;
+    return (idx == d);
 }
 #endif
 
