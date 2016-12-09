@@ -302,6 +302,7 @@ public:
     inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
     inline bool isManaged() const { return !isUndefined() && ((_val >> IsManagedOrUndefined_Shift) == 0); }
+    inline bool isManagedOrUndefined() const { return ((_val >> IsManagedOrUndefined_Shift) == 0); }
 
     inline bool integerCompatible() const {
         return (_val >> IsIntegerConvertible_Shift) == 3;
@@ -317,6 +318,7 @@ public:
     inline bool isUndefined() const { return tag() == Managed_Type_Internal && value() == 0; }
     inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isManaged() const { return tag() == Managed_Type_Internal && !isUndefined(); }
+    inline bool isManagedOrUndefined() const { return tag() == Managed_Type_Internal; }
     inline bool integerCompatible() const { return (tag() & ConvertibleToInt) == ConvertibleToInt; }
     static inline bool integerCompatible(Value a, Value b) {
         return ((a.tag() & b.tag()) & ConvertibleToInt) == ConvertibleToInt;
@@ -387,7 +389,7 @@ public:
         return reinterpret_cast<Managed*>(const_cast<Value *>(this));
     }
     QML_NEARLY_ALWAYS_INLINE Heap::Base *heapObject() const {
-        return isManaged() ? m() : nullptr;
+        return isManagedOrUndefined() ? m() : nullptr;
     }
 
     static inline Value fromHeapObject(Heap::Base *m)
@@ -485,15 +487,13 @@ V4_ASSERT_IS_TRIVIAL(Value)
 
 inline bool Value::isString() const
 {
-    if (!isManaged())
-        return false;
-    return m()->vtable()->isString;
+    Heap::Base *b = heapObject();
+    return b && b->vtable()->isString;
 }
 inline bool Value::isObject() const
 {
-    if (!isManaged())
-        return false;
-    return m()->vtable()->isObject;
+    Heap::Base *b = heapObject();
+    return b && b->vtable()->isObject;
 }
 
 inline bool Value::isPrimitive() const
