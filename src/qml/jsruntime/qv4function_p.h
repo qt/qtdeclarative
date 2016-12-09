@@ -71,6 +71,7 @@ struct Q_QML_EXPORT Function {
     uint nFormals;
     bool activationRequired;
     bool hasQmlDependencies;
+    bool canUseSimpleCall;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
              ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));
@@ -91,14 +92,7 @@ struct Q_QML_EXPORT Function {
     inline bool needsActivation() const
     { return activationRequired; }
 
-    inline bool canUseSimpleFunction() const {
-        if (needsActivation() ||
-            compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
-            compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
-            isNamedExpression())
-            return false;
-        return true;
-    }
+    inline bool canUseSimpleFunction() const { return canUseSimpleCall; }
 
     QQmlSourceLocation sourceLocation() const
     {

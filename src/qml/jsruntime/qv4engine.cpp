@@ -281,10 +281,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(functionProtoClass, objectPrototype());
     functionClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    simpleScriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Name);
-    simpleScriptFunctionClass = simpleScriptFunctionClass->addMember(id_length(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Length);
+    scriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::ScriptFunction::Index_Name);
+    scriptFunctionClass = scriptFunctionClass->addMember(id_length(), Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
     protoClass = emptyClass->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 

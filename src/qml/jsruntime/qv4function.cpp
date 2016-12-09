@@ -84,6 +84,9 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
     activationRequired = compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject));
+
+    canUseSimpleCall = !needsActivation() && !(compiledFunction->flags & CompiledData::Function::HasCatchOrWith) &&
+                       !(compiledFunction->nFormals > QV4::Global::ReservedArgumentCount) && !isNamedExpression();
 }
 
 Function::~Function()

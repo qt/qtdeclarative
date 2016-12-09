@@ -194,10 +194,8 @@ void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
+Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
-    if (function->canUseSimpleFunction())
-        return scope->d()->engine->memoryManager->allocObject<SimpleScriptFunction>(scope, function, createProto);
     return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
 }
 
@@ -421,7 +419,10 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
     Q_ASSERT(v4Function);
 
     ScopedContext c(scope, f->scope());
-    c->call(scope, callData, v4Function, f);
+    if (v4Function->canUseSimpleCall)
+        c->simpleCall(scope, callData, v4Function);
+    else
+        c->call(scope, callData, v4Function, f);
 
     if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
@@ -445,12 +446,13 @@ void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
     Q_ASSERT(v4Function);
 
     ScopedContext c(scope, f->scope());
-    c->call(scope, callData, v4Function, f);
+    if (v4Function->canUseSimpleCall)
+        c->simpleCall(scope, callData, v4Function);
+    else
+        c->call(scope, callData, v4Function, f);
 }
 
-DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
-
-void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
+void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
 {
     FunctionObject::init();
     this->scope = scope->d();
@@ -463,16 +465,10 @@ void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *fu
     Scope s(scope);
     ScopedFunctionObject f(s, this);
 
-    if (createProto) {
-        ScopedString name(s, function->name());
-        f->init(name, createProto);
-        f->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(f->formalParameterCount()));
-    } else {
-        Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
-        Q_ASSERT(internalClass && internalClass->find(s.engine->id_name()) == Index_Name);
-        *propertyData(Index_Name) = function->name();
-        *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
-    }
+    ScopedString name(s, function->name());
+    f->init(name, true);
+    Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
+    *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);
@@ -483,53 +479,7 @@ void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *fu
     }
 }
 
-void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData *callData)
-{
-    ExecutionEngine *v4 = scope.engine;
-    if (Q_UNLIKELY(v4->hasException)) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
-
-    InternalClass *ic = scope.engine->emptyClass;
-    ScopedObject proto(scope, f->protoForConstructor());
-    callData->thisObject = v4->newObject(ic, proto);
-
-    QV4::Function *v4Function = f->function();
-    Q_ASSERT(v4Function);
-
-    ScopedContext c(scope, f->scope());
-    c->simpleCall(scope, callData, v4Function);
-
-    if (Q_UNLIKELY(v4->hasException)) {
-        scope.result = Encode::undefined();
-    } else if (!scope.result.isObject()) {
-        scope.result = callData->thisObject;
-    }
-}
-
-void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
-
-    QV4::Function *v4Function = f->function();
-    Q_ASSERT(v4Function);
-
-    ScopedContext c(scope, f->scope());
-    c->simpleCall(scope, callData, v4Function);
-}
-
-Heap::Object *SimpleScriptFunction::protoForConstructor() const
+Heap::Object *ScriptFunction::protoForConstructor() const
 {
     Scope scope(engine());
     ScopedObject p(scope, protoProperty());

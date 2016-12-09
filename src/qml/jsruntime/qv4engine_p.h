@@ -255,7 +255,7 @@ public:
     InternalClass *stringClass;
 
     InternalClass *functionClass;
-    InternalClass *simpleScriptFunctionClass;
+    InternalClass *scriptFunctionClass;
     InternalClass *protoClass;
 
     InternalClass *regExpExecArrayClass;

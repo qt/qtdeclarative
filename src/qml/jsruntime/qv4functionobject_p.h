@@ -105,15 +105,12 @@ struct IndexedBuiltinFunction : FunctionObject {
     uint index;
 };
 
-struct SimpleScriptFunction : FunctionObject {
+struct ScriptFunction : FunctionObject {
     enum {
         Index_Name = FunctionObject::Index_Prototype + 1,
         Index_Length
     };
-    void init(QV4::ExecutionContext *scope, Function *function, bool createProto = true);
-};
-
-struct ScriptFunction : SimpleScriptFunction {
+    void init(QV4::ExecutionContext *scope, Function *function);
 };
 
 struct BoundFunction : FunctionObject {
@@ -149,7 +146,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static void construct(const Managed *that, Scope &scope, CallData *);
     static void call(const Managed *that, Scope &scope, CallData *d);
 
-    static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
+    static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
 
     ReturnedValue protoProperty() const { return propertyData(Heap::FunctionObject::Index_Prototype)->asReturnedValue(); }
 
@@ -222,21 +219,14 @@ void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index
 }
 
 
-struct SimpleScriptFunction: FunctionObject {
-    V4_OBJECT2(SimpleScriptFunction, FunctionObject)
-    V4_INTERNALCLASS(simpleScriptFunctionClass)
+struct ScriptFunction : FunctionObject {
+    V4_OBJECT2(ScriptFunction, FunctionObject)
+    V4_INTERNALCLASS(scriptFunctionClass)
 
     static void construct(const Managed *, Scope &scope, CallData *callData);
     static void call(const Managed *that, Scope &scope, CallData *callData);
 
     Heap::Object *protoForConstructor() const;
-};
-
-struct ScriptFunction: SimpleScriptFunction {
-    V4_OBJECT2(ScriptFunction, FunctionObject)
-
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
 };
 
 
