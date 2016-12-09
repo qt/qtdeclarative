@@ -198,6 +198,16 @@ QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent)
 }
 
 /*!
+    \internal
+*/
+QQuickView::QQuickView(const QUrl &source, QQuickRenderControl *control)
+    : QQuickWindow(*(new QQuickViewPrivate), control)
+{
+    d_func()->init();
+    setSource(source);
+}
+
+/*!
   Destroys the QQuickView.
 */
 QQuickView::~QQuickView()

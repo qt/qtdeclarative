@@ -1288,7 +1288,15 @@ QQuickWindow::QQuickWindow(QQuickRenderControl *control)
     d->init(this, control);
 }
 
-
+/*!
+    \internal
+*/
+QQuickWindow::QQuickWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control)
+    : QWindow(dd, 0)
+{
+    Q_D(QQuickWindow);
+    d->init(this, control);
+}
 
 /*!
     Destroys the window.

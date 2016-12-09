@@ -204,6 +204,7 @@ public Q_SLOTS:
 
 protected:
     QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = nullptr);
+    QQuickWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control);
 
     void exposeEvent(QExposeEvent *) override;
     void resizeEvent(QResizeEvent *) override;
