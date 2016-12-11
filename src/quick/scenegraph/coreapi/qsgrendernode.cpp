@@ -160,10 +160,7 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     \list
     \li glDepthMask(false)
     \li glDisable(GL_DEPTH_TEST)
-    \li glStencilMask(0)
-    \li glEnable(GL_STENCIL_TEST)/glDisable(GL_STENCIL_TEST) depending on clip
     \li glStencilFunc(GL_EQUAL, state.stencilValue, 0xff) depending on clip
-    \li glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST) depending on clip
     \li glScissor(state.scissorRect.x(), state.scissorRect.y(),
                  state.scissorRect.width(), state.scissorRect.height()) depending on clip
     \li glEnable(GL_BLEND)
