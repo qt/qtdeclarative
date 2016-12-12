@@ -79,6 +79,8 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     bool needsActivation() const { return function ? function->needsActivation() : false; }
 
+    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->cast<QV4::Object>(); }
+
     Pointer<ExecutionContext> scope;
     Function *function;
 };
@@ -144,8 +146,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static void call(const Managed *that, Scope &scope, CallData *d);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
-
-    ReturnedValue protoProperty() const { return propertyData(Heap::FunctionObject::Index_Prototype)->asReturnedValue(); }
 
     bool needsActivation() const { return d()->needsActivation(); }
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }

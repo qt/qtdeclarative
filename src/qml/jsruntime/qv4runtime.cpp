@@ -345,28 +345,29 @@ ReturnedValue Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
 
 QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
 {
-    Scope scope(engine);
-    ScopedFunctionObject f(scope, right.as<FunctionObject>());
-    if (!f)
+    const FunctionObject *function = right.as<FunctionObject>();
+    if (!function)
         return engine->throwTypeError();
 
-    if (f->isBoundFunction())
-        f = static_cast<BoundFunction *>(f.getPointer())->target();
+    Heap::FunctionObject *f = function->d();
+    if (function->isBoundFunction())
+        f = function->cast<BoundFunction>()->target();
 
-    ScopedObject v(scope, left.as<Object>());
-    if (!v)
+    const Object *o = left.as<Object>();
+    if (!o)
         return Encode(false);
+    Heap::Object *v = o->d();
 
-    ScopedObject o(scope, f->protoProperty());
+    o = f->protoProperty();
     if (!o)
         return engine->throwTypeError();
 
     while (v) {
-        v = v->prototype();
+        v = v->prototype;
 
         if (!v)
             break;
-        else if (o->d() == v->d())
+        else if (o->d() == v)
             return Encode(true);
     }
 

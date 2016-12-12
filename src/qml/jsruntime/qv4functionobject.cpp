@@ -451,11 +451,10 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
 
 Heap::Object *ScriptFunction::protoForConstructor() const
 {
-    Scope scope(engine());
-    ScopedObject p(scope, protoProperty());
-    if (p)
-        return p->d();
-    return scope.engine->objectPrototype()->d();
+    const Object *o = d()->protoProperty();
+    if (o)
+        return o->d();
+    return engine()->objectPrototype()->d();
 }
 
 
