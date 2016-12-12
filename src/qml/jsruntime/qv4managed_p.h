@@ -211,6 +211,13 @@ public:
         return m();
     }
 
+    template<typename T> inline T *cast() {
+        return static_cast<T *>(this);
+    }
+    template<typename T> inline const T *cast() const {
+        return static_cast<const T *>(this);
+    }
+
 private:
     friend class MemoryManager;
     friend struct Identifiers;
