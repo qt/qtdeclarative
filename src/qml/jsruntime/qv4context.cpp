@@ -343,7 +343,7 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
     scope.result = Q_V4_PROFILE(scope.engine, function);
 
-    if (function->compiledFunction->hasQmlDependencies())
+    if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
 }
 
