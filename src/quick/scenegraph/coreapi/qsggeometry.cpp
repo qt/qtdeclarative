@@ -675,6 +675,7 @@ void QSGGeometry::allocate(int vertexCount, int indexCount)
         Q_ASSERT(m_index_type == UnsignedIntType || m_index_type == UnsignedShortType);
         int indexByteSize = indexCount * (m_index_type == UnsignedShortType ? sizeof(quint16) : sizeof(quint32));
         m_data = (void *) malloc(vertexByteSize + indexByteSize);
+        Q_CHECK_PTR(m_data);
         m_index_data_offset = vertexByteSize;
         m_owns_data = true;
     }
