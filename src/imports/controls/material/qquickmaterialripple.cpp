@@ -288,8 +288,10 @@ void QQuickMaterialRipple::setPressed(bool pressed)
 
     m_pressed = pressed;
 
-    if (!isEnabled())
+    if (!isEnabled()) {
+        exitWave();
         return;
+    }
 
     if (pressed) {
         if (m_trigger == Press)
