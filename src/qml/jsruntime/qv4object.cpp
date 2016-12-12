@@ -61,7 +61,9 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
-    ensureMemberData();
+    if ((ic->size > d()->inlineMemberSize && !d()->memberData) ||
+        (d()->memberData && d()->memberData->size < ic->size - d()->inlineMemberSize))
+        d()->memberData = MemberData::allocate(ic->engine, ic->size - d()->inlineMemberSize, d()->memberData);
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -223,13 +225,6 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
         o->arrayData->mark(e);
     if (o->prototype)
         o->prototype->mark(e);
-}
-
-void Object::ensureMemberData()
-{
-    QV4::InternalClass *ic = internalClass();
-    if (ic->size > d()->inlineMemberSize)
-        d()->memberData = MemberData::reallocate(ic->engine, d()->memberData, ic->size - d()->inlineMemberSize);
 }
 
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
