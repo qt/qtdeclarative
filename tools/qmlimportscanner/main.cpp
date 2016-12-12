@@ -58,6 +58,7 @@ QStringList g_qmlImportPaths;
 static inline QString typeLiteral()         { return QStringLiteral("type"); }
 static inline QString versionLiteral()      { return QStringLiteral("version"); }
 static inline QString nameLiteral()         { return QStringLiteral("name"); }
+static inline QString relativePathLiteral() { return QStringLiteral("relativePath"); }
 static inline QString pluginsLiteral()      { return QStringLiteral("plugins"); }
 static inline QString pathLiteral()         { return QStringLiteral("path"); }
 static inline QString classnamesLiteral()   { return QStringLiteral("classnames"); }
@@ -162,8 +163,9 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     return pluginInfo;
 }
 
-// Search for a given qml import in g_qmlImportPaths.
-QString resolveImportPath(const QString &uri, const QString &version)
+// Search for a given qml import in g_qmlImportPaths and return a pair
+// of absolute / relative paths (for deployment).
+QPair<QString, QString> resolveImportPath(const QString &uri, const QString &version)
 {
     const QLatin1Char dot('.');
     const QLatin1Char slash('/');
@@ -180,18 +182,21 @@ QString resolveImportPath(const QString &uri, const QString &version)
             // - qml/QtQml.2/Models
             // - qml/QtQml/Models
             if (ver.isEmpty()) {
-                const QString candidatePath = QDir::cleanPath(qmlImportPath + slash + parts.join(slash));
+                QString relativePath = parts.join(slash);
+                if (relativePath.endsWith(slash))
+                    relativePath.chop(1);
+                const QString candidatePath = QDir::cleanPath(qmlImportPath + slash + relativePath);
                 if (QDir(candidatePath).exists())
-                    return candidatePath; // import found
+                    return qMakePair(candidatePath, relativePath); // import found
             } else {
                 for (int index = parts.count() - 1; index >= 0; --index) {
-                    const QString candidatePath = QDir::cleanPath(qmlImportPath + slash
-                                                                                + parts.mid(0, index + 1).join(slash)
-                                                                                + dot + ver + slash
-                                                                                + parts.mid(index + 1).join(slash));
-
+                    QString relativePath = parts.mid(0, index + 1).join(slash)
+                        + dot + ver + slash + parts.mid(index + 1).join(slash);
+                    if (relativePath.endsWith(slash))
+                        relativePath.chop(1);
+                    const QString candidatePath = QDir::cleanPath(qmlImportPath + slash + relativePath);
                     if (QDir(candidatePath).exists())
-                        return candidatePath; // import found
+                        return qMakePair(candidatePath, relativePath); // import found
                 }
             }
         }
@@ -207,7 +212,7 @@ QString resolveImportPath(const QString &uri, const QString &version)
             ver = ver.mid(0, lastDot);
     }
 
-    return QString(); // not found
+    return QPair<QString, QString>(); // not found
 }
 
 // Find absolute file system paths and plugins for a list of modules.
@@ -219,9 +224,12 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
     for (int i = 0; i < importsCopy.length(); ++i) {
         QVariantMap import = qvariant_cast<QVariantMap>(importsCopy[i]);
         if (import[typeLiteral()] == QLatin1String("module")) {
-            QString path = resolveImportPath(import.value(nameLiteral()).toString(), import.value(versionLiteral()).toString());
-            if (!path.isEmpty())
-                import[pathLiteral()] = path;
+            const QPair<QString, QString> paths =
+                resolveImportPath(import.value(nameLiteral()).toString(), import.value(versionLiteral()).toString());
+            if (!paths.first.isEmpty()) {
+                import.insert(pathLiteral(), paths.first);
+                import.insert(relativePathLiteral(), paths.second);
+            }
             QVariantMap plugininfo = pluginsForModulePath(import.value(pathLiteral()).toString());
             QString plugins = plugininfo.value(pluginsLiteral()).toString();
             QString classnames = plugininfo.value(classnamesLiteral()).toString();
