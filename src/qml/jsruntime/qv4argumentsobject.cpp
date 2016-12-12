@@ -57,8 +57,6 @@ void Heap::ArgumentsObject::init(QV4::CallContext *context)
     Scope scope(v4);
     Scoped<QV4::ArgumentsObject> args(scope, this);
 
-    args->setArrayType(Heap::ArrayData::Complex);
-
     if (context->d()->strictMode) {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
         Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller()));
@@ -245,4 +243,12 @@ void ArgumentsObject::markObjects(Heap::Base *that, ExecutionEngine *e)
         o->mappedArguments->mark(e);
 
     Object::markObjects(that, e);
+}
+
+uint ArgumentsObject::getLength(const Managed *m)
+{
+    const ArgumentsObject *a = static_cast<const ArgumentsObject *>(m);
+    if (a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->isInteger())
+        return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->integerValue();
+    return Primitive::toUInt32(a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->doubleValue());
 }

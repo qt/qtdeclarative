@@ -47,6 +47,7 @@
 
 #include "qv4arrayobject_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4argumentsobject_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -301,7 +302,13 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
+        if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
+            QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
+            int l = qMin(len, (uint)a->d()->context->callData->argc);
+            memcpy(callData->args, a->d()->context->callData->args, l*sizeof(Value));
+            for (quint32 i = l; i < len; ++i)
+                callData->args[i] = Primitive::undefinedValue();
+        } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
             auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
             uint alen = sad ? sad->len : 0;
             if (alen > len)
