@@ -130,7 +130,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 {
     Q_UNUSED(l);
     Scope scope(l->engine);
-    uint idx;
+    uint idx = 0;
     bool isInt = index.asArrayIndex(idx);
 
     ScopedObject o(scope, object);
