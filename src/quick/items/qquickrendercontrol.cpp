@@ -380,6 +380,9 @@ QImage QQuickRenderControl::grab()
 
     if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
 #if QT_CONFIG(opengl)
+        QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+        cd->polishItems();
+        cd->syncSceneGraph();
         render();
         grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
 #endif
@@ -394,6 +397,8 @@ QImage QQuickRenderControl::grab()
             QPaintDevice *prevDev = softwareRenderer->currentPaintDevice();
             softwareRenderer->setCurrentPaintDevice(&grabContent);
             softwareRenderer->markDirty();
+            cd->polishItems();
+            cd->syncSceneGraph();
             render();
             softwareRenderer->setCurrentPaintDevice(prevDev);
         }
