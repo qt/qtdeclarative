@@ -567,6 +567,10 @@ TestCase {
         var control = swipeDelegateWithButtonComponent.createObject(testCase);
         verify(control);
 
+        var closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
+        verify(closedSpy);
+        verify(closedSpy.valid);
+
         // The button should be pressed instead of the SwipeDelegate.
         mouseDrag(control, control.width / 2, control.height / 2,  -control.width, 0);
         // Mouse has been released by this stage.
@@ -604,7 +608,8 @@ TestCase {
         // Returning back to a position of 0 and pressing on the control should
         // result in the control being pressed.
         mouseDrag(control, control.width / 2, control.height / 2, control.width * 0.6, 0);
-        tryCompare(control.swipe, "position", 0);
+        tryCompare(closedSpy, "count", 1);
+        compare(control.swipe.position, 0);
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
         verify(!button.pressed);
@@ -1100,6 +1105,10 @@ TestCase {
         var control = closeSwipeDelegateComponent.createObject(testCase);
         verify(control);
 
+        var closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
+        verify(closedSpy);
+        verify(closedSpy.valid);
+
         swipe(control, 0.0, -1.0);
         compare(control.swipe.rightItem.visible, true);
         // Should animate, so it shouldn't change right away.
@@ -1111,7 +1120,8 @@ TestCase {
 
         mouseRelease(control);
         verify(!control.swipe.rightItem.SwipeDelegate.pressed);
-        tryCompare(control.swipe, "position", 0);
+        tryCompare(closedSpy, "count", 1);
+        compare(control.swipe.position, 0);
 
         // Swiping after closing should work as normal.
         swipe(control, 0.0, -1.0);
