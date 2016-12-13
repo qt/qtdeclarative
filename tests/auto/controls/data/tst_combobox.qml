@@ -968,15 +968,13 @@ TestCase {
         var listview = control.popup.contentItem
         verify(listview)
 
-        waitForRendering(listview)
-        compare(listview.contentItem.children.length, resetmodel.count + 1) // + highlight item
+        tryCompare(listview.contentItem.children, "length", resetmodel.count + 1) // + highlight item
 
         resetmodel.clear()
         resetmodel.append({text: "Fourth"})
         resetmodel.append({text: "Fifth"})
 
-        waitForRendering(listview)
-        compare(listview.contentItem.children.length, resetmodel.count + 1) // + highlight item
+        tryCompare(listview.contentItem.children, "length", resetmodel.count + 1) // + highlight item
 
         control.destroy()
     }
