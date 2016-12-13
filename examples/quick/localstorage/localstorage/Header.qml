@@ -52,22 +52,22 @@ Item {
     }
 
     function initrec_new() {
-        dateInput.text = ""
-        descInput.text = ""
-        distInput.text = ""
+        dateInput.clear()
+        descInput.clear()
+        distInput.clear()
         listView.model.insert(0, {
                                   date: "",
                                   trip_desc: "",
-                                  distance: ""
+                                  distance: 0
                               })
         listView.currentIndex = 0
         dateInput.forceActiveFocus()
     }
 
     function initrec() {
-        dateInput.text = ""
-        descInput.text = ""
-        distInput.text = ""
+        dateInput.clear()
+        descInput.clear()
+        distInput.clear()
     }
 
     function setlistview() {
@@ -76,7 +76,7 @@ Item {
         listView.model.setProperty(listView.currentIndex, "trip_desc",
                                    descInput.text)
         listView.model.setProperty(listView.currentIndex, "distance",
-                                   distInput.text)
+                                   parseInt(distInput.text,10))
     }
 
     Rectangle {
