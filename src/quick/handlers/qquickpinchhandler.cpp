@@ -64,9 +64,9 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 
 QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
     : QQuickMultiPointerHandler(parent, 2)
-    , m_scale(1)
-    , m_rotation(0)
-    , m_translation(0,0)
+    , m_activeScale(1)
+    , m_activeRotation(0)
+    , m_activeTranslation(0,0)
     , m_minimumScale(-qInf())
     , m_maximumScale(qInf())
     , m_minimumRotation(-qInf())
@@ -79,7 +79,6 @@ QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
     , m_startScale(1)
     , m_startRotation(0)
 {
-    connect(this, &QQuickPinchHandler::targetChanged, this, &QQuickPinchHandler::onTargetChanged);
 }
 
 QQuickPinchHandler::~QQuickPinchHandler()
@@ -199,27 +198,26 @@ void QQuickPinchHandler::setMaximumY(qreal maxY)
 void QQuickPinchHandler::onActiveChanged()
 {
     if (active()) {
-        m_startScale = m_scale; // TODO incompatible with independent x/y scaling
-        m_startRotation = m_rotation;
-        m_startCentroid = touchPointCentroid();
-        m_startAngles = angles(m_startCentroid);
-        m_startDistance = averageTouchPointDistance(m_startCentroid);
-        m_activeRotation = 0;
-        m_startMatrix = m_transform.matrix();
-        qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
-        grabPoints(m_currentPoints);
+        if (const QQuickItem *t = target()) {
+            m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
+            m_startRotation = t->rotation();
+            m_startCentroid = touchPointCentroid();
+            m_startAngles = angles(m_startCentroid);
+            m_startDistance = averageTouchPointDistance(m_startCentroid);
+            QVector3D xformOrigin(t->transformOriginPoint());
+            m_startMatrix = QMatrix4x4();
+            m_startMatrix.translate(t->x(), t->y());
+            m_startMatrix.translate(xformOrigin);
+            m_startMatrix.scale(m_startScale);
+            m_startMatrix.rotate(m_startRotation, 0, 0, -1);
+            m_startMatrix.translate(-xformOrigin);
+            m_activeRotation = 0;
+            m_activeTranslation = QPointF(0,0);
+            qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
+            grabPoints(m_currentPoints);
+        }
     } else {
-        qCInfo(lcPinchHandler) << "deactivated with scale" << m_scale << "rotation" << m_rotation;
-    }
-}
-
-void QQuickPinchHandler::onTargetChanged()
-{
-    if (target()) {
-        // TODO if m_target was previously set differently,
-        // does prepending to the new target remove it from the old one?
-        // If not, should we fix that there, or here?
-        m_transform.prependToItem(target());
+        qCInfo(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
     }
 }
 
@@ -237,51 +235,60 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     QRectF bounds(m_minimumX, m_minimumY, m_maximumX, m_maximumY);
     // avoid mapping the minima and maxima, as they might have unmappable values
     // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
-    QPointF centroidLocalPos;
+    QPointF centroidParentPos;
     if (target() && target()->parentItem()) {
-        centroidLocalPos = target()->parentItem()->mapFromScene(m_centroid);
-        centroidLocalPos = QPointF(qBound(bounds.left(), centroidLocalPos.x(), bounds.right()),
-                                   qBound(bounds.top(), centroidLocalPos.y(), bounds.bottom()));
+        centroidParentPos = target()->parentItem()->mapFromScene(m_centroid);
+        centroidParentPos = QPointF(qBound(bounds.left(), centroidParentPos.x(), bounds.right()),
+                                   qBound(bounds.top(), centroidParentPos.y(), bounds.bottom()));
     }
     // 1. scale
-    qreal dist = averageTouchPointDistance(m_centroid);
-    qreal activeScale = dist / m_startDistance;
-    activeScale = qBound(m_minimumScale/m_startScale, activeScale, m_maximumScale/m_startScale);
-    m_scale = m_startScale * activeScale;
+    const qreal dist = averageTouchPointDistance(m_centroid);
+    m_activeScale = dist / m_startDistance;
+    m_activeScale = qBound(m_minimumScale/m_startScale, m_activeScale, m_maximumScale/m_startScale);
+    const qreal scale = m_startScale * m_activeScale;
 
     // 2. rotate
     QVector<PointData> newAngles = angles(m_centroid);
     const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
     m_activeRotation += angleDelta;
     const qreal totalRotation = m_startRotation + m_activeRotation;
-    m_rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
-    m_activeRotation += (m_rotation - totalRotation);   //adjust for the potential bounding above
+    const qreal rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
+    m_activeRotation += (rotation - totalRotation);   //adjust for the potential bounding above
     m_startAngles = std::move(newAngles);
 
     if (target() && target()->parentItem()) {
         // 3. Drag/translate
-        QPointF activeTranslation(centroidLocalPos - target()->parentItem()->mapFromScene(m_startCentroid));
+        const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_startCentroid);
+        m_activeTranslation = centroidParentPos - centroidStartParentPos;
 
         // apply rotation + scaling around the centroid - then apply translation.
         QMatrix4x4 mat;
-        QVector3D xlatOrigin(centroidLocalPos - target()->position());
-        mat.translate(xlatOrigin);
-        mat.rotate(m_activeRotation, 0, 0, -1);
-        mat.scale(activeScale);
-        mat.translate(-xlatOrigin);
-        mat.translate(QVector3D(activeTranslation));
+
+        const QVector3D centroidParentVector(centroidParentPos);
+        mat.translate(centroidParentVector);
+        mat.rotate(m_activeRotation, 0, 0, 1);
+        mat.scale(m_activeScale);
+        mat.translate(-centroidParentVector);
+        mat.translate(QVector3D(m_activeTranslation));
+
+        mat = mat * m_startMatrix;
+
+        QPointF xformOriginPoint = target()->transformOriginPoint();
+        QPointF pos = mat * xformOriginPoint;
+        pos -= xformOriginPoint;
+
+        target()->setPosition(pos);
+        target()->setRotation(rotation);
+        target()->setScale(scale);
+
 
         // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
 
         qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
                                 << ", distance" << m_startDistance << "->" << dist
-                                << ", startScale" << m_startScale << "->" << m_scale
+                                << ", startScale" << m_startScale << "->" << scale
                                 << ", activeRotation" << m_activeRotation
-                                << ", rotation" << m_rotation;
-
-        mat = mat * m_startMatrix;
-        m_transform.setMatrix(mat);
-        m_translation = QPointF(mat.constData()[12], mat.constData()[13]);
+                                << ", rotation" << rotation;
     }
 
     acceptPoints(m_currentPoints);

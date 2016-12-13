@@ -44,25 +44,38 @@ import Qt.labs.handlers 1.0
 Rectangle {
     width: 1024; height: 600
     color: "#eee"
+
+    function getTransformationDetails(item, pinchhandler) {
+        return "\n\npinch.scale:" + pinchhandler.scale.toFixed(2)
+        + "\npinch.rotation:" + pinchhandler.rotation.toFixed(2)
+        + "\npinch.translation:" + "(" + pinchhandler.translation.x.toFixed(2) + "," + pinchhandler.translation.y.toFixed(2) + ")"
+        + "\nrect.scale: " + item.scale.toFixed(2)
+        + "\nrect.rotation: " + item.rotation.toFixed(2)
+        + "\nrect.position: " + "(" + item.x.toFixed(2) + "," + item.y.toFixed(2) + ")"
+    }
+
     Rectangle {
-        id: root
-        color: "black"
-        width: 900
-        height: 600
-        x: 100
+        // Purpose of this item is just to make sure the rectangles are transformed into
+        // a coordinate system that is different from the scene coordinate system.
+        anchors.fill: parent
+        anchors.margins: 50
+        color: "#ffe0e0e0"
 
         Rectangle {
+            id: rect2
             width: 400
             height: 300
             color: "lightsteelblue"
             antialiasing: true
+            x: 100
+            y: 200
+            rotation: 30
+            transformOrigin: Item.TopRight
 
             Text {
                 anchors.centerIn: parent
                 text: "Pinch with 2 fingers to scale, rotate and translate"
-                    + "\ncurrent rotation: " + pinch2.rotation.toFixed(1)
-                    + "\nscale: " + pinch2.scale.toFixed(1)
-                    + "\ntranslation: " + pinch2.translation
+                    + getTransformationDetails(rect2, pinch2)
             }
 
             PinchHandler {
@@ -74,11 +87,12 @@ Rectangle {
                 maximumScale: 3
                 minimumX: 0
                 maximumX: 600
-                pointDistanceThreshold: 150
+                pointDistanceThreshold: 0
             }
         }
 
         Rectangle {
+            id: rect3
             x: 500
             width: 400
             height: 300
@@ -88,9 +102,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
-                    + "\ncurrent rotation " + pinch3.rotation.toFixed(1)
-                    + "\nscale: " + pinch3.scale.toFixed(1)
-                    + "\ntranslation: " + pinch3.translation
+                    + getTransformationDetails(rect3, pinch3)
             }
             DragHandler { objectName: "DragHandler" }
 
@@ -102,13 +114,12 @@ Rectangle {
                 maximumScale: 10
             }
         }
-
     }
     Rectangle {
         id: centroidIndicator
         property QtObject pincher: pinch2.active ? pinch2 : pinch3
-        x: pincher.centroid.x
-        y: pincher.centroid.y
+        x: pincher.centroid.x - radius
+        y: pincher.centroid.y - radius
         z: 1
         visible: pincher.active
         radius: width / 2

@@ -99,9 +99,9 @@ public:
     PinchOrigin pinchOrigin() const { return m_pinchOrigin; }
     void setPinchOrigin(PinchOrigin pinchOrigin);
 
-    QPointF translation() const { return m_translation; }
-    qreal scale() const { return m_scale; }
-    qreal rotation() const { return m_rotation; }
+    QPointF translation() const { return m_activeTranslation; }
+    qreal scale() const { return m_activeScale; }
+    qreal rotation() const { return m_activeRotation; }
     QPointF centroid() const { return m_centroid; }
 
     qreal minimumX() const { return m_minimumX; }
@@ -128,14 +128,13 @@ signals:
 
 protected:
     void onActiveChanged() override;
-    void onTargetChanged();
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
 
 private:
     // properties
-    qreal m_scale;
-    qreal m_rotation;
-    QPointF m_translation;
+    qreal m_activeScale;
+    qreal m_activeRotation;
+    QPointF m_activeTranslation;
     QPointF m_centroid;
 
     qreal m_minimumScale;
@@ -154,9 +153,9 @@ private:
     // internal
     qreal m_startScale;
     qreal m_startRotation;
-    qreal m_activeRotation;
     QPointF m_startCentroid;
     qreal m_startDistance;
+    QPointF m_startPos;
 
     QVector<PointData> m_startAngles;
     QMatrix4x4 m_startMatrix;

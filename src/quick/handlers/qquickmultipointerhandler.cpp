@@ -167,7 +167,7 @@ QVector<QQuickMultiPointerHandler::PointData> QQuickMultiPointerHandler::angles(
     angles.reserve(m_currentPoints.count());
     for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
         qreal angle = QLineF(ref, point->scenePos()).angle();
-        angles.append(PointData(point->pointId(), angle));
+        angles.append(PointData(point->pointId(), -angle));     // convert to clockwise, to be consistent with QQuickItem::rotation
     }
     return angles;
 }
