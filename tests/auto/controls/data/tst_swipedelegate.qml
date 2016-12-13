@@ -317,6 +317,14 @@ TestCase {
         verify(completedSpy);
         verify(completedSpy.valid);
 
+        var openedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "opened" });
+        verify(openedSpy);
+        verify(openedSpy.valid);
+
+        var closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
+        verify(closedSpy);
+        verify(closedSpy.valid);
+
         mouseSignalSequenceSpy.target = control;
         mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"];
         mousePress(control, control.width / 2, control.height / 2);
@@ -324,6 +332,8 @@ TestCase {
         compare(control.swipe.position, 0.0);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 0);
+        compare(openedSpy.count, 0);
+        compare(closedSpy.count, 0);
         verify(mouseSignalSequenceSpy.success);
         verify(!control.swipe.leftItem);
         verify(!control.swipe.rightItem);
@@ -334,6 +344,8 @@ TestCase {
         compare(control.swipe.position, overDragDistance / control.width);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 0);
+        compare(openedSpy.count, 0);
+        compare(closedSpy.count, 0);
         verify(control.swipe.leftItem);
         verify(control.swipe.leftItem.visible);
         compare(control.swipe.leftItem.parent, control);
@@ -346,6 +358,8 @@ TestCase {
         compare(control.swipe.position, 0.0);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 0);
+        compare(openedSpy.count, 0);
+        compare(closedSpy.count, 0);
         verify(control.swipe.leftItem);
         verify(control.swipe.leftItem.visible);
         compare(control.swipe.leftItem.parent, control);
@@ -359,6 +373,8 @@ TestCase {
         compare(control.swipe.position, -overDragDistance / control.width);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 0);
+        compare(openedSpy.count, 0);
+        compare(closedSpy.count, 0);
         verify(control.swipe.leftItem);
         verify(!control.swipe.leftItem.visible);
         verify(control.swipe.rightItem);
@@ -372,6 +388,8 @@ TestCase {
         compare(control.swipe.position, 0.6);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 0);
+        compare(openedSpy.count, 0);
+        compare(closedSpy.count, 0);
         verify(control.swipe.leftItem);
         verify(control.swipe.leftItem.visible);
         verify(control.swipe.rightItem);
@@ -383,6 +401,8 @@ TestCase {
         tryCompare(control.swipe, "position", 1.0);
         tryCompare(control.swipe, "complete", true);
         compare(completedSpy.count, 1);
+        compare(openedSpy.count, 1);
+        compare(closedSpy.count, 0);
         verify(mouseSignalSequenceSpy.success);
         verify(control.swipe.leftItem);
         verify(control.swipe.leftItem.visible);
@@ -399,12 +419,16 @@ TestCase {
         // haven't started grabbing behind's mouse events.
         verify(control.swipe.complete);
         compare(completedSpy.count, 1);
+        compare(openedSpy.count, 1);
+        compare(closedSpy.count, 0);
         verify(mouseSignalSequenceSpy.success);
 
         mouseMove(control, control.width / 2 - overDragDistance, control.height / 2);
         verify(control.pressed);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 1);
+        compare(openedSpy.count, 1);
+        compare(closedSpy.count, 0);
         compare(control.swipe.position, 1.0 - overDragDistance / control.width);
 
         // Since we went over the drag distance, we should expect canceled() to be emitted.
@@ -414,6 +438,8 @@ TestCase {
         tryCompare(control.swipe, "position", 1.0);
         tryCompare(control.swipe, "complete", true);
         compare(completedSpy.count, 2);
+        compare(openedSpy.count, 2);
+        compare(closedSpy.count, 0);
         verify(mouseSignalSequenceSpy.success);
         tryCompare(control.contentItem, "x", control.width + control.leftPadding);
 
@@ -424,12 +450,16 @@ TestCase {
         compare(control.swipe.position, 1.0);
         verify(control.swipe.complete);
         compare(completedSpy.count, 2);
+        compare(openedSpy.count, 2);
+        compare(closedSpy.count, 0);
         verify(mouseSignalSequenceSpy.success);
 
         mouseMove(control, control.width * -0.1, control.height / 2);
         verify(control.pressed);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 2);
+        compare(openedSpy.count, 2);
+        compare(closedSpy.count, 0);
         compare(control.swipe.position, 0.4);
 
         mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }], "canceled"];
@@ -438,6 +468,8 @@ TestCase {
         tryCompare(control.swipe, "position", 0.0);
         verify(!control.swipe.complete);
         compare(completedSpy.count, 2);
+        compare(openedSpy.count, 2);
+        tryCompare(closedSpy, "count", 1);
         verify(mouseSignalSequenceSpy.success);
         tryCompare(control.contentItem, "x", control.leftPadding);
 

@@ -114,6 +114,8 @@ Q_SIGNALS:
     void completeChanged();
     /*Q_REVISION(2)*/ void enabledChanged();
     /*Q_REVISION(1)*/ void completed();
+    /*Q_REVISION(2)*/ void opened();
+    /*Q_REVISION(2)*/ void closed();
     void leftChanged();
     void behindChanged();
     void rightChanged();
