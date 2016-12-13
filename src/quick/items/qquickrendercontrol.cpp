@@ -356,6 +356,9 @@ QImage QQuickRenderControl::grab()
     if (!d->window)
         return QImage();
 
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+    cd->polishItems();
+    cd->syncSceneGraph();
     render();
     QImage grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
     return grabContent;
