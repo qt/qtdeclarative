@@ -979,6 +979,10 @@ void Renderer::nodeChangedBatchRoot(Node *node, Node *root)
             e->root = root;
             e->boundsComputed = false;
         }
+    } else if (node->type() == QSGNode::RenderNodeType) {
+        RenderNodeElement *e = node->renderNodeElement();
+        if (e)
+            e->root = root;
     }
 
     SHADOWNODE_TRAVERSE(node)
