@@ -521,7 +521,8 @@ int main(int argc, char *argv[])
                 std::cerr << "-importPath requires an argument\n";
             argReceiver = &qmlImportPaths;
         } else {
-            std::cerr << "Invalid argument: \"" << qPrintable(arg) << "\"\n";
+            std::cerr << qPrintable(appName) << ": Invalid argument: \""
+                << qPrintable(arg) << "\"\n";
             return 1;
         }
 
@@ -531,7 +532,8 @@ int main(int argc, char *argv[])
                 break;
             ++i;
             if (!QFile::exists(arg)) {
-                std::cerr << "No such file or directory: \"" << qPrintable(arg) << "\"\n";
+                std::cerr << qPrintable(appName) << ": No such file or directory: \""
+                    << qPrintable(arg) << "\"\n";
                 return 1;
             } else {
                 *argReceiver += arg;

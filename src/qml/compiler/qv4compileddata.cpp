@@ -397,7 +397,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
         return false;
     }
 
-    const QString sourcePath = url.toLocalFile();
+    const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
     CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);

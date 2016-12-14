@@ -1259,7 +1259,7 @@ ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
  *
  * Instead the push/pop pair acts as a non local scope.
  */
-void Runtime::method_pushWithScope(const Value &o, ExecutionEngine *engine)
+void Runtime::method_pushWithScope(const Value &o, NoThrowEngine *engine)
 {
     engine->pushContext(engine->currentContext->newWithContext(o.toObject(engine)));
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
@@ -1272,7 +1272,7 @@ void Runtime::method_pushCatchScope(NoThrowEngine *engine, int exceptionVarNameI
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
 }
 
-void Runtime::method_popScope(ExecutionEngine *engine)
+void Runtime::method_popScope(NoThrowEngine *engine)
 {
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
     engine->popContext();
