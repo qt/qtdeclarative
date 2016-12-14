@@ -8,3 +8,5 @@ StockListView 1.0 StockListView.qml
 StockModel 1.0 StockModel.qml
 StockSettingsPanel 1.0 StockSettingsPanel.qml
 StockView 1.0 StockView.qml
+StockListDelegate 1.0 StockListDelegate.qml
+Banner 1.0 Banner.qml

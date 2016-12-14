@@ -99,10 +99,12 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     bool preferNativeGlyphNode = m_useNativeRenderer;
     if (!preferNativeGlyphNode) {
         QRawFontPrivate *fontPriv = QRawFontPrivate::get(font);
-        if (fontPriv->fontEngine->hasUnreliableGlyphOutline())
+        if (fontPriv->fontEngine->hasUnreliableGlyphOutline()) {
             preferNativeGlyphNode = true;
-        else
-            preferNativeGlyphNode = !QFontDatabase().isSmoothlyScalable(font.familyName(), font.styleName());
+        } else {
+            QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+            preferNativeGlyphNode = !fe->isSmoothlyScalable;
+        }
     }
 
     QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode);
@@ -235,7 +237,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     engine.setAnchorColor(anchorColor);
     engine.setPosition(position);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     int preeditLength = textLayout->preeditAreaText().length();
     int preeditPosition = textLayout->preeditAreaPosition();
 #endif
@@ -254,7 +256,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
         int length = line.textLength();
         int end = start + length;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (preeditPosition >= 0
          && preeditPosition >= start
          && preeditPosition < end) {

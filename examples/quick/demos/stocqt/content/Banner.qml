@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -37,42 +37,50 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-//![0]
+
 import QtQuick 2.0
-import QtQuick.LocalStorage 2.0
+import QtQuick.Layouts 1.1
 
 Rectangle {
-    width: 200
-    height: 100
+    id: banner
+    height: 80
+    color: "#000000"
 
-    Text {
-        text: "?"
-        anchors.horizontalCenter: parent.horizontalCenter
+    GridLayout {
+        anchors.fill: parent
+        rows: 1
+        columns: 3
+        Rectangle {
+            Layout.leftMargin: 10
+            Layout.topMargin: 20
+            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            Image {
+                id: arrow
+                source: "./images/icon-left-arrow.png"
+                visible: root.currentIndex == 1 ? true : false
 
-        function findGreetings() {
-            var db = LocalStorage.openDatabaseSync("QQmlExampleDB", "1.0", "The Example QML SQL!", 1000000);
-
-            db.transaction(
-                function(tx) {
-                    // Create the database if it doesn't already exist
-                    tx.executeSql('CREATE TABLE IF NOT EXISTS Greeting(salutation TEXT, salutee TEXT)');
-
-                    // Add (another) greeting row
-                    tx.executeSql('INSERT INTO Greeting VALUES(?, ?)', [ 'hello', 'world' ]);
-
-                    // Show all added greetings
-                    var rs = tx.executeSql('SELECT * FROM Greeting');
-
-                    var r = ""
-                    for(var i = 0; i < rs.rows.length; i++) {
-                        r += rs.rows.item(i).salutation + ", " + rs.rows.item(i).salutee + "\n"
-                    }
-                    text = r
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.currentIndex = 0;
                 }
-            )
+            }
         }
-
-        Component.onCompleted: findGreetings()
+        Text {
+            id: stocText
+            color: "#ffffff"
+            font.family: "Abel"
+            font.pointSize: 40
+            text: "Stoc"
+            Layout.alignment: Qt.AlignRight
+            Layout.leftMargin: parent.width / 2.5
+        }
+        Text {
+            id: qtText
+            color: "#5caa15"
+            font.family: "Abel"
+            font.pointSize: 40
+            text: "Qt"
+            Layout.fillWidth: true
+        }
     }
 }
-//![0]

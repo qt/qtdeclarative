@@ -950,7 +950,7 @@ void QQuickTextNodeEngine::mergeFormats(QTextLayout *textLayout, QVarLengthArray
 void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QTextBlock &block, const QPointF &position, const QColor &textColor, const QColor &anchorColor, int selectionStart, int selectionEnd)
 {
     Q_ASSERT(textDocument);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     int preeditLength = block.isValid() ? block.layout()->preeditAreaText().length() : 0;
     int preeditPosition = block.isValid() ? block.layout()->preeditAreaPosition() : -1;
 #endif
@@ -1070,7 +1070,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                 setTextColor(textColor);
 
             int fragmentEnd = textPos + fragment.length();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
             if (preeditPosition >= 0
                     && (preeditPosition + block.position()) >= textPos
                     && (preeditPosition + block.position()) <= fragmentEnd) {
@@ -1092,7 +1092,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
         ++blockIterator;
     }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
         setPosition(blockPosition);
         textPos = block.position() + preeditPosition;

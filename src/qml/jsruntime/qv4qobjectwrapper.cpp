@@ -48,7 +48,6 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qv8engine_p.h>
@@ -392,9 +391,10 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             QQmlContextData *callingQmlContext = scope.engine->callingQmlContext();
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
-            bindingFunction->initBindingLocation();
 
-            newBinding = QQmlBinding::create(property, value, object, callingQmlContext);
+            QV4::ScopedContext ctx(scope, bindingFunction->scope());
+            newBinding = QQmlBinding::create(property, bindingFunction->function(), object, callingQmlContext, ctx);
+            newBinding->setSourceLocation(bindingFunction->currentLocation());
             newBinding->setTarget(object, *property, nullptr);
         }
     }
@@ -493,8 +493,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
 
 ReturnedValue QObjectWrapper::wrap_slowPath(ExecutionEngine *engine, QObject *object)
 {
-    if (QQmlData::wasDeleted(object))
-        return QV4::Encode::null();
+    Q_ASSERT(!QQmlData::wasDeleted(object));
 
     QQmlData *ddata = QQmlData::get(object, true);
     if (!ddata)

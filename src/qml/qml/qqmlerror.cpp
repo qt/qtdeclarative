@@ -285,7 +285,7 @@ QDebug operator<<(QDebug debug, const QQmlError &error)
         if (f.open(QIODevice::ReadOnly)) {
             QByteArray data = f.readAll();
             QTextStream stream(data, QIODevice::ReadOnly);
-#ifndef QT_NO_TEXTCODEC
+#if QT_CONFIG(textcodec)
             stream.setCodec("UTF-8");
 #endif
             const QString code = stream.readAll();

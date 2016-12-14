@@ -54,70 +54,11 @@
 #include <private/qv4profiling_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 
-QT_BEGIN_NAMESPACE
-
-namespace QV4 {
-namespace Heap {
-
-struct QmlBindingWrapper : FunctionObject {
-    void init(QV4::QmlContext *scope, Function *f);
-};
-
-}
-
-struct QmlBindingWrapper : FunctionObject {
-    V4_OBJECT2(QmlBindingWrapper, FunctionObject)
-
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-};
-
-}
-
-QT_END_NAMESPACE
-
 using namespace QV4;
-
-DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
-
-void Heap::QmlBindingWrapper::init(QV4::QmlContext *scope, Function *f)
-{
-    Heap::FunctionObject::init(scope, scope->d()->engine->id_eval(), /*createProto = */ false);
-
-    Q_ASSERT(scope->inUse());
-
-    function = f;
-    if (function)
-        function->compilationUnit->addref();
-}
-
-void QmlBindingWrapper::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
-    ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    ExecutionContextSaver ctxSaver(scope);
-
-    QV4::Function *f = This->function();
-    if (!f) {
-        scope.result = QV4::Encode::undefined();
-        return;
-    }
-
-    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(This, callData));
-    v4->pushContext(ctx);
-
-    scope.result = Q_V4_PROFILE(v4, f);
-}
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
@@ -230,10 +171,12 @@ ReturnedValue Script::run()
         return Q_V4_PROFILE(engine, vmFunction);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        ScopedFunctionObject f(valueScope, engine->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
-        f->call(valueScope, callData);
+        if (vmFunction->canUseSimpleFunction())
+            qml->simpleCall(valueScope, callData, vmFunction);
+        else
+            qml->call(valueScope, callData, vmFunction);
         return valueScope.result.asReturnedValue();
     }
 }
@@ -301,17 +244,6 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
     QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, module, unitGenerator));
     isel->setUseFastLookups(false);
     return isel->compile(/*generate unit data*/false);
-}
-
-ReturnedValue Script::qmlBinding()
-{
-    if (!parsed)
-        parse();
-    ExecutionEngine *v4 = scope->engine();
-    Scope valueScope(v4);
-    Scoped<QmlContext> qml(valueScope, qmlContext.value());
-    ScopedObject v(valueScope, v4->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
-    return v.asReturnedValue();
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)

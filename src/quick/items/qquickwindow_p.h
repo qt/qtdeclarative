@@ -66,6 +66,8 @@
 #include <qopenglcontext.h>
 #include <QtGui/qopenglframebufferobject.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qstylehints.h>
+#include <QtGui/qguiapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -125,10 +127,10 @@ public:
     void deliverKeyEvent(QKeyEvent *e);
 
     // Keeps track of the item currently receiving mouse events
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     QQuickItem *cursorItem;
 #endif
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     QQuickDragGrabber *dragGrabber;
 #endif
     int touchMouseId;
@@ -146,10 +148,10 @@ public:
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
-#ifndef QT_NO_GESTURES
+#if QT_CONFIG(gestures)
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
 
@@ -179,11 +181,11 @@ public:
                         Qt::KeyboardModifiers modifiers, ulong timestamp, bool accepted);
     bool clearHover(ulong timestamp = 0);
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
     bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);
 #endif
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     void updateCursor(const QPointF &scenePos);
     QQuickItem *findCursorItem(QQuickItem *item, const QPointF &scenePos);
 #endif
@@ -270,7 +272,19 @@ public:
     static bool defaultAlphaBuffer;
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold = -1);
+
+    template <typename TEventPoint>
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p, int startDragThreshold = -1)
+    {
+        QStyleHints *styleHints = qApp->styleHints();
+        bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
+        const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
+        if (!overThreshold && dragVelocityLimitAvailable) {
+            qreal velocity = axis == Qt::XAxis ? p->velocity().x() : p->velocity().y();
+            overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
+        }
+        return overThreshold;
+    }
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

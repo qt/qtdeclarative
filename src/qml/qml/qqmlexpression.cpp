@@ -75,7 +75,9 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFu
 {
     expressionFunctionValid = true;
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
-    m_function.set(engine, QV4::FunctionObject::createQmlFunction(ctxt, me, runtimeFunction));
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(engine->rootContext(), ctxt, me));
+    setupFunction(qmlContext, runtimeFunction);
 
     QQmlJavaScriptExpression::setContext(ctxt);
     setScopeObject(me);

@@ -39,42 +39,43 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Layouts 1.1
 import "."
 
 Rectangle {
     id: root
-    width: 440
-    height: 160
     color: "transparent"
 
     property var stock: null
 
-    Column {
-        id: stockColumn
+    GridLayout {
+        id: stockInfoLayout
         anchors.fill: parent
-        spacing: 4
+        columns: 2
+        rows: 3
+        rowSpacing: 4
 
-        Flow {
-            anchors { left: parent.left; right: parent.right }
-            spacing: 12
+        Text {
+            id: stockIdText
+            color: "#000000"
+            font.family: Settings.fontFamily
+            font.pointSize: 28
+            font.weight: Font.DemiBold
+            text: root.stock.stockId
+            Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
+            Layout.leftMargin: 10
+        }
 
-            Text {
-                id: stockIdText
-                color: "#000000"
-                font.family: Settings.fontFamily
-                font.pointSize: 28
-                font.weight: Font.DemiBold
-                text: root.stock.stockId
-            }
-
-            Text {
-                id: price
-                color: "#6d6d6d"
-                font.family: Settings.fontFamily
-                font.pointSize: 28
-                font.weight: Font.DemiBold
-                text: parseFloat(root.stock.stockPrice).toFixed(2);
-            }
+        Text {
+            id: price
+            color: "#6d6d6d"
+            font.family: Settings.fontFamily
+            font.pointSize: 28
+            font.weight: Font.DemiBold
+            text: parseFloat(root.stock.stockPrice).toFixed(2);
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
+            Layout.leftMargin: 5
         }
 
         Text {
@@ -82,38 +83,38 @@ Rectangle {
             color: "#0c0c0c"
             font.family: Settings.fontFamily
             font.pointSize: 16
-            width: stockColumn.width
             elide: Text.ElideRight
             maximumLineCount: 3
             wrapMode: Text.WordWrap
             text: root.stock.stockName
+            Layout.leftMargin: 10
+            Layout.columnSpan: 2
+            Layout.alignment: Qt.AlignLeft
         }
 
-        Flow {
-            anchors { left: parent.left; right: parent.right }
-            spacing: 12
 
-            Text {
-                id: priceChange
-                horizontalAlignment: Text.AlignRight
-                color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
-                font.family: Settings.fontFamily
-                font.pointSize: 18
-                text: parseFloat(root.stock.stockPriceChanged).toFixed(2);
-            }
+        Text {
+            id: priceChange
+            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            Layout.leftMargin: 10
+            color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
+            font.family: Settings.fontFamily
+            font.pointSize: 18
+            text: parseFloat(root.stock.stockPriceChanged).toFixed(2);
+        }
 
-            Text {
-                id: priceChangePercentage
-                horizontalAlignment: Text.AlignRight
-                color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
-                font.family: Settings.fontFamily
-                font.pointSize: 18
-                font.weight: Font.DemiBold
-                text: "(" +
-                      parseFloat(root.stock.stockPriceChanged /
-                          (root.stock.stockPrice - root.stock.stockPriceChanged) * 100.0).toFixed(2) +
-                      "%)"
-            }
+        Text {
+            id: priceChangePercentage
+            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            color: root.stock.stockPriceChanged < 0 ? "#d40000" : "#328930"
+            font.family: Settings.fontFamily
+            font.pointSize: 18
+            font.weight: Font.DemiBold
+            Layout.fillWidth: true
+            text: "(" +
+                  parseFloat(root.stock.stockPriceChanged /
+                             (root.stock.stockPrice - root.stock.stockPriceChanged) * 100.0).toFixed(2) +
+                  "%)"
         }
     }
 }

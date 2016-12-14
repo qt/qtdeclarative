@@ -60,7 +60,7 @@ QV4::CallContext *QV4DataCollector::findContext(int frame)
     QV4::ExecutionContext *ctx = engine()->currentContext;
     while (ctx) {
         QV4::CallContext *cCtxt = ctx->asCallContext();
-        if (cCtxt && cCtxt->d()->function) {
+        if (cCtxt && cCtxt->d()->v4Function) {
             if (frame < 1)
                 return cCtxt;
             --frame;

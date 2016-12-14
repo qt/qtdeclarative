@@ -63,6 +63,11 @@ template <typename T>
 struct ExceptionCheck {
     enum { NeedsCheck = 1 };
 };
+// push_catch and pop context methods shouldn't check for exceptions
+template <>
+struct ExceptionCheck<void (*)(QV4::NoThrowEngine *)> {
+    enum { NeedsCheck = 0 };
+};
 template <typename A>
 struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
     enum { NeedsCheck = 0 };

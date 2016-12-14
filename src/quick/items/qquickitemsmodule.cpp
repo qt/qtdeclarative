@@ -96,7 +96,7 @@
 #include "qquickspritesequence_p.h"
 #include "qquickanimatedsprite_p.h"
 #endif
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include "qquickopenglinfo_p.h"
 #endif
 #include "qquickgraphicsinfo_p.h"
@@ -278,7 +278,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
 #endif
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
     qmlRegisterType<QQuickDropEvent>();
     qmlRegisterType<QQuickDropAreaDrag>();
@@ -289,7 +289,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");
     qmlRegisterType<QQuickGrabGestureEvent>();
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     qmlRegisterUncreatableType<QQuickAccessibleAttached>("QtQuick", 2, 0, "Accessible",QQuickAccessibleAttached::tr("Accessible is only available via attached properties"));
 #endif
 
@@ -325,7 +325,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
 #endif
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
 #endif
     qmlRegisterType<QQuickPinchArea, 1>(uri, 2, 5,"PinchArea");

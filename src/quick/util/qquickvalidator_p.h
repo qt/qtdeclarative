@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
 class Q_AUTOTEST_EXPORT QQuickIntValidator : public QIntValidator
 {
     Q_OBJECT
@@ -90,7 +90,7 @@ Q_SIGNALS:
 
 QT_END_NAMESPACE
 
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
 QML_DECLARE_TYPE(QValidator)
 QML_DECLARE_TYPE(QQuickIntValidator)
 QML_DECLARE_TYPE(QQuickDoubleValidator)

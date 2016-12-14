@@ -115,19 +115,19 @@ public:
     bool sendEvent(QQuickItem *, QEvent *);
 
     QImage grabWindow();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
 #endif
     void setRenderTarget(uint fboId, const QSize &size);
     uint renderTargetId() const;
     QSize renderTargetSize() const;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void resetOpenGLState();
 #endif
     QQmlIncubationController *incubationController() const;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessibleInterface *accessibleRoot() const Q_DECL_OVERRIDE;
 #endif
 
@@ -209,7 +209,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
     void mouseDoubleClickEvent(QMouseEvent *) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *) Q_DECL_OVERRIDE;
 #endif
 

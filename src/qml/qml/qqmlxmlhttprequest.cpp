@@ -50,7 +50,6 @@
 #include <private/qv4domerrors_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qobject.h>
@@ -70,7 +69,7 @@
 
 using namespace QV4;
 
-#if !defined(QT_NO_XMLSTREAMREADER) && QT_CONFIG(qml_network)
+#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
 
 #define V4THROW_REFERENCE(string) { \
         ScopedObject error(scope, ctx->engine()->newReferenceErrorObject(QStringLiteral(string))); \
@@ -1069,7 +1068,7 @@ private:
     QByteArray m_mime;
     QByteArray m_charset;
     QTextCodec *m_textCodec;
-#ifndef QT_NO_TEXTCODEC
+#if QT_CONFIG(textcodec)
     QTextCodec* findTextCodec() const;
 #endif
     void readEncoding();
@@ -1511,7 +1510,7 @@ QV4::ReturnedValue QQmlXMLHttpRequest::xmlResponseBody(QV4::ExecutionEngine* eng
     return m_parsedDocument.value();
 }
 
-#ifndef QT_NO_TEXTCODEC
+#if QT_CONFIG(textcodec)
 QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
 {
     QTextCodec *codec = 0;
@@ -1540,7 +1539,7 @@ QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
 
 QString QQmlXMLHttpRequest::responseBody()
 {
-#ifndef QT_NO_TEXTCODEC
+#if QT_CONFIG(textcodec)
     if (!m_textCodec)
         m_textCodec = findTextCodec();
     if (m_textCodec)
@@ -2057,6 +2056,6 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_XMLSTREAMREADER && qml_network
+#endif // xmlstreamreader && qml_network
 
 #include <qqmlxmlhttprequest.moc>

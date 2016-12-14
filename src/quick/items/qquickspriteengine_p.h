@@ -254,7 +254,7 @@ protected:
     QVector<int> m_goals;
     QVector<int> m_duration;
     QVector<int> m_startTimes;
-    QList<QPair<uint, QList<int> > > m_stateUpdates;//### This could be done faster - priority queue?
+    QVector<QPair<uint, QVector<int> > > m_stateUpdates;//### This could be done faster - priority queue?
 
     QTime m_advanceTime;
     uint m_timeOffset;

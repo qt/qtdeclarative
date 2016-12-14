@@ -77,6 +77,10 @@ public:
     Qt::LayoutDirection effectiveLayoutDirection() const;
     void setAlignment(QQuickItem *item, Qt::Alignment align) Q_DECL_OVERRIDE;
 
+    /* QQuickItemChangeListener */
+    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemVisibilityChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+
 protected:
     void updateLayoutItems() Q_DECL_OVERRIDE;
     QQuickItem *itemAt(int index) const Q_DECL_OVERRIDE;
@@ -84,14 +88,9 @@ protected:
 
     void rearrange(const QSizeF &size) Q_DECL_OVERRIDE;
     virtual void insertLayoutItems() {}
-    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
 
 signals:
     Q_REVISION(1) void layoutDirectionChanged();
-
-protected slots:
-    void onItemVisibleChanged();
-    void onItemDestroyed();
 
 private:
     void removeGridItem(QGridLayoutItem *gridItem);

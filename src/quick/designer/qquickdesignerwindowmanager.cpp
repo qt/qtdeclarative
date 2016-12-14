@@ -39,7 +39,7 @@
 
 #include "qquickdesignerwindowmanager_p.h"
 #include "private/qquickwindow_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #endif
 #include <QtQuick/QQuickWindow>
@@ -67,7 +67,7 @@ void QQuickDesignerWindowManager::windowDestroyed(QQuickWindow *)
 
 void QQuickDesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (!m_openGlContext) {
         m_openGlContext.reset(new QOpenGLContext());
         m_openGlContext->setFormat(window->requestedFormat());

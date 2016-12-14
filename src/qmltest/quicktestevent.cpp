@@ -198,7 +198,7 @@ namespace QtQuickTest
         }
     }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     static void mouseWheel(QWindow* window, QObject* item, Qt::MouseButtons buttons,
                                 Qt::KeyboardModifiers stateKey,
                                 QPointF _pos, int xDelta, int yDelta, int delay = -1)
@@ -242,7 +242,7 @@ bool QuickTestEvent::mousePress
     return true;
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 bool QuickTestEvent::mouseWheel(
     QObject *item, qreal x, qreal y, int buttons,
     int modifiers, int xDelta, int yDelta, int delay)

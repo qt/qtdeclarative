@@ -75,7 +75,7 @@ void tst_compilation::boomblock()
         QQmlComponent c(&engine);
         c.setData(data, QUrl());
     }
-#ifdef QT_NO_OPENGL
+#if !QT_CONFIG(opengl)
     QSKIP("boomblock imports Particles which requires OpenGL Support");
 #endif
     QBENCHMARK {

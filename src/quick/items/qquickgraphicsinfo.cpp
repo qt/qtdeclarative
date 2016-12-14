@@ -257,7 +257,7 @@ void QQuickGraphicsInfo::updateInfo()
     }
 
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_window && m_window->isSceneGraphInitialized()) {
         QOpenGLContext *context = m_window->openglContext();
         if (context)

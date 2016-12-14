@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLCONTEXTWRAPPER_P_H
-#define QQMLCONTEXTWRAPPER_P_H
+#ifndef QV4QMLCONTEXT_P_H
+#define QV4QMLCONTEXT_P_H
 
 //
 //  W A R N I N G
@@ -55,11 +55,14 @@
 #include <private/qtqmlglobal_p.h>
 
 #include <private/qv4object_p.h>
+#include <private/qv4context_p.h>
 #include <private/qqmlcontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+
+struct QmlContextWrapper;
 
 namespace Heap {
 
@@ -74,15 +77,18 @@ struct QmlContextWrapper : Object {
     QQmlQPointer<QObject> scopeObject;
 };
 
+struct QmlContext : ExecutionContext {
+    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
+
+    Pointer<QmlContextWrapper> qml;
+};
+
 }
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
     V4_OBJECT2(QmlContextWrapper, Object)
     V4_NEEDS_DESTROY
-
-    static ReturnedValue qmlScope(ExecutionEngine *e, QQmlContextData *ctxt, QObject *scope);
-    static ReturnedValue urlScope(ExecutionEngine *v4, const QUrl &);
 
     void takeContextOwnership() {
         d()->ownsContext = true;
@@ -97,9 +103,28 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static void put(Managed *m, String *name, const Value &value);
 };
 
+struct Q_QML_EXPORT QmlContext : public ExecutionContext
+{
+    V4_MANAGED(QmlContext, ExecutionContext)
+
+    static Heap::QmlContext *createWorkerContext(QV4::ExecutionContext *parent, const QUrl &source, Value *sendFunction);
+    static Heap::QmlContext *create(QV4::ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject);
+
+    QObject *qmlScope() const {
+        return d()->qml->scopeObject;
+    }
+    QQmlContextData *qmlContext() const {
+        return *d()->qml->context;
+    }
+
+    void takeContextOwnership() {
+        d()->qml->ownsContext = true;
+    }
+};
+
 }
 
 QT_END_NAMESPACE
 
-#endif // QV8CONTEXTWRAPPER_P_H
+#endif
 

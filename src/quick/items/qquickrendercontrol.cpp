@@ -44,7 +44,7 @@
 #include <QtCore/QTime>
 #include <QtQuick/private/qquickanimatorcontroller_p.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
 # include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #if QT_CONFIG(quick_shadereffect)
@@ -62,7 +62,7 @@
 #include <QtCore/private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 #endif
 /*!
@@ -227,7 +227,7 @@ void QQuickRenderControl::initialize(QOpenGLContext *gl)
 {
 
     Q_D(QQuickRenderControl);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (!d->window) {
         qWarning("QQuickRenderControl::initialize called with no associated window");
         return;
@@ -379,7 +379,7 @@ QImage QQuickRenderControl::grab()
     QImage grabContent;
 
     if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         render();
         grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
 #endif

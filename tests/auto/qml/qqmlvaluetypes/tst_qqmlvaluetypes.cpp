@@ -91,6 +91,7 @@ private slots:
     void gadgetInheritance();
     void toStringConversion();
     void enumerableProperties();
+    void enumProperties();
 
 private:
     QQmlEngine engine;
@@ -322,7 +323,7 @@ void tst_qqmlvaluetypes::locale()
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         QVERIFY(QQml_guiProvider()->inputMethod());
         QInputMethod *inputMethod = qobject_cast<QInputMethod*>(QQml_guiProvider()->inputMethod());
         QLocale locale = inputMethod->locale();
@@ -349,7 +350,7 @@ void tst_qqmlvaluetypes::locale()
         }
         QCOMPARE(weekDays, locale.weekdays());
         QCOMPARE(object->property("zeroDigit").toString().at(0), locale.zeroDigit());
-#endif // QT_NO_IM
+#endif // im
     }
 }
 
@@ -1701,6 +1702,39 @@ void tst_qqmlvaluetypes::enumerableProperties()
     QCOMPARE(names.count(), 2);
     QVERIFY(names.contains(QStringLiteral("baseProperty")));
     QVERIFY(names.contains(QStringLiteral("derivedProperty")));
+}
+
+struct GadgetWithEnum
+{
+    Q_GADGET
+public:
+
+    enum MyEnum { FirstValue, SecondValue };
+
+    Q_ENUM(MyEnum)
+    Q_PROPERTY(MyEnum enumProperty READ enumProperty)
+
+    MyEnum enumProperty() const { return SecondValue; }
+};
+
+void tst_qqmlvaluetypes::enumProperties()
+{
+    QJSEngine engine;
+
+    // When creating the property cache for the gadget when MyEnum is _not_ a registered
+    // meta-type, then QMetaProperty::type() will return QMetaType::Int and consequently
+    // property-read meta-calls will return an int (as expected in this test). However if we
+    // explicitly register the gadget, then QMetaProperty::type() will return the user-type
+    // and QQmlValueTypeWrapper should still handle that and return an integer/number for the
+    // enum property when it is read.
+    qRegisterMetaType<GadgetWithEnum::MyEnum>();
+
+    GadgetWithEnum g;
+    QJSValue value = engine.toScriptValue(g);
+
+    QJSValue enumValue = value.property("enumProperty");
+    QVERIFY(enumValue.isNumber());
+    QCOMPARE(enumValue.toInt(), int(g.enumProperty()));
 }
 
 

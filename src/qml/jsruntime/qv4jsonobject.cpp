@@ -727,8 +727,8 @@ QString Stringify::Str(const QString &key, const Value &v)
         return QStringLiteral("null");
     if (scope.result.isBoolean())
         return scope.result.booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
-    if (scope.result.isString())
-        return quote(scope.result.stringValue()->toQString());
+    if (String *s = scope.result.stringValue())
+        return quote(s->toQString());
 
     if (scope.result.isNumber()) {
         double d = scope.result.toNumber();
@@ -917,7 +917,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
                 Value *v = stringify.propertyList + i;
                 *v = o->getIndexed(i);
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
-                    *v = RuntimeHelpers::toString(scope.engine, *v);
+                    *v = v->toString(scope.engine);
                 if (!v->isString()) {
                     v->setM(0);
                 } else {
@@ -940,8 +940,8 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 
     if (s->isNumber()) {
         stringify.gap = QString(qMin(10, (int)s->toInteger()), ' ');
-    } else if (s->isString()) {
-        stringify.gap = s->stringValue()->toQString().left(10);
+    } else if (String *str = s->stringValue()) {
+        stringify.gap = str->toQString().left(10);
     }
 
 
@@ -982,8 +982,8 @@ QJsonValue JsonObject::toJsonValue(const Value &value, V4ObjectSet &visitedObjec
         return QJsonValue(QJsonValue::Null);
     else if (value.isUndefined())
         return QJsonValue(QJsonValue::Undefined);
-    else if (value.isString())
-        return QJsonValue(value.toQString());
+    else if (String *s = value.stringValue())
+        return QJsonValue(s->toQString());
 
     Q_ASSERT(value.isObject());
     Scope scope(value.as<Object>()->engine());

@@ -252,9 +252,8 @@ QV4::Function *QV4Debugger::getFunction() const
 {
     QV4::Scope scope(m_engine);
     QV4::ExecutionContext *context = m_engine->currentContext;
-    QV4::ScopedFunctionObject function(scope, context->getFunctionObject());
-    if (function)
-        return function->function();
+    if (QV4::Function *function = context->getFunction())
+        return function;
     else
         return context->d()->engine->globalCode;
 }

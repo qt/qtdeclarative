@@ -218,8 +218,8 @@ static QString getThisString(ExecutionContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue t(scope, ctx->thisObject());
-    if (t->isString())
-        return t->stringValue()->toQString();
+    if (String *s = t->stringValue())
+        return s->toQString();
     if (StringObject *thisString = t->as<StringObject>())
         return thisString->d()->string->toQString();
     if (t->isUndefined() || t->isNull()) {
@@ -282,13 +282,13 @@ ReturnedValue StringPrototype::method_concat(CallContext *context)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    ScopedValue v(scope);
+    ScopedString s(scope);
     for (int i = 0; i < context->argc(); ++i) {
-        v = RuntimeHelpers::toString(scope.engine, context->args()[i]);
+        s = context->args()[i].toString(scope.engine);
         if (scope.hasException())
             return Encode::undefined();
-        Q_ASSERT(v->isString());
-        value += v->stringValue()->toQString();
+        Q_ASSERT(s->isString());
+        value += s->toQString();
     }
 
     return context->d()->engine->newString(value)->asReturnedValue();

@@ -52,30 +52,16 @@ void MemberData::markObjects(Heap::Base *that, ExecutionEngine *e)
         m->data[i].mark(e);
 }
 
-static Heap::MemberData *reallocateHelper(ExecutionEngine *e, Heap::MemberData *old, uint n)
+Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberData *old)
 {
+    Q_ASSERT(!old || old->size < n);
+
     uint alloc = sizeof(Heap::MemberData) + (n)*sizeof(Value);
-    Scope scope(e);
-    Scoped<MemberData> newMemberData(scope, e->memoryManager->allocManaged<MemberData>(alloc));
+    Heap::MemberData *m = e->memoryManager->allocManaged<MemberData>(alloc);
     if (old)
-        memcpy(newMemberData->d_unchecked(), old, sizeof(Heap::MemberData) + old->size * sizeof(Value));
+        memcpy(m, old, sizeof(Heap::MemberData) + old->size * sizeof(Value));
     else
-        newMemberData->d_unchecked()->init();
-    newMemberData->d()->size = n;
-    return newMemberData->d();
-}
-
-Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n)
-{
-    return reallocateHelper(e, 0, n);
-}
-
-Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *old, uint n)
-{
-    uint s = old ? old->size : 0;
-    if (n < s)
-        return old;
-
-    // n is multiplied by two to leave room for growth
-    return reallocateHelper(e, old, qMax((uint)4, 2*n));
+        m->init();
+    m->size = n;
+    return m;
 }

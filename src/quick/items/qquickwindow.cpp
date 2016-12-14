@@ -62,7 +62,6 @@
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
-#include <QtGui/qstylehints.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
 #include <QtCore/QLibraryInfo>
@@ -74,7 +73,7 @@
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <private/qopenglvertexarrayobject_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
@@ -95,7 +94,7 @@ bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     Q_Q(QQuickWindow);
     QQuickItem *focus = q->activeFocusItem();
     if (focus && QGuiApplication::focusObject() == focus) {
@@ -172,7 +171,7 @@ private:
 #include "qquickwindow.moc"
 
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 /*!
     Returns an accessibility interface for this window, or 0 if such an
     interface cannot be created.
@@ -256,7 +255,7 @@ void QQuickWindow::focusInEvent(QFocusEvent *ev)
     d->updateFocusItemTransform();
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 static bool transformDirtyOnItemOrAncestor(const QQuickItem *item)
 {
     while (item) {
@@ -297,7 +296,7 @@ void QQuickWindowPrivate::polishItems()
     if (recursionSafeguard == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     if (QQuickItem *focusItem = q_func()->activeFocusItem()) {
         // If the current focus item, or any of its anchestors, has changed location
         // inside the window, we need inform IM about it. This to ensure that overlays
@@ -473,10 +472,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 QQuickWindowPrivate::QQuickWindowPrivate()
     : contentItem(0)
     , activeFocusItem(0)
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     , cursorItem(0)
 #endif
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     , dragGrabber(0)
 #endif
     , touchMouseId(-1)
@@ -502,7 +501,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , vaoHelper(0)
     , incubationController(0)
 {
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     dragGrabber = new QQuickDragGrabber;
 #endif
 }
@@ -896,7 +895,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
         }
 
         if (oldActiveFocusItem) {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
             QGuiApplication::inputMethod()->commit();
 #endif
 
@@ -1002,7 +1001,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = scope;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         QGuiApplication::inputMethod()->commit();
 #endif
 
@@ -1278,7 +1277,7 @@ QQuickWindow::~QQuickWindow()
     }
 
     delete d->incubationController; d->incubationController = 0;
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     delete d->dragGrabber; d->dragGrabber = 0;
 #endif
     delete d->contentItem; d->contentItem = 0;
@@ -1547,7 +1546,7 @@ bool QQuickWindow::event(QEvent *e)
         d->clearHover();
         d->lastMousePosition = QPointF();
         break;
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     case QEvent::DragEnter:
     case QEvent::DragLeave:
     case QEvent::DragMove:
@@ -1567,7 +1566,7 @@ bool QQuickWindow::event(QEvent *e)
         e->setAccepted(qev.isAccepted());
         } break;
     case QEvent::FocusAboutToChange:
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (d->activeFocusItem)
             qGuiApp->inputMethod()->commit();
 #endif
@@ -1579,7 +1578,7 @@ bool QQuickWindow::event(QEvent *e)
             d->windowManager->handleUpdateRequest(this);
         break;
     }
-#ifndef QT_NO_GESTURES
+#if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
         d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
         break;
@@ -1776,7 +1775,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     return false;
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -1830,9 +1829,9 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
     d->deliverWheelEvent(d->contentItem, event);
     d->lastWheelEventAccepted = event->isAccepted();
 }
-#endif // QT_NO_WHEELEVENT
+#endif // wheelevent
 
-#ifndef QT_NO_GESTURES
+#if QT_CONFIG(gestures)
 bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -1864,7 +1863,7 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
 
     return false;
 }
-#endif // QT_NO_GESTURES
+#endif // gestures
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
@@ -2045,7 +2044,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
 
         qCDebug(DBG_HOVER_TRACE) << this;
 
-    #ifndef QT_NO_CURSOR
+    #if QT_CONFIG(cursor)
         updateCursor(event->windowPos());
     #endif
 
@@ -2360,7 +2359,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     return eventAccepted;
 }
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *event)
 {
     grabber->resetTarget();
@@ -2481,9 +2480,9 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
 
     return accepted;
 }
-#endif // QT_NO_DRAGANDDROP
+#endif // draganddrop
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)
 {
     Q_Q(QQuickWindow);
@@ -2637,15 +2636,6 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
         qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
-    return overThreshold;
-}
-
-bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold)
-{
-    QStyleHints *styleHints = qApp->styleHints();
-    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
-    qreal velocity = axis == Qt::XAxis ? tp->velocity().x() : tp->velocity().y();
-    overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     return overThreshold;
 }
 
@@ -3186,7 +3176,7 @@ void QQuickWindow::maybeUpdate()
 void QQuickWindow::cleanupSceneGraph()
 {
     Q_D(QQuickWindow);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     delete d->vaoHelper;
     d->vaoHelper = 0;
 #endif
@@ -3225,7 +3215,7 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 
 QOpenGLContext *QQuickWindow::openglContext() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     Q_D(const QQuickWindow);
     if (d->context && d->context->isValid()) {
         QSGRendererInterface *rif = d->context->sceneGraphContext()->rendererInterface(d->context);
@@ -3353,7 +3343,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     The corresponding handler is \c onClosing.
  */
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 /*!
     Sets the render target for this window to be \a fbo.
 
@@ -3441,7 +3431,7 @@ QSize QQuickWindow::renderTargetSize() const
 
 
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 /*!
     Returns the render target for this window.
 
@@ -3480,7 +3470,7 @@ QImage QQuickWindow::grabWindow()
             return d->windowManager->grab(this);
     }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (!isVisible() && !d->renderControl) {
         auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
         if (!openglRenderContext->openglContext()) {
@@ -3838,7 +3828,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
  */
 QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (openglContext()) {
         QSGPlainTexture *texture = new QSGPlainTexture();
         texture->setTextureId(id);
@@ -3921,7 +3911,7 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
 {
     QQuickWindowPrivate::defaultAlphaBuffer = useAlpha;
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 /*!
     \since 5.2
 

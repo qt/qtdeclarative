@@ -133,7 +133,7 @@ public:
     virtual void clear(QSGAbstractRenderer::ClearMode mode) const;
     virtual void reactivate() const;
 };
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 class QSGBindableFboId : public QSGBindable
 {
 public:

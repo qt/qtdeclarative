@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmltypewrapper_p.h"
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qv8engine_p.h>
 
 #include <private/qqmlengine_p.h>

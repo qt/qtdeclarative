@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qsgvertexcolormaterial.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <qopenglshaderprogram.h>
 #endif
 QT_BEGIN_NAMESPACE
@@ -55,7 +55,7 @@ public:
 
 private:
     virtual void initialize();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     int m_matrix_id;
     int m_opacity_id;
 #endif
@@ -66,7 +66,7 @@ QSGMaterialType QSGVertexColorMaterialShader::type;
 QSGVertexColorMaterialShader::QSGVertexColorMaterialShader()
     : QSGMaterialShader()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/vertexcolor.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/vertexcolor.frag"));
 #endif
@@ -74,7 +74,7 @@ QSGVertexColorMaterialShader::QSGVertexColorMaterialShader()
 
 void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMaterial * /*newEffect*/, QSGMaterial *)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (state.isOpacityDirty())
         program()->setUniformValue(m_opacity_id, state.opacity());
 
@@ -93,7 +93,7 @@ char const *const *QSGVertexColorMaterialShader::attributeNames() const
 
 void QSGVertexColorMaterialShader::initialize()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     m_matrix_id = program()->uniformLocation("matrix");
     m_opacity_id = program()->uniformLocation("opacity");
 #endif

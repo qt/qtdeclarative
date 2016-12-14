@@ -48,6 +48,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -94,7 +95,9 @@ QQmlJavaScriptExpression::QQmlJavaScriptExpression()
     : m_error(0),
       m_context(0),
       m_prevExpression(0),
-      m_nextExpression(0)
+      m_nextExpression(0),
+      m_v4Function(0),
+      m_sourceLocation(0)
 {
 }
 
@@ -110,6 +113,8 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
     clearPermanentGuards();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = 0;
+
+    delete m_sourceLocation;
 }
 
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
@@ -126,6 +131,22 @@ void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
 void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 {
     setNotifyOnValueChanged(false);
+}
+
+QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
+{
+    if (m_sourceLocation)
+        return *m_sourceLocation;
+    if (m_v4Function)
+        return m_v4Function->sourceLocation();
+    return QQmlSourceLocation();
+}
+
+void QQmlJavaScriptExpression::setSourceLocation(const QQmlSourceLocation &location)
+{
+    if (m_sourceLocation)
+        delete m_sourceLocation;
+    m_sourceLocation = new QQmlSourceLocation(location);
 }
 
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
@@ -149,6 +170,11 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
     }
 }
 
+QV4::Function *QQmlJavaScriptExpression::function() const
+{
+    return m_v4Function;
+}
+
 void QQmlJavaScriptExpression::refresh()
 {
 }
@@ -159,8 +185,8 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
 {
     Q_ASSERT(m_context && m_context->engine);
 
-    QV4::Value *f = m_function.valueRef();
-    if (!f || f->isUndefined()) {
+    QV4::Function *v4Function = function();
+    if (!v4Function) {
         if (isUndefined)
             *isUndefined = true;
         return;
@@ -191,7 +217,13 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
             callData->thisObject = value;
     }
 
-    f->as<QV4::FunctionObject>()->call(scope, callData);
+    QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
+    if (v4Function->canUseSimpleFunction()) {
+        outer->simpleCall(scope, callData, v4Function);
+    } else {
+        outer->call(scope, callData, v4Function);
+    }
+
     if (scope.hasException()) {
         if (watcher.wasDeleted())
             scope.engine->catchException(); // ignore exception
@@ -374,7 +406,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->rootContext()->newQmlContext(ctxt, scopeObject));
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, scopeObject));
     QV4::Script script(v4, qmlContext, code, filename, line);
     QV4::ScopedValue result(scope);
     script.parse();
@@ -404,12 +436,9 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->rootContext()->newQmlContext(ctxt, qmlScope));
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, qmlScope));
     QV4::Script script(v4, qmlContext, code, filename, line);
-    QV4::ScopedValue result(scope);
     script.parse();
-    if (!v4->hasException)
-        result = script.qmlBinding();
     if (v4->hasException) {
         QQmlError error = v4->catchExceptionAsQmlError();
         if (error.description().isEmpty())
@@ -420,11 +449,19 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
             error.setUrl(QUrl::fromLocalFile(filename));
         error.setObject(qmlScope);
         ep->warning(error);
-        result = QV4::Encode::undefined();
+        return;
     }
-    m_function.set(v4, result);
+    setupFunction(qmlContext, script.vmFunction);
 }
 
+void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f)
+{
+    if (!qmlContext || !f)
+        return;
+    m_qmlScope.set(qmlContext->engine(), *qmlContext);
+    m_v4Function = f;
+    m_compilationUnit = m_v4Function->compilationUnit;
+}
 
 void QQmlJavaScriptExpression::clearActiveGuards()
 {

@@ -103,7 +103,7 @@ tst_examples::tst_examples()
     excludedFiles << "views/visualdatamodel/slideshow.qml";
 #endif
 
-#ifdef QT_NO_OPENGL
+#if !QT_CONFIG(opengl)
     //No support for Particles
     excludedFiles << "examples/qml/dynamicscene/dynamicscene.qml";
     excludedFiles << "examples/quick/animation/basics/color-animation.qml";

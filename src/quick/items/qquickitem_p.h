@@ -347,7 +347,7 @@ public:
 #if QT_CONFIG(quick_shadereffect)
         mutable QQuickItemLayer *layer;
 #endif
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
         QCursor cursor;
 #endif
         QPointF userTransformOriginPoint;
@@ -534,7 +534,7 @@ public:
     virtual void implicitWidthChanged();
     virtual void implicitHeightChanged();
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;
 #endif
 
@@ -556,7 +556,7 @@ public:
     virtual void transformChanged();
 
     void deliverKeyEvent(QKeyEvent *);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
 
@@ -618,7 +618,7 @@ public:
 
     virtual void keyPressed(QKeyEvent *event, bool post);
     virtual void keyReleased(QKeyEvent *event, bool post);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     virtual void inputMethodEvent(QInputMethodEvent *event, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 #endif
@@ -857,7 +857,7 @@ Q_SIGNALS:
 private:
     void keyPressed(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
     void keyReleased(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *, bool post) Q_DECL_OVERRIDE;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const Q_DECL_OVERRIDE;
 #endif

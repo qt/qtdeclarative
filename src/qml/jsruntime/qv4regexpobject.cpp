@@ -262,12 +262,12 @@ void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
     bool ignoreCase = false;
     bool multiLine = false;
     if (!f->isUndefined()) {
-        f = RuntimeHelpers::toString(scope.engine, f);
+        ScopedString s(scope, f->toString(scope.engine));
         if (scope.hasException()) {
             scope.result = Encode::undefined();
             return;
         }
-        QString str = f->stringValue()->toQString();
+        QString str = s->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QLatin1Char('g') && !global) {
                 global = true;
@@ -356,10 +356,10 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(0));
-    arg = RuntimeHelpers::toString(scope.engine, arg);
+    ScopedString str(scope, arg->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
-    QString s = arg->stringValue()->toQString();
+    QString s = str->toQString();
 
     int offset = r->global() ? r->lastIndexProperty()->toInt32() : 0;
     if (offset < 0 || offset > s.length()) {
@@ -391,11 +391,11 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
     array->setArrayLengthUnchecked(len);
     *array->propertyData(Index_ArrayIndex) = Primitive::fromInt32(result);
-    *array->propertyData(Index_ArrayInput) = arg;
+    *array->propertyData(Index_ArrayInput) = str;
 
     RegExpCtor::Data *dd = regExpCtor->d();
     dd->lastMatch = array;
-    dd->lastInput = arg->stringValue()->d();
+    dd->lastInput = str->d();
     dd->lastMatchStart = matchOffsets[0];
     dd->lastMatchEnd = matchOffsets[1];
 

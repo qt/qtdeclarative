@@ -41,6 +41,7 @@
 
 #include <private/qv4script_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmldebugservice_p.h>
 
@@ -78,8 +79,8 @@ void JavaScriptJob::run()
     if (context >= 0) {
         QQmlContext *extraContext = qmlContext(QQmlDebugService::objectForId(context));
         if (extraContext) {
-            engine->pushContext(ctx->newQmlContext(QQmlContextData::get(extraContext),
-                                                   &scopeObject));
+            engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(extraContext),
+                                                        &scopeObject));
             ctx = engine->currentContext;
         }
     } else if (frameNr < 0) { // Use QML context if available
@@ -99,7 +100,7 @@ void JavaScriptJob::run()
                 }
             }
             if (!engine->qmlContext()) {
-                engine->pushContext(ctx->newQmlContext(QQmlContextData::get(qmlRootContext),
+                engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext),
                                                        &scopeObject));
                 ctx = engine->currentContext;
             }
@@ -212,7 +213,7 @@ void ValueLookupJob::run()
     QV4::ExecutionEngine *engine = collector->engine();
     if (engine->qmlEngine() && !engine->qmlContext()) {
         scopeObject.reset(new QObject);
-        engine->pushContext(engine->currentContext->newQmlContext(
+        engine->pushContext(QV4::QmlContext::create(engine->currentContext,
                                 QQmlContextData::get(engine->qmlEngine()->rootContext()),
                                 scopeObject.data()));
     }

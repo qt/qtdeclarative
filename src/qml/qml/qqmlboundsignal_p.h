@@ -73,7 +73,7 @@ public:
                               const QString &parameterString = QString());
 
     QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scope, const QV4::Value &function);
+                              QQmlContextData *ctxt, QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope);
 
     QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);
@@ -86,9 +86,7 @@ public:
     void evaluate(void **a);
     void evaluate(const QList<QVariant> &args);
 
-    QQmlSourceLocation sourceLocation() const;
     QString expression() const;
-    QV4::Function *function() const;
     QObject *target() const { return m_target; }
 
     QQmlEngine *engine() const { return context() ? context()->engine : 0; }
@@ -98,7 +96,7 @@ private:
 
     void init(QQmlContextData *ctxt, QObject *scope);
 
-    bool expressionFunctionValid() const { return !m_function.isNullOrUndefined(); }
+    bool expressionFunctionValid() const { return function() != 0; }
 
     int m_index;
     QObject *m_target;

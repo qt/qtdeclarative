@@ -16,5 +16,7 @@
         <file>content/StockInfo.qml</file>
         <file>content/Settings.qml</file>
         <file>content/+windows/Settings.qml</file>
+        <file>content/StockListDelegate.qml</file>
+        <file>content/Banner.qml</file>
     </qresource>
 </RCC>

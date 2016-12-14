@@ -79,9 +79,9 @@ protected:
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
-#ifndef QT_NO_CONTEXTMENU
+#if QT_CONFIG(contextmenu)
     void contextMenuEvent(QContextMenuEvent *) override;
-#endif // QT_NO_CONTEXTMENU
+#endif // contextmenu
 
     void invalidate();
     void invalidateSmoothList();

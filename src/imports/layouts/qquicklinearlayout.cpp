@@ -303,17 +303,13 @@ QQuickGridLayoutBase::~QQuickGridLayoutBase()
 {
     Q_D(QQuickGridLayoutBase);
 
-    /* Avoid messy deconstruction, should give:
-        * Faster deconstruction
-        * Less risk of signals reaching already deleted objects
-    */
+    // Remove item listeners so we do not act on signalling unnecessarily
+    // (there is no point, as the layout will be torn down anyway).
     for (int i = 0; i < itemCount(); ++i) {
         QQuickItem *item = itemAt(i);
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(destroyed()), this, QQuickGridLayoutBase, SLOT(onItemDestroyed()));
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(visibleChanged()), this, QQuickGridLayoutBase, SLOT(onItemVisibleChanged()));
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitWidthChanged()), this, QQuickGridLayoutBase, SLOT(invalidateSenderItem()));
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitHeightChanged()), this, QQuickGridLayoutBase, SLOT(invalidateSenderItem()));
+        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
     }
+
     delete d->styleInfo;
 }
 
@@ -436,23 +432,6 @@ int QQuickGridLayoutBase::itemCount() const
     return d->engine.itemCount();
 }
 
-void QQuickGridLayoutBase::itemChange(ItemChange change, const ItemChangeData &value)
-{
-    if (change == ItemChildAddedChange) {
-        quickLayoutDebug() << "ItemChildAddedChange";
-        QQuickItem *item = value.item;
-        qmlobject_connect(item, QQuickItem, SIGNAL(destroyed()), this, QQuickGridLayoutBase, SLOT(onItemDestroyed()));
-        qmlobject_connect(item, QQuickItem, SIGNAL(visibleChanged()), this, QQuickGridLayoutBase, SLOT(onItemVisibleChanged()));
-    } else if (change == ItemChildRemovedChange) {
-        quickLayoutDebug() << "ItemChildRemovedChange";
-        QQuickItem *item = value.item;
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(destroyed()), this, QQuickGridLayoutBase, SLOT(onItemDestroyed()));
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(visibleChanged()), this, QQuickGridLayoutBase, SLOT(onItemVisibleChanged()));
-    }
-
-    QQuickLayout::itemChange(change, value);
-}
-
 void QQuickGridLayoutBase::removeGridItem(QGridLayoutItem *gridItem)
 {
     Q_D(QQuickGridLayoutBase);
@@ -461,26 +440,27 @@ void QQuickGridLayoutBase::removeGridItem(QGridLayoutItem *gridItem)
     d->engine.removeRows(index, 1, d->orientation);
 }
 
-void QQuickGridLayoutBase::onItemVisibleChanged()
-{
-    if (!isReady())
-        return;
-    quickLayoutDebug() << "QQuickGridLayoutBase::onItemVisibleChanged";
-    updateLayoutItems();
-}
-
-void QQuickGridLayoutBase::onItemDestroyed()
+void QQuickGridLayoutBase::itemDestroyed(QQuickItem *item)
 {
     if (!isReady())
         return;
     Q_D(QQuickGridLayoutBase);
-    quickLayoutDebug() << "QQuickGridLayoutBase::onItemDestroyed";
-    QQuickItem *inDestruction = static_cast<QQuickItem *>(sender());
-    if (QQuickGridLayoutItem *gridItem = d->engine.findLayoutItem(inDestruction)) {
+    quickLayoutDebug() << "QQuickGridLayoutBase::itemDestroyed";
+    if (QQuickGridLayoutItem *gridItem = d->engine.findLayoutItem(item)) {
         removeGridItem(gridItem);
         delete gridItem;
         invalidate();
     }
+}
+
+void QQuickGridLayoutBase::itemVisibilityChanged(QQuickItem *item)
+{
+    Q_UNUSED(item);
+
+    if (!isReady())
+        return;
+    quickLayoutDebug() << "QQuickGridLayoutBase::itemVisibilityChanged";
+    updateLayoutItems();
 }
 
 void QQuickGridLayoutBase::rearrange(const QSizeF &size)

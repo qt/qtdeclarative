@@ -206,6 +206,18 @@ public:
     bool markBit() const { return d()->isMarked(); }
 
     static void destroy(Heap::Base *) {}
+
+    Q_ALWAYS_INLINE Heap::Base *heapObject() const {
+        return m();
+    }
+
+    template<typename T> inline T *cast() {
+        return static_cast<T *>(this);
+    }
+    template<typename T> inline const T *cast() const {
+        return static_cast<const T *>(this);
+    }
+
 private:
     friend class MemoryManager;
     friend struct Identifiers;
@@ -215,14 +227,12 @@ private:
 
 template<>
 inline const Managed *Value::as() const {
-    if (isManaged())
-        return managed();
-    return 0;
+    return managed();
 }
 
 template<>
 inline const Object *Value::as() const {
-    return isManaged() && m() && m()->vtable()->isObject ? objectValue() : 0;
+    return objectValue();
 }
 
 }

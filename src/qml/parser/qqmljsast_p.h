@@ -2537,11 +2537,11 @@ class QML_PARSER_EXPORT UiParameterList: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(UiParameterList)
 
-    UiParameterList(const QStringRef &t, const QStringRef &n):
+    UiParameterList(UiQualifiedId *t, const QStringRef &n):
         type (t), name (n), next (this)
         { kind = K; }
 
-    UiParameterList(UiParameterList *previous, const QStringRef &t, const QStringRef &n):
+    UiParameterList(UiParameterList *previous, UiQualifiedId *t, const QStringRef &n):
         type (t), name (n)
     {
         kind = K;
@@ -2565,7 +2565,7 @@ public:
     }
 
 // attributes
-    QStringRef type;
+    UiQualifiedId *type;
     QStringRef name;
     UiParameterList *next;
     SourceLocation commaToken;
@@ -2578,12 +2578,12 @@ class QML_PARSER_EXPORT UiPublicMember: public UiObjectMember
 public:
     QQMLJS_DECLARE_AST_NODE(UiPublicMember)
 
-    UiPublicMember(const QStringRef &memberType,
+    UiPublicMember(UiQualifiedId *memberType,
                    const QStringRef &name)
         : type(Property), memberType(memberType), name(name), statement(0), binding(0), isDefaultMember(false), isReadonlyMember(false), parameters(0)
     { kind = K; }
 
-    UiPublicMember(const QStringRef &memberType,
+    UiPublicMember(UiQualifiedId *memberType,
                    const QStringRef &name,
                    Statement *statement)
         : type(Property), memberType(memberType), name(name), statement(statement), binding(0), isDefaultMember(false), isReadonlyMember(false), parameters(0)
@@ -2614,7 +2614,7 @@ public:
 // attributes
     enum { Signal, Property } type;
     QStringRef typeModifier;
-    QStringRef memberType;
+    UiQualifiedId *memberType;
     QStringRef name;
     Statement *statement; // initialized with a JS expression
     UiObjectMember *binding; // initialized with a QML object or array.

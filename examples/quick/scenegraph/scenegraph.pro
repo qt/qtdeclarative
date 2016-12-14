@@ -7,7 +7,6 @@ qtConfig(opengl(es1|es2)?) {
             sgengine \
             textureinsgnode \
             openglunderqml \
-            textureinsgnode \
             textureinthread \
             twotextureproviders
 }

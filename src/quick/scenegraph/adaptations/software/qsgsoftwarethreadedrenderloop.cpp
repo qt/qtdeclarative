@@ -484,7 +484,8 @@ void QSGSoftwareRenderThread::syncAndRender()
     if (syncRequested)
         sync(exposeRequested);
 
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
+                              QQuickProfiler::SceneGraphRenderLoopSync);
 
     if (!syncResultedInChanges && !repaintRequested) {
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - no changes, render aborted");
@@ -510,7 +511,8 @@ void QSGSoftwareRenderThread::syncAndRender()
             softwareRenderer->setBackingStore(backingStore);
         wd->renderSceneGraph(exposedWindow->size());
 
-        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
+        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
+                                  QQuickProfiler::SceneGraphRenderLoopRender);
 
         if (softwareRenderer && (!wd->customRenderStage || !wd->customRenderStage->swap()))
             backingStore->flush(softwareRenderer->flushRegion());
@@ -526,7 +528,8 @@ void QSGSoftwareRenderThread::syncAndRender()
 
         wd->fireFrameSwapped();
     } else {
-        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame, 1);
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
+                                QQuickProfiler::SceneGraphRenderLoopSync, 1);
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - window not ready, skipping render");
     }
 
@@ -538,7 +541,8 @@ void QSGSoftwareRenderThread::syncAndRender()
         mutex.unlock();
     }
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
+                           QQuickProfiler::SceneGraphRenderLoopSwap);
 }
 
 template<class T> T *windowFor(const QVector<T> &list, QQuickWindow *window)
@@ -951,7 +955,8 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     wd->polishItems();
 
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
+                              QQuickProfiler::SceneGraphPolishAndSyncPolish);
 
     w->updateDuringSync = false;
 
@@ -965,13 +970,15 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
 
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - wait for sync");
 
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
+                              QQuickProfiler::SceneGraphPolishAndSyncWait);
     w->thread->waitCondition.wait(&w->thread->mutex);
     lockedForSync = false;
     w->thread->mutex.unlock();
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - unlock after sync");
 
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
+                              QQuickProfiler::SceneGraphPolishAndSyncSync);
 
     if (!animationTimer && m_anim->isRunning()) {
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - advancing animations");
@@ -983,7 +990,8 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
         w->window->requestUpdate();
     }
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,
+                           QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }
 
 #include "qsgsoftwarethreadedrenderloop.moc"

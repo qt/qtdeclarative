@@ -2,6 +2,7 @@ TEMPLATE=subdirs
 SUBDIRS=\
     qml \
     quick \
+    quicktest \
     qmltest \
     qmldevtools \
     cmake \
