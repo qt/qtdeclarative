@@ -1052,8 +1052,11 @@ ID3D12Resource *QSGD3D12EnginePrivate::createColorBuffer(D3D12_CPU_DESCRIPTOR_HA
     rtDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
     ID3D12Resource *resource = nullptr;
+    const D3D12_RESOURCE_STATES initialState = samples <= 1
+            ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+            : D3D12_RESOURCE_STATE_RENDER_TARGET;
     if (FAILED(device->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rtDesc,
-                                               D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, IID_PPV_ARGS(&resource)))) {
+                                               initialState, &clearValue, IID_PPV_ARGS(&resource)))) {
         qWarning("Failed to create offscreen render target of size %dx%d", size.width(), size.height());
         return nullptr;
     }
