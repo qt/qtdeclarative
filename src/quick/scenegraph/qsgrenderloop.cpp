@@ -423,6 +423,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (data.grabOnly) {
         bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
         grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
+        grabContent.setDevicePixelRatio(window->effectiveDevicePixelRatio());
         data.grabOnly = false;
     }
 

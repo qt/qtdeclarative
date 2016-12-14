@@ -76,10 +76,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_CONFIG(opengl)
-extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-#endif
-
 class QQuickWidgetRenderControl : public QQuickRenderControl
 {
 public:

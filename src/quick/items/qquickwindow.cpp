@@ -3491,6 +3491,7 @@ QImage QQuickWindow::grabWindow()
 
             bool alpha = format().alphaBufferSize() > 0 && color().alpha() < 255;
             QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), alpha, alpha);
+            image.setDevicePixelRatio(effectiveDevicePixelRatio());
             d->cleanupNodesOnShutdown();
             d->context->invalidate();
             context.doneCurrent();

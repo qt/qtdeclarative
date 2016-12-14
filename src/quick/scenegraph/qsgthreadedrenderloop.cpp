@@ -432,6 +432,7 @@ bool QSGRenderThread::event(QEvent *e)
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- grabbing result";
             bool alpha = ce->window->format().alphaBufferSize() > 0 && ce->window->color().alpha() != 255;
             *ce->image = qt_gl_read_framebuffer(windowSize * ce->window->effectiveDevicePixelRatio(), alpha, alpha);
+            ce->image->setDevicePixelRatio(ce->window->effectiveDevicePixelRatio());
         }
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- waking gui to handle result";
         waitCondition.wakeOne();
