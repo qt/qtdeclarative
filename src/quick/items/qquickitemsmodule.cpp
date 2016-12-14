@@ -298,8 +298,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
 #endif
 #if QT_CONFIG(quick_itemview)
-    qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
-    qmlRegisterUncreatableType<QQuickItemView, 2>(uri, 2, 3, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
+    const char *itemViewName = "ItemView";
+    const QString itemViewMessage = QQuickItemView::tr("ItemView is an abstract base class");
+    qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, itemViewName, itemViewMessage);
+    qmlRegisterUncreatableType<QQuickItemView, 2>(uri, 2, 3, itemViewName, itemViewMessage);
 #endif
 #if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
@@ -360,6 +362,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
 #if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView, 7>(uri, 2, 7, "PathView");
+#endif
+#if QT_CONFIG(quick_itemview)
+    qmlRegisterUncreatableType<QQuickItemView, 7>(uri, 2, 7, itemViewName, itemViewMessage);
 #endif
 
     qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
