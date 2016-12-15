@@ -51,9 +51,6 @@ TestCase {
     name: "Tumbler"
 
     property var tumbler: null
-    // With the help of cleanup(), ensures that all items created during a test function
-    // are destroyed if that test fails.
-    property Item cleanupItem
     readonly property real implicitTumblerWidth: 60
     readonly property real implicitTumblerHeight: 200
     readonly property real defaultImplicitDelegateHeight: implicitTumblerHeight / 3
@@ -77,23 +74,8 @@ TestCase {
         }
     }
 
-    function init() {
-        cleanupItem = itemComponent.createObject(testCase);
-        verify(cleanupItem);
-    }
-
-    function cleanup() {
-        cleanupItem.destroy();
-        // Waiting until it's deleted before continuing makes debugging
-        // test failures much easier, because there aren't unrelated items hanging around.
-        tryVerify(function() { return !tumbler; });
-    }
-
     function createTumbler(args) {
-        if (args === undefined)
-            tumbler = tumblerComponent.createObject(cleanupItem);
-        else
-            tumbler = tumblerComponent.createObject(cleanupItem, args);
+        tumbler = createTemporaryObject(tumblerComponent, testCase, args);
         verify(tumbler, "Tumbler: failed to create an instance");
         tumblerView = findView(tumbler);
         verify(tumblerView);
@@ -278,7 +260,7 @@ TestCase {
 
     function test_currentIndexAtCreation(data) {
         // Test setting currentIndex at creation time
-        tumbler = data.component.createObject(cleanupItem);
+        tumbler = createTemporaryObject(data.component, testCase);
         verify(tumbler);
         // A "statically declared" currentIndex will be pending until the count has changed,
         // which happens when the model is set, which happens on the TumblerView's next polish.
@@ -344,7 +326,7 @@ TestCase {
         wait(tumblerView.highlightMoveDuration);
         var firstItemCenterPos = itemCenterPos(1);
         var firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
-        var actualPos = cleanupItem.mapFromItem(firstItem, 0, 0);
+        var actualPos = testCase.mapFromItem(firstItem, 0, 0);
         compare(actualPos.x, tumbler.leftPadding);
         compare(actualPos.y, tumbler.topPadding + 40);
 
@@ -355,7 +337,7 @@ TestCase {
         firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
         verify(firstItem);
         // Test QTBUG-40298.
-        actualPos = cleanupItem.mapFromItem(firstItem, 0, 0);
+        actualPos = testCase.mapFromItem(firstItem, 0, 0);
         compare(actualPos.x, tumbler.leftPadding);
         compare(actualPos.y, tumbler.topPadding);
 
@@ -372,11 +354,11 @@ TestCase {
     }
 
     function test_focusPastTumbler() {
-        tumbler = tumblerComponent.createObject(cleanupItem);
+        tumbler = createTemporaryObject(tumblerComponent, testCase);
         verify(tumbler);
 
-        var mouseArea = Qt.createQmlObject(
-            "import QtQuick 2.2; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", cleanupItem, "");
+        var mouseArea = createTemporaryQmlObject(
+            "import QtQuick 2.2; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", testCase, "");
 
         tumbler.forceActiveFocus();
         verify(tumbler.activeFocus);
@@ -389,7 +371,7 @@ TestCase {
     function test_datePicker() {
         var component = Qt.createComponent("TumblerDatePicker.qml");
         compare(component.status, Component.Ready, component.errorString());
-        tumbler = component.createObject(cleanupItem);
+        tumbler = createTemporaryObject(component, testCase);
         // Should not be any warnings.
 
         tryCompare(tumbler.dayTumbler, "currentIndex", 0);
@@ -449,7 +431,7 @@ TestCase {
     }
 
     function test_listViewTimePicker() {
-        var root = timePickerComponent.createObject(cleanupItem);
+        var root = createTemporaryObject(timePickerComponent, testCase);
         verify(root);
 
         mouseDrag(root.minuteTumbler, root.minuteTumbler.width / 2, root.minuteTumbler.height / 2, 0, 50);
@@ -566,7 +548,7 @@ TestCase {
     }
 
     function test_countWrap() {
-        tumbler = tumblerComponent.createObject(cleanupItem);
+        tumbler = createTemporaryObject(tumblerComponent, testCase);
         verify(tumbler);
 
         // Check that a count that is less than visibleItemCount results in wrap being set to false.
@@ -578,7 +560,7 @@ TestCase {
 
     function test_explicitlyNonwrapping() {
         // Check that explicitly setting wrap to false works even when it was implicitly false.
-        var explicitlyNonWrapping = twoItemTumbler.createObject(cleanupItem);
+        var explicitlyNonWrapping = createTemporaryObject(twoItemTumbler, testCase);
         verify(explicitlyNonWrapping);
         tryCompare(explicitlyNonWrapping, "wrap", false);
 
@@ -595,7 +577,7 @@ TestCase {
 
     function test_explicitlyWrapping() {
         // Check that explicitly setting wrap to true works even when it was implicitly true.
-        var explicitlyWrapping = tenItemTumbler.createObject(cleanupItem);
+        var explicitlyWrapping = createTemporaryObject(tenItemTumbler, testCase);
         verify(explicitlyWrapping);
         compare(explicitlyWrapping.wrap, true);
 
@@ -667,7 +649,7 @@ TestCase {
     }
 
     function test_customContentItemAtConstruction(data) {
-        var tumbler = data.component.createObject(cleanupItem);
+        var tumbler = createTemporaryObject(data.component, testCase);
         // Shouldn't assert.
 
         tumbler.model = 5;
@@ -707,7 +689,7 @@ TestCase {
         var contentItemComponent = Qt.createComponent(data.componentPath);
         compare(contentItemComponent.status, Component.Ready);
 
-        var customContentItem = contentItemComponent.createObject(tumbler);
+        var customContentItem = createTemporaryObject(contentItemComponent, tumbler);
         tumbler.contentItem = customContentItem;
         compare(tumbler.count, 5);
         tumblerView = findView(tumbler);
@@ -921,7 +903,7 @@ TestCase {
     }
 
     function test_attachedProperties() {
-        tumbler = tumblerComponent.createObject(cleanupItem);
+        tumbler = createTemporaryObject(tumblerComponent, testCase);
         verify(tumbler);
 
         // TODO: crashes somewhere in QML's guts
@@ -932,10 +914,10 @@ TestCase {
 //        tumbler.contentItem.offset += 1;
 
         ignoreWarning("Tumbler: attached properties must be accessed through a delegate item that has a parent");
-        noParentDelegateComponent.createObject(null);
+        createTemporaryObject(noParentDelegateComponent, null);
 
         ignoreWarning("Tumbler: attempting to access attached property on item without an \"index\" property");
-        var object = noParentDelegateComponent.createObject(cleanupItem);
+        var object = createTemporaryObject(noParentDelegateComponent, testCase);
         verify(object);
     }
 
