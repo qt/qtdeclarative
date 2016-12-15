@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -68,7 +68,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -76,12 +76,10 @@ TestCase {
         compare(control.text, "Button")
         control.text = ""
         compare(control.text, "")
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -148,12 +146,10 @@ TestCase {
                                         "clicked"]
         mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_keys() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
 
         control.forceActiveFocus()
@@ -180,8 +176,6 @@ TestCase {
             keyClick(keys[i])
             verify(sequenceSpy.success)
         }
-
-        control.destroy()
     }
 
     function eventErrorMessage(actual, expected) {
@@ -189,7 +183,7 @@ TestCase {
     }
 
     function test_autoRepeat() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
 
         compare(control.autoRepeat, false)
@@ -270,19 +264,16 @@ TestCase {
         compare(clickSpy.count, 0)
         compare(pressSpy.count, 0)
         compare(releaseSpy.count, 0)
-
-        control.destroy()
     }
 
     function test_baseline() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 
     function test_checkable() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
         verify(control.hasOwnProperty("checkable"))
         verify(!control.checkable)
@@ -326,18 +317,14 @@ TestCase {
         mouseClick(control)
         verify(!control.checked)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_highlighted() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
         verify(!control.highlighted)
 
         control.highlighted = true
         verify(control.highlighted)
-
-        control.destroy()
     }
 }
