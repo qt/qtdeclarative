@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -66,7 +66,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = button.createObject(testCase);
+        var control = createTemporaryObject(button, testCase);
         verify(control);
 
         compare(control.text, "");
@@ -74,21 +74,18 @@ TestCase {
         compare(control.text, "Button");
         control.text = "";
         compare(control.text, "");
-
-        control.destroy();
     }
 
     function test_baseline() {
-        var control = button.createObject(testCase, {padding: 6})
+        var control = createTemporaryObject(button, testCase, {padding: 6})
         verify(control)
         compare(control.baselineOffset, 0)
         control.contentItem = item.createObject(control, {baselineOffset: 12})
         compare(control.baselineOffset, 18)
-        control.destroy()
     }
 
     function test_implicitSize() {
-        var control = button.createObject(testCase)
+        var control = createTemporaryObject(button, testCase)
         verify(control)
 
         compare(control.implicitWidth, 0)
@@ -105,12 +102,10 @@ TestCase {
         control.padding = 100
         compare(control.implicitWidth, 210)
         compare(control.implicitHeight, 220)
-
-        control.destroy()
     }
 
     function test_pressAndHold() {
-        var control = button.createObject(testCase, {checkable: true})
+        var control = createTemporaryObject(button, testCase, {checkable: true})
         verify(control)
 
         var pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
@@ -122,7 +117,5 @@ TestCase {
 
         mouseRelease(control)
         compare(control.checked, false)
-
-        control.destroy()
     }
 }
