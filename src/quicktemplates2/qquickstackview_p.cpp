@@ -39,6 +39,7 @@
 #include "qquickstacktransition_p_p.h"
 
 #include <QtQml/qqmllist.h>
+#include <QtQml/private/qv4script_p.h> // TODO: replace with qv4qmlcontext_p.h
 #include <QtQml/private/qv4qobjectwrapper_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
