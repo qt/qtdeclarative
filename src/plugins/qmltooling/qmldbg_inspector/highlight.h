@@ -81,7 +81,7 @@ class SelectionHighlight : public Highlight
 
 public:
     SelectionHighlight(const QString &name, QQuickItem *item, QQuickItem *parent);
-    void paint(QPainter *painter);
+    void paint(QPainter *painter) override;
     void showName(const QPointF &displayPoint);
 
 private:
@@ -104,7 +104,7 @@ public:
         setZ(1); // hover highlight on top of selection highlight
     }
 
-    void paint(QPainter *painter);
+    void paint(QPainter *painter) override;
 };
 
 } // namespace QmlJSDebugger

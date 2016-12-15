@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 
 class QTextDocument;
 
@@ -141,7 +141,7 @@ private:
 QRect itemScreenRect(QQuickItem *item);
 QList<QQuickItem *> accessibleUnignoredChildren(QQuickItem *item, bool paintOrder = false);
 
-#endif // QT_NO_ACCESSIBILITY
+#endif // accessibility
 
 QT_END_NAMESPACE
 

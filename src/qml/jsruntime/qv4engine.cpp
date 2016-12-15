@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 #include <qv4engine_p.h>
-#include <qv4context_p.h>
+#include <qv4qmlcontext_p.h>
 #include <qv4value_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
@@ -71,7 +71,6 @@
 #include "qv4typedarray_p.h"
 #include <private/qv8engine_p.h>
 #include <private/qjsvalue_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmlvaluetype_p.h>
@@ -282,10 +281,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(functionProtoClass, objectPrototype());
     functionClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    simpleScriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Name);
-    simpleScriptFunctionClass = simpleScriptFunctionClass->addMember(id_length(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Length);
+    scriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::ScriptFunction::Index_Name);
+    scriptFunctionClass = scriptFunctionClass->addMember(id_length(), Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
     protoClass = emptyClass->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
@@ -714,6 +713,27 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
     return obj->d();
 }
 
+Heap::QmlContext *ExecutionEngine::qmlContext() const
+{
+    Heap::ExecutionContext *ctx = current;
+
+    // get the correct context when we're within a builtin function
+    if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
+        ctx = parentContext(currentContext)->d();
+
+    if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
+        return 0;
+
+    while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
+        ctx = ctx->outer;
+
+    Q_ASSERT(ctx);
+    if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
+        return 0;
+
+    return static_cast<Heap::QmlContext *>(ctx);
+}
+
 QObject *ExecutionEngine::qmlScopeObject() const
 {
     Heap::QmlContext *ctx = qmlContext();
@@ -760,21 +780,17 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     QVector<StackFrame> stack;
 
     ExecutionContext *c = currentContext;
-    ScopedFunctionObject function(scope);
     while (c && frameLimit) {
-        function = c->getFunctionObject();
+        QV4::Function *function = c->getFunction();
         if (function) {
             StackFrame frame;
-            if (const Function *f = function->function())
-                frame.source = f->sourceFile();
+            frame.source = function->sourceFile();
             name = function->name();
             frame.function = name->toQString();
-            frame.line = -1;
-            frame.column = -1;
 
-            if (function->function())
-                // line numbers can be negative for places where you can't set a real breakpoint
-                frame.line = qAbs(c->d()->lineNumber);
+            // line numbers can be negative for places where you can't set a real breakpoint
+            frame.line = qAbs(c->d()->lineNumber);
+            frame.column = -1;
 
             stack.append(frame);
             --frameLimit;
@@ -850,9 +866,8 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     ExecutionContext *c = currentContext;
     while (c) {
         CallContext *callCtx = c->asCallContext();
-        if (callCtx && callCtx->d()->function) {
-            if (callCtx->d()->function->function)
-                base.setUrl(callCtx->d()->function->function->sourceFile());
+        if (callCtx && callCtx->d()->v4Function) {
+            base.setUrl(callCtx->d()->v4Function->sourceFile());
             break;
         }
         c = parentContext(c);
@@ -1151,8 +1166,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return value.integerValue();
     if (value.isNumber())
         return value.asDouble();
-    if (value.isString()) {
-        const QString &str = value.toQString();
+    if (String *s = value.stringValue()) {
+        const QString &str = s->toQString();
         // QChars are stored as a strings
         if (typeHint == QVariant::Char && str.size() == 1)
             return str.at(0);
@@ -1591,8 +1606,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
         *reinterpret_cast<unsigned char*>(data) = (unsigned char)(value->toInt32());
         return true;
     case QMetaType::QChar:
-        if (value->isString()) {
-            QString str = value->stringValue()->toQString();
+        if (String *s = value->stringValue()) {
+            QString str = s->toQString();
             *reinterpret_cast<QChar*>(data) = str.isEmpty() ? QChar() : str.at(0);
         } else {
             *reinterpret_cast<QChar*>(data) = QChar(ushort(value->toUInt16()));
@@ -1704,10 +1719,10 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
-        } else if (value->isObject()) {
+        } else if (Object *o = value->objectValue()) {
             // Look in the prototype chain.
             QV4::Scope scope(this);
-            QV4::ScopedObject proto(scope, value->objectValue()->prototype());
+            QV4::ScopedObject proto(scope, o->prototype());
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {

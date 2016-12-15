@@ -218,11 +218,11 @@ public:
     */
     static void updateAnimationTimer();
 
-    void restartAnimationTimer();
-    void updateAnimationsTime(qint64 timeStep);
+    void restartAnimationTimer() override;
+    void updateAnimationsTime(qint64 timeStep) override;
 
     //useful for profiling/debugging
-    int runningAnimationCount() { return animations.count(); }
+    int runningAnimationCount() override { return animations.count(); }
 
     bool hasStartAnimationPending() const { return startAnimationPending; }
 

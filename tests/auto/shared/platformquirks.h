@@ -39,7 +39,7 @@ struct PlatformQuirks
 {
     static inline bool isClipboardAvailable()
     {
-#if defined(QT_NO_CLIPBOARD)
+#if !QT_CONFIG(clipboard)
         return false;
 #elif defined(Q_OS_OSX)
         PasteboardRef pasteboard;

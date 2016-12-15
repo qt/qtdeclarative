@@ -224,7 +224,7 @@ void SplineEditor::mouseReleaseEvent(QMouseEvent *e)
     }
 }
 
-#ifndef QT_NO_CONTEXTMENU
+#if QT_CONFIG(contextmenu)
 void SplineEditor::contextMenuEvent(QContextMenuEvent *e)
 {
     int index = findControlPoint(e->pos());
@@ -244,7 +244,7 @@ void SplineEditor::contextMenuEvent(QContextMenuEvent *e)
             addPoint(e->pos());
     }
 }
-#endif // QT_NO_CONTEXTMENU
+#endif // contextmenu
 
 void SplineEditor::invalidate()
 {

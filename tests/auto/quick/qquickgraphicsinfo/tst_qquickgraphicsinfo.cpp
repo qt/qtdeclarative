@@ -35,7 +35,7 @@
 
 #include "../../shared/util.h"
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QtGui/qopenglcontext.h>
 #include <QtGui/qsurfaceformat.h>
 #endif
@@ -67,7 +67,7 @@ void tst_QQuickGraphicsInfo::testProperties()
 
     QCOMPARE(obj->property("api").toInt(), expectedAPI);
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (expectedAPI == QSGRendererInterface::OpenGL) {
         QCOMPARE(obj->property("shaderType").toInt(), int(QSGRendererInterface::GLSL));
         QVERIFY(view.openglContext());

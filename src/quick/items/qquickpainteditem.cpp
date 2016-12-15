@@ -662,7 +662,7 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
         return QQuickItem::textureProvider();
 
     Q_D(const QQuickPaintedItem);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
         qWarning("QQuickPaintedItem::textureProvider: can only be queried on the rendering thread of an exposed window");

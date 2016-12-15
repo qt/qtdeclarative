@@ -68,10 +68,10 @@ public:
     QDebugMessageServiceImpl(QObject *parent = 0);
 
     void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt, const QString &buf);
-    void synchronizeTime(const QElapsedTimer &otherTimer);
+    void synchronizeTime(const QElapsedTimer &otherTimer) override;
 
 protected:
-    void stateChanged(State);
+    void stateChanged(State) override;
 
 private:
     friend class QQmlDebuggerServiceFactory;

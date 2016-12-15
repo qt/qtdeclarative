@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qqmlcontextwrapper_p.h"
+#include "qv4qmlcontext_p.h"
 #include <private/qv8engine_p.h>
 
 #include <private/qqmlengine_p.h>
@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
+DEFINE_MANAGED_VTABLE(QmlContext);
 
 void Heap::QmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
 {
@@ -78,29 +79,6 @@ void Heap::QmlContextWrapper::destroy()
     delete context;
     scopeObject.destroy();
     Object::destroy();
-}
-
-ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *ctxt, QObject *scope)
-{
-    Scope valueScope(v4);
-
-    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->allocObject<QmlContextWrapper>(ctxt, scope));
-    return w.asReturnedValue();
-}
-
-ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
-{
-    Scope scope(v4);
-
-    QQmlContextData *context = new QQmlContextData;
-    context->baseUrl = url;
-    context->baseUrlString = url.toString();
-    context->isInternal = true;
-    context->isJSContext = true;
-
-    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->allocObject<QmlContextWrapper>(context, (QObject*)0, true));
-    w->d()->isNullWrapper = true;
-    return w.asReturnedValue();
 }
 
 ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
@@ -318,6 +296,51 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     }
 
     Object::put(m, name, value);
+}
+
+void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
+{
+    Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
+    outer = outerContext->d();
+    strictMode = false;
+    callData = outer->callData;
+    lookups = outer->lookups;
+    constantTable = outer->constantTable;
+    compilationUnit = outer->compilationUnit;
+
+    this->qml = qml->d();
+}
+
+Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, const QUrl &source, Value *sendFunction)
+{
+    Scope scope(parent);
+
+    QQmlContextData *context = new QQmlContextData;
+    context->baseUrl = source;
+    context->baseUrlString = source.toString();
+    context->isInternal = true;
+    context->isJSContext = true;
+
+    Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, (QObject*)0, true));
+    qml->d()->isNullWrapper = true;
+
+    qml->setReadOnly(false);
+    QV4::ScopedObject api(scope, scope.engine->newObject());
+    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), *sendFunction);
+    qml->QV4::Object::put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
+    qml->setReadOnly(true);
+
+    Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    return c;
+}
+
+Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject)
+{
+    Scope scope(parent);
+
+    Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, scopeObject));
+    Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    return c;
 }
 
 QT_END_NAMESPACE

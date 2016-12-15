@@ -58,6 +58,12 @@
 #include <QtCore/qglobal.h>
 #include <QString>
 
+#ifdef QT_NO_DEBUG
+#define QML_NEARLY_ALWAYS_INLINE Q_ALWAYS_INLINE
+#else
+#define QML_NEARLY_ALWAYS_INLINE inline
+#endif
+
 #ifdef V4_BOOTSTRAP
 #include <private/qtqmldevtoolsglobal_p.h>
 #else

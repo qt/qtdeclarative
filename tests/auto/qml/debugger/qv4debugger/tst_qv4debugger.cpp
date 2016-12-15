@@ -41,6 +41,7 @@
 #include <private/qv4isel_moth_p.h>
 #include <private/qv4string_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmldebugservice_p.h>
 
 using namespace QV4;
 using namespace QV4::Debugging;
@@ -203,8 +204,8 @@ public slots:
         while (!m_expressionRequests.isEmpty()) {
             Q_ASSERT(debugger->state() == QV4Debugger::Paused);
             ExpressionRequest request = m_expressionRequests.takeFirst();
-            ExpressionEvalJob job(debugger->engine(), request.frameNr, request.expression,
-                                  &collector);
+            ExpressionEvalJob job(debugger->engine(), request.frameNr, request.context,
+                                  request.expression, &collector);
             debugger->runInEngine(&job);
             m_expressionResults << job.returnValue();
             m_expressionRefs << job.refs();
@@ -276,6 +277,7 @@ public:
     struct ExpressionRequest {
         QString expression;
         int frameNr;
+        int context;
     };
     QVector<ExpressionRequest> m_expressionRequests;
     QList<QJsonObject> m_expressionResults;
@@ -726,24 +728,34 @@ void tst_qv4debugger::evaluateExpression()
     TestAgent::ExpressionRequest request;
     request.expression = "x";
     request.frameNr = 0;
+    request.context = -1; // no extra context
     m_debuggerAgent->m_expressionRequests << request;
     request.expression = "x";
     request.frameNr = 1;
+    m_debuggerAgent->m_expressionRequests << request;
+
+    request.context = 5355; // invalid context object
+    m_debuggerAgent->m_expressionRequests << request;
+
+    QObject object; // some object without QML context
+    request.context = QQmlDebugService::idForObject(&object);
     m_debuggerAgent->m_expressionRequests << request;
 
     debugger()->addBreakPoint("evaluateExpression", 3);
 
     evaluateJavaScript(script, "evaluateExpression");
 
-    QCOMPARE(m_debuggerAgent->m_expressionRefs.count(), 2);
+    QCOMPARE(m_debuggerAgent->m_expressionRefs.count(), 4);
     QCOMPARE(m_debuggerAgent->m_expressionRefs[0].size(), 1);
     QJsonObject result0 = m_debuggerAgent->m_expressionRefs[0].first().toObject();
     QCOMPARE(result0.value("type").toString(), QStringLiteral("number"));
     QCOMPARE(result0.value("value").toInt(), 10);
-    QCOMPARE(m_debuggerAgent->m_expressionRefs[1].size(), 1);
-    QJsonObject result1 = m_debuggerAgent->m_expressionRefs[1].first().toObject();
-    QCOMPARE(result1.value("type").toString(), QStringLiteral("number"));
-    QCOMPARE(result1.value("value").toInt(), 20);
+    for (int i = 1; i < 4; ++i) {
+        QCOMPARE(m_debuggerAgent->m_expressionRefs[i].size(), 1);
+        QJsonObject result1 = m_debuggerAgent->m_expressionRefs[1].first().toObject();
+        QCOMPARE(result1.value("type").toString(), QStringLiteral("number"));
+        QCOMPARE(result1.value("value").toInt(), 20);
+    }
 }
 
 QTEST_MAIN(tst_qv4debugger)

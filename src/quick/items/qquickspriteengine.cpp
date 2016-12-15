@@ -664,13 +664,14 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
     //Sprite State Update;
     m_timeOffset = time;
     m_addAdvance = false;
-    while (!m_stateUpdates.isEmpty() && time >= m_stateUpdates.constFirst().first){
-        const auto copy = m_stateUpdates.constFirst().second;
+    int i = 0;
+    for (; i < m_stateUpdates.count() && time >= m_stateUpdates.at(i).first; ++i) {
+        const auto copy = m_stateUpdates.at(i).second;
         for (int idx : copy)
             advance(idx);
-        m_stateUpdates.pop_front();
     }
 
+    m_stateUpdates.remove(0, i);
     m_advanceTime.start();
     m_addAdvance = true;
     if (m_stateUpdates.isEmpty())
@@ -760,13 +761,13 @@ void QQuickStochasticEngine::addToUpdateList(uint t, int idx)
             m_stateUpdates[i].second << idx;
             return;
         } else if (m_stateUpdates.at(i).first > t) {
-            QList<int> tmpList;
+            QVector<int> tmpList;
             tmpList << idx;
             m_stateUpdates.insert(i, qMakePair(t, tmpList));
             return;
         }
     }
-    QList<int> tmpList;
+    QVector<int> tmpList;
     tmpList << idx;
     m_stateUpdates << qMakePair(t, tmpList);
 }

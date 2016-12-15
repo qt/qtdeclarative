@@ -72,11 +72,12 @@
 #include <qt_windows.h>
 #endif
 
+namespace {
 
-static const uint qtQmlMajorVersion = 2;
-static const uint qtQmlMinorVersion = 2;
-static const uint qtQuickMajorVersion = 2;
-static const uint qtQuickMinorVersion = 8;
+const uint qtQmlMajorVersion = 2;
+const uint qtQmlMinorVersion = 2;
+const uint qtQuickMajorVersion = 2;
+const uint qtQuickMinorVersion = 8;
 
 const QString qtQuickQualifiedName = QString::fromLatin1("QtQuick %1.%2")
         .arg(qtQuickMajorVersion)
@@ -88,6 +89,8 @@ bool creatable = true;
 
 QString currentProperty;
 QString inObjectInstantiation;
+
+}
 
 static QString enquote(const QString &string)
 {

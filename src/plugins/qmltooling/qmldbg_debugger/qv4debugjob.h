@@ -60,11 +60,12 @@ class JavaScriptJob : public QV4DebugJob
 {
     QV4::ExecutionEngine *engine;
     int frameNr;
+    int context;
     const QString &script;
     bool resultIsException;
 
 public:
-    JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script);
+    JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, int context, const QString &script);
     void run() override;
     bool hasExeption() const;
 
@@ -112,7 +113,7 @@ class ScopeJob: public CollectJob
 
 public:
     ScopeJob(QV4DataCollector *collector, int frameNr, int scopeNr);
-    void run();
+    void run() override;
     bool wasSuccessful() const;
 };
 
@@ -135,8 +136,8 @@ class ExpressionEvalJob: public JavaScriptJob
     QJsonArray collectedRefs;
 
 public:
-    ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, const QString &expression,
-                      QV4DataCollector *collector);
+    ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, int context,
+                      const QString &expression, QV4DataCollector *collector);
     void handleResult(QV4::ScopedValue &value) override;
     const QString &exceptionMessage() const;
     const QJsonObject &returnValue() const;

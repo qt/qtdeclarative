@@ -67,19 +67,19 @@ public:
     QSGDistanceFieldGlyphNode(QSGRenderContext *context);
     ~QSGDistanceFieldGlyphNode();
 
-    virtual QPointF baseLine() const { return m_baseLine; }
-    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
-    virtual void setColor(const QColor &color);
+    QPointF baseLine() const override { return m_baseLine; }
+    void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
+    void setColor(const QColor &color) override;
 
-    virtual void setPreferredAntialiasingMode(AntialiasingMode mode);
+    void setPreferredAntialiasingMode(AntialiasingMode mode) override;
 
-    virtual void setStyle(QQuickText::TextStyle style);
-    virtual void setStyleColor(const QColor &color);
+    void setStyle(QQuickText::TextStyle style) override;
+    void setStyleColor(const QColor &color) override;
 
-    virtual void update();
-    void preprocess();
+    void update() override;
+    void preprocess() override;
 
-    void invalidateGlyphs(const QVector<quint32> &glyphs);
+    void invalidateGlyphs(const QVector<quint32> &glyphs) override;
 
     void updateGeometry();
 

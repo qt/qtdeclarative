@@ -59,7 +59,7 @@ static bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArr
     const QSize size = v.size();
     const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
     v.setFramePosition(screenGeometry.center() - offset);
-#ifndef QT_NO_CURSOR // Get the cursor out of the way.
+#if QT_CONFIG(cursor) // Get the cursor out of the way.
     if (moveMouseOut)
          QCursor::setPos(v.geometry().topRight() + QPoint(100, 100));
 #else
@@ -116,7 +116,7 @@ private slots:
     void pressedMultipleButtons_data();
     void pressedMultipleButtons();
     void changeAxis();
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     void cursorShape();
 #endif
     void moveAndReleaseWithoutPress();
@@ -1692,7 +1692,7 @@ void tst_QQuickMouseArea::changeAxis()
     QCOMPARE(blackRect->y(), 94.0);
 }
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 void tst_QQuickMouseArea::cursorShape()
 {
     QQmlEngine engine;

@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 
 class QAccessibleQuickWindow : public QAccessibleObject
 {
@@ -80,7 +80,7 @@ private:
     QList<QQuickItem *> rootItems() const;
 };
 
-#endif // QT_NO_ACCESSIBILITY
+#endif // accessibility
 
 QT_END_NAMESPACE
 

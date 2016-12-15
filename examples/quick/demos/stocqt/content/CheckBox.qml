@@ -60,7 +60,6 @@ Item {
         id: checkbox
         width: 30
         height: 30
-        anchors.left: parent.left
         border.color: "#999999"
         border.width: 1
         antialiasing: true

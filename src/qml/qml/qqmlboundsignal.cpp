@@ -98,20 +98,20 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
         function += parameterString;
 
     function += QLatin1String(") { ") + expression + QLatin1String(" })");
-    m_function.set(v4, evalFunction(context(), scopeObject(), function, fileName, line));
-
-    if (m_function.isNullOrUndefined())
-        return; // could not evaluate function.  Not valid.
-
+    QV4::Scope valueScope(v4);
+    QV4::ScopedFunctionObject f(valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
+    QV4::ScopedContext context(valueScope, f->scope());
+    setupFunction(context, f->function());
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scopeObject,
+                                                     QV4::Function *function, QV4::ExecutionContext *scope)
     : QQmlJavaScriptExpression(),
       m_index(index),
       m_target(target)
 {
-    m_function.set(function.as<QV4::Object>()->engine(), function);
-    init(ctxt, scope);
+    setupFunction(scope, function);
+    init(ctxt, scopeObject);
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
@@ -122,14 +122,22 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
     init(ctxt, scope);
 
-    QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
-    QString error;
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
-    m_function.set(engine, QV4::FunctionObject::createQmlFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
-    if (!error.isEmpty()) {
-        qmlInfo(scopeObject()) << error;
-        m_function.clear();
+
+    QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
+    if (!signalParameters.isEmpty()) {
+        QString error;
+        QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
+        if (!error.isEmpty()) {
+            qmlInfo(scopeObject()) << error;
+            return;
+        }
+        runtimeFunction->updateInternalClass(engine, signalParameters);
     }
+
+    QV4::Scope valueScope(engine);
+    QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, QV4::QmlContext::create(engine->rootContext(), ctxt, scope));
+    setupFunction(qmlContext, runtimeFunction);
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
@@ -157,39 +165,11 @@ void QQmlBoundSignalExpression::expressionChanged()
     // bound signals do not notify on change.
 }
 
-QQmlSourceLocation QQmlBoundSignalExpression::sourceLocation() const
-{
-    QV4::Function *f = function();
-    if (f) {
-        QQmlSourceLocation loc;
-        loc.sourceFile = f->sourceFile();
-        loc.line = f->compiledFunction->location.line;
-        loc.column = f->compiledFunction->location.column;
-        return loc;
-    }
-    return QQmlSourceLocation();
-}
-
 QString QQmlBoundSignalExpression::expression() const
 {
-    if (expressionFunctionValid()) {
-        Q_ASSERT (context() && engine());
-        QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::ScopedValue v(scope, m_function.value());
-        return v->toQStringNoThrow();
-    }
+    if (expressionFunctionValid())
+        return QStringLiteral("function() { [code] }");
     return QString();
-}
-
-QV4::Function *QQmlBoundSignalExpression::function() const
-{
-    if (expressionFunctionValid()) {
-        Q_ASSERT (context() && engine());
-        QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::ScopedFunctionObject v(scope, m_function.value());
-        return v ? v->function() : 0;
-    }
-    return 0;
 }
 
 // Parts of this function mirror code in QQmlExpressionPrivate::value() and v8value().

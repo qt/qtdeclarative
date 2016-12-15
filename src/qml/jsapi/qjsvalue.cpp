@@ -612,8 +612,8 @@ QVariant QJSValue::toVariant() const
     if (Object *o = val->as<Object>())
         return o->engine()->toVariant(*val, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
 
-    if (val->isString())
-        return QVariant(val->stringValue()->toQString());
+    if (String *s = val->stringValue())
+        return QVariant(s->toQString());
     if (val->isBoolean())
         return QVariant(val->booleanValue());
     if (val->isNumber()) {
@@ -885,14 +885,14 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 
 static bool js_equal(const QString &string, const QV4::Value &value)
 {
-    if (value.isString())
-        return string == value.stringValue()->toQString();
+    if (String *s = value.stringValue())
+        return string == s->toQString();
     if (value.isNumber())
         return RuntimeHelpers::stringToNumber(string) == value.asDouble();
     if (value.isBoolean())
         return RuntimeHelpers::stringToNumber(string) == double(value.booleanValue());
-    if (value.isObject()) {
-        Scope scope(value.objectValue()->engine());
+    if (Object *o = value.objectValue()) {
+        Scope scope(o->engine());
         ScopedValue p(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
         return js_equal(string, p);
     }
@@ -979,8 +979,8 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
             return *variant == *QJSValuePrivate::getVariant(&other);
         if (variant->type() == QVariant::Map || variant->type() == QVariant::List)
             return false;
-        if (ov->isString())
-            return variant->toString() == ov->stringValue()->toQString();
+        if (String *s = ov->stringValue())
+            return variant->toString() == s->toQString();
         return false;
     }
     if (!ov)

@@ -41,7 +41,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
 
 /*!
     \qmltype IntValidator
@@ -221,7 +221,7 @@ void QQuickDoubleValidator::resetLocaleName()
    By default, this property contains a regular expression with the pattern .* that matches any string.
 */
 
-#endif // QT_NO_VALIDATOR
+#endif // validator
 
 QT_END_NAMESPACE
 

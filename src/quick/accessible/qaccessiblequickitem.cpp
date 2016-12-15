@@ -47,7 +47,7 @@
 #include "QtQuick/qquicktextdocument.h"
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 
 QAccessibleQuickItem::QAccessibleQuickItem(QQuickItem *item)
     : QAccessibleObject(item), m_doc(textDocument())
@@ -591,6 +591,6 @@ void QAccessibleQuickItem::setSelection(int /* selectionIndex */, int /* startOf
 }
 
 
-#endif // QT_NO_ACCESSIBILITY
+#endif // accessibility
 
 QT_END_NAMESPACE

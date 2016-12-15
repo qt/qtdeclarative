@@ -73,7 +73,7 @@ protected:
     QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
 
 private:
-    virtual void messageReceived(const QByteArray &message);
+    void messageReceived(const QByteArray &message) override;
 
     virtual void traceStarted(qint64 time, int engineId);
     virtual void traceFinished(qint64 time, int engineId);

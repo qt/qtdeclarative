@@ -689,8 +689,8 @@ void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
         } else {
             arg = RuntimeHelpers::toPrimitive(arg, PREFERREDTYPE_HINT);
 
-            if (arg->isString())
-                t = ParseString(arg->stringValue()->toQString());
+            if (String *s = arg->stringValue())
+                t = ParseString(s->toQString());
             else
                 t = TimeClip(arg->toNumber());
         }
@@ -1319,14 +1319,17 @@ ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
 ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue O(scope, RuntimeHelpers::toObject(scope.engine, ctx->thisObject()));
+    ScopedObject O(scope, ctx->thisObject().toObject(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+
     ScopedValue tv(scope, RuntimeHelpers::toPrimitive(O, NUMBER_HINT));
 
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Encode::null();
 
     ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toISOString")));
-    ScopedValue v(scope, O->objectValue()->get(s));
+    ScopedValue v(scope, O->get(s));
     FunctionObject *toIso = v->as<FunctionObject>();
 
     if (!toIso)

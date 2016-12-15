@@ -1404,7 +1404,7 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 void QQuickFlickable::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickFlickable);

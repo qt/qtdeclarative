@@ -35,8 +35,13 @@
 
     \include examples-run.qdocinc
 
-    \section1 Hello World
+    \section1 Activity Tracker
 
-    \e {Hello World} demonstrates creating a simple SQL table and doing
-    insert and select operations.
+    \e {Activity tracker} allows you to keep track of walks, hikes, or bike trips.
+
+    All database transactions are handled in Database.js. The database is
+    checked at startup, and created if it does not exist. LocalStorage uses
+    SQLite, which is a self-contained, serverless, public-domain database.
+    Opening a connection to the database is handled at the beginning of each
+    function that manipulates or retrieves data.
 */

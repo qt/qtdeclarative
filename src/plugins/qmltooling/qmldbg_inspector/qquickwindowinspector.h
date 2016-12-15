@@ -78,7 +78,7 @@ public:
     void setEnabled(bool enabled);
 
 protected:
-    bool eventFilter(QObject *, QEvent *);
+    bool eventFilter(QObject *, QEvent *) override;
 
 private:
     QQuickItem *m_overlay;

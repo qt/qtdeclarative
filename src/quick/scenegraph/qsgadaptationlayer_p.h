@@ -141,7 +141,7 @@ public:
 
     virtual void update() = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 
@@ -165,7 +165,7 @@ public:
 
     virtual void update() = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGPainterNode : public QSGVisitableNode
@@ -188,7 +188,7 @@ public:
     virtual void update() = 0;
     virtual QSGTexture *texture() const = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 class Q_QUICK_EXPORT QSGLayer : public QSGDynamicTexture
@@ -231,7 +231,7 @@ public:
 
     virtual void update() = 0;
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 };
 
 #endif
@@ -389,7 +389,7 @@ public:
     void setOwnerElement(QQuickItem *ownerElement) { m_ownerElement = ownerElement; }
     QQuickItem *ownerElement() const { return m_ownerElement; }
 
-    virtual void accept(QSGNodeVisitorEx *visitor) { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
     QQuickItem *m_ownerElement;

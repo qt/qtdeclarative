@@ -76,7 +76,7 @@ private slots:
     void statusChanges_data();
     void sourceSizeChanges();
     void progressAndStatusChanges();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void borderImageMesh();
 #endif
 
@@ -583,7 +583,7 @@ void tst_qquickborderimage::progressAndStatusChanges()
 
     delete obj;
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 void tst_qquickborderimage::borderImageMesh()
 {
     QQuickView *window = new QQuickView;

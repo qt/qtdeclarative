@@ -73,7 +73,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qdebug_p.h>
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 # include <QtGui/qcursor.h>
 #endif
 
@@ -317,7 +317,7 @@ void QQuickItemKeyFilter::keyReleased(QKeyEvent *event, bool post)
     if (m_next) m_next->keyReleased(event, post);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickItemKeyFilter::inputMethodEvent(QInputMethodEvent *event, bool post)
 {
     if (m_next)
@@ -331,7 +331,7 @@ QVariant QQuickItemKeyFilter::inputMethodQuery(Qt::InputMethodQuery query) const
     if (m_next) return m_next->inputMethodQuery(query);
     return QVariant();
 }
-#endif // QT_NO_IM
+#endif // im
 
 void QQuickItemKeyFilter::componentComplete()
 {
@@ -1298,7 +1298,7 @@ void QQuickKeysAttached::setPriority(Priority order)
 
 void QQuickKeysAttached::componentComplete()
 {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     Q_D(QQuickKeysAttached);
     if (d->item) {
         for (QQuickItem *targetItem : qAsConst(d->targets)) {
@@ -1387,7 +1387,7 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
     if (!event->isAccepted()) QQuickItemKeyFilter::keyReleased(event, post);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickKeysAttached::inputMethodEvent(QInputMethodEvent *event, bool post)
 {
     Q_D(QQuickKeysAttached);
@@ -1424,7 +1424,7 @@ QVariant QQuickKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
     }
     return QQuickItemKeyFilter::inputMethodQuery(query);
 }
-#endif // QT_NO_IM
+#endif // im
 
 QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 {
@@ -1675,7 +1675,7 @@ void QQuickEnterKeyAttached::setType(Qt::EnterKeyType type)
 {
     if (keyType != type) {
         keyType = type;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (itemPrivate && itemPrivate->activeFocus)
             QGuiApplication::inputMethod()->update(Qt::ImEnterKeyType);
 #endif
@@ -2366,7 +2366,7 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
     if (item == item->window()->contentItem())
         return true;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (QObject *acc = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false)) {
         int role = acc->property("role").toInt();
         if (role == QAccessible::EditableText
@@ -2855,7 +2855,7 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
     // if the added child has a cursor and we do not currently have any children
@@ -2883,7 +2883,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
     // turn it off, if nothing else is using it
@@ -2958,7 +2958,7 @@ void QQuickItemPrivate::derefWindow()
     if (polishScheduled)
         c->itemsToPolish.removeOne(q);
     c->removeGrabber(q);
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     if (c->cursorItem == q) {
         c->cursorItem = 0;
         window->unsetCursor();
@@ -3842,7 +3842,7 @@ void QQuickItem::keyReleaseEvent(QKeyEvent *event)
     event->ignore();
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     This event handler can be reimplemented in a subclass to receive input
     method events for an item. The event information is provided by the
@@ -3852,7 +3852,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 {
     event->ignore();
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-in
@@ -3861,7 +3861,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
   */
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
             QAccessibleEvent ev(acc, QAccessible::Focus);
@@ -3939,7 +3939,7 @@ void QQuickItem::touchUngrabEvent()
     // XXX todo
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 /*!
     This event handler can be reimplemented in a subclass to receive
     wheel events for an item. The event information is provided by the
@@ -3997,7 +3997,7 @@ void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
     Q_UNUSED(event);
 }
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 /*!
     This event handler can be reimplemented in a subclass to receive drag-enter
     events for an item. The event information is provided by the
@@ -4057,7 +4057,7 @@ void QQuickItem::dropEvent(QDropEvent *event)
 {
     Q_UNUSED(event);
 }
-#endif // QT_NO_DRAGANDDROP
+#endif // draganddrop
 
 /*!
     Reimplement this method to filter the mouse events that are received by
@@ -4088,7 +4088,7 @@ void QQuickItem::windowDeactivateEvent()
     }
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     This method is only relevant for input items.
 
@@ -4146,7 +4146,7 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 
     return v;
 }
-#endif // QT_NO_IM
+#endif // im
 
 QQuickAnchorLine QQuickItemPrivate::left() const
 {
@@ -4991,7 +4991,7 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
     }
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
 {
     Q_Q(QQuickItem);
@@ -5017,7 +5017,7 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
         extra->keyHandler->inputMethodEvent(e, true);
     }
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*!
     Called when \a change occurs for this item.
@@ -5038,7 +5038,7 @@ void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
         emit windowChanged(value.window);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     Notify input method on updated query values if needed. \a queries indicates
     the changed attributes.
@@ -5048,7 +5048,7 @@ void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
     if (hasActiveFocus())
         QGuiApplication::inputMethod()->update(queries);
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*! \internal */
 // XXX todo - do we want/need this anymore?
@@ -5790,7 +5790,7 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     }
 
     itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (isAccessible) {
         QAccessibleEvent ev(q, effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide);
         QAccessible::updateAccessibility(&ev);
@@ -7074,7 +7074,7 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
 {
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     Q_Q(QQuickItem);
 
     // if we're asked to turn it off (because of an unsetcursor call, or a node
@@ -7123,7 +7123,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     }
 }
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 
 /*!
     Returns the cursor shape for this item.
@@ -7609,7 +7609,7 @@ bool QQuickItem::event(QEvent *ev)
         updatePolish();
         break;
 #endif
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     case QEvent::InputMethodQuery: {
         QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
         Qt::InputMethodQueries queries = query->queries();
@@ -7626,7 +7626,7 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::InputMethod:
         inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
         break;
-#endif // QT_NO_IM
+#endif // im
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
@@ -7670,12 +7670,12 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::MouseButtonDblClick:
         mouseDoubleClickEvent(static_cast<QMouseEvent*>(ev));
         break;
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     case QEvent::Wheel:
         wheelEvent(static_cast<QWheelEvent*>(ev));
         break;
 #endif
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     case QEvent::DragEnter:
         dragEnterEvent(static_cast<QDragEnterEvent*>(ev));
         break;
@@ -7688,12 +7688,12 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::Drop:
         dropEvent(static_cast<QDropEvent*>(ev));
         break;
-#endif // QT_NO_DRAGANDDROP
-#ifndef QT_NO_GESTURES
+#endif // draganddrop
+#if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
         ev->ignore();
         break;
-#endif // QT_NO_GESTURES
+#endif // gestures
     default:
         return QObject::event(ev);
     }
@@ -8291,7 +8291,7 @@ QQuickItemPrivate::ExtraData::ExtraData()
 }
 
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickItemPrivate::accessibleRole() const
 {
     Q_Q(const QQuickItem);

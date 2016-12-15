@@ -63,16 +63,16 @@ public:
     QSGBasicGlyphNode();
     virtual ~QSGBasicGlyphNode();
 
-    virtual QPointF baseLine() const { return m_baseLine; }
-    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
-    virtual void setColor(const QColor &color);
+    QPointF baseLine() const override { return m_baseLine; }
+    void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
+    void setColor(const QColor &color) override;
 
-    virtual void setPreferredAntialiasingMode(AntialiasingMode) { }
-    virtual void setStyle(QQuickText::TextStyle);
-    virtual void setStyleColor(const QColor &);
+    void setPreferredAntialiasingMode(AntialiasingMode) override { }
+    void setStyle(QQuickText::TextStyle) override;
+    void setStyleColor(const QColor &) override;
 
     virtual void setMaterialColor(const QColor &color) = 0;
-    virtual void update() = 0;
+    void update() override = 0;
 
 protected:
     QGlyphRun m_glyphs;

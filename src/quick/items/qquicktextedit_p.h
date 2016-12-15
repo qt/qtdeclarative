@@ -242,7 +242,7 @@ public:
 
     QRectF cursorRectangle() const;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const Q_DECL_OVERRIDE;
     Q_REVISION(4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
@@ -347,7 +347,7 @@ public Q_SLOTS:
     void select(int start, int end);
     void deselect();
     bool isRightToLeft(int start, int end);
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void cut();
     void copy();
     void paste();
@@ -399,7 +399,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *e) Q_DECL_OVERRIDE;
 #endif
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) Q_DECL_OVERRIDE;

@@ -62,26 +62,24 @@ void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
 void ObjectCtor::construct(const Managed *that, Scope &scope, CallData *callData)
 {
     const ObjectCtor *ctor = static_cast<const ObjectCtor *>(that);
-    ExecutionEngine *v4 = ctor->engine();
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
-        ScopedObject obj(scope, v4->newObject());
-        ScopedObject proto(scope, ctor->get(v4->id_prototype()));
+        ScopedObject obj(scope, scope.engine->newObject());
+        ScopedObject proto(scope, ctor->get(scope.engine->id_prototype()));
         if (!!proto)
             obj->setPrototype(proto);
         scope.result = obj.asReturnedValue();
     } else {
-        scope.result = RuntimeHelpers::toObject(scope.engine, callData->args[0]);
+        scope.result = callData->args[0].toObject(scope.engine);
     }
 }
 
-void ObjectCtor::call(const Managed *m, Scope &scope, CallData *callData)
+void ObjectCtor::call(const Managed *, Scope &scope, CallData *callData)
 {
-    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);
-    ExecutionEngine *v4 = ctor->engine();
+    ExecutionEngine *v4 = scope.engine;
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         scope.result = v4->newObject()->asReturnedValue();
     } else {
-        scope.result = RuntimeHelpers::toObject(v4, callData->args[0]);
+        scope.result = callData->args[0].toObject(v4);
     }
 }
 
@@ -398,7 +396,7 @@ ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
     } else if (ctx->thisObject().isNull()) {
         return ctx->d()->engine->newString(QStringLiteral("[object Null]"))->asReturnedValue();
     } else {
-        ScopedObject obj(scope, RuntimeHelpers::toObject(scope.engine, ctx->thisObject()));
+        ScopedObject obj(scope, ctx->thisObject().toObject(scope.engine));
         QString className = obj->className();
         return ctx->d()->engine->newString(QStringLiteral("[object %1]").arg(className))->asReturnedValue();
     }

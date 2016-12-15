@@ -36,7 +36,7 @@
 #include <QtCore/qnumeric.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
-#include <private/qqmlcontextwrapper_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../../shared/util.h"
@@ -3986,7 +3986,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
 
             {
                 QV4::Scope scope(QV8Engine::getV4((engine)));
-                QV4::ScopedValue temporaryScope(scope, QV4::QmlContextWrapper::qmlScope(scope.engine, scriptContext, 0));
+                QV4::ScopedContext temporaryScope(scope, QV4::QmlContext::create(scope.engine->rootContext(), scriptContext, 0));
                 Q_UNUSED(temporaryScope)
             }
 

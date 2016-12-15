@@ -39,7 +39,7 @@
 
 #include "qsgrenderer_p.h"
 #include "qsgnodeupdater_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLFramebufferObject>
 # include <QtGui/QOpenGLContext>
 # include <QtGui/QOpenGLFunctions>
@@ -67,7 +67,7 @@ int qt_sg_envInt(const char *name, int defaultValue)
 
 void QSGBindable::clear(QSGAbstractRenderer::ClearMode mode) const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     GLuint bits = 0;
     if (mode & QSGAbstractRenderer::ClearColorBuffer) bits |= GL_COLOR_BUFFER_BIT;
     if (mode & QSGAbstractRenderer::ClearDepthBuffer) bits |= GL_DEPTH_BUFFER_BIT;
@@ -81,11 +81,11 @@ void QSGBindable::clear(QSGAbstractRenderer::ClearMode mode) const
 // Reactivate the color buffer after switching to the stencil.
 void QSGBindable::reactivate() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLContext::currentContext()->functions()->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 #endif
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 QSGBindableFboId::QSGBindableFboId(GLuint id)
     : m_id(id)
 {
@@ -181,7 +181,7 @@ bool QSGRenderer::isMirrored() const
 
 void QSGRenderer::renderScene(uint fboId)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (fboId) {
         QSGBindableFboId bindable(fboId);
         renderScene(bindable);
@@ -220,9 +220,10 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     bindable.bind();
     if (profileFrames)
         bindTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererBinding);
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     // Sanity check that attribute registers are disabled
     if (qsg_sanity_check) {
         GLint count = 0;
@@ -240,7 +241,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     render();
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRendererFrame,
+                           QQuickProfiler::SceneGraphRendererRender);
 
     m_is_rendering = false;
     m_changed_emitted = false;
@@ -304,13 +306,15 @@ void QSGRenderer::preprocess()
     bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled();
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererPreprocess);
 
     nodeUpdater()->updateStates(root);
 
     if (profileFrames)
         updatePassTime = frameTimer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererUpdate);
 }
 
 void QSGRenderer::addNodesToPreprocess(QSGNode *node)

@@ -49,7 +49,7 @@ class QDebugMessageServiceFactory : public QQmlDebugServiceFactory
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qdebugmessageservice.json")
 public:
-    QQmlDebugService *create(const QString &key);
+    QQmlDebugService *create(const QString &key) override;
 };
 
 QT_END_NAMESPACE

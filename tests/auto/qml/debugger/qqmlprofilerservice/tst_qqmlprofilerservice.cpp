@@ -618,7 +618,7 @@ void tst_QQmlProfilerService::scenegraphData()
     // if the clocks are acting up.
     qint64 contextFrameTime = -1;
     qint64 renderFrameTime = -1;
-#ifndef QT_NO_OPENGL //Software renderer doesn't have context frames
+#if QT_CONFIG(opengl) //Software renderer doesn't have context frames
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
         if (msg.messageType == QQmlProfilerDefinitions::SceneGraphFrame) {
             if (msg.detailType == QQmlProfilerDefinitions::SceneGraphContextFrame) {

@@ -58,6 +58,8 @@ The supported backends are the following
 
 \li Direct3D 12 - Requested by the string \c{"d3d12"} or the enum value QSGRendererInterface::Direct3D12.
 
+\li OpenVG - Requested by the string \c{"openvg"} or the enum value QSGRendererInterface::OpenVG.
+
 \endlist
 
 When in doubt which backend is in use, enable basic scenegraph information
@@ -91,6 +93,14 @@ The Direct3D 12 adaptation is an alternative renderer for \l {Qt Quick} 2 when
 running on Windows 10, both for Win32 and UWP applications. The details for
 this adaptation are available here:
 \l{qtquick-visualcanvas-adaptations-d3d12.html}{Direct3D 12 Adaptation}
+
+\section1 OpenVG
+
+The OpenVG adaptation is an alternative renderer for \l {Qt Quick} 2 that will
+renderer the contents of the scene graph using OpenVG commands to provide
+hardware-acclerated 2D vector and raster graphics. The details for this
+adaptation are available here:
+\l{qtquick-visualcanvas-scenegraph-openvg.html}{OpenVG Adaptation}
 
 */
 
@@ -385,5 +395,75 @@ prepare the next frame (or may not block at all depending on the time gap
 between the frames). By default blocking present is disabled.
 
 \endlist
+
+*/
+
+/*!
+\title Qt Quick OpenVG Adaptation
+\page qtquick-visualcanvas-adaptations-openvg.html
+
+The OpenVG adaptation is an alternative renderer for \l {Qt Quick} 2 that will
+renderer the contents of the scene graph using OpenVG commands to provide
+hardware-acclerated 2D vector and raster graphics. Much like the Software
+adaptation, some features and optimizations are no longer available. Most
+Qt Quick 2 applications will run without modification though any attempts to
+use unsupported features will be ignored.
+
+\section2 EGL Requirement
+Unlike the defualt OpenGL Renderer, there is no built in support for acquiring
+an OpenVG context.  This means that the renderer has the responsbility of
+requesting and managing the the current context.  To do this EGL has to be used
+directly in the OpenVG renderer.  This means that the OpenVG renderer is only
+usable with platform plugins that support creating QWindows with support for
+QSurfaceFormat::OpenVG. From this window, the renderer can get an EGLSurface
+which can be used with an EGLContext to render OpenVG content.
+
+\section2 Renderer
+The OpenVG Renderer works by using the OpenVG API to send commands and data to
+a Vector GPU which will render the scenegraph in an accelerated manner, offloading
+graphics rendering from the CPU. Many operations like the rendering of rectangles
+and fonts glyphs ideal for OpenVG because these can be represented as paths which
+are stroked and filled. Rendering scenegraph items that would typically involve
+textures are handled in the OpenVG renderer by using VGImage. In addition when
+rendering to offscreen surfaces (like when using Layers), the scene subtree is
+rendered to a VGImage which can be reused in the scene.
+
+\section2 Render Loop
+The OpenVG Renderer mirrors the behavior of the Basic render loop and will execute
+all OpenVG commands in a single thread.
+
+See the \l{qtquick-visualcanvas-scenegraph.html}{Scene Graph page} for more
+information on render loops
+
+\section2 Shader Effects
+ShaderEffect components in QtQuick 2 can not be rendered by the OpenVG adaptation.
+While it is possible to user ShaderEffectSource and QML Item Layers (which are both
+offscreen surfaces), it is not actually possible to apply shader effects to them
+via the ShaderEffect item.  This is because OpenVG lacks an API for applying per
+vertex and per fragment shader operations.  It may be possible however to take
+advantage of Image Filter operations in the OpenVG API to get similar effects to
+what is provided by ShaderEffects in custom items. To integrate custom OpenVG
+rendering, use QSGRenderNode in combination with QSGRendererInterface.
+
+\section2 Qt Graphical Effects Module
+\l {Qt Graphical Effects} uses ShaderEffect items to render effects. If you use
+graphical effects from this module, then you should not hide the source
+item so that the original item can still be rendered.
+
+\section2 Particle Effects
+It is not possible to render particle effects with the OpenVG adaptation. Whenever
+possible, remove particles completely from the scene. Otherwise they will still
+require some processing, even though they are not visible.
+
+\section2 Rendering Text
+The text rendering with the OpenVG adaptation is based on rendering the glpyh
+paths, and does not use the distance fields technique used by the OpenGL backend.
+
+\section2 Perspective Transforms
+The OpenVG API does not allow paths to be transformed with non-affine transforms,
+while it is possible with Qt Quick. This means that rendering components using
+paths like Rectangles and Text, when applying perspective transforms the OpenVG
+backend will first render to a VGImage before applying transformations. This uses
+more memory at runtime and is a slower path so avoid doing this if necessary.
 
 */

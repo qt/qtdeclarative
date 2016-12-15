@@ -143,7 +143,7 @@ private slots:
     void cursorDelegateHeight();
     void navigation();
     void readOnly();
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void copyAndPaste();
     void canPaste();
     void canPasteEmpty();
@@ -153,7 +153,7 @@ private slots:
     void inputMethodUpdate();
     void openInputPanel();
     void geometrySignals();
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void pastingRichText_QTBUG_14003();
 #endif
     void implicitSize_data();
@@ -2923,7 +2923,7 @@ void tst_qquicktextedit::navigation()
     QCOMPARE(input->hasActiveFocus(), false);
 }
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextedit::copyAndPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -3000,7 +3000,7 @@ void tst_qquicktextedit::copyAndPaste()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextedit::canPaste()
 {
     QGuiApplication::clipboard()->setText("Some text");
@@ -3018,7 +3018,7 @@ void tst_qquicktextedit::canPaste()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextedit::canPasteEmpty()
 {
     QGuiApplication::clipboard()->clear();
@@ -3036,7 +3036,7 @@ void tst_qquicktextedit::canPasteEmpty()
 }
 #endif
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextedit::middleClickPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -3338,7 +3338,7 @@ void tst_qquicktextedit::geometrySignals()
     delete o;
 }
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 void tst_qquicktextedit::pastingRichText_QTBUG_14003()
 {
     QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.PlainText }";

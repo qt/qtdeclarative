@@ -68,29 +68,29 @@ public:
     QSGThreadedRenderLoop();
     ~QSGThreadedRenderLoop();
 
-    void show(QQuickWindow *) {}
-    void hide(QQuickWindow *);
+    void show(QQuickWindow *) override {}
+    void hide(QQuickWindow *) override;
 
-    void windowDestroyed(QQuickWindow *window);
-    void exposureChanged(QQuickWindow *window);
+    void windowDestroyed(QQuickWindow *window) override;
+    void exposureChanged(QQuickWindow *window) override;
 
-    QImage grab(QQuickWindow *);
+    QImage grab(QQuickWindow *) override;
 
-    void update(QQuickWindow *window);
-    void maybeUpdate(QQuickWindow *window);
-    void handleUpdateRequest(QQuickWindow *window);
+    void update(QQuickWindow *window) override;
+    void maybeUpdate(QQuickWindow *window) override;
+    void handleUpdateRequest(QQuickWindow *window) override;
 
-    QSGContext *sceneGraphContext() const;
-    QSGRenderContext *createRenderContext(QSGContext *) const;
+    QSGContext *sceneGraphContext() const override;
+    QSGRenderContext *createRenderContext(QSGContext *) const override;
 
-    QAnimationDriver *animationDriver() const;
+    QAnimationDriver *animationDriver() const override;
 
-    void releaseResources(QQuickWindow *window);
+    void releaseResources(QQuickWindow *window) override;
 
-    bool event(QEvent *);
-    void postJob(QQuickWindow *window, QRunnable *job);
+    bool event(QEvent *) override;
+    void postJob(QQuickWindow *window, QRunnable *job) override;
 
-    bool interleaveIncubation() const;
+    bool interleaveIncubation() const override;
 
 public Q_SLOTS:
     void animationStarted();

@@ -783,7 +783,7 @@ public:
         return new QQuickApplication(parent);
     }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     QInputMethod *inputMethod()
     {
         QInputMethod *im = qGuiApp->inputMethod();

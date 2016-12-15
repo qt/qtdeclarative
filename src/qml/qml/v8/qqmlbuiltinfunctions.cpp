@@ -148,9 +148,7 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
 
     o->defineAccessorProperty(QStringLiteral("platform"), QV4::QtObject::method_get_platform, 0);
     o->defineAccessorProperty(QStringLiteral("application"), QV4::QtObject::method_get_application, 0);
-#ifndef QT_NO_IM
     o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, 0);
-#endif
     o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, 0);
 
     o->defineDefaultProperty(QStringLiteral("callLater"), QV4::QtObject::method_callLater);
@@ -1031,7 +1029,7 @@ ReturnedValue QtObject::method_exit(CallContext *ctx)
 /*!
 \qmlmethod object Qt::createQmlObject(string qml, object parent, string filepath)
 
-Returns a new object created from the given \a string of QML which will have the specified \a parent,
+Returns a new object created from the given \a qml string which will have the specified \a parent,
 or \c null if there was an error in creating the object.
 
 If \a filepath is specified, it will be used for error reporting for the created object.
@@ -1305,30 +1303,15 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 
 void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction)
 {
-    QV4::Heap::FunctionObject::init(originalFunction->scope(), originalFunction->name());
-    bindingLocation = new QQmlSourceLocation;
-    this->originalFunction = originalFunction->d();
+    Scope scope(originalFunction->engine());
+    ScopedContext context(scope, originalFunction->scope());
+    FunctionObject::init(context, originalFunction->function());
 }
 
-void QQmlBindingFunction::initBindingLocation()
+QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
     QV4::StackFrame frame = engine()->currentStackFrame();
-    d()->bindingLocation->sourceFile = frame.source;
-    d()->bindingLocation->line = frame.line;
-}
-
-void QQmlBindingFunction::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    ScopedFunctionObject function(scope, static_cast<const QQmlBindingFunction*>(that)->d()->originalFunction);
-    function->call(scope, callData);
-}
-
-void QQmlBindingFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    QQmlBindingFunction::Data *This = static_cast<QQmlBindingFunction::Data *>(that);
-    if (This->originalFunction)
-        This->originalFunction->mark(e);
-    QV4::FunctionObject::markObjects(that, e);
+    return QQmlSourceLocation(frame.source, frame.line, 0);
 }
 
 DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
@@ -1423,13 +1406,11 @@ ReturnedValue QtObject::method_get_application(CallContext *ctx)
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, qt->d()->application);
 }
 
-#ifndef QT_NO_IM
 ReturnedValue QtObject::method_get_inputMethod(CallContext *ctx)
 {
     QObject *o = QQml_guiProvider()->inputMethod();
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, o);
 }
-#endif
 
 ReturnedValue QtObject::method_get_styleHints(CallContext *ctx)
 {
@@ -1740,7 +1721,7 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
     Scope scope(v4);
 
     if (extensions.testFlag(QJSEngine::TranslationExtension)) {
-    #ifndef QT_NO_TRANSLATION
+    #if QT_CONFIG(translation)
         globalObject->defineDefaultProperty(QStringLiteral("qsTranslate"), QV4::GlobalExtensions::method_qsTranslate);
         globalObject->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), QV4::GlobalExtensions::method_qsTranslateNoOp);
         globalObject->defineDefaultProperty(QStringLiteral("qsTr"), QV4::GlobalExtensions::method_qsTr);
@@ -1767,7 +1748,7 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
 }
 
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
 /*!
     \qmlmethod string Qt::qsTranslate(string context, string sourceText, string disambiguation, int n)
 
@@ -2015,7 +1996,7 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(CallContext *ctx)
         return QV4::Encode::undefined();
     return ctx->args()[0].asReturnedValue();
 }
-#endif // QT_NO_TRANSLATION
+#endif // translation
 
 
 QV4::ReturnedValue GlobalExtensions::method_gc(CallContext *ctx)

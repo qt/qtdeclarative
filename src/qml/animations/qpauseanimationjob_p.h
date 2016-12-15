@@ -62,12 +62,12 @@ public:
     explicit QPauseAnimationJob(int duration = 250);
     ~QPauseAnimationJob();
 
-    int duration() const;
+    int duration() const override;
     void setDuration(int msecs);
 
 protected:
-    void updateCurrentTime(int);
-    void debugAnimation(QDebug d) const;
+    void updateCurrentTime(int) override;
+    void debugAnimation(QDebug d) const override;
 
 private:
     //definition

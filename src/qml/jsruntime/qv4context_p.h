@@ -55,8 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlContextData;
 class QObject;
+class QQmlContextData;
 
 namespace QV4 {
 
@@ -65,11 +65,13 @@ struct CompilationUnit;
 struct Function;
 }
 
-struct QmlContextWrapper;
+struct Function;
 struct Identifier;
 struct CallContext;
 struct CatchContext;
 struct WithContext;
+struct QmlContext;
+struct QmlContextWrapper;
 
 struct CallData
 {
@@ -90,6 +92,8 @@ struct CallData
 };
 
 namespace Heap {
+
+struct QmlContext;
 
 struct ExecutionContext : Base {
     enum ContextType {
@@ -137,11 +141,15 @@ struct CallContext : ExecutionContext {
     {
         ExecutionContext::init(engine, t);
         function = 0;
+        v4Function = 0;
         locals = 0;
         activation = 0;
     }
 
+    inline unsigned int formalParameterCount() const;
+
     Pointer<FunctionObject> function;
+    QV4::Function *v4Function;
     Value *locals;
     Pointer<Object> activation;
 };
@@ -177,14 +185,6 @@ struct WithContext : ExecutionContext {
 };
 V4_ASSERT_IS_TRIVIAL(WithContext)
 
-struct QmlContextWrapper;
-
-struct QmlContext : ExecutionContext {
-    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
-
-    Pointer<QmlContextWrapper> qml;
-};
-
 }
 
 struct Q_QML_EXPORT ExecutionContext : public Managed
@@ -198,11 +198,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     ExecutionEngine *engine() const { return d()->engine; }
 
-    Heap::CallContext *newCallContext(const FunctionObject *f, CallData *callData);
+    Heap::CallContext *newCallContext(Function *f, CallData *callData);
     Heap::WithContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
-    Heap::QmlContext *newQmlContext(QmlContextWrapper *qml);
-    Heap::QmlContext *newQmlContext(QQmlContextData *context, QObject *scopeObject);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -216,7 +214,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     inline const CatchContext *asCatchContext() const;
     inline const WithContext *asWithContext() const;
 
-    Heap::FunctionObject *getFunctionObject() const;
+    Function *getFunction() const;
 
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 
@@ -232,6 +230,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue argument(int i) const {
         return d()->callData->argument(i);
     }
+
+    void call(Scope &scope, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
+    void simpleCall(Scope &scope, CallData *callData, QV4::Function *function);
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext
@@ -244,11 +245,11 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
     Identifier * const *variables() const;
     unsigned int variableCount() const;
 
-    inline ReturnedValue argument(int i);
+    inline ReturnedValue argument(int i) const;
     bool needsOwnArguments() const;
 };
 
-inline ReturnedValue CallContext::argument(int i) {
+inline ReturnedValue CallContext::argument(int i) const {
     return i < argc() ? args()[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 
@@ -266,16 +267,6 @@ struct CatchContext : public ExecutionContext
 struct WithContext : public ExecutionContext
 {
     V4_MANAGED(WithContext, ExecutionContext)
-};
-
-struct Q_QML_EXPORT QmlContext : public ExecutionContext
-{
-    V4_MANAGED(QmlContext, ExecutionContext)
-
-    QObject *qmlScope() const;
-    QQmlContextData *qmlContext() const;
-
-    void takeContextOwnership();
 };
 
 inline CallContext *ExecutionContext::asCallContext()
@@ -307,10 +298,6 @@ inline Heap::CallContext Heap::CallContext::createOnStack(ExecutionEngine *v4)
     ctxt.init(v4);
     return ctxt;
 }
-
-/* Function *f, int argc */
-#define requiredMemoryForExecutionContect(f, argc) \
-    ((sizeof(CallContext::Data) + 7) & ~7) + sizeof(Value) * (f->varCount() + qMax((uint)argc, f->formalParameterCount())) + sizeof(CallData)
 
 } // namespace QV4
 

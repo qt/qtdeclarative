@@ -128,12 +128,11 @@ void CustomBinding::componentComplete()
 
         QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
-        QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
-        QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, m_target, compilationUnit->runtimeFunctions[bindingId]));
-
         QQmlProperty property(m_target, name, qmlContext(this));
+        QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
+        QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, m_target));
         QQmlBinding *qmlBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
-                                                      function, m_target, context);
+                                                      compilationUnit->runtimeFunctions[bindingId], m_target, context, qmlContext);
         qmlBinding->setTarget(property);
         QQmlPropertyPrivate::setBinding(property, qmlBinding);
     }

@@ -69,13 +69,6 @@ using namespace QV4::JIT;
 
 
 namespace {
-inline bool isPregOrConst(IR::Expr *e)
-{
-    if (IR::Temp *t = e->asTemp())
-        return t->kind == IR::Temp::PhysicalRegister;
-    return e->asConst() != 0;
-}
-
 class QIODevicePrintStream: public FilePrintStream
 {
     Q_DISABLE_COPY(QIODevicePrintStream)
@@ -1164,11 +1157,41 @@ void InstructionSelection::convertTypeToBool(IR::Expr *source, IR::Expr *target)
         _as->storeBool(false, target);
         break;
     case IR::StringType:
+        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
+                            Assembler::PointerToValue(source));
+        _as->storeBool(Assembler::ReturnValueRegister, target);
     case IR::VarType:
     default:
+        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer tagAddr = addr;
+        tagAddr.offset += 4;
+        _as->load32(tagAddr, Assembler::ReturnValueRegister);
+
+        // checkif it's a bool:
+        Assembler::Jump notBool = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
+                                                Assembler::TrustedImm32(Value::Boolean_Type_Internal));
+        _as->load32(addr, Assembler::ReturnValueRegister);
+        Assembler::Jump boolDone = _as->jump();
+        // check if it's an int32:
+        notBool.link(_as);
+        Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
+                                                 Assembler::TrustedImm32(Value::Integer_Type_Internal));
+        _as->load32(addr, Assembler::ReturnValueRegister);
+        Assembler::Jump isZero = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister,
+                                               Assembler::TrustedImm32(0));
+        _as->move(Assembler::TrustedImm32(1), Assembler::ReturnValueRegister);
+        Assembler::Jump intDone = _as->jump();
+
+        // not an int:
+        fallback.link(_as);
         generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
-                             Assembler::PointerToValue(source));
+                            Assembler::PointerToValue(source));
+
+        isZero.link(_as);
+        intDone.link(_as);
+        boolDone.link(_as);
         _as->storeBool(Assembler::ReturnValueRegister, target);
+
         break;
     }
 }
@@ -1713,9 +1736,6 @@ QT_END_NAMESPACE
 bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
-    if (!isPregOrConst(left) || !isPregOrConst(right))
-        return false;
-
     if (_as->nextBlock() == iftrue) {
         Assembler::Jump target = _as->branchDouble(true, op, left, right);
         _as->addPatch(iffalse, target);
@@ -1730,9 +1750,6 @@ bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Ex
 bool InstructionSelection::visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Expr *right,
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
-    if (!isPregOrConst(left) || !isPregOrConst(right))
-        return false;
-
     if (_as->nextBlock() == iftrue) {
         Assembler::Jump target = _as->branchInt32(true, op, left, right);
         _as->addPatch(iffalse, target);
@@ -1831,7 +1848,7 @@ bool InstructionSelection::visitCJumpStrictUndefined(IR::Binop *binop,
 
     Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
                                                                          : Assembler::NotEqual;
-    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
     Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
     _as->load64(addr, tagReg);
@@ -1930,7 +1947,7 @@ bool InstructionSelection::visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Bin
 
     Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
     tagAddr.offset += 4;
-    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
     _as->load32(tagAddr, tagReg);
 
     if (binop->op == IR::OpNotEqual)

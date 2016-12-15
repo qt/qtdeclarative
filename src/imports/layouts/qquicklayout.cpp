@@ -763,18 +763,14 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemChildAddedChange) {
         QQuickItem *item = value.item;
-        qmlobject_connect(item, QQuickItem, SIGNAL(implicitWidthChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
-        qmlobject_connect(item, QQuickItem, SIGNAL(implicitHeightChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
         qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
-        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::SiblingOrder);
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
         if (isReady())
             updateLayoutItems();
     } else if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitWidthChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(implicitHeightChanged()), this, QQuickLayout, SLOT(invalidateSenderItem()));
         qmlobject_disconnect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
-        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder);
+        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
         if (isReady())
             updateLayoutItems();
     }
@@ -810,6 +806,30 @@ void QQuickLayout::itemSiblingOrderChanged(QQuickItem *item)
 {
     Q_UNUSED(item);
     updateLayoutItems();
+}
+
+void QQuickLayout::itemImplicitWidthChanged(QQuickItem *item)
+{
+    if (!isReady() || item->signalsBlocked())
+        return;
+    invalidate(item);
+}
+
+void QQuickLayout::itemImplicitHeightChanged(QQuickItem *item)
+{
+    if (!isReady() || item->signalsBlocked())
+        return;
+    invalidate(item);
+}
+
+void QQuickLayout::itemDestroyed(QQuickItem *item)
+{
+    Q_UNUSED(item);
+}
+
+void QQuickLayout::itemVisibilityChanged(QQuickItem *item)
+{
+    Q_UNUSED(item);
 }
 
 void QQuickLayout::rearrange(const QSizeF &/*size*/)

@@ -397,7 +397,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
         return false;
     }
 
-    const QString sourcePath = url.toLocalFile();
+    const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
     CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
@@ -471,7 +471,7 @@ QString Binding::valueAsString(const Unit *unit) const
         return QString::number(valueAsNumber());
     case Type_Invalid:
         return QString();
-#ifdef QT_NO_TRANSLATION
+#if !QT_CONFIG(translation)
     case Type_TranslationById:
     case Type_Translation:
         return unit->stringAt(stringIndex);

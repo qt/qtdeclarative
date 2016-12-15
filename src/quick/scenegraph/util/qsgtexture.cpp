@@ -45,7 +45,7 @@
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <qopenglfunctions.h>
 # include <QtGui/qopenglcontext.h>
 # include <QtGui/qopenglfunctions.h>
@@ -70,7 +70,7 @@
 #include <QHash>
 #endif
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 static QElapsedTimer qsg_renderer_timer;
 #endif
 
@@ -86,7 +86,7 @@ static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK"
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
@@ -284,7 +284,7 @@ Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 
 bool qsg_safeguard_texture(QSGTexture *texture)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QMutexLocker locker(qsg_valid_texture_mutex());
     if (!qsg_valid_texture_set()->contains(texture)) {
         qWarning() << "Invalid texture accessed:" << (void *) texture;
@@ -527,7 +527,7 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
  */
 void QSGTexture::updateBindOptions(bool force)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     Q_D(QSGTexture);
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     force |= isAtlasTexture();
@@ -582,7 +582,7 @@ QSGPlainTexture::QSGPlainTexture()
 
 QSGPlainTexture::~QSGPlainTexture()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_texture_id && m_owns_texture && QOpenGLContext::currentContext())
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
 #endif
@@ -617,7 +617,7 @@ int QSGPlainTexture::textureId() const
             // or ~QSGPlainTexture so just keep it minimal here.
             return 0;
         } else if (m_texture_id == 0){
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
             // Generate a texture id for use later and return it.
             QOpenGLContext::currentContext()->functions()->glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
 #endif
@@ -629,7 +629,7 @@ int QSGPlainTexture::textureId() const
 
 void QSGPlainTexture::setTextureId(int id)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_texture_id && m_owns_texture)
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
 #endif
@@ -643,7 +643,7 @@ void QSGPlainTexture::setTextureId(int id)
 
 void QSGPlainTexture::bind()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLContext *context = QOpenGLContext::currentContext();
     QOpenGLFunctions *funcs = context->functions();
     if (!m_dirty_texture) {
@@ -673,7 +673,8 @@ void QSGPlainTexture::bind()
                     (int) qsg_renderer_timer.elapsed(),
                     m_texture_size.width(),
                     m_texture_size.height());
-            Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTextureDeletion);
+            Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTextureDeletion,
+                                   QQuickProfiler::SceneGraphTextureDeletionDelete);
         }
         m_texture_id = 0;
         m_texture_size = QSize();
@@ -689,7 +690,8 @@ void QSGPlainTexture::bind()
     qint64 bindTime = 0;
     if (profileFrames)
         bindTime = qsg_renderer_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
+                              QQuickProfiler::SceneGraphTexturePrepareBind);
 
     // ### TODO: check for out-of-memory situations...
 
@@ -730,7 +732,8 @@ void QSGPlainTexture::bind()
     qint64 convertTime = 0;
     if (profileFrames)
         convertTime = qsg_renderer_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
+                              QQuickProfiler::SceneGraphTexturePrepareConvert);
 
     updateBindOptions(m_dirty_bind_options);
 
@@ -773,14 +776,16 @@ void QSGPlainTexture::bind()
     qint64 swizzleTime = 0;
     if (profileFrames)
         swizzleTime = qsg_renderer_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
+                              QQuickProfiler::SceneGraphTexturePrepareSwizzle);
 
     funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_texture_size.width(), m_texture_size.height(), 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
     qint64 uploadTime = 0;
     if (profileFrames)
         uploadTime = qsg_renderer_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
+                              QQuickProfiler::SceneGraphTexturePrepareUpload);
 
     if (mipmapFiltering() != QSGTexture::None) {
         funcs->glGenerateMipmap(GL_TEXTURE_2D);
@@ -803,7 +808,8 @@ void QSGPlainTexture::bind()
                 int((mipmapTime - uploadTime)/1000000),
                 m_texture_size != m_image.size() ? " (scaled to GL_MAX_TEXTURE_SIZE)" : "");
     }
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTexturePrepare);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTexturePrepare,
+                           QQuickProfiler::SceneGraphTexturePrepareMipmap);
 
     m_texture_rect = QRectF(0, 0, 1, 1);
 

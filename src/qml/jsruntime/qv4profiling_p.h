@@ -86,7 +86,7 @@ QT_END_NAMESPACE
         engine->profiler()->trackDealloc(size, type) : false)
 
 #define Q_V4_PROFILE(engine, function)\
-    (engine->profiler() &&\
+    (Q_UNLIKELY(engine->profiler()) &&\
             (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
         Profiling::FunctionCallProfiler::profileCall(engine->profiler(), engine, function) :\
         function->code(engine, function->codeData))

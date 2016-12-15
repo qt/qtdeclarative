@@ -87,8 +87,8 @@ struct Property {
     inline bool isSubset(const PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const;
     inline void merge(PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs);
 
-    inline Heap::FunctionObject *getter() const { return value.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(value.heapObject()) : 0; }
-    inline Heap::FunctionObject *setter() const { return set.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(set.heapObject()) : 0; }
+    inline Heap::FunctionObject *getter() const { return reinterpret_cast<Heap::FunctionObject *>(value.heapObject()); }
+    inline Heap::FunctionObject *setter() const { return reinterpret_cast<Heap::FunctionObject *>(set.heapObject()); }
     inline void setGetter(FunctionObject *g) { value = reinterpret_cast<Managed *>(g); }
     inline void setSetter(FunctionObject *s) { set = (s ? reinterpret_cast<Managed *>(s) : 0); }
 

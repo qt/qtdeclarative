@@ -61,7 +61,7 @@ void QQuickViewTestUtil::centerOnScreen(QQuickView *window)
 
 void QQuickViewTestUtil::moveMouseAway(QQuickView *window)
 {
-#ifndef QT_NO_CURSOR // Get the cursor out of the way.
+#if QT_CONFIG(cursor) // Get the cursor out of the way.
     QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
 #else
     Q_UNUSED(window)

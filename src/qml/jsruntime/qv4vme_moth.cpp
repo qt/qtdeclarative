@@ -169,10 +169,8 @@ static Breakpoint qt_v4LastStop;
 
 static QV4::Function *qt_v4ExtractFunction(QV4::ExecutionContext *context)
 {
-    QV4::Scope scope(context->engine());
-    QV4::ScopedFunctionObject function(scope, context->getFunctionObject());
-    if (function)
-        return function->function();
+    if (QV4::Function *function = context->getFunction())
+        return function;
     else
         return context->d()->engine->globalCode;
 }
@@ -662,13 +660,13 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
-        engine->runtime.pushWithScope(VALUE(instr.arg), engine);
+        engine->runtime.pushWithScope(VALUE(instr.arg), static_cast<QV4::NoThrowEngine*>(engine));
         context = engine->currentContext;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
-        engine->runtime.popScope(engine);
+        engine->runtime.popScope(static_cast<QV4::NoThrowEngine*>(engine));
         context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPopScope)
 

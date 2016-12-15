@@ -40,7 +40,7 @@
 #include <private/qquickshadereffect_p.h>
 #include <private/qsgcontextplugin_p.h>
 #include <private/qquickitem_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <private/qquickopenglshadereffect_p.h>
 #endif
 #include <private/qquickgenericshadereffect_p.h>
@@ -499,14 +499,14 @@ QSGContextFactoryInterface::Flags qsg_backend_flags();
 
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     : QQuickItem(*new QQuickShaderEffectPrivate, parent),
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
       m_glImpl(nullptr),
 #endif
       m_impl(nullptr)
 {
     setFlag(QQuickItem::ItemHasContents);
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectNode))
         m_glImpl = new QQuickOpenGLShaderEffect(this, this);
 
@@ -539,7 +539,7 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
 
 QByteArray QQuickShaderEffect::fragmentShader() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->fragmentShader();
 #endif
@@ -548,7 +548,7 @@ QByteArray QQuickShaderEffect::fragmentShader() const
 
 void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->setFragmentShader(code);
         return;
@@ -578,7 +578,7 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
 
 QByteArray QQuickShaderEffect::vertexShader() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->vertexShader();
 #endif
@@ -587,7 +587,7 @@ QByteArray QQuickShaderEffect::vertexShader() const
 
 void QQuickShaderEffect::setVertexShader(const QByteArray &code)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->setVertexShader(code);
         return;
@@ -607,7 +607,7 @@ void QQuickShaderEffect::setVertexShader(const QByteArray &code)
 
 bool QQuickShaderEffect::blending() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->blending();
 #endif
@@ -616,7 +616,7 @@ bool QQuickShaderEffect::blending() const
 
 void QQuickShaderEffect::setBlending(bool enable)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->setBlending(enable);
         return;
@@ -640,7 +640,7 @@ void QQuickShaderEffect::setBlending(bool enable)
 
 QVariant QQuickShaderEffect::mesh() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->mesh();
 #endif
@@ -649,7 +649,7 @@ QVariant QQuickShaderEffect::mesh() const
 
 void QQuickShaderEffect::setMesh(const QVariant &mesh)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->setMesh(mesh);
         return;
@@ -674,7 +674,7 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
 
 QQuickShaderEffect::CullMode QQuickShaderEffect::cullMode() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->cullMode();
 #endif
@@ -683,7 +683,7 @@ QQuickShaderEffect::CullMode QQuickShaderEffect::cullMode() const
 
 void QQuickShaderEffect::setCullMode(CullMode face)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->setCullMode(face);
         return;
@@ -715,7 +715,7 @@ void QQuickShaderEffect::setCullMode(CullMode face)
 
 bool QQuickShaderEffect::supportsAtlasTextures() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->supportsAtlasTextures();
 #endif
@@ -724,7 +724,7 @@ bool QQuickShaderEffect::supportsAtlasTextures() const
 
 void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->setSupportsAtlasTextures(supports);
         return;
@@ -771,7 +771,7 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 
 QString QQuickShaderEffect::log() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->log();
 #endif
@@ -780,7 +780,7 @@ QString QQuickShaderEffect::log() const
 
 QQuickShaderEffect::Status QQuickShaderEffect::status() const
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->status();
 #endif
@@ -789,7 +789,7 @@ QQuickShaderEffect::Status QQuickShaderEffect::status() const
 
 bool QQuickShaderEffect::event(QEvent *e)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->handleEvent(e);
         return QQuickItem::event(e);
@@ -801,7 +801,7 @@ bool QQuickShaderEffect::event(QEvent *e)
 
 void QQuickShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->handleGeometryChanged(newGeometry, oldGeometry);
         QQuickItem::geometryChanged(newGeometry, oldGeometry);
@@ -814,7 +814,7 @@ void QQuickShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF
 
 QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->handleUpdatePaintNode(oldNode, updatePaintNodeData);
 #endif
@@ -823,7 +823,7 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 
 void QQuickShaderEffect::componentComplete()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->maybeUpdateShaders();
         QQuickItem::componentComplete();
@@ -836,7 +836,7 @@ void QQuickShaderEffect::componentComplete()
 
 void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->handleItemChange(change, value);
         QQuickItem::itemChange(change, value);
@@ -854,7 +854,7 @@ bool QQuickShaderEffect::isComponentComplete() const
 
 QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_glImpl)
         return m_glImpl->parseLog();
 #endif
@@ -864,7 +864,7 @@ QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
 void QQuickShaderEffectPrivate::updatePolish()
 {
     Q_Q(QQuickShaderEffect);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (q->m_glImpl) {
         q->m_glImpl->maybeUpdateShaders();
         return;

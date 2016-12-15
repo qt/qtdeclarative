@@ -143,7 +143,7 @@ public:
     inline void fetchMore() { return accessors->fetchMore(*this); }
 
 protected:
-    void objectDestroyed(QObject *);
+    void objectDestroyed(QObject *) override;
 };
 
 class QQmlAdaptorModelProxyInterface

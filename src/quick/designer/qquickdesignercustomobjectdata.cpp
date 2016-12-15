@@ -258,7 +258,7 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
 
     if (property.isProperty()) {
         QQmlBinding *binding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
-                                                   expression, object(), context);
+                                                   expression, object(), QQmlContextData::get(context));
         binding->setTarget(property);
         binding->setNotifyOnValueChanged(true);
 

@@ -758,7 +758,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
         QQmlJS::AST::UiParameterList *p = node->parameters;
         while (p) {
-            const QStringRef &memberType = p->type;
+            const QString memberType = asString(p->type);
 
             if (memberType.isEmpty()) {
                 recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected parameter type"));
@@ -781,10 +781,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                     // Must be a QML object type.
                     // Lazily determine type during compilation.
                     param->type = QV4::CompiledData::Property::Custom;
-                    param->customTypeNameIndex = registerString(p->type.toString());
+                    param->customTypeNameIndex = registerString(memberType);
                 } else {
                     QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
-                    errStr.append(memberType.toString());
+                    errStr.append(memberType);
                     recordError(node->typeToken, errStr);
                     return false;
                 }
@@ -813,7 +813,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             return false;
         }
     } else {
-        const QStringRef &memberType = node->memberType;
+        QString memberType = asString(node->memberType);
         if (memberType == QLatin1String("alias")) {
             return appendAlias(node);
         } else {
@@ -858,7 +858,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 property->flags |= QV4::CompiledData::Property::IsReadOnly;
             property->type = type;
             if (type >= QV4::CompiledData::Property::Custom)
-                property->customTypeNameIndex = registerString(memberType.toString());
+                property->customTypeNameIndex = registerString(memberType);
             else
                 property->customTypeNameIndex = emptyStringIndex;
 

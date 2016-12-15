@@ -51,7 +51,9 @@
 //
 
 #include "qv4global_p.h"
+#include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4context_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,6 +70,8 @@ struct Q_QML_EXPORT Function {
     InternalClass *internalClass;
     uint nFormals;
     bool activationRequired;
+    bool hasQmlDependencies;
+    bool canUseSimpleCall;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
              ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));
@@ -88,7 +92,21 @@ struct Q_QML_EXPORT Function {
     inline bool needsActivation() const
     { return activationRequired; }
 
+    inline bool canUseSimpleFunction() const { return canUseSimpleCall; }
+
+    QQmlSourceLocation sourceLocation() const
+    {
+        return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
+    }
+
 };
+
+
+inline unsigned int Heap::CallContext::formalParameterCount() const
+{
+    return v4Function ? v4Function->nFormals : 0;
+}
+
 
 }
 

@@ -78,7 +78,7 @@ class QQmlNativeDebugConnectorFactory : public QQmlDebugConnectorFactory
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlDebugConnectorFactory_iid FILE "qqmlnativedebugconnector.json")
 public:
-    QQmlDebugConnector *create(const QString &key);
+    QQmlDebugConnector *create(const QString &key) override;
 };
 
 QT_END_NAMESPACE

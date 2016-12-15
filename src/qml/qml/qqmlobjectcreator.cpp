@@ -44,7 +44,6 @@
 #include <private/qv4function_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4qobjectwrapper_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmlboundsignal_p.h>
@@ -402,7 +401,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         }
     }
     break;
-#ifndef QT_NO_DATESTRING
+#if QT_CONFIG(datestring)
     case QVariant::Date: {
         bool ok = false;
         QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(qmlUnit), &ok);
@@ -430,7 +429,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-#endif // QT_NO_DATESTRING
+#endif // datestring
     case QVariant::Point: {
         bool ok = false;
         QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok).toPoint();
@@ -793,14 +792,13 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
 
         QV4::Scope scope(v4);
-        QV4::ScopedContext qmlContext(scope, currentQmlContext());
-        QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction, /*createProto*/ false));
+        QV4::Scoped<QV4::QmlContext> qmlContext(scope, currentQmlContext());
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex());
             QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_bindingTarget, signalIndex,
-                                                                            context, _scopeObject, function);
+                                                                            context, _scopeObject, runtimeFunction, qmlContext);
 
             bs->takeExpression(expr);
         } else {
@@ -810,13 +808,14 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             // the result is written to a value type virtual property, that contains the sub-index
             // of the "x" property.
             QQmlBinding *qmlBinding;
+            const QQmlPropertyData *prop = property;
+            const QQmlPropertyData *subprop = nullptr;
             if (_valueTypeProperty) {
-                qmlBinding = QQmlBinding::create(_valueTypeProperty, function, _scopeObject, context);
-                qmlBinding->setTarget(_bindingTarget, *_valueTypeProperty, property);
-            } else {
-                qmlBinding = QQmlBinding::create(property, function, _scopeObject, context);
-                qmlBinding->setTarget(_bindingTarget, *property, nullptr);
+                prop = _valueTypeProperty;
+                subprop = property;
             }
+            qmlBinding = QQmlBinding::create(prop, runtimeFunction, _scopeObject, context, qmlContext);
+            qmlBinding->setTarget(_bindingTarget, *prop, subprop);
 
             sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));
 
@@ -1016,8 +1015,8 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
 
 QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
 {
-    if (!_qmlContext->objectValue())
-        _qmlContext->setM(v4->rootContext()->newQmlContext(context, _scopeObject));
+    if (!_qmlContext->isManaged())
+        _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 
     return _qmlContext->d();
 }
