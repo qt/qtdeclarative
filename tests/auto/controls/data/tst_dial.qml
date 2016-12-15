@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -60,19 +60,9 @@ TestCase {
         SignalSpy {}
     }
 
-    property var dial: null
-
-    function init() {
-        dial = dialComponent.createObject(testCase);
-        verify(dial, "Dial: failed to create an instance");
-    }
-
-    function cleanup() {
-        if (dial)
-            dial.destroy();
-    }
-
     function test_instance() {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
         compare(dial.value, 0.0);
         compare(dial.from, 0.0);
         compare(dial.to, 1.0);
@@ -82,6 +72,8 @@ TestCase {
     }
 
     function test_value() {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
         compare(dial.value, 0.0);
 
         dial.value = 0.5;
@@ -98,6 +90,9 @@ TestCase {
     }
 
     function test_range() {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
         dial.from = 0;
         dial.to = 100;
         dial.value = 50;
@@ -130,9 +125,8 @@ TestCase {
     }
 
     function test_inverted() {
-        dial.destroy();
-        dial = dialComponent.createObject(testCase, { from: 1.0, to: -1.0 });
-        verify(dial, "Dial: failed to create an instance");
+        var dial = createTemporaryObject(dialComponent, testCase, { from: 1.0, to: -1.0 });
+        verify(dial);
         compare(dial.from, 1.0);
         compare(dial.to, -1.0);
         compare(dial.value, 0.0);
@@ -157,6 +151,9 @@ TestCase {
     }
 
     function test_pressed() {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
         pressSpy.target = dial;
         verify(pressSpy.valid);
         verify(!dial.pressed);
@@ -185,6 +182,9 @@ TestCase {
     }
 
     function test_dragging(data) {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
         dial.wrap = true;
         verify(dial.wrap);
         dial.from = data.from;
@@ -194,7 +194,7 @@ TestCase {
         valueSpy.target = dial;
         verify(valueSpy.valid);
 
-        var moveSpy = signalSpy.createObject(testCase, {target: dial, signalName: "moved"});
+        var moveSpy = createTemporaryObject(signalSpy, testCase, {target: dial, signalName: "moved"});
         verify(moveSpy.valid);
 
         var minimumExpectedValueCount = data.live ? 2 : 1;
@@ -233,6 +233,9 @@ TestCase {
     }
 
     function test_nonWrapping() {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
         compare(dial.wrap, false);
         dial.value = 0;
 
@@ -284,7 +287,10 @@ TestCase {
     }
 
     function test_keyboardNavigation() {
-        var focusScope = focusTest.createObject(testCase);
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
+        var focusScope = createTemporaryObject(focusTest, testCase);
         verify(focusScope);
 
         var moveCount = 0;
@@ -293,7 +299,7 @@ TestCase {
         parentEventSpy.target = focusScope;
         parentEventSpy.signalName = "receivedKeyPress";
 
-        var moveSpy = signalSpy.createObject(testCase, {target: dial, signalName: "moved"});
+        var moveSpy = createTemporaryObject(signalSpy, testCase, {target: dial, signalName: "moved"});
         verify(moveSpy.valid);
 
         dial.parent = focusScope;
@@ -354,8 +360,6 @@ TestCase {
         compare(parentEventSpy.count, 0);
         compare(moveSpy.count, moveCount);
         compare(dial.value, dial.to);
-
-        focusScope.destroy();
     }
 
     function test_snapMode_data() {
@@ -373,6 +377,9 @@ TestCase {
     }
 
     function test_snapMode(data) {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
         dial.snapMode = data.snapMode;
         dial.from = data.from;
         dial.to = data.to;
@@ -401,7 +408,7 @@ TestCase {
     }
 
     function test_wheel(data) {
-        var control = dialComponent.createObject(testCase, {wheelEnabled: true, orientation: data.orientation})
+        var control = createTemporaryObject(dialComponent, testCase, {wheelEnabled: true, orientation: data.orientation})
         verify(control)
 
         compare(control.value, 0.0)
@@ -436,7 +443,5 @@ TestCase {
         mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
         compare(control.value, 2.5)
         compare(control.position, 0.25)
-
-        control.destroy()
     }
 }
