@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -56,13 +56,11 @@ TestCase {
     }
 
     function test_running() {
-        var control = busyIndicator.createObject(testCase)
+        var control = createTemporaryObject(busyIndicator, testCase)
         verify(control)
 
         compare(control.running, true)
         control.running = false
         compare(control.running, false)
-
-        control.destroy()
     }
 }
