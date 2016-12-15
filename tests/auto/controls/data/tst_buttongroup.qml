@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -61,13 +61,11 @@ TestCase {
     }
 
     function test_null() {
-        var group = buttonGroup.createObject(testCase)
+        var group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
         group.addButton(null)
         group.removeButton(null)
-
-        group.destroy()
     }
 
     Component {
@@ -81,16 +79,16 @@ TestCase {
     }
 
     function test_current() {
-        var group = buttonGroup.createObject(testCase)
+        var group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var checkedButtonSpy = signalSpy.createObject(testCase, {target: group, signalName: "checkedButtonChanged"})
+        var checkedButtonSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "checkedButtonChanged"})
         verify(checkedButtonSpy.valid)
         verify(!group.checkedButton)
 
-        var button1 = button.createObject(testCase, {checked: true})
-        var button2 = button.createObject(testCase, {checked: false})
-        var button3 = button.createObject(testCase, {checked: true, objectName: "3"})
+        var button1 = createTemporaryObject(button, testCase, {checked: true})
+        var button2 = createTemporaryObject(button, testCase, {checked: false})
+        var button3 = createTemporaryObject(button, testCase, {checked: true, objectName: "3"})
 
         // add checked
         group.addButton(button1)
@@ -147,22 +145,20 @@ TestCase {
         compare(button2.checked, false)
         compare(button3.checked, false)
         compare(checkedButtonSpy.count, 5)
-
-        group.destroy()
     }
 
     function test_buttons() {
-        var group = buttonGroup.createObject(testCase)
+        var group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var buttonsSpy = signalSpy.createObject(testCase, {target: group, signalName: "buttonsChanged"})
+        var buttonsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "buttonsChanged"})
         verify(buttonsSpy.valid)
 
         compare(group.buttons.length, 0)
         compare(group.checkedButton, null)
 
-        var button1 = button.createObject(testCase, {checked: true})
-        var button2 = button.createObject(testCase, {checked: false})
+        var button1 = createTemporaryObject(button, testCase, {checked: true})
+        var button2 = createTemporaryObject(button, testCase, {checked: false})
 
         group.buttons = [button1, button2]
         compare(group.buttons.length, 2)
@@ -171,7 +167,7 @@ TestCase {
         compare(group.checkedButton, button1)
         compare(buttonsSpy.count, 2)
 
-        var button3 = button.createObject(testCase, {checked: true})
+        var button3 = createTemporaryObject(button, testCase, {checked: true})
 
         group.addButton(button3)
         compare(group.buttons.length, 3)
@@ -192,19 +188,17 @@ TestCase {
         compare(group.buttons.length, 0)
         tryCompare(group, "checkedButton", null)
         compare(buttonsSpy.count, 5)
-
-        group.destroy()
     }
 
     function test_clicked() {
-        var group = buttonGroup.createObject(testCase)
+        var group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var clickedSpy = signalSpy.createObject(testCase, {target: group, signalName: "clicked"})
+        var clickedSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "clicked"})
         verify(clickedSpy.valid)
 
-        var button1 = button.createObject(testCase)
-        var button2 = button.createObject(testCase)
+        var button1 = createTemporaryObject(button, testCase)
+        var button2 = createTemporaryObject(button, testCase)
 
         group.addButton(button1)
         group.addButton(button2)
@@ -216,10 +210,6 @@ TestCase {
         button2.clicked()
         compare(clickedSpy.count, 2)
         compare(clickedSpy.signalArguments[1][0], button2)
-
-        group.destroy()
-        button1.destroy()
-        button2.destroy()
     }
 
     Component {
@@ -276,7 +266,7 @@ TestCase {
     }
 
     function test_controls(data) {
-        var container = data.component.createObject(testCase)
+        var container = createTemporaryObject(data.component, testCase)
         verify(container)
 
         verify(!container.group.checkedButton)
@@ -298,18 +288,16 @@ TestCase {
         compare(container.control1.checked, false)
         compare(container.control2.checked, false)
         compare(container.control3.checked, true)
-
-        container.destroy()
     }
 
     function test_buttonDestroyed() {
-        var group = buttonGroup.createObject(testCase)
+        var group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
 
-        var buttonsSpy = signalSpy.createObject(testCase, {target: group, signalName: "buttonsChanged"})
+        var buttonsSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "buttonsChanged"})
         verify(buttonsSpy.valid)
 
-        var button1 = button.createObject(testCase, {objectName: "button1", checked: true})
+        var button1 = createTemporaryObject(button, testCase, {objectName: "button1", checked: true})
 
         group.addButton(button1)
         compare(group.buttons.length, 1)
@@ -322,8 +310,6 @@ TestCase {
         compare(group.buttons.length, 0)
         compare(group.checkedButton, null)
         compare(buttonsSpy.count, 2)
-
-        group.destroy()
     }
 
     Component {
@@ -344,12 +330,10 @@ TestCase {
     }
 
     function test_repeater() {
-        var container = repeater.createObject(testCase)
+        var container = createTemporaryObject(repeater, testCase)
         verify(container)
 
         verify(container.group.checkedButton)
         compare(container.group.checkedButton.objectName, "0")
-
-        container.destroy()
     }
 }
