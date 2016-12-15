@@ -71,9 +71,9 @@ static void qt_quickhandlers_defineModule(const char *uri, int major, int minor)
         QQuickPointerHandler::tr("PointerEvent is only available as a parameter of several signals in PointerHandler"));
     qmlRegisterUncreatableType<QQuickPointerDevice>(uri, major, minor, "PointerDevice",
         QQuickPointerHandler::tr("PointerDevice is only available as a property of PointerEvent"));
-    qRegisterMetaType<QPointerUniqueId>("QPointerUniqueId");
-    qmlRegisterUncreatableType<QPointerUniqueId>(uri, major, minor, "PointerUniqueId",
-        QQuickPointerHandler::tr("PointerUniqueId is only available as a property of PointerEvent"));
+    qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
+    qmlRegisterUncreatableType<QPointingDeviceUniqueId>(uri, major, minor, "PointingDeviceUniqueId",
+        QQuickPointerHandler::tr("PointingDeviceUniqueId is only available as a property of PointerEvent"));
 
     qmlRegisterType<QQuickPointerHandler>(uri,major,minor,"PointerHandler");
     qmlRegisterType<QQuickDragHandler>(uri,major,minor,"DragHandler");
