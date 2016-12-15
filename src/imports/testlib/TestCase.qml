@@ -614,7 +614,8 @@ Item {
     function qtest_destroyTemporaryObjects() {
         for (var i = 0; i < qtest_temporaryObjects.length; ++i) {
             var temporaryObject = qtest_temporaryObjects[i];
-            if (temporaryObject)
+            // ### the typeof check can be removed when QTBUG-57749 is fixed
+            if (temporaryObject && typeof temporaryObject.destroy === "function")
                 temporaryObject.destroy();
         }
         qtest_temporaryObjects = [];

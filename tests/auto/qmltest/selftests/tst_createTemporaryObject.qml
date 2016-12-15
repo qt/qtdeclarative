@@ -70,6 +70,21 @@ TestCase {
         compare(findChild(testCase, object.objectName), object);
 
         createdObjectNames.push(object.objectName);
+
+        // Create an object and destroy it early. It should be
+        // removed from TestCase's list of temporary objects
+        // as soon as it's destroyed.
+        var manuallyDestroyedObject = createTemporaryQmlObject(data.qml, testCase);
+        verify(manuallyDestroyedObject);
+
+        var manuallyDestroyedObjectName = data.tag + "FromQmlShortLived";
+        manuallyDestroyedObject.objectName = manuallyDestroyedObjectName;
+        compare(findChild(testCase, manuallyDestroyedObjectName), manuallyDestroyedObject);
+
+        manuallyDestroyedObject.destroy();
+        wait(0);
+
+        verify(!findChild(testCase, manuallyDestroyedObjectName));
     }
 
     Component {
@@ -109,5 +124,20 @@ TestCase {
             object.contentItem.objectName = "WindowContentItemFromComponent";
 
         createdObjectNames.push(object.objectName);
+
+        // Create an object and destroy it early. It should be
+        // removed from TestCase's list of temporary objects
+        // as soon as it's destroyed.
+        var manuallyDestroyedObject = createTemporaryObject(data.component, testCase);
+        verify(manuallyDestroyedObject);
+
+        var manuallyDestroyedObjectName = data.tag + "FromComponentShortLived";
+        manuallyDestroyedObject.objectName = manuallyDestroyedObjectName;
+        compare(findChild(testCase, manuallyDestroyedObjectName), manuallyDestroyedObject);
+
+        manuallyDestroyedObject.destroy();
+        wait(0);
+
+        verify(!findChild(testCase, manuallyDestroyedObjectName));
     }
 }
