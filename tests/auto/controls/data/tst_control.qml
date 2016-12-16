@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -72,7 +72,7 @@ TestCase {
     }
 
     function test_padding() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         compare(control.padding, 0)
@@ -127,12 +127,10 @@ TestCase {
         compare(control.leftPadding, 30)
         compare(control.rightPadding, 40)
         compare(control.bottomPadding, 50)
-
-        control.destroy()
     }
 
     function test_availableSize() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         var availableWidthSpy = signalSpy.createObject(control, {target: control, signalName: "availableWidthChanged"})
@@ -199,12 +197,10 @@ TestCase {
         compare(control.availableHeight, 0)
         compare(availableWidthSpy.count, availableWidthChanges)
         compare(availableHeightSpy.count, ++availableHeightChanges)
-
-        control.destroy()
     }
 
     function test_mirrored() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         var mirroredSpy = signalSpy.createObject(control, {target: control, signalName: "mirroredChanged"})
@@ -230,12 +226,10 @@ TestCase {
         control.LayoutMirroring.enabled = false
         compare(control.mirrored, false)
         compare(mirroredSpy.count, 2)
-
-        control.destroy()
     }
 
     function test_background() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         control.background = component.createObject(control)
@@ -277,8 +271,6 @@ TestCase {
         control.background.y = 10
         control.height -= 20
         verify(control.background.height !== control.height)
-
-        control.destroy()
     }
 
     Component {
@@ -319,7 +311,7 @@ TestCase {
     }
 
     function test_font() {
-        var control2 = component2.createObject(testCase)
+        var control2 = createTemporaryObject(component2, testCase)
         verify(control2)
         verify(control2.item2_2)
         verify(control2.item2_3)
@@ -412,8 +404,6 @@ TestCase {
         compare(control2.item2_6.font.family, "Arial")
         compare(control2.item2_6.font.pointSize, 36)
         compare(control2.item2_6.font.weight, Font.Black)
-
-        control2.destroy()
     }
 
     Component {
@@ -464,7 +454,7 @@ TestCase {
     }
 
     function test_font_2() {
-        var control3 = component3.createObject(testCase)
+        var control3 = createTemporaryObject(component3, testCase)
         verify(control3)
         verify(control3.item3_2)
         verify(control3.item3_3)
@@ -551,8 +541,6 @@ TestCase {
         compare(control3.item3_8.font.family, "Arial")
         compare(control3.item3_8.font.pointSize, 36)
         compare(control3.item3_8.font.weight, Font.Black)
-
-        control3.destroy()
     }
 
     Component {
@@ -581,7 +569,7 @@ TestCase {
     }
 
     function test_font_3() {
-        var control4 = component4.createObject(testCase)
+        var control4 = createTemporaryObject(component4, testCase)
         verify(control4)
         verify(control4.item4_2)
         verify(control4.item4_3)
@@ -602,8 +590,6 @@ TestCase {
         compare(control4.item4_2.font.pixelSize, control4.font.pixelSize + 15)
         compare(control4.item4_3.font.pixelSize, control4.font.pixelSize - 1)
         compare(control4.item4_4.font.pixelSize, control4.font.pixelSize + 15)
-
-        control4.destroy()
     }
 
     function test_font_explicit_attributes_data() {
@@ -620,7 +606,7 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         var child = component.createObject(control)
@@ -645,12 +631,10 @@ TestCase {
 
         compare(child.font[data.tag], defaultValue)
         compare(childSpy.count, 0)
-
-        control.destroy()
     }
 
     function test_locale() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         control.locale = Qt.locale("en_US")
@@ -658,8 +642,6 @@ TestCase {
 
         control.locale = Qt.locale("nb_NO")
         compare(control.locale.name, "nb_NO")
-
-        control.destroy()
     }
 
     Component {
@@ -723,7 +705,7 @@ TestCase {
     }
 
     function test_locale_2() {
-        var control = component5.createObject(testCase)
+        var control = createTemporaryObject(component5, testCase)
         verify(control)
         verify(control.item2_2)
         verify(control.item2_3)
@@ -816,7 +798,7 @@ TestCase {
     }
 
     function test_locale_3() {
-        var control = component6.createObject(testCase)
+        var control = createTemporaryObject(component6, testCase)
         verify(control)
         verify(control.item6_2)
         verify(control.item6_3)
@@ -855,7 +837,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = data.target.createObject(testCase, {width: 100, height: 100})
+        var control = createTemporaryObject(data.target, testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.hovered, false)
@@ -889,12 +871,10 @@ TestCase {
 
         control.visible = false
         compare(control.hovered, false)
-
-        control.destroy()
     }
 
     function test_hoverEnabled() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         compare(control.hoverEnabled, Qt.styleHints.useHoverEffects)
 
         var child = component.createObject(control)
@@ -925,12 +905,10 @@ TestCase {
 
         compare(childExplicitHoverDisabled.hoverEnabled, false)
         compare(grandChildExplicitHoverEnabled.hoverEnabled, true)
-
-        control.destroy()
     }
 
     function test_implicitSize() {
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
 
         compare(control.implicitWidth, 0)
@@ -947,7 +925,5 @@ TestCase {
         control.padding = 100
         compare(control.implicitWidth, 210)
         compare(control.implicitHeight, 220)
-
-        control.destroy()
     }
 }
