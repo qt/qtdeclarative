@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -56,12 +56,11 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = drawer.createObject(testCase)
+        var control = createTemporaryObject(drawer, testCase)
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
         compare(control.dragMargin, Qt.styleHints.startDragDistance)
         compare(control.parent, ApplicationWindow.overlay)
-        control.destroy()
     }
 
     Component {
@@ -79,7 +78,7 @@ TestCase {
     function test_swipeVelocity() {
         skip("QTBUG-52003");
 
-        var control = rectDrawer.createObject(testCase)
+        var control = createTemporaryObject(rectDrawer, testCase)
         verify(control.contentItem)
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
@@ -95,7 +94,5 @@ TestCase {
         tryCompare(control, "position", distance / control.contentItem.width)
         mouseRelease(control, distance, 0, Qt.LeftButton)
         tryCompare(control, "position", 1.0)
-
-        control.destroy()
     }
 }
