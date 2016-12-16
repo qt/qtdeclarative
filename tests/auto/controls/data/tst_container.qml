@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -62,7 +62,7 @@ TestCase {
     }
 
     function test_implicitSize() {
-        var control = container.createObject(testCase)
+        var control = createTemporaryObject(container, testCase)
         verify(control)
 
         compare(control.implicitWidth, 0)
@@ -79,7 +79,5 @@ TestCase {
         control.padding = 100
         compare(control.implicitWidth, 210)
         compare(control.implicitHeight, 220)
-
-        control.destroy()
     }
 }
