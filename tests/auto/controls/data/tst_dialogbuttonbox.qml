@@ -66,17 +66,16 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = buttonBox.createObject(testCase)
+        var control = createTemporaryObject(buttonBox, testCase)
         verify(control)
         compare(control.count, 0)
         verify(control.delegate)
         compare(control.standardButtons, 0)
-        control.destroy()
     }
 
     function test_standardButtons() {
-        var control = buttonBox.createObject(testCase)
-
+        var control = createTemporaryObject(buttonBox, testCase)
+        verify(control)
         compare(control.count, 0)
 
         control.standardButtons = DialogButtonBox.Ok
@@ -107,12 +106,11 @@ TestCase {
 
         control.standardButtons = 0
         compare(control.count, 0)
-
-        control.destroy()
     }
 
     function test_attached() {
-        var control = buttonBox.createObject(testCase)
+        var control = createTemporaryObject(buttonBox, testCase)
+        verify(control)
 
         control.standardButtons = DialogButtonBox.Ok
         var okButton = control.itemAt(0)
@@ -125,7 +123,7 @@ TestCase {
         saveButton.DialogButtonBox.buttonRole = DialogButtonBox.AcceptRole
         compare(saveButton.DialogButtonBox.buttonRole, DialogButtonBox.AcceptRole)
 
-        var closeButton = button.createObject(null, {text: "Save"})
+        var closeButton = createTemporaryObject(button, null, {text: "Save"})
         compare(closeButton.DialogButtonBox.buttonBox, null)
         compare(closeButton.DialogButtonBox.buttonRole, DialogButtonBox.InvalidRole)
         closeButton.DialogButtonBox.buttonRole = DialogButtonBox.DestructiveRole
@@ -137,8 +135,6 @@ TestCase {
         compare(okButton.DialogButtonBox.buttonBox, null)
         compare(saveButton.DialogButtonBox.buttonBox, null)
         compare(closeButton.DialogButtonBox.buttonBox, null)
-
-        control.destroy()
     }
 
     function test_signals_data() {
@@ -165,7 +161,8 @@ TestCase {
     }
 
     function test_signals(data) {
-        var control = buttonBox.createObject(testCase)
+        var control = createTemporaryObject(buttonBox, testCase)
+        verify(control)
 
         control.standardButtons = data.standardButton
         compare(control.count, 1)
@@ -182,7 +179,5 @@ TestCase {
         compare(clickedSpy.count, 1)
         compare(clickedSpy.signalArguments[0][0], button)
         compare(roleSpy.count, !!data.signalName ? 1 : 0)
-
-        control.destroy()
     }
 }
