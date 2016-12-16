@@ -78,22 +78,22 @@ TestCase {
     }
 
     function test_padding() {
-        var control = popupTemplate.createObject(testCase)
+        var control = createTemporaryObject(popupTemplate, testCase)
         verify(control)
 
-        var paddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "paddingChanged"})
+        var paddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "paddingChanged"})
         verify(paddingSpy.valid)
 
-        var topPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "topPaddingChanged"})
+        var topPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topPaddingChanged"})
         verify(topPaddingSpy.valid)
 
-        var leftPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "leftPaddingChanged"})
+        var leftPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftPaddingChanged"})
         verify(leftPaddingSpy.valid)
 
-        var rightPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "rightPaddingChanged"})
+        var rightPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightPaddingChanged"})
         verify(rightPaddingSpy.valid)
 
-        var bottomPaddingSpy = signalSpy.createObject(testCase, {target: control, signalName: "bottomPaddingChanged"})
+        var bottomPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomPaddingChanged"})
         verify(bottomPaddingSpy.valid)
 
         var paddingChanges = 0
@@ -184,18 +184,16 @@ TestCase {
         compare(leftPaddingSpy.count, leftPaddingChanges)
         compare(rightPaddingSpy.count, rightPaddingChanges)
         compare(bottomPaddingSpy.count, bottomPaddingChanges)
-
-        control.destroy()
     }
 
     function test_availableSize() {
         var control = popupTemplate.createObject(testCase)
         verify(control)
 
-        var availableWidthSpy = signalSpy.createObject(testCase, {target: control, signalName: "availableWidthChanged"})
+        var availableWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableWidthChanged"})
         verify(availableWidthSpy.valid)
 
-        var availableHeightSpy = signalSpy.createObject(testCase, {target: control, signalName: "availableHeightChanged"})
+        var availableHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableHeightChanged"})
         verify(availableHeightSpy.valid)
 
         var availableWidthChanges = 0
@@ -256,19 +254,17 @@ TestCase {
         compare(control.availableHeight, 0)
         compare(availableWidthSpy.count, availableWidthChanges)
         compare(availableHeightSpy.count, ++availableHeightChanges)
-
-        control.destroy()
     }
 
     function test_position() {
-        var control = popupControl.createObject(testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
+        var control = createTemporaryObject(popupControl, testCase, {visible: true, leftMargin: 10, topMargin: 20, width: 100, height: 100})
         verify(control)
         verify(control.visible)
 
-        var xSpy = signalSpy.createObject(testCase, {target: control, signalName: "xChanged"})
+        var xSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "xChanged"})
         verify(xSpy.valid)
 
-        var ySpy = signalSpy.createObject(testCase, {target: control, signalName: "yChanged"})
+        var ySpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "yChanged"})
         verify(ySpy.valid)
 
         // moving outside margins does not trigger change notifiers
@@ -298,7 +294,7 @@ TestCase {
         compare(ySpy.count, 1)
 
         // re-parent and reset the position
-        control.parent = rect.createObject(testCase, {color: "red", width: 100, height: 100})
+        control.parent = createTemporaryObject(rect, testCase, {color: "red", width: 100, height: 100})
         control.x = 0
         control.y = 0
         compare(xSpy.count, 2)
@@ -314,12 +310,10 @@ TestCase {
         compare(control.y, 60 + control.topMargin)
         compare(xSpy.count, 3)
         compare(ySpy.count, 3)
-
-        control.destroy()
     }
 
     function test_resetSize() {
-        var control = popupControl.createObject(testCase, {visible: true, margins: 0})
+        var control = createTemporaryObject(popupControl, testCase, {visible: true, margins: 0})
         verify(control)
 
         control.width = control.implicitWidth = testCase.width + 10
@@ -332,12 +326,10 @@ TestCase {
         control.height = undefined
         compare(control.width, testCase.width)
         compare(control.height, testCase.height)
-
-        control.destroy()
     }
 
     function test_negativeMargins() {
-        var control = popupControl.createObject(testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
+        var control = createTemporaryObject(popupControl, testCase, {implicitWidth: testCase.width, implicitHeight: testCase.height})
         verify(control)
 
         control.open()
@@ -356,12 +348,10 @@ TestCase {
         control.y = -10
         compare(control.x, 0)
         compare(control.y, 0)
-
-        control.destroy()
     }
 
     function test_margins() {
-        var control = popupControl.createObject(testCase, {width: 100, height: 100})
+        var control = createTemporaryObject(popupControl, testCase, {width: 100, height: 100})
         verify(control)
 
         control.open()
@@ -444,12 +434,10 @@ TestCase {
         compare(control.leftMargin, -1)
         compare(control.contentItem.parent.x, -testCase.width)
         compare(control.contentItem.parent.y, -testCase.height)
-
-        control.destroy()
     }
 
     function test_background() {
-        var control = popupTemplate.createObject(testCase)
+        var control = createTemporaryObject(popupTemplate, testCase)
         verify(control)
 
         control.background = rect.createObject(testCase)
@@ -491,8 +479,6 @@ TestCase {
         control.background.y = 10
         control.height -= 20
         verify(control.background.height !== control.height)
-
-        control.destroy()
     }
 
     function getChild(control, objname, idx) {
@@ -566,7 +552,7 @@ TestCase {
     }
 
     function test_font() { // QTBUG_50984, QTBUG-51696
-        var window = component.createObject(testCase)
+        var window = createTemporaryObject(component, testCase)
         verify(window)
 
         compare(window.font.pixelSize, 40)
@@ -643,8 +629,6 @@ TestCase {
         compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 2)
         compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 60)
         compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 2)
-
-        window.destroy()
     }
 
     Component {
@@ -687,7 +671,7 @@ TestCase {
 
     function test_locale() { // QTBUG_50984
         // test looking up natural locale from ancestors
-        var control = localeComponent.createObject(applicationWindow.contentItem)
+        var control = createTemporaryObject(localeComponent, applicationWindow.contentItem)
         verify(control)
 
         compare(control.locale.name, "en_US")
@@ -697,7 +681,6 @@ TestCase {
         compare(control.popup.button2.locale.name, "nb_NO")
 
         control.ApplicationWindow.window.locale = undefined
-        control.destroy()
     }
 
     Component {
@@ -771,7 +754,7 @@ TestCase {
 
     function test_locale_changes() { // QTBUG_50984
         // test default locale and locale inheritance
-        var control = localeChangeComponent.createObject(applicationWindow.contentItem)
+        var control = createTemporaryObject(localeChangeComponent, applicationWindow.contentItem)
         verify(control)
 
         var defaultLocale = Qt.locale()
@@ -937,12 +920,10 @@ TestCase {
         compare(control.popup.button1.mirrorspy.count, 2)
         compare(control.popup.button2.localespy.count, 5)
         compare(control.popup.button2.mirrorspy.count, 2)
-
-        control.destroy()
     }
 
     function test_size() {
-        var control = popupControl.createObject(testCase)
+        var control = createTemporaryObject(popupControl, testCase)
         verify(control)
 
         control.open()
@@ -991,12 +972,10 @@ TestCase {
         compare(control.implicitHeight, 40)
         compare(control.height, 40)
         compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
-
-        control.destroy()
     }
 
     function test_visible() {
-        var control = popupTemplate.createObject(testCase, {visible: true})
+        var control = createTemporaryObject(popupTemplate, testCase, {visible: true})
         verify(control)
 
         // QTBUG-51989
@@ -1005,8 +984,6 @@ TestCase {
         // QTBUG-55347
         control.parent = null
         verify(!control.visible)
-
-        control.destroy()
     }
 
     Component {
@@ -1070,7 +1047,7 @@ TestCase {
     }
 
     function test_overlay() {
-        var window = overlayTest.createObject(testCase)
+        var window = createTemporaryObject(overlayTest, testCase)
         verify(window)
 
         window.requestActivate()
@@ -1168,12 +1145,10 @@ TestCase {
         window.modalPopupWithoutDim.close()
         tryCompare(window.modalPopupWithoutDim, "visible", false)
         compare(window.overlay.children.length, 0) // popup + overlay removed
-
-        window.destroy()
     }
 
     function test_attached_applicationwindow() {
-        var control = popupControl.createObject(applicationWindow.contentItem)
+        var control = createTemporaryObject(popupControl, applicationWindow.contentItem)
         verify(control)
 
         var child = rect.createObject(control.contentItem)
@@ -1186,8 +1161,6 @@ TestCase {
         compare(control.ApplicationWindow.window, null)
         compare(control.contentItem.ApplicationWindow.window, null)
         compare(child.ApplicationWindow.window, null)
-
-        control.destroy()
     }
 
     SignalSpy {
@@ -1209,7 +1182,7 @@ TestCase {
     }
 
     function test_openedClosed() {
-        var control = pausePopup.createObject(testCase)
+        var control = createTemporaryObject(pausePopup, testCase)
         verify(control)
 
         openedSpy.target = control
@@ -1226,8 +1199,6 @@ TestCase {
         compare(closedSpy.count, 0)
         tryCompare(closedSpy, "count", 1)
         compare(control.visible, false)
-
-        control.destroy()
     }
 
     Component {
@@ -1253,11 +1224,10 @@ TestCase {
     }
 
     function test_xyBindingLoop() {
-        var window = xyBindingLoop.createObject(testCase)
+        var window = createTemporaryObject(xyBindingLoop, testCase)
         var control = window.popup
         waitForRendering(control.contentItem)
         compare(control.x, (control.parent.width - control.width) / 2)
         compare(control.y, (control.parent.height - control.height) / 2)
-        window.destroy()
     }
 }
