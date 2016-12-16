@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -61,9 +61,8 @@ TestCase {
     }
 
     function test_creation() {
-        var control = label.createObject(testCase)
+        var control = createTemporaryObject(label, testCase)
         verify(control)
-        control.destroy()
     }
 
     function test_font_explicit_attributes_data() {
@@ -80,7 +79,7 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = label.createObject(testCase)
+        var control = createTemporaryObject(label, testCase)
         verify(control)
 
         var child = label.createObject(control)
@@ -105,7 +104,5 @@ TestCase {
 
         compare(child.font[data.tag], defaultValue)
         compare(childSpy.count, 0)
-
-        control.destroy()
     }
 }
