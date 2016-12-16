@@ -58,14 +58,13 @@ TestCase {
     // TODO: data-fy tst_radiobutton (rename to tst_radio?) so we don't duplicate its tests here?
 
     function test_defaults() {
-        var control = radioDelegate.createObject(testCase);
+        var control = createTemporaryObject(radioDelegate, testCase);
         verify(control);
         verify(!control.checked);
-        control.destroy();
     }
 
     function test_checked() {
-        var control = radioDelegate.createObject(testCase);
+        var control = createTemporaryObject(radioDelegate, testCase);
         verify(control);
 
         mouseClick(control);
@@ -73,14 +72,11 @@ TestCase {
 
         mouseClick(control);
         verify(control.checked);
-
-        control.destroy();
     }
 
     function test_baseline() {
-        var control = radioDelegate.createObject(testCase);
+        var control = createTemporaryObject(radioDelegate, testCase);
         verify(control);
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset);
-        control.destroy();
     }
 }
