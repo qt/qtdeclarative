@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -103,54 +103,46 @@ TestCase {
     }
 
     function test_empty() {
-        var control = pane.createObject(testCase)
+        var control = createTemporaryObject(pane, testCase)
         verify(control)
 
         verify(control.contentItem)
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
-
-        control.destroy()
     }
 
     function test_oneChild() {
-        var control = oneChildPane.createObject(testCase)
+        var control = createTemporaryObject(oneChildPane, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
-
-        control.destroy()
     }
 
     function test_twoChildren() {
-        var control = twoChildrenPane.createObject(testCase)
+        var control = createTemporaryObject(twoChildrenPane, testCase)
         verify(control)
 
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
         verify(control.implicitWidth > 0)
         verify(control.implicitHeight > 0)
-
-        control.destroy()
     }
 
     function test_contentItem() {
-        var control = contentPane.createObject(testCase)
+        var control = createTemporaryObject(contentPane, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
-
-        control.destroy()
     }
 
     function test_press() {
-        var control = pressPane.createObject(testCase)
+        var control = createTemporaryObject(pressPane, testCase)
         verify(control)
 
         compare(control.pressCount, 0)
@@ -160,7 +152,5 @@ TestCase {
         control.children[0].enabled = false
         mouseClick(control)
         compare(control.pressCount, 1)
-
-        control.destroy()
     }
 }
