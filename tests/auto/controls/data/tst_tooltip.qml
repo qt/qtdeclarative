@@ -69,6 +69,11 @@ TestCase {
         id: object
     }
 
+    SignalSpy {
+        id: sharedSpy
+        target: ToolTip.toolTip
+    }
+
     function test_properties_data() {
         return [
             {tag: "text", property: "text", defaultValue: "", setValue: "Hello", signalName: "textChanged"},
@@ -119,8 +124,9 @@ TestCase {
         verify(spy2.valid)
 
         var sharedTip = ToolTip.toolTip
-        var sharedSpy = signalSpy.createObject(testCase, {target: sharedTip, signalName: data.signalName})
+        sharedSpy.signalName = data.signalName
         verify(sharedSpy.valid)
+        sharedSpy.clear()
 
         // change attached properties while the shared tooltip is not visible
         item1.ToolTip[data.property] = data.setValue
