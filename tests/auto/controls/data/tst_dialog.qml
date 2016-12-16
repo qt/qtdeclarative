@@ -67,39 +67,36 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = dialog.createObject(testCase)
+        var control = createTemporaryObject(dialog, testCase)
         verify(control)
         verify(control.header)
         verify(control.footer)
         compare(control.standardButtons, 0)
-        control.destroy()
     }
 
     function test_accept() {
-        var control = dialog.createObject(testCase)
+        var control = createTemporaryObject(dialog, testCase)
 
         control.open()
         waitForRendering(control.contentItem)
         verify(control.visible)
 
-        var acceptedSpy = signalSpy.createObject(testCase, {target: control, signalName: "accepted"})
+        var acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
         verify(acceptedSpy.valid)
         control.accept()
         compare(acceptedSpy.count, 1)
 
         tryCompare(control, "visible", false)
-
-        control.destroy()
     }
 
     function test_reject() {
-        var control = dialog.createObject(testCase)
+        var control = createTemporaryObject(dialog, testCase)
 
         control.open()
         waitForRendering(control.contentItem)
         verify(control.visible)
 
-        var rejectedSpy = signalSpy.createObject(testCase, {target: control, signalName: "rejected"})
+        var rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
         verify(rejectedSpy.valid)
         control.reject()
         compare(rejectedSpy.count, 1)
@@ -149,8 +146,6 @@ TestCase {
         mouseRelease(testCase, 1, 1)
         compare(rejectedSpy.count, 4)
         tryCompare(control, "visible", false)
-
-        control.destroy()
     }
 
     function test_buttonBox_data() {
@@ -161,7 +156,7 @@ TestCase {
     }
 
     function test_buttonBox(data) {
-        var control = dialog.createObject(testCase)
+        var control = createTemporaryObject(dialog, testCase)
 
         if (data.custom)
             control.footer = buttonBox.createObject(testCase)
@@ -170,21 +165,19 @@ TestCase {
         verify(box)
         compare(box.standardButtons, Dialog.Ok | Dialog.Cancel)
 
-        var acceptedSpy = signalSpy.createObject(testCase, {target: control, signalName: "accepted"})
+        var acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
         verify(acceptedSpy.valid)
         box.accepted()
         compare(acceptedSpy.count, 1)
 
-        var rejectedSpy = signalSpy.createObject(testCase, {target: control, signalName: "rejected"})
+        var rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
         verify(rejectedSpy.valid)
         box.rejected()
         compare(rejectedSpy.count, 1)
-
-        control.destroy()
     }
 
     function test_standardButtons() {
-        var control = dialog.createObject(testCase)
+        var control = createTemporaryObject(dialog, testCase)
 
         control.standardButtons = Dialog.Ok
 
@@ -217,12 +210,10 @@ TestCase {
 
         control.standardButtons = 0
         compare(box.count, 0)
-
-        control.destroy()
     }
 
     function test_layout() {
-        var control = dialog.createObject(testCase, {width: 100, height: 100})
+        var control = createTemporaryObject(dialog, testCase, {width: 100, height: 100})
         verify(control)
 
         control.open()
@@ -296,8 +287,6 @@ TestCase {
 
         control.footer.implicitWidth = 160
         compare(control.implicitWidth, control.footer.implicitWidth)
-
-        control.destroy()
     }
 
     function test_spacing_data() {
@@ -313,7 +302,7 @@ TestCase {
     }
 
     function test_spacing(data) {
-        var control = dialog.createObject(testCase, {spacing: 20, width: 100, height: 100})
+        var control = createTemporaryObject(dialog, testCase, {spacing: 20, width: 100, height: 100})
         verify(control)
 
         control.open()
@@ -340,7 +329,5 @@ TestCase {
         compare(control.contentItem.height, control.availableHeight
                                             - (data.header ? control.header.height + control.spacing : 0)
                                             - (data.footer ? control.footer.height + control.spacing : 0))
-
-        control.destroy()
     }
 }
