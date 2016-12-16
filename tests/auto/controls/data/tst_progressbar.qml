@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -56,7 +56,7 @@ TestCase {
     }
 
     function test_value() {
-        var control = progressBar.createObject(testCase)
+        var control = createTemporaryObject(progressBar, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -68,12 +68,10 @@ TestCase {
         compare(control.value, 0.0)
         control.value = 2.0
         compare(control.value, 1.0)
-
-        control.destroy()
     }
 
     function test_range() {
-        var control = progressBar.createObject(testCase, {from: 0, to: 100, value: 50})
+        var control = createTemporaryObject(progressBar, testCase, {from: 0, to: 100, value: 50})
         verify(control)
 
         compare(control.from, 0)
@@ -102,12 +100,10 @@ TestCase {
         control.value = 50
         compare(control.value, 50)
         compare(control.position, 0.5)
-
-        control.destroy()
     }
 
     function test_inverted() {
-        var control = progressBar.createObject(testCase, {from: 1.0, to: -1.0})
+        var control = createTemporaryObject(progressBar, testCase, {from: 1.0, to: -1.0})
         verify(control)
 
         compare(control.from, 1.0)
@@ -126,12 +122,10 @@ TestCase {
         control.value = 0.0
         compare(control.value, 0.0)
         compare(control.position, 0.5)
-
-        control.destroy()
     }
 
     function test_position() {
-        var control = progressBar.createObject(testCase)
+        var control = createTemporaryObject(progressBar, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -144,12 +138,10 @@ TestCase {
         control.value = 0.75
         compare(control.value, 0.75)
         compare(control.position, 0.75)
-
-        control.destroy()
     }
 
     function test_visualPosition() {
-        var control = progressBar.createObject(testCase)
+        var control = createTemporaryObject(progressBar, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -178,12 +170,10 @@ TestCase {
         // LayoutMirroring
         control.LayoutMirroring.enabled = true
         compare(control.visualPosition, 0.75)
-
-        control.destroy()
     }
 
     function test_indeterminate() {
-        var control = progressBar.createObject(testCase)
+        var control = createTemporaryObject(progressBar, testCase)
         verify(control)
         compare(control.indeterminate, false)
 
@@ -192,7 +182,5 @@ TestCase {
         wait(100)
         // Shouldn't crash...
         control.indeterminate = false
-
-        control.destroy()
     }
 }
