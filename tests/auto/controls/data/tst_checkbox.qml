@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -63,7 +63,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -71,12 +71,10 @@ TestCase {
         compare(control.text, "CheckBox")
         control.text = ""
         compare(control.text, "")
-
-        control.destroy()
     }
 
     function test_checked() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -99,12 +97,10 @@ TestCase {
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_checkState() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -127,12 +123,10 @@ TestCase {
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -200,12 +194,10 @@ TestCase {
         compare(control.checkState, Qt.Unchecked)
         compare(control.pressed, false)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_keys() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -252,8 +244,6 @@ TestCase {
             compare(control.checked, false)
             verify(sequenceSpy.success)
         }
-
-        control.destroy()
     }
 
     Component {
@@ -265,7 +255,7 @@ TestCase {
     }
 
     function test_checked_binding() {
-        var container = checkedBoundBoxes.createObject(testCase)
+        var container = createTemporaryObject(checkedBoundBoxes, testCase)
         verify(container)
 
         compare(container.cb1.checked, false)
@@ -284,8 +274,6 @@ TestCase {
         compare(container.cb1.checkState, Qt.Unchecked)
         compare(container.cb2.checked, false)
         compare(container.cb2.checkState, Qt.Unchecked)
-
-        container.destroy()
     }
 
     Component {
@@ -297,7 +285,7 @@ TestCase {
     }
 
     function test_checkState_binding() {
-        var container = checkStateBoundBoxes.createObject(testCase)
+        var container = createTemporaryObject(checkStateBoundBoxes, testCase)
         verify(container)
 
         compare(container.cb1.checked, false)
@@ -328,12 +316,10 @@ TestCase {
 
         compare(container.cb1.tristate, true)
         compare(container.cb2.tristate, true)
-
-        container.destroy()
     }
 
     function test_tristate() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
@@ -428,14 +414,11 @@ TestCase {
         compare(control.checked, true)
         compare(control.checkState, Qt.PartiallyChecked)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_baseline() {
-        var control = checkBox.createObject(testCase)
+        var control = createTemporaryObject(checkBox, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 }
