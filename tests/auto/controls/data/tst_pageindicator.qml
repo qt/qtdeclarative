@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -56,29 +56,25 @@ TestCase {
     }
 
     function test_count() {
-        var control = pageIndicator.createObject(testCase)
+        var control = createTemporaryObject(pageIndicator, testCase)
         verify(control)
 
         compare(control.count, 0)
         control.count = 3
         compare(control.count, 3)
-
-        control.destroy()
     }
 
     function test_currentIndex() {
-        var control = pageIndicator.createObject(testCase)
+        var control = createTemporaryObject(pageIndicator, testCase)
         verify(control)
 
         compare(control.currentIndex, 0)
         control.currentIndex = 5
         compare(control.currentIndex, 5)
-
-        control.destroy()
     }
 
     function test_interactive() {
-        var control = pageIndicator.createObject(testCase, {count: 5})
+        var control = createTemporaryObject(pageIndicator, testCase, {count: 5})
         verify(control)
 
         verify(!control.interactive)
@@ -110,7 +106,5 @@ TestCase {
                 }
             }
         }
-
-        control.destroy()
     }
 }
