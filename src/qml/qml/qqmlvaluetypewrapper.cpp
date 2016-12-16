@@ -51,9 +51,11 @@
 #include <private/qv4alloca_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
 
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
 
@@ -438,6 +440,9 @@ bool QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 
     if (reference) {
         QV4::ScopedFunctionObject f(scope, value);
+        const QQmlQPointer<QObject> &referenceObject = reference->d()->object;
+        const int referencePropertyIndex = reference->d()->property;
+
         if (f) {
             if (!f->isBinding()) {
                 // assigning a JS function to a non-var-property is not allowed.
@@ -452,18 +457,31 @@ bool QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             QQmlPropertyData cacheData;
             cacheData.setWritable(true);
             cacheData.setPropType(writeBackPropertyType);
-            cacheData.setCoreIndex(reference->d()->property);
+            cacheData.setCoreIndex(referencePropertyIndex);
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
 
             QV4::ScopedContext ctx(scope, bindingFunction->scope());
-            QQmlBinding *newBinding = QQmlBinding::create(&cacheData, bindingFunction->function(), reference->d()->object, context, ctx);
+            QQmlBinding *newBinding = QQmlBinding::create(&cacheData, bindingFunction->function(), referenceObject, context, ctx);
             newBinding->setSourceLocation(bindingFunction->currentLocation());
-            newBinding->setTarget(reference->d()->object, cacheData, pd);
+            newBinding->setTarget(referenceObject, cacheData, pd);
             QQmlPropertyPrivate::setBinding(newBinding);
             return true;
         } else {
-            QQmlPropertyPrivate::removeBinding(reference->d()->object, QQmlPropertyIndex(reference->d()->property, pd->coreIndex()));
+            if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+                if (auto binding = QQmlPropertyPrivate::binding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd->coreIndex()))) {
+                    Q_ASSERT(!binding->isValueTypeProxy());
+                    const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
+                    const auto stackFrame = v4->currentStackFrame();
+                    qCInfo(lcBindingRemoval,
+                           "Overwriting binding on %s::%s which was initially bound at %s by setting \"%s\" at %s:%d",
+                           referenceObject->metaObject()->className(), referenceObject->metaObject()->property(referencePropertyIndex).name(),
+                           qPrintable(qmlBinding->expressionIdentifier()),
+                           metaObject->property(pd->coreIndex()).name(),
+                           qPrintable(stackFrame.source), stackFrame.line);
+                }
+            }
+            QQmlPropertyPrivate::removeBinding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd->coreIndex()));
         }
     }
 

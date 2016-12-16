@@ -75,9 +75,12 @@
 #include <QtCore/qatomic.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <vector>
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
@@ -458,10 +461,23 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         }
     }
 
-    if (newBinding)
+    if (newBinding) {
         QQmlPropertyPrivate::setBinding(newBinding);
-    else
+    } else {
+        if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+            if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
+                Q_ASSERT(!binding->isValueTypeProxy());
+                const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
+                const auto stackFrame = engine->currentStackFrame();
+                qCInfo(lcBindingRemoval,
+                       "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
+                       object->metaObject()->className(), qPrintable(property->name(object)),
+                       qPrintable(stackFrame.source), stackFrame.line,
+                       qPrintable(qmlBinding->expressionIdentifier()));
+            }
+        }
         QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
+    }
 
     if (!newBinding && property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
