@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -106,54 +106,46 @@ TestCase {
     }
 
     function test_empty() {
-        var control = page.createObject(testCase)
+        var control = createTemporaryObject(page, testCase)
         verify(control)
 
         verify(control.contentItem)
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
-
-        control.destroy()
     }
 
     function test_oneChild() {
-        var control = oneChildPage.createObject(testCase)
+        var control = createTemporaryObject(oneChildPage, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         compare(control.implicitWidth, 100 + control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, 30 + control.topPadding + control.bottomPadding)
-
-        control.destroy()
     }
 
     function test_twoChildren() {
-        var control = twoChildrenPage.createObject(testCase)
+        var control = createTemporaryObject(twoChildrenPage, testCase)
         verify(control)
 
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
         compare(control.implicitWidth, control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, control.topPadding + control.bottomPadding)
-
-        control.destroy()
     }
 
     function test_contentItem() {
-        var control = contentPage.createObject(testCase)
+        var control = createTemporaryObject(contentPage, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         compare(control.implicitWidth, 100 + control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, 30 + control.topPadding + control.bottomPadding)
-
-        control.destroy()
     }
 
     function test_layout() {
-        var control = page.createObject(testCase, {width: 100, height: 100})
+        var control = createTemporaryObject(page, testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.width, 100)
@@ -223,8 +215,6 @@ TestCase {
 
         control.footer.implicitWidth = 160
         compare(control.implicitWidth, control.footer.implicitWidth + control.leftPadding + control.rightPadding)
-
-        control.destroy()
     }
 
     function test_spacing_data() {
@@ -240,7 +230,7 @@ TestCase {
     }
 
     function test_spacing(data) {
-        var control = page.createObject(testCase, {spacing: 20, width: 100, height: 100})
+        var control = createTemporaryObject(page, testCase, {spacing: 20, width: 100, height: 100})
         verify(control)
 
         control.contentItem.visible = data.content
@@ -263,7 +253,5 @@ TestCase {
         compare(control.contentItem.height, control.availableHeight
                                             - (data.header ? control.header.height + control.spacing : 0)
                                             - (data.footer ? control.footer.height + control.spacing : 0))
-
-        control.destroy()
     }
 }
