@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -63,7 +63,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = radioButton.createObject(testCase)
+        var control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -71,12 +71,10 @@ TestCase {
         compare(control.text, "RadioButton")
         control.text = ""
         compare(control.text, "")
-
-        control.destroy()
     }
 
     function test_checked() {
-        var control = radioButton.createObject(testCase)
+        var control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -94,12 +92,10 @@ TestCase {
         control.checked = false
         compare(control.checked, false)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = radioButton.createObject(testCase)
+        var control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -158,12 +154,10 @@ TestCase {
         compare(control.checked, true)
         compare(control.pressed, false)
         verify(sequenceSpy.success)
-
-        control.destroy()
     }
 
     function test_keys() {
-        var control = radioButton.createObject(testCase)
+        var control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
@@ -204,12 +198,10 @@ TestCase {
             compare(control.checked, true)
             verify(sequenceSpy.success)
         }
-
-        control.destroy()
     }
 
     Component {
-        id: twoRadioButtones
+        id: twoRadioButtons
         Item {
             property RadioButton rb1: RadioButton { id: rb1 }
             property RadioButton rb2: RadioButton { id: rb2; checked: rb1.checked; enabled: false }
@@ -217,7 +209,7 @@ TestCase {
     }
 
     function test_binding() {
-        var container = twoRadioButtones.createObject(testCase)
+        var container = createTemporaryObject(twoRadioButtons, testCase)
         verify(container)
 
         compare(container.rb1.checked, false)
@@ -230,8 +222,6 @@ TestCase {
         container.rb1.checked = false
         compare(container.rb1.checked, false)
         compare(container.rb2.checked, false)
-
-        container.destroy()
     }
 
     Component {
@@ -258,7 +248,7 @@ TestCase {
     }
 
     function test_autoExclusive() {
-        var container = radioButtonGroup.createObject(testCase)
+        var container = createTemporaryObject(radioButtonGroup, testCase)
         compare(container.children.length, 8)
 
         var checkStates = [false, false, false, false, false, false, false, false]
@@ -313,14 +303,11 @@ TestCase {
         checkStates[1] = false
         for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
-
-        container.destroy()
     }
 
     function test_baseline() {
-        var control = radioButton.createObject(testCase)
+        var control = createTemporaryObject(radioButton, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 }
