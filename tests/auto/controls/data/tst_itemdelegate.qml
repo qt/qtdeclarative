@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -56,20 +56,17 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = itemDelegate.createObject(testCase)
+        var control = createTemporaryObject(itemDelegate, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 
     function test_highlighted() {
-        var control = itemDelegate.createObject(testCase)
+        var control = createTemporaryObject(itemDelegate, testCase)
         verify(control)
         verify(!control.highlighted)
 
         control.highlighted = true
         verify(control.highlighted)
-
-        control.destroy()
     }
 }
