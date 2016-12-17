@@ -1,0 +1,4 @@
+singleton UIStyle 1.0 UIStyle.qml
+WSlider 1.0 WSlider.qml
+WSwitch 1.0 WSwitch.qml
+PageContainer 1.0 PageContainer.qml
