@@ -390,7 +390,6 @@ public:
     bool hasStartY() const;
 
     bool isClosed() const;
-    bool hasEnd() const;
 
     QPainterPath path() const;
     QStringList attributes() const;

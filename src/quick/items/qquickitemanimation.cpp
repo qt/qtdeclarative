@@ -869,7 +869,7 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
     data->reverse = direction == Backward ? true : false;
     data->fromSourced = false;
     data->fromDefined = (d->path && d->path->hasStartX() && d->path->hasStartY()) ? true : false;
-    data->toDefined = d->path ? d->path->hasEnd() : false;
+    data->toDefined = d->path ? true : false;
     int origModifiedSize = modified.count();
 
     for (int i = 0; i < actions.count(); ++i) {

@@ -101,6 +101,8 @@ private slots:
     void scriptActionCrash();
     void animatorInvalidTargetCrash();
     void defaultPropertyWarning();
+    void pathSvgAnimation();
+    void pathLineUnspecifiedXYBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1521,6 +1523,48 @@ void tst_qquickanimations::defaultPropertyWarning()
     QVERIFY(root);
 
     QVERIFY(warnings.isEmpty());
+}
+
+// QTBUG-57666
+void tst_qquickanimations::pathSvgAnimation()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("pathSvgAnimation.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(component.create()));
+    QVERIFY(rect);
+
+    QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
+    QVERIFY(redRect);
+    QQuickPathAnimation *pathAnim = rect->findChild<QQuickPathAnimation*>();
+    QVERIFY(pathAnim);
+
+    QCOMPARE(redRect->x(), qreal(50));
+    QCOMPARE(redRect->y(), qreal(50));
+
+    pathAnim->start();
+    QTRY_COMPARE(redRect->x(), qreal(200));
+    QCOMPARE(redRect->y(), qreal(200));
+}
+
+// QTBUG-57666
+void tst_qquickanimations::pathLineUnspecifiedXYBug()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("pathLineUnspecifiedXYBug.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(component.create()));
+    QVERIFY(rect);
+
+    QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
+    QVERIFY(redRect);
+    QQuickPathAnimation *pathAnim = rect->findChild<QQuickPathAnimation*>();
+    QVERIFY(pathAnim);
+
+    QCOMPARE(redRect->x(), qreal(50));
+    QCOMPARE(redRect->y(), qreal(50));
+
+    pathAnim->start();
+    QTRY_COMPARE(redRect->x(), qreal(0));
+    QCOMPARE(redRect->y(), qreal(0));
 }
 
 QTEST_MAIN(tst_qquickanimations)

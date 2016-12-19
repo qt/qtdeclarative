@@ -149,20 +149,6 @@ bool QQuickPath::isClosed() const
     return d->closed;
 }
 
-bool QQuickPath::hasEnd() const
-{
-    Q_D(const QQuickPath);
-    for (int i = d->_pathElements.count() - 1; i > -1; --i) {
-        if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(d->_pathElements.at(i))) {
-            if ((!curve->hasX() && !curve->hasRelativeX()) || (!curve->hasY() && !curve->hasRelativeY()))
-                return false;
-            else
-                return true;
-        }
-    }
-    return hasStartX() && hasStartY();
-}
-
 /*!
     \qmlproperty list<PathElement> QtQuick::Path::pathElements
     This property holds the objects composing the path.
