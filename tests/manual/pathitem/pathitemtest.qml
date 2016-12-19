@@ -279,6 +279,80 @@ Rectangle {
                     }
                 }
             }
+
+            Rectangle {
+                border.color: "purple"
+                color: "transparent"
+                width: 200
+                height: 200
+                Rectangle {
+                    anchors.centerIn: parent
+                    // have a size smaller than 150x150
+                    width: 100
+                    height: 100
+                    // and enable clipping. Normally this goes via scissoring, unless
+                    // some transform triggers the stencil-based path. Ensure this via rotation.
+                    clip: true
+                    NumberAnimation on rotation {
+                        from: 0; to: 360; duration: 5000; loops: Animation.Infinite
+                    }
+
+                    PathItem {
+                        width: 150
+                        height: 150
+
+                        fillColor: "blue"
+                        strokeColor: "red"
+                        strokeWidth: 4
+
+                        path: Path {
+                            startX: 10; startY: 10
+                            PathLine { x: 140; y: 140 }
+                            PathLine { x: 10; y: 140 }
+                            PathLine { x: 10; y: 10 }
+                        }
+                    }
+                }
+            }
+
+            // stencil clip test #2, something more complicated:
+            Rectangle {
+                border.color: "purple"
+                color: "transparent"
+                width: 150
+                height: 150
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 60
+                    height: 60
+                    clip: true
+                    NumberAnimation on rotation {
+                        from: 0; to: 360; duration: 5000; loops: Animation.Infinite
+                    }
+                    PathItem {
+                        id: clippedStar
+                        width: 100
+                        height: 100
+                        strokeColor: "blue"
+                        fillColor: "lightGray"
+                        strokeWidth: 2
+                        path: Path {
+                            PathMove { x: 90; y: 50 }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
+                            PathLine { x: 90; y: 50 }
+                        }
+                    }
+                    Timer {
+                        interval: 1000
+                        onTriggered: clippedStar.fillRule = (clippedStar.fillRule === PathItem.OddEvenFill ? PathItem.WindingFill : PathItem.OddEvenFill)
+                        repeat: true
+                        running: true
+                    }
+                }
+            }
         }
     }
 

@@ -39,6 +39,9 @@
 
 #include "qquickpathitemnvprrenderer_p.h"
 #include <QOpenGLExtraFunctions>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
 #include <private/qquickpath_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -307,10 +310,10 @@ void QQuickPathItemNvprRenderer::updatePathRenderNode()
     if (m_dirty & DirtyFillRule) {
         switch (m_fillRule) {
         case QQuickPathItem::OddEvenFill:
-            m_node->m_fillRule = GL_COUNT_UP_NV;
+            m_node->m_fillRule = GL_INVERT;
             break;
         case QQuickPathItem::WindingFill:
-            m_node->m_fillRule = GL_INVERT;
+            m_node->m_fillRule = GL_COUNT_UP_NV;
             break;
         default:
             Q_UNREACHABLE();
@@ -360,6 +363,13 @@ void QQuickPathItemNvprRenderNode::releaseResources()
         nvpr.deletePaths(m_path, 1);
         m_path = 0;
     }
+
+    if (m_fallbackFbo) {
+        delete m_fallbackFbo;
+        m_fallbackFbo = nullptr;
+    }
+
+    m_fallbackBlitter.destroy();
 }
 
 void QQuickNvprMaterialManager::create(QQuickNvprFunctions *nvpr)
@@ -465,8 +475,95 @@ void QQuickPathItemNvprRenderNode::updatePath()
     }
 }
 
+void QQuickPathItemNvprRenderNode::renderStroke(int strokeStencilValue, int writeMask)
+{
+    QQuickNvprMaterialManager::MaterialDesc *mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
+    f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
+            m_strokeColor.x(), m_strokeColor.y(), m_strokeColor.z(), m_strokeColor.w());
+    f->glProgramUniform1f(mtl->prg, mtl->uniLoc[1], inheritedOpacity());
+
+    nvpr.stencilThenCoverStrokePath(m_path, strokeStencilValue, writeMask, GL_CONVEX_HULL_NV);
+}
+
+void QQuickPathItemNvprRenderNode::renderFill()
+{
+    QQuickNvprMaterialManager::MaterialDesc *mtl = nullptr;
+    if (m_fillGradientActive) {
+        mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatLinearGradient);
+        QSGTexture *tx = QQuickPathItemGradientCache::currentCache()->get(m_fillGradient);
+        tx->bind();
+        // uv = vec2(coeff[0] * x + coeff[1] * y + coeff[2], coeff[3] * x + coeff[4] * y + coeff[5])
+        // where x and y are in path coordinate space, which is just what
+        // we need since the gradient's start and stop are in that space too.
+        GLfloat coeff[6] = { 1, 0, 0,
+                             0, 1, 0 };
+        nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
+        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], m_fillGradient.start.x(), m_fillGradient.start.y());
+        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], m_fillGradient.end.x(), m_fillGradient.end.y());
+    } else {
+        mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
+        f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
+                m_fillColor.x(), m_fillColor.y(), m_fillColor.z(), m_fillColor.w());
+    }
+    f->glProgramUniform1f(mtl->prg, mtl->uniLoc[1], inheritedOpacity());
+
+    const int writeMask = 0xFF;
+    nvpr.stencilThenCoverFillPath(m_path, m_fillRule, writeMask, GL_BOUNDING_BOX_NV);
+}
+
+void QQuickPathItemNvprRenderNode::renderOffscreenFill()
+{
+    QQuickWindow *w = m_item->window();
+    const qreal dpr = w->effectiveDevicePixelRatio();
+    QSize itemSize = QSize(m_item->width(), m_item->height()) * dpr;
+    QSize rtSize = w->renderTargetSize();
+    if (rtSize.isEmpty())
+        rtSize = w->size() * dpr;
+
+    if (m_fallbackFbo && m_fallbackFbo->size() != itemSize) {
+        delete m_fallbackFbo;
+        m_fallbackFbo = nullptr;
+    }
+    if (!m_fallbackFbo)
+        m_fallbackFbo = new QOpenGLFramebufferObject(itemSize, QOpenGLFramebufferObject::CombinedDepthStencil);
+    if (!m_fallbackFbo->bind())
+        return;
+
+    f->glViewport(0, 0, itemSize.width(), itemSize.height());
+    f->glClearColor(0, 0, 0, 0);
+    f->glClearStencil(0);
+    f->glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    f->glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+    f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    nvpr.matrixLoadIdentity(GL_PATH_MODELVIEW_NV);
+    QMatrix4x4 proj;
+    proj.ortho(0, itemSize.width(), itemSize.height(), 0, 1, -1);
+    nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, proj.constData());
+
+    renderFill();
+
+    m_fallbackFbo->release();
+    f->glViewport(0, 0, rtSize.width(), rtSize.height());
+}
+
+void QQuickPathItemNvprRenderNode::setupStencilForCover(bool stencilClip, int sv)
+{
+    if (!stencilClip) {
+        // Assume stencil buffer is cleared to 0 for each frame.
+        // Within the frame dppass=GL_ZERO for glStencilOp ensures stencil is reset and so no need to clear.
+        f->glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+        f->glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+    } else {
+        f->glStencilFunc(GL_LESS, sv, 0xFF); // pass if (sv & 0xFF) < (stencil_value & 0xFF)
+        f->glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // dppass: replace with the original value (clip's stencil ref value)
+    }
+}
+
 void QQuickPathItemNvprRenderNode::render(const RenderState *state)
 {
+    f = QOpenGLContext::currentContext()->extraFunctions();
+
     if (!nvprInited) {
         if (!nvpr.create()) {
             qWarning("NVPR init failed");
@@ -478,22 +575,23 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
 
     updatePath();
 
-    QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
     f->glUseProgram(0);
-    QQuickNvprMaterialManager::MaterialDesc *mtl;
-    if (m_fillGradientActive)
-        mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatLinearGradient);
-    else
-        mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
-    if (!mtl)
-        return;
-
-    // Assume stencil buffer is cleared to 0 for each frame.
-    // Within the frame dppass=GL_ZERO for glStencilOp ensures stencil is reset and so no need to clear.
     f->glStencilMask(~0);
     f->glEnable(GL_STENCIL_TEST);
-    f->glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
-    f->glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+
+    const bool stencilClip = state->stencilEnabled();
+    // when true, the stencil buffer already has a clip path with a ref value of sv
+    const int sv = state->stencilValue();
+
+    const bool hasFill = !qFuzzyIsNull(m_fillColor.w()) || m_fillGradientActive;
+    const bool hasStroke = m_strokeWidth >= 0.0f && !qFuzzyIsNull(m_strokeColor.w());
+
+    if (hasFill && stencilClip) {
+        // Fall back to a texture when complex clipping is in use and we have
+        // to fill. Reconciling glStencilFillPath's and the scenegraph's clip
+        // stencil semantics has not succeeded so far...
+        renderOffscreenFill();
+    }
 
     // Depth test against the opaque batches rendered before.
     f->glEnable(GL_DEPTH_TEST);
@@ -509,34 +607,42 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
         f->glEnable(GL_SCISSOR_TEST);
     }
 
-    if (!qFuzzyIsNull(m_fillColor.w()) || m_fillGradientActive) {
-        if (m_fillGradientActive) {
-            QSGTexture *tx = QQuickPathItemGradientCache::currentCache()->get(m_fillGradient);
-            tx->bind();
-            // uv = vec2(coeff[0] * x + coeff[1] * y + coeff[2], coeff[3] * x + coeff[4] * y + coeff[5])
-            // where x and y are in path coordinate space, which is just what
-            // we need since the gradient's start and stop are in that space too.
-            GLfloat coeff[6] = { 1, 0, 0,
-                                 0, 1, 0 };
-            nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
-            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], m_fillGradient.start.x(), m_fillGradient.start.y());
-            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], m_fillGradient.end.x(), m_fillGradient.end.y());
+    // Fill!
+    if (hasFill) {
+        if (!stencilClip) {
+            setupStencilForCover(false, 0);
+            renderFill();
         } else {
-            f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
-                    m_fillColor.x(), m_fillColor.y(), m_fillColor.z(), m_fillColor.w());
+            if (!m_fallbackBlitter.isCreated())
+                m_fallbackBlitter.create();
+            f->glStencilFunc(GL_EQUAL, sv, 0xFF);
+            f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+            m_fallbackBlitter.texturedQuad(m_fallbackFbo->texture(), m_fallbackFbo->size(),
+                                           *state->projectionMatrix(), *matrix(),
+                                           inheritedOpacity());
         }
-        f->glProgramUniform1f(mtl->prg, mtl->uniLoc[1], inheritedOpacity());
-        nvpr.stencilThenCoverFillPath(m_path, m_fillRule, 0xFF, GL_BOUNDING_BOX_NV);
     }
 
-    if (m_strokeWidth >= 0.0f && !qFuzzyIsNull(m_strokeColor.w())) {
-        if (m_fillGradientActive)
-            mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
-        f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
-                m_strokeColor.x(), m_strokeColor.y(), m_strokeColor.z(), m_strokeColor.w());
-        f->glProgramUniform1f(mtl->prg, mtl->uniLoc[1], inheritedOpacity());
-        nvpr.stencilThenCoverStrokePath(m_path, 0x1, ~0, GL_CONVEX_HULL_NV);
+    // Stroke!
+    if (hasStroke) {
+        const int strokeStencilValue = 0x80;
+        const int writeMask = 0x80;
+
+        setupStencilForCover(stencilClip, sv);
+        if (stencilClip) {
+            // for the stencil step (eff. read mask == 0xFF & ~writeMask)
+            nvpr.pathStencilFunc(GL_EQUAL, sv, 0xFF);
+            // With stencilCLip == true the read mask for the stencil test before the stencil step is 0x7F.
+            // This assumes the clip stencil value is <= 127.
+            if (sv >= strokeStencilValue)
+                qWarning("PathItem/NVPR: stencil clip ref value %d too large; expect rendering errors", sv);
+        }
+
+        renderStroke(strokeStencilValue, writeMask);
     }
+
+    if (stencilClip)
+        nvpr.pathStencilFunc(GL_ALWAYS, 0, ~0);
 
     f->glBindProgramPipeline(0);
 
@@ -562,6 +668,98 @@ bool QQuickPathItemNvprRenderNode::isSupported()
 {
     static const bool nvprDisabled = qEnvironmentVariableIntValue("QT_NO_NVPR") != 0;
     return !nvprDisabled && QQuickNvprFunctions::isSupported();
+}
+
+bool QQuickNvprBlitter::create()
+{
+    if (isCreated())
+        destroy();
+
+    m_program = new QOpenGLShaderProgram;
+    if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/shadereffect_core.vert"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/shadereffect_core.frag"));
+    } else {
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/shadereffect.vert"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/shadereffect.frag"));
+    }
+    m_program->bindAttributeLocation("qt_Vertex", 0);
+    m_program->bindAttributeLocation("qt_MultiTexCoord0", 1);
+    if (!m_program->link())
+        return false;
+
+    m_matrixLoc = m_program->uniformLocation("qt_Matrix");
+    m_opacityLoc = m_program->uniformLocation("qt_Opacity");
+
+    m_buffer = new QOpenGLBuffer;
+    if (!m_buffer->create())
+        return false;
+    m_buffer->bind();
+    m_buffer->allocate(4 * sizeof(GLfloat) * 6);
+    m_buffer->release();
+
+    return true;
+}
+
+void QQuickNvprBlitter::destroy()
+{
+    if (m_program) {
+        delete m_program;
+        m_program = nullptr;
+    }
+    if (m_buffer) {
+        delete m_buffer;
+        m_buffer = nullptr;
+    }
+}
+
+void QQuickNvprBlitter::texturedQuad(GLuint textureId, const QSize &size,
+                                     const QMatrix4x4 &proj, const QMatrix4x4 &modelview,
+                                     float opacity)
+{
+    QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
+
+    m_program->bind();
+
+    QMatrix4x4 m = proj * modelview;
+    m_program->setUniformValue(m_matrixLoc, m);
+    m_program->setUniformValue(m_opacityLoc, opacity);
+
+    m_buffer->bind();
+
+    if (size != m_prevSize) {
+        m_prevSize = size;
+
+        QPointF p0(size.width() - 1, size.height() - 1);
+        QPointF p1(0, 0);
+        QPointF p2(0, size.height() - 1);
+        QPointF p3(size.width() - 1, 0);
+
+        GLfloat vertices[6 * 4] = {
+            GLfloat(p0.x()), GLfloat(p0.y()), 1, 0,
+            GLfloat(p1.x()), GLfloat(p1.y()), 0, 1,
+            GLfloat(p2.x()), GLfloat(p2.y()), 0, 0,
+
+            GLfloat(p0.x()), GLfloat(p0.y()), 1, 0,
+            GLfloat(p3.x()), GLfloat(p3.y()), 1, 1,
+            GLfloat(p1.x()), GLfloat(p1.y()), 0, 1,
+        };
+
+        m_buffer->write(0, vertices, sizeof(vertices));
+    }
+
+    m_program->enableAttributeArray(0);
+    m_program->enableAttributeArray(1);
+    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+    f->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const void *) (2 * sizeof(GLfloat)));
+
+    f->glBindTexture(GL_TEXTURE_2D, textureId);
+
+    f->glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    f->glBindTexture(GL_TEXTURE_2D, 0);
+    m_buffer->release();
+    m_program->release();
 }
 
 QT_END_NAMESPACE

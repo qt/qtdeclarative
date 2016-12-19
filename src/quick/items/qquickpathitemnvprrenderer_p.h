@@ -63,6 +63,9 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickPathItemNvprRenderNode;
+class QOpenGLFramebufferObject;
+class QOpenGLBuffer;
+class QOpenGLExtraFunctions;
 
 class QQuickPathItemNvprRenderer : public QQuickAbstractPathRenderer
 {
@@ -76,6 +79,10 @@ public:
 
         DirtyAll = 0xFF
     };
+
+    QQuickPathItemNvprRenderer(QQuickItem *item)
+        : m_item(item)
+    { }
 
     void beginSync() override;
     void setPath(const QQuickPath *path) override;
@@ -101,6 +108,7 @@ public:
 private:
     void convertPath(const QQuickPath *path);
 
+    QQuickItem *m_item;
     QQuickPathItemNvprRenderNode *m_node = nullptr;
     int m_dirty = 0;
 
@@ -146,6 +154,24 @@ private:
     MaterialDesc m_materials[NMaterials];
 };
 
+class QQuickNvprBlitter
+{
+public:
+    bool create();
+    void destroy();
+    bool isCreated() const { return m_program != nullptr; }
+    void texturedQuad(GLuint textureId, const QSize &size,
+                      const QMatrix4x4 &proj, const QMatrix4x4 &modelview,
+                      float opacity);
+
+private:
+    QOpenGLShaderProgram *m_program = nullptr;
+    QOpenGLBuffer *m_buffer = nullptr;
+    int m_matrixLoc;
+    int m_opacityLoc;
+    QSize m_prevSize;
+};
+
 class QQuickPathItemNvprRenderNode : public QSGRenderNode
 {
 public:
@@ -162,6 +188,10 @@ public:
 
 private:
     void updatePath();
+    void renderStroke(int strokeStencilValue, int writeMask);
+    void renderFill();
+    void renderOffscreenFill();
+    void setupStencilForCover(bool stencilClip, int sv);
 
     static bool nvprInited;
     static QQuickNvprFunctions nvpr;
@@ -183,6 +213,9 @@ private:
     QVector<GLfloat> m_dashPattern;
     bool m_fillGradientActive;
     QQuickPathItemGradientCache::GradientDesc m_fillGradient;
+    QOpenGLFramebufferObject *m_fallbackFbo = nullptr;
+    QQuickNvprBlitter m_fallbackBlitter;
+    QOpenGLExtraFunctions *f = nullptr;
 
     friend class QQuickPathItemNvprRenderer;
 };

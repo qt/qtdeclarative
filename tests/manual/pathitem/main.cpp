@@ -49,11 +49,16 @@ int main(int argc, char **argv)
 
     QQuickView view;
 
-    if (app.arguments().contains(QStringLiteral("--multisample"))) {
-        QSurfaceFormat fmt;
+    QSurfaceFormat fmt;
+    fmt.setDepthBufferSize(24);
+    fmt.setStencilBufferSize(8);
+    if (app.arguments().contains(QStringLiteral("--multisample")))
         fmt.setSamples(4);
-        view.setFormat(fmt);
+    if (app.arguments().contains(QStringLiteral("--coreprofile"))) {
+        fmt.setVersion(4, 3);
+        fmt.setProfile(QSurfaceFormat::CoreProfile);
     }
+    view.setFormat(fmt);
 
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.resize(1024, 768);
