@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
+import QtQuick 2.9
 import QtQuick.Templates 2.2 as T
 
 T.SwipeView {
