@@ -368,6 +368,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickBorderImageMesh>("QtQuick", 2, 8, "BorderImageMesh");
 #endif
+
+    qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
 }
 
 static void initResources()

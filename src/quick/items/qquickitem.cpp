@@ -333,6 +333,12 @@ QVariant QQuickItemKeyFilter::inputMethodQuery(Qt::InputMethodQuery query) const
 }
 #endif // im
 
+void QQuickItemKeyFilter::shortcutOverride(QKeyEvent *event)
+{
+    if (m_next)
+        m_next->shortcutOverride(event);
+}
+
 void QQuickItemKeyFilter::componentComplete()
 {
     if (m_next) m_next->componentComplete();
@@ -935,6 +941,46 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
+    \qmlsignal QtQuick::Keys::shortcutOverride(KeyEvent event)
+    \since 5.9
+
+    This signal is emitted when a key has been pressed that could potentially
+    be used as a shortcut. The \a event parameter provides information about
+    the event.
+
+    Set \c event.accepted to \c true if you wish to prevent the pressed key
+    from being used as a shortcut by other types, such as \l Shortcut. For
+    example:
+
+    \code
+    Item {
+        id: escapeItem
+        focus: true
+
+        // Ensure that we get escape key press events first.
+        Keys.onShortcutOverride: event.accepted = (event.key === Qt.Key_Escape)
+
+        Keys.onEscapePressed: {
+            console.log("escapeItem is handling escape");
+            event.accepted = true;
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        onActivated: console.log("Shortcut is handling escape")
+    }
+    \endcode
+
+    As with the other signals, \c shortcutOverride will only be emitted for an
+    item if that item has \l {Item::}{activeFocus}.
+
+    The corresponding handler is \c onShortcutOverride.
+
+    \sa Shortcut
+*/
+
+/*!
     \qmlsignal QtQuick::Keys::digit0Pressed(KeyEvent event)
 
     This signal is emitted when the digit '0' has been pressed. The \a event
@@ -1425,6 +1471,16 @@ QVariant QQuickKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
     return QQuickItemKeyFilter::inputMethodQuery(query);
 }
 #endif // im
+
+void QQuickKeysAttached::shortcutOverride(QKeyEvent *event)
+{
+    Q_D(QQuickKeysAttached);
+    QQuickKeyEvent &keyEvent = d->theKeyEvent;
+    keyEvent.reset(*event);
+    emit shortcutOverride(&keyEvent);
+
+    event->setAccepted(keyEvent.isAccepted());
+}
 
 QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 {
@@ -5019,6 +5075,13 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
 }
 #endif // im
 
+void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
+{
+    if (extra.isAllocated() && extra->keyHandler) {
+        extra->keyHandler->shortcutOverride(event);
+    }
+}
+
 /*!
     Called when \a change occurs for this item.
 
@@ -7651,6 +7714,9 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::KeyPress:
     case QEvent::KeyRelease:
         d->deliverKeyEvent(static_cast<QKeyEvent*>(ev));
+        break;
+    case QEvent::ShortcutOverride:
+        d->deliverShortcutOverrideEvent(static_cast<QKeyEvent*>(ev));
         break;
     case QEvent::FocusIn:
         focusInEvent(static_cast<QFocusEvent*>(ev));

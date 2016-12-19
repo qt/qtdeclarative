@@ -60,7 +60,8 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false), overThreshold(false), pressed(0)
+  propagateComposedEvents(false), overThreshold(false), pressed(0),
+  pressAndHoldInterval(-1)
 #if QT_CONFIG(draganddrop)
   , drag(0)
 #endif
@@ -685,7 +686,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
 #endif
         setHovered(true);
         d->startScene = event->windowPos();
-        d->pressAndHoldTimer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), this);
+        d->pressAndHoldTimer.start(pressAndHoldInterval(), this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(event->button(), true, event->source()));
     }
@@ -1293,6 +1294,48 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
 }
 
 #endif
+
+
+/*!
+    \qmlproperty int QtQuick::MouseArea::pressAndHoldInterval
+    \since 5.9
+
+    This property overrides the elapsed time in milliseconds before
+    \c pressAndHold is emitted.
+
+    If not explicitly set -- or after reset -- the value follows
+    \c QStyleHints::mousePressAndHoldInterval.
+
+    Typically it's sufficient to set this property globally using the
+    application style hint. This property should be used when varying intervals
+    are needed for certain MouseAreas.
+
+    \sa pressAndHold
+*/
+int QQuickMouseArea::pressAndHoldInterval() const
+{
+    Q_D(const QQuickMouseArea);
+    return d->pressAndHoldInterval > -1 ?
+        d->pressAndHoldInterval : QGuiApplication::styleHints()->mousePressAndHoldInterval();
+}
+
+void QQuickMouseArea::setPressAndHoldInterval(int interval)
+{
+    Q_D(QQuickMouseArea);
+    if (interval != d->pressAndHoldInterval) {
+        d->pressAndHoldInterval = interval;
+        emit pressAndHoldIntervalChanged();
+    }
+}
+
+void QQuickMouseArea::resetPressAndHoldInterval()
+{
+    Q_D(QQuickMouseArea);
+    if (d->pressAndHoldInterval > -1) {
+        d->pressAndHoldInterval = -1;
+        emit pressAndHoldIntervalChanged();
+    }
+}
 
 /*!
     \qmlpropertygroup QtQuick::MouseArea::drag

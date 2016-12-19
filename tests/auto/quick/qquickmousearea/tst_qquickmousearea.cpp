@@ -127,6 +127,8 @@ private slots:
     void containsPress();
     void ignoreBySource();
     void notPressedAfterStolenGrab();
+    void pressAndHold_data();
+    void pressAndHold();
 
 private:
     int startDragDistance() const {
@@ -2096,6 +2098,49 @@ void tst_QQuickMouseArea::notPressedAfterStolenGrab()
 
     QTest::mouseClick(&window, Qt::LeftButton);
     QVERIFY(!ma->pressed());
+}
+
+void tst_QQuickMouseArea::pressAndHold_data()
+{
+    QTest::addColumn<int>("pressAndHoldInterval");
+    QTest::addColumn<int>("waitTime");
+
+    QTest::newRow("default") << -1 << QGuiApplication::styleHints()->mousePressAndHoldInterval();
+    QTest::newRow("short") << 500 << 500;
+    QTest::newRow("long") << 1000 << 1000;
+}
+
+void tst_QQuickMouseArea::pressAndHold()
+{
+    QFETCH(int, pressAndHoldInterval);
+    QFETCH(int, waitTime);
+
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("pressAndHold.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea*>("mouseArea");
+    QVERIFY(mouseArea != 0);
+
+    QSignalSpy pressAndHoldSpy(mouseArea, &QQuickMouseArea::pressAndHold);
+
+    if (pressAndHoldInterval > -1)
+        mouseArea->setPressAndHoldInterval(pressAndHoldInterval);
+    else
+        mouseArea->resetPressAndHoldInterval();
+
+    QElapsedTimer t;
+    t.start();
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+    QVERIFY(pressAndHoldSpy.wait());
+    // should be off by no more than 20% of waitTime
+    QVERIFY(qAbs(t.elapsed() - waitTime) < (waitTime * 0.2));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)

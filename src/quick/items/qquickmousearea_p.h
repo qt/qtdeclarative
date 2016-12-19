@@ -84,6 +84,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET unsetCursor NOTIFY cursorShapeChanged)
 #endif
     Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION 1)
+    Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION 9)
 
 public:
     QQuickMouseArea(QQuickItem *parent=0);
@@ -125,6 +126,10 @@ public:
     void setCursorShape(Qt::CursorShape shape);
 #endif
 
+    int pressAndHoldInterval() const;
+    void setPressAndHoldInterval(int interval);
+    void resetPressAndHoldInterval();
+
 Q_SIGNALS:
     void hoveredChanged();
     void pressedChanged();
@@ -152,6 +157,7 @@ Q_SIGNALS:
     void exited();
     void canceled();
     Q_REVISION(1) void containsPressChanged();
+    Q_REVISION(9) void pressAndHoldIntervalChanged();
 
 protected:
     void setHovered(bool);
