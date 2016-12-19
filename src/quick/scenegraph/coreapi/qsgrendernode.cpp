@@ -359,7 +359,10 @@ QSGRenderNode::RenderState::~RenderState()
     of the render state is not in use. However, the clip region that can be set
     on the QPainter still has to be communicated since reconstructing this
     manually in render() is not reasonable. It can therefore be queried via
-    this function.
+    this function. The region is in world coordinates and can be passed
+    to QPainter::setClipRegion() with Qt::ReplaceClip. This must be done before
+    calling QPainter::setTransform() since the clip region is already mapped to
+    the transform provided in QSGRenderNode::matrix().
  */
 
 /*!

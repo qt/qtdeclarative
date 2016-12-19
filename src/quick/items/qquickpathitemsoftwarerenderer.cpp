@@ -202,12 +202,12 @@ void QQuickPathItemSoftwareRenderNode::render(const RenderState *state)
     QPainter *p = static_cast<QPainter *>(rif->getResource(m_item->window(), QSGRendererInterface::PainterResource));
     Q_ASSERT(p);
 
-    p->setTransform(matrix()->toTransform());
-    p->setOpacity(inheritedOpacity());
-
     const QRegion *clipRegion = state->clipRegion();
     if (clipRegion && !clipRegion->isEmpty())
-        p->setClipRegion(*clipRegion, Qt::IntersectClip);
+        p->setClipRegion(*clipRegion, Qt::ReplaceClip); // must be done before setTransform
+
+    p->setTransform(matrix()->toTransform());
+    p->setOpacity(inheritedOpacity());
 
     p->setPen(!qFuzzyIsNull(m_pen.widthF()) && m_pen.color() != Qt::transparent ? m_pen : Qt::NoPen);
     p->setBrush(m_brush.color() != Qt::transparent ? m_brush : Qt::NoBrush);
