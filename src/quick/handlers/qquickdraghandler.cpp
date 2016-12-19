@@ -82,7 +82,8 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
     point->setAccepted();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
-        m_startPos = target()->mapToScene(QPointF());
+        if (target() && target()->parentItem())
+            m_startPos = target()->parentItem()->mapToScene(target()->position());
         break;
     case QQuickEventPoint::Updated: {
         QPointF delta = point->scenePos() - point->scenePressPos();
@@ -91,9 +92,11 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         if (!m_yAxis.enabled())
             delta.setY(0);
         if (m_dragging) {
-            QPointF pos = target()->parentItem()->mapFromScene(m_startPos) + delta;
-            enforceAxisConstraints(&pos);
-            target()->setPosition(pos);
+            if (target() && target()->parentItem()) {
+                QPointF pos = target()->parentItem()->mapFromScene(m_startPos + delta);
+                enforceAxisConstraints(&pos);
+                target()->setPosition(pos);
+            }
         } else if ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point))) {
             m_dragging = true;
