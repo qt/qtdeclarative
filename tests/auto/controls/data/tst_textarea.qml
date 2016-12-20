@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -70,13 +70,12 @@ TestCase {
     }
 
     function test_creation() {
-        var control = textArea.createObject(testCase)
+        var control = createTemporaryObject(textArea, testCase)
         verify(control)
-        control.destroy()
     }
 
     function test_implicitSize() {
-        var control = textArea.createObject(testCase)
+        var control = createTemporaryObject(textArea, testCase)
 
         var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
         var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
@@ -86,12 +85,10 @@ TestCase {
         compare(control.implicitHeight, 200)
         compare(implicitWidthSpy.count, 1)
         compare(implicitHeightSpy.count, 1)
-
-        control.destroy()
     }
 
     function test_alignment() {
-        var control = textArea.createObject(testCase)
+        var control = createTemporaryObject(textArea, testCase)
 
         control.horizontalAlignment = TextArea.AlignRight
         compare(control.horizontalAlignment, TextArea.AlignRight)
@@ -106,8 +103,6 @@ TestCase {
             if (control.children[j].hasOwnProperty("verticalAlignment"))
                 compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
         }
-
-        control.destroy()
     }
 
     function test_font_explicit_attributes_data() {
@@ -124,7 +119,7 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = textArea.createObject(testCase)
+        var control = createTemporaryObject(textArea, testCase)
         verify(control)
 
         var child = textArea.createObject(control)
@@ -149,12 +144,10 @@ TestCase {
 
         compare(child.font[data.tag], defaultValue)
         compare(childSpy.count, 0)
-
-        control.destroy()
     }
 
     function test_flickable() {
-        var control = flickable.createObject(testCase, {text:"line0", selectByMouse: true})
+        var control = createTemporaryObject(flickable, testCase, {text:"line0", selectByMouse: true})
         verify(control)
 
         var textArea = control.TextArea.flickable
@@ -190,8 +183,6 @@ TestCase {
         verify(above > 0 && above < center)
         mouseClick(textArea, control.width / 2, 0)
         compare(textArea.cursorPosition, center) // no change
-
-        control.destroy()
     }
 
     function test_warning() {
@@ -207,7 +198,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = textArea.createObject(testCase, {text: "TextArea", hoverEnabled: data.hoverEnabled})
+        var control = createTemporaryObject(textArea, testCase, {text: "TextArea", hoverEnabled: data.hoverEnabled})
         verify(control)
 
         compare(control.hovered, false)
@@ -217,8 +208,6 @@ TestCase {
 
         mouseMove(control, -1, -1)
         compare(control.hovered, false)
-
-        control.destroy()
     }
 
     function test_pressedReleased_data() {
@@ -274,7 +263,7 @@ TestCase {
     }
 
     function test_pressedReleased(data) {
-        var mouseArea = mouseAreaComponent.createObject(testCase)
+        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
         verify(mouseArea)
         var control = textArea.createObject(mouseArea, {text: "TextArea"})
         verify(control)
@@ -321,8 +310,6 @@ TestCase {
         mouseRelease(control, data.x, data.y, data.button)
         compare(controlReleasedSpy.count, data.controlReleaseEvent ? 1 : 0)
         compare(parentReleasedSpy.count, data.parentReleaseEvent ? 1 : 0)
-
-        mouseArea.destroy()
     }
 
     Component {
@@ -346,7 +333,7 @@ TestCase {
     }
 
     function test_ignorePressRelease() {
-        var mouseArea = mouseAreaComponent.createObject(testCase)
+        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
         verify(mouseArea)
         var control = ignoreTextArea.createObject(mouseArea)
         verify(control)
@@ -385,12 +372,10 @@ TestCase {
         compare(parentReleasedSpy.count, 1)
         control.onPressed.disconnect(checkEventAccepted)
         control.onReleased.disconnect(checkEventIgnored)
-
-        mouseArea.destroy()
     }
 
     function test_multiClick() {
-        var control = textArea.createObject(testCase, {text: "Qt Quick Controls 2 TextArea", selectByMouse: true})
+        var control = createTemporaryObject(textArea, testCase, {text: "Qt Quick Controls 2 TextArea", selectByMouse: true})
         verify(control)
 
         waitForRendering(control)
@@ -404,7 +389,5 @@ TestCase {
         // tripple click -> select whole line
         mouseClick(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
         compare(control.selectedText, "Qt Quick Controls 2 TextArea")
-
-        control.destroy()
     }
 }
