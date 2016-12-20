@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -73,7 +73,7 @@ TestCase {
     }
 
     function test_attach() {
-        var container = flickable.createObject(testCase)
+        var container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
@@ -105,7 +105,7 @@ TestCase {
         container.width += 10
         compare(vertical.x, 123)
 
-        var horizontal = scrollBar.createObject()
+        var horizontal = createTemporaryObject(scrollBar, null)
         verify(!horizontal.parent)
         compare(horizontal.size, 0.0)
         compare(horizontal.position, 0.0)
@@ -170,8 +170,6 @@ TestCase {
         container.width += 10
         compare(horizontal.x, oldX - 10)
         compare(horizontal.width, oldWidth)
-
-        container.destroy()
     }
 
     function test_mouse_data() {
@@ -182,7 +180,7 @@ TestCase {
     }
 
     function test_mouse(data) {
-        var control = scrollBar.createObject(testCase, data.properties)
+        var control = createTemporaryObject(scrollBar, testCase, data.properties)
         verify(control)
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
@@ -227,8 +225,6 @@ TestCase {
         compare(pressedSpy.count, 4)
         compare(control.pressed, false)
         compare(control.position, 0.25)
-
-        control.destroy()
     }
 
     function test_increase_decrease_data() {
@@ -241,7 +237,7 @@ TestCase {
     }
 
     function test_increase_decrease(data) {
-        var control = scrollBar.createObject(testCase, {position: 0.5, active: data.active})
+        var control = createTemporaryObject(scrollBar, testCase, {position: 0.5, active: data.active})
         verify(control)
 
         if (data.increase) {
@@ -252,8 +248,6 @@ TestCase {
             compare(control.position, 0.4)
         }
         compare(control.active, data.active)
-
-        control.destroy()
     }
 
     function test_stepSize_data() {
@@ -265,7 +259,7 @@ TestCase {
     }
 
     function test_stepSize(data) {
-        var control = scrollBar.createObject(testCase, {stepSize: data.stepSize})
+        var control = createTemporaryObject(scrollBar, testCase, {stepSize: data.stepSize})
         verify(control)
 
         compare(control.stepSize, data.stepSize)
@@ -290,8 +284,6 @@ TestCase {
         }
         control.decrease()
         compare(control.position, 0.0)
-
-        control.destroy()
     }
 
     function test_padding_data() {
@@ -302,14 +294,12 @@ TestCase {
     }
 
     function test_padding(data) {
-        var control = scrollBar.createObject(testCase, data.properties)
+        var control = createTemporaryObject(scrollBar, testCase, data.properties)
 
         mousePress(control, control.leftPadding + control.availableWidth * 0.5, control.topPadding + control.availableHeight * 0.5, Qt.LeftButton)
         mouseRelease(control, control.leftPadding + control.availableWidth * 0.5, control.topPadding + control.availableHeight * 0.5, Qt.LeftButton)
 
         compare(control.position, 0.5)
-
-        control.destroy()
     }
 
     function test_warning() {
@@ -318,7 +308,7 @@ TestCase {
     }
 
     function test_mirrored() {
-        var container = flickable.createObject(testCase)
+        var container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
@@ -326,8 +316,6 @@ TestCase {
         compare(container.ScrollBar.vertical.x, container.width - container.ScrollBar.vertical.width)
         container.ScrollBar.vertical.locale = Qt.locale("ar_EG")
         compare(container.ScrollBar.vertical.x, 0)
-
-        container.destroy()
     }
 
     function test_hover_data() {
@@ -338,7 +326,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = scrollBar.createObject(testCase, {hoverEnabled: data.hoverEnabled})
+        var control = createTemporaryObject(scrollBar, testCase, {hoverEnabled: data.hoverEnabled})
         verify(control)
 
         compare(control.hovered, false)
@@ -350,7 +338,5 @@ TestCase {
         mouseMove(control, -1, -1)
         compare(control.hovered, false)
         compare(control.active, false)
-
-        control.destroy()
     }
 }
