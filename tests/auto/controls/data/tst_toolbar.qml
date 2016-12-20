@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -90,49 +90,41 @@ TestCase {
     }
 
     function test_empty() {
-        var control = toolBar.createObject(testCase)
+        var control = createTemporaryObject(toolBar, testCase)
         verify(control)
 
         verify(control.contentItem)
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
-
-        control.destroy()
     }
 
     function test_oneChild() {
-        var control = oneChildBar.createObject(testCase)
+        var control = createTemporaryObject(oneChildBar, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         verify(control.implicitWidth >= 100)
         verify(control.implicitHeight >= 30)
-
-        control.destroy()
     }
 
     function test_twoChildren() {
-        var control = twoChildrenBar.createObject(testCase)
+        var control = createTemporaryObject(twoChildrenBar, testCase)
         verify(control)
 
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
         verify(control.implicitWidth >= 0)
         verify(control.implicitHeight >= 0)
-
-        control.destroy()
     }
 
     function test_contentItem() {
-        var control = contentBar.createObject(testCase)
+        var control = createTemporaryObject(contentBar, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         verify(control.implicitWidth >= 100)
         verify(control.implicitHeight >= 30)
-
-        control.destroy()
     }
 }
