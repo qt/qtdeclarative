@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -61,7 +61,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = toolButton.createObject(testCase)
+        var control = createTemporaryObject(toolButton, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -69,12 +69,10 @@ TestCase {
         compare(control.text, "ToolButton")
         control.text = ""
         compare(control.text, "")
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = toolButton.createObject(testCase)
+        var control = createTemporaryObject(toolButton, testCase)
         verify(control)
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
@@ -140,12 +138,10 @@ TestCase {
         compare(downSpy.count, 6)
         compare(control.pressed, false)
         compare(control.down, false)
-
-        control.destroy()
     }
 
     function test_keys() {
-        var control = toolButton.createObject(testCase)
+        var control = createTemporaryObject(toolButton, testCase)
         verify(control)
 
         var clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
@@ -168,14 +164,11 @@ TestCase {
             keyClick(keys[i])
             compare(clickedSpy.count, 2)
         }
-
-        control.destroy()
     }
 
     function test_baseline() {
-        var control = toolButton.createObject(testCase)
+        var control = createTemporaryObject(toolButton, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 }
