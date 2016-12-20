@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -61,7 +61,7 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         compare(control.from, 0)
@@ -73,12 +73,10 @@ TestCase {
         compare(control.up.indicator.enabled, true)
         compare(control.down.pressed, false)
         compare(control.down.indicator.enabled, false)
-
-        control.destroy()
     }
 
     function test_value() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -90,12 +88,10 @@ TestCase {
         compare(control.value, 0)
         control.value = 100
         compare(control.value, 99)
-
-        control.destroy()
     }
 
     function test_range() {
-        var control = spinBox.createObject(testCase, {from: 0, to: 100, value: 50})
+        var control = createTemporaryObject(spinBox, testCase, {from: 0, to: 100, value: 50})
         verify(control)
 
         compare(control.from, 0)
@@ -135,12 +131,10 @@ TestCase {
         compare(control.value, 40)
         compare(control.up.indicator.enabled, false)
         compare(control.down.indicator.enabled, true)
-
-        control.destroy()
     }
 
     function test_inverted() {
-        var control = spinBox.createObject(testCase, {from: 100, to: -100})
+        var control = createTemporaryObject(spinBox, testCase, {from: 100, to: -100})
         verify(control)
 
         compare(control.from, 100)
@@ -163,12 +157,10 @@ TestCase {
         compare(control.value, 0)
         compare(control.up.indicator.enabled, true)
         compare(control.down.indicator.enabled, true)
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = spinBox.createObject(testCase, {stepSize: 50})
+        var control = createTemporaryObject(spinBox, testCase, {stepSize: 50})
         verify(control)
 
         var upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
@@ -252,12 +244,10 @@ TestCase {
         compare(control.up.pressed, false)
         compare(control.value, control.from)
         compare(valueModifiedSpy.count, 2)
-
-        control.destroy()
     }
 
     function test_keys() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         var upPressedCount = 0
@@ -363,12 +353,10 @@ TestCase {
             compare(valueModifiedSpy.count, valueModifiedCount)
         }
         compare(control.value, 99)
-
-        control.destroy()
     }
 
     function test_locale() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         control.locale = Qt.locale("ar_EG") // Arabic, Egypt
@@ -378,19 +366,16 @@ TestCase {
             control.value = i
             compare(control.contentItem.text, numbers[i])
         }
-
-        control.destroy()
     }
 
     function test_baseline() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 
     function test_focus() {
-        var control = spinBox.createObject(testCase, {from: 10, to: 1000, value: 100, focus: true})
+        var control = createTemporaryObject(spinBox, testCase, {from: 10, to: 1000, value: 100, focus: true})
         verify(control)
 
         control.forceActiveFocus()
@@ -406,12 +391,10 @@ TestCase {
         compare(control.from, 10)
         compare(control.to, 1000)
         compare(control.value, 100)
-
-        control.destroy()
     }
 
     function test_editable() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         control.contentItem.forceActiveFocus()
@@ -429,12 +412,10 @@ TestCase {
         keyClick(Qt.Key_5)
         keyClick(Qt.Key_Return)
         compare(control.value, 5)
-
-        control.destroy()
     }
 
     function test_wheel(data) {
-        var control = spinBox.createObject(testCase, {wheelEnabled: true})
+        var control = createTemporaryObject(spinBox, testCase, {wheelEnabled: true})
         verify(control)
 
         var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
@@ -473,8 +454,6 @@ TestCase {
         mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
         compare(control.value, 3)
         compare(valueModifiedSpy.count, 6)
-
-        control.destroy()
     }
 
     function test_initiallyDisabledIndicators_data() {
@@ -487,13 +466,11 @@ TestCase {
     }
 
     function test_initiallyDisabledIndicators(data) {
-        var control = spinBox.createObject(testCase, { from: data.from, value: data.value, to: data.to })
+        var control = createTemporaryObject(spinBox, testCase, { from: data.from, value: data.value, to: data.to })
         verify(control)
 
         compare(control.up.indicator.enabled, data.upEnabled)
         compare(control.down.indicator.enabled, data.downEnabled)
-
-        control.destroy()
     }
 
     function test_hover_data() {
@@ -508,7 +485,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = spinBox.createObject(testCase, {hoverEnabled: data.hoverEnabled, value: data.value})
+        var control = createTemporaryObject(spinBox, testCase, {hoverEnabled: data.hoverEnabled, value: data.value})
         verify(control)
 
         var button = control[data.button]
@@ -521,8 +498,6 @@ TestCase {
 
         mouseMove(control, button.indicator.x - 1, button.indicator.y - 1)
         compare(button.hovered, false)
-
-        control.destroy()
     }
 
     function test_valueFromText_data() {
@@ -533,7 +508,7 @@ TestCase {
     }
 
     function test_valueFromText(data) {
-        var control = spinBox.createObject(testCase, {editable: data.editable})
+        var control = createTemporaryObject(spinBox, testCase, {editable: data.editable})
         verify(control)
 
         control.forceActiveFocus()
@@ -553,12 +528,10 @@ TestCase {
 
         control.focus = false
         compare(valueFromTextCalls, data.editable ? 3 : 0)
-
-        control.destroy()
     }
 
     function test_autoRepeat() {
-        var control = spinBox.createObject(testCase)
+        var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -615,7 +588,5 @@ TestCase {
 
         mouseRelease(control.up.indicator, -1, -1)
         verify(!control.up.pressed)
-
-        control.destroy()
     }
 }
