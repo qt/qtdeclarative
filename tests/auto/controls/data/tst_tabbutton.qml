@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -66,7 +66,7 @@ TestCase {
     }
 
     function test_autoExclusive() {
-        var container = repeater.createObject(testCase)
+        var container = createTemporaryObject(repeater, testCase)
 
         for (var i = 0; i < 3; ++i) {
             container.children[i].checked = true
@@ -78,14 +78,11 @@ TestCase {
                     compare(container.children[j].checked, false)
             }
         }
-
-        container.destroy()
     }
 
     function test_baseline() {
-        var control = tabButton.createObject(testCase)
+        var control = createTemporaryObject(tabButton, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 }
