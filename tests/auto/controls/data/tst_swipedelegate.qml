@@ -1521,7 +1521,7 @@ TestCase {
             width: 150
             swipe.left: greenLeftComponent
             swipe.right: redRightComponent
-            swipe.rebound: null
+            swipe.transition: null
 
             property alias behavior: xBehavior
             property alias animation: numberAnimation

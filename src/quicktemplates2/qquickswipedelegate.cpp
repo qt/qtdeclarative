@@ -121,7 +121,7 @@ class QQuickSwipeTransitionManager : public QQuickTransitionManager
 public:
     QQuickSwipeTransitionManager(QQuickSwipe *swipe);
 
-    void transition(QQuickTransition *rebound, qreal position);
+    void transition(QQuickTransition *transition, qreal position);
 
 protected:
     void finished() override;
@@ -148,7 +148,7 @@ public:
         leftItem(nullptr),
         behindItem(nullptr),
         rightItem(nullptr),
-        rebound(nullptr),
+        transition(nullptr),
         transitionManager(nullptr)
     {
     }
@@ -172,7 +172,7 @@ public:
     bool hasDelegates() const;
 
     bool isTransitioning() const;
-    void transition(qreal position);
+    void beginTransition(qreal position);
     void finishTransition();
 
     QQuickSwipeDelegate *control;
@@ -192,7 +192,7 @@ public:
     QQuickItem *leftItem;
     QQuickItem *behindItem;
     QQuickItem *rightItem;
-    QQuickTransition *rebound;
+    QQuickTransition *transition;
     QScopedPointer<QQuickSwipeTransitionManager> transitionManager;
 };
 
@@ -201,12 +201,12 @@ QQuickSwipeTransitionManager::QQuickSwipeTransitionManager(QQuickSwipe *swipe)
 {
 }
 
-void QQuickSwipeTransitionManager::transition(QQuickTransition *rebound, qreal position)
+void QQuickSwipeTransitionManager::transition(QQuickTransition *transition, qreal position)
 {
-    qmlExecuteDeferred(rebound);
+    qmlExecuteDeferred(transition);
 
     QQmlProperty defaultTarget(m_swipe, QLatin1String("position"));
-    QQmlListProperty<QQuickAbstractAnimation> animations = rebound->animations();
+    QQmlListProperty<QQuickAbstractAnimation> animations = transition->animations();
     const int count = animations.count(&animations);
     for (int i = 0; i < count; ++i) {
         QQuickAbstractAnimation *anim = animations.at(&animations, i);
@@ -215,7 +215,7 @@ void QQuickSwipeTransitionManager::transition(QQuickTransition *rebound, qreal p
 
     QList<QQuickStateAction> actions;
     actions << QQuickStateAction(m_swipe, QLatin1String("position"), position);
-    QQuickTransitionManager::transition(actions, rebound, m_swipe);
+    QQuickTransitionManager::transition(actions, transition, m_swipe);
 }
 
 void QQuickSwipeTransitionManager::finished()
@@ -415,10 +415,10 @@ bool QQuickSwipePrivate::isTransitioning() const
     return transitionManager && transitionManager->isRunning();
 }
 
-void QQuickSwipePrivate::transition(qreal newPosition)
+void QQuickSwipePrivate::beginTransition(qreal newPosition)
 {
     Q_Q(QQuickSwipe);
-    if (!rebound) {
+    if (!transition) {
         q->setPosition(newPosition);
         finishTransition();
         return;
@@ -427,7 +427,7 @@ void QQuickSwipePrivate::transition(qreal newPosition)
     if (!transitionManager)
         transitionManager.reset(new QQuickSwipeTransitionManager(q));
 
-    transitionManager->transition(rebound, newPosition);
+    transitionManager->transition(transition, newPosition);
 }
 
 void QQuickSwipePrivate::finishTransition()
@@ -674,20 +674,20 @@ void QQuickSwipe::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
-QQuickTransition *QQuickSwipe::rebound() const
+QQuickTransition *QQuickSwipe::transition() const
 {
     Q_D(const QQuickSwipe);
-    return d->rebound;
+    return d->transition;
 }
 
-void QQuickSwipe::setRebound(QQuickTransition *rebound)
+void QQuickSwipe::setTransition(QQuickTransition *transition)
 {
     Q_D(QQuickSwipe);
-    if (rebound == d->rebound)
+    if (transition == d->transition)
         return;
 
-    d->rebound = rebound;
-    emit reboundChanged();
+    d->transition = transition;
+    emit transitionChanged();
 }
 
 void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
@@ -701,7 +701,7 @@ void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
             || (!d->right && !d->behind && side == QQuickSwipeDelegate::Right))
         return;
 
-    d->transition(side);
+    d->beginTransition(side);
     d->wasComplete = true;
     d->velocityCalculator.reset();
     d->positionBeforePress = d->position;
@@ -713,7 +713,7 @@ void QQuickSwipe::close()
     if (qFuzzyIsNull(d->position))
         return;
 
-    d->transition(0.0);
+    d->beginTransition(0.0);
     d->wasComplete = false;
     d->positionBeforePress = 0.0;
     d->velocityCalculator.reset();
@@ -898,14 +898,14 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
     const qreal swipeVelocity = swipePrivate->velocityCalculator.velocity().x();
     if (swipePrivate->position > 0.5 ||
         (swipePrivate->position > 0.0 && swipeVelocity > exposeVelocityThreshold)) {
-        swipePrivate->transition(1.0);
+        swipePrivate->beginTransition(1.0);
         swipePrivate->wasComplete = true;
     } else if (swipePrivate->position < -0.5 ||
         (swipePrivate->position < 0.0 && swipeVelocity < -exposeVelocityThreshold)) {
-        swipePrivate->transition(-1.0);
+        swipePrivate->beginTransition(-1.0);
         swipePrivate->wasComplete = true;
     } else if (!swipePrivate->isTransitioning()) {
-        swipePrivate->transition(0.0);
+        swipePrivate->beginTransition(0.0);
         swipePrivate->wasComplete = false;
     }
 
@@ -1042,6 +1042,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
     \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.leftItem
     \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.behindItem
     \qmlproperty Item QtQuick.Controls::SwipeDelegate::swipe.rightItem
+    \qmlproperty Transition QtQuick.Controls::SwipeDelegate::swipe.transition
 
     \table
     \header
@@ -1112,6 +1113,14 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 
             If \c right has not been set, or the position hasn't changed since
             creation of the SwipeDelegate, this property will be \c null.
+    \row
+        \li transition
+        \li This property holds the transition that is applied when a swipe is released,
+            or \l swipe.open() or \l swipe.close() is called.
+
+            \snippet qtquickcontrols2-swipedelegate-transition.qml 1
+
+            This property was added in Qt Quick Controls 2.2.
     \endtable
 
     \sa {Control::}{contentItem}, {Control::}{background}, swipe.open(), swipe.close()

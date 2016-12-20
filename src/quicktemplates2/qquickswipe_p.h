@@ -71,7 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
     Q_PROPERTY(QQuickItem *leftItem READ leftItem NOTIFY leftItemChanged FINAL)
     Q_PROPERTY(QQuickItem *behindItem READ behindItem NOTIFY behindItemChanged FINAL)
     Q_PROPERTY(QQuickItem *rightItem READ rightItem NOTIFY rightItemChanged FINAL)
-    Q_PROPERTY(QQuickTransition *rebound READ rebound WRITE setRebound NOTIFY reboundChanged FINAL) // REVISION 2
+    Q_PROPERTY(QQuickTransition *transition READ transition WRITE setTransition NOTIFY transitionChanged FINAL) // REVISION 2
 
 public:
     explicit QQuickSwipe(QQuickSwipeDelegate *control);
@@ -103,8 +103,8 @@ public:
     QQuickItem *rightItem() const;
     void setRightItem(QQuickItem *item);
 
-    QQuickTransition *rebound() const;
-    void setRebound(QQuickTransition *rebound);
+    QQuickTransition *transition() const;
+    void setTransition(QQuickTransition *transition);
 
     Q_REVISION(2) Q_INVOKABLE void open(QQuickSwipeDelegate::Side side);
     Q_REVISION(1) Q_INVOKABLE void close();
@@ -122,7 +122,7 @@ Q_SIGNALS:
     void leftItemChanged();
     void behindItemChanged();
     void rightItemChanged();
-    /*Q_REVISION(2)*/ void reboundChanged();
+    /*Q_REVISION(2)*/ void transitionChanged();
 
 private:
     Q_DISABLE_COPY(QQuickSwipe)

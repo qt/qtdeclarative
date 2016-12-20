@@ -52,7 +52,7 @@ T.SwipeDelegate {
     padding: 12
     spacing: 12
 
-    swipe.rebound: Transition { SmoothedAnimation { velocity: 3; easing.type: Easing.InOutCubic } }
+    swipe.transition: Transition { SmoothedAnimation { velocity: 3; easing.type: Easing.InOutCubic } }
 
     contentItem: Text {
         leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
