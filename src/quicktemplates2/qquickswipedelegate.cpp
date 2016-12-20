@@ -991,6 +991,47 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 */
 
 /*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal void QtQuick.Controls::SwipeDelegate::swipe.opened()
+
+    This signal is emitted when the delegate has been swiped open
+    and the transition has finished.
+
+    It is useful for performing some action upon completion of a swipe.
+    For example, it can be used to remove the delegate from the list
+    that it is in.
+
+    \sa swipe, swipe.closed()
+*/
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlsignal void QtQuick.Controls::SwipeDelegate::swipe.closed()
+
+    This signal is emitted when the delegate has been swiped to closed
+    and the transition has finished.
+
+    It is useful for performing some action upon cancellation of a swipe.
+    For example, it can be used to cancel the removal of the delegate from
+    the list that it is in.
+
+    \sa swipe, swipe.opened()
+*/
+
+/*!
+    \since QtQuick.Controls 2.1
+    \qmlsignal void QtQuick.Controls::SwipeDelegate::swipe.completed()
+
+    This signal is emitted when \c swipe.complete becomes \c true.
+
+    It is useful for performing some action upon completion of a swipe.
+    For example, it can be used to remove the delegate from the list
+    that it is in.
+
+    \sa swipe
+*/
+
+/*!
     \qmlpropertygroup QtQuick.Controls::SwipeDelegate::swipe
     \qmlproperty real QtQuick.Controls::SwipeDelegate::swipe.position
     \qmlproperty bool QtQuick.Controls::SwipeDelegate::swipe.complete
@@ -1071,35 +1112,6 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
 
             If \c right has not been set, or the position hasn't changed since
             creation of the SwipeDelegate, this property will be \c null.
-    \row
-        \li completed()
-        \li This signal is emitted when \c complete becomes \c true.
-
-            It is useful for performing some action upon completion of a swipe.
-            For example, it can be used to remove the delegate from the list
-            that it is in.
-
-            This signal was added in QtQuick.Controls 2.1.
-    \row
-        \li opened()
-        \li This signal is emitted when the delegate has been swiped open
-            and the transition has finished.
-
-            It is useful for performing some action upon completion of a swipe.
-            For example, it can be used to remove the delegate from the list
-            that it is in.
-
-            This signal was added in QtQuick.Controls 2.2.
-    \row
-        \li closed()
-        \li This signal is emitted when the delegate has been swiped to closed
-            and the transition has finished.
-
-            It is useful for performing some action upon cancellation of a swipe.
-            For example, it can be used to cancel the removal of the delegate from
-            the list that it is in.
-
-            This signal was added in QtQuick.Controls 2.2.
     \endtable
 
     \sa {Control::}{contentItem}, {Control::}{background}, swipe.open(), swipe.close()
