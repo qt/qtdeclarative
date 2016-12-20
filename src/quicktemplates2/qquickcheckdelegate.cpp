@@ -170,9 +170,12 @@ QFont QQuickCheckDelegate::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
 }
 
-void QQuickCheckDelegate::checkStateSet()
+void QQuickCheckDelegate::buttonChange(ButtonChange change)
 {
-    setCheckState(isChecked() ? Qt::Checked : Qt::Unchecked);
+    if (change == ButtonCheckedChange)
+        setCheckState(isChecked() ? Qt::Checked : Qt::Unchecked);
+    else
+        QQuickAbstractButton::buttonChange(change);
 }
 
 void QQuickCheckDelegate::nextCheckState()

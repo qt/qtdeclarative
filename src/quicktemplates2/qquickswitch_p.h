@@ -80,7 +80,7 @@ protected:
     void mirrorChange() override;
 
     void nextCheckState() override;
-    void checkStateSet() override;
+    void buttonChange(ButtonChange change) override;
 
 private:
     Q_DISABLE_COPY(QQuickSwitch)

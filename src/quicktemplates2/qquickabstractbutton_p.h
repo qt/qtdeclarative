@@ -126,12 +126,15 @@ protected:
     void mouseUngrabEvent() override;
     void timerEvent(QTimerEvent *event) override;
 
-    virtual void checkStateSet();
-    virtual void nextCheckState();
+    enum ButtonChange {
+        ButtonAutoRepeatChange,
+        ButtonCheckedChange,
+        ButtonCheckableChange,
+        ButtonTextChange
+    };
+    virtual void buttonChange(ButtonChange change);
 
-    virtual void checkableChange();
-    virtual void autoRepeatChange();
-    virtual void textChange(const QString &newText, const QString &oldText);
+    virtual void nextCheckState();
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;

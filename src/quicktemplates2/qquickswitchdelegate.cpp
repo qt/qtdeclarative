@@ -197,10 +197,13 @@ void QQuickSwitchDelegate::nextCheckState()
         QQuickItemDelegate::nextCheckState();
 }
 
-void QQuickSwitchDelegate::checkStateSet()
+void QQuickSwitchDelegate::buttonChange(ButtonChange change)
 {
     Q_D(QQuickSwitchDelegate);
-    setPosition(d->checked ? 1.0 : 0.0);
+    if (change == ButtonCheckedChange)
+        setPosition(d->checked ? 1.0 : 0.0);
+    else
+        QQuickAbstractButton::buttonChange(change);
 }
 
 QT_END_NAMESPACE

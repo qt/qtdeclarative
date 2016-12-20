@@ -106,9 +106,11 @@ QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
     The default value is \c false.
 */
 
-void QQuickButton::autoRepeatChange()
+void QQuickButton::buttonChange(ButtonChange change)
 {
-    emit autoRepeatChanged();
+    QQuickAbstractButton::buttonChange(change);
+    if (change == ButtonAutoRepeatChange)
+        emit autoRepeatChanged();
 }
 
 QFont QQuickButton::defaultFont() const

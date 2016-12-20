@@ -173,9 +173,12 @@ QFont QQuickCheckBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::CheckBoxFont);
 }
 
-void QQuickCheckBox::checkStateSet()
+void QQuickCheckBox::buttonChange(ButtonChange change)
 {
-    setCheckState(isChecked() ? Qt::Checked : Qt::Unchecked);
+    if (change == ButtonCheckedChange)
+        setCheckState(isChecked() ? Qt::Checked : Qt::Unchecked);
+    else
+        QQuickAbstractButton::buttonChange(change);
 }
 
 void QQuickCheckBox::nextCheckState()

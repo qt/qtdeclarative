@@ -268,10 +268,9 @@ void QQuickAbstractButton::setText(const QString &text)
     if (d->text == text)
         return;
 
-    QString oldText = d->text;
     d->text = text;
     setAccessibleName(text);
-    textChange(text, oldText);
+    buttonChange(ButtonTextChange);
     emit textChanged();
 }
 
@@ -368,7 +367,7 @@ void QQuickAbstractButton::setChecked(bool checked)
 
     d->checked = checked;
     setAccessibleProperty("checked", checked);
-    checkStateSet();
+    buttonChange(ButtonCheckedChange);
     emit checkedChanged();
 }
 
@@ -401,7 +400,7 @@ void QQuickAbstractButton::setCheckable(bool checkable)
 
     d->checkable = checkable;
     setAccessibleProperty("checkable", checkable);
-    checkableChange();
+    buttonChange(ButtonCheckableChange);
     emit checkableChanged();
 }
 
@@ -449,7 +448,7 @@ void QQuickAbstractButton::setAutoRepeat(bool repeat)
 
     d->stopPressRepeat();
     d->autoRepeat = repeat;
-    autoRepeatChange();
+    buttonChange(ButtonAutoRepeatChange);
 }
 
 /*!
@@ -623,13 +622,19 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
     }
 }
 
-void QQuickAbstractButton::checkStateSet()
+void QQuickAbstractButton::buttonChange(ButtonChange change)
 {
     Q_D(QQuickAbstractButton);
-    if (d->checked) {
-        QQuickAbstractButton *button = d->findCheckedButton();
-        if (button && button != this)
-            button->setChecked(false);
+    switch (change) {
+    case ButtonCheckedChange:
+        if (d->checked) {
+            QQuickAbstractButton *button = d->findCheckedButton();
+            if (button && button != this)
+                button->setChecked(false);
+        }
+        break;
+    default:
+        break;
     }
 }
 
@@ -638,20 +643,6 @@ void QQuickAbstractButton::nextCheckState()
     Q_D(QQuickAbstractButton);
     if (d->checkable && (!d->checked || d->findCheckedButton() != this))
         d->toggle(!d->checked);
-}
-
-void QQuickAbstractButton::checkableChange()
-{
-}
-
-void QQuickAbstractButton::autoRepeatChange()
-{
-}
-
-void QQuickAbstractButton::textChange(const QString &newText, const QString &oldText)
-{
-    Q_UNUSED(newText);
-    Q_UNUSED(oldText);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

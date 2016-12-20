@@ -78,7 +78,7 @@ Q_SIGNALS:
 protected:
     QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
 
-    void autoRepeatChange() override;
+    void buttonChange(ButtonChange change) override;
 
     QFont defaultFont() const override;
 

@@ -76,7 +76,7 @@ Q_SIGNALS:
 protected:
     QFont defaultFont() const override;
 
-    void checkStateSet() override;
+    void buttonChange(ButtonChange change) override;
     void nextCheckState() override;
 
 #ifndef QT_NO_ACCESSIBILITY
