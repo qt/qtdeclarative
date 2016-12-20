@@ -55,12 +55,10 @@ TestCase {
     }
 
     function test_size() {
-        var control = toolSeparator.createObject(testCase);
+        var control = createTemporaryObject(toolSeparator, testCase);
         verify(control);
         verify(control.width > 1);
         verify(control.height > 1);
-
-        control.destroy();
     }
 
     Component {
@@ -69,7 +67,7 @@ TestCase {
     }
 
     function test_orientation() {
-        var control = toolSeparator.createObject(testCase);
+        var control = createTemporaryObject(toolSeparator, testCase);
         verify(control);
         compare(control.horizontal, false);
         compare(control.vertical, true);
@@ -93,7 +91,5 @@ TestCase {
         compare(control.horizontal, false);
         compare(control.vertical, true);
         compare(orientationSpy.count, 2);
-
-        control.destroy();
     }
 }
