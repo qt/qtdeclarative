@@ -28,7 +28,7 @@
     \title Qt Quick Examples - Local Storage
     \example localstorage
     \brief A collection of QML local storage examples.
-    \image qml-localstorage-example.png
+    \borderedimage qml-localstorage-example.png
 
     \e{Local Storage} is a collection of small QML examples relating to
     Qt Quick's \l{local storage} functionality.
