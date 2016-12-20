@@ -223,9 +223,9 @@ TestCase {
         compare(control.depth, 0)
         control.push(item, StackView.Immediate)
         compare(control.depth, 1)
-        control.push(item, StackView.Immediate)
-        compare(control.depth, 2)
-        control.pop(StackView.Immediate)
+        control.clear()
+        compare(control.depth, 0)
+        control.push(component, StackView.Immediate)
         compare(control.depth, 1)
         control.push(component, StackView.Immediate)
         compare(control.depth, 2)
@@ -1017,6 +1017,34 @@ TestCase {
             wait(50)
         }
         tryCompare(control, "busy", false)
+
+        control.destroy()
+    }
+
+    function test_pushSameItem() {
+        var control = stackView.createObject(testCase)
+        verify(control)
+
+        control.push(item, StackView.Immediate)
+        compare(control.currentItem, item)
+        compare(control.depth, 1)
+
+        // Pushing the same Item should do nothing.
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: nothing to push")
+        control.push(item, StackView.Immediate)
+        compare(control.currentItem, item)
+        compare(control.depth, 1)
+
+        // Push a component so that it becomes current.
+        var current = control.push(component, StackView.Immediate)
+        compare(control.currentItem, current)
+        compare(control.depth, 2)
+
+        // Push a bunch of stuff. "item" is already in the stack, so it should be ignored.
+        current = control.push(component, item, StackView.Immediate)
+        verify(current !== item)
+        compare(control.currentItem, current)
+        compare(control.depth, 3)
 
         control.destroy()
     }

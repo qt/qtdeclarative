@@ -466,6 +466,8 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
     \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
 
+    \note Items that already exist in the stack are not pushed.
+
     \sa initialItem, {Pushing Items}
 */
 void QQuickStackView::push(QQmlV4Function *args)
@@ -486,6 +488,15 @@ void QQuickStackView::push(QQmlV4Function *args)
         operation = static_cast<Operation>(lastArg->toInt32());
 
     QList<QQuickStackElement *> elements = d->parseElements(args);
+    // Remove any items that are already in the stack, as they can't be in two places at once.
+    for (int i = 0; i < elements.size(); ) {
+        QQuickStackElement *element = elements.at(i);
+        if (element->item && d->findElement(element->item))
+            elements.removeAt(i);
+        else
+            ++i;
+    }
+
     if (elements.isEmpty()) {
         qmlInfo(this) << "push: nothing to push";
         args->setReturnValue(QV4::Encode::null());
