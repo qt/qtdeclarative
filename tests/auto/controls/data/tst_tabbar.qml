@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -91,16 +91,15 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = tabBar.createObject(testCase)
+        var control = createTemporaryObject(tabBar, testCase)
         verify(control)
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(control.currentItem, null)
-        control.destroy()
     }
 
     function test_current() {
-        var control = tabBar.createObject(testCase)
+        var control = createTemporaryObject(tabBar, testCase)
 
         compare(control.count, 0)
         compare(control.currentIndex, -1)
@@ -143,32 +142,26 @@ TestCase {
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
         compare(control.currentItem.checked, true)
-
-        control.destroy()
     }
 
     function test_current_static() {
-        var control = tabBarStaticTabs.createObject(testCase)
+        var control = createTemporaryObject(tabBarStaticTabs, testCase)
 
         compare(control.count, 2)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
         compare(control.currentItem.checked, true)
 
-        control.destroy()
-
-        control = tabBarStaticTabsCurrent.createObject(testCase)
+        control = createTemporaryObject(tabBarStaticTabsCurrent, testCase)
 
         compare(control.count, 2)
         compare(control.currentIndex, 1)
         compare(control.currentItem.text, "1")
         compare(control.currentItem.checked, true)
-
-        control.destroy()
     }
 
     function test_addRemove() {
-        var control = tabBar.createObject(testCase)
+        var control = createTemporaryObject(tabBar, testCase)
 
         function verifyCurrentIndexCountDiff() {
             verify(control.currentIndex < control.count)
@@ -176,7 +169,7 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
-        var contentChildrenSpy = signalSpy.createObject(testCase, {target: control, signalName: "contentChildrenChanged"})
+        var contentChildrenSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "contentChildrenChanged"})
         verify(contentChildrenSpy.valid)
 
         compare(control.count, 0)
@@ -265,8 +258,6 @@ TestCase {
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(contentChildrenSpy.count, 12)
-
-        control.destroy()
     }
 
     Component {
@@ -281,7 +272,7 @@ TestCase {
     }
 
     function test_content() {
-        var control = contentBar.createObject(testCase)
+        var control = createTemporaryObject(contentBar, testCase)
 
         function compareObjectNames(content, names) {
             if (content.length !== names.length)
@@ -293,7 +284,7 @@ TestCase {
             return true
         }
 
-        var contentChildrenSpy = signalSpy.createObject(testCase, {target: control, signalName: "contentChildrenChanged"})
+        var contentChildrenSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "contentChildrenChanged"})
         verify(contentChildrenSpy.valid)
 
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", ""]))
@@ -318,8 +309,6 @@ TestCase {
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", "", "button3"]))
         verify(compareObjectNames(control.contentChildren, ["button2", "button1", "button3"]))
         compare(contentChildrenSpy.count, 5)
-
-        control.destroy()
     }
 
     Component {
@@ -335,7 +324,7 @@ TestCase {
     }
 
     function test_repeater() {
-        var control = repeated.createObject(testCase)
+        var control = createTemporaryObject(repeated, testCase)
         verify(control)
 
         var model = control.contentModel
@@ -366,8 +355,6 @@ TestCase {
             compare(model.get(j), item2)
             compare(repeater.itemAt(j), item2)
         }
-
-        control.destroy()
     }
 
     Component {
@@ -391,7 +378,7 @@ TestCase {
     }
 
     function test_order() {
-        var control = ordered.createObject(testCase)
+        var control = createTemporaryObject(ordered, testCase)
         verify(control)
 
         compare(control.count, 7)
@@ -402,8 +389,6 @@ TestCase {
         compare(control.itemAt(4).text, "static_4")
         compare(control.itemAt(5).text, "dynamic_5")
         compare(control.itemAt(6).text, "dynamic_6")
-
-        control.destroy()
     }
 
     function test_move_data() {
@@ -442,7 +427,7 @@ TestCase {
     }
 
     function test_move(data) {
-        var control = tabBar.createObject(testCase)
+        var control = createTemporaryObject(tabBar, testCase)
 
         compare(control.count, 0)
         var titles = ["1", "2", "3"]
@@ -468,8 +453,6 @@ TestCase {
         compare(control.count, titles.length)
         for (i = 0; i < control.count; ++i)
             compare(control.itemAt(i).text, titles[i])
-
-        control.destroy()
     }
 
     Component {
@@ -486,7 +469,7 @@ TestCase {
     }
 
     function test_dynamic() {
-        var control = dynamicBar.createObject(testCase)
+        var control = createTemporaryObject(dynamicBar, testCase)
 
         // insertItem(), addItem(), createObject() and static TabButton {}
         compare(control.count, 4)
@@ -500,8 +483,6 @@ TestCase {
 //        tab.destroy()
 //        wait(0)
 //        compare(control.count, 4)
-
-        control.destroy()
     }
 
     function test_layout_data() {
@@ -513,7 +494,7 @@ TestCase {
     }
 
     function test_layout(data) {
-        var control = tabBar.createObject(testCase, {spacing: data.spacing, width: 200})
+        var control = createTemporaryObject(tabBar, testCase, {spacing: data.spacing, width: 200})
 
         var tab1 = tabButton.createObject(control, {text: "First"})
         control.addItem(tab1)
@@ -535,7 +516,5 @@ TestCase {
         tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
         tryCompare(tab2, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
         compare(tab3.width, expectedWidth)
-
-        control.destroy()
     }
 }
