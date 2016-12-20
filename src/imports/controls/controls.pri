@@ -21,6 +21,7 @@ QML_CONTROLS = \
     ComboBox.qml \
     Container.qml \
     Control.qml \
+    DelayButton.qml \
     Dial.qml \
     Dialog.qml \
     DialogButtonBox.qml \

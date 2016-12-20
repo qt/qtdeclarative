@@ -46,6 +46,7 @@
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
+#include <QtQuickTemplates2/private/qquickdelaybutton_p.h>
 #include <QtQuickTemplates2/private/qquickdial_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
@@ -225,6 +226,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // QtQuick.Templates 2.2 (new types and revisions in Qt 5.9)
     qmlRegisterRevision<QQuickAbstractButton, 2>(uri, 2, 2);
     qmlRegisterType<QQuickComboBox, 2>(uri, 2, 2, "ComboBox");
+    qmlRegisterType<QQuickDelayButton>(uri, 2, 2, "DelayButton");
     qmlRegisterType<QQuickDial, 2>(uri, 2, 2, "Dial");
     qmlRegisterType<QQuickDrawer, 2>(uri, 2, 2, "Drawer");
     qmlRegisterType<QQuickRangeSlider, 2>(uri, 2, 2, "RangeSlider");

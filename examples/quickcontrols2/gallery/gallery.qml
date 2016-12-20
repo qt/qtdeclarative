@@ -156,6 +156,7 @@ ApplicationWindow {
                 ListElement { title: "Button"; source: "qrc:/pages/ButtonPage.qml" }
                 ListElement { title: "CheckBox"; source: "qrc:/pages/CheckBoxPage.qml" }
                 ListElement { title: "ComboBox"; source: "qrc:/pages/ComboBoxPage.qml" }
+                ListElement { title: "DelayButton"; source: "qrc:/pages/DelayButtonPage.qml" }
                 ListElement { title: "Dial"; source: "qrc:/pages/DialPage.qml" }
                 ListElement { title: "Dialog"; source: "qrc:/pages/DialogPage.qml" }
                 ListElement { title: "Delegates"; source: "qrc:/pages/DelegatePage.qml" }

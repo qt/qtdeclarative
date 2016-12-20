@@ -99,6 +99,21 @@
 
     \b {See also} \l CheckBox
 
+    \section1 DelayButton Control
+
+    \l DelayButton is a button that incorporates a delay before triggering an action.
+    This delay prevents accidental presses.
+
+    \image qtquickcontrols2-delaybutton.gif
+
+    Recommendations:
+    \list
+    \li Use in touch user interfaces.
+    \li Use for actions that must be triggered with care.
+    \endlist
+
+    \b {See also} \l Button and \l AbstractButton
+
     \section1 RadioButton Control
 
     \image qtquickcontrols2-radiobutton.gif

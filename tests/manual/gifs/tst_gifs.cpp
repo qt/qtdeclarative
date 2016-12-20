@@ -80,6 +80,7 @@ private slots:
     void stackView_data();
     void stackView();
     void drawer();
+    void delayButton();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -962,6 +963,32 @@ void tst_Gifs::drawer()
 
     QTest::qWait(1000);
     QMetaObject::invokeMethod(drawer, "close");
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::delayButton()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(9);
+    gifRecorder.setQmlFileName("qtquickcontrols2-delaybutton.qml");
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 1500);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 200);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 1500);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 1730);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() / 2), 2070); // 0.69 * 3000
 
     gifRecorder.waitForFinish();
 }

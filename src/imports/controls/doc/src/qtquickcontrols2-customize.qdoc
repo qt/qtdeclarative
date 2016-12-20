@@ -419,6 +419,16 @@
         \snippet qtquickcontrols2-combobox-custom.qml file
 
 
+    \section2 Customizing DelayButton
+
+        DelayButton consists of two visual items: \l {Control::background}{background}
+        and \l {Control::contentItem}{content item}.
+
+        \image qtquickcontrols2-delaybutton-custom.png
+
+        \snippet qtquickcontrols2-delaybutton-custom.qml file
+
+
     \section2 Customizing Dial
 
         Dial consists of two visual items: \l {Control::background}{background}

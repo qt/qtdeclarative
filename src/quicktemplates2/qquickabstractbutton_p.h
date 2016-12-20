@@ -130,6 +130,7 @@ protected:
         ButtonAutoRepeatChange,
         ButtonCheckedChange,
         ButtonCheckableChange,
+        ButtonPressedChanged,
         ButtonTextChange
     };
     virtual void buttonChange(ButtonChange change);

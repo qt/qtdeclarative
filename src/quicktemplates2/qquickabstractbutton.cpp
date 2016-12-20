@@ -400,6 +400,7 @@ void QQuickAbstractButton::setPressed(bool isPressed)
     d->pressed = isPressed;
     setAccessibleProperty("pressed", isPressed);
     emit pressedChanged();
+    buttonChange(ButtonPressedChanged);
 
     if (!d->explicitDown) {
         setDown(d->pressed);

@@ -471,7 +471,7 @@
         \li
     \row
         \li \l [QML QtQuickExtras] {DelayButton}
-        \li \mdash
+        \li \l [QML QtQuickControls2] {DelayButton}
         \li
         \li
     \row

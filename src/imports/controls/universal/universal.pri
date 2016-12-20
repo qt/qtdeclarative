@@ -6,6 +6,7 @@ QML_FILES += \
     $$PWD/CheckDelegate.qml \
     $$PWD/CheckIndicator.qml \
     $$PWD/ComboBox.qml \
+    $$PWD/DelayButton.qml \
     $$PWD/Dial.qml \
     $$PWD/Dialog.qml \
     $$PWD/DialogButtonBox.qml \
