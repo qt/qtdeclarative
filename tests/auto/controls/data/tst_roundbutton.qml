@@ -56,7 +56,7 @@ TestCase {
     }
 
     function test_radius() {
-        var control = roundButton.createObject(testCase);
+        var control = createTemporaryObject(roundButton, testCase);
         verify(control);
 
         var implicitRadius = control.radius;
@@ -73,7 +73,5 @@ TestCase {
 
         control.width = 10;
         compare(control.radius, 5);
-
-        control.destroy();
     }
 }
