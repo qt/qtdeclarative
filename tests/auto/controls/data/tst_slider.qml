@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -61,18 +61,16 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = slider.createObject(testCase)
+        var control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.stepSize, 0)
         compare(control.snapMode, Slider.NoSnap)
         compare(control.orientation, Qt.Horizontal)
-
-        control.destroy()
     }
 
     function test_value() {
-        var control = slider.createObject(testCase)
+        var control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -84,12 +82,10 @@ TestCase {
         compare(control.value, 0.0)
         control.value = 2.0
         compare(control.value, 1.0)
-
-        control.destroy()
     }
 
     function test_range() {
-        var control = slider.createObject(testCase, {from: 0, to: 100, value: 50})
+        var control = createTemporaryObject(slider, testCase, {from: 0, to: 100, value: 50})
         verify(control)
 
         compare(control.from, 0)
@@ -118,12 +114,10 @@ TestCase {
         control.value = 50
         compare(control.value, 50)
         compare(control.position, 0.5)
-
-        control.destroy()
     }
 
     function test_inverted() {
-        var control = slider.createObject(testCase, {from: 1.0, to: -1.0})
+        var control = createTemporaryObject(slider, testCase, {from: 1.0, to: -1.0})
         verify(control)
 
         compare(control.from, 1.0)
@@ -142,12 +136,10 @@ TestCase {
         control.value = 0.0
         compare(control.value, 0.0)
         compare(control.position, 0.5)
-
-        control.destroy()
     }
 
     function test_position() {
-        var control = slider.createObject(testCase)
+        var control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -160,12 +152,10 @@ TestCase {
         control.value = 0.75
         compare(control.value, 0.75)
         compare(control.position, 0.75)
-
-        control.destroy()
     }
 
     function test_visualPosition() {
-        var control = slider.createObject(testCase)
+        var control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -194,12 +184,10 @@ TestCase {
         // LayoutMirroring
         control.LayoutMirroring.enabled = true
         compare(control.visualPosition, 0.75)
-
-        control.destroy()
     }
 
     function test_orientation() {
-        var control = slider.createObject(testCase)
+        var control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.orientation, Qt.Horizontal)
@@ -207,8 +195,6 @@ TestCase {
         control.orientation = Qt.Vertical
         compare(control.orientation, Qt.Vertical)
         verify(control.width < control.height)
-
-        control.destroy()
     }
 
     function test_mouse_data() {
@@ -221,7 +207,7 @@ TestCase {
     }
 
     function test_mouse(data) {
-        var control = slider.createObject(testCase, {orientation: data.orientation, live: data.live})
+        var control = createTemporaryObject(slider, testCase, {orientation: data.orientation, live: data.live})
         verify(control)
 
         var pressedCount = 0
@@ -298,8 +284,6 @@ TestCase {
         compare(pressedSpy.count, pressedCount += 2)
         compare(control.value, 0.5)
         compare(control.position, 0.5)
-
-        control.destroy()
     }
 
     function test_keys_data() {
@@ -310,7 +294,7 @@ TestCase {
     }
 
     function test_keys(data) {
-        var control = slider.createObject(testCase, {orientation: data.orientation})
+        var control = createTemporaryObject(slider, testCase, {orientation: data.orientation})
         verify(control)
 
         var pressedCount = 0
@@ -397,15 +381,13 @@ TestCase {
             compare(pressedSpy.count, ++pressedCount)
             compare(movedSpy.count, movedCount)
         }
-
-        control.destroy()
     }
 
     function test_padding() {
         // test with "unbalanced" paddings (left padding != right padding) to ensure
         // that the slider position calculation is done taking padding into account
         // ==> the position is _not_ 0.5 in the middle of the control
-        var control = slider.createObject(testCase, {leftPadding: 10, rightPadding: 20})
+        var control = createTemporaryObject(slider, testCase, {leftPadding: 10, rightPadding: 20})
         verify(control)
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
@@ -470,8 +452,6 @@ TestCase {
         compare(control.value, 0.5)
         compare(control.position, 0.5)
         compare(control.visualPosition, 0.5)
-
-        control.destroy()
     }
 
     function test_snapMode_data() {
@@ -489,7 +469,7 @@ TestCase {
     }
 
     function test_snapMode(data) {
-        var control = slider.createObject(testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        var control = createTemporaryObject(slider, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
         function sliderCompare(left, right) {
@@ -508,8 +488,6 @@ TestCase {
         mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2))
         verify(sliderCompare(control.value, data.values[2]))
         verify(sliderCompare(control.position, data.positions[2]))
-
-        control.destroy()
     }
 
     function test_wheel_data() {
@@ -520,7 +498,7 @@ TestCase {
     }
 
     function test_wheel(data) {
-        var control = slider.createObject(testCase, {wheelEnabled: true, orientation: data.orientation})
+        var control = createTemporaryObject(slider, testCase, {wheelEnabled: true, orientation: data.orientation})
         verify(control)
 
         var movedCount = 0
@@ -571,8 +549,6 @@ TestCase {
         compare(movedSpy.count, ++movedCount)
         compare(control.value, 2.5)
         compare(control.position, 0.25)
-
-        control.destroy()
     }
 
     function test_valueAt_data() {
@@ -584,14 +560,12 @@ TestCase {
     }
 
     function test_valueAt(data) {
-        var control = slider.createObject(testCase, {from: data.from, to: data.to})
+        var control = createTemporaryObject(slider, testCase, {from: data.from, to: data.to})
         verify(control)
 
         compare(control.valueAt(0.0), data.values[0])
         compare(control.valueAt(0.2), data.values[1])
         compare(control.valueAt(0.5), data.values[2])
         compare(control.valueAt(1.0), data.values[3])
-
-        control.destroy()
     }
 }
