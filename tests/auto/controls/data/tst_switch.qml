@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -63,7 +63,7 @@ TestCase {
     }
 
     function test_text() {
-        var control = swtch.createObject(testCase)
+        var control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -71,12 +71,10 @@ TestCase {
         compare(control.text, "Switch")
         control.text = ""
         compare(control.text, "")
-
-        control.destroy()
     }
 
     function test_checked() {
-        var control = swtch.createObject(testCase)
+        var control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         compare(control.checked, false)
@@ -91,8 +89,6 @@ TestCase {
         control.checked = false
         compare(control.checked, false)
         verify(spy.success)
-
-        control.destroy()
     }
 
     function test_pressed_data() {
@@ -103,7 +99,7 @@ TestCase {
     }
 
     function test_pressed(data) {
-        var control = swtch.createObject(testCase, {padding: 10})
+        var control = createTemporaryObject(swtch, testCase, {padding: 10})
         verify(control)
 
         // stays pressed when dragged outside
@@ -114,12 +110,10 @@ TestCase {
         compare(control.pressed, true)
         mouseRelease(control, -1, control.height / 2, Qt.LeftButton)
         compare(control.pressed, false)
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = swtch.createObject(testCase)
+        var control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         // check
@@ -200,12 +194,10 @@ TestCase {
         compare(control.checked, false)
         compare(control.pressed, false)
         verify(spy.success)
-
-        control.destroy()
     }
 
     function test_drag() {
-        var control = swtch.createObject(testCase, {leftPadding: 100, rightPadding: 100})
+        var control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
         var spy = signalSequenceSpy.createObject(control, {target: control})
@@ -307,12 +299,10 @@ TestCase {
         compare(control.checked, true)
         compare(control.pressed, false)
         verify(spy.success)
-
-        control.destroy()
     }
 
     function test_keys() {
-        var control = swtch.createObject(testCase)
+        var control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         control.forceActiveFocus()
@@ -351,8 +341,6 @@ TestCase {
             compare(control.checked, false)
             verify(spy.success)
         }
-
-        control.destroy()
     }
 
     Component {
@@ -364,7 +352,7 @@ TestCase {
     }
 
     function test_binding() {
-        var container = twoSwitches.createObject(testCase)
+        var container = createTemporaryObject(twoSwitches, testCase)
         verify(container)
 
         compare(container.sw1.checked, false)
@@ -377,25 +365,20 @@ TestCase {
         container.sw1.checked = false
         compare(container.sw1.checked, false)
         compare(container.sw2.checked, false)
-
-        container.destroy()
     }
 
     function test_baseline() {
-        var control = swtch.createObject(testCase)
+        var control = createTemporaryObject(swtch, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 
     function test_focus() {
-        var control = swtch.createObject(testCase)
+        var control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         verify(!control.activeFocus)
         mouseClick(control.indicator)
         verify(control.activeFocus)
-
-        control.destroy()
     }
 }
