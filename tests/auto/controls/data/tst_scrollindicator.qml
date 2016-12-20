@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -68,11 +68,11 @@ TestCase {
     }
 
     function test_attach() {
-        var container = flickable.createObject(testCase)
+        var container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
-        var vertical = scrollIndicator.createObject()
+        var vertical = createTemporaryObject(scrollIndicator, null)
         verify(!vertical.parent)
         compare(vertical.size, 0.0)
         compare(vertical.position, 0.0)
@@ -100,7 +100,7 @@ TestCase {
         container.width += 10
         compare(vertical.x, 123)
 
-        var horizontal = scrollIndicator.createObject()
+        var horizontal = createTemporaryObject(scrollIndicator, null)
         verify(!horizontal.parent)
         compare(horizontal.size, 0.0)
         compare(horizontal.position, 0.0)
@@ -165,8 +165,6 @@ TestCase {
         container.width += 10
         compare(horizontal.x, oldX - 10)
         compare(horizontal.width, oldWidth)
-
-        container.destroy()
     }
 
     function test_warning() {
@@ -175,7 +173,7 @@ TestCase {
     }
 
     function test_overshoot() {
-        var container = flickable.createObject(testCase)
+        var container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
@@ -204,7 +202,5 @@ TestCase {
         horizontal.position = 0.8
         compare(horizontal.contentItem.x, horizontal.leftPadding + 0.8 * horizontal.availableWidth)
         compare(horizontal.contentItem.width, 0.2 * horizontal.availableWidth)
-
-        container.destroy()
     }
 }
