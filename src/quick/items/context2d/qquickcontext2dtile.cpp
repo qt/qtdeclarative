@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickcontext2dtile_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QOpenGLFramebufferObject>
 # include <QOpenGLFramebufferObjectFormat>
 # include <QOpenGLPaintDevice>
@@ -97,7 +97,7 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth, bool antialiasing)
 
     return 0;
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 QQuickContext2DFBOTile::QQuickContext2DFBOTile()
     : QQuickContext2DTile()
     , m_fbo(0)

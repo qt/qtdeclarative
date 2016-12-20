@@ -215,7 +215,7 @@ QSGRendererInterface::ShaderSourceTypes QSGSoftwareContext::shaderSourceType() c
 
 void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) const
 {
-    if (resource == Painter && window && window->isSceneGraphInitialized())
+    if (resource == PainterResource && window && window->isSceneGraphInitialized())
         return static_cast<QSGSoftwareRenderContext *>(QQuickWindowPrivate::get(window)->context)->m_activePainter;
 
     return nullptr;

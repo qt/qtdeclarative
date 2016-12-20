@@ -205,6 +205,7 @@ void usage(const char *name)
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
     qmlRegisterType<Timer>("QmlTime", 1, 0, "Timer");
 

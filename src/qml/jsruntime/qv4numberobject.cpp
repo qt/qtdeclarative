@@ -285,7 +285,7 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
         return Encode::undefined();
 
     if (!ctx->argc() || ctx->args()[0].isUndefined())
-        return RuntimeHelpers::toString(scope.engine, v);
+        return Encode(v->toString(scope.engine));
 
     int precision = ctx->args()[0].toInt32();
     if (precision < 1 || precision > 21) {

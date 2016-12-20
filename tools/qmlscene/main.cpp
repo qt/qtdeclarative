@@ -289,7 +289,7 @@ static bool checkVersion(const QUrl &url)
 
 static void displayFileDialog(Options *options)
 {
-#if defined(QT_WIDGETS_LIB) && !defined(QT_NO_FILEDIALOG)
+#if defined(QT_WIDGETS_LIB) && QT_CONFIG(filedialog)
     QString fileName = QFileDialog::getOpenFileName(0, "Open QML file", QString(), "QML Files (*.qml)");
     if (!fileName.isEmpty()) {
         QFileInfo fi(fileName);
@@ -301,7 +301,7 @@ static void displayFileDialog(Options *options)
 #endif
 }
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
 static void loadTranslationFile(QTranslator &translator, const QString& directory)
 {
     translator.load(QLatin1String("qml_" )+QLocale::system().name(), directory + QLatin1String("/i18n"));
@@ -361,7 +361,7 @@ static void usage()
     puts(" ");
     exit(1);
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 // Listen on GL context creation of the QQuickWindow in order to print diagnostic output.
 class DiagnosticGlContextCreationListener : public QObject {
     Q_OBJECT
@@ -405,7 +405,7 @@ static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *windo
     if (verbose) {
         newTitle += QLatin1String(" [Qt ") + QLatin1String(QT_VERSION_STR) + QLatin1Char(' ')
             + QGuiApplication::platformName() + QLatin1Char(' ');
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         newTitle += QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
             ? QLatin1String("GL") : QLatin1String("GLES");
 #endif
@@ -467,6 +467,7 @@ int main(int argc, char ** argv)
     app.setApplicationName("QtQmlViewer");
     app.setOrganizationName("QtProject");
     app.setOrganizationDomain("qt-project.org");
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
     const QStringList arguments = QCoreApplication::arguments();
     for (int i = 1, size = arguments.size(); i < size; ++i) {
@@ -508,7 +509,7 @@ int main(int argc, char ** argv)
         }
     }
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
     QTranslator translator;
     QTranslator qtTranslator;
     QString sysLocale = QLocale::system().name();
@@ -544,7 +545,7 @@ int main(int argc, char ** argv)
 
     if (!options.url.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.url)) {
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
             QTranslator translator;
 #endif
 
@@ -558,7 +559,7 @@ int main(int argc, char ** argv)
                 engine.addPluginPath(pluginPaths.at(i));
             if (options.url.isLocalFile()) {
                 QFileInfo fi(options.url.toLocalFile());
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
                 loadTranslationFile(translator, fi.path());
 #endif
                 loadDummyDataFiles(engine, fi.path());
@@ -597,7 +598,7 @@ int main(int argc, char ** argv)
 
             if (window) {
                 setWindowTitle(options.verbose, topLevel, window.data());
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
                 if (options.verbose)
                     new DiagnosticGlContextCreationListener(window.data());
 #endif

@@ -44,7 +44,7 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include "qquickcontext2dcommandbuffer_p.h"
 #include <QOpenGLPaintDevice>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
@@ -53,7 +53,7 @@
 #include <QtGui/QGuiApplication>
 
 QT_BEGIN_NAMESPACE
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #define QT_MINIMUM_FBO_SIZE 64
 
 static inline int qt_next_power_of_two(int v)
@@ -90,7 +90,7 @@ struct GLAcquireContext {
 #endif
 QQuickContext2DTexture::QQuickContext2DTexture()
     : m_context(0)
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     , m_gl(0)
 #endif
     , m_surface(0)
@@ -254,7 +254,7 @@ void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
         return;
     }
     QQuickContext2D::mutex.unlock();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     GLAcquireContext currentContext(m_gl, m_surface);
 #endif
     if (!m_tiledCanvas) {
@@ -383,7 +383,7 @@ bool QQuickContext2DTexture::event(QEvent *e)
     }
     return QObject::event(e);
 }
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 static inline QSize npotAdjustedSize(const QSize &size)
 {
     static bool checked = false;

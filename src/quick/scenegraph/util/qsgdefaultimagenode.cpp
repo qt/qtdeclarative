@@ -173,33 +173,4 @@ bool QSGDefaultImageNode::ownsTexture() const
     return m_ownsTexture;
 }
 
-void QSGDefaultImageNode::rebuildGeometry(QSGGeometry *g,
-                                          QSGTexture *texture,
-                                          const QRectF &rect,
-                                          QRectF sourceRect,
-                                          TextureCoordinatesTransformMode texCoordMode)
-{
-    if (!texture)
-        return;
-
-    if (!sourceRect.width() || !sourceRect.height()) {
-        QSize ts = texture->textureSize();
-        sourceRect = QRectF(0, 0, ts.width(), ts.height());
-    }
-
-    // Maybe transform the texture coordinates
-    if (texCoordMode.testFlag(QSGImageNode::MirrorHorizontally)) {
-        float tmp = sourceRect.left();
-        sourceRect.setLeft(sourceRect.right());
-        sourceRect.setRight(tmp);
-    }
-    if (texCoordMode.testFlag(QSGImageNode::MirrorVertically)) {
-        float tmp = sourceRect.top();
-        sourceRect.setTop(sourceRect.bottom());
-        sourceRect.setBottom(tmp);
-    }
-
-    QSGGeometry::updateTexturedRectGeometry(g, rect, texture->convertToNormalizedSourceRect(sourceRect));
-}
-
 QT_END_NAMESPACE

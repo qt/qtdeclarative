@@ -132,8 +132,10 @@ struct ArgumentsObject: Object {
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
+    static uint getLength(const Managed *m);
 
     void fullyCreate();
+
 };
 
 }

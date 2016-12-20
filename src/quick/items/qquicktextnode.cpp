@@ -99,10 +99,12 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     bool preferNativeGlyphNode = m_useNativeRenderer;
     if (!preferNativeGlyphNode) {
         QRawFontPrivate *fontPriv = QRawFontPrivate::get(font);
-        if (fontPriv->fontEngine->hasUnreliableGlyphOutline())
+        if (fontPriv->fontEngine->hasUnreliableGlyphOutline()) {
             preferNativeGlyphNode = true;
-        else
-            preferNativeGlyphNode = !QFontDatabase().isSmoothlyScalable(font.familyName(), font.styleName());
+        } else {
+            QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+            preferNativeGlyphNode = !fe->isSmoothlyScalable;
+        }
     }
 
     QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode);
@@ -160,18 +162,14 @@ void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
     QSGInternalImageNode *node = sg->sceneGraphContext()->createInternalImageNode();
     QSGTexture *texture = sg->createTexture(image);
-    if (m_ownerElement->smooth()) {
+    if (m_ownerElement->smooth())
         texture->setFiltering(QSGTexture::Linear);
-        texture->setMipmapFiltering(QSGTexture::Linear);
-    }
     m_textures.append(texture);
     node->setTargetRect(rect);
     node->setInnerTargetRect(rect);
     node->setTexture(texture);
-    if (m_ownerElement->smooth()) {
+    if (m_ownerElement->smooth())
         node->setFiltering(QSGTexture::Linear);
-        node->setMipmapFiltering(QSGTexture::Linear);
-    }
     appendChildNode(node);
     node->update();
 }
@@ -239,7 +237,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     engine.setAnchorColor(anchorColor);
     engine.setPosition(position);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     int preeditLength = textLayout->preeditAreaText().length();
     int preeditPosition = textLayout->preeditAreaPosition();
 #endif
@@ -258,7 +256,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
         int length = line.textLength();
         int end = start + length;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (preeditPosition >= 0
          && preeditPosition >= start
          && preeditPosition < end) {

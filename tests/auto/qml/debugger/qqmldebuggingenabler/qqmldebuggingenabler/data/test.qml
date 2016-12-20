@@ -36,6 +36,7 @@ Item {
             var b = {a: "hello", d: 1 }
             var c
             var d = 12
+        console.log("Component.onCompleted");
     }
     function foo() {
         var a = [1, 2]

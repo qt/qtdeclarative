@@ -39,7 +39,6 @@
 
 #include "qqmltypeloader_p.h"
 #include "qqmlabstracturlinterceptor.h"
-#include "qqmlcontextwrapper_p.h"
 #include "qqmlexpression_p.h"
 
 #include <private/qqmlengine_p.h>
@@ -2836,7 +2835,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
         return QV4::Encode::undefined();
     }
 
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->rootContext()->newQmlContext(ctxt, 0));
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, 0));
     qmlContext->takeContextOwnership();
 
     m_program->qmlContext.set(scope.engine, qmlContext);

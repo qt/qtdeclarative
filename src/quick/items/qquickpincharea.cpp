@@ -682,7 +682,7 @@ bool QQuickPinchArea::event(QEvent *event)
         return QQuickItem::event(event);
 
     switch (event->type()) {
-#ifndef QT_NO_GESTURES
+#if QT_CONFIG(gestures)
     case QEvent::NativeGesture: {
         QNativeGestureEvent *gesture = static_cast<QNativeGestureEvent *>(event);
         switch (gesture->gestureType()) {
@@ -775,7 +775,7 @@ bool QQuickPinchArea::event(QEvent *event)
             return QQuickItem::event(event);
         }
     } break;
-#endif // QT_NO_GESTURES
+#endif // gestures
     case QEvent::Wheel:
         event->ignore();
         return false;

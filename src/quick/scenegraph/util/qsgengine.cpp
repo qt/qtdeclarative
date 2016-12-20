@@ -44,7 +44,7 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgtexture_p.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
@@ -116,7 +116,7 @@ QSGEngine::~QSGEngine()
 void QSGEngine::initialize(QOpenGLContext *context)
 {
     Q_D(QSGEngine);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (context && QOpenGLContext::currentContext() != context) {
         qWarning("WARNING: The context must be current before calling QSGEngine::initialize.");
         return;
@@ -125,7 +125,7 @@ void QSGEngine::initialize(QOpenGLContext *context)
     if (d->sgRenderContext && !d->sgRenderContext->isValid()) {
         d->sgRenderContext->setAttachToGraphicsContext(false);
         d->sgRenderContext->initialize(context);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (context)
             connect(context, &QOpenGLContext::aboutToBeDestroyed, this, &QSGEngine::invalidate);
 #endif

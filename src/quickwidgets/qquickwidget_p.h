@@ -87,7 +87,7 @@ public:
     ~QQuickWidgetPrivate();
 
     void execute();
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void initResize();
     void updateSize();
     void updatePosition();
@@ -101,7 +101,7 @@ public:
 
     QObject *focusObject() Q_DECL_OVERRIDE;
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     GLuint textureId() const Q_DECL_OVERRIDE;
     QImage grabFramebuffer() Q_DECL_OVERRIDE;
 #else
@@ -126,7 +126,7 @@ public:
     QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLFramebufferObject *fbo;
     QOpenGLFramebufferObject *resolvedFbo;
     QOpenGLContext *context;

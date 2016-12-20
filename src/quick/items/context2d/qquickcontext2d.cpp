@@ -75,7 +75,7 @@
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
 
@@ -3997,7 +3997,7 @@ public:
 
     ~QQuickContext2DThreadCleanup()
     {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         context->makeCurrent(surface);
         delete texture;
         context->doneCurrent();
@@ -4038,7 +4038,7 @@ QQuickContext2D::~QQuickContext2D()
     delete m_buffer;
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (m_renderStrategy == QQuickCanvasItem::Immediate && m_glContext) {
             Q_ASSERT(QThread::currentThread() == m_glContext->thread());
             m_glContext->makeCurrent(m_surface.data());
@@ -4115,7 +4115,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_texture = new QQuickContext2DImageTexture;
         break;
     case QQuickCanvasItem::FramebufferObject:
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         m_texture = new QQuickContext2DFBOTexture;
 #else
         // It shouldn't be possible to use a FramebufferObject without OpenGL
@@ -4134,7 +4134,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_thread = QThread::currentThread();
 
     QThread *renderThread = m_thread;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QQuickWindow *window = canvasItem->window();
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     QThread *sceneGraphThread = wd->context->thread();
@@ -4151,7 +4151,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
     if (renderThread && renderThread != QThread::currentThread())
         m_texture->moveToThread(renderThread);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
          auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(QQuickWindowPrivate::get(window)->context);
          QOpenGLContext *cc = openglRenderContext->openglContext();
@@ -4212,7 +4212,7 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
             flush();
             m_texture->grabImage(bounds);
         } else {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
             QQuickWindow *window = m_canvas->window();
             QOpenGLContext *ctx =  window ? window->openglContext() : 0;
             if (ctx && ctx->isValid()) {

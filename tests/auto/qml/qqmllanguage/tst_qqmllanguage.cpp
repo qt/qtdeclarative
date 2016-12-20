@@ -254,6 +254,9 @@ private slots:
     void arrayBuffer_data();
     void arrayBuffer();
 
+    void defaultListProperty();
+    void namespacedPropertyTypes();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -1395,7 +1398,6 @@ void tst_qqmllanguage::dynamicObjectProperties()
     }
     {
     QQmlComponent component(&engine, testFileUrl("dynamicObjectProperties.2.qml"));
-    QEXPECT_FAIL("", "QTBUG-10822", Abort);
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -4231,6 +4233,21 @@ void tst_qqmllanguage::arrayBuffer()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("ok").toBool(), true);
+}
+
+void tst_qqmllanguage::defaultListProperty()
+{
+    QQmlComponent component(&engine, testFileUrl("defaultListProperty.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+}
+
+void tst_qqmllanguage::namespacedPropertyTypes()
+{
+    QQmlComponent component(&engine, testFileUrl("namespacedPropertyTypes.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

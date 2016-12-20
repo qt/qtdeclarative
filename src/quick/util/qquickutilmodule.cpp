@@ -67,7 +67,7 @@ Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 
 void QQuickUtilModule::defineModule()
 {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputMethod",
                                              QInputMethod::tr("InputMethod is an abstract class"));
 #endif
@@ -94,7 +94,7 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickTransition>("QtQuick",2,0,"Transition");
     qmlRegisterType<QQuickVector3dAnimation>("QtQuick",2,0,"Vector3dAnimation");
 
-#ifndef QT_NO_VALIDATOR
+#if QT_CONFIG(validator)
     qmlRegisterType<QValidator>();
     qmlRegisterType<QQuickIntValidator>("QtQuick",2,0,"IntValidator");
     qmlRegisterType<QQuickDoubleValidator>("QtQuick",2,0,"DoubleValidator");

@@ -113,10 +113,15 @@ public:
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
 
+    QQmlSourceLocation sourceLocation() const;
+    void setSourceLocation(const QQmlSourceLocation &location);
+
     bool isValid() const { return context() != 0; }
 
     QQmlContextData *context() const { return m_context; }
     void setContext(QQmlContextData *context);
+
+    QV4::Function *function() const;
 
     virtual void refresh();
 
@@ -154,6 +159,8 @@ protected:
         }
     }
 
+    void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
+
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
@@ -173,8 +180,10 @@ private:
     QQmlJavaScriptExpression  *m_nextExpression;
     bool m_permanentDependenciesRegistered = false;
 
-protected:
-    QV4::PersistentValue m_function;
+    QV4::PersistentValue m_qmlScope;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
+    QV4::Function *m_v4Function;
+    QQmlSourceLocation *m_sourceLocation; // used for Qt.binding() created functions
 };
 
 class QQmlPropertyCapture

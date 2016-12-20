@@ -118,7 +118,8 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
 
 ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, const Value &object, const Value &index)
 {
-    if (object.isObject() && index.asArrayIndex() < UINT_MAX) {
+    uint idx;
+    if (object.isObject() && index.asArrayIndex(idx)) {
         l->indexedGetter = indexedGetterObjectInt;
         return indexedGetterObjectInt(l, object, index);
     }
@@ -129,11 +130,12 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 {
     Q_UNUSED(l);
     Scope scope(l->engine);
-    uint idx = index.asArrayIndex();
+    uint idx = 0;
+    bool isInt = index.asArrayIndex(idx);
 
     ScopedObject o(scope, object);
     if (!o) {
-        if (idx < UINT_MAX) {
+        if (isInt) {
             if (const String *str = object.as<String>()) {
                 if (idx >= (uint)str->toQString().length()) {
                     return Encode::undefined();
@@ -153,7 +155,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
             return Encode::undefined();
     }
 
-    if (idx < UINT_MAX) {
+    if (isInt) {
         if (o->d()->arrayData && !o->d()->arrayData->attrs) {
             ScopedValue v(scope, Scoped<ArrayData>(scope, o->arrayData())->get(idx));
             if (!v->isEmpty())
@@ -173,16 +175,19 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 
 ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, const Value &index)
 {
-    uint idx = index.asArrayIndex();
-    if (idx == UINT_MAX || !object.isObject())
-        return indexedGetterFallback(l, object, index);
-
-    Object *o = object.objectValue();
-    if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-        Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (idx < s->len)
-            if (!s->data(idx).isEmpty())
-                return s->data(idx).asReturnedValue();
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->vtable()->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->len)
+                        if (!s->data(idx).isEmpty())
+                            return s->data(idx).asReturnedValue();
+                }
+            }
+        }
     }
 
     return indexedGetterFallback(l, object, index);
@@ -190,9 +195,9 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
 
 void Lookup::indexedSetterGeneric(Lookup *l, const Value &object, const Value &index, const Value &v)
 {
-    if (object.isObject()) {
-        Object *o = object.objectValue();
-        if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex() < UINT_MAX) {
+    if (Object *o = object.objectValue()) {
+        uint idx;
+        if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex(idx)) {
             l->indexedSetter = indexedSetterObjectInt;
             indexedSetterObjectInt(l, object, index, v);
             return;
@@ -208,8 +213,8 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
     if (scope.engine->hasException)
         return;
 
-    uint idx = index.asArrayIndex();
-    if (idx < UINT_MAX) {
+    uint idx;
+    if (index.asArrayIndex(idx)) {
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             if (idx < s->len) {
@@ -227,18 +232,19 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
 
 void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value &index, const Value &v)
 {
-    uint idx = index.asArrayIndex();
-    if (idx == UINT_MAX || !object.isObject()) {
-        indexedSetterGeneric(l, object, index, v);
-        return;
-    }
-
-    Object *o = object.objectValue();
-    if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-        Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (idx < s->len) {
-            s->data(idx) = v;
-            return;
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->vtable()->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->len) {
+                        s->data(idx) = v;
+                        return;
+                    }
+                }
+            }
         }
     }
     indexedSetterFallback(l, object, index, v);
@@ -345,11 +351,11 @@ ReturnedValue Lookup::getterFallback(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getter0(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass())
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass)
             return o->propertyData(l->index)->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
@@ -357,25 +363,24 @@ ReturnedValue Lookup::getter0(Lookup *l, ExecutionEngine *engine, const Value &o
 
 ReturnedValue Lookup::getter1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index)->asReturnedValue();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass && l->classList[1] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index)->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
 }
 
 ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass()) {
-            Heap::Object *p = o->prototype();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass) {
+            Heap::Object *p = o->prototype;
             if (l->classList[1] == p->internalClass) {
                 p = p->prototype;
                 if (l->classList[2] == p->internalClass)
@@ -389,13 +394,13 @@ ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const Value &o
 
 ReturnedValue Lookup::getter0getter0(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass())
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass)
             return o->propertyData(l->index)->asReturnedValue();
-        if (l->classList[2] == o->internalClass())
+        if (l->classList[2] == o->internalClass)
             return o->propertyData(l->index2)->asReturnedValue();
     }
     l->getter = getterFallback;
@@ -404,15 +409,14 @@ ReturnedValue Lookup::getter0getter0(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getter0getter1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass())
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass)
             return o->propertyData(l->index)->asReturnedValue();
-        if (l->classList[2] == o->internalClass() &&
-            l->classList[3] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index2)->asReturnedValue();
+        if (l->classList[2] == o->internalClass && l->classList[3] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index2)->asReturnedValue();
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -420,16 +424,16 @@ ReturnedValue Lookup::getter0getter1(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getter1getter1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index)->asReturnedValue();
-        if (l->classList[2] == o->internalClass() &&
-            l->classList[3] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index2)->asReturnedValue();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index)->asReturnedValue();
+        if (l->classList[2] == o->internalClass &&
+            l->classList[3] == o->prototype->internalClass)
+            return o->prototype->propertyData(l->index2)->asReturnedValue();
         return getterFallback(l, engine, object);
     }
     l->getter = getterFallback;
@@ -439,12 +443,12 @@ ReturnedValue Lookup::getter1getter1(Lookup *l, ExecutionEngine *engine, const V
 
 ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Object *o = object.objectValue();
-        if (l->classList[0] == o->internalClass()) {
-            Scope scope(o->engine());
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (l->classList[0] == o->internalClass) {
+            Scope scope(o->internalClass->engine);
             ScopedFunctionObject getter(scope, o->propertyData(l->index + Object::GetterOffset));
             if (!getter)
                 return Encode::undefined();
@@ -461,10 +465,10 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const 
 
 ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Heap::Object *o = object.objectValue()->d();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype->internalClass) {
             Scope scope(o->internalClass->engine);
@@ -484,10 +488,10 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
 
 ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.isManaged()) {
-        // we can safely cast to a QV4::Object here. If object is actually a string,
-        // the internal class won't match
-        Heap::Object *o = object.objectValue()->d();
+    // we can safely cast to a QV4::Object here. If object is actually a string,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
         if (l->classList[0] == o->internalClass) {
             o = o->prototype;
             if (l->classList[1] == o->internalClass) {

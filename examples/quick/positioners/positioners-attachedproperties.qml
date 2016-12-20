@@ -66,14 +66,14 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: page.width / 32
         anchors.topMargin: page.height / 48
-        spacing: elementSpacing
+        spacing: page.elementSpacing
 
         //! [0]
         Rectangle {
             id: green
             color: "#80c342"
-            width: 100 * ratio
-            height: 100 * ratio
+            width: 100 * page.ratio
+            height: 100 * page.ratio
 
             Text {
               anchors.left: parent.right
@@ -95,8 +95,8 @@ Rectangle {
         Rectangle {
             id: blue
             color: "#14aaff"
-            width: 100 * ratio
-            height: 100 * ratio
+            width: 100 * page.ratio
+            height: 100 * page.ratio
 
             Text {
               anchors.left: parent.right
@@ -117,8 +117,8 @@ Rectangle {
         Rectangle {
             id: purple
             color: "#6400aa"
-            width: 100 * ratio
-            height: 100 * ratio
+            width: 100 * page.ratio
+            height: 100 * page.ratio
 
             Text {
               anchors.left: parent.right
@@ -140,8 +140,8 @@ Rectangle {
         Rectangle {
             id: hidingRect
             color: "#006325"
-            width: 100 * ratio
-            height: 100 * ratio
+            width: 100 * page.ratio
+            height: 100 * page.ratio
             visible: false
 
             Text {

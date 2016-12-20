@@ -48,7 +48,7 @@
 #include <QtQuick/private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgcontextplugin_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdefaultinternalimagenode_p.h>

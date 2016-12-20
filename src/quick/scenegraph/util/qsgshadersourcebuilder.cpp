@@ -217,11 +217,11 @@ void QSGShaderSourceBuilder::initializeProgramFromFiles(QOpenGLShaderProgram *pr
     QSGShaderSourceBuilder builder;
 
     builder.appendSourceFile(vertexShader);
-    program->addShaderFromSourceCode(QOpenGLShader::Vertex, builder.source());
+    program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, builder.source());
     builder.clear();
 
     builder.appendSourceFile(fragmentShader);
-    program->addShaderFromSourceCode(QOpenGLShader::Fragment, builder.source());
+    program->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, builder.source());
 }
 
 QByteArray QSGShaderSourceBuilder::source() const

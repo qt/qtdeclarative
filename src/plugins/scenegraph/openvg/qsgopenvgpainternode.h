@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -36,48 +36,62 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4CONTEXT_P_P_H
-#define QV4CONTEXT_P_P_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#ifndef QSGOPENVGPAINTERNODE_H
+#define QSGOPENVGPAINTERNODE_H
 
-// This header defines a couple of inlinable methods.
-// These implementation cannot be put in qv4context_p.h, because they rely on the
-// QQmlContextWrapper, which in turn is a QV4::Object subclass (so it includes qv4object_p.h),
-// which includes qv4engine_p.h, that needs to include qv4context_p.h
-
-#include "qv4context_p.h"
-#include "private/qqmlcontextwrapper_p.h"
+#include <private/qsgadaptationlayer_p.h>
+#include <QtQuick/QQuickPaintedItem>
+#include "qsgopenvgrenderable.h"
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
+class QSGOpenVGTexture;
 
-QObject *QmlContext::qmlScope() const
+class QSGOpenVGPainterNode : public QSGPainterNode, public QSGOpenVGRenderable
 {
-    return d()->qml->scopeObject;
-}
+public:
+    QSGOpenVGPainterNode(QQuickPaintedItem *item);
+    ~QSGOpenVGPainterNode();
 
-QQmlContextData *QmlContext::qmlContext() const
-{
-    return *d()->qml->context;
-}
+    void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target) override;
+    void setSize(const QSize &size) override;
+    void setDirty(const QRect &dirtyRect) override;
+    void setOpaquePainting(bool opaque) override;
+    void setLinearFiltering(bool linearFiltering) override;
+    void setMipmapping(bool mipmapping) override;
+    void setSmoothPainting(bool s) override;
+    void setFillColor(const QColor &c) override;
+    void setContentsScale(qreal s) override;
+    void setFastFBOResizing(bool dynamic) override;
+    void setTextureSize(const QSize &size) override;
+    QImage toImage() const override;
+    void update() override;
+    QSGTexture *texture() const override;
 
-void QmlContext::takeContextOwnership() {
-    d()->qml->ownsContext = true;
-}
+    void render() override;
+    void paint();
 
-} // QV4 namespace
+private:
+    QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
+
+    QQuickPaintedItem *m_item;
+    QSGOpenVGTexture *m_texture;
+    QImage m_image;
+
+    QSize m_size;
+    bool m_dirtyContents;
+    QRect m_dirtyRect;
+    bool m_opaquePainting;
+    bool m_linear_filtering;
+    bool m_smoothPainting;
+    QColor m_fillColor;
+    qreal m_contentsScale;
+    QSize m_textureSize;
+
+    bool m_dirtyGeometry;
+};
 
 QT_END_NAMESPACE
 
-#endif // QV4CONTEXT_P_P_H
+#endif // QSGOPENVGPAINTERNODE_H

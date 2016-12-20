@@ -183,7 +183,7 @@ QQmlNativeDebugConnector::QQmlNativeDebugConnector()
     : m_blockingMode(false)
 {
     const QString args = commandLineArguments();
-    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','));
+    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','), QString::SkipEmptyParts);
     QStringList services;
     for (const QStringRef &strArgument : lstjsDebugArguments) {
         if (strArgument == QLatin1String("block")) {
@@ -195,7 +195,7 @@ QQmlNativeDebugConnector::QQmlNativeDebugConnector()
             services.append(strArgument.mid(9).toString());
         } else if (!services.isEmpty()) {
             services.append(strArgument.toString());
-        } else {
+        } else if (!strArgument.startsWith(QLatin1String("connector:"))) {
             qWarning("QML Debugger: Invalid argument \"%s\" detected. Ignoring the same.",
                      strArgument.toUtf8().constData());
         }

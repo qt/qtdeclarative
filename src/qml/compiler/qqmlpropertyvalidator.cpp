@@ -412,7 +412,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
         }
     }
     break;
-#ifndef QT_NO_DATESTRING
+#if QT_CONFIG(datestring)
     case QVariant::Date: {
         bool ok = false;
         QQmlStringConverters::dateFromString(binding->valueAsString(qmlUnit), &ok);
@@ -437,7 +437,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
         }
     }
     break;
-#endif // QT_NO_DATESTRING
+#endif // datestring
     case QVariant::Point: {
         bool ok = false;
         QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok);

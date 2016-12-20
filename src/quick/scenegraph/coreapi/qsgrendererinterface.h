@@ -53,14 +53,15 @@ public:
         Unknown,
         Software,
         OpenGL,
-        Direct3D12
+        Direct3D12,
+        OpenVG
     };
 
     enum Resource {
-        Device,
-        CommandQueue,
-        CommandList,
-        Painter
+        DeviceResource,
+        CommandQueueResource,
+        CommandListResource,
+        PainterResource
     };
 
     enum ShaderType {

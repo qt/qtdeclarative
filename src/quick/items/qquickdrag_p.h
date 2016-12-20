@@ -60,7 +60,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qurl.h>
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 
 QT_BEGIN_NAMESPACE
 
@@ -77,7 +77,7 @@ class QQuickDragGrabber
 
         QIntrusiveListNode node;
     protected:
-        void objectDestroyed(QQuickItem *) { delete this; }
+        void objectDestroyed(QQuickItem *) override { delete this; }
     };
 
     typedef QIntrusiveList<Item, &Item::node> ItemList;
@@ -318,6 +318,6 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickDrag)
 QML_DECLARE_TYPEINFO(QQuickDrag, QML_HAS_ATTACHED_PROPERTIES)
 
-#endif // QT_NO_DRAGANDDROP
+#endif // draganddrop
 
 #endif

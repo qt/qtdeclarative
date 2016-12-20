@@ -63,9 +63,9 @@ public:
     QSGDistanceFieldTextMaterial();
     ~QSGDistanceFieldTextMaterial();
 
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    virtual int compare(const QSGMaterial *other) const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    int compare(const QSGMaterial *other) const override;
 
     virtual void setColor(const QColor &color);
     const QVector4D &color() const { return m_color; }
@@ -97,9 +97,9 @@ public:
     QSGDistanceFieldStyledTextMaterial();
     ~QSGDistanceFieldStyledTextMaterial();
 
-    virtual QSGMaterialType *type() const = 0;
-    virtual QSGMaterialShader *createShader() const = 0;
-    virtual int compare(const QSGMaterial *other) const;
+    QSGMaterialType *type() const override = 0;
+    QSGMaterialShader *createShader() const override = 0;
+    int compare(const QSGMaterial *other) const override;
 
     void setStyleColor(const QColor &color);
     const QVector4D &styleColor() const { return m_styleColor; }
@@ -114,8 +114,8 @@ public:
     QSGDistanceFieldOutlineTextMaterial();
     ~QSGDistanceFieldOutlineTextMaterial();
 
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldShiftedStyleTextMaterial : public QSGDistanceFieldStyledTextMaterial
@@ -124,9 +124,9 @@ public:
     QSGDistanceFieldShiftedStyleTextMaterial();
     ~QSGDistanceFieldShiftedStyleTextMaterial();
 
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    virtual int compare(const QSGMaterial *other) const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    int compare(const QSGMaterial *other) const override;
 
     void setShift(const QPointF &shift) { m_shift = shift; }
     const QPointF &shift() const { return m_shift; }
@@ -138,17 +138,17 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QSGHiQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    void setColor(const QColor &color) { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    void setColor(const QColor &color) override { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    void setColor(const QColor &color) { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    void setColor(const QColor &color) override { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
 };
 
 QT_END_NAMESPACE

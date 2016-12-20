@@ -61,7 +61,7 @@ private slots:
     void initTestCase() Q_DECL_OVERRIDE;
     void layerEnabled();
     void layerSmooth();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     void layerMipmap();
     void layerEffect();
 #endif
@@ -105,7 +105,7 @@ tst_QQuickItemLayer::tst_QQuickItemLayer()
 void tst_QQuickItemLayer::initTestCase()
 {
     QQmlDataTest::initTestCase();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QWindow window;
     QOpenGLContext context;
     window.setSurfaceType(QWindow::OpenGLSurface);
@@ -177,7 +177,7 @@ void tst_QQuickItemLayer::layerEnabled()
     QVERIFY(fb.pixel(0, 0) != fb.pixel(0, fb.height() - 1));
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 // The test draws a one pixel wide line and scales it down by more than a a factor 2
 // If mipmpping works, the pixels should be gray, not white or black
 

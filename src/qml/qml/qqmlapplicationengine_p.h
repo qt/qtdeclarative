@@ -78,7 +78,7 @@ public:
     QSignalMapper statusMapper;
     QObject *appObj;
 
-#ifndef QT_NO_TRANSLATIONS
+#if QT_CONFIG(translation)
     QList<QTranslator *> translators;
 #endif
 };

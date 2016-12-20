@@ -83,7 +83,7 @@ public:
 
 protected:
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
-    virtual void clear();
+    void clear() override;
 
 private:
     QQmlOpenMetaObjectTypePrivate *d;

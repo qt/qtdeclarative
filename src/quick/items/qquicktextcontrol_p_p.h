@@ -90,7 +90,7 @@ public:
 
     void _q_updateCurrentCharFormatAndSelection();
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     void setClipboardSelection();
 #endif
 
@@ -114,14 +114,14 @@ public:
     void mouseDoubleClickEvent(QMouseEvent *event, const QPointF &pos);
     bool sendMouseEventToInputContext(QMouseEvent *event, const QPointF &pos);
     void focusEvent(QFocusEvent *e);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *);
 #endif
     void hoverEvent(QHoverEvent *e, const QPointF &pos);
 
     void activateLinkUnderCursor(QString href = QString());
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     bool isPreediting() const;
     void commitPreedit();
     void cancelPreedit();
@@ -143,7 +143,7 @@ public:
     QBasicTimer cursorBlinkTimer;
     QBasicTimer tripleClickTimer;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     int preeditCursor;
 #endif
 

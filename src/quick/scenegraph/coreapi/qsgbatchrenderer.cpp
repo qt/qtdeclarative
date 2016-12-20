@@ -90,7 +90,7 @@ DECLARE_DEBUG_VAR(noclip)
 static QElapsedTimer qsg_renderer_timer;
 
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
-#define SHADOWNODE_TRAVERSE(NODE) for (Node *child = NODE->firstChild; child; child = child->nextSibling)
+#define SHADOWNODE_TRAVERSE(NODE) for (Node *child = NODE->firstChild(); child; child = child->sibling())
 
 static inline int size_of_type(GLenum type)
 {
@@ -170,7 +170,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms", (int) qsg_renderer_timer.elapsed());
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
+                           QQuickProfiler::SceneGraphContextMaterialCompile);
 
     rewrittenShaders[type] = shader;
     return shader;
@@ -201,7 +202,8 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms (no rewrite)", (int) qsg_renderer_timer.elapsed());
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
+                           QQuickProfiler::SceneGraphContextMaterialCompile);
     return shader;
 }
 
@@ -510,7 +512,7 @@ void Updater::updateRootTransforms(Node *node, Node *root, const QMatrix4x4 &com
     while (n != root) {
         if (n->type() == QSGNode::TransformNodeType)
             m = static_cast<QSGTransformNode *>(n->sgNode)->matrix() * m;
-        n = n->parent;
+        n = n->parent();
     }
 
     m = combined * m;
@@ -1013,16 +1015,8 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
     Node *snode = m_nodeAllocator.allocate();
     snode->sgNode = node;
     m_nodes.insert(node, snode);
-    if (shadowParent) {
-        snode->parent = shadowParent;
-        if (shadowParent->lastChild) {
-            shadowParent->lastChild->nextSibling = snode;
-            shadowParent->lastChild = snode;
-        } else {
-            shadowParent->firstChild = snode;
-            shadowParent->lastChild = snode;
-        }
-    }
+    if (shadowParent)
+        shadowParent->append(snode);
 
     if (node->type() == QSGNode::GeometryNodeType) {
         snode->data = m_elementAllocator.allocate();
@@ -1054,17 +1048,12 @@ void Renderer::nodeWasRemoved(Node *node)
     // here, because we delete 'child' (when recursed, down below), so we'd
     // have a use-after-free.
     {
-        Node *child = node->firstChild;
-        Node *nextChild = 0;
-
+        Node *child = node->firstChild();
         while (child) {
-            // Get the next child now before we proceed
-            nextChild = child->nextSibling;
-
             // Remove (and delete) child
+            node->remove(child);
             nodeWasRemoved(child);
-
-            child = nextChild;
+            child = node->firstChild();
         }
     }
 
@@ -1110,6 +1099,7 @@ void Renderer::nodeWasRemoved(Node *node)
     }
 
     Q_ASSERT(m_nodes.contains(node->sgNode));
+
     m_nodeAllocator.release(m_nodes.take(node->sgNode));
 }
 
@@ -1120,13 +1110,13 @@ void Renderer::turnNodeIntoBatchRoot(Node *node)
     node->isBatchRoot = true;
     node->becameBatchRoot = true;
 
-    Node *p = node->parent;
+    Node *p = node->parent();
     while (p) {
         if (p->type() == QSGNode::ClipNodeType || p->isBatchRoot) {
             registerBatchRoot(node, p);
             break;
         }
-        p = p->parent;
+        p = p->parent();
     }
 
     SHADOWNODE_TRAVERSE(node)
@@ -1255,33 +1245,18 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
                                               | QSGNode::DirtyForceUpdate);
     if (dirtyChain != 0) {
         dirtyChain = QSGNode::DirtyState(dirtyChain << 16);
-        Node *sn = shadowNode->parent;
+        Node *sn = shadowNode->parent();
         while (sn) {
             sn->dirtyState |= dirtyChain;
-            sn = sn->parent;
+            sn = sn->parent();
         }
     }
 
     // Delete happens at the very end because it deletes the shadownode.
     if (state & QSGNode::DirtyNodeRemoved) {
-        Node *parent = shadowNode->parent;
-        if (parent) {
-            Q_ASSERT(parent->firstChild);
-            Q_ASSERT(parent->lastChild);
-            shadowNode->parent = 0;
-            Node *child = parent->firstChild;
-            if (child == shadowNode) {
-                parent->firstChild = shadowNode->nextSibling;
-                if (parent->lastChild == shadowNode)
-                    parent->lastChild = 0;
-            } else {
-                while (child->nextSibling != shadowNode)
-                    child = child->nextSibling;
-                child->nextSibling = shadowNode->nextSibling;
-                if (shadowNode == parent->lastChild)
-                    parent->lastChild = child;
-            }
-        }
+        Node *parent = shadowNode->parent();
+        if (parent)
+            parent->remove(shadowNode);
         nodeWasRemoved(shadowNode);
         Q_ASSERT(m_nodes.value(node) == 0);
     }

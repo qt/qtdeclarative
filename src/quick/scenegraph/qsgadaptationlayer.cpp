@@ -73,7 +73,7 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCach
     // this allows us to call pathForGlyph once and reuse the result.
     m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
 #else
     Q_UNUSED(c)
@@ -189,7 +189,8 @@ void QSGDistanceFieldGlyphCache::update()
     int count = m_pendingGlyphs.size();
     if (profileFrames)
         renderTime = qsg_render_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphAdaptationLayerFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
+                              QQuickProfiler::SceneGraphAdaptationLayerGlyphRender);
 
     m_pendingGlyphs.reset();
 
@@ -210,6 +211,7 @@ void QSGDistanceFieldGlyphCache::update()
                 int((now - (renderTime / 1000000))));
     }
     Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
+                                        QQuickProfiler::SceneGraphAdaptationLayerGlyphStore,
                                         (qint64)count);
 }
 

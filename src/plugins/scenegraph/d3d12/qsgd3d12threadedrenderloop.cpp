@@ -597,7 +597,8 @@ void QSGD3D12RenderThread::syncAndRender()
     if (Q_UNLIKELY(debug_time()))
         syncTime = threadTimer.nsecsElapsed();
 #endif
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
+                              QQuickProfiler::SceneGraphRenderLoopSync);
 
     if (!syncResultedInChanges && !repaintRequested) {
         if (Q_UNLIKELY(debug_loop()))
@@ -632,7 +633,8 @@ void QSGD3D12RenderThread::syncAndRender()
         wd->renderSceneGraph(engine->windowSize());
         if (Q_UNLIKELY(debug_time()))
             renderTime = threadTimer.nsecsElapsed();
-        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
+        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
+                                  QQuickProfiler::SceneGraphRenderLoopRender);
 
         // The engine is able to have multiple frames in flight. This in effect is
         // similar to BufferQueueingOpenGL. Provide an env var to force the
@@ -649,7 +651,8 @@ void QSGD3D12RenderThread::syncAndRender()
         // blockOnEachFrame is not used, but emit it for compatibility.
         wd->fireFrameSwapped();
     } else {
-        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame, 1);
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
+                                QQuickProfiler::SceneGraphRenderLoopSync, 1);
         if (Q_UNLIKELY(debug_loop()))
             qDebug("RT - window not ready, skipping render");
     }
@@ -671,7 +674,8 @@ void QSGD3D12RenderThread::syncAndRender()
                int((renderTime - syncTime) / 1000000),
                int(threadTimer.elapsed() - renderTime / 1000000));
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
+                           QQuickProfiler::SceneGraphRenderLoopSwap);
 
     static int devLossTest = qEnvironmentVariableIntValue("QT_D3D_TEST_DEVICE_LOSS");
     if (devLossTest > 0) {
@@ -1127,7 +1131,8 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
 
     if (Q_UNLIKELY(debug_time()))
         polishTime = timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
+                              QQuickProfiler::SceneGraphPolishAndSyncPolish);
 
     w->updateDuringSync = false;
 
@@ -1144,7 +1149,8 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
         qDebug("polishAndSync - wait for sync");
     if (Q_UNLIKELY(debug_time()))
         waitTime = timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
+                              QQuickProfiler::SceneGraphPolishAndSyncWait);
     w->thread->waitCondition.wait(&w->thread->mutex);
     lockedForSync = false;
     w->thread->mutex.unlock();
@@ -1153,7 +1159,8 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
 
     if (Q_UNLIKELY(debug_time()))
         syncTime = timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
+                              QQuickProfiler::SceneGraphPolishAndSyncSync);
 
     if (!animationTimer && anim->isRunning()) {
         if (Q_UNLIKELY(debug_loop()))
@@ -1175,7 +1182,8 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
                 << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
                 << " - (on gui thread) " << window;
 
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,
+                           QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }
 
 #include "qsgd3d12threadedrenderloop.moc"

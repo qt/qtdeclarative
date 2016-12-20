@@ -235,9 +235,7 @@ bool GlobalInspector::syncSelectedItems(const QList<QQuickItem *> &items)
 
     // Disconnect and remove items that are no longer selected
     const auto selectedItemsCopy = m_selectedItems;
-    for (const QPointer<QQuickItem> &item : selectedItemsCopy) {
-        if (!item) // Don't see how this can happen due to handling of destroyed()
-            continue;
+    for (QQuickItem *item : selectedItemsCopy) {
         if (items.contains(item))
             continue;
 

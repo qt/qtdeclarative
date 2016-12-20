@@ -266,7 +266,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 
     QuickTestResult::parseArgs(testArgC, testArgV.data());
 
-#ifndef QT_NO_TRANSLATION
+#if QT_CONFIG(translation)
     QTranslator translator;
     if (!translationFile.isEmpty()) {
         if (translator.load(translationFile)) {

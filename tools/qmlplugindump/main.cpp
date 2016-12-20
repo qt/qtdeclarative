@@ -72,11 +72,12 @@
 #include <qt_windows.h>
 #endif
 
+namespace {
 
-static const uint qtQmlMajorVersion = 2;
-static const uint qtQmlMinorVersion = 2;
-static const uint qtQuickMajorVersion = 2;
-static const uint qtQuickMinorVersion = 8;
+const uint qtQmlMajorVersion = 2;
+const uint qtQmlMinorVersion = 2;
+const uint qtQuickMajorVersion = 2;
+const uint qtQuickMinorVersion = 8;
 
 const QString qtQuickQualifiedName = QString::fromLatin1("QtQuick %1.%2")
         .arg(qtQuickMajorVersion)
@@ -88,6 +89,8 @@ bool creatable = true;
 
 QString currentProperty;
 QString inObjectInstantiation;
+
+}
 
 static QString enquote(const QString &string)
 {
@@ -987,6 +990,7 @@ int main(int argc, char *argv[])
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
 
     QGuiApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
     const QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
     if (args.size() < 2) {

@@ -70,15 +70,16 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
     ScopedString n(scope);
 
     while (1) {
-        if (!current->as<Object>())
+        Object *co = current->objectValue();
+        if (!co)
             break;
 
         while (1) {
-            current->as<Object>()->advanceIterator(this, name, index, pd, attrs);
+            co->advanceIterator(this, name, index, pd, attrs);
             if (attrs->isEmpty())
                 break;
             // check the property is not already defined earlier in the proto chain
-            if (current->heapObject() != object->heapObject()) {
+            if (co->heapObject() != object->heapObject()) {
                 o = object->as<Object>();
                 n = *name;
                 bool shadowed = false;
@@ -97,7 +98,7 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
         }
 
         if (flags & WithProtoChain)
-            current->setM(current->objectValue()->prototype());
+            current->setM(co->prototype());
         else
             current->setM(0);
 
@@ -109,7 +110,8 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
 
 ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 {
-    if (!object->as<Object>())
+    Object *o = object->objectValue();
+    if (!o)
         return Encode::null();
 
     PropertyAttributes attrs;
@@ -121,7 +123,7 @@ ReturnedValue ObjectIterator::nextPropertyName(Value *value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    *value = object->objectValue()->getValue(p->value, attrs);
+    *value = o->getValue(p->value, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -131,7 +133,8 @@ ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 {
-    if (!object->as<Object>())
+    Object *o = object->objectValue();
+    if (!o)
         return Encode::null();
 
     PropertyAttributes attrs;
@@ -143,7 +146,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    *value = object->objectValue()->getValue(p->value, attrs);
+    *value = o->getValue(p->value, attrs);
 
     if (!!name)
         return name->asReturnedValue();

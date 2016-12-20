@@ -117,8 +117,9 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
     if (image.width() < m_atlas_size_limit && image.height() < m_atlas_size_limit) {
         if (!m_atlas)
             m_atlas = new Atlas(m_atlas_size);
+        // t may be null for atlas allocation failure
         t = m_atlas->create(image);
-        if (!hasAlphaChannel && t->hasAlphaChannel())
+        if (t && !hasAlphaChannel && t->hasAlphaChannel())
             t->setHasAlphaChannel(false);
     }
     return t;
@@ -394,9 +395,12 @@ void Atlas::bind(QSGTexture::Filtering filtering)
         bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled();
         if (profileFrames)
             qsg_renderer_timer.start();
-        // Skip bind, convert, swizzle; they're irrelevant
+
         Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphTexturePrepare);
-        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare, 3);
+
+        // Skip bind, convert, swizzle; they're irrelevant
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare,
+                                QQuickProfiler::SceneGraphTexturePrepareStart, 3);
 
         Texture *t = m_pending_uploads.at(i);
         if (m_externalFormat == GL_BGRA &&
@@ -414,10 +418,14 @@ void Atlas::bind(QSGTexture::Filtering filtering)
                                            << "ms (" << t->textureSize().width() << "x"
                                            << t->textureSize().height() << ")";
 
+        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
+                                  QQuickProfiler::SceneGraphTexturePrepareUpload);
+
         // Skip mipmap; unused
-        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
-        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare, 1);
-        Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphTexturePrepare);
+        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare,
+                                QQuickProfiler::SceneGraphTexturePrepareUpload, 1);
+        Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphTexturePrepare,
+                                  QQuickProfiler::SceneGraphTexturePrepareMipmap);
     }
 
     GLenum f = filtering == QSGTexture::Nearest ? GL_NEAREST : GL_LINEAR;

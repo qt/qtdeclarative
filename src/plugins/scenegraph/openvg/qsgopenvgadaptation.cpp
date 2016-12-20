@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,51 +37,42 @@
 **
 ****************************************************************************/
 
-#ifndef QDEBUGMESSAGESERVICE_H
-#define QDEBUGMESSAGESERVICE_H
+#include "qsgopenvgadaptation_p.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qqmldebugserviceinterfaces_p.h>
-
-#include <QtCore/qlogging.h>
-#include <QtCore/qmutex.h>
-#include <QtCore/qelapsedtimer.h>
+#include "qsgopenvgcontext_p.h"
+#include "qsgopenvgrenderloop_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QDebugMessageServicePrivate;
-
-class QDebugMessageServiceImpl : public QDebugMessageService
+QSGOpenVGAdaptation::QSGOpenVGAdaptation(QObject *parent)
+    : QSGContextPlugin(parent)
 {
-    Q_OBJECT
-public:
-    QDebugMessageServiceImpl(QObject *parent = 0);
+}
 
-    void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt, const QString &buf);
-    void synchronizeTime(const QElapsedTimer &otherTimer);
+QStringList QSGOpenVGAdaptation::keys() const
+{
+    return QStringList() << QLatin1String("openvg");
+}
 
-protected:
-    void stateChanged(State);
+QSGContext *QSGOpenVGAdaptation::create(const QString &key) const
+{
+    Q_UNUSED(key)
+    if (!instance)
+        instance = new QSGOpenVGContext();
+    return instance;
+}
 
-private:
-    friend class QQmlDebuggerServiceFactory;
+QSGRenderLoop *QSGOpenVGAdaptation::createWindowManager()
+{
+    return new QSGOpenVGRenderLoop();
+}
 
-    QtMessageHandler oldMsgHandler;
-    QQmlDebugService::State prevState;
-    QMutex initMutex;
-    QElapsedTimer timer;
-};
+QSGContextFactoryInterface::Flags QSGOpenVGAdaptation::flags(const QString &key) const
+{
+    Q_UNUSED(key)
+    return 0;
+}
+
+QSGOpenVGContext *QSGOpenVGAdaptation::instance = nullptr;
 
 QT_END_NAMESPACE
-
-#endif // QDEBUGMESSAGESERVICE_H

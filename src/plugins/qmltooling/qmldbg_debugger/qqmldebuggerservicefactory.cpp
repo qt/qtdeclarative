@@ -39,26 +39,18 @@
 
 #include "qqmldebuggerservicefactory.h"
 #include "qqmlenginedebugservice.h"
-#include "qdebugmessageservice.h"
 #include "qv4debugservice.h"
-#include "qqmlnativedebugservice.h"
 #include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QQmlDebugService *QQmlDebuggerServiceFactory::create(const QString &key)
 {
-    if (key == QDebugMessageServiceImpl::s_key)
-        return new QDebugMessageServiceImpl(this);
-
     if (key == QQmlEngineDebugServiceImpl::s_key)
         return new QQmlEngineDebugServiceImpl(this);
 
     if (key == QV4DebugServiceImpl::s_key)
         return new QV4DebugServiceImpl(this);
-
-    if (key == QQmlNativeDebugServiceImpl::s_key)
-        return new QQmlNativeDebugServiceImpl(this);
 
     return 0;
 }

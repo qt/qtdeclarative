@@ -39,14 +39,14 @@
 
 #include "qsgtexturematerial_p.h"
 #include "qsgtexture_p.h"
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/qopenglshaderprogram.h>
 # include <QtGui/qopenglfunctions.h>
 #endif
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
@@ -59,7 +59,7 @@ QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
     : QSGMaterialShader()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.frag"));
 #endif
@@ -73,7 +73,7 @@ char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
 
 void QSGOpaqueTextureMaterialShader::initialize()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     m_matrix_id = program()->uniformLocation("qt_Matrix");
 #endif
 }
@@ -95,7 +95,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 
     t->setHorizontalWrapMode(tx->horizontalWrapMode());
     t->setVerticalWrapMode(tx->verticalWrapMode());
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     bool npotSupported = const_cast<QOpenGLContext *>(state.context())
         ->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
     if (!npotSupported) {
@@ -115,7 +115,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
         t->bind();
     else
         t->updateBindOptions();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (state.isMatrixDirty())
         program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 #endif
@@ -379,7 +379,7 @@ QSGMaterialShader *QSGTextureMaterial::createShader() const
 QSGTextureMaterialShader::QSGTextureMaterialShader()
     : QSGOpaqueTextureMaterialShader()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/texture.frag"));
 #endif
 }
@@ -387,7 +387,7 @@ QSGTextureMaterialShader::QSGTextureMaterialShader()
 void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (state.isOpacityDirty())
         program()->setUniformValue(m_opacity_id, state.opacity());
 #endif
@@ -397,7 +397,7 @@ void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial
 void QSGTextureMaterialShader::initialize()
 {
     QSGOpaqueTextureMaterialShader::initialize();
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     m_opacity_id = program()->uniformLocation("opacity");
 #endif
 }

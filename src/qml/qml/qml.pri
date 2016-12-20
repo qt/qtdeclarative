@@ -42,7 +42,6 @@ SOURCES += \
     $$PWD/qqmlabstracturlinterceptor.cpp \
     $$PWD/qqmlapplicationengine.cpp \
     $$PWD/qqmllistwrapper.cpp \
-    $$PWD/qqmlcontextwrapper.cpp \
     $$PWD/qqmlvaluetypewrapper.cpp \
     $$PWD/qqmltypewrapper.cpp \
     $$PWD/qqmlfileselector.cpp \
@@ -113,8 +112,6 @@ HEADERS += \
     $$PWD/qqmlapplicationengine_p.h \
     $$PWD/qqmlapplicationengine.h \
     $$PWD/qqmllistwrapper_p.h \
-    $$PWD/qqmlcontextwrapper_p.h \
-    $$PWD/qqmlvaluetypewrapper_p.h \
     $$PWD/qqmltypewrapper_p.h \
     $$PWD/qqmlfileselector_p.h \
     $$PWD/qqmlfileselector.h \

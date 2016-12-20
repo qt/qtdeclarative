@@ -14,5 +14,3 @@ SUBDIRS += \
            creation
 
 qtHaveModule(opengl): SUBDIRS += painting qquickwindow
-
-include(../trusted-benchmarks.pri)

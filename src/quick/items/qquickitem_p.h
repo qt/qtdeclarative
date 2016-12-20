@@ -349,7 +349,7 @@ public:
 #if QT_CONFIG(quick_shadereffect)
         mutable QQuickItemLayer *layer;
 #endif
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
         QCursor cursor;
 #endif
         QPointF userTransformOriginPoint;
@@ -536,7 +536,7 @@ public:
     virtual void implicitWidthChanged();
     virtual void implicitHeightChanged();
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;
 #endif
 
@@ -558,9 +558,10 @@ public:
     virtual void transformChanged();
 
     void deliverKeyEvent(QKeyEvent *);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
+    void deliverShortcutOverrideEvent(QKeyEvent *);
 
     virtual void handlePointerEvent(QQuickPointerEvent *);
 
@@ -622,10 +623,11 @@ public:
 
     virtual void keyPressed(QKeyEvent *event, bool post);
     virtual void keyReleased(QKeyEvent *event, bool post);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     virtual void inputMethodEvent(QInputMethodEvent *event, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 #endif
+    virtual void shortcutOverride(QKeyEvent *event);
     virtual void componentComplete();
 
     bool m_processPost;
@@ -817,6 +819,7 @@ Q_SIGNALS:
     void priorityChanged();
     void pressed(QQuickKeyEvent *event);
     void released(QQuickKeyEvent *event);
+    void shortcutOverride(QQuickKeyEvent *event);
     void digit0Pressed(QQuickKeyEvent *event);
     void digit1Pressed(QQuickKeyEvent *event);
     void digit2Pressed(QQuickKeyEvent *event);
@@ -861,10 +864,11 @@ Q_SIGNALS:
 private:
     void keyPressed(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
     void keyReleased(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *, bool post) Q_DECL_OVERRIDE;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const Q_DECL_OVERRIDE;
 #endif
+    void shortcutOverride(QKeyEvent *event) override;
     static QByteArray keyToSignal(int key);
 
     bool isConnected(const char *signalName) const;

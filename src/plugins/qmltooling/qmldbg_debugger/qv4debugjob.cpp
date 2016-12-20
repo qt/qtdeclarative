@@ -41,7 +41,9 @@
 
 #include <private/qv4script_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmldebugservice_p.h>
 
 #include <QtQml/qqmlengine.h>
 
@@ -51,9 +53,10 @@ QV4DebugJob::~QV4DebugJob()
 {
 }
 
-JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr,
-                                   const QString &script) :
-    engine(engine), frameNr(frameNr), script(script), resultIsException(false)
+JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, int context,
+                             const QString &script) :
+    engine(engine), frameNr(frameNr), context(context), script(script),
+    resultIsException(false)
 {}
 
 void JavaScriptJob::run()
@@ -64,7 +67,23 @@ void JavaScriptJob::run()
 
     QV4::ExecutionContext *ctx = engine->currentContext;
     QObject scopeObject;
-    if (frameNr < 0) { // Use QML context if available
+
+    if (frameNr > 0) {
+        for (int i = 0; i < frameNr; ++i) {
+            ctx = engine->parentContext(ctx);
+        }
+        engine->pushContext(ctx);
+        ctx = engine->currentContext;
+    }
+
+    if (context >= 0) {
+        QQmlContext *extraContext = qmlContext(QQmlDebugService::objectForId(context));
+        if (extraContext) {
+            engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(extraContext),
+                                                        &scopeObject));
+            ctx = engine->currentContext;
+        }
+    } else if (frameNr < 0) { // Use QML context if available
         QQmlEngine *qmlEngine = engine->qmlEngine();
         if (qmlEngine) {
             QQmlContext *qmlRootContext = qmlEngine->rootContext();
@@ -81,19 +100,12 @@ void JavaScriptJob::run()
                 }
             }
             if (!engine->qmlContext()) {
-                engine->pushContext(ctx->newQmlContext(QQmlContextData::get(qmlRootContext),
+                engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext),
                                                        &scopeObject));
                 ctx = engine->currentContext;
             }
             engine->pushContext(ctx->newWithContext(withContext->toObject(engine)));
             ctx = engine->currentContext;
-        }
-    } else {
-        if (frameNr > 0) {
-            for (int i = 0; i < frameNr; ++i) {
-                ctx = engine->parentContext(ctx);
-            }
-            engine->pushContext(ctx);
         }
     }
 
@@ -201,7 +213,7 @@ void ValueLookupJob::run()
     QV4::ExecutionEngine *engine = collector->engine();
     if (engine->qmlEngine() && !engine->qmlContext()) {
         scopeObject.reset(new QObject);
-        engine->pushContext(engine->currentContext->newQmlContext(
+        engine->pushContext(QV4::QmlContext::create(engine->currentContext,
                                 QQmlContextData::get(engine->qmlEngine()->rootContext()),
                                 scopeObject.data()));
     }
@@ -224,8 +236,9 @@ const QString &ValueLookupJob::exceptionMessage() const
 }
 
 ExpressionEvalJob::ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr,
-                                     const QString &expression, QV4DataCollector *collector) :
-    JavaScriptJob(engine, frameNr, expression), collector(collector)
+                                     int context, const QString &expression,
+                                     QV4DataCollector *collector) :
+    JavaScriptJob(engine, frameNr, context, expression), collector(collector)
 {
 }
 
@@ -271,7 +284,7 @@ const QStringList &GatherSourcesJob::result() const
 }
 
 EvalJob::EvalJob(QV4::ExecutionEngine *engine, const QString &script) :
-    JavaScriptJob(engine, /*frameNr*/-1, script), result(false)
+    JavaScriptJob(engine, /*frameNr*/-1, /*context*/ -1, script), result(false)
 {}
 
 void EvalJob::handleResult(QV4::ScopedValue &result)

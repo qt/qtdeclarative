@@ -79,6 +79,7 @@ protected:
     QMutex dataMutex;
     QList<QJSEngine *> startingEngines;
     QList<QJSEngine *> stoppingEngines;
+    bool blockingMode;
 
     void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
     void engineAboutToBeAdded(QJSEngine *) Q_DECL_OVERRIDE;

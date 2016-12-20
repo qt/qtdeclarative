@@ -79,8 +79,7 @@ struct MemberData : Managed
     Value *data() { return d()->data; }
     inline uint size() const { return d()->size; }
 
-    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n);
-    static Heap::MemberData *reallocate(QV4::ExecutionEngine *e, Heap::MemberData *old, uint n);
+    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

@@ -41,7 +41,7 @@
 #include "openglrenderer.h"
 #include <QQuickItem>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
@@ -86,8 +86,8 @@ void OpenGLRenderNode::init()
         "   gl_FragColor = col * opacity;\n"
         "}\n";
 
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
+    m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->bindAttributeLocation("posAttr", 0);
     m_program->bindAttributeLocation("colAttr", 1);
     m_program->link();
@@ -161,4 +161,4 @@ QRectF OpenGLRenderNode::rect() const
     return QRect(0, 0, m_item->width(), m_item->height());
 }
 
-#endif // QT_NO_OPENGL
+#endif // opengl

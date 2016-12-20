@@ -1819,7 +1819,7 @@ bool QQuickTextPrivate::setHAlign(QQuickText::HAlignment alignment, bool forceAl
 bool QQuickTextPrivate::determineHorizontalAlignment()
 {
     if (hAlignImplicit) {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         bool alignToRight = text.isEmpty() ? QGuiApplication::inputMethod()->inputDirection() == Qt::RightToLeft : rightToLeftText;
 #else
         bool alignToRight = rightToLeftText;
@@ -2713,12 +2713,12 @@ QString QQuickText::hoveredLink() const
         if (d->extra.isAllocated())
             return d->extra->hoveredLink;
     } else {
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
         if (QQuickWindow *wnd = window()) {
             QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
             return d->anchorAt(pos);
         }
-#endif // QT_NO_CURSOR
+#endif // cursor
     }
     return QString();
 }

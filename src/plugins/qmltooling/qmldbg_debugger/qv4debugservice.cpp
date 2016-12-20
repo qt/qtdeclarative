@@ -177,6 +177,7 @@ public:
         body.insert(QStringLiteral("V8Version"),
                     QLatin1String("this is not V8, this is V4 in Qt " QT_VERSION_STR));
         body.insert(QStringLiteral("UnpausedEvaluate"), true);
+        body.insert(QStringLiteral("ContextEvaluate"), true);
         addBody(body);
     }
 };
@@ -610,6 +611,7 @@ public:
     {
         QJsonObject arguments = req.value(QLatin1String("arguments")).toObject();
         QString expression = arguments.value(QLatin1String("expression")).toString();
+        int context = arguments.value(QLatin1String("context")).toInt(-1);
         int frame = -1;
 
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
@@ -627,7 +629,8 @@ public:
             frame = arguments.value(QLatin1String("frame")).toInt(0);
         }
 
-        ExpressionEvalJob job(debugger->engine(), frame, expression, debugger->collector());
+        ExpressionEvalJob job(debugger->engine(), frame, context, expression,
+                              debugger->collector());
         debugger->runInEngine(&job);
         if (job.hasExeption()) {
             createErrorResponse(job.exceptionMessage());

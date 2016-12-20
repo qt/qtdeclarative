@@ -83,7 +83,7 @@ public:
     inline QQmlVMEVariantQObjectPtr();
     inline ~QQmlVMEVariantQObjectPtr();
 
-    inline void objectDestroyed(QObject *);
+    inline void objectDestroyed(QObject *) override;
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
 
     QQmlVMEMetaObject *m_target;

@@ -70,7 +70,6 @@ void LogoRenderer::initialize()
 
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
-    QOpenGLShader *vshader1 = new QOpenGLShader(QOpenGLShader::Vertex, &program1);
     const char *vsrc1 =
         "attribute highp vec4 vertex;\n"
         "attribute mediump vec3 normal;\n"
@@ -85,19 +84,16 @@ void LogoRenderer::initialize()
         "    color = clamp(color, 0.0, 1.0);\n"
         "    gl_Position = matrix * vertex;\n"
         "}\n";
-    vshader1->compileSourceCode(vsrc1);
 
-    QOpenGLShader *fshader1 = new QOpenGLShader(QOpenGLShader::Fragment, &program1);
     const char *fsrc1 =
         "varying mediump vec4 color;\n"
         "void main(void)\n"
         "{\n"
         "    gl_FragColor = color;\n"
         "}\n";
-    fshader1->compileSourceCode(fsrc1);
 
-    program1.addShader(vshader1);
-    program1.addShader(fshader1);
+    program1.addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vsrc1);
+    program1.addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fsrc1);
     program1.link();
 
     vertexAttr1 = program1.attributeLocation("vertex");

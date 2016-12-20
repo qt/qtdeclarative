@@ -206,6 +206,59 @@ import Qt.test.qtestroot 1.0
     will fail.  Use the \l when and windowShown properties to track
     when the main window has been shown.
 
+    \section1 Managing Dynamically Created Test Objects
+
+    A typical pattern with QML tests is to
+    \l {Dynamic QML Object Creation from JavaScript}{dynamically create}
+    an item and then destroy it at the end of the test function:
+
+    \code
+    TestCase {
+        id: testCase
+        name: "MyTest"
+        when: windowShown
+
+        function test_click() {
+            var item = Qt.createQmlObject("import QtQuick 2.0; Item {}", testCase);
+            verify(item);
+
+            // Test item...
+
+            item.destroy();
+        }
+    }
+    \endcode
+
+    The problem with this pattern is that any failures in the test function
+    will cause the call to \c item.destroy() to be skipped, leaving the item
+    hanging around in the scene until the test case has finished. This can
+    result in interference with future tests; for example, by blocking input
+    events or producing unrelated debug output that makes it difficult to
+    follow the code's execution.
+
+    By calling \l createTemporaryQmlObject() instead, the object is guaranteed
+    to be destroyed at the end of the test function:
+
+    \code
+    TestCase {
+        id: testCase
+        name: "MyTest"
+        when: windowShown
+
+        function test_click() {
+            var item = createTemporaryQmlObject("import QtQuick 2.0; Item {}", testCase);
+            verify(item);
+
+            // Test item...
+
+            // Don't need to worry about destroying "item" here.
+        }
+    }
+    \endcode
+
+    For objects that are created via the \l {Component::}{createObject()} function
+    of \l Component, the \l createTemporaryObject() function can be used.
+
     \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test Reference Documentation}
 */
 
@@ -221,7 +274,7 @@ Item {
         \qmlproperty string TestCase::name
 
         This property defines the name of the test case for result reporting.
-        The default is the empty string.
+        The default value is an empty string.
 
         \code
         TestCase {
@@ -358,6 +411,8 @@ Item {
     /*! \internal */
     property var qtest_events: qtest_events_normal
     TestEvent { id: qtest_events_normal }
+    /*! \internal */
+    property var qtest_temporaryObjects: []
 
     /*!
         \qmlmethod TestCase::fail(message = "")
@@ -459,6 +514,110 @@ Item {
 
         if (!qtest_results.verify(expressionFunction(), msg, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
+    }
+
+    /*!
+        \since 5.9
+        \qmlmethod object TestCase::createTemporaryQmlObject(string qml, object parent, string filePath)
+
+        This function dynamically creates a QML object from the given \a qml
+        string with the specified \a parent. The returned object will be
+        destroyed (if it was not already) after \l cleanup() has finished
+        executing, meaning that objects created with this function are
+        guaranteed to be destroyed after each test, regardless of whether or
+        not the tests fail.
+
+        If there was an error while creating the object, \c null will be
+        returned.
+
+        If \a filePath is specified, it will be used for error reporting for
+        the created object.
+
+        This function calls
+        \l {QtQml::Qt::createQmlObject()}{Qt.createQmlObject()} internally.
+
+        \sa {Managing Dynamically Created Test Objects}
+    */
+    function createTemporaryQmlObject(qml, parent, filePath) {
+        if (typeof qml !== "string") {
+            qtest_results.fail("First argument must be a string of QML; actual type is " + typeof qml,
+                util.callerFile(), util.callerLine());
+            throw new Error("QtQuickTest::fail");
+        }
+
+        if (!parent || typeof parent !== "object") {
+            qtest_results.fail("Second argument must be a valid parent object; actual type is " + typeof parent,
+                util.callerFile(), util.callerLine());
+            throw new Error("QtQuickTest::fail");
+        }
+
+        if (filePath !== undefined && typeof filePath !== "string") {
+            qtest_results.fail("Third argument must be a file path string; actual type is " + typeof filePath,
+                util.callerFile(), util.callerLine());
+            throw new Error("QtQuickTest::fail");
+        }
+
+        var object = Qt.createQmlObject(qml, parent, filePath);
+        qtest_temporaryObjects.push(object);
+        return object;
+    }
+
+    /*!
+        \since 5.9
+        \qmlmethod object TestCase::createTemporaryObject(Component component, object parent, object properties)
+
+        This function dynamically creates a QML object from the given
+        \a component with the specified \a parent and \a properties.
+        The returned object will be destroyed (if it was not already) after
+        \l cleanup() has finished executing, meaning that objects created with
+        this function are guaranteed to be destroyed after each test,
+        regardless of whether or not the tests fail.
+
+        If there was an error while creating the object, \c null will be
+        returned.
+
+        This function calls
+        \l {QtQml::Component::createObject()}{component.createObject()}
+        internally.
+
+        \sa {Managing Dynamically Created Test Objects}
+    */
+    function createTemporaryObject(component, parent, properties) {
+        if (typeof component !== "object") {
+            qtest_results.fail("First argument must be a Component; actual type is " + typeof component,
+                util.callerFile(), util.callerLine());
+            throw new Error("QtQuickTest::fail");
+        }
+
+        if (!parent && parent !== null) {
+            qtest_results.fail("Second argument must be a parent object or null; actual type is " + typeof parent,
+                util.callerFile(), util.callerLine());
+            throw new Error("QtQuickTest::fail");
+        }
+
+        if (properties && typeof properties !== "object") {
+            qtest_results.fail("Third argument must be an object; actual type is " + typeof properties,
+                util.callerFile(), util.callerLine());
+            throw new Error("QtQuickTest::fail");
+        }
+
+        var object = component.createObject(parent, properties ? properties : ({}));
+        qtest_temporaryObjects.push(object);
+        return object;
+    }
+
+    /*!
+        \internal
+
+        Destroys all temporary objects that still exist.
+    */
+    function qtest_destroyTemporaryObjects() {
+        for (var i = 0; i < qtest_temporaryObjects.length; ++i) {
+            var temporaryObject = qtest_temporaryObjects[i];
+            if (temporaryObject)
+                temporaryObject.destroy();
+        }
+        qtest_temporaryObjects = [];
     }
 
     /*! \internal */
@@ -835,7 +994,7 @@ Item {
         \c{QEXPECT_FAIL(tag, message, Abort)} in C++.
 
         If the test is not data-driven, then \a tag must be set to
-        the empty string.
+        an empty string.
 
         \sa expectFailContinue()
     */
@@ -861,7 +1020,7 @@ Item {
         \c{QEXPECT_FAIL(tag, message, Continue)} in C++.
 
         If the test is not data-driven, then \a tag must be set to
-        the empty string.
+        an empty string.
 
         \sa expectFail()
     */
@@ -1317,6 +1476,109 @@ Item {
             qtest_fail("window not shown", 2)
    }
 
+    /*!
+        \qmlmethod TouchEventSequence TestCase::touchEvent(object item)
+
+        \since 5.9
+
+        Begins a sequence of touch events through a simulated QTouchDevice::TouchScreen.
+        Events are delivered to the window containing \a item.
+
+        The returned object is used to enumerate events to be delivered through a single
+        QTouchEvent. Touches are delivered to the window containing the TestCase unless
+        otherwise specified.
+
+        \code
+        Rectangle {
+            width: 640; height: 480
+
+            MultiPointTouchArea {
+                id: area
+                anchors.fill: parent
+
+                property bool touched: false
+
+                onPressed: touched = true
+            }
+
+            TestCase {
+                name: "ItemTests"
+                when: area.pressed
+                id: test1
+
+                function test_touch() {
+                    var touch = touchEvent(area);
+                    touch.press(0, area, 10, 10);
+                    touch.commit();
+                    verify(area.touched);
+                }
+            }
+        }
+        \endcode
+
+        \sa TouchEventSequence::press(), TouchEventSequence::move(), TouchEventSequence::release(), TouchEventSequence::stationary(), TouchEventSequence::commit(), QTouchDevice::TouchScreen
+    */
+
+    function touchEvent(item) {
+        if (!item)
+            qtest_fail("No item given to touchEvent", 1)
+
+        return {
+            _defaultItem: item,
+            _sequence: qtest_events.touchEvent(item),
+
+            press: function (id, target, x, y) {
+                if (!target)
+                    target = this._defaultItem;
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::press", 1);
+                if (x === undefined)
+                    x = target.width / 2;
+                if (y === undefined)
+                    y = target.height / 2;
+                this._sequence.press(id, target, x, y);
+                return this;
+            },
+
+            move: function (id, target, x, y) {
+                if (!target)
+                    target = this._defaultItem;
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::move", 1);
+                if (x === undefined)
+                    x = target.width / 2;
+                if (y === undefined)
+                    y = target.height / 2;
+                this._sequence.move(id, target, x, y);
+                return this;
+            },
+
+            stationary: function (id) {
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::stationary", 1);
+                this._sequence.stationary(id);
+                return this;
+            },
+
+            release: function (id, target, x, y) {
+                if (!target)
+                    target = this._defaultItem;
+                if (id === undefined)
+                    qtest_fail("No id given to TouchEventSequence::release", 1);
+                if (x === undefined)
+                    x = target.width / 2;
+                if (y === undefined)
+                    y = target.height / 2;
+                this._sequence.release(id, target, x, y);
+                return this;
+            },
+
+            commit: function () {
+                 this._sequence.commit();
+                 return this;
+            }
+        };
+    }
 
     // Functions that can be overridden in subclasses for init/cleanup duties.
     /*!
@@ -1389,6 +1651,7 @@ Item {
             qtest_runInternal(prop, arg)
             qtest_results.finishTestData()
             qtest_runInternal("cleanup")
+            qtest_destroyTemporaryObjects()
             qtest_results.finishTestDataCleanup()
             // wait(0) will call processEvents() so objects marked for deletion
             // in the test function will be deleted.

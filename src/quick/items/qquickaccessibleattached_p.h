@@ -56,7 +56,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 
 #include <QtGui/qaccessible.h>
 #include <private/qtquickglobal_p.h>
@@ -265,6 +265,6 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickAccessibleAttached)
 QML_DECLARE_TYPEINFO(QQuickAccessibleAttached, QML_HAS_ATTACHED_PROPERTIES)
 
-#endif // QT_NO_ACCESSIBILITY
+#endif // accessibility
 
 #endif

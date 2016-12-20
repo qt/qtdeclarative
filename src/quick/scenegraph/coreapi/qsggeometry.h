@@ -88,15 +88,7 @@ public:
         UnsignedShortType = 0x1403,
         IntType = 0x1404,
         UnsignedIntType = 0x1405,
-        FloatType = 0x1406,
-
-        TypeByte = ByteType,
-        TypeUnsignedByte = UnsignedByteType,
-        TypeShort = ShortType,
-        TypeUnsignedShort = UnsignedShortType,
-        TypeInt = IntType,
-        TypeUnsignedInt = UnsignedIntType,
-        TypeFloat = FloatType
+        FloatType = 0x1406
     };
 
     struct Q_QUICK_EXPORT Attribute

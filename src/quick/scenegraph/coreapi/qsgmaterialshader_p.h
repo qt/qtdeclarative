@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QSGMaterialShaderPrivate
 {
 public:
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     const char *loadShaderSource(QOpenGLShader::ShaderType type) const;
 
     QHash<QOpenGLShader::ShaderType, QStringList> m_sourceFiles;

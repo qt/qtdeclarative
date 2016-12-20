@@ -37,69 +37,21 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLCONTEXTWRAPPER_P_H
-#define QQMLCONTEXTWRAPPER_P_H
+#ifndef QDEBUGMESSAGESERVICEFACTORY_H
+#define QDEBUGMESSAGESERVICEFACTORY_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
-#include <private/qtqmlglobal_p.h>
-
-#include <private/qv4object_p.h>
-#include <private/qqmlcontext_p.h>
+#include <private/qqmldebugservicefactory_p.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-
-namespace Heap {
-
-struct QmlContextWrapper : Object {
-    void init(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-    void destroy();
-    bool readOnly;
-    bool ownsContext;
-    bool isNullWrapper;
-
-    QQmlGuardedContextData *context;
-    QQmlQPointer<QObject> scopeObject;
-};
-
-}
-
-struct Q_QML_EXPORT QmlContextWrapper : Object
+class QDebugMessageServiceFactory : public QQmlDebugServiceFactory
 {
-    V4_OBJECT2(QmlContextWrapper, Object)
-    V4_NEEDS_DESTROY
-
-    static ReturnedValue qmlScope(ExecutionEngine *e, QQmlContextData *ctxt, QObject *scope);
-    static ReturnedValue urlScope(ExecutionEngine *v4, const QUrl &);
-
-    void takeContextOwnership() {
-        d()->ownsContext = true;
-    }
-
-    inline QObject *getScopeObject() const { return d()->scopeObject; }
-    inline QQmlContextData *getContext() const { return *d()->context; }
-
-    void setReadOnly(bool b) { d()->readOnly = b; }
-
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qdebugmessageservice.json")
+public:
+    QQmlDebugService *create(const QString &key) override;
 };
-
-}
 
 QT_END_NAMESPACE
 
-#endif // QV8CONTEXTWRAPPER_P_H
-
+#endif // QDEBUGMESSAGESERVICEFACTORY_H

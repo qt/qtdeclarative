@@ -46,7 +46,7 @@
 FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),
       abort(false),
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
       watcher(0),
 #endif
       sortFlags(QDir::Name),
@@ -61,11 +61,11 @@ FileInfoThread::FileInfoThread(QObject *parent)
       showOnlyReadable(false),
       caseSensitive(true)
 {
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
     watcher = new QFileSystemWatcher(this);
     connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(dirChanged(QString)));
     connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(updateFile(QString)));
-#endif // !QT_NO_FILESYSTEMWATCHER
+#endif // filesystemwatcher
 }
 
 FileInfoThread::~FileInfoThread()
@@ -80,7 +80,7 @@ FileInfoThread::~FileInfoThread()
 void FileInfoThread::clear()
 {
     QMutexLocker locker(&mutex);
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
     watcher->removePaths(watcher->files());
     watcher->removePaths(watcher->directories());
 #endif
@@ -89,7 +89,7 @@ void FileInfoThread::clear()
 void FileInfoThread::removePath(const QString &path)
 {
     QMutexLocker locker(&mutex);
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
     if (!path.startsWith(QLatin1Char(':')))
         watcher->removePath(path);
 #else
@@ -103,7 +103,7 @@ void FileInfoThread::setPath(const QString &path)
     Q_ASSERT(!path.isEmpty());
 
     QMutexLocker locker(&mutex);
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
     if (!path.startsWith(QLatin1Char(':')))
         watcher->addPath(path);
 #endif
@@ -120,7 +120,7 @@ void FileInfoThread::setRootPath(const QString &path)
     rootPath = path;
 }
 
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
 void FileInfoThread::dirChanged(const QString &directoryPath)
 {
     Q_UNUSED(directoryPath);
@@ -204,7 +204,7 @@ void FileInfoThread::setCaseSensitive(bool on)
     condition.wakeAll();
 }
 
-#ifndef QT_NO_FILESYSTEMWATCHER
+#if QT_CONFIG(filesystemwatcher)
 void FileInfoThread::updateFile(const QString &path)
 {
     Q_UNUSED(path);

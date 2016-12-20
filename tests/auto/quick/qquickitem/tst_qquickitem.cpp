@@ -172,6 +172,8 @@ private slots:
 
     void ignoreButtonPressNotInAcceptedMouseButtons();
 
+    void shortcutOverride();
+
 private:
 
     enum PaintOrderOp {
@@ -2034,6 +2036,39 @@ void tst_qquickitem::ignoreButtonPressNotInAcceptedMouseButtons()
 
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
+}
+
+void tst_qquickitem::shortcutOverride()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("shortcutOverride.qml"));
+    ensureFocus(&view);
+
+    QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 0);
+    QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 0);
+
+    QQuickItem *escapeItem = view.rootObject()->property("escapeItem").value<QQuickItem*>();
+    QVERIFY(escapeItem);
+    QVERIFY(escapeItem->hasActiveFocus());
+
+    // escapeItem's onEscapePressed handler should accept the first escape press event.
+    QTest::keyPress(&view, Qt::Key_Escape);
+    QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 1);
+    QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 0);
+    // Now it shouldn't have focus, so it can't handle the next escape press event.
+    QVERIFY(!escapeItem->hasActiveFocus());
+
+    QTest::keyRelease(&view, Qt::Key_Escape);
+    QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 1);
+    QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 0);
+
+    QTest::keyPress(&view, Qt::Key_Escape);
+    QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 1);
+    QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 1);
+
+    QTest::keyRelease(&view, Qt::Key_Escape);
+    QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 1);
+    QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 1);
 }
 
 QTEST_MAIN(tst_qquickitem)

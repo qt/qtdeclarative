@@ -160,9 +160,9 @@ private:
     quint64 _val;
 
 public:
-    Q_ALWAYS_INLINE quint64 &rawValueRef() { return _val; }
-    Q_ALWAYS_INLINE quint64 rawValue() const { return _val; }
-    Q_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
+    QML_NEARLY_ALWAYS_INLINE quint64 &rawValueRef() { return _val; }
+    QML_NEARLY_ALWAYS_INLINE quint64 rawValue() const { return _val; }
+    QML_NEARLY_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
 
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     static inline int valueOffset() { return 0; }
@@ -171,23 +171,23 @@ public:
     static inline int valueOffset() { return 4; }
     static inline int tagOffset() { return 0; }
 #endif
-    Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
-    Q_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
-    Q_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
+    QML_NEARLY_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
+    QML_NEARLY_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
+    QML_NEARLY_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
 
 #if defined(QV4_USE_64_BIT_VALUE_ENCODING)
-    Q_ALWAYS_INLINE Heap::Base *m() const
+    QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
     {
         Heap::Base *b;
         memcpy(&b, &_val, 8);
         return b;
     }
-    Q_ALWAYS_INLINE void setM(Heap::Base *b)
+    QML_NEARLY_ALWAYS_INLINE void setM(Heap::Base *b)
     {
         memcpy(&_val, &b, 8);
     }
 #else // !QV4_USE_64_BIT_VALUE_ENCODING
-    Q_ALWAYS_INLINE Heap::Base *m() const
+    QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
     {
         Q_STATIC_ASSERT(sizeof(Heap::Base*) == sizeof(quint32));
         Heap::Base *b;
@@ -195,7 +195,7 @@ public:
         memcpy(&b, &v, 4);
         return b;
     }
-    Q_ALWAYS_INLINE void setM(Heap::Base *b)
+    QML_NEARLY_ALWAYS_INLINE void setM(Heap::Base *b)
     {
         quint32 v;
         memcpy(&v, &b, 4);
@@ -203,32 +203,32 @@ public:
     }
 #endif
 
-    Q_ALWAYS_INLINE int int_32() const
+    QML_NEARLY_ALWAYS_INLINE int int_32() const
     {
         return int(value());
     }
-    Q_ALWAYS_INLINE void setInt_32(int i)
+    QML_NEARLY_ALWAYS_INLINE void setInt_32(int i)
     {
         setTagValue(Integer_Type_Internal, quint32(i));
     }
-    Q_ALWAYS_INLINE uint uint_32() const { return value(); }
+    QML_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
 
-    Q_ALWAYS_INLINE void setEmpty()
+    QML_NEARLY_ALWAYS_INLINE void setEmpty()
     {
         setTagValue(Empty_Type_Internal, value());
     }
 
-    Q_ALWAYS_INLINE void setEmpty(int i)
+    QML_NEARLY_ALWAYS_INLINE void setEmpty(int i)
     {
         setTagValue(Empty_Type_Internal, quint32(i));
     }
 
-    Q_ALWAYS_INLINE void setEmpty(quint32 i)
+    QML_NEARLY_ALWAYS_INLINE void setEmpty(quint32 i)
     {
         setTagValue(Empty_Type_Internal, i);
     }
 
-    Q_ALWAYS_INLINE quint32 emptyValue()
+    QML_NEARLY_ALWAYS_INLINE quint32 emptyValue()
     {
         Q_ASSERT(isEmpty());
         return quint32(value());
@@ -302,6 +302,7 @@ public:
     inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
     inline bool isManaged() const { return !isUndefined() && ((_val >> IsManagedOrUndefined_Shift) == 0); }
+    inline bool isManagedOrUndefined() const { return ((_val >> IsManagedOrUndefined_Shift) == 0); }
 
     inline bool integerCompatible() const {
         return (_val >> IsIntegerConvertible_Shift) == 3;
@@ -317,6 +318,7 @@ public:
     inline bool isUndefined() const { return tag() == Managed_Type_Internal && value() == 0; }
     inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isManaged() const { return tag() == Managed_Type_Internal && !isUndefined(); }
+    inline bool isManagedOrUndefined() const { return tag() == Managed_Type_Internal; }
     inline bool integerCompatible() const { return (tag() & ConvertibleToInt) == ConvertibleToInt; }
     static inline bool integerCompatible(Value a, Value b) {
         return ((a.tag() & b.tag()) & ConvertibleToInt) == ConvertibleToInt;
@@ -326,7 +328,7 @@ public:
     }
     inline bool isNaN() const { return (tag() & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
-    Q_ALWAYS_INLINE double doubleValue() const {
+    QML_NEARLY_ALWAYS_INLINE double doubleValue() const {
         Q_ASSERT(isDouble());
         double d;
         quint64 v = _val;
@@ -336,7 +338,7 @@ public:
         memcpy(&d, &v, 8);
         return d;
     }
-    Q_ALWAYS_INLINE void setDouble(double d) {
+    QML_NEARLY_ALWAYS_INLINE void setDouble(double d) {
         memcpy(&_val, &d, 8);
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
         _val ^= NaNEncodeMask;
@@ -371,23 +373,23 @@ public:
         return int_32();
     }
 
-    Q_ALWAYS_INLINE String *stringValue() const {
+    QML_NEARLY_ALWAYS_INLINE String *stringValue() const {
         if (!isString())
             return nullptr;
-        return m() ? reinterpret_cast<String*>(const_cast<Value *>(this)) : 0;
+        return reinterpret_cast<String*>(const_cast<Value *>(this));
     }
-    Q_ALWAYS_INLINE Object *objectValue() const {
+    QML_NEARLY_ALWAYS_INLINE Object *objectValue() const {
         if (!isObject())
             return nullptr;
-        return m() ? reinterpret_cast<Object*>(const_cast<Value *>(this)) : 0;
+        return reinterpret_cast<Object*>(const_cast<Value *>(this));
     }
-    Q_ALWAYS_INLINE Managed *managed() const {
+    QML_NEARLY_ALWAYS_INLINE Managed *managed() const {
         if (!isManaged())
             return nullptr;
-        return m() ? reinterpret_cast<Managed*>(const_cast<Value *>(this)) : 0;
+        return reinterpret_cast<Managed*>(const_cast<Value *>(this));
     }
-    Q_ALWAYS_INLINE Heap::Base *heapObject() const {
-        return isManaged() ? m() : nullptr;
+    QML_NEARLY_ALWAYS_INLINE Heap::Base *heapObject() const {
+        return isManagedOrUndefined() ? m() : nullptr;
     }
 
     static inline Value fromHeapObject(Heap::Base *m)
@@ -420,7 +422,7 @@ public:
 
     template <typename T>
     const T *as() const {
-        if (!m() || !isManaged())
+        if (!isManaged())
             return 0;
 
         Q_ASSERT(m()->vtable());
@@ -451,6 +453,7 @@ public:
     }
 
     inline uint asArrayIndex() const;
+    inline bool asArrayIndex(uint &idx) const;
 #ifndef V4_BOOTSTRAP
     uint asArrayLength(bool *ok) const;
 #endif
@@ -485,15 +488,13 @@ V4_ASSERT_IS_TRIVIAL(Value)
 
 inline bool Value::isString() const
 {
-    if (!isManaged())
-        return false;
-    return m() && m()->vtable()->isString;
+    Heap::Base *b = heapObject();
+    return b && b->vtable()->isString;
 }
 inline bool Value::isObject() const
 {
-    if (!isManaged())
-        return false;
-    return m() && m()->vtable()->isObject;
+    Heap::Base *b = heapObject();
+    return b && b->vtable()->isObject;
 }
 
 inline bool Value::isPrimitive() const
@@ -530,6 +531,20 @@ inline uint Value::asArrayIndex() const
     if (idx != d)
         return UINT_MAX;
     return idx;
+}
+
+inline bool Value::asArrayIndex(uint &idx) const
+{
+    if (!isDouble()) {
+        if (isInteger() && int_32() >= 0) {
+            idx = (uint)int_32();
+            return true;
+        }
+        return false;
+    }
+    double d = doubleValue();
+    idx = (uint)d;
+    return (idx == d);
 }
 #endif
 

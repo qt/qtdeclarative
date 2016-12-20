@@ -86,7 +86,6 @@ void tst_qmlmin::initTestCase()
 
     // Add invalid files (i.e. files with syntax errors)
     invalidFiles << "tests/auto/quick/qquickloader/data/InvalidSourceComponent.qml";
-    invalidFiles << "tests/auto/qml/qqmllanguage/data/dynamicObjectProperties.2.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/signal.2.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/signal.3.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/signal.5.qml";

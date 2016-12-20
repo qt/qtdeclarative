@@ -40,7 +40,7 @@
 #include "qsgdistancefieldutil_p.h"
 
 #include <private/qsgadaptationlayer_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 # include <QtGui/private/qopenglengineshadersource_p.h>
 #endif
 #include <QtQuick/private/qsgcontext_p.h>
@@ -84,32 +84,12 @@ QSGDistanceFieldGlyphCacheManager::~QSGDistanceFieldGlyphCacheManager()
 
 QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCacheManager::cache(const QRawFont &font)
 {
-    return m_caches.value(fontKey(font), 0);
+    return m_caches.value(font, 0);
 }
 
 void QSGDistanceFieldGlyphCacheManager::insertCache(const QRawFont &font, QSGDistanceFieldGlyphCache *cache)
 {
-    m_caches.insert(fontKey(font), cache);
-}
-
-QString QSGDistanceFieldGlyphCacheManager::fontKey(const QRawFont &font)
-{
-    QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-    if (!fe->faceId().filename.isEmpty()) {
-        QByteArray keyName = fe->faceId().filename;
-        if (font.style() != QFont::StyleNormal)
-            keyName += QByteArray(" I");
-        if (font.weight() != QFont::Normal)
-            keyName += ' ' + QByteArray::number(font.weight());
-        keyName += QByteArray(" DF");
-        return QString::fromUtf8(keyName);
-    } else {
-        return QString::fromLatin1("%1_%2_%3_%4")
-                  .arg(font.familyName())
-                  .arg(font.styleName())
-                  .arg(font.weight())
-                  .arg(font.style());
-    }
+    m_caches.insert(font, cache);
 }
 
 QT_END_NAMESPACE

@@ -544,3 +544,15 @@
   in order to be found.
 */
 
+/*!
+  \since 5.9
+  \fn void qmlRegisterModule(const char* uri, int versionMajor, int versionMinor);
+  \relates QQmlEngine
+
+  This function registers a module in a particular \a uri with a version specified
+  in \a versionMajor and \a versionMinor.
+
+  This can be used to make a certain module version available, even if no types
+  are registered for that version. This is particularly useful for keeping the
+  versions of related modules in sync.
+*/

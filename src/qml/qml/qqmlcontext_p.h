@@ -197,7 +197,7 @@ public:
     {
         inline ContextGuard();
         inline ContextGuard &operator=(QObject *obj);
-        inline void objectDestroyed(QObject *);
+        inline void objectDestroyed(QObject *) override;
 
         inline bool wasSet() const;
 

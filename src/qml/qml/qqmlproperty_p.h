@@ -115,30 +115,26 @@ public:
     };
     Q_DECLARE_FLAGS(BindingFlags, BindingFlag)
 
-    static void setBinding(QQmlAbstractBinding *binding, BindingFlags flags = None, QQmlPropertyData::WriteFlags writeFlags = QQmlPropertyData::DontRemoveBinding);
+    static void setBinding(QQmlAbstractBinding *binding, BindingFlags flags = None,
+                           QQmlPropertyData::WriteFlags writeFlags = QQmlPropertyData::DontRemoveBinding);
 
     static void removeBinding(const QQmlProperty &that);
     static void removeBinding(QObject *o, QQmlPropertyIndex index);
     static void removeBinding(QQmlAbstractBinding *b);
     static QQmlAbstractBinding *binding(QObject *, QQmlPropertyIndex index);
 
-    static QQmlProperty restore(QObject *, const QQmlPropertyData &, const QQmlPropertyData *,
-                                QQmlContextData *);
+    static QQmlProperty restore(QObject *, const QQmlPropertyData &, const QQmlPropertyData *, QQmlContextData *);
 
     int signalIndex() const;
 
-    static inline QQmlPropertyPrivate *get(const QQmlProperty &p) {
-        return p.d;
-    }
+    static inline QQmlPropertyPrivate *get(const QQmlProperty &p) { return p.d; }
 
     // "Public" (to QML) methods
     static QQmlAbstractBinding *binding(const QQmlProperty &that);
     static void setBinding(const QQmlProperty &that, QQmlAbstractBinding *);
     static QQmlBoundSignalExpression *signalExpression(const QQmlProperty &that);
-    static void setSignalExpression(const QQmlProperty &that,
-                                                                QQmlBoundSignalExpression *);
-    static void takeSignalExpression(const QQmlProperty &that,
-                                                                 QQmlBoundSignalExpression *);
+    static void setSignalExpression(const QQmlProperty &that, QQmlBoundSignalExpression *);
+    static void takeSignalExpression(const QQmlProperty &that, QQmlBoundSignalExpression *);
     static bool write(const QQmlProperty &that, const QVariant &, QQmlPropertyData::WriteFlags);
     static QQmlPropertyIndex propertyIndex(const QQmlProperty &that);
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);

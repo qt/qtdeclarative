@@ -51,12 +51,6 @@ private:
     QQmlDebugConnection *m_conn;
     QQmlDebugTestService *m_service;
 
-    bool connect();
-
-signals:
-    void waiting();
-    void parallel();
-
 private slots:
     void initTestCase();
 
@@ -75,11 +69,12 @@ void tst_QQmlDebugLocal::initTestCase()
 
     const QString waitingMsg = QString("QML Debugger: Connecting to socket %1...").arg(fileName);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
+    QQmlDebuggingEnabler::connectToLocalDebugger(fileName);
+
+    QTest::qWait(1000);
 
     m_conn = new QQmlDebugConnection(this);
     m_conn->startLocalServer(fileName);
-
-    QQmlDebuggingEnabler::connectToLocalDebugger(fileName);
 
     new QQmlEngine(this);
 

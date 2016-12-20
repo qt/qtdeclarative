@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x07
+#define QV4_DATA_STRUCTURE_VERSION 0x08
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -207,9 +207,9 @@ struct String
 struct Function
 {
     enum Flags : unsigned int {
-        HasDirectEval       = 0x1,
-        UsesArgumentsObject = 0x2,
-        IsStrict            = 0x4,
+        IsStrict            = 0x1,
+        HasDirectEval       = 0x2,
+        UsesArgumentsObject = 0x4,
         IsNamedExpression   = 0x8,
         HasCatchOrWith      = 0x10
     };
@@ -749,7 +749,9 @@ struct TypeReferenceMap : QHash<int, TypeReference>
             r.errorWhenNotFound = true;
         }
 
-        for (auto prop = obj->propertiesBegin(), propEnd = obj->propertiesEnd(); prop != propEnd; ++prop) {
+        auto prop = obj->propertiesBegin();
+        auto propEnd = obj->propertiesEnd();
+        for ( ; prop != propEnd; ++prop) {
             if (prop->type >= QV4::CompiledData::Property::Custom) {
                 // ### FIXME: We could report the more accurate location here by using prop->location, but the old
                 // compiler can't and the tests expect it to be the object location right now.
@@ -758,7 +760,9 @@ struct TypeReferenceMap : QHash<int, TypeReference>
             }
         }
 
-        for (auto binding = obj->bindingsBegin(), bindingEnd = obj->bindingsEnd(); binding != bindingEnd; ++binding) {
+        auto binding = obj->bindingsBegin();
+        auto bindingEnd = obj->bindingsEnd();
+        for ( ; binding != bindingEnd; ++binding) {
             if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
                 this->add(binding->propertyNameIndex, binding->location);
         }

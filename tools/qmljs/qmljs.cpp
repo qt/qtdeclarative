@@ -42,6 +42,7 @@
 #include "private/qv4context_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4string_p.h"
+#include "private/qqmlbuiltinfunctions_p.h"
 
 #ifdef V4_ENABLE_JIT
 #  include "private/qv4isel_masm_p.h"
@@ -59,57 +60,6 @@ QT_REQUIRE_CONFIG(qml_interpreter);
 #include <private/qqmljsast_p.h>
 
 #include <iostream>
-
-namespace builtins {
-
-using namespace QV4;
-
-struct Print: FunctionObject
-{
-    struct Data : Heap::FunctionObject {
-        void init(ExecutionContext *scope)
-        {
-            Heap::FunctionObject::init(scope, QStringLiteral("print"));
-        }
-    };
-    V4_OBJECT(FunctionObject)
-
-    static void call(const Managed *, Scope &scope, CallData *callData)
-    {
-        for (int i = 0; i < callData->argc; ++i) {
-            QString s = callData->args[i].toQStringNoThrow();
-            if (i)
-                std::cout << ' ';
-            std::cout << qPrintable(s);
-        }
-        std::cout << std::endl;
-        scope.result = Encode::undefined();
-    }
-};
-
-DEFINE_OBJECT_VTABLE(Print);
-
-struct GC: public FunctionObject
-{
-    struct Data : Heap::FunctionObject {
-        void init(ExecutionContext *scope)
-        {
-            Heap::FunctionObject::init(scope, QStringLiteral("gc"));
-        }
-
-    };
-    V4_OBJECT(FunctionObject)
-
-    static void call(const Managed *m, Scope &scope, CallData *)
-    {
-        static_cast<const GC *>(m)->engine()->memoryManager->runGC();
-        scope.result = Encode::undefined();
-    }
-};
-
-DEFINE_OBJECT_VTABLE(GC);
-
-} // builtins
 
 static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exception, const QV4::StackTrace &trace)
 {
@@ -135,6 +85,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exceptio
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
     QStringList args = app.arguments();
     args.removeFirst();
 
@@ -199,10 +150,7 @@ int main(int argc, char *argv[])
         QV4::Scope scope(&vm);
         QV4::ScopedContext ctx(scope, vm.rootContext());
 
-        QV4::ScopedObject print(scope, vm.memoryManager->allocObject<builtins::Print>(vm.rootContext()));
-        vm.globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))).getPointer(), print);
-        QV4::ScopedObject gc(scope, vm.memoryManager->allocObject<builtins::GC>(ctx));
-        vm.globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
+        QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
 
         for (const QString &fn : qAsConst(args)) {
             QFile file(fn);

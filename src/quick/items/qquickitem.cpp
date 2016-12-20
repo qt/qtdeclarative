@@ -74,7 +74,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qdebug_p.h>
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 # include <QtGui/qcursor.h>
 #endif
 
@@ -319,7 +319,7 @@ void QQuickItemKeyFilter::keyReleased(QKeyEvent *event, bool post)
     if (m_next) m_next->keyReleased(event, post);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickItemKeyFilter::inputMethodEvent(QInputMethodEvent *event, bool post)
 {
     if (m_next)
@@ -333,7 +333,13 @@ QVariant QQuickItemKeyFilter::inputMethodQuery(Qt::InputMethodQuery query) const
     if (m_next) return m_next->inputMethodQuery(query);
     return QVariant();
 }
-#endif // QT_NO_IM
+#endif // im
+
+void QQuickItemKeyFilter::shortcutOverride(QKeyEvent *event)
+{
+    if (m_next)
+        m_next->shortcutOverride(event);
+}
 
 void QQuickItemKeyFilter::componentComplete()
 {
@@ -937,6 +943,46 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
+    \qmlsignal QtQuick::Keys::shortcutOverride(KeyEvent event)
+    \since 5.9
+
+    This signal is emitted when a key has been pressed that could potentially
+    be used as a shortcut. The \a event parameter provides information about
+    the event.
+
+    Set \c event.accepted to \c true if you wish to prevent the pressed key
+    from being used as a shortcut by other types, such as \l Shortcut. For
+    example:
+
+    \code
+    Item {
+        id: escapeItem
+        focus: true
+
+        // Ensure that we get escape key press events first.
+        Keys.onShortcutOverride: event.accepted = (event.key === Qt.Key_Escape)
+
+        Keys.onEscapePressed: {
+            console.log("escapeItem is handling escape");
+            event.accepted = true;
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        onActivated: console.log("Shortcut is handling escape")
+    }
+    \endcode
+
+    As with the other signals, \c shortcutOverride will only be emitted for an
+    item if that item has \l {Item::}{activeFocus}.
+
+    The corresponding handler is \c onShortcutOverride.
+
+    \sa Shortcut
+*/
+
+/*!
     \qmlsignal QtQuick::Keys::digit0Pressed(KeyEvent event)
 
     This signal is emitted when the digit '0' has been pressed. The \a event
@@ -1300,7 +1346,7 @@ void QQuickKeysAttached::setPriority(Priority order)
 
 void QQuickKeysAttached::componentComplete()
 {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     Q_D(QQuickKeysAttached);
     if (d->item) {
         for (QQuickItem *targetItem : qAsConst(d->targets)) {
@@ -1389,7 +1435,7 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
     if (!event->isAccepted()) QQuickItemKeyFilter::keyReleased(event, post);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickKeysAttached::inputMethodEvent(QInputMethodEvent *event, bool post)
 {
     Q_D(QQuickKeysAttached);
@@ -1426,7 +1472,17 @@ QVariant QQuickKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
     }
     return QQuickItemKeyFilter::inputMethodQuery(query);
 }
-#endif // QT_NO_IM
+#endif // im
+
+void QQuickKeysAttached::shortcutOverride(QKeyEvent *event)
+{
+    Q_D(QQuickKeysAttached);
+    QQuickKeyEvent &keyEvent = d->theKeyEvent;
+    keyEvent.reset(*event);
+    emit shortcutOverride(&keyEvent);
+
+    event->setAccepted(keyEvent.isAccepted());
+}
 
 QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 {
@@ -1677,7 +1733,7 @@ void QQuickEnterKeyAttached::setType(Qt::EnterKeyType type)
 {
     if (keyType != type) {
         keyType = type;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (itemPrivate && itemPrivate->activeFocus)
             QGuiApplication::inputMethod()->update(Qt::ImEnterKeyType);
 #endif
@@ -2310,29 +2366,31 @@ QQuickItem::~QQuickItem()
     while (!d->childItems.isEmpty())
         d->childItems.constFirst()->setParentItem(0);
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-        if (anchor)
-            anchor->clearItem(this);
-    }
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+            if (anchor)
+                anchor->clearItem(this);
+        }
 
-    /*
+        /*
         update item anchors that depended on us unless they are our child (and will also be destroyed),
         or our sibling, and our parent is also being destroyed.
     */
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-        if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
-            anchor->update();
-    }
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+            if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
+                anchor->update();
+        }
 
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Destroyed)
-            change.listener->itemDestroyed(this);
-    }
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::Destroyed)
+                change.listener->itemDestroyed(this);
+        }
 
-    d->changeListeners.clear();
+        d->changeListeners.clear();
+    }
 
     /*
        Remove any references our transforms have to us, in case they try to
@@ -2366,7 +2424,7 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
     if (item == item->window()->contentItem())
         return true;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (QObject *acc = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false)) {
         int role = acc->property("role").toInt();
         if (role == QAccessible::EditableText
@@ -2603,7 +2661,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     if (parentItem) {
         QQuickItem *itemAncestor = parentItem;
         while (itemAncestor != 0) {
-            if (itemAncestor == this) {
+            if (Q_UNLIKELY(itemAncestor == this)) {
                 qWarning() << "QQuickItem::setParentItem: Parent" << parentItem << "is already part of the subtree of" << this;
                 return;
             }
@@ -2855,7 +2913,7 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
     // if the added child has a cursor and we do not currently have any children
@@ -2883,7 +2941,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
     // turn it off, if nothing else is using it
@@ -2958,7 +3016,7 @@ void QQuickItemPrivate::derefWindow()
     if (polishScheduled)
         c->itemsToPolish.removeOne(q);
     c->removeGrabber(q);
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     if (c->cursorItem == q) {
         c->cursorItem = 0;
         window->unsetCursor();
@@ -3553,10 +3611,12 @@ QQuickAnchors *QQuickItemPrivate::anchors() const
 void QQuickItemPrivate::siblingOrderChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::SiblingOrder) {
-            change.listener->itemSiblingOrderChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::SiblingOrder) {
+                change.listener->itemSiblingOrderChanged(q);
+            }
         }
     }
 }
@@ -3658,20 +3718,18 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
         QQuickAnchorsPrivate::get(d->_anchors)->updateMe();
 
     QQuickGeometryChange change;
-    QRectF diff(newGeometry.x() - oldGeometry.x(),
-                newGeometry.y() - oldGeometry.y(),
-                newGeometry.width() - oldGeometry.width(),
-                newGeometry.height() - oldGeometry.height());
-    change.setXChange(diff.x() != 0);
-    change.setYChange(diff.y() != 0);
-    change.setWidthChange(diff.width() != 0);
-    change.setHeightChange(diff.height() != 0);
+    change.setXChange(newGeometry.x() != oldGeometry.x());
+    change.setYChange(newGeometry.y() != oldGeometry.y());
+    change.setWidthChange(newGeometry.width() != oldGeometry.width());
+    change.setHeightChange(newGeometry.height() != oldGeometry.height());
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
-        if (listener.types & QQuickItemPrivate::Geometry) {
-            if (change.matches(listener.gTypes))
-                listener.listener->itemGeometryChanged(this, change, diff);
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &listener : listeners) {
+            if (listener.types & QQuickItemPrivate::Geometry) {
+                if (change.matches(listener.gTypes))
+                    listener.listener->itemGeometryChanged(this, change, oldGeometry);
+            }
         }
     }
 
@@ -3844,7 +3902,7 @@ void QQuickItem::keyReleaseEvent(QKeyEvent *event)
     event->ignore();
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     This event handler can be reimplemented in a subclass to receive input
     method events for an item. The event information is provided by the
@@ -3854,7 +3912,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 {
     event->ignore();
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-in
@@ -3863,7 +3921,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
   */
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
             QAccessibleEvent ev(acc, QAccessible::Focus);
@@ -3941,7 +3999,7 @@ void QQuickItem::touchUngrabEvent()
     // XXX todo
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 /*!
     This event handler can be reimplemented in a subclass to receive
     wheel events for an item. The event information is provided by the
@@ -3999,7 +4057,7 @@ void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
     Q_UNUSED(event);
 }
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 /*!
     This event handler can be reimplemented in a subclass to receive drag-enter
     events for an item. The event information is provided by the
@@ -4059,7 +4117,7 @@ void QQuickItem::dropEvent(QDropEvent *event)
 {
     Q_UNUSED(event);
 }
-#endif // QT_NO_DRAGANDDROP
+#endif // draganddrop
 
 /*!
     Reimplement this method to filter the mouse events that are received by
@@ -4090,7 +4148,7 @@ void QQuickItem::windowDeactivateEvent()
     }
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     This method is only relevant for input items.
 
@@ -4148,7 +4206,7 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 
     return v;
 }
-#endif // QT_NO_IM
+#endif // im
 
 QQuickAnchorLine QQuickItemPrivate::left() const
 {
@@ -4228,12 +4286,14 @@ void QQuickItem::setBaselineOffset(qreal offset)
 
     d->baselineOffset = offset;
 
-    const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::Geometry) {
-            QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
-            if (anchor)
-                anchor->updateVerticalAnchors();
+    if (!d->changeListeners.isEmpty()) {
+        const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::Geometry) {
+                QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
+                if (anchor)
+                    anchor->updateVerticalAnchors();
+            }
         }
     }
 
@@ -4991,7 +5051,7 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
     }
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
 {
     Q_Q(QQuickItem);
@@ -5017,7 +5077,14 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
         extra->keyHandler->inputMethodEvent(e, true);
     }
 }
-#endif // QT_NO_IM
+#endif // im
+
+void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
+{
+    if (extra.isAllocated() && extra->keyHandler) {
+        extra->keyHandler->shortcutOverride(event);
+    }
+}
 
 void QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event)
 {
@@ -5049,7 +5116,7 @@ void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
         emit windowChanged(value.window);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
     Notify input method on updated query values if needed. \a queries indicates
     the changed attributes.
@@ -5059,7 +5126,7 @@ void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
     if (hasActiveFocus())
         QGuiApplication::inputMethod()->update(queries);
 }
-#endif // QT_NO_IM
+#endif // im
 
 /*! \internal */
 // XXX todo - do we want/need this anymore?
@@ -5801,7 +5868,7 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     }
 
     itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (isAccessible) {
         QAccessibleEvent ev(q, effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide);
         QAccessible::updateAccessibility(&ev);
@@ -5992,20 +6059,24 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Children) {
-                change.listener->itemChildAdded(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Children) {
+                    change.listener->itemChildAdded(q, data.item);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemChildRemovedChange: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Children) {
-                change.listener->itemChildRemoved(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Children) {
+                    change.listener->itemChildRemoved(q, data.item);
+                }
             }
         }
         break;
@@ -6015,30 +6086,36 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemVisibleHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Visibility) {
-                change.listener->itemVisibilityChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Visibility) {
+                    change.listener->itemVisibilityChanged(q);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemParentHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Parent) {
-                change.listener->itemParentChanged(q, data.item);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Parent) {
+                    change.listener->itemParentChanged(q, data.item);
+                }
             }
         }
         break;
     }
     case QQuickItem::ItemOpacityHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Opacity) {
-                change.listener->itemOpacityChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Opacity) {
+                    change.listener->itemOpacityChanged(q);
+                }
             }
         }
         break;
@@ -6048,10 +6125,12 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemRotationHasChanged: {
         q->itemChange(change, data);
-        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-            if (change.types & QQuickItemPrivate::Rotation) {
-                change.listener->itemRotationChanged(q);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Rotation) {
+                    change.listener->itemRotationChanged(q);
+                }
             }
         }
         break;
@@ -6410,10 +6489,12 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::ImplicitWidth) {
-            change.listener->itemImplicitWidthChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::ImplicitWidth) {
+                change.listener->itemImplicitWidthChanged(q);
+            }
         }
     }
     emit q->implicitWidthChanged();
@@ -6574,10 +6655,12 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
-    const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
-    for (const QQuickItemPrivate::ChangeListener &change : listeners) {
-        if (change.types & QQuickItemPrivate::ImplicitHeight) {
-            change.listener->itemImplicitHeightChanged(q);
+    if (!changeListeners.isEmpty()) {
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & QQuickItemPrivate::ImplicitHeight) {
+                change.listener->itemImplicitHeightChanged(q);
+            }
         }
     }
     emit q->implicitHeightChanged();
@@ -7069,7 +7152,7 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
 {
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     Q_Q(QQuickItem);
 
     // if we're asked to turn it off (because of an unsetcursor call, or a node
@@ -7118,7 +7201,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     }
 }
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 
 /*!
     Returns the cursor shape for this item.
@@ -7604,7 +7687,7 @@ bool QQuickItem::event(QEvent *ev)
         updatePolish();
         break;
 #endif
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     case QEvent::InputMethodQuery: {
         QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
         Qt::InputMethodQueries queries = query->queries();
@@ -7621,7 +7704,7 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::InputMethod:
         inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
         break;
-#endif // QT_NO_IM
+#endif // im
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
@@ -7647,6 +7730,9 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::KeyRelease:
         d->deliverKeyEvent(static_cast<QKeyEvent*>(ev));
         break;
+    case QEvent::ShortcutOverride:
+        d->deliverShortcutOverrideEvent(static_cast<QKeyEvent*>(ev));
+        break;
     case QEvent::FocusIn:
         focusInEvent(static_cast<QFocusEvent*>(ev));
         break;
@@ -7665,12 +7751,12 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::MouseButtonDblClick:
         mouseDoubleClickEvent(static_cast<QMouseEvent*>(ev));
         break;
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     case QEvent::Wheel:
         wheelEvent(static_cast<QWheelEvent*>(ev));
         break;
 #endif
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     case QEvent::DragEnter:
         dragEnterEvent(static_cast<QDragEnterEvent*>(ev));
         break;
@@ -7683,12 +7769,12 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::Drop:
         dropEvent(static_cast<QDropEvent*>(ev));
         break;
-#endif // QT_NO_DRAGANDDROP
-#ifndef QT_NO_GESTURES
+#endif // draganddrop
+#if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
         ev->ignore();
         break;
-#endif // QT_NO_GESTURES
+#endif // gestures
     default:
         return QObject::event(ev);
     }
@@ -8286,7 +8372,7 @@ QQuickItemPrivate::ExtraData::ExtraData()
 }
 
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickItemPrivate::accessibleRole() const
 {
     Q_Q(const QQuickItem);

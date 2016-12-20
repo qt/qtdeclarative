@@ -50,24 +50,24 @@ signals:
     void error(const QString &error);
 
 private:
-    virtual void stateChanged(State state);
+    void stateChanged(State state) override;
 
-    void traceStarted(qint64 time, int engineId);
-    void traceFinished(qint64 time, int engineId);
-    void rangeStart(QQmlProfilerDefinitions::RangeType type, qint64 startTime);
-    void rangeData(QQmlProfilerDefinitions::RangeType type, qint64 time, const QString &data);
+    void traceStarted(qint64 time, int engineId) override;
+    void traceFinished(qint64 time, int engineId) override;
+    void rangeStart(QQmlProfilerDefinitions::RangeType type, qint64 startTime) override;
+    void rangeData(QQmlProfilerDefinitions::RangeType type, qint64 time, const QString &data) override;
     void rangeLocation(QQmlProfilerDefinitions::RangeType type, qint64 time,
-                       const QQmlEventLocation &location);
-    void rangeEnd(QQmlProfilerDefinitions::RangeType type, qint64 endTime);
-    void animationFrame(qint64 time, int frameRate, int animationCount, int threadId);
+                       const QQmlEventLocation &location) override;
+    void rangeEnd(QQmlProfilerDefinitions::RangeType type, qint64 endTime) override;
+    void animationFrame(qint64 time, int frameRate, int animationCount, int threadId) override;
     void sceneGraphEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
                          qint64 numericData1, qint64 numericData2, qint64 numericData3,
-                         qint64 numericData4, qint64 numericData5);
+                         qint64 numericData4, qint64 numericData5) override;
     void pixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type, qint64 time,
-                          const QString &url, int numericData1, int numericData2);
-    void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount);
-    void inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a, int b);
-    void complete();
+                          const QString &url, int numericData1, int numericData2) override;
+    void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount) override;
+    void inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a, int b) override;
+    void complete() override;
 };
 
 #endif // QMLPROFILERCLIENT_H

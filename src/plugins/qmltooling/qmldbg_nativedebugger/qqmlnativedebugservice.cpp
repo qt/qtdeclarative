@@ -336,18 +336,16 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
     QJsonArray frameArray;
     QV4::ExecutionContext *executionContext = m_engine->currentContext;
     for (int i  = 0; i < limit && executionContext; ++i) {
-        QV4::Heap::FunctionObject *heapFunctionObject = executionContext->getFunctionObject();
-        if (heapFunctionObject) {
+        if (QV4::Function *function = executionContext->getFunction()) {
 
             QJsonObject frame;
             frame.insert(QStringLiteral("language"), QStringLiteral("js"));
             frame.insert(QStringLiteral("context"), encodeContext(executionContext));
 
-            if (QV4::Function *function = heapFunctionObject->function) {
-                if (QV4::Heap::String *functionName = function->name())
-                    frame.insert(QStringLiteral("function"), functionName->toQString());
-                frame.insert(QStringLiteral("file"), function->sourceFile());
-            }
+            if (QV4::Heap::String *functionName = function->name())
+                frame.insert(QStringLiteral("function"), functionName->toQString());
+            frame.insert(QStringLiteral("file"), function->sourceFile());
+
             int line = executionContext->d()->lineNumber;
             frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
 
@@ -667,11 +665,9 @@ void NativeDebugger::aboutToThrow()
 
 QV4::Function *NativeDebugger::getFunction() const
 {
-    QV4::Scope scope(m_engine);
     QV4::ExecutionContext *context = m_engine->currentContext;
-    QV4::ScopedFunctionObject function(scope, context->getFunctionObject());
-    if (function)
-        return function->function();
+    if (QV4::Function *function = context->getFunction())
+        return function;
     else
         return context->d()->engine->globalCode;
 }
@@ -683,10 +679,8 @@ void NativeDebugger::pauseAndWait()
     event.insert(QStringLiteral("event"), QStringLiteral("break"));
     event.insert(QStringLiteral("language"), QStringLiteral("js"));
     if (QV4::ExecutionContext *executionContext = m_engine->currentContext) {
-        QV4::Heap::FunctionObject *heapFunctionObject = executionContext->getFunctionObject();
-        if (heapFunctionObject) {
-            if (QV4::Function *function = heapFunctionObject->function)
-                event.insert(QStringLiteral("file"), function->sourceFile());
+        if (QV4::Function *function = executionContext->getFunction()) {
+            event.insert(QStringLiteral("file"), function->sourceFile());
             int line = executionContext->d()->lineNumber;
             event.insert(QStringLiteral("line"), (line < 0 ? -line : line));
         }

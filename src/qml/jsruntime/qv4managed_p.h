@@ -107,10 +107,17 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     (classname::func == QV4::Managed::func ? 0 : classname::func)
 
 // Q_VTABLE_FUNCTION triggers a bogus tautological-compare warning in GCC6+
-#if defined(Q_CC_GNU) && Q_CC_GNU >= 600
+#if (defined(Q_CC_GNU) && Q_CC_GNU >= 600)
 #define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
     QT_WARNING_PUSH; \
     QT_WARNING_DISABLE_GCC("-Wtautological-compare")
+
+#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
+    ;QT_WARNING_POP
+#elif defined(Q_CC_CLANG) && Q_CC_CLANG >= 306
+#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
+    QT_WARNING_PUSH; \
+    QT_WARNING_DISABLE_CLANG("-Wtautological-compare")
 
 #define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
     ;QT_WARNING_POP
@@ -199,6 +206,18 @@ public:
     bool markBit() const { return d()->isMarked(); }
 
     static void destroy(Heap::Base *) {}
+
+    Q_ALWAYS_INLINE Heap::Base *heapObject() const {
+        return m();
+    }
+
+    template<typename T> inline T *cast() {
+        return static_cast<T *>(this);
+    }
+    template<typename T> inline const T *cast() const {
+        return static_cast<const T *>(this);
+    }
+
 private:
     friend class MemoryManager;
     friend struct Identifiers;
@@ -208,14 +227,12 @@ private:
 
 template<>
 inline const Managed *Value::as() const {
-    if (isManaged())
-        return managed();
-    return 0;
+    return managed();
 }
 
 template<>
 inline const Object *Value::as() const {
-    return isManaged() && m() && m()->vtable()->isObject ? objectValue() : 0;
+    return objectValue();
 }
 
 }

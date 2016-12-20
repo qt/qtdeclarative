@@ -577,8 +577,8 @@ public:
     void setPriority(int);
 
 protected:
-    virtual void dataReceived(const Data &);
-    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*);
+    void dataReceived(const Data &) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*) override;
 
 private:
     QString m_content;

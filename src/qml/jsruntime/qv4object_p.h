@@ -58,8 +58,6 @@
 #include "qv4value_p.h"
 #include "qv4internalclass_p.h"
 
-#include <type_traits>
-
 QT_BEGIN_NAMESPACE
 
 
@@ -147,7 +145,7 @@ struct ObjectVTable
 #define DEFINE_OBJECT_VTABLE_BASE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
-    DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? Q_NULLPTR : &classname::SuperClass::static_vtbl.vTable), \
+    DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? nullptr : &classname::SuperClass::static_vtbl.vTable), \
     call,                                       \
     construct,                                  \
     get,                                        \
@@ -369,8 +367,6 @@ protected:
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
 
-    void ensureMemberData();
-
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
@@ -502,7 +498,7 @@ inline void Object::arraySet(uint index, const Value &value)
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return isManaged() && m() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
+    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
 }
 
 #ifndef V4_BOOTSTRAP

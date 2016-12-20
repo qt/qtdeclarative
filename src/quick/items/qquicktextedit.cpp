@@ -190,7 +190,7 @@ QString QQuickTextEdit::text() const
     Q_D(const QQuickTextEdit);
     if (!d->textCached && isComponentComplete()) {
         QQuickTextEditPrivate *d = const_cast<QQuickTextEditPrivate *>(d_func());
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
         if (d->richText)
             d->text = d->control->toHtml();
         else
@@ -381,7 +381,7 @@ void QQuickTextEdit::setText(const QString &text)
     if (!isComponentComplete()) {
         d->text = text;
     } else if (d->richText) {
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
         d->control->setHtml(text);
 #else
         d->control->setPlainText(text);
@@ -458,7 +458,7 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     bool wasRich = d->richText;
     d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
 
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     if (isComponentComplete()) {
         if (wasRich && !d->richText) {
             d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
@@ -540,7 +540,7 @@ void QQuickTextEdit::setFont(const QFont &font)
         }
         updateSize();
         updateWholeDocument();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle | Qt::ImFont);
 #endif
     }
@@ -738,7 +738,7 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
     Q_Q(QQuickTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
         Qt::LayoutDirection direction = contentDirection;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (direction == Qt::LayoutDirectionAuto) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             direction = textDirection(preeditText);
@@ -764,7 +764,7 @@ void QQuickTextEditPrivate::mirrorChange()
     }
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 Qt::InputMethodHints QQuickTextEditPrivate::effectiveInputMethodHints() const
 {
     return inputMethodHints | Qt::ImhMultiLine;
@@ -892,7 +892,7 @@ void QQuickTextEdit::setWrapMode(WrapMode mode)
 /*!
     \qmlproperty int QtQuick::TextEdit::lineCount
 
-    Returns the total number of lines in the textEdit item.
+    Returns the total number of lines in the TextEdit item.
 */
 int QQuickTextEdit::lineCount() const
 {
@@ -1012,7 +1012,7 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
     y -= d->yoff;
 
     int r = d->document->documentLayout()->hitTest(QPointF(x, y), Qt::FuzzyHit);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     QTextCursor cursor = d->control->textCursor();
     if (r > cursor.position()) {
         // The cursor position includes positions within the preedit text, but only positions in the
@@ -1261,7 +1261,7 @@ int QQuickTextEdit::selectionEnd() const
 QString QQuickTextEdit::selectedText() const
 {
     Q_D(const QQuickTextEdit);
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     return d->richText
             ? d->control->textCursor().selectedText()
             : d->control->textCursor().selection().toPlainText();
@@ -1379,17 +1379,17 @@ void QQuickTextEdit::setTextMargin(qreal margin)
 
 Qt::InputMethodHints QQuickTextEdit::inputMethodHints() const
 {
-#ifdef QT_NO_IM
+#if !QT_CONFIG(im)
     return Qt::ImhNone;
 #else
     Q_D(const QQuickTextEdit);
     return d->inputMethodHints;
-#endif // QT_NO_IM
+#endif // im
 }
 
 void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
 {
-#ifdef QT_NO_IM
+#if !QT_CONFIG(im)
     Q_UNUSED(hints);
 #else
     Q_D(QQuickTextEdit);
@@ -1400,7 +1400,7 @@ void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
     d->inputMethodHints = hints;
     updateInputMethod(Qt::ImHints);
     emit inputMethodHintsChanged();
-#endif // QT_NO_IM
+#endif // im
 }
 
 void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
@@ -1427,7 +1427,7 @@ void QQuickTextEdit::componentComplete()
     QQuickImplicitSizeItem::componentComplete();
 
     d->document->setBaseUrl(baseUrl());
-#ifndef QT_NO_TEXTHTML_PARSER
+#if QT_CONFIG(texthtmlparser)
     if (d->richText)
         d->control->setHtml(d->text);
     else
@@ -1554,7 +1554,7 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (r == isReadOnly())
         return;
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     setFlag(QQuickItem::ItemAcceptsInputMethod, !r);
 #endif
     Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse;
@@ -1569,7 +1569,7 @@ void QQuickTextEdit::setReadOnly(bool r)
     d->control->setTextInteractionFlags(flags);
     d->control->moveCursor(QTextCursor::End);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     updateInputMethod(Qt::ImEnabled);
 #endif
     q_canPasteChanged();
@@ -1748,7 +1748,7 @@ bool QQuickTextEdit::isRightToLeft(int start, int end)
     }
 }
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
 /*!
     \qmlmethod QtQuick::TextEdit::cut()
 
@@ -1781,7 +1781,7 @@ void QQuickTextEdit::paste()
     Q_D(QQuickTextEdit);
     d->control->paste();
 }
-#endif // QT_NO_CLIPBOARD
+#endif // clipboard
 
 
 /*!
@@ -1822,7 +1822,7 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus(Qt::MouseFocusReason);
         // re-open input panel on press if already focused
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
             qGuiApp->inputMethod()->show();
 #else
@@ -1870,7 +1870,7 @@ void QQuickTextEdit::mouseMoveEvent(QMouseEvent *event)
         QQuickImplicitSizeItem::mouseMoveEvent(event);
 }
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
 /*!
 \overload
 Handles the given input method \a event.
@@ -1923,7 +1923,7 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     return inputMethodQuery(property, QVariant());
 }
-#endif // QT_NO_IM
+#endif // im
 
 void QQuickTextEdit::triggerPreprocess()
 {
@@ -2197,12 +2197,12 @@ bool QQuickTextEdit::canRedo() const
 */
 bool QQuickTextEdit::isInputMethodComposing() const
 {
-#ifdef QT_NO_IM
+#if !QT_CONFIG(im)
     return false;
 #else
     Q_D(const QQuickTextEdit);
     return d->control->hasImState();
-#endif // QT_NO_IM
+#endif // im
 }
 
 QQuickTextEditPrivate::ExtraData::ExtraData()
@@ -2223,14 +2223,14 @@ void QQuickTextEditPrivate::init()
 {
     Q_Q(QQuickTextEdit);
 
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     if (QGuiApplication::clipboard()->supportsSelection())
         q->setAcceptedMouseButtons(Qt::LeftButton | Qt::MiddleButton);
     else
 #endif
         q->setAcceptedMouseButtons(Qt::LeftButton);
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
 #endif
     q->setFlag(QQuickItem::ItemHasContents);
@@ -2255,7 +2255,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(control, QQuickTextControl, SIGNAL(overwriteModeChanged(bool)), q, QQuickTextEdit, SIGNAL(overwriteModeChanged(bool)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(preeditTextChanged()), q, QQuickTextEdit, SIGNAL(preeditTextChanged()));
-#ifndef QT_NO_CLIPBOARD
+#if QT_CONFIG(clipboard)
     qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()), q, QQuickTextEdit, SLOT(q_canPasteChanged()));
 #endif
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(undoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canUndoChanged()));
@@ -2341,7 +2341,7 @@ void QQuickTextEdit::q_contentsChange(int pos, int charsRemoved, int charsAdded)
 void QQuickTextEdit::moveCursorDelegate()
 {
     Q_D(QQuickTextEdit);
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     updateInputMethod();
 #endif
     emit cursorRectangleChanged();
@@ -2350,6 +2350,7 @@ void QQuickTextEdit::moveCursorDelegate()
     QRectF cursorRect = cursorRectangle();
     d->cursorItem->setX(cursorRect.x());
     d->cursorItem->setY(cursorRect.y());
+    d->cursorItem->setHeight(cursorRect.height());
 }
 
 void QQuickTextEdit::updateSelection()
@@ -2581,7 +2582,7 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     else
         opt.setAlignment(Qt::Alignment(vAlign));
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     if (contentDirection == Qt::LayoutDirectionAuto) {
         opt.setTextDirection(qGuiApp->inputMethod()->inputDirection());
     } else
@@ -2626,14 +2627,14 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
     control->processEvent(event, QPointF(-xoff, -yoff));
     if (focus) {
         q->q_updateAlignment();
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         if (focusOnPress && !q->isReadOnly())
             qGuiApp->inputMethod()->show();
         q->connect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                 q, SLOT(q_updateAlignment()));
 #endif
     } else {
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         q->disconnect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                    q, SLOT(q_updateAlignment()));
 #endif
@@ -2684,7 +2685,7 @@ QString QQuickTextEdit::getText(int start, int end) const
     QTextCursor cursor(d->document);
     cursor.setPosition(start, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     return d->richText
             ? cursor.selectedText()
             : cursor.selection().toPlainText();
@@ -2713,7 +2714,7 @@ QString QQuickTextEdit::getFormattedText(int start, int end) const
     cursor.setPosition(end, QTextCursor::KeepAnchor);
 
     if (d->richText) {
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
         return cursor.selection().toHtml();
 #else
         return cursor.selection().toPlainText();
@@ -2737,7 +2738,7 @@ void QQuickTextEdit::insert(int position, const QString &text)
     cursor.setPosition(position);
     d->richText = d->richText || (d->format == AutoText && Qt::mightBeRichText(text));
     if (d->richText) {
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
         cursor.insertHtml(text);
 #else
         cursor.insertText(text);
@@ -2830,12 +2831,12 @@ QString QQuickTextEdit::hoveredLink() const
     if (const_cast<QQuickTextEditPrivate *>(d)->isLinkHoveredConnected()) {
         return d->control->hoveredLink();
     } else {
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
         if (QQuickWindow *wnd = window()) {
             QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
             return d->control->anchorAt(pos);
         }
-#endif // QT_NO_CURSOR
+#endif // cursor
     }
     return QString();
 }
@@ -2880,7 +2881,7 @@ void QQuickTextEdit::append(const QString &text)
     if (!d->document->isEmpty())
         cursor.insertBlock();
 
-#ifndef QT_NO_TEXTHTMLPARSER
+#if QT_CONFIG(texthtmlparser)
     if (d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text))) {
         cursor.insertHtml(text);
     } else {
@@ -2888,7 +2889,7 @@ void QQuickTextEdit::append(const QString &text)
     }
 #else
     cursor.insertText(text);
-#endif // QT_NO_TEXTHTMLPARSER
+#endif // texthtmlparser
 
     cursor.endEditBlock();
     d->control->updateCursorRectangle(false);

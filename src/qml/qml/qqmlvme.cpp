@@ -62,7 +62,6 @@
 #include "qqmlpropertyvalueinterceptor_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"
 #include "qqmlexpression_p.h"
-#include "qqmlcontextwrapper_p.h"
 
 #include <QStack>
 #include <QPointF>

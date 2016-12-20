@@ -43,6 +43,8 @@
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qlocalsocket.h>
 
+Q_DECLARE_METATYPE(QLocalSocket::LocalSocketError)
+
 QT_BEGIN_NAMESPACE
 
 
@@ -133,8 +135,14 @@ bool QLocalClientConnection::connectToServer()
 {
     m_socket = new QLocalSocket;
     m_socket->setParent(this);
-    QObject::connect(m_socket, &QLocalSocket::connected,
-                     this, &QLocalClientConnection::connectionEstablished);
+    connect(m_socket, &QLocalSocket::connected,
+            this, &QLocalClientConnection::connectionEstablished);
+    connect(m_socket, static_cast<void(QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
+                &QLocalSocket::error), m_socket, [this](QLocalSocket::LocalSocketError) {
+        m_socket->disconnectFromServer();
+        m_socket->connectToServer(m_filename);
+    }, Qt::QueuedConnection);
+
     m_socket->connectToServer(m_filename);
     qDebug("QML Debugger: Connecting to socket %s...", m_filename.toLatin1().constData());
     return true;

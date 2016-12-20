@@ -37,62 +37,18 @@
 **
 ****************************************************************************/
 
-#ifndef QQML_NATIVE_DEBUG_SERVICE_H
-#define QQML_NATIVE_DEBUG_SERVICE_H
-
-#include <private/qqmldebugconnector_p.h>
-#include <private/qv4debugging_p.h>
-#include <private/qv8engine_p.h>
-#include <private/qv4engine_p.h>
-#include <private/qv4debugging_p.h>
-#include <private/qv4script_p.h>
-#include <private/qv4string_p.h>
-#include <private/qv4objectiterator_p.h>
-#include <private/qv4identifier_p.h>
-#include <private/qv4runtime_p.h>
+#include "qqmlnativedebugservice.h"
+#include "qqmlnativedebugservicefactory.h"
 #include <private/qqmldebugserviceinterfaces_p.h>
-
-#include <QtCore/qjsonarray.h>
-
-#include <qqmlengine.h>
-
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QVector>
-#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 
-class NativeDebugger;
-class BreakPointHandler;
-class QQmlDebuggerServiceFactory;
-
-class QQmlNativeDebugServiceImpl : public QQmlNativeDebugService
+QQmlDebugService *QQmlNativeDebugServiceFactory::create(const QString &key)
 {
-public:
-    QQmlNativeDebugServiceImpl(QObject *parent);
+    if (key == QQmlNativeDebugServiceImpl::s_key)
+        return new QQmlNativeDebugServiceImpl(this);
 
-    ~QQmlNativeDebugServiceImpl() Q_DECL_OVERRIDE;
-
-    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
-
-    void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
-
-    void messageReceived(const QByteArray &message) Q_DECL_OVERRIDE;
-
-    void emitAsynchronousMessageToClient(const QJsonObject &message);
-
-private:
-    friend class QQmlDebuggerServiceFactory;
-    friend class NativeDebugger;
-
-    QList<QPointer<NativeDebugger> > m_debuggers;
-    BreakPointHandler *m_breakHandler;
-};
+    return 0;
+}
 
 QT_END_NAMESPACE
-
-#endif // QQML_NATIVE_DEBUG_SERVICE_H

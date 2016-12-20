@@ -217,7 +217,7 @@ public:
             setObject(static_cast<QQuickStateOperation *>(obj));
         }
         QList<OperationGuard> *list;
-        void objectDestroyed(QQuickStateOperation *) {
+        void objectDestroyed(QQuickStateOperation *) override {
             // we assume priv will always be destroyed after objectDestroyed calls
             list->removeOne(*this);
         }

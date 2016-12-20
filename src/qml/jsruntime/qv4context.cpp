@@ -39,7 +39,7 @@
 
 #include <QString>
 #include "qv4debugging_p.h"
-#include <qv4context_p_p.h>
+#include <qv4context_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
@@ -47,6 +47,9 @@
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
+#include "qv4qmlcontext_p.h"
+#include "qv4profiling_p.h"
+#include <private/qqmljavascriptexpression_p.h>
 
 using namespace QV4;
 
@@ -55,29 +58,31 @@ DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(WithContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
-DEFINE_MANAGED_VTABLE(QmlContext);
 
-Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *function, CallData *callData)
+/* Function *f, int argc */
+#define requiredMemoryForExecutionContect(f, argc) \
+    ((sizeof(CallContext::Data) + 7) & ~7) + \
+    sizeof(Value) * (f->compiledFunction->nLocals + qMax((uint)argc, f->nFormals)) + sizeof(CallData)
+
+Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData *callData)
 {
-    Q_ASSERT(function->function());
-
     Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(
                 requiredMemoryForExecutionContect(function, callData->argc));
     c->init(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
-    c->function = function->d();
+    c->v4Function = function;
 
-    c->strictMode = function->strictMode();
-    c->outer = function->scope();
+    c->strictMode = function->isStrict();
+    c->outer = this->d();
 
     c->activation = 0;
 
-    c->compilationUnit = function->function()->compilationUnit;
+    c->compilationUnit = function->compilationUnit;
     c->lookups = c->compilationUnit->runtimeLookups;
     c->constantTable = c->compilationUnit->constants;
     c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
-    const CompiledData::Function *compiledFunction = function->function()->compiledFunction;
+    const CompiledData::Function *compiledFunction = function->compiledFunction;
     int nLocals = compiledFunction->nLocals;
     if (nLocals)
         std::fill(c->locals, c->locals + nLocals, Primitive::undefinedValue());
@@ -100,20 +105,6 @@ Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVar
     Scope scope(this);
     ScopedValue e(scope, exceptionValue);
     return d()->engine->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
-}
-
-Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
-{
-    Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
-    return c;
-}
-
-Heap::QmlContext *ExecutionContext::newQmlContext(QQmlContextData *context, QObject *scopeObject)
-{
-    Scope scope(this);
-    Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
-    Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
-    return c;
 }
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
@@ -182,38 +173,25 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
     this->exceptionValue = exceptionValue;
 }
 
-void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
-{
-    Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
-    outer = outerContext->d();
-    strictMode = false;
-    callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
-
-    this->qml = qml->d();
-}
-
 
 Identifier * const *CallContext::formals() const
 {
-    return (d()->function && d()->function->function) ? d()->function->function->internalClass->nameMap.constData() : 0;
+    return d()->v4Function ? d()->v4Function->internalClass->nameMap.constData() : 0;
 }
 
 unsigned int CallContext::formalCount() const
 {
-    return d()->function ? d()->function->formalParameterCount() : 0;
+    return d()->v4Function ? d()->v4Function->nFormals : 0;
 }
 
 Identifier * const *CallContext::variables() const
 {
-    return (d()->function && d()->function->function) ? d()->function->function->internalClass->nameMap.constData() + d()->function->formalParameterCount() : 0;
+    return d()->v4Function ? d()->v4Function->internalClass->nameMap.constData() + d()->v4Function->nFormals : 0;
 }
 
 unsigned int CallContext::variableCount() const
 {
-    return d()->function ? d()->function->varCount() : 0;
+    return d()->v4Function ? d()->v4Function->compiledFunction->nLocals : 0;
 }
 
 
@@ -247,9 +225,8 @@ bool ExecutionContext::deleteProperty(String *name)
         case Heap::ExecutionContext::Type_CallContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            ScopedFunctionObject f(scope, c->function);
-            if (f->needsActivation() || hasWith) {
-                uint index = f->function()->internalClass->find(name);
+            if (c->v4Function && (c->v4Function->needsActivation() || hasWith)) {
+                uint index = c->v4Function->internalClass->find(name);
                 if (index < UINT_MAX)
                     // ### throw in strict mode?
                     return false;
@@ -272,7 +249,8 @@ bool ExecutionContext::deleteProperty(String *name)
 
 bool CallContext::needsOwnArguments() const
 {
-    return d()->function->needsActivation() || argc() < static_cast<int>(d()->function->formalParameterCount());
+    QV4::Function *f = d()->v4Function;
+    return (f && f->needsActivation()) || (argc() < (f ? static_cast<int>(f->nFormals) : 0));
 }
 
 void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
@@ -304,14 +282,16 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
         break;
     case Heap::ExecutionContext::Type_CallContext: {
         QV4::Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
+        Q_ASSERT(c->v4Function);
         ctx->callData->thisObject.mark(engine);
-        for (int arg = 0; arg < qMax(ctx->callData->argc, (int)c->function->formalParameterCount()); ++arg)
+        for (int arg = 0; arg < qMax(ctx->callData->argc, (int)c->v4Function->nFormals); ++arg)
             ctx->callData->args[arg].mark(engine);
-        for (unsigned local = 0, lastLocal = c->function->varCount(); local < lastLocal; ++local)
+        for (unsigned local = 0, lastLocal = c->v4Function->compiledFunction->nLocals; local < lastLocal; ++local)
             c->locals[local].mark(engine);
         if (c->activation)
             c->activation->mark(engine);
-        c->function->mark(engine);
+        if (c->function)
+            c->function->mark(engine);
         break;
     }
     case Heap::ExecutionContext::Type_QmlContext: {
@@ -320,6 +300,51 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
         break;
     }
     }
+}
+
+// Do a standard call with this execution context as the outer scope
+void ExecutionContext::call(Scope &scope, CallData *callData, Function *function, const FunctionObject *f)
+{
+    ExecutionContextSaver ctxSaver(scope);
+
+    Scoped<CallContext> ctx(scope, newCallContext(function, callData));
+    if (f)
+        ctx->d()->function = f->d();
+    scope.engine->pushContext(ctx);
+
+    scope.result = Q_V4_PROFILE(scope.engine, function);
+
+    if (function->hasQmlDependencies)
+        QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
+}
+
+// Do a simple, fast call with this execution context as the outer scope
+void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Function *function)
+{
+    Q_ASSERT(function->canUseSimpleFunction());
+
+    ExecutionContextSaver ctxSaver(scope);
+
+    CallContext::Data ctx = CallContext::Data::createOnStack(scope.engine);
+
+    ctx.strictMode = function->isStrict();
+    ctx.callData = callData;
+    ctx.v4Function = function;
+    ctx.compilationUnit = function->compilationUnit;
+    ctx.lookups = function->compilationUnit->runtimeLookups;
+    ctx.constantTable = function->compilationUnit->constants;
+    ctx.outer = this->d();
+    ctx.locals = scope.alloc(function->compiledFunction->nLocals);
+    for (int i = callData->argc; i < (int)function->nFormals; ++i)
+        callData->args[i] = Encode::undefined();
+
+    scope.engine->pushContext(&ctx);
+    Q_ASSERT(scope.engine->current == &ctx);
+
+    scope.result = Q_V4_PROFILE(scope.engine, function);
+
+    if (function->hasQmlDependencies)
+        QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
 }
 
 void ExecutionContext::setProperty(String *name, const Value &value)
@@ -354,13 +379,13 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         case Heap::ExecutionContext::Type_CallContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            if (c->function->function) {
-                uint index = c->function->function->internalClass->find(name);
+            if (c->v4Function) {
+                uint index = c->v4Function->internalClass->find(name);
                 if (index < UINT_MAX) {
-                    if (index < c->function->formalParameterCount()) {
-                        c->callData->args[c->function->formalParameterCount() - index - 1] = value;
+                    if (index < c->v4Function->nFormals) {
+                        c->callData->args[c->v4Function->nFormals - index - 1] = value;
                     } else {
-                        index -= c->function->formalParameterCount();
+                        index -= c->v4Function->nFormals;
                         c->locals[index] = value;
                     }
                     return;
@@ -435,13 +460,12 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         case Heap::ExecutionContext::Type_CallContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            ScopedFunctionObject f(scope, c->function);
-            if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
-                uint index = f->function()->internalClass->find(name);
+            if (c->v4Function && (c->v4Function->needsActivation() || hasWith || hasCatchScope)) {
+                uint index = c->v4Function->internalClass->find(name);
                 if (index < UINT_MAX) {
-                    if (index < c->function->formalParameterCount())
-                        return c->callData->args[c->function->formalParameterCount() - index - 1].asReturnedValue();
-                    return c->locals[index - c->function->formalParameterCount()].asReturnedValue();
+                    if (index < c->v4Function->nFormals)
+                        return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
+                    return c->locals[index - c->v4Function->nFormals].asReturnedValue();
                 }
             }
             ScopedObject activation(scope, c->activation);
@@ -451,9 +475,9 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 if (hasProperty)
                     return v->asReturnedValue();
             }
-            if (f->function() && f->function()->isNamedExpression()
-                && name->equals(ScopedString(scope, f->function()->name())))
-                return f.asReturnedValue();
+            if (c->function && c->v4Function->isNamedExpression()
+                && name->equals(ScopedString(scope, c->v4Function->name())))
+                return c->function->asReturnedValue();
             break;
         }
         case Heap::ExecutionContext::Type_QmlContext: {
@@ -514,13 +538,12 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         case Heap::ExecutionContext::Type_CallContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            ScopedFunctionObject f(scope, c->function);
-            if (f->function() && (f->needsActivation() || hasWith || hasCatchScope)) {
-                uint index = f->function()->internalClass->find(name);
+            if (c->v4Function && (c->v4Function->needsActivation() || hasWith || hasCatchScope)) {
+                uint index = c->v4Function->internalClass->find(name);
                 if (index < UINT_MAX) {
-                    if (index < c->function->formalParameterCount())
-                        return c->callData->args[c->function->formalParameterCount() - index - 1].asReturnedValue();
-                    return c->locals[index - c->function->formalParameterCount()].asReturnedValue();
+                    if (index < c->v4Function->nFormals)
+                        return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
+                    return c->locals[index - c->v4Function->nFormals].asReturnedValue();
                 }
             }
             ScopedObject activation(scope, c->activation);
@@ -530,9 +553,9 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
                 if (hasProperty)
                     return v->asReturnedValue();
             }
-            if (f->function() && f->function()->isNamedExpression()
-                && name->equals(ScopedString(scope, f->function()->name())))
-                return f.asReturnedValue();
+            if (c->function && c->v4Function->isNamedExpression()
+                && name->equals(ScopedString(scope, c->v4Function->name())))
+                return c->function->asReturnedValue();
             break;
         }
         case Heap::ExecutionContext::Type_QmlContext: {
@@ -551,13 +574,13 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
     return engine()->throwReferenceError(n);
 }
 
-Heap::FunctionObject *ExecutionContext::getFunctionObject() const
+Function *ExecutionContext::getFunction() const
 {
     Scope scope(d()->engine);
     ScopedContext it(scope, this->d());
     for (; it; it = it->d()->outer) {
         if (const CallContext *callCtx = it->asCallContext())
-            return callCtx->d()->function;
+            return callCtx->d()->v4Function;
         else if (it->asCatchContext() || it->asWithContext())
             continue; // look in the parent context for a FunctionObject
         else

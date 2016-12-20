@@ -60,11 +60,12 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false), overThreshold(false), pressed(0)
-#ifndef QT_NO_DRAGANDDROP
+  propagateComposedEvents(false), overThreshold(false), pressed(0),
+  pressAndHoldInterval(-1)
+#if QT_CONFIG(draganddrop)
   , drag(0)
 #endif
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
   , cursor(0)
 #endif
 {
@@ -72,10 +73,10 @@ QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 
 QQuickMouseAreaPrivate::~QQuickMouseAreaPrivate()
 {
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     delete drag;
 #endif
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     delete cursor;
 #endif
 }
@@ -435,7 +436,7 @@ QQuickMouseArea::QQuickMouseArea(QQuickItem *parent)
 {
     Q_D(QQuickMouseArea);
     d->init();
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     // Explcitly call setCursor on QQuickItem since
     // it internally keeps a boolean hasCursor that doesn't
     // get set to true unless you call setCursor
@@ -679,13 +680,13 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
     } else {
         d->longPress = false;
         d->saveEvent(event);
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
         if (d->drag)
             d->drag->setActive(false);
 #endif
         setHovered(true);
         d->startScene = event->windowPos();
-        d->pressAndHoldTimer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), this);
+        d->pressAndHoldTimer.start(pressAndHoldInterval(), this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(event->button(), true, event->source()));
     }
@@ -705,7 +706,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
     // ### can GV handle this for us?
     setHovered(contains(d->lastPos));
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     if (d->drag && d->drag->target()) {
         if (!d->moved) {
             d->targetStartPos = d->drag->target()->parentItem()
@@ -788,7 +789,7 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
         setPressed(event->button(), false, event->source());
         if (!d->pressed) {
             // no other buttons are pressed
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
             if (d->drag)
                 d->drag->setActive(false);
 #endif
@@ -866,7 +867,7 @@ void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
         setHovered(false);
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 void QQuickMouseArea::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickMouseArea);
@@ -897,7 +898,7 @@ void QQuickMouseArea::ungrabMouse()
         d->overThreshold = false;
         setKeepMouseGrab(false);
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
         if (d->drag)
             d->drag->setActive(false);
 #endif
@@ -980,7 +981,7 @@ bool QQuickMouseArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
     Q_D(QQuickMouseArea);
     if (!d->pressed &&
             (!d->enabled || !isVisible()
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
              || !d->drag || !d->drag->filterChildren()
 #endif
             )
@@ -1003,7 +1004,7 @@ void QQuickMouseArea::timerEvent(QTimerEvent *event)
     Q_D(QQuickMouseArea);
     if (event->timerId() == d->pressAndHoldTimer.timerId()) {
         d->pressAndHoldTimer.stop();
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
         bool dragged = d->drag && d->drag->active();
 #else
         bool dragged = false;
@@ -1179,7 +1180,7 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
 {
     Q_D(QQuickMouseArea);
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     bool dragged = d->drag && d->drag->active();
 #else
     bool dragged = false;
@@ -1276,7 +1277,7 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
     \sa Qt::CursorShape
 */
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
 Qt::CursorShape QQuickMouseArea::cursorShape() const
 {
     return cursor().shape();
@@ -1293,6 +1294,48 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
 }
 
 #endif
+
+
+/*!
+    \qmlproperty int QtQuick::MouseArea::pressAndHoldInterval
+    \since 5.9
+
+    This property overrides the elapsed time in milliseconds before
+    \c pressAndHold is emitted.
+
+    If not explicitly set -- or after reset -- the value follows
+    \c QStyleHints::mousePressAndHoldInterval.
+
+    Typically it's sufficient to set this property globally using the
+    application style hint. This property should be used when varying intervals
+    are needed for certain MouseAreas.
+
+    \sa pressAndHold
+*/
+int QQuickMouseArea::pressAndHoldInterval() const
+{
+    Q_D(const QQuickMouseArea);
+    return d->pressAndHoldInterval > -1 ?
+        d->pressAndHoldInterval : QGuiApplication::styleHints()->mousePressAndHoldInterval();
+}
+
+void QQuickMouseArea::setPressAndHoldInterval(int interval)
+{
+    Q_D(QQuickMouseArea);
+    if (interval != d->pressAndHoldInterval) {
+        d->pressAndHoldInterval = interval;
+        emit pressAndHoldIntervalChanged();
+    }
+}
+
+void QQuickMouseArea::resetPressAndHoldInterval()
+{
+    Q_D(QQuickMouseArea);
+    if (d->pressAndHoldInterval > -1) {
+        d->pressAndHoldInterval = -1;
+        emit pressAndHoldIntervalChanged();
+    }
+}
 
 /*!
     \qmlpropertygroup QtQuick::MouseArea::drag
@@ -1343,7 +1386,7 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
 
 */
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 QQuickDrag *QQuickMouseArea::drag()
 {
     Q_D(QQuickMouseArea);

@@ -107,8 +107,8 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleString(QV4::CallContext *ct
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QString formattedDt;
     if (ctx->argc() == 2) {
-        if (ctx->args()[1].isString()) {
-            QString format = ctx->args()[1].stringValue()->toQString();
+        if (String *s = ctx->args()[1].stringValue()) {
+            QString format = s->toQString();
             formattedDt = r->d()->locale->toString(dt, format);
         } else if (ctx->args()[1].isNumber()) {
             quint32 intFormat = ctx->args()[1].toNumber();
@@ -152,8 +152,8 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleTimeString(QV4::CallContext
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QString formattedTime;
     if (ctx->argc() == 2) {
-        if (ctx->args()[1].isString()) {
-            QString format = ctx->args()[1].stringValue()->toQString();
+        if (String *s = ctx->args()[1].stringValue()) {
+            QString format = s->toQString();
             formattedTime = r->d()->locale->toString(time, format);
         } else if (ctx->args()[1].isNumber()) {
             quint32 intFormat = ctx->args()[1].toNumber();
@@ -197,8 +197,8 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleDateString(QV4::CallContext
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QString formattedDate;
     if (ctx->argc() == 2) {
-        if (ctx->args()[1].isString()) {
-            QString format = ctx->args()[1].stringValue()->toQString();
+        if (String *s = ctx->args()[1].stringValue()) {
+            QString format = s->toQString();
             formattedDate = r->d()->locale->toString(date, format);
         } else if (ctx->args()[1].isNumber()) {
             quint32 intFormat = ctx->args()[1].toNumber();
@@ -217,11 +217,13 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleDateString(QV4::CallContext
 QV4::ReturnedValue QQmlDateExtension::method_fromLocaleString(QV4::CallContext *ctx)
 {
     QV4::ExecutionEngine * const engine = ctx->d()->engine;
-    if (ctx->argc() == 1 && ctx->args()[0].isString()) {
-        QLocale locale;
-        QString dateString = ctx->args()[0].stringValue()->toQString();
-        QDateTime dt = locale.toDateTime(dateString);
-        return QV4::Encode(engine->newDateObject(dt));
+    if (ctx->argc() == 1) {
+        if (String *s = ctx->args()[0].stringValue()) {
+            QLocale locale;
+            QString dateString = s->toQString();
+            QDateTime dt = locale.toDateTime(dateString);
+            return QV4::Encode(engine->newDateObject(dt));
+        }
     }
 
     QV4::Scope scope(ctx);
@@ -235,8 +237,8 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleString(QV4::CallContext *
     QDateTime dt;
     QString dateString = ctx->args()[1].toQStringNoThrow();
     if (ctx->argc() == 3) {
-        if (ctx->args()[2].isString()) {
-            QString format = ctx->args()[2].stringValue()->toQString();
+        if (String *s = ctx->args()[2].stringValue()) {
+            QString format = s->toQString();
             dt = r->d()->locale->toDateTime(dateString, format);
         } else if (ctx->args()[2].isNumber()) {
             quint32 intFormat = ctx->args()[2].toNumber();
@@ -256,13 +258,15 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::CallConte
 {
     QV4::ExecutionEngine * const engine = ctx->d()->engine;
 
-    if (ctx->argc() == 1 && ctx->args()[0].isString()) {
-        QLocale locale;
-        QString timeString = ctx->args()[0].stringValue()->toQString();
-        QTime time = locale.toTime(timeString);
-        QDateTime dt = QDateTime::currentDateTime();
-        dt.setTime(time);
-        return QV4::Encode(engine->newDateObject(dt));
+    if (ctx->argc() == 1) {
+        if (String *s = ctx->args()[0].stringValue()) {
+            QLocale locale;
+            QString timeString = s->toQString();
+            QTime time = locale.toTime(timeString);
+            QDateTime dt = QDateTime::currentDateTime();
+            dt.setTime(time);
+            return QV4::Encode(engine->newDateObject(dt));
+        }
     }
 
     if (ctx->argc() < 1 || ctx->argc() > 3 || !isLocaleObject(ctx->args()[0]))
@@ -276,8 +280,8 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::CallConte
     QTime tm;
     QString dateString = ctx->args()[1].toQStringNoThrow();
     if (ctx->argc() == 3) {
-        if (ctx->args()[2].isString()) {
-            QString format = ctx->args()[2].stringValue()->toQString();
+        if (String *s = ctx->args()[2].stringValue()) {
+            QString format = s->toQString();
             tm = r->d()->locale->toTime(dateString, format);
         } else if (ctx->args()[2].isNumber()) {
             quint32 intFormat = ctx->args()[2].toNumber();
@@ -303,11 +307,13 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::CallConte
 {
     QV4::ExecutionEngine * const engine = ctx->d()->engine;
 
-    if (ctx->argc() == 1 && ctx->args()[0].isString()) {
-        QLocale locale;
-        QString dateString = ctx->args()[0].stringValue()->toQString();
-        QDate date = locale.toDate(dateString);
-        return QV4::Encode(engine->newDateObject(QDateTime(date)));
+    if (ctx->argc() == 1) {
+        if (String *s = ctx->args()[0].stringValue()) {
+            QLocale locale;
+            QString dateString = s->toQString();
+            QDate date = locale.toDate(dateString);
+            return QV4::Encode(engine->newDateObject(QDateTime(date)));
+        }
     }
 
     if (ctx->argc() < 1 || ctx->argc() > 3 || !isLocaleObject(ctx->args()[0]))
@@ -321,8 +327,8 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::CallConte
     QDate dt;
     QString dateString = ctx->args()[1].toQStringNoThrow();
     if (ctx->argc() == 3) {
-        if (ctx->args()[2].isString()) {
-            QString format = ctx->args()[2].stringValue()->toQString();
+        if (String *s = ctx->args()[2].stringValue()) {
+            QString format = s->toQString();
             dt = r->d()->locale->toDate(dateString, format);
         } else if (ctx->args()[2].isNumber()) {
             quint32 intFormat = ctx->args()[2].toNumber();

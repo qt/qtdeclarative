@@ -205,14 +205,14 @@ protected:
 class Q_QML_PRIVATE_EXPORT QQmlNativeDebugService : public QQmlDebugService
 {
     Q_OBJECT
+public:
+    static const QString s_key;
 
 protected:
     friend class QQmlDebugConnector;
 
     QQmlNativeDebugService(float version, QObject *parent = 0)
         : QQmlDebugService(s_key, version,  parent) {}
-
-    static const QString s_key;
 };
 
 #endif

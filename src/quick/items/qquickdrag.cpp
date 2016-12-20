@@ -55,7 +55,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 
 QT_BEGIN_NAMESPACE
 
@@ -995,4 +995,4 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_DRAGANDDROP
+#endif // draganddrop

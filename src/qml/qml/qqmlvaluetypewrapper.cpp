@@ -43,7 +43,6 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 
 #include <private/qv4engine_p.h>
@@ -390,6 +389,7 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
 
     // These four types are the most common used by the value type wrappers
     VALUE_TYPE_LOAD(QMetaType::QReal, qreal, qreal);
+    VALUE_TYPE_LOAD(QMetaType::Int || result->isEnum(), int, int);
     VALUE_TYPE_LOAD(QMetaType::Int, int, int);
     VALUE_TYPE_LOAD(QMetaType::QString, QString, v4->newString);
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
@@ -453,9 +453,10 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             cacheData.setCoreIndex(reference->d()->property);
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
-            bindingFunction->initBindingLocation();
 
-            QQmlBinding *newBinding = QQmlBinding::create(&cacheData, value, reference->d()->object, context);
+            QV4::ScopedContext ctx(scope, bindingFunction->scope());
+            QQmlBinding *newBinding = QQmlBinding::create(&cacheData, bindingFunction->function(), reference->d()->object, context, ctx);
+            newBinding->setSourceLocation(bindingFunction->currentLocation());
             newBinding->setTarget(reference->d()->object, cacheData, pd);
             QQmlPropertyPrivate::setBinding(newBinding);
             return;

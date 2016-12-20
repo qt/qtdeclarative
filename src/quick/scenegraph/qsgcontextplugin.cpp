@@ -45,7 +45,7 @@
 
 // Built-in adaptations
 #include <QtQuick/private/qsgsoftwareadaptation_p.h>
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QtQuick/private/qsgdefaultcontext_p.h>
 #endif
 
@@ -62,7 +62,7 @@ QSGContextPlugin::~QSGContextPlugin()
 {
 }
 
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
     (QSGContextFactoryInterface_iid, QLatin1String("/scenegraph")))
 #endif
@@ -128,7 +128,7 @@ QSGAdaptationBackendData *contextFactory()
         if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QT_QUICK_BACKEND"))
             requestedBackend = QString::fromLocal8Bit(qgetenv("QT_QUICK_BACKEND"));
 
-#ifdef QT_NO_OPENGL
+#if !QT_CONFIG(opengl)
         // If this is a build without OpenGL, and no backend has been set
         // default to the software renderer
         if (requestedBackend.isEmpty())
@@ -148,7 +148,7 @@ QSGAdaptationBackendData *contextFactory()
                 }
             }
 
-#ifndef QT_NO_LIBRARY
+#if QT_CONFIG(library)
             // Then try the plugins.
             if (!backendData->factory) {
                 const int index = loader()->indexOf(requestedBackend);
@@ -165,7 +165,7 @@ QSGAdaptationBackendData *contextFactory()
                              qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
                 }
             }
-#endif // QT_NO_LIBRARY
+#endif // library
         }
     }
 
@@ -185,7 +185,7 @@ QSGContext *QSGContext::createDefaultContext()
     QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->create(backendData->name);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     return new QSGDefaultContext();
 #else
     return nullptr;

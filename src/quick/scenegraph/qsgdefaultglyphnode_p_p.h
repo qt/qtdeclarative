@@ -71,9 +71,9 @@ public:
     QSGTextMaskMaterial(const QRawFont &font, QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
     virtual ~QSGTextMaskMaterial();
 
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
-    virtual int compare(const QSGMaterial *other) const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    int compare(const QSGMaterial *other) const override;
 
     void setColor(const QColor &c) { m_color = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
     void setColor(const QVector4D &color) { m_color = color; }
@@ -115,10 +115,10 @@ public:
     void setStyleColor(const QVector4D &color) { m_styleColor = color; }
     const QVector4D &styleColor() const { return m_styleColor; }
 
-    virtual QSGMaterialType *type() const;
-    virtual QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 
-    int compare(const QSGMaterial *other) const;
+    int compare(const QSGMaterial *other) const override;
 
 private:
     QVector2D m_styleShift;
@@ -131,8 +131,8 @@ public:
     QSGOutlinedTextMaterial(const QRawFont &font);
     ~QSGOutlinedTextMaterial() { }
 
-    QSGMaterialType *type() const;
-    QSGMaterialShader *createShader() const;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
 };
 
 QT_END_NAMESPACE

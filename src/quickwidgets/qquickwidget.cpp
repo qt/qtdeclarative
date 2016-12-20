@@ -59,7 +59,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFunctions>
 #include <QtGui/private/qopenglextensions_p.h>
@@ -76,7 +76,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 #endif
 
@@ -108,7 +108,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
         useSoftwareRenderer = true;
 
     if (!useSoftwareRenderer) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RasterGLSurface))
             setRenderToTexture();
         else
@@ -121,7 +121,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (!engine.isNull() && !engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     q->setAcceptDrops(true);
 #endif
 
@@ -143,7 +143,7 @@ void QQuickWidgetPrivate::ensureEngine() const
 
 void QQuickWidgetPrivate::invalidateRenderControl()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (!useSoftwareRenderer) {
         if (!context) // this is not an error, could be called before creating the context, or multiple times
             return;
@@ -183,7 +183,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , offscreenWindow(0)
     , offscreenSurface(0)
     , renderControl(0)
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     , fbo(0)
     , resolvedFbo(0)
     , context(0)
@@ -206,7 +206,7 @@ QQuickWidgetPrivate::~QQuickWidgetPrivate()
         delete renderControl;
         delete offscreenWindow;
     } else {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         // context and offscreenSurface are current at this stage, if the context was created.
         Q_ASSERT(!context || (QOpenGLContext::currentContext() == context && context->surface() == offscreenSurface));
         delete renderControl; // always delete the rendercontrol first
@@ -245,20 +245,20 @@ void QQuickWidgetPrivate::execute()
 }
 
 void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeometryChange change,
-                                              const QRectF &diff)
+                                              const QRectF &oldGeometry)
 {
     Q_Q(QQuickWidget);
     if (resizeItem == root && resizeMode == QQuickWidget::SizeViewToRootObject) {
         // wait for both width and height to be changed
         resizetimer.start(0,q);
     }
-    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, diff);
+    QQuickItemChangeListener::itemGeometryChanged(resizeItem, change, oldGeometry);
 }
 
 void QQuickWidgetPrivate::render(bool needsSync)
 {
     if (!useSoftwareRenderer) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         // createFramebufferObject() bails out when the size is empty. In this case
         // we cannot render either.
         if (!fbo)
@@ -327,7 +327,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
     render(true);
 
-#ifndef QT_NO_GRAPHICSVIEW
+#if QT_CONFIG(graphicsview)
     if (q->window()->graphicsProxyWidget())
         QWidgetPrivate::nearestGraphicsProxyWidget(q)->update();
     else
@@ -343,7 +343,7 @@ void QQuickWidgetPrivate::renderSceneGraph()
 QImage QQuickWidgetPrivate::grabFramebuffer()
 {
     if (!useSoftwareRenderer) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (!context)
             return QImage();
 
@@ -835,7 +835,7 @@ void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &for
 // Never called by Software Rendering backend
 void QQuickWidgetPrivate::createContext()
 {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     Q_Q(QQuickWidget);
 
     // On hide-show we may invalidate() (when !isPersistentSceneGraph) but our
@@ -886,7 +886,7 @@ void QQuickWidgetPrivate::destroyContext()
 {
     delete offscreenSurface;
     offscreenSurface = 0;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     delete context;
     context = 0;
 #endif
@@ -914,7 +914,7 @@ void QQuickWidget::createFramebufferObject()
         return;
     }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     QOpenGLContext *context = d->offscreenWindow->openglContext();
 
     if (!context) {
@@ -995,7 +995,7 @@ void QQuickWidget::destroyFramebufferObject()
         return;
     }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     delete d->fbo;
     d->fbo = 0;
     delete d->resolvedFbo;
@@ -1078,7 +1078,7 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
     }
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 GLuint QQuickWidgetPrivate::textureId() const
 {
     Q_Q(const QQuickWidget);
@@ -1180,7 +1180,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
             createFramebufferObject();
         }
     } else {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
         if (d->context) {
             // Bail out when receiving a resize after scenegraph invalidation. This can happen
             // during hide - resize - show sequences and also during application exit.
@@ -1335,7 +1335,7 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
     e->setAccepted(mappedEvent.isAccepted());
 }
 
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
 /*! \reimp */
 void QQuickWidget::wheelEvent(QWheelEvent *e)
 {
@@ -1408,14 +1408,14 @@ bool QQuickWidget::event(QEvent *e)
                 d->offscreenWindow->setScreen(newScreen);
             if (d->offscreenSurface)
                 d->offscreenSurface->setScreen(newScreen);
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
             if (d->context)
                 d->context->setScreen(newScreen);
 #endif
         }
 
         if (d->useSoftwareRenderer
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
             || d->fbo
 #endif
            ) {
@@ -1442,7 +1442,7 @@ bool QQuickWidget::event(QEvent *e)
     return QWidget::event(e);
 }
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
 
 /*! \reimp */
 void QQuickWidget::dragEnterEvent(QDragEnterEvent *e)
@@ -1477,7 +1477,7 @@ void QQuickWidget::dropEvent(QDropEvent *e)
     d->offscreenWindow->event(e);
 }
 
-#endif // QT_NO_DRAGANDDROP
+#endif // draganddrop
 
 // TODO: try to separate the two cases of
 // 1. render() unconditionally without sync
@@ -1589,9 +1589,6 @@ QQuickWindow *QQuickWidget::quickWindow() const
     return d->offscreenWindow;
 }
 
-QT_END_NAMESPACE
-
-
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
@@ -1612,3 +1609,5 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
         }
     }
 }
+
+QT_END_NAMESPACE

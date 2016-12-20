@@ -72,7 +72,7 @@ namespace QQmlStringConverters
     Q_QML_PRIVATE_EXPORT QVariant colorFromString(const QString &, bool *ok = 0);
     Q_QML_PRIVATE_EXPORT unsigned rgbaFromString(const QString &, bool *ok = 0);
 
-#ifndef QT_NO_DATESTRING
+#if QT_CONFIG(datestring)
     Q_QML_PRIVATE_EXPORT QDate dateFromString(const QString &, bool *ok = 0);
     Q_QML_PRIVATE_EXPORT QTime timeFromString(const QString &, bool *ok = 0);
     Q_QML_PRIVATE_EXPORT QDateTime dateTimeFromString(const QString &, bool *ok = 0);

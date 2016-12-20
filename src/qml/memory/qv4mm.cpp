@@ -421,11 +421,9 @@ void MemoryManager::mark()
     // managed objects in the loop down there doesn't make then end up as leftovers
     // on the stack and thus always get collected.
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
-        if (!(*it).isManaged())
+        QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>();
+        if (!qobjectWrapper)
             continue;
-        if (!(*it).as<QObjectWrapper>())
-            continue;
-        QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
         QObject *qobject = qobjectWrapper->object();
         if (!qobject)
             continue;
@@ -453,10 +451,8 @@ void MemoryManager::mark()
 void MemoryManager::sweep(bool lastSweep)
 {
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
-        if (!(*it).isManaged())
-            continue;
         Managed *m = (*it).managed();
-        if (m->markBit())
+        if (!m || m->markBit())
             continue;
         // we need to call destroyObject on qobjectwrappers now, so that they can emit the destroyed
         // signal before we start sweeping the heap
@@ -469,10 +465,8 @@ void MemoryManager::sweep(bool lastSweep)
     // onDestruction handlers may have accessed other QObject wrappers and reset their value, so ensure
     // that they are all set to undefined.
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
-        if (!(*it).isManaged())
-            continue;
-        Managed *m = (*it).as<Managed>();
-        if (m->markBit())
+        Managed *m = (*it).managed();
+        if (!m || m->markBit())
             continue;
         (*it) = Primitive::undefinedValue();
     }

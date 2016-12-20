@@ -75,15 +75,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     Q_PROPERTY(QQuickDrag *drag READ drag CONSTANT) //### add flicking to QQuickDrag or add a QQuickFlick ???
 #endif
     Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
     Q_PROPERTY(bool propagateComposedEvents READ propagateComposedEvents WRITE setPropagateComposedEvents NOTIFY propagateComposedEventsChanged)
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET unsetCursor NOTIFY cursorShapeChanged)
 #endif
     Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION 1)
+    Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION 9)
 
 public:
     QQuickMouseArea(QQuickItem *parent=0);
@@ -110,7 +111,7 @@ public:
     bool hoverEnabled() const;
     void setHoverEnabled(bool h);
 
-#ifndef QT_NO_DRAGANDDROP
+#if QT_CONFIG(draganddrop)
     QQuickDrag *drag();
 #endif
 
@@ -120,10 +121,14 @@ public:
     bool propagateComposedEvents() const;
     void setPropagateComposedEvents(bool propagate);
 
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     Qt::CursorShape cursorShape() const;
     void setCursorShape(Qt::CursorShape shape);
 #endif
+
+    int pressAndHoldInterval() const;
+    void setPressAndHoldInterval(int interval);
+    void resetPressAndHoldInterval();
 
 Q_SIGNALS:
     void hoveredChanged();
@@ -133,7 +138,7 @@ Q_SIGNALS:
     void pressedButtonsChanged();
     void acceptedButtonsChanged();
     void hoverEnabledChanged();
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     void cursorShapeChanged();
 #endif
     void positionChanged(QQuickMouseEvent *mouse);
@@ -152,6 +157,7 @@ Q_SIGNALS:
     void exited();
     void canceled();
     Q_REVISION(1) void containsPressChanged();
+    Q_REVISION(9) void pressAndHoldIntervalChanged();
 
 protected:
     void setHovered(bool);
@@ -166,7 +172,7 @@ protected:
     void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
     void hoverMoveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
     void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-#ifndef QT_NO_WHEELEVENT
+#if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
 #endif
     bool childMouseEventFilter(QQuickItem *i, QEvent *e) Q_DECL_OVERRIDE;

@@ -47,6 +47,7 @@
 
 #include "qv4arrayobject_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4argumentsobject_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -81,7 +82,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
     Object::init();
-    function = nullptr;
+    this->function = function;
+    function->compilationUnit->addref();
     this->scope = scope->d();
     Scope s(scope->engine());
     ScopedString name(s, function->name());
@@ -91,46 +93,9 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name, bool createProto)
 {
-    Object::init();
-    function = nullptr;
-    this->scope = scope->d();
-    Scope s(scope->engine());
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, s.engine->newString(name));
-    f->init(n, createProto);
-}
-
-void Heap::FunctionObject::init(ExecutionContext *scope, const QString &name, bool createProto)
-{
-    Object::init();
-    function = nullptr;
-    this->scope = scope;
-    Scope s(scope->engine);
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, s.engine->newString(name));
-    f->init(n, createProto);
-}
-
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const ReturnedValue name)
-{
-    Object::init();
-    function = nullptr;
-    this->scope = scope->d();
-    Scope s(scope);
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, name);
-    f->init(n, false);
-}
-
-void Heap::FunctionObject::init(ExecutionContext *scope, const ReturnedValue name)
-{
-    Object::init();
-    function = nullptr;
-    this->scope = scope;
-    Scope s(scope->engine);
-    ScopedFunctionObject f(s, this);
-    ScopedString n(s, name);
-    f->init(n, false);
+    Scope valueScope(scope);
+    ScopedString s(valueScope, valueScope.engine->newString(name));
+    init(scope, s, createProto);
 }
 
 void Heap::FunctionObject::init()
@@ -165,8 +130,8 @@ void FunctionObject::init(String *n, bool createProto)
         *propertyData(Heap::FunctionObject::Index_Prototype) = Encode::undefined();
     }
 
-    ScopedValue v(s, n);
-    defineReadonlyProperty(s.engine->id_name(), v);
+    if (n)
+        defineReadonlyProperty(s.engine->id_name(), *n);
 }
 
 ReturnedValue FunctionObject::name() const
@@ -193,33 +158,10 @@ void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function, bool createProto)
+Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
-    if (function->needsActivation() ||
-        function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
-        function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
-        function->isNamedExpression())
-        return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
-    return scope->d()->engine->memoryManager->allocObject<SimpleScriptFunction>(scope, function, createProto);
+    return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
 }
-
-Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
-{
-    ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
-    QV4::Scope valueScope(engine);
-    ExecutionContext *global = valueScope.engine->rootContext();
-    QV4::Scoped<QmlContext> wrapperContext(valueScope, global->newQmlContext(qmlContext, scopeObject));
-
-    if (!signalParameters.isEmpty()) {
-        if (error)
-            QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, error);
-        runtimeFunction->updateInternalClass(engine, signalParameters);
-    }
-
-    QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction));
-    return function->d();
-}
-
 
 bool FunctionObject::isBinding() const
 {
@@ -233,14 +175,7 @@ bool FunctionObject::isBoundFunction() const
 
 QQmlSourceLocation FunctionObject::sourceLocation() const
 {
-    if (isBinding()) {
-        Q_ASSERT(as<const QV4::QQmlBindingFunction>());
-        return *static_cast<QV4::Heap::QQmlBindingFunction *>(d())->bindingLocation;
-    }
-    QV4::Function *function = d()->function;
-    Q_ASSERT(function);
-
-    return QQmlSourceLocation(function->sourceFile(), function->compiledFunction->location.line, function->compiledFunction->location.column);
+    return d()->function->sourceLocation();
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
@@ -346,11 +281,11 @@ ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 
 ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
-    Scope scope(ctx);
-    ScopedFunctionObject o(scope, ctx->thisObject().as<FunctionObject>());
+    FunctionObject *o = ctx->thisObject().as<FunctionObject>();
     if (!o)
         return ctx->engine()->throwTypeError();
 
+    Scope scope(ctx);
     ScopedValue arg(scope, ctx->argument(1));
 
     ScopedObject arr(scope, arg);
@@ -367,17 +302,24 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->arrayType() != Heap::ArrayData::Simple || arr->protoHasArray()) {
-            for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = arr->getIndexed(i);
-        } else {
-            uint alen = arr->arrayData() ? arr->arrayData()->len : 0;
+        if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
+            QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
+            int l = qMin(len, (uint)a->d()->context->callData->argc);
+            memcpy(callData->args, a->d()->context->callData->args, l*sizeof(Value));
+            for (quint32 i = l; i < len; ++i)
+                callData->args[i] = Primitive::undefinedValue();
+        } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
+            auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
+            uint alen = sad ? sad->len : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
-                callData->args[i] = static_cast<Heap::SimpleArrayData *>(arr->arrayData())->data(i);
+                callData->args[i] = sad->data(i);
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
+        } else {
+            for (quint32 i = 0; i < len; ++i)
+                callData->args[i] = arr->getIndexed(i);
         }
     }
 
@@ -388,12 +330,11 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 
 ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
-    Scope scope(ctx);
-
-    ScopedFunctionObject o(scope, ctx->thisObject().as<FunctionObject>());
+    FunctionObject *o = ctx->thisObject().as<FunctionObject>();
     if (!o)
         return ctx->engine()->throwTypeError();
 
+    Scope scope(ctx);
     ScopedCallData callData(scope, ctx->argc() ? ctx->argc() - 1 : 0);
     if (ctx->argc()) {
         for (int i = 1; i < ctx->argc(); ++i)
@@ -407,11 +348,11 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 
 ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 {
-    Scope scope(ctx);
-    ScopedFunctionObject target(scope, ctx->thisObject());
+    FunctionObject *target = ctx->thisObject().as<FunctionObject>();
     if (!target)
         return ctx->engine()->throwTypeError();
 
+    Scope scope(ctx);
     ScopedValue boundThis(scope, ctx->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
     if (ctx->argc() > 1) {
@@ -426,15 +367,10 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
-void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
-{
-    Heap::SimpleScriptFunction::init(scope, function, true);
-}
-
 void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
         return;
     }
@@ -447,17 +383,18 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
     InternalClass *ic = v4->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
-
     callData->thisObject = obj.asReturnedValue();
-    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(f, callData));
-    v4->pushContext(ctx);
 
-    scope.result = Q_V4_PROFILE(v4, f->function());
+    QV4::Function *v4Function = f->function();
+    Q_ASSERT(v4Function);
 
-    if (f->function()->compiledFunction->hasQmlDependencies())
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
+    ScopedContext c(scope, f->scope());
+    if (v4Function->canUseSimpleCall)
+        c->simpleCall(scope, callData, v4Function);
+    else
+        c->call(scope, callData, v4Function, f);
 
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
     } else if (!scope.result.isObject()) {
         scope.result = obj.asReturnedValue();
@@ -467,27 +404,25 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
 {
     ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
+    if (Q_UNLIKELY(v4->hasException)) {
         scope.result = Encode::undefined();
         return;
     }
     CHECK_STACK_LIMITS(v4, scope);
 
-    ExecutionContextSaver ctxSaver(scope);
-
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
-    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(f, callData));
-    v4->pushContext(ctx);
 
-    scope.result = Q_V4_PROFILE(v4, f->function());
+    QV4::Function *v4Function = f->function();
+    Q_ASSERT(v4Function);
 
-    if (f->function()->compiledFunction->hasQmlDependencies())
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
+    ScopedContext c(scope, f->scope());
+    if (v4Function->canUseSimpleCall)
+        c->simpleCall(scope, callData, v4Function);
+    else
+        c->call(scope, callData, v4Function, f);
 }
 
-DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
-
-void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
+void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
 {
     FunctionObject::init();
     this->scope = scope->d();
@@ -500,16 +435,10 @@ void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *fu
     Scope s(scope);
     ScopedFunctionObject f(s, this);
 
-    if (createProto) {
-        ScopedString name(s, function->name());
-        f->init(name, createProto);
-        f->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(f->formalParameterCount()));
-    } else {
-        Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
-        Q_ASSERT(internalClass && internalClass->find(s.engine->id_name()) == Index_Name);
-        *propertyData(Index_Name) = function->name();
-        *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
-    }
+    ScopedString name(s, function->name());
+    f->init(name, true);
+    Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
+    *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);
@@ -520,89 +449,12 @@ void Heap::SimpleScriptFunction::init(QV4::ExecutionContext *scope, Function *fu
     }
 }
 
-void SimpleScriptFunction::construct(const Managed *that, Scope &scope, CallData *callData)
+Heap::Object *ScriptFunction::protoForConstructor() const
 {
-    ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    ExecutionContextSaver ctxSaver(scope);
-
-    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
-
-    InternalClass *ic = scope.engine->emptyClass;
-    ScopedObject proto(scope, f->protoForConstructor());
-    callData->thisObject = v4->newObject(ic, proto);
-
-    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
-    ctx.strictMode = f->strictMode();
-    ctx.callData = callData;
-    ctx.function = f->d();
-    ctx.compilationUnit = f->function()->compilationUnit;
-    ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.constantTable = ctx.compilationUnit->constants;
-    ctx.outer = f->scope();
-    ctx.locals = scope.alloc(f->varCount());
-    for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
-        callData->args[i] = Encode::undefined();
-    v4->pushContext(&ctx);
-    Q_ASSERT(v4->current == &ctx);
-
-    scope.result = Q_V4_PROFILE(v4, f->function());
-
-    if (f->function()->compiledFunction->hasQmlDependencies())
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
-
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-    } else if (!scope.result.isObject()) {
-        scope.result = callData->thisObject;
-    }
-}
-
-void SimpleScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    ExecutionContextSaver ctxSaver(scope);
-
-    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
-
-    CallContext::Data ctx = CallContext::Data::createOnStack(v4);
-    ctx.strictMode = f->strictMode();
-    ctx.callData = callData;
-    ctx.function = f->d();
-    ctx.compilationUnit = f->function()->compilationUnit;
-    ctx.lookups = ctx.compilationUnit->runtimeLookups;
-    ctx.constantTable = ctx.compilationUnit->constants;
-    ctx.outer = f->scope();
-    ctx.locals = scope.alloc(f->varCount());
-    for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
-        callData->args[i] = Encode::undefined();
-    v4->pushContext(&ctx);
-    Q_ASSERT(v4->current == &ctx);
-
-    scope.result = Q_V4_PROFILE(v4, f->function());
-
-    if (f->function()->compiledFunction->hasQmlDependencies())
-        QQmlPropertyCapture::registerQmlDependencies(f->function()->compiledFunction, scope);
-}
-
-Heap::Object *SimpleScriptFunction::protoForConstructor()
-{
-    Scope scope(engine());
-    ScopedObject p(scope, protoProperty());
-    if (p)
-        return p->d();
-    return scope.engine->objectPrototype()->d();
+    const Object *o = d()->protoProperty();
+    if (o)
+        return o->d();
+    return engine()->objectPrototype()->d();
 }
 
 

@@ -119,7 +119,7 @@ public:
 #endif
         , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters)
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
         , inputMethodHints(Qt::ImhNone)
 #endif
         , updateType(UpdatePaintNode)
@@ -156,7 +156,7 @@ public:
     void addCurrentTextNodeToRoot(QQuickTextNodeEngine *, QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
     QQuickTextNode* createTextNode();
 
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     Qt::InputMethodHints effectiveInputMethodHints() const;
 #endif
 
@@ -208,7 +208,7 @@ public:
     QQuickTextEdit::RenderType renderType;
     Qt::LayoutDirection contentDirection;
     QQuickTextEdit::SelectionMode mouseSelectionMode;
-#ifndef QT_NO_IM
+#if QT_CONFIG(im)
     Qt::InputMethodHints inputMethodHints;
 #endif
     UpdateType updateType;
