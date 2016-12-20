@@ -65,14 +65,13 @@ TestCase {
     // TODO: data-fy tst_checkbox (rename to tst_check?) so we don't duplicate its tests here?
 
     function test_defaults() {
-        var control = switchDelegate.createObject(testCase);
+        var control = createTemporaryObject(switchDelegate, testCase);
         verify(control);
         verify(!control.checked);
-        control.destroy();
     }
 
     function test_checked() {
-        var control = switchDelegate.createObject(testCase);
+        var control = createTemporaryObject(switchDelegate, testCase);
         verify(control);
 
         mouseClick(control);
@@ -80,15 +79,12 @@ TestCase {
 
         mouseClick(control);
         verify(!control.checked);
-
-        control.destroy();
     }
 
     function test_baseline() {
-        var control = switchDelegate.createObject(testCase);
+        var control = createTemporaryObject(switchDelegate, testCase);
         verify(control);
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset);
-        control.destroy();
     }
 
     function test_pressed_data() {
@@ -99,7 +95,7 @@ TestCase {
     }
 
     function test_pressed(data) {
-        var control = switchDelegate.createObject(testCase, {padding: 10})
+        var control = createTemporaryObject(switchDelegate, testCase, {padding: 10})
         verify(control)
 
         // stays pressed when dragged outside
@@ -110,12 +106,10 @@ TestCase {
         compare(control.pressed, true)
         mouseRelease(control, -1, control.height / 2, Qt.LeftButton)
         compare(control.pressed, false)
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = switchDelegate.createObject(testCase)
+        var control = createTemporaryObject(switchDelegate, testCase)
         verify(control)
 
         // check
@@ -196,12 +190,10 @@ TestCase {
         compare(control.checked, false)
         compare(control.pressed, false)
         verify(spy.success)
-
-        control.destroy()
     }
 
     function test_drag() {
-        var control = switchDelegate.createObject(testCase, {leftPadding: 100, rightPadding: 100})
+        var control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
         var spy = signalSequenceSpy.createObject(control, {target: control})
@@ -303,7 +295,5 @@ TestCase {
         compare(control.checked, true)
         compare(control.pressed, false)
         verify(spy.success)
-
-        control.destroy()
     }
 }
