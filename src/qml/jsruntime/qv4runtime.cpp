@@ -499,6 +499,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
         {
             Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, STRING_HINT));
+            Q_ASSERT(!prim->isManaged() || prim->isString());
             return RuntimeHelpers::convertToString(engine, prim);
         }
     case Value::Integer_Type:

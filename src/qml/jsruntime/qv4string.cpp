@@ -102,6 +102,7 @@ void Heap::String::init(MemoryManager *mm, String *l, String *r)
     stringHash = UINT_MAX;
     largestSubLength = qMax(l->largestSubLength, r->largestSubLength);
     len = l->len + r->len;
+    Q_ASSERT(largestSubLength <= len);
 
     if (!l->largestSubLength && l->len > largestSubLength)
         largestSubLength = l->len;
