@@ -95,14 +95,12 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = page.createObject(testCase)
+        var control = createTemporaryObject(page, testCase)
         verify(control)
 
         verify(control.contentItem)
         compare(control.header, null)
         compare(control.footer, null)
-
-        control.destroy()
     }
 
     function test_empty() {
