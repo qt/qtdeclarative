@@ -107,6 +107,7 @@ private:
     QTriangulatingStroker m_stroker;
     QDashedStrokeProcessor m_dashStroker;
 
+    float m_strokeWidth;
     QPen m_pen;
     Color4ub m_strokeColor;
     Color4ub m_fillColor;

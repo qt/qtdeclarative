@@ -529,7 +529,7 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
         nvpr.stencilThenCoverFillPath(m_path, m_fillRule, 0xFF, GL_BOUNDING_BOX_NV);
     }
 
-    if (!qFuzzyIsNull(m_strokeWidth) && !qFuzzyIsNull(m_strokeColor.w())) {
+    if (m_strokeWidth >= 0.0f && !qFuzzyIsNull(m_strokeColor.w())) {
         if (m_fillGradientActive)
             mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
         f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],

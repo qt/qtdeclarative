@@ -58,7 +58,7 @@ Rectangle {
         height: 200
         anchors.centerIn: parent
 
-        strokeWidth: 0 // or strokeColor: "transparent"
+        strokeWidth: -1 // or strokeColor: "transparent"
 
         SequentialAnimation on fillColor {
             loops: Animation.Infinite

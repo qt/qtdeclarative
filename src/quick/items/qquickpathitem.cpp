@@ -455,7 +455,7 @@ QSGNode *QQuickPathItemPrivate::createRenderNode()
         return node;
 
     const bool hasFill = fillColor != Qt::transparent;
-    const bool hasStroke = !qFuzzyIsNull(strokeWidth) && strokeColor != Qt::transparent;
+    const bool hasStroke = strokeWidth >= 0.0f && strokeColor != Qt::transparent;
 
     switch (ri->graphicsApi()) {
 #ifndef QT_NO_OPENGL

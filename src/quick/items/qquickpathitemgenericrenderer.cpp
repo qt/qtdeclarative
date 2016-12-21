@@ -145,7 +145,9 @@ void QQuickPathItemGenericRenderer::setStrokeColor(const QColor &color)
 
 void QQuickPathItemGenericRenderer::setStrokeWidth(qreal w)
 {
-    m_pen.setWidthF(w);
+    m_strokeWidth = w;
+    if (w >= 0.0f)
+        m_pen.setWidthF(w);
     m_syncDirty |= DirtyGeom;
 }
 
@@ -311,7 +313,7 @@ void QQuickPathItemGenericRenderer::updatePathRenderNode()
         m_effectiveDirty |= DirtyGeom;
     }
 
-    if (qFuzzyIsNull(m_pen.widthF()) || m_strokeColor.a == 0) {
+    if (m_strokeWidth < 0.0f || m_strokeColor.a == 0) {
         delete m_rootNode->m_strokeNode;
         m_rootNode->m_strokeNode = nullptr;
     } else if (!m_rootNode->m_strokeNode) {
