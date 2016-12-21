@@ -118,6 +118,70 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
 {
 }
 
+void QQuickAbstractButtonPrivate::handlePress(const QPointF &point, Qt::MouseButton button, Qt::MouseButtons buttons)
+{
+    Q_Q(QQuickAbstractButton);
+    pressPoint = point;
+    q->setPressed(true);
+
+    emit q->pressed();
+
+    if (autoRepeat) {
+        startRepeatDelay();
+        repeatButton = button;
+    } else if (Qt::LeftButton == (buttons & Qt::LeftButton)) {
+        startPressAndHold();
+    } else {
+        stopPressAndHold();
+    }
+}
+
+void QQuickAbstractButtonPrivate::handleMove(const QPointF &point)
+{
+    Q_Q(QQuickAbstractButton);
+    q->setPressed(keepPressed || q->contains(point));
+
+    if (!pressed && autoRepeat)
+        stopPressRepeat();
+    else if (holdTimer > 0 && (!pressed || QLineF(pressPoint, point).length() > QGuiApplication::styleHints()->startDragDistance()))
+        stopPressAndHold();
+}
+
+void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
+{
+    Q_Q(QQuickAbstractButton);
+    bool wasPressed = pressed;
+    q->setPressed(false);
+
+    if (!wasHeld && (keepPressed || q->contains(point)))
+        q->nextCheckState();
+
+    if (wasPressed) {
+        emit q->released();
+        if (!wasHeld)
+            emit q->clicked();
+    } else {
+        emit q->canceled();
+    }
+
+    if (autoRepeat)
+        stopPressRepeat();
+    else
+        stopPressAndHold();
+}
+
+void QQuickAbstractButtonPrivate::handleCancel()
+{
+    Q_Q(QQuickAbstractButton);
+    if (!pressed)
+        return;
+
+    q->setPressed(false);
+    stopPressRepeat();
+    stopPressAndHold();
+    emit q->canceled();
+}
+
 bool QQuickAbstractButtonPrivate::isPressAndHoldConnected()
 {
     Q_Q(QQuickAbstractButton);
@@ -493,10 +557,7 @@ void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::focusOutEvent(event);
-    if (d->pressed) {
-        setPressed(false);
-        emit canceled();
-    }
+    d->handleCancel();
 }
 
 void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
@@ -536,55 +597,21 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mousePressEvent(event);
-    d->pressPoint = event->pos();
-    setPressed(true);
-
-    emit pressed();
-
-    if (d->autoRepeat) {
-        d->startRepeatDelay();
-        d->repeatButton = event->button();
-    } else if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
-        d->startPressAndHold();
-    } else {
-        d->stopPressAndHold();
-    }
+    d->handlePress(event->localPos(), event->button(), event->buttons());
 }
 
 void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mouseMoveEvent(event);
-    setPressed(d->keepPressed || contains(event->pos()));
-
-    if (!d->pressed && d->autoRepeat)
-        d->stopPressRepeat();
-    else if (d->holdTimer > 0 && (!d->pressed || QLineF(d->pressPoint, event->localPos()).length() > QGuiApplication::styleHints()->startDragDistance()))
-        d->stopPressAndHold();
+    d->handleMove(event->localPos());
 }
 
 void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mouseReleaseEvent(event);
-    bool wasPressed = d->pressed;
-    setPressed(false);
-
-    if (!d->wasHeld && (d->keepPressed || contains(event->pos())))
-        nextCheckState();
-
-    if (wasPressed) {
-        emit released();
-        if (!d->wasHeld)
-            emit clicked();
-    } else {
-        emit canceled();
-    }
-
-    if (d->autoRepeat)
-        d->stopPressRepeat();
-    else
-        d->stopPressAndHold();
+    d->handleRelease(event->localPos());
 }
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
@@ -597,12 +624,7 @@ void QQuickAbstractButton::mouseUngrabEvent()
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mouseUngrabEvent();
-    if (d->pressed) {
-        setPressed(false);
-        d->stopPressRepeat();
-        d->stopPressAndHold();
-        emit canceled();
-    }
+    d->handleCancel();
 }
 
 void QQuickAbstractButton::timerEvent(QTimerEvent *event)

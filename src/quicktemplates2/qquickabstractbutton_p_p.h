@@ -67,6 +67,11 @@ public:
         return button->d_func();
     }
 
+    virtual void handlePress(const QPointF &point, Qt::MouseButton button, Qt::MouseButtons buttons);
+    virtual void handleMove(const QPointF &point);
+    virtual void handleRelease(const QPointF &point);
+    virtual void handleCancel();
+
     bool isPressAndHoldConnected();
     void startPressAndHold();
     void stopPressAndHold();
