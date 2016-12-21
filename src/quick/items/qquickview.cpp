@@ -62,6 +62,8 @@ void QQuickViewPrivate::init(QQmlEngine* e)
     if (engine.isNull())
         engine = new QQmlEngine(q);
 
+    QQmlEngine::setContextForObject(contentItem, engine.data()->rootContext());
+
     if (!engine.data()->incubationController())
         engine.data()->setIncubationController(q->incubationController());
 
