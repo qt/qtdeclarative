@@ -71,7 +71,7 @@ TestCase {
     }
 
     function test_defaults() {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
 
         compare(control.count, 0)
@@ -84,12 +84,10 @@ TestCase {
         verify(control.delegate)
         verify(control.indicator)
         verify(control.popup)
-
-        control.destroy()
     }
 
     function test_array() {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
 
         var items = [ "Banana", "Apple", "Coconut" ]
@@ -110,12 +108,10 @@ TestCase {
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(control.currentText, "")
-
-        control.destroy()
     }
 
     function test_objects() {
-        var control = emptyBox.createObject(testCase)
+        var control = createTemporaryObject(emptyBox, testCase)
         verify(control)
 
         var items = [
@@ -140,12 +136,10 @@ TestCase {
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(control.currentText, "")
-
-        control.destroy()
     }
 
     function test_number() {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
 
         control.model = 10
@@ -164,8 +158,6 @@ TestCase {
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(control.currentText, "")
-
-        control.destroy()
     }
 
     ListModel {
@@ -178,7 +170,7 @@ TestCase {
     }
 
     function test_listModel() {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
 
         control.model = listmodel
@@ -197,8 +189,6 @@ TestCase {
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(control.currentText, "")
-
-        control.destroy()
     }
 
     ListModel {
@@ -222,7 +212,7 @@ TestCase {
     }
 
     function test_textRole(data) {
-        var control = emptyBox.createObject(testCase)
+        var control = createTemporaryObject(emptyBox, testCase)
         verify(control)
 
         control.model = data.model
@@ -245,12 +235,10 @@ TestCase {
 
         control.textRole = ""
         compare(control.currentText, "")
-
-        control.destroy()
     }
 
     function test_textAt() {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
 
         control.model = ["Apple", "Orange", "Banana"]
@@ -259,8 +247,6 @@ TestCase {
         compare(control.textAt(2), "Banana")
         compare(control.textAt(-1), "") // TODO: null?
         compare(control.textAt(5), "") // TODO: null?
-
-        control.destroy()
     }
 
     function test_find_data() {
@@ -292,19 +278,17 @@ TestCase {
     }
 
     function test_find(data) {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
 
         control.model = ["Banana", "banana", "Coconut", "Apple", "Cocomuffin"]
 
         compare(control.find(data.term, data.flags), data.index)
-
-        control.destroy()
     }
 
 
     function test_arrowKeys() {
-        var control = comboBox.createObject(testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
         var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
@@ -428,8 +412,6 @@ TestCase {
 
         compare(control.currentIndex, 1)
         tryCompare(control, "highlightedIndex", -1)
-
-        control.destroy()
     }
 
     function test_keys_space_enter_escape_data() {
@@ -446,7 +428,7 @@ TestCase {
     }
 
     function test_keys_space_enter_escape(data) {
-        var control = comboBox.createObject(testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
         waitForRendering(control)
@@ -471,12 +453,10 @@ TestCase {
         keyRelease(data.key2)
         compare(control.pressed, false)
         tryCompare(control.popup, "visible", !data.hidePopup)
-
-        control.destroy()
     }
 
     function test_keys_home_end() {
-        var control = comboBox.createObject(testCase, {model: 5})
+        var control = createTemporaryObject(comboBox, testCase, {model: 5})
         verify(control)
 
         control.forceActiveFocus()
@@ -584,12 +564,10 @@ TestCase {
         compare(highlightedIndexSpy.count, highlightedIndexCount)
         compare(activatedSpy.count, activatedCount)
         compare(highlightedSpy.count, highlightedCount)
-
-        control.destroy()
     }
 
     function test_keySearch() {
-        var control = comboBox.createObject(testCase, {model: ["Banana", "Coco", "Coconut", "Apple", "Cocomuffin"]})
+        var control = createTemporaryObject(comboBox, testCase, {model: ["Banana", "Coco", "Coconut", "Apple", "Cocomuffin"]})
         verify(control)
 
         control.forceActiveFocus()
@@ -627,12 +605,10 @@ TestCase {
         keyPress(Qt.Key_B)
         compare(control.currentIndex, 0)
         compare(control.currentText, "Banana")
-
-        control.destroy()
     }
 
     function test_popup() {
-        var control = comboBox.createObject(testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
         // show below
@@ -666,12 +642,10 @@ TestCase {
         control.x = testCase.width - control.width / 2
         compare(control.x, testCase.width - control.width / 2)
         compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2)
-
-        control.destroy()
     }
 
     function test_mouse() {
-        var control = comboBox.createObject(testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
         var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
@@ -709,12 +683,10 @@ TestCase {
         compare(activatedSpy.count, 1)
         compare(highlightedSpy.count, 1)
         tryCompare(control.popup, "visible", false)
-
-        control.destroy()
     }
 
     function test_down() {
-        var control = comboBox.createObject(testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
         // some styles position the popup over the combo button. move it out
@@ -777,12 +749,10 @@ TestCase {
         compare(control.down, false)
         compare(downSpy.count, 8)
         compare(pressedSpy.count, 4)
-
-        control.destroy()
     }
 
     function test_focus() {
-        var control = comboBox.createObject(testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
         waitForRendering(control)
@@ -796,15 +766,12 @@ TestCase {
         control.focus = false
         verify(!control.activeFocus)
         tryCompare(control.popup, "visible", false)
-
-        control.destroy()
     }
 
     function test_baseline() {
-        var control = comboBox.createObject(testCase)
+        var control = createTemporaryObject(comboBox, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
-        control.destroy()
     }
 
     Component {
@@ -820,7 +787,7 @@ TestCase {
     }
 
     function test_displayText() {
-        var control = displayBox.createObject(testCase)
+        var control = createTemporaryObject(displayBox, testCase)
         verify(control)
 
         compare(control.displayText, "First")
@@ -834,8 +801,6 @@ TestCase {
         compare(control.displayText, "Display")
         control.displayText = undefined
         compare(control.displayText, "789")
-
-        control.destroy()
     }
 
     Component {
@@ -880,7 +845,7 @@ TestCase {
     }
 
     function test_font() { // QTBUG_50984, QTBUG-51696
-        var control = component.createObject(testCase)
+        var control = createTemporaryObject(component, testCase)
         verify(control)
         verify(control.button)
         verify(control.combobox)
@@ -923,12 +888,10 @@ TestCase {
 //        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
 //        idx2 = getChild(listview.contentItem, "delegate", idx1)
 //        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
-
-        control.destroy()
     }
 
     function test_wheel() {
-        var control = comboBox.createObject(testCase, {model: 2, wheelEnabled: true})
+        var control = createTemporaryObject(comboBox, testCase, {model: 2, wheelEnabled: true})
         verify(control)
 
         var delta = 120
@@ -946,8 +909,6 @@ TestCase {
         // reached bounds -> no change
         mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
         compare(control.currentIndex, 0)
-
-        control.destroy()
     }
 
     function test_activation_data() {
@@ -961,7 +922,7 @@ TestCase {
 
     // QTBUG-51645
     function test_activation(data) {
-        var control = comboBox.createObject(testCase, {currentIndex: 1, model: ["Apple", "Orange", "Banana"]})
+        var control = createTemporaryObject(comboBox, testCase, {currentIndex: 1, model: ["Apple", "Orange", "Banana"]})
         verify(control)
 
         waitForRendering(control)
@@ -981,8 +942,6 @@ TestCase {
         compare(control.currentIndex, 1)
         compare(control.currentText, "Orange")
         compare(control.displayText, "Orange")
-
-        control.destroy()
     }
 
     Component {
@@ -998,7 +957,7 @@ TestCase {
 
     // QTBUG-51972
     function test_async() {
-        var loader = asyncLoader.createObject(testCase)
+        var loader = createTemporaryObject(asyncLoader, testCase)
         verify(loader)
 
         loader.active = true
@@ -1006,18 +965,14 @@ TestCase {
         verify(loader.item)
         compare(loader.item.currentText, "First")
         compare(loader.item.displayText, "First")
-
-        loader.destroy()
     }
 
     // QTBUG-52615
     function test_currentIndex() {
-        var control = comboBox.createObject(testCase, {currentIndex: -1, model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {currentIndex: -1, model: 3})
         verify(control)
 
         compare(control.currentIndex, -1)
-
-        control.destroy()
     }
 
     ListModel {
@@ -1029,7 +984,7 @@ TestCase {
 
     // QTBUG-54573
     function test_modelReset() {
-        var control = comboBox.createObject(testCase, {model: resetmodel})
+        var control = createTemporaryObject(comboBox, testCase, {model: resetmodel})
         verify(control)
         control.popup.open()
 
@@ -1043,13 +998,11 @@ TestCase {
         resetmodel.append({text: "Fifth"})
 
         tryCompare(listview.contentItem.children, "length", resetmodel.count + 1) // + highlight item
-
-        control.destroy()
     }
 
     // QTBUG-55118
     function test_currentText() {
-        var control = comboBox.createObject(testCase, {model: listmodel})
+        var control = createTemporaryObject(comboBox, testCase, {model: listmodel})
         verify(control)
 
         compare(control.currentIndex, 0)
@@ -1063,13 +1016,11 @@ TestCase {
 
         listmodel.setProperty(0, "text", "First")
         compare(control.currentText, "Second")
-
-        control.destroy()
     }
 
     // QTBUG-55030
     function test_highlightRange() {
-        var control = comboBox.createObject(testCase, {model: 100})
+        var control = createTemporaryObject(comboBox, testCase, {model: 100})
         verify(control)
 
         control.currentIndex = 50
@@ -1111,7 +1062,6 @@ TestCase {
 
         openedSpy.target = null
         closedSpy.target = null
-        control.destroy()
     }
 
     RegExpValidator {
@@ -1120,7 +1070,7 @@ TestCase {
     }
 
     function test_validator() {
-        var control = comboBox.createObject(testCase, {editable: true, validator: regExpValidator})
+        var control = createTemporaryObject(comboBox, testCase, {editable: true, validator: regExpValidator})
 
         control.editText = "blu"
         compare(control.acceptableInput, false)
@@ -1147,8 +1097,6 @@ TestCase {
         keyPress(Qt.Key_D)
         compare(control.editText, "red")
         compare(control.acceptableInput, true)
-
-        control.destroy()
     }
 
     Component {
@@ -1166,7 +1114,7 @@ TestCase {
     }
 
     function test_append_find() {
-        var control = appendFindBox.createObject(testCase)
+        var control = createTemporaryObject(appendFindBox, testCase)
 
         compare(control.currentIndex, 0)
         compare(control.currentText, "first")
@@ -1187,12 +1135,10 @@ TestCase {
         compare(control.count, 2)
         compare(control.currentIndex, 1)
         compare(control.currentText, "third")
-
-        control.destroy()
     }
 
     function test_editable() {
-        var control = comboBox.createObject(testCase, {editable: true, model: ["Banana", "Coco", "Coconut", "Apple", "Cocomuffin"]})
+        var control = createTemporaryObject(comboBox, testCase, {editable: true, model: ["Banana", "Coco", "Coconut", "Apple", "Cocomuffin"]})
         verify(control)
 
         control.forceActiveFocus()
@@ -1326,8 +1272,6 @@ TestCase {
         compare(control.currentText, "")
         compare(control.currentIndex, -1)
         compare(acceptSpy.count, ++acceptCount)
-
-        control.destroy()
     }
 
     Component {
@@ -1345,7 +1289,7 @@ TestCase {
     }
 
     function test_keys_attached() {
-        var control = keysAttachedBox.createObject(testCase)
+        var control = createTemporaryObject(keysAttachedBox, testCase)
         verify(control)
 
         control.forceActiveFocus()
@@ -1369,8 +1313,6 @@ TestCase {
         verify(control.activeFocus)
         verify(control.gotit)
         compare(control.editText, "ab")
-
-        control.destroy()
     }
 
     function test_minusOneIndexResetsSelection_QTBUG_35794_data() {
@@ -1381,7 +1323,7 @@ TestCase {
     }
 
     function test_minusOneIndexResetsSelection_QTBUG_35794(data) {
-        var control = comboBox.createObject(testCase, {editable: data.editable, model: ["A", "B", "C"]})
+        var control = createTemporaryObject(comboBox, testCase, {editable: data.editable, model: ["A", "B", "C"]})
         verify(control)
 
         compare(control.currentIndex, 0)
@@ -1392,12 +1334,10 @@ TestCase {
         control.currentIndex = 1
         compare(control.currentIndex, 1)
         compare(control.currentText, "B")
-
-        control.destroy()
     }
 
     function test_minusOneToZeroSelection_QTBUG_38036() {
-        var control = comboBox.createObject(testCase, {model: ["A", "B", "C"]})
+        var control = createTemporaryObject(comboBox, testCase, {model: ["A", "B", "C"]})
         verify(control)
 
         compare(control.currentIndex, 0)
@@ -1408,7 +1348,5 @@ TestCase {
         control.currentIndex = 0
         compare(control.currentIndex, 0)
         compare(control.currentText, "A")
-
-        control.destroy()
     }
 }
