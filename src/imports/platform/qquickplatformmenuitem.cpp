@@ -403,7 +403,7 @@ void QQuickPlatformMenuItem::setChecked(bool checked)
     \value MenuItem.AboutQtRole The item handles the "About Qt" menu item.
     \value MenuItem.AboutRole The item should be placed where the "About" menu item is in the application menu. The text of
            the menu item will be set to "About <application name>". The application name is fetched from the
-           \c{Info.plist} file in the application's bundle (See \l{Qt for OS X - Deployment}).
+           \c{Info.plist} file in the application's bundle (See \l{Qt for macOS - Deployment}).
     \value MenuItem.PreferencesRole The item should be placed where the  "Preferences..." menu item is in the application menu.
     \value MenuItem.QuitRole The item should be placed where the Quit menu item is in the application menu.
 
