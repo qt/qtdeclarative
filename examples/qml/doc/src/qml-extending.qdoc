@@ -310,6 +310,15 @@ This example builds on:
 \li \l {Extending QML - Adding Types Example}
 \endlist
 
+The Methods Example has an additional method in the \c BirthdayParty class: \c invite().
+\c invite() is declared with \l Q_INVOKABLE so that it can be
+called from QML.
+
+\snippet referenceexamples/methods/birthdayparty.h 0
+
+In \c example.qml, the \c invite() method is called in the \l [QML]{QtQml::Component::completed()}{Component.onCompleted} signal handler:
+
+\snippet referenceexamples/methods/example.qml 0
 */
 
 /*!
