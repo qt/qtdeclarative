@@ -83,20 +83,17 @@ TestCase {
     }
 
     function test_properties(data) {
-        var control = toolTip.createObject(testCase)
+        var control = createTemporaryObject(toolTip, testCase)
         verify(control)
 
         compare(control[data.property], data.defaultValue)
 
-        var spy = signalSpy.createObject(testCase, {target: control, signalName: data.signalName})
+        var spy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: data.signalName})
         verify(spy.valid)
 
         control[data.property] = data.setValue
         compare(control[data.property], data.setValue)
         compare(spy.count, 1)
-
-        spy.destroy()
-        control.destroy()
     }
 
     function test_attached_data() {
@@ -108,10 +105,10 @@ TestCase {
     }
 
     function test_attached(data) {
-        var item1 = mouseArea.createObject(testCase)
+        var item1 = createTemporaryObject(mouseArea, testCase)
         verify(item1)
 
-        var item2 = mouseArea.createObject(testCase)
+        var item2 = createTemporaryObject(mouseArea, testCase)
         verify(item2)
 
         compare(item1.ToolTip[data.property], data.defaultValue)
@@ -155,9 +152,6 @@ TestCase {
         // property change should apply to the shared instance
         compare(sharedSpy.count, 1)
         compare(sharedTip[data.property], data.setValue)
-
-        item1.destroy()
-        item2.destroy()
     }
 
     function test_delay_data() {
@@ -170,7 +164,7 @@ TestCase {
     }
 
     function test_delay(data) {
-        var control = toolTip.createObject(testCase, {delay: data.delay})
+        var control = createTemporaryObject(toolTip, testCase, {delay: data.delay})
 
         compare(control.visible, false)
         if (data.imperative)
@@ -179,8 +173,6 @@ TestCase {
             control.visible = true
         compare(control.visible, data.delay <= 0)
         tryCompare(control, "visible", true)
-
-        control.destroy()
     }
 
     function test_timeout_data() {
@@ -191,7 +183,7 @@ TestCase {
     }
 
     function test_timeout(data) {
-        var control = toolTip.createObject(testCase, {timeout: 100})
+        var control = createTemporaryObject(toolTip, testCase, {timeout: 100})
 
         compare(control.visible, false)
         if (data.imperative)
@@ -200,8 +192,6 @@ TestCase {
             control.visible = true
         compare(control.visible, true)
         tryCompare(control, "visible", false)
-
-        control.destroy()
     }
 
     function test_warning() {
@@ -231,7 +221,7 @@ TestCase {
     }
 
     function test_makeVisibleWhileExitTransitionRunning(data) {
-        var control = toolTipWithExitTransition.createObject(testCase)
+        var control = createTemporaryObject(toolTipWithExitTransition, testCase)
 
         // Show, hide, and show the tooltip again. Its exit transition should
         // start and get cancelled, and then its enter transition should run.
@@ -253,7 +243,5 @@ TestCase {
         else
             control.visible = true
         tryCompare(control, "opacity", 1)
-
-        control.destroy()
     }
 }
