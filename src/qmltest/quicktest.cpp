@@ -373,9 +373,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             // and then wait for quit indication.
             view->setFramePosition(QPoint(50, 50));
             if (view->size().isEmpty()) { // Avoid hangs with empty windows.
-                qWarning().nospace()
-                    << "Test '" << QDir::toNativeSeparators(path) << "' has invalid size "
-                    << view->size() << ", resizing.";
                 view->resize(200, 200);
             }
             view->show();
