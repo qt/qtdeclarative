@@ -174,7 +174,7 @@ and other types can be coerced to it.
 
 \section2 Define Boy and Girl
 
-The implementation of Boy and Girl are trivial.
+The implementation of Boy and Girl is trivial.
 
 \snippet referenceexamples/coercion/person.cpp 1
 
