@@ -38,11 +38,15 @@ TestCase {
     when: windowShown
 
     property var createdObjectNames: []
+    property var createdParentlessObjects: []
 
     function verifyNoChildren() {
         for (var i = 0; i < createdObjectNames.length; ++i) {
             verify(!findChild(testCase, createdObjectNames[i]));
         }
+
+        compare(createdParentlessObjects.length, 0,
+            "The following parentless temporary objects were not destroyed: " + createdParentlessObjects)
     }
 
     function init() {
@@ -139,5 +143,37 @@ TestCase {
         wait(0);
 
         verify(!findChild(testCase, manuallyDestroyedObjectName));
+    }
+
+    function test_fromComponentParent_data() {
+        return [
+            { tag: "omit", expectedParent: null },
+            { tag: "undefined", parent: undefined, expectedParent: null },
+            { tag: "null", parent: null, expectedParent: null },
+            { tag: "1", parent: 1, expectedParent: null },
+            { tag: "testCase", parent: testCase, expectedParent: testCase }
+        ];
+    }
+
+    // Tests that an invalid or missing parent argument results in a parentless object.
+    // This is the same behavior as displayed by component.createObject().
+    function test_fromComponentParent(data) {
+        var object = data.hasOwnProperty("parent")
+            ? createTemporaryObject(itemComponent, data.parent)
+            : createTemporaryObject(itemComponent);
+        verify(object);
+        compare(object.parent, data.expectedParent);
+
+        object.objectName = data.tag + "FromComponentOmitParent";
+        if (object.parent) {
+            compare(findChild(testCase, object.objectName), object);
+            createdObjectNames.push(object.objectName);
+        } else {
+            object.Component.destruction.connect(function() {
+                 var indexOfObject = createdParentlessObjects.indexOf(object);
+                 createdParentlessObjects.splice(indexOfObject, 1);
+            });
+            createdParentlessObjects.push(object);
+        }
     }
 }
