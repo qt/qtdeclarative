@@ -91,24 +91,13 @@ namespace Heap {
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
 
-    quintptr mm_data; // vtable and markbit
+    const VTable *vt;
 
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);
 
-    enum {
-        MarkBit = 0x1,
-        NotInUse = 0x2,
-        PointerMask = ~0x3
-    };
-
-    void setVtable(const VTable *v) {
-        Q_ASSERT(!(mm_data & MarkBit));
-        mm_data = reinterpret_cast<quintptr>(v);
-    }
-    VTable *vtable() const {
-        return reinterpret_cast<VTable *>(mm_data & PointerMask);
-    }
+    void setVtable(const VTable *v) { vt = v; }
+    const VTable *vtable() const { return vt; }
     inline bool isMarked() const {
         const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
         Chunk *c = h->chunk();
@@ -127,13 +116,6 @@ struct Q_QML_EXPORT Base {
         Chunk *c = h->chunk();
         Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
         return Chunk::testBit(c->objectBitmap, h - c->realBase());
-    }
-
-    Base *nextFree() {
-        return reinterpret_cast<Base *>(mm_data & PointerMask);
-    }
-    void setNextFree(Base *m) {
-        mm_data = (reinterpret_cast<quintptr>(m) | NotInUse);
     }
 
     void *operator new(size_t, Managed *m) { return m; }

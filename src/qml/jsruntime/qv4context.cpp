@@ -99,7 +99,6 @@ Heap::CallContext *Heap::CallContext::createSimpleContext(ExecutionEngine *v4)
 {
     Heap::CallContext *ctxt = v4->memoryManager->allocSimpleCallContext();
     memset(ctxt, 0, sizeof(Heap::CallContext));
-    ctxt->mm_data = 0;
     ctxt->setVtable(QV4::CallContext::staticVTable());
     ctxt->init(v4);
     return ctxt;
