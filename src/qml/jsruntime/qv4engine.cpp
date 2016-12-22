@@ -158,8 +158,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     }
     Q_ASSERT(maxCallDepth > 0);
 
-    MemoryManager::GCBlocker gcBlocker(memoryManager);
-
     if (!factory) {
 #if QT_CONFIG(qml_interpreter)
         bool jitDisabled = true;
