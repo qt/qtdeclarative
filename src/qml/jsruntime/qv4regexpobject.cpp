@@ -307,7 +307,8 @@ void RegExpCtor::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     RegExpCtor::Data *This = static_cast<RegExpCtor::Data *>(that);
     This->lastMatch.mark(e);
-    This->lastInput->mark(e);
+    if (This->lastInput)
+        This->lastInput->mark(e);
     FunctionObject::markObjects(that, e);
 }
 
