@@ -79,36 +79,6 @@ using namespace WTF;
 
 QT_BEGIN_NAMESPACE
 
-static uint maxShiftValue()
-{
-    static uint result = 0;
-    if (!result) {
-        result = 6;
-        if (Q_UNLIKELY(qEnvironmentVariableIsSet(QV4_MM_MAXBLOCK_SHIFT))) {
-            bool ok;
-            const uint overrideValue = qgetenv(QV4_MM_MAXBLOCK_SHIFT).toUInt(&ok);
-            if (ok && overrideValue <= 11 && overrideValue > 0)
-                result = overrideValue;
-        }
-    }
-    return result;
-}
-
-static std::size_t maxChunkSizeValue()
-{
-    static std::size_t result = 0;
-    if (!result) {
-        result = 32 * 1024;
-        if (Q_UNLIKELY(qEnvironmentVariableIsSet(QV4_MM_MAX_CHUNK_SIZE))) {
-            bool ok;
-            const std::size_t overrideValue = qgetenv(QV4_MM_MAX_CHUNK_SIZE).toUInt(&ok);
-            if (ok)
-                result = overrideValue;
-        }
-    }
-    return result;
-}
-
 using namespace QV4;
 
 struct MemoryManager::Data
@@ -125,7 +95,6 @@ struct MemoryManager::Data
 
     ExecutionEngine *engine;
 
-    std::size_t maxChunkSize;
     std::vector<PageAllocation> heapChunks;
     std::size_t unmanagedHeapSize; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;
@@ -150,7 +119,6 @@ struct MemoryManager::Data
     uint allocCount[MaxItemSize/16];
     int totalItems;
     int totalAlloc;
-    uint maxShift;
 
     bool gcBlocked;
     bool aggressiveGC;
@@ -165,14 +133,12 @@ struct MemoryManager::Data
     Data()
         : pageSize(WTF::pageSize())
         , engine(0)
-        , maxChunkSize(maxChunkSizeValue())
         , unmanagedHeapSize(0)
         , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
         , largeItems(0)
         , totalLargeItemsAllocated(0)
         , totalItems(0)
         , totalAlloc(0)
-        , maxShift(maxShiftValue())
         , gcBlocked(false)
         , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
         , gcStats(!qEnvironmentVariableIsEmpty(QV4_MM_STATS))
@@ -327,12 +293,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
 
     // no free item available, allocate a new chunk
     {
-        // allocate larger chunks at a time to avoid excessive GC, but cap at maximum chunk size (2MB by default)
-        uint shift = ++m_d->nChunks[pos];
-        if (shift > m_d->maxShift)
-            shift = m_d->maxShift;
-        std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
-        allocSize = roundUpToMultipleOf(m_d->pageSize, allocSize);
+        std::size_t allocSize = QV4::Chunk::ChunkSize;
         Q_V4_PROFILE_ALLOC(engine, allocSize, Profiling::HeapPage);
         PageAllocation allocation = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
         m_d->heapChunks.push_back(allocation);
