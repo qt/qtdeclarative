@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct GCDeletable;
+struct ChunkAllocator;
 
 class Q_QML_EXPORT MemoryManager
 {
@@ -316,6 +316,7 @@ private:
 
 public:
     QV4::ExecutionEngine *engine;
+    ChunkAllocator *chunkAllocator;
     QScopedPointer<Data> m_d;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;

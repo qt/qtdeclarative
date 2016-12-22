@@ -42,8 +42,12 @@
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
 #include "qv4qobjectwrapper_p.h"
+#include <QtCore/qalgorithms.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <qqmlengine.h>
+#include "PageReservation.h"
 #include "PageAllocation.h"
+#include "PageAllocationAligned.h"
 #include "StdLibExtras.h"
 
 #include <QElapsedTimer>
@@ -55,6 +59,14 @@
 #include <algorithm>
 #include "qv4alloca_p.h"
 #include "qv4profiling_p.h"
+
+#define MM_DEBUG 0
+
+#if MM_DEBUG
+#define DEBUG qDebug() << "MM:"
+#else
+#define DEBUG if (1) ; else qDebug() << "MM:"
+#endif
 
 #ifdef V4_USE_VALGRIND
 #include <valgrind/valgrind.h>
@@ -79,7 +91,160 @@ using namespace WTF;
 
 QT_BEGIN_NAMESPACE
 
-using namespace QV4;
+namespace QV4 {
+
+enum {
+    MinSlotsGCLimit = QV4::Chunk::AvailableSlots*16,
+    GCOverallocation = 200 /* Max overallocation by the GC in % */
+};
+
+struct MemorySegment {
+    enum {
+        NumChunks = 8*sizeof(quint64),
+        SegmentSize = NumChunks*Chunk::ChunkSize,
+    };
+
+    MemorySegment(size_t size)
+    {
+        size += Chunk::ChunkSize; // make sure we can get enough 64k aligment memory
+        if (size < SegmentSize)
+            size = SegmentSize;
+
+        pageReservation = PageReservation::reserve(size, OSAllocator::JSGCHeapPages);
+        base = reinterpret_cast<Chunk *>((reinterpret_cast<quintptr>(pageReservation.base()) + Chunk::ChunkSize - 1) & ~(Chunk::ChunkSize - 1));
+        nChunks = NumChunks;
+        if (base != pageReservation.base())
+            --nChunks;
+    }
+    MemorySegment(MemorySegment &&other) {
+        qSwap(pageReservation, other.pageReservation);
+        qSwap(base, other.base);
+        qSwap(nChunks, other.nChunks);
+        qSwap(allocatedMap, other.allocatedMap);
+    }
+
+    ~MemorySegment() {
+        if (base)
+            pageReservation.deallocate();
+    }
+
+    void setBit(size_t index) {
+        Q_ASSERT(index < nChunks);
+        quint64 bit = static_cast<quint64>(1) << index;
+//        qDebug() << "    setBit" << hex << index << (index & (Bits - 1)) << bit;
+        allocatedMap |= bit;
+    }
+    void clearBit(size_t index) {
+        Q_ASSERT(index < nChunks);
+        quint64 bit = static_cast<quint64>(1) << index;
+//        qDebug() << "    setBit" << hex << index << (index & (Bits - 1)) << bit;
+        allocatedMap &= ~bit;
+    }
+    bool testBit(size_t index) const {
+        Q_ASSERT(index < nChunks);
+        quint64 bit = static_cast<quint64>(1) << index;
+        return (allocatedMap & bit);
+    }
+
+    Chunk *allocate(size_t size);
+    void free(Chunk *chunk, size_t size) {
+        DEBUG << "freeing chunk" << chunk;
+        size_t index = static_cast<size_t>(chunk - base);
+        size_t end = index + (size - 1)/Chunk::ChunkSize + 1;
+        while (index < end) {
+            Q_ASSERT(testBit(index));
+            clearBit(index);
+            ++index;
+        }
+
+        size_t pageSize = WTF::pageSize();
+        size = (size + pageSize - 1) & ~(pageSize - 1);
+        pageReservation.decommit(chunk, size);
+    }
+
+    bool contains(Chunk *c) const {
+        return c >= base && c < base + nChunks;
+    }
+
+    PageReservation pageReservation;
+    Chunk *base = 0;
+    quint64 allocatedMap = 0;
+    uint nChunks = 0;
+};
+
+Chunk *MemorySegment::allocate(size_t size)
+{
+    size_t requiredChunks = (size + sizeof(Chunk) - 1)/sizeof(Chunk);
+    uint sequence = 0;
+    Chunk *candidate = 0;
+    for (uint i = 0; i < nChunks; ++i) {
+        if (!testBit(i)) {
+            if (!candidate)
+                candidate = base + i;
+            ++sequence;
+        } else {
+            candidate = 0;
+            sequence = 0;
+        }
+        if (sequence == requiredChunks) {
+            pageReservation.commit(candidate, size);
+            for (uint i = 0; i < requiredChunks; ++i)
+                setBit(candidate - base + i);
+            DEBUG << "allocated chunk " << candidate << hex << size;
+            return candidate;
+        }
+    }
+    return 0;
+}
+
+struct ChunkAllocator {
+    ChunkAllocator() {}
+
+    size_t requiredChunkSize(size_t size) {
+        size += Chunk::HeaderSize; // space required for the Chunk header
+        size_t pageSize = WTF::pageSize();
+        size = (size + pageSize - 1) & ~(pageSize - 1); // align to page sizes
+        if (size < Chunk::ChunkSize)
+            size = Chunk::ChunkSize;
+        return size;
+    }
+
+    Chunk *allocate(size_t size = 0);
+    void free(Chunk *chunk, size_t size = 0);
+
+    std::vector<MemorySegment> memorySegments;
+};
+
+Chunk *ChunkAllocator::allocate(size_t size)
+{
+    size = requiredChunkSize(size);
+    for (auto &m : memorySegments) {
+        if (~m.allocatedMap) {
+            Chunk *c = m.allocate(size);
+            if (c)
+                return c;
+        }
+    }
+
+    // allocate a new segment
+    memorySegments.push_back(MemorySegment(size));
+    Chunk *c = memorySegments.back().allocate(size);
+    Q_ASSERT(c);
+    return c;
+}
+
+void ChunkAllocator::free(Chunk *chunk, size_t size)
+{
+    size = requiredChunkSize(size);
+    for (auto &m : memorySegments) {
+        if (m.contains(chunk)) {
+            m.free(chunk, size);
+            return;
+        }
+    }
+    Q_ASSERT(false);
+}
+
 
 struct MemoryManager::Data
 {
@@ -218,6 +383,7 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 
 MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
+    , chunkAllocator(new ChunkAllocator)
     , m_d(new Data)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
@@ -609,6 +775,7 @@ MemoryManager::~MemoryManager()
 #ifdef V4_USE_VALGRIND
     VALGRIND_DESTROY_MEMPOOL(this);
 #endif
+    delete chunkAllocator;
 }
 
 
@@ -651,4 +818,7 @@ void MemoryManager::collectFromJSStack() const
         ++v;
     }
 }
+
+} // namespace QV4
+
 QT_END_NAMESPACE
