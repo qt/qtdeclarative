@@ -64,11 +64,57 @@
 #define QV4_MM_MAX_CHUNK_SIZE "QV4_MM_MAX_CHUNK_SIZE"
 #define QV4_MM_STATS "QV4_MM_STATS"
 
+#define MM_DEBUG 0
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
 struct ChunkAllocator;
+
+template<typename T>
+struct StackAllocator {
+    Q_STATIC_ASSERT(sizeof(T) < Chunk::DataSize);
+    static const uint requiredSlots = (sizeof(T) + sizeof(HeapItem) - 1)/sizeof(HeapItem);
+
+    StackAllocator(ChunkAllocator *chunkAlloc);
+
+    T *allocate() {
+        T *m = nextFree->as<T>();
+        if (Q_UNLIKELY(nextFree == lastInChunk)) {
+            nextChunk();
+        } else {
+            nextFree += requiredSlots;
+        }
+#if MM_DEBUG
+        Chunk *c = m->chunk();
+        Chunk::setBit(c->objectBitmap, m - c->realBase());
+#endif
+        return m;
+    }
+    void free() {
+#if MM_DEBUG
+        Chunk::clearBit(item->chunk()->objectBitmap, item - item->chunk()->realBase());
+#endif
+        if (Q_UNLIKELY(nextFree == firstInChunk)) {
+            prevChunk();
+        } else {
+            nextFree -= requiredSlots;
+        }
+    }
+
+    void nextChunk();
+    void prevChunk();
+
+    void freeAll();
+
+    ChunkAllocator *chunkAllocator;
+    HeapItem *nextFree = 0;
+    HeapItem *firstInChunk = 0;
+    HeapItem *lastInChunk = 0;
+    std::vector<Chunk *> chunks;
+    uint currentChunk = 0;
+};
 
 class Q_QML_EXPORT MemoryManager
 {
@@ -85,6 +131,11 @@ public:
     // Note: all occurrences of "16" in alloc/dealloc are also due to the alignment.
     static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
+
+    QV4::Heap::CallContext *allocSimpleCallContext()
+    { return stackAllocator.allocate(); }
+    void freeSimpleCallContext()
+    { stackAllocator.free(); }
 
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, std::size_t unmanagedSize = 0)
@@ -317,6 +368,7 @@ private:
 public:
     QV4::ExecutionEngine *engine;
     ChunkAllocator *chunkAllocator;
+    StackAllocator<Heap::CallContext> stackAllocator;
     QScopedPointer<Data> m_d;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;

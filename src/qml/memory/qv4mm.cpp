@@ -246,6 +246,49 @@ void ChunkAllocator::free(Chunk *chunk, size_t size)
 }
 
 
+template<typename T>
+StackAllocator<T>::StackAllocator(ChunkAllocator *chunkAlloc)
+    : chunkAllocator(chunkAlloc)
+{
+    chunks.push_back(chunkAllocator->allocate());
+    firstInChunk = chunks.back()->first();
+    nextFree = firstInChunk;
+    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
+}
+
+template<typename T>
+void StackAllocator<T>::freeAll()
+{
+    for (auto c : chunks)
+        chunkAllocator->free(c);
+}
+
+template<typename T>
+void StackAllocator<T>::nextChunk() {
+    Q_ASSERT(nextFree == lastInChunk);
+    ++currentChunk;
+    if (currentChunk >= chunks.size()) {
+        Chunk *newChunk = chunkAllocator->allocate();
+        chunks.push_back(newChunk);
+    }
+    firstInChunk = chunks.at(currentChunk)->first();
+    nextFree = firstInChunk;
+    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
+}
+
+template<typename T>
+void QV4::StackAllocator<T>::prevChunk() {
+    Q_ASSERT(nextFree == firstInChunk);
+    Q_ASSERT(chunks.at(currentChunk) == nextFree->chunk());
+    Q_ASSERT(currentChunk > 0);
+    --currentChunk;
+    firstInChunk = chunks.at(currentChunk)->first();
+    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
+    nextFree = lastInChunk;
+}
+
+template struct StackAllocator<Heap::CallContext>;
+
 struct MemoryManager::Data
 {
     const size_t pageSize;
@@ -384,6 +427,7 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
+    , stackAllocator(chunkAllocator)
     , m_d(new Data)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
@@ -770,6 +814,7 @@ MemoryManager::~MemoryManager()
     delete m_persistentValues;
 
     sweep(/*lastSweep*/true);
+    stackAllocator.freeAll();
 
     delete m_weakValues;
 #ifdef V4_USE_VALGRIND
