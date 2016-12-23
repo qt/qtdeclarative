@@ -9,5 +9,6 @@
         <file>resources/map.svgz</file>
         <file>resources/mixer-knob.png</file>
         <file>resources/redball.png</file>
+        <file>map2.qml</file>
     </qresource>
 </RCC>

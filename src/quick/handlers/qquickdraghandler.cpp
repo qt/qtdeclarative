@@ -88,6 +88,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         if (!m_yAxis.enabled())
             delta.setY(0);
         if (active()) {
+            setTranslation(delta);
             if (target() && target()->parentItem()) {
                 QPointF pos = target()->parentItem()->mapFromScene(m_startPos + delta);
                 enforceAxisConstraints(&pos);
@@ -121,6 +122,15 @@ void QQuickDragHandler::enforceAxisConstraints(QPointF *localPos)
     if (m_yAxis.enabled())
         localPos->setY(qBound(m_yAxis.minimum(), localPos->y(), m_yAxis.maximum()));
 }
+
+void QQuickDragHandler::setTranslation(const QPointF &trans)
+{
+    if (trans == m_translation) // fuzzy compare?
+        return;
+    m_translation = trans;
+    emit translationChanged();
+}
+
 
 QQuickDragAxis::QQuickDragAxis()
   : m_minimum(-DBL_MAX)

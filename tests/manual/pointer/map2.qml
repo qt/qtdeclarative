@@ -39,22 +39,53 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
-            addExample("pinch", "PinchHandler: scale, rotate and drag", Qt.resolvedUrl("pinchHandler.qml"))
-            addExample("map", "scale and pan", Qt.resolvedUrl("map.qml"))
-            addExample("custom map", "scale and pan", Qt.resolvedUrl("map2.qml"))
+Item {
+    width: 640
+    height: 480
+
+    Rectangle {
+        id: map
+        color: "aqua"
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: image.implicitWidth
+        height: image.implicitHeight
+        property point center : Qt.point(x + map.width/2, y + map.height/2)
+
+        function setCenter(xx, yy) {
+            map.x = xx - map.width/2
+            map.y = yy - map.height/2
+        }
+
+
+        Image {
+            id: image
+            anchors.centerIn: parent
+            fillMode: Image.PreserveAspectFit
+            source: "resources/map.svgz"
+        }
+    }
+
+    PinchHandler {
+        id: pinch
+        target: map
+        minimumScale: 0.1
+        maximumScale: 10
+    }
+
+    DragHandler {
+        property point startDrag
+        target: null
+        onActiveChanged: {
+            if (active)
+                startDrag = map.center
+        }
+
+        onTranslationChanged: {
+            if (!target)
+                map.setCenter(startDrag.x + translation.x, startDrag.y + translation.y)
         }
     }
 }
