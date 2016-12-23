@@ -3222,7 +3222,12 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
         if (o->inherits("QGraphicsItem"))
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
-            pointerHandler->setTarget(that);
+            Q_ASSERT(pointerHandler->parentItem() == that);
+            // Accept all buttons, and leave filtering to pointerEvent() and/or user JS,
+            // because there can be multiple handlers...
+            that->setAcceptedMouseButtons(Qt::AllButtons);
+            QQuickItemPrivate *p = QQuickItemPrivate::get(that);
+            p->extra.value().pointerHandlers.append(pointerHandler);
         } else {
             QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
             QQuickItem *item = that;

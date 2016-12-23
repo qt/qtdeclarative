@@ -76,9 +76,6 @@ bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
 
 void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
 {
-    // If there's no target or the target has no parent, we shouldn't be dragging
-    if (!target() || !target()->parentItem())
-        return;
     point->setAccepted();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:

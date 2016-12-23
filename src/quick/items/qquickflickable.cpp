@@ -1785,8 +1785,6 @@ void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObjec
         i->setParentItem(static_cast<QQuickFlickablePrivate*>(prop->data)->contentItem);
     } else {
         o->setParent(prop->object); // XXX todo - do we want this?
-        if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o))
-            pointerHandler->setTarget(static_cast<QQuickItem *>(prop->object));
     }
 }
 

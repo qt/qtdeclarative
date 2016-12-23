@@ -110,7 +110,7 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
 
 bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
 {
-    return targetContains(point);
+    return parentContains(point);
 }
 
 void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)

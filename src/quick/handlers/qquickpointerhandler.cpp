@@ -60,7 +60,17 @@ QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
   , m_target(nullptr)
   , m_enabled(true)
   , m_active(false)
+  , m_targetExplicitlySet(false)
 {
+}
+
+QQuickPointerHandler::~QQuickPointerHandler()
+{
+    QQuickItem *parItem = parentItem();
+    if (parItem) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(parItem);
+        p->extra.value().pointerHandlers.removeOne(this);
+    }
 }
 
 void QQuickPointerHandler::setGrab(QQuickEventPoint *point, bool grab)
@@ -81,14 +91,16 @@ void QQuickPointerHandler::setGrab(QQuickEventPoint *point, bool grab)
 
 QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
 {
-    return (m_target ? m_target->mapFromScene(point->scenePos()) : point->scenePos());
+    return (target() ? target()->mapFromScene(point->scenePos()) : point->scenePos());
 }
 
-bool QQuickPointerHandler::targetContains(const QQuickEventPoint *point) const
+bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
 {
-    if (!m_target || !point)
-        return false;
-    return m_target->contains(m_target->mapFromScene(point->scenePos()));
+    if (point) {
+        if (QQuickItem *par = parentItem())
+            return par->contains(par->mapFromScene(point->scenePos()));
+    }
+    return false;
 }
 
 /*!
@@ -111,23 +123,19 @@ void QQuickPointerHandler::setEnabled(bool enabled)
 
 void QQuickPointerHandler::setTarget(QQuickItem *target)
 {
+    m_targetExplicitlySet = true;
     if (m_target == target)
         return;
 
-    if (m_target) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(m_target);
-        p->extra.value().pointerHandlers.removeOne(this);
-    }
-
     m_target = target;
-    if (m_target) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(m_target);
-        p->extra.value().pointerHandlers.append(this);
-        // Accept all buttons, and leave filtering to pointerEvent() and/or user JS,
-        // because there can be multiple handlers...
-        m_target->setAcceptedMouseButtons(Qt::AllButtons);
-    }
     emit targetChanged();
+}
+
+QQuickItem *QQuickPointerHandler::target() const
+{
+    if (!m_targetExplicitlySet)
+        return parentItem();
+    return m_target;
 }
 
 void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)

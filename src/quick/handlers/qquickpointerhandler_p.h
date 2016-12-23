@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject
 
 public:
     QQuickPointerHandler(QObject *parent = 0);
-    virtual ~QQuickPointerHandler() { }
+    virtual ~QQuickPointerHandler();
 
 public:
     bool enabled() const { return m_enabled; }
@@ -78,7 +78,7 @@ public:
 
     bool active() const { return m_active; }
 
-    QQuickItem *target() const { return m_target; }
+    QQuickItem *target() const;
     void setTarget(QQuickItem *target);
 
     QQuickItem * parentItem() const { return static_cast<QQuickItem *>(QObject::parent()); }
@@ -102,13 +102,14 @@ protected:
     void setGrab(QQuickEventPoint *point, bool grab);
     virtual void handleGrabCancel(QQuickEventPoint *point);
     QPointF eventPos(const QQuickEventPoint *point) const;
-    bool targetContains(const QQuickEventPoint *point) const;
+    bool parentContains(const QQuickEventPoint *point) const;
 
 private:
     QQuickPointerEvent *m_currentEvent;
     QQuickItem *m_target;
     bool m_enabled : 1;
     bool m_active : 1;
+    bool m_targetExplicitlySet : 1;
 
     friend class QQuickEventPoint;
 };

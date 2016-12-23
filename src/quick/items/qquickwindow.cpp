@@ -2252,7 +2252,7 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
         // we need the item in order to call deliverMatchingPointsToItem().
         QQuickItem *receiver = qmlobject_cast<QQuickItem *>(grabber);
         if (!receiver)
-            receiver = static_cast<QQuickPointerHandler *>(grabber)->target();
+            receiver = static_cast<QQuickPointerHandler *>(grabber)->parentItem();
         deliverMatchingPointsToItem(receiver, event, hasFiltered);
     }
 

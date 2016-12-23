@@ -53,10 +53,10 @@ QT_BEGIN_NAMESPACE
 
 static QQmlPrivate::AutoParentResult handler_autoParent(QObject *obj, QObject *parent)
 {
-    if (QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent)) {
+    if (qmlobject_cast<QQuickItem *>(parent)) {
         QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(obj);
-        if (handler && !handler->target()) {
-            handler->setTarget(parentItem);
+        if (handler) {
+            handler->setParent(parent);
             return QQmlPrivate::Parented;
         }
     }
