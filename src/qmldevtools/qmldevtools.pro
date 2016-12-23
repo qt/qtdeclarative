@@ -1,11 +1,9 @@
 option(host_build)
 TARGET     = QtQmlDevTools
 QT         = core-private
-CONFIG += static internal_module qmldevtools_build
+CONFIG    += minimal_syncqt internal_module qmldevtools_build
 
-# Don't use pch because the auto-generated header refers to QtBootstrap,
-# which doesn't exist
-CONFIG -= precompile_header
+MODULE_INCNAME = QtQml
 
 # 2415: variable "xx" of static storage duration was declared but never referenced
 # unused variable 'xx' [-Werror,-Wunused-const-variable]

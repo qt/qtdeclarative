@@ -64,12 +64,8 @@
 #define QML_NEARLY_ALWAYS_INLINE inline
 #endif
 
-#ifdef V4_BOOTSTRAP
-#include <private/qtqmldevtoolsglobal_p.h>
-#else
 #include <qtqmlglobal.h>
 #include <private/qtqmlglobal_p.h>
-#endif
 
 #if defined(Q_CC_MSVC)
 #include <float.h>
