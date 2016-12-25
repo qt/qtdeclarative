@@ -302,8 +302,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
     Q_OBJECT
     Q_PROPERTY(qreal rotation READ rotation)
     Q_PROPERTY(qreal pressure READ pressure)
-// TODO rename to QPointingDeviceUniqueId
-//    Q_PROPERTY(QPointerUniqueId uniqueId READ uniqueId)
+    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId)
 
 public:
     QQuickEventTouchPoint(QQuickPointerTouchEvent *parent);
@@ -312,12 +311,12 @@ public:
 
     qreal rotation() const { return m_rotation; }
     qreal pressure() const { return m_pressure; }
-//    QPointerUniqueId uniqueId() const { return m_uniqueId; }
+    QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
 
 private:
     qreal m_rotation;
     qreal m_pressure;
-//    QPointerUniqueId m_uniqueId;
+    QPointingDeviceUniqueId m_uniqueId;
 
     Q_DISABLE_COPY(QQuickEventTouchPoint)
 };
@@ -451,7 +450,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
     Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints CONSTANT)
     Q_PROPERTY(int buttonCount READ buttonCount CONSTANT)
     Q_PROPERTY(QString name READ name CONSTANT)
-    Q_PROPERTY(qint64 uniqueId READ uniqueId CONSTANT)
+    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId CONSTANT)
 
 public:
     enum DeviceType {
@@ -498,7 +497,8 @@ public:
 
     QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
       : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
-      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name), m_uniqueId(uniqueId), m_event(nullptr)
+      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name)
+      , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId)), m_event(nullptr)
     {
         if (m_deviceType == Mouse) {
             m_event = new QQuickPointerMouseEvent;
@@ -517,7 +517,7 @@ public:
     int maximumTouchPoints() const { return m_maximumTouchPoints; }
     int buttonCount() const { return m_buttonCount; }
     QString name() const { return m_name; }
-    qint64 uniqueId() const { return m_uniqueId; }
+    QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
     QQuickPointerEvent *pointerEvent() const { return m_event; }
 
     static QQuickPointerDevice *touchDevice(QTouchDevice *d);
@@ -532,7 +532,7 @@ private:
     int m_maximumTouchPoints;
     int m_buttonCount;
     QString m_name;
-    qint64 m_uniqueId;
+    QPointingDeviceUniqueId m_uniqueId;
     // the device-specific event instance which is reused during event delivery
     QQuickPointerEvent *m_event;
 
@@ -555,7 +555,7 @@ QML_DECLARE_TYPE(QQuickMouseEvent)
 QML_DECLARE_TYPE(QQuickWheelEvent)
 QML_DECLARE_TYPE(QQuickCloseEvent)
 QML_DECLARE_TYPE(QQuickPointerDevice)
-//QML_DECLARE_TYPE(QPointerUniqueId)
+QML_DECLARE_TYPE(QPointingDeviceUniqueId)
 QML_DECLARE_TYPE(QQuickPointerEvent)
 
 #endif // QQUICKEVENTS_P_P_H

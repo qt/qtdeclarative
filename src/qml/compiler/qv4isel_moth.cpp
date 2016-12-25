@@ -242,6 +242,11 @@ void InstructionSelection::run(int functionIndex)
                 addInstruction(set);
             }
             exceptionHandler = _block->catchBlock;
+        } else if (_block->catchBlock == nullptr && _block->index() != 0 && _block->in.isEmpty()) {
+            exceptionHandler = nullptr;
+            Instruction::SetExceptionHandler set;
+            set.offset = 0;
+            addInstruction(set);
         }
 
         for (IR::Stmt *s : _block->statements()) {
