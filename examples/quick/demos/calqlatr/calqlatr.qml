@@ -128,6 +128,7 @@ Rectangle {
         height: parent.height
 
         MouseArea {
+            id: mouseInput
             property real startX: 0
             property real oldP: 0
             property bool rewind: false
@@ -140,7 +141,7 @@ Rectangle {
             height: 50
             onPositionChanged: {
                 var reverse = startX > window.width / 2
-                var mx = mapToItem(window, mouse.x).x
+                var mx = mapToItem(window, mouseInput.mouseX, mouseInput.mouseY).x
                 var p = Math.abs((mx - startX) / (window.width - display.width))
                 if (p < oldP)
                     rewind = reverse ? false : true
@@ -149,7 +150,7 @@ Rectangle {
                 controller.progress = reverse ? 1 - p : p
                 oldP = p
             }
-            onPressed: startX = mapToItem(window, mouse.x).x
+            onPressed: startX = mapToItem(window, mouseInput.mouseX, mouseInput.mouseY).x
             onReleased: {
                 if (rewind)
                     controller.completeToBeginning()

@@ -163,7 +163,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
     if (canUseAccessor())
         flags.setFlag(QQmlPropertyData::BypassInterceptor);
 
-    QQmlBindingProfiler prof(ep->profiler, this, function());
+    QQmlBindingProfiler prof(ep->profiler, function());
     doUpdate(watcher, flags, scope);
 
     if (!watcher.wasDeleted())
