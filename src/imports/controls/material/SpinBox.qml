@@ -125,7 +125,7 @@ T.SpinBox {
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            width: Math.min(parent.width / 3, parent.width / 3)
+            width: Math.min(parent.width / 3, parent.height / 3)
             height: 2
             color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
@@ -133,7 +133,7 @@ T.SpinBox {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
-            height: Math.min(parent.width / 3, parent.width / 3)
+            height: Math.min(parent.width / 3, parent.height / 3)
             color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
     }
