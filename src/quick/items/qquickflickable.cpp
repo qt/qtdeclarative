@@ -1557,6 +1557,8 @@ void QQuickFlickablePrivate::replayDelayedPress()
 
         // If we have the grab, release before delivering the event
         if (QQuickWindow *w = q->window()) {
+            QQuickWindowPrivate *wpriv = QQuickWindowPrivate::get(w);
+            wpriv->allowChildEventFiltering = false; // don't allow re-filtering during replay
             replayingPressEvent = true;
             if (w->mouseGrabberItem() == q)
                 q->ungrabMouse();
@@ -1564,6 +1566,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
             // Use the event handler that will take care of finding the proper item to propagate the event
             QCoreApplication::sendEvent(w, mouseEvent.data());
             replayingPressEvent = false;
+            wpriv->allowChildEventFiltering = true;
         }
     }
 }

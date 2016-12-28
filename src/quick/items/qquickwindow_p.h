@@ -148,6 +148,7 @@ public:
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
+    bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver);
 #if QT_CONFIG(wheelevent)
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
@@ -174,6 +175,7 @@ public:
 
     QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointF &, bool checkMouseButtons) const;
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
+    void updateFilteringParentItems(const QVector<QQuickItem *> &targetItems);
 
     // hover delivery
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted);
@@ -222,6 +224,7 @@ public:
     QList<QSGNode *> cleanupNodeList;
 
     QVector<QQuickItem *> itemsToPolish;
+    QVector<QPair<QQuickItem *,QQuickItem *> > filteringParentItems;  // item:parent pairs
 
     qreal devicePixelRatio;
     QMetaObject::Connection physicalDpiChangedConnection;
@@ -258,6 +261,8 @@ public:
 
     uint lastWheelEventAccepted : 1;
     bool componentCompleted : 1;
+
+    bool allowChildEventFiltering : 1;
 
     Qt::FocusReason lastFocusReason;
 
