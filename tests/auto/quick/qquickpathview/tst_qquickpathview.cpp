@@ -141,6 +141,7 @@ private slots:
     void addCustomAttribute();
     void movementDirection_data();
     void movementDirection();
+    void removePath();
 };
 
 class TestObject : public QObject
@@ -2502,6 +2503,19 @@ void tst_QQuickPathView::movementDirection()
     QVERIFY(pathview->movementDirection() == movementdirection);
 
     verify_offsets(pathview, toidx, fromoffset, tooffset);
+}
+
+void tst_QQuickPathView::removePath()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("removePath.qml"));
+    window->show();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != 0);
+
+    QVERIFY(QMetaObject::invokeMethod(pathview, "removePath"));
+    QVERIFY(QMetaObject::invokeMethod(pathview, "setPath"));
 }
 
 QTEST_MAIN(tst_QQuickPathView)
