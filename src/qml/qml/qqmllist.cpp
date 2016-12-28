@@ -335,7 +335,7 @@ int QQmlListReference::count() const
 \since 5.0
 \inmodule QtQml
 \brief The QQmlListProperty class allows applications to expose list-like
-properties to QML.
+properties of QObject-derived classes to QML.
 
 QML has many list properties, where more than one object value can be assigned.
 The use of a list property from QML looks like this:
@@ -369,7 +369,8 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
 
 The \l {Qt Quick 1} version of this class is named QDeclarativeListProperty.
 
-\note QQmlListProperty can only be used for lists of QObject-derived object pointers.
+\sa {Extending QML - Object and List Property Types Example}
+
 */
 
 /*!
