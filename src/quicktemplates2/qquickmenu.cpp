@@ -461,8 +461,13 @@ void QQuickMenu::componentComplete()
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickMenu);
-    Q_UNUSED(oldItem);
     QQuickPopup::contentItemChange(newItem, oldItem);
+
+    if (oldItem)
+        QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
+    if (newItem)
+        QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
+
     d->contentItem = newItem;
 }
 

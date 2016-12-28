@@ -67,6 +67,8 @@ private slots:
     void menuButton();
     void addItem();
     void menuSeparator();
+    void repeater();
+    void order();
 };
 
 void tst_menu::defaults()
@@ -315,6 +317,71 @@ void tst_menu::menuSeparator()
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         saveMenuItem->mapToScene(QPointF(saveMenuItem->width() / 2, saveMenuItem->height() / 2)).toPoint());
     QTRY_VERIFY(!menu->isVisible());
+}
+
+void tst_menu::repeater()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("repeater.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    QObject *repeater = window->property("repeater").value<QObject*>();
+    QVERIFY(repeater);
+
+    int count = repeater->property("count").toInt();
+    QCOMPARE(count, 5);
+
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = menu->itemAt(i);
+        QVERIFY(item);
+        QCOMPARE(item->property("idx").toInt(), i);
+
+        QQuickItem *repeaterItem = nullptr;
+        QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem*, repeaterItem), Q_ARG(int, i)));
+        QCOMPARE(item, repeaterItem);
+    }
+
+    repeater->setProperty("model", 3);
+
+    count = repeater->property("count").toInt();
+    QCOMPARE(count, 3);
+
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = menu->itemAt(i);
+        QVERIFY(item);
+        QCOMPARE(item->property("idx").toInt(), i);
+
+        QQuickItem *repeaterItem = nullptr;
+        QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem*, repeaterItem), Q_ARG(int, i)));
+        QCOMPARE(item, repeaterItem);
+    }
+}
+
+void tst_menu::order()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("order.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    const QStringList texts = {"dynamic_0", "static_1", "repeated_2", "repeated_3", "static_4", "dynamic_5", "dynamic_6"};
+
+    for (int i = 0; i < texts.count(); ++i) {
+        QQuickItem *item = menu->itemAt(i);
+        QVERIFY(item);
+        QCOMPARE(item->property("text").toString(), texts.at(i));
+    }
 }
 
 QTEST_MAIN(tst_menu)
