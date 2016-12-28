@@ -56,8 +56,7 @@ namespace QQuickValueTypes {
 
 QString QQuickColorValueType::toString() const
 {
-    // to maintain behaviour with QtQuick 1.0, we just output normal toString() value.
-    return QVariant(v).toString();
+    return v.name(v.alpha() != 255 ? QColor::HexArgb : QColor::HexRgb);
 }
 
 qreal QQuickColorValueType::r() const

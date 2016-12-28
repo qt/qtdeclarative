@@ -38,11 +38,15 @@ TestCase {
     when: windowShown
 
     property var createdObjectNames: []
+    property var createdParentlessObjects: []
 
     function verifyNoChildren() {
         for (var i = 0; i < createdObjectNames.length; ++i) {
             verify(!findChild(testCase, createdObjectNames[i]));
         }
+
+        compare(createdParentlessObjects.length, 0,
+            "The following parentless temporary objects were not destroyed: " + createdParentlessObjects)
     }
 
     function init() {
@@ -70,6 +74,21 @@ TestCase {
         compare(findChild(testCase, object.objectName), object);
 
         createdObjectNames.push(object.objectName);
+
+        // Create an object and destroy it early. It should be
+        // removed from TestCase's list of temporary objects
+        // as soon as it's destroyed.
+        var manuallyDestroyedObject = createTemporaryQmlObject(data.qml, testCase);
+        verify(manuallyDestroyedObject);
+
+        var manuallyDestroyedObjectName = data.tag + "FromQmlShortLived";
+        manuallyDestroyedObject.objectName = manuallyDestroyedObjectName;
+        compare(findChild(testCase, manuallyDestroyedObjectName), manuallyDestroyedObject);
+
+        manuallyDestroyedObject.destroy();
+        wait(0);
+
+        verify(!findChild(testCase, manuallyDestroyedObjectName));
     }
 
     Component {
@@ -109,5 +128,52 @@ TestCase {
             object.contentItem.objectName = "WindowContentItemFromComponent";
 
         createdObjectNames.push(object.objectName);
+
+        // Create an object and destroy it early. It should be
+        // removed from TestCase's list of temporary objects
+        // as soon as it's destroyed.
+        var manuallyDestroyedObject = createTemporaryObject(data.component, testCase);
+        verify(manuallyDestroyedObject);
+
+        var manuallyDestroyedObjectName = data.tag + "FromComponentShortLived";
+        manuallyDestroyedObject.objectName = manuallyDestroyedObjectName;
+        compare(findChild(testCase, manuallyDestroyedObjectName), manuallyDestroyedObject);
+
+        manuallyDestroyedObject.destroy();
+        wait(0);
+
+        verify(!findChild(testCase, manuallyDestroyedObjectName));
+    }
+
+    function test_fromComponentParent_data() {
+        return [
+            { tag: "omit", expectedParent: null },
+            { tag: "undefined", parent: undefined, expectedParent: null },
+            { tag: "null", parent: null, expectedParent: null },
+            { tag: "1", parent: 1, expectedParent: null },
+            { tag: "testCase", parent: testCase, expectedParent: testCase }
+        ];
+    }
+
+    // Tests that an invalid or missing parent argument results in a parentless object.
+    // This is the same behavior as displayed by component.createObject().
+    function test_fromComponentParent(data) {
+        var object = data.hasOwnProperty("parent")
+            ? createTemporaryObject(itemComponent, data.parent)
+            : createTemporaryObject(itemComponent);
+        verify(object);
+        compare(object.parent, data.expectedParent);
+
+        object.objectName = data.tag + "FromComponentOmitParent";
+        if (object.parent) {
+            compare(findChild(testCase, object.objectName), object);
+            createdObjectNames.push(object.objectName);
+        } else {
+            object.Component.destruction.connect(function() {
+                 var indexOfObject = createdParentlessObjects.indexOf(object);
+                 createdParentlessObjects.splice(indexOfObject, 1);
+            });
+            createdParentlessObjects.push(object);
+        }
     }
 }

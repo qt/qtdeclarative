@@ -634,7 +634,7 @@ void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong times
     QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp, tp.velocity());
     m_rotation = tp.rotation();
     m_pressure = tp.pressure();
-//    m_uniqueId = tp.uniqueId();
+    m_uniqueId = tp.uniqueId();
 }
 
 /*!

@@ -149,40 +149,38 @@ class Q_QML_PRIVATE_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDef
     Q_OBJECT
 public:
 
-    class BindingRefCount : public QQmlRefCount {
+    class FunctionRefCount : public QQmlRefCount {
     public:
-        BindingRefCount(QQmlBinding *binding):
-            m_binding(binding)
+        FunctionRefCount(QV4::Function *function):
+            m_function(function)
         {
-            m_binding->ref.ref();
+            m_function->compilationUnit->addref();
         }
 
-        BindingRefCount(const BindingRefCount &other) :
-            QQmlRefCount(other), m_binding(other.m_binding)
+        FunctionRefCount(const FunctionRefCount &other) :
+            QQmlRefCount(other), m_function(other.m_function)
         {
-            m_binding->ref.ref();
+            m_function->compilationUnit->addref();
         }
 
-        BindingRefCount &operator=(const BindingRefCount &other)
+        FunctionRefCount &operator=(const FunctionRefCount &other)
         {
             if (this != &other) {
                 QQmlRefCount::operator=(other);
-                other.m_binding->ref.ref();
-                if (!m_binding->ref.deref())
-                    delete m_binding;
-                m_binding = other.m_binding;
+                other.m_function->compilationUnit->addref();
+                m_function->compilationUnit->release();
+                m_function = other.m_function;
             }
             return *this;
         }
 
-        ~BindingRefCount()
+        ~FunctionRefCount()
         {
-            if (!m_binding->ref.deref())
-                delete m_binding;
+            m_function->compilationUnit->release();
         }
 
     private:
-        QQmlBinding *m_binding;
+        QV4::Function *m_function;
     };
 
     struct Location {
@@ -199,14 +197,10 @@ public:
         RefLocation() : Location(), locationType(MaximumRangeType), ref(nullptr), sent(false)
         {}
 
-        RefLocation(QQmlBinding *binding, QV4::FunctionObject *function) :
+        RefLocation(QV4::Function *function) :
             Location(function->sourceLocation()), locationType(Binding),
-            ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
-        {}
-
-        RefLocation(QQmlBinding *binding, QV4::Function *function) :
-            Location(function->sourceLocation()), locationType(Binding),
-            ref(new BindingRefCount(binding), QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
+            ref(new FunctionRefCount(function),
+                QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
         {}
 
         RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
@@ -236,16 +230,21 @@ public:
 
     typedef QHash<quintptr, Location> LocationHash;
 
-    void startBinding(QQmlBinding *binding, QV4::Function *function)
+    void startBinding(QV4::Function *function)
     {
-        quintptr locationId(id(binding));
+        // Use the QV4::Function as ID, as that is common among different instances of the same
+        // component. QQmlBinding is per instance.
+        // Add 1 to the ID, to make it different from the IDs the V4 profiler produces. The +1 makes
+        // the pointer point into the middle of the QV4::Function. Thus it still points to valid
+        // memory but we cannot accidentally create a duplicate key from another object.
+        quintptr locationId(id(function) + 1);
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), Binding,
                                        locationId));
 
         RefLocation &location = m_locations[locationId];
         if (!location.isValid())
-            location = RefLocation(binding, function);
+            location = RefLocation(function);
     }
 
     // Have toByteArrays() construct another RangeData event from the same QString later.
@@ -281,7 +280,8 @@ public:
                                        Creating, id(obj)));
     }
 
-    void updateCreating(const QV4::CompiledData::Object *obj, QV4::CompiledData::CompilationUnit *ref,
+    void updateCreating(const QV4::CompiledData::Object *obj,
+                        QV4::CompiledData::CompilationUnit *ref,
                         const QUrl &url, const QString &type)
     {
         quintptr locationId(id(obj));
@@ -330,12 +330,11 @@ struct QQmlProfilerHelper : public QQmlProfilerDefinitions {
 };
 
 struct QQmlBindingProfiler : public QQmlProfilerHelper {
-    QQmlBindingProfiler(QQmlProfiler *profiler, QQmlBinding *binding,
-                        QV4::Function *function) :
+    QQmlBindingProfiler(QQmlProfiler *profiler, QV4::Function *function) :
         QQmlProfilerHelper(profiler)
     {
         Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileBinding, profiler,
-                      startBinding(binding, function));
+                      startBinding(function));
     }
 
     ~QQmlBindingProfiler()

@@ -898,6 +898,7 @@ void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
     } else if (buffer->size != byteSize) {
         free(buffer->data);
         buffer->data = (char *) malloc(byteSize);
+        Q_CHECK_PTR(buffer->data);
     }
     buffer->size = byteSize;
 }

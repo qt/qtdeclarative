@@ -8271,7 +8271,7 @@ void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
 void tst_QQuickListView::keyNavigationEnabled()
 {
     QScopedPointer<QQuickView> window(createView());
-    window->setSource(testFileUrl("simplelistview.qml"));
+    window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));

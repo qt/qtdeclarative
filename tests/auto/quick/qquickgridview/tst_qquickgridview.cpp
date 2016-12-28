@@ -6568,7 +6568,7 @@ void tst_QQuickGridView::QTBUG_45640()
 void tst_QQuickGridView::keyNavigationEnabled()
 {
     QScopedPointer<QQuickView> window(createView());
-    window->setSource(testFileUrl("gridview4.qml"));
+    window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));

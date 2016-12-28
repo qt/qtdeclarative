@@ -43,11 +43,11 @@ var db = LocalStorage.openDatabaseSync("ActivityTrackDB", "", "Database tracking
 db.transaction(
     try {
         function(tx) {
-            tx.executeSql('INSERT INTO trip_log VALUES(?, ?, ?)',
-                          [ '01/10/2016','Sylling - Vikersund', '53' ]);
+            tx.executeSql("INSERT INTO trip_log VALUES(?, ?, ?)",
+                          [ "01/10/2016","Sylling - Vikersund", "53" ]);
         }
     }   catch (err) {
-            console.log("Error inserting into table Greeting: " + err);
+            console.log("Error inserting into table trip_log: " + err);
         }
 )
 //![0]
@@ -60,11 +60,11 @@ function db_distance_select(Pdistance)
 var db = LocalStorage.openDatabaseSync("ActivityTrackDB", "", "Database tracking sports activities", 1000000);
 db.transaction(
     function(tx) {
-        var results = tx.executeSql('SELECT rowid,
+        var results = tx.executeSql("SELECT rowid,
                                             date,
                                             trip_desc,
                                             distance FROM trip_log
-                                     where distance >= ?',[Pdistance]');
+                                     where distance >= ?",[Pdistance]);
         for (var i = 0; i < results.rows.length; i++) {
             listModel.append({"id": results.rows.item(i).rowid,
                               "date": results.rows.item(i).date,
@@ -76,10 +76,22 @@ db.transaction(
 //![1]
 //![2]
 var db = LocalStorage.openDatabaseSync("ActivityTrackDB", "", "Database tracking sports activities", 1000000);
-if (db.version == '0.1') {
-    db.changeVersion('0.1', '0.2', function(tx) {
-        tx.executeSql('INSERT INTO trip_log VALUES(?, ?, ?)',
-                    [ '01/10/2016','Sylling - Vikersund', '53' ]);
+if (db.version == "0.1") {
+    db.changeVersion("0.1", "0.2", function(tx) {
+        tx.executeSql("INSERT INTO trip_log VALUES(?, ?, ?)",
+                    [ "01/10/2016","Sylling - Vikersund", "53" ]);
     }
 });
 //![2]
+//![3]
+create table trip_log(date text, data text)
+//![3]
+//![4]
+var obj = {description = "Vikersund - Noresund", distance = "60"}
+//![4]
+//![5]
+db.transaction(function(tx) {
+    result = tx.executeSQL("insert into trip_log values (?,?)",
+                           ["01/11/2016", JSON.stringify(obj)])
+}
+//![5]
