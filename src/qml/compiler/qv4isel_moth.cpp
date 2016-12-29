@@ -39,14 +39,14 @@
 
 #include "qv4isel_util_p.h"
 #include "qv4isel_moth_p.h"
-#include "qv4vme_moth_p.h"
 #include "qv4ssa_p.h"
-#include <private/qv4debugging_p.h>
-#include <private/qv4function_p.h>
-#include <private/qv4regexpobject_p.h>
 #include <private/qv4compileddata_p.h>
-#include <private/qqmlengine_p.h>
 #include <wtf/MathExtras.h>
+
+#if !defined(V4_BOOTSTRAP)
+#include "qv4vme_moth_p.h"
+#include <private/qv4function_p.h>
+#endif
 
 #undef USE_TYPE_INFO
 
@@ -1425,6 +1425,8 @@ CompilationUnit::~CompilationUnit()
 {
 }
 
+#if !defined(V4_BOOTSTRAP)
+
 void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
 {
 #ifdef MOTH_THREADED_INTERPRETER
@@ -1461,6 +1463,31 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
     }
 }
 
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    Q_UNUSED(errorString);
+    codeRefs.resize(data->functionTableSize);
+
+    const char *basePtr = reinterpret_cast<const char *>(data);
+
+    for (uint i = 0; i < data->functionTableSize; ++i) {
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+        const char *codePtr = const_cast<const char *>(reinterpret_cast<const char *>(basePtr + compiledFunction->codeOffset));
+#ifdef MOTH_THREADED_INTERPRETER
+        // for the threaded interpreter we need to make a copy of the data because it needs to be
+        // modified for the instruction handler addresses.
+        QByteArray code(codePtr, compiledFunction->codeSize);
+#else
+        QByteArray code = QByteArray::fromRawData(codePtr, compiledFunction->codeSize);
+#endif
+        codeRefs[i] = code;
+    }
+
+    return true;
+}
+
+#endif // V4_BOOTSTRAP
+
 void CompilationUnit::prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit)
 {
     const int codeAlignment = 16;
@@ -1482,7 +1509,7 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 
     QByteArray padding;
 
-#ifdef MOTH_THREADED_INTERPRETER
+#if defined(MOTH_THREADED_INTERPRETER) && !defined(V4_BOOTSTRAP)
     // Map from instruction label back to instruction type. Only needed when persisting
     // already linked compilation units;
     QHash<void*, int> reverseInstructionMapping;
@@ -1511,7 +1538,7 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 
         QByteArray code = codeRefs.at(i);
 
-#ifdef MOTH_THREADED_INTERPRETER
+#if defined(MOTH_THREADED_INTERPRETER) && !defined(V4_BOOTSTRAP)
         if (!reverseInstructionMapping.isEmpty()) {
             char *codePtr = code.data(); // detaches
             int index = 0;
@@ -1538,29 +1565,6 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
             return false;
         }
     }
-    return true;
-}
-
-bool CompilationUnit::memoryMapCode(QString *errorString)
-{
-    Q_UNUSED(errorString);
-    codeRefs.resize(data->functionTableSize);
-
-    const char *basePtr = reinterpret_cast<const char *>(data);
-
-    for (uint i = 0; i < data->functionTableSize; ++i) {
-        const CompiledData::Function *compiledFunction = data->functionAt(i);
-        const char *codePtr = const_cast<const char *>(reinterpret_cast<const char *>(basePtr + compiledFunction->codeOffset));
-#ifdef MOTH_THREADED_INTERPRETER
-        // for the threaded interpreter we need to make a copy of the data because it needs to be
-        // modified for the instruction handler addresses.
-        QByteArray code(codePtr, compiledFunction->codeSize);
-#else
-        QByteArray code = QByteArray::fromRawData(codePtr, compiledFunction->codeSize);
-#endif
-        codeRefs[i] = code;
-    }
-
     return true;
 }
 

@@ -52,7 +52,6 @@
 #include "qv4compilationunitmapper_p.h"
 #include <QQmlPropertyMap>
 #include <QDateTime>
-#include <QSaveFile>
 #include <QFile>
 #include <QFileInfo>
 #include <QScopedValueRollback>
@@ -62,6 +61,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <QSaveFile>
 
 #include <algorithm>
 
@@ -76,6 +76,27 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 namespace CompiledData {
+
+#ifdef V4_BOOTSTRAP
+static QString cacheFilePath(const QString &localSourcePath)
+{
+    const QString localCachePath = localSourcePath + QLatin1Char('c');
+    return localCachePath;
+}
+#else
+static QString cacheFilePath(const QUrl &url)
+{
+    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
+    const QString localCachePath = localSourcePath + QLatin1Char('c');
+    if (QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
+        return localCachePath;
+    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
+    fileNameHash.addData(localSourcePath.toUtf8());
+    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
+    QDir::root().mkpath(directory);
+    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + QFileInfo(localCachePath).completeSuffix();
+}
+#endif
 
 #ifndef V4_BOOTSTRAP
 CompilationUnit::CompilationUnit()
@@ -329,67 +350,6 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
-static QString cacheFilePath(const QUrl &url)
-{
-    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
-    const QString localCachePath = localSourcePath + QLatin1Char('c');
-    if (QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
-        return localCachePath;
-    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
-    fileNameHash.addData(localSourcePath.toUtf8());
-    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
-    QDir::root().mkpath(directory);
-    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + QFileInfo(localCachePath).completeSuffix();
-}
-
-bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
-{
-    errorString->clear();
-
-    if (data->sourceTimeStamp == 0) {
-        *errorString = QStringLiteral("Missing time stamp for source file");
-        return false;
-    }
-
-    if (!QQmlFile::isLocalFile(unitUrl)) {
-        *errorString = QStringLiteral("File has to be a local file.");
-        return false;
-    }
-
-    // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(cacheFilePath(unitUrl));
-    if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        *errorString = cacheFile.errorString();
-        return false;
-    }
-
-    QByteArray modifiedUnit;
-    modifiedUnit.resize(data->unitSize);
-    memcpy(modifiedUnit.data(), data, data->unitSize);
-    const char *dataPtr = modifiedUnit.data();
-    Unit *unitPtr;
-    memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
-    unitPtr->flags |= Unit::StaticData;
-
-    prepareCodeOffsetsForDiskStorage(unitPtr);
-
-    qint64 headerWritten = cacheFile.write(modifiedUnit);
-    if (headerWritten != modifiedUnit.size()) {
-        *errorString = cacheFile.errorString();
-        return false;
-    }
-
-    if (!saveCodeToDisk(&cacheFile, unitPtr, errorString))
-        return false;
-
-    if (!cacheFile.commit()) {
-        *errorString = cacheFile.errorString();
-        return false;
-    }
-
-    return true;
-}
-
 bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
 {
     if (!QQmlFile::isLocalFile(url)) {
@@ -439,6 +399,68 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     return true;
 }
 
+bool CompilationUnit::memoryMapCode(QString *errorString)
+{
+    *errorString = QStringLiteral("Missing code mapping backend");
+    return false;
+}
+
+#endif // V4_BOOTSTRAP
+
+#if defined(V4_BOOTSTRAP)
+bool CompilationUnit::saveToDisk(const QString &unitUrl, QString *errorString)
+#else
+bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
+#endif
+{
+    errorString->clear();
+
+    if (data->sourceTimeStamp == 0) {
+        *errorString = QStringLiteral("Missing time stamp for source file");
+        return false;
+    }
+
+#if !defined(V4_BOOTSTRAP)
+    if (!QQmlFile::isLocalFile(unitUrl)) {
+        *errorString = QStringLiteral("File has to be a local file.");
+        return false;
+    }
+#endif
+
+    // Foo.qml -> Foo.qmlc
+    QSaveFile cacheFile(cacheFilePath(unitUrl));
+    if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    QByteArray modifiedUnit;
+    modifiedUnit.resize(data->unitSize);
+    memcpy(modifiedUnit.data(), data, data->unitSize);
+    const char *dataPtr = modifiedUnit.data();
+    Unit *unitPtr;
+    memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
+    unitPtr->flags |= Unit::StaticData;
+
+    prepareCodeOffsetsForDiskStorage(unitPtr);
+
+    qint64 headerWritten = cacheFile.write(modifiedUnit);
+    if (headerWritten != modifiedUnit.size()) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    if (!saveCodeToDisk(&cacheFile, unitPtr, errorString))
+        return false;
+
+    if (!cacheFile.commit()) {
+        *errorString = cacheFile.errorString();
+        return false;
+    }
+
+    return true;
+}
+
 void CompilationUnit::prepareCodeOffsetsForDiskStorage(Unit *unit)
 {
     Q_UNUSED(unit);
@@ -451,13 +473,6 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const Unit *unit, QStrin
     *errorString = QStringLiteral("Saving code to disk is not supported in this configuration");
     return false;
 }
-
-bool CompilationUnit::memoryMapCode(QString *errorString)
-{
-    *errorString = QStringLiteral("Missing code mapping backend");
-    return false;
-}
-#endif // V4_BOOTSTRAP
 
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 {
