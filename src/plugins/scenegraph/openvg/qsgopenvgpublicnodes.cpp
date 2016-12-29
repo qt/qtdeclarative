@@ -39,6 +39,8 @@
 
 #include "qsgopenvgpublicnodes.h"
 #include "qsgopenvghelpers.h"
+#include <VG/openvg.h>
+#include <QtGui/QPixmap>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,11 +68,21 @@ void QSGOpenVGRectangleNode::setRect(const QRectF &rect)
     markDirty(DirtyMaterial);
 }
 
+QRectF QSGOpenVGRectangleNode::rect() const
+{
+    return m_rect;
+}
+
 void QSGOpenVGRectangleNode::setColor(const QColor &color)
 {
     m_color = color;
     m_paintDirty = true;
     markDirty(DirtyMaterial);
+}
+
+QColor QSGOpenVGRectangleNode::color() const
+{
+    return m_color;
 }
 
 void QSGOpenVGRectangleNode::setTransform(const QOpenVGMatrix &transform)
@@ -177,10 +189,56 @@ QSGOpenVGImageNode::~QSGOpenVGImageNode()
     }
 }
 
+void QSGOpenVGImageNode::setRect(const QRectF &rect)
+{
+    m_rect = rect;
+    markDirty(DirtyMaterial);
+}
+
+QRectF QSGOpenVGImageNode::rect() const
+{
+    return m_rect;
+}
+
+void QSGOpenVGImageNode::setSourceRect(const QRectF &r)
+{
+    m_sourceRect = r;
+}
+
+QRectF QSGOpenVGImageNode::sourceRect() const
+{
+    return m_sourceRect;
+}
+
 void QSGOpenVGImageNode::setTexture(QSGTexture *texture)
 {
     m_texture = texture;
     markDirty(DirtyMaterial);
+}
+
+QSGTexture *QSGOpenVGImageNode::texture() const
+{
+    return m_texture;
+}
+
+void QSGOpenVGImageNode::setFiltering(QSGTexture::Filtering filtering)
+{
+    m_filtering = filtering;
+    markDirty(DirtyMaterial);
+}
+
+QSGTexture::Filtering QSGOpenVGImageNode::filtering() const
+{
+    return m_filtering;
+}
+
+void QSGOpenVGImageNode::setMipmapFiltering(QSGTexture::Filtering)
+{
+}
+
+QSGTexture::Filtering QSGOpenVGImageNode::mipmapFiltering() const
+{
+    return QSGTexture::None;
 }
 
 void QSGOpenVGImageNode::setTextureCoordinatesTransform(QSGImageNode::TextureCoordinatesTransformMode transformNode)
@@ -189,6 +247,21 @@ void QSGOpenVGImageNode::setTextureCoordinatesTransform(QSGImageNode::TextureCoo
         return;
     m_transformMode = transformNode;
     markDirty(DirtyGeometry);
+}
+
+QSGImageNode::TextureCoordinatesTransformMode QSGOpenVGImageNode::textureCoordinatesTransform() const
+{
+    return m_transformMode;
+}
+
+void QSGOpenVGImageNode::setOwnsTexture(bool owns)
+{
+    m_owns = owns;
+}
+
+bool QSGOpenVGImageNode::ownsTexture() const
+{
+    return m_owns;
 }
 
 void QSGOpenVGImageNode::render()

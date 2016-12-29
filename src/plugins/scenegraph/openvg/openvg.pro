@@ -10,6 +10,7 @@ QMAKE_TARGET_PRODUCT = "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
 QMAKE_TARGET_DESCRIPTION = "Quick OpenVG Renderer for Qt."
 
 QMAKE_USE += openvg
+CONFIG += egl
 
 OTHER_FILES += $$PWD/openvg.json
 

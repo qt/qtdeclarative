@@ -37,10 +37,11 @@
 **
 ****************************************************************************/
 
+#include <QDebug>
 #include "qopenvgoffscreensurface.h"
 
 #include <QtGui/QImage>
-#include <QDebug>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -71,7 +72,7 @@ QOpenVGOffscreenSurface::QOpenVGOffscreenSurface(const QSize &size)
 
     m_renderTarget = eglCreatePbufferFromClientBuffer(m_display,
                                                       EGL_OPENVG_IMAGE,
-                                                      (EGLClientBuffer)m_image,
+                                                      reinterpret_cast<EGLClientBuffer>(uintptr_t(m_image)),
                                                       pbufferConfig,
                                                       0);
     if (m_renderTarget == EGL_NO_SURFACE)
