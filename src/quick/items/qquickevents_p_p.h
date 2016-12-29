@@ -331,6 +331,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
     Q_OBJECT
     Q_PROPERTY(qreal rotation READ rotation)
     Q_PROPERTY(qreal pressure READ pressure)
+    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters)
     Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId)
 
 public:
@@ -340,11 +341,13 @@ public:
 
     qreal rotation() const { return m_rotation; }
     qreal pressure() const { return m_pressure; }
+    QSizeF ellipseDiameters() const { return m_ellipseDiameters; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
 
 private:
     qreal m_rotation;
     qreal m_pressure;
+    QSizeF m_ellipseDiameters;
     QPointingDeviceUniqueId m_uniqueId;
 
     Q_DISABLE_COPY(QQuickEventTouchPoint)
