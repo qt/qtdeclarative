@@ -74,6 +74,8 @@ T.ComboBox {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         source: "image://material/drop-indicator/" + (control.enabled ? control.Material.foreground : control.Material.hintTextColor)
+        sourceSize.width: width
+        sourceSize.height: height
     }
 
     contentItem: Text {
