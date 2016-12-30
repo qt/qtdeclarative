@@ -1646,8 +1646,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
     auto point = pointerEvent->point(0);
     lastMousePosition = point->scenePos();
 
-    if (point->grabberPointerHandler()) {
-        point->grabberPointerHandler()->handlePointerEvent(pointerEvent);
+    if (auto handler = point->grabberPointerHandler()) {
+        pointerEvent->localize(handler->parentItem());
+        handler->handlePointerEvent(pointerEvent);
         return;
     }
 
