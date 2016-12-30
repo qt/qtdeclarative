@@ -98,7 +98,8 @@ Rectangle {
                 height: 1
                 x: touchPoint.x
                 y: touchPoint.y
-                rotation: width > 0 ? Math.acos(touchPoint.velocity.x / width) : 0
+                rotation: width > 0 ? Math.atan2(touchPoint.velocity.y, touchPoint.velocity.x) * 180 / Math.PI : 0
+                Behavior on rotation { SmoothedAnimation { duration: 20 } }
                 transformOrigin: Item.BottomLeft
             }
 
