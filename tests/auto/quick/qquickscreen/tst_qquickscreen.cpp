@@ -113,6 +113,9 @@ void tst_qquickscreen::fullScreenList()
         QQuickScreenInfo *info = qobject_cast<QQuickScreenInfo *>(screensArray.property(i).toQObject());
         QVERIFY(info != nullptr);
         QCOMPARE(screenList[i]->name(), info->name());
+        QCOMPARE(screenList[i]->manufacturer(), info->manufacturer());
+        QCOMPARE(screenList[i]->model(), info->model());
+        QCOMPARE(screenList[i]->serialNumber(), info->serialNumber());
         QCOMPARE(screenList[i]->size().width(), info->width());
         QCOMPARE(screenList[i]->size().height(), info->height());
         QCOMPARE(screenList[i]->availableVirtualGeometry().width(), info->desktopAvailableWidth());
