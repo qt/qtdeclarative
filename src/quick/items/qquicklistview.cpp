@@ -1462,9 +1462,15 @@ void QQuickListViewPrivate::fixupPosition()
 
 void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 {
-    if ((orient == QQuickListView::Horizontal && &data == &vData)
-        || (orient == QQuickListView::Vertical && &data == &hData))
+    if (orient == QQuickListView::Horizontal && &data == &vData) {
+        if (flickableDirection != QQuickFlickable::HorizontalFlick)
+            QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
         return;
+    } else if (orient == QQuickListView::Vertical && &data == &hData) {
+        if (flickableDirection != QQuickFlickable::VerticalFlick)
+            QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
+        return;
+    }
 
     correctFlick = false;
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
@@ -1813,6 +1819,19 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             \image listview-layout-righttoleft.png
     \endtable
 
+    \section1 Flickable Direction
+
+    By default, a vertical ListView sets \l {Flickable::}{flickableDirection} to \e Flickable.Vertical,
+    and a horizontal ListView sets it to \e Flickable.Horizontal. Furthermore, a vertical ListView only
+    calculates (estimates) the \l {Flickable::}{contentHeight}, and a horizontal ListView only calculates
+    the \l {Flickable::}{contentWidth}. The other dimension is set to \e -1.
+
+    Since Qt 5.9 (Qt Quick 2.9), it is possible to make a ListView that can be flicked to both directions.
+    In order to do this, the \l {Flickable::}{flickableDirection} can be set to \e Flickable.AutoFlickDirection
+    or \e Flickable.AutoFlickIfNeeded, and the desired \e contentWidth or \e contentHeight must be provided.
+
+    \snippet qml/listview/listview.qml flickBothDirections
+
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
@@ -2099,6 +2118,8 @@ void QQuickListView::setSpacing(qreal spacing)
     \li Vertical orientation:
     \image listview-highlight.png
     \endtable
+
+    \sa {Flickable Direction}
 */
 QQuickListView::Orientation QQuickListView::orientation() const
 {
@@ -2112,12 +2133,18 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     if (d->orient != orientation) {
         d->orient = orientation;
         if (d->orient == Vertical) {
-            setContentWidth(-1);
-            setFlickableDirection(VerticalFlick);
+            if (d->flickableDirection == HorizontalFlick) {
+                setFlickableDirection(VerticalFlick);
+                if (isComponentComplete())
+                    setContentWidth(-1);
+            }
             setContentX(0);
         } else {
-            setContentHeight(-1);
-            setFlickableDirection(HorizontalFlick);
+            if (d->flickableDirection == VerticalFlick) {
+                setFlickableDirection(HorizontalFlick);
+                if (isComponentComplete())
+                    setContentHeight(-1);
+            }
             setContentY(0);
         }
         d->regenerate(true);
@@ -3042,6 +3069,21 @@ void QQuickListView::initItem(int index, QObject *object)
     }
 }
 
+qreal QQuickListView::maxYExtent() const
+{
+    Q_D(const QQuickListView);
+    if (d->layoutOrientation() == Qt::Horizontal && d->flickableDirection != HorizontalFlick)
+        return QQuickFlickable::maxYExtent();
+    return QQuickItemView::maxYExtent();
+}
+
+qreal QQuickListView::maxXExtent() const
+{
+    Q_D(const QQuickListView);
+    if (d->layoutOrientation() == Qt::Vertical && d->flickableDirection != VerticalFlick)
+        return QQuickFlickable::maxXExtent();
+    return QQuickItemView::maxXExtent();
+}
 
 /*!
     \qmlmethod QtQuick::ListView::incrementCurrentIndex()

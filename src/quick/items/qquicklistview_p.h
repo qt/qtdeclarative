@@ -196,6 +196,8 @@ protected:
     void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry,const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void initItem(int index, QObject *item) Q_DECL_OVERRIDE;
+    qreal maxYExtent() const Q_DECL_OVERRIDE;
+    qreal maxXExtent() const Q_DECL_OVERRIDE;
 };
 
 class QQuickListViewAttached : public QQuickItemViewAttached
