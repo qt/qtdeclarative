@@ -407,6 +407,11 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
     QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
+    if (sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+        *errorString = QStringLiteral("QML source file has moved to a different location.");
+        return false;
+    }
+
     {
         const QString foundArchitecture = stringAt(data->architectureIndex);
         const QString expectedArchitecture = QSysInfo::buildAbi();
