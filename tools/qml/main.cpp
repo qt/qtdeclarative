@@ -46,7 +46,6 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QRegularExpression>
 #include <QStringList>
 #include <QScopedPointer>
 #include <QDebug>
@@ -568,29 +567,14 @@ int main(int argc, char *argv[])
         loadDummyDataFiles(e, dummyDir);
 
     for (const QString &path : qAsConst(files)) {
-        //QUrl::fromUserInput doesn't treat no scheme as relative file paths
-#if QT_CONFIG(regularexpression)
-        QRegularExpression urlRe("[[:word:]]+://.*");
-        if (urlRe.match(path).hasMatch()) { //Treat as a URL
-            QUrl url = QUrl::fromUserInput(path);
-            if (verboseMode)
-                printf("qml: loading %s\n",
-                        qPrintable(url.isLocalFile()
-                        ? QDir::toNativeSeparators(url.toLocalFile())
-                        : url.toString()));
+        QUrl url = QUrl::fromUserInput(path, QDir::currentPath());
+        if (verboseMode)
+            printf("qml: loading %s\n", qPrintable(url.toString()));
+        QByteArray strippedFile;
+        if (getFileSansBangLine(path, strippedFile))
+            e.loadData(strippedFile, e.baseUrl().resolved(url)); //QQmlComponent won't resolve it for us, it doesn't know it's a valid file if we loadData
+        else //Errors or no bang line
             e.load(url);
-        } else
-#endif
-        { //Local file path
-            if (verboseMode)
-                printf("qml: loading %s\n", qPrintable(QDir::toNativeSeparators(path)));
-
-            QByteArray strippedFile;
-            if (getFileSansBangLine(path, strippedFile))
-                e.loadData(strippedFile, e.baseUrl().resolved(QUrl::fromLocalFile(path))); //QQmlComponent won't resolve it for us, it doesn't know it's a valid file if we loadData
-            else //Errors or no bang line
-                e.load(path);
-        }
     }
 
     if (lw->earlyExit)
