@@ -99,6 +99,11 @@ public:
     void setPosition(qreal position);
     void updatePosition();
 
+    void handlePress(const QPointF &point);
+    void handleMove(const QPointF &point);
+    void handleRelease(const QPointF &point);
+    void handleUngrab();
+
     qreal from;
     qreal to;
     qreal value;
@@ -167,6 +172,56 @@ void QQuickSliderPrivate::updatePosition()
     if (!qFuzzyCompare(from, to))
         pos = (value - from) / (to - from);
     setPosition(pos);
+}
+
+void QQuickSliderPrivate::handlePress(const QPointF &point)
+{
+    Q_Q(QQuickSlider);
+    pressPoint = point;
+    q->setPressed(true);
+}
+
+void QQuickSliderPrivate::handleMove(const QPointF &point)
+{
+    Q_Q(QQuickSlider);
+    if (!q->keepMouseGrab())
+        return;
+    const qreal oldPos = position;
+    qreal pos = positionAt(point);
+    if (snapMode == QQuickSlider::SnapAlways)
+        pos = snapPosition(pos);
+    if (live)
+        q->setValue(q->valueAt(pos));
+    else
+        setPosition(pos);
+    if (!qFuzzyCompare(pos, oldPos))
+        emit q->moved();
+}
+
+void QQuickSliderPrivate::handleRelease(const QPointF &point)
+{
+    Q_Q(QQuickSlider);
+    pressPoint = QPointF();
+    const qreal oldPos = position;
+    qreal pos = positionAt(point);
+    if (snapMode != QQuickSlider::NoSnap)
+        pos = snapPosition(pos);
+    qreal val = q->valueAt(pos);
+    if (!qFuzzyCompare(val, value))
+        q->setValue(val);
+    else if (snapMode != QQuickSlider::NoSnap)
+        setPosition(pos);
+    if (!qFuzzyCompare(pos, oldPos))
+        emit q->moved();
+    q->setKeepMouseGrab(false);
+    q->setPressed(false);
+}
+
+void QQuickSliderPrivate::handleUngrab()
+{
+    Q_Q(QQuickSlider);
+    pressPoint = QPointF();
+    q->setPressed(false);
 }
 
 QQuickSlider::QQuickSlider(QQuickItem *parent) :
@@ -560,8 +615,7 @@ void QQuickSlider::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickSlider);
     QQuickControl::mousePressEvent(event);
-    d->pressPoint = event->localPos();
-    setPressed(true);
+    d->handlePress(event->localPos());
 }
 
 void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
@@ -574,46 +628,21 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
         else
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->localPos().y() - d->pressPoint.y(), Qt::YAxis, event));
     }
-    if (keepMouseGrab()) {
-        const qreal oldPos = d->position;
-        qreal pos = d->positionAt(event->localPos());
-        if (d->snapMode == SnapAlways)
-            pos = d->snapPosition(pos);
-        if (d->live)
-            setValue(valueAt(pos));
-        else
-            d->setPosition(pos);
-        if (!qFuzzyCompare(pos, oldPos))
-            emit moved();
-    }
+    d->handleMove(event->localPos());
 }
 
 void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickSlider);
     QQuickControl::mouseReleaseEvent(event);
-    d->pressPoint = QPointF();
-    const qreal oldPos = d->position;
-    qreal pos = d->positionAt(event->localPos());
-    if (d->snapMode != NoSnap)
-        pos = d->snapPosition(pos);
-    qreal val = valueAt(pos);
-    if (!qFuzzyCompare(val, d->value))
-        setValue(val);
-    else if (d->snapMode != NoSnap)
-        d->setPosition(pos);
-    if (!qFuzzyCompare(pos, oldPos))
-        emit moved();
-    setKeepMouseGrab(false);
-    setPressed(false);
+    d->handleRelease(event->localPos());
 }
 
 void QQuickSlider::mouseUngrabEvent()
 {
     Q_D(QQuickSlider);
     QQuickControl::mouseUngrabEvent();
-    d->pressPoint = QPointF();
-    setPressed(false);
+    d->handleUngrab();
 }
 
 void QQuickSlider::wheelEvent(QWheelEvent *event)
