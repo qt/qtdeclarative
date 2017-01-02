@@ -286,6 +286,184 @@ TestCase {
         compare(control.position, 0.5)
     }
 
+    function test_touch_data() {
+        return [
+            { tag: "horizontal", orientation: Qt.Horizontal, live: false },
+            { tag: "vertical", orientation: Qt.Vertical, live: false },
+            { tag: "horizontal:live", orientation: Qt.Horizontal, live: true },
+            { tag: "vertical:live", orientation: Qt.Vertical, live: true }
+        ]
+    }
+
+    function test_touch(data) {
+        var control = createTemporaryObject(slider, testCase, {orientation: data.orientation, live: data.live})
+        verify(control)
+
+        var pressedCount = 0
+        var movedCount = 0
+
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        verify(pressedSpy.valid)
+
+        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        verify(movedSpy.valid)
+
+        var touch = touchEvent(control)
+        touch.press(0, control, 0, 0).commit()
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, movedCount)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+
+        // mininum on the left in horizontal vs. at the bottom in vertical
+        touch.move(0, control, -control.width, 2 * control.height, 0).commit()
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, movedCount)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+
+        touch.move(0, control, control.width * 0.5, control.height * 0.5, 0).commit()
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, ++movedCount)
+        compare(control.pressed, true)
+        compare(control.value, data.live ? 0.5 : 0.0)
+        compare(control.position, 0.5)
+
+        touch.release(0, control, control.width * 0.5, control.height * 0.5).commit()
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, movedCount)
+        compare(control.pressed, false)
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+
+        touch.press(0, control, control.width, control.height).commit()
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, movedCount)
+        compare(control.pressed, true)
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+
+        // maximum on the right in horizontal vs. at the top in vertical
+        touch.move(0, control, control.width * 2, -control.height, 0).commit()
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, ++movedCount)
+        compare(control.pressed, true)
+        compare(control.value, data.live ? 1.0 : 0.5)
+        compare(control.position, 1.0)
+
+        touch.move(0, control, control.width * 0.75, control.height * 0.25, 0).commit()
+        compare(pressedSpy.count, pressedCount)
+        compare(movedSpy.count, ++movedCount)
+        compare(control.pressed, true)
+        compare(control.value, data.live ? control.position : 0.5)
+        verify(control.position >= 0.75)
+
+        touch.release(0, control, control.width * 0.25, control.height * 0.75).commit()
+        compare(pressedSpy.count, ++pressedCount)
+        compare(movedSpy.count, ++movedCount)
+        compare(control.pressed, false)
+        compare(control.value, control.position)
+        verify(control.value <= 0.25 && control.value >= 0.0)
+        verify(control.position <= 0.25 && control.position >= 0.0)
+
+        // QTBUG-53846
+        touch.press(0, control).commit().release(0, control).commit()
+        compare(movedSpy.count, ++movedCount)
+        compare(pressedSpy.count, pressedCount += 2)
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+    }
+
+    function test_multiTouch() {
+        var control1 = createTemporaryObject(slider, testCase)
+        verify(control1)
+
+        var pressedCount1 = 0
+        var movedCount1 = 0
+
+        var pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
+        verify(pressedSpy1.valid)
+
+        var movedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "moved"})
+        verify(movedSpy1.valid)
+
+        var touch = touchEvent(control1)
+        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width, control1.height).commit()
+
+        compare(pressedSpy1.count, ++pressedCount1)
+        compare(movedSpy1.count, ++movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 1.0)
+
+        // second touch point on the same control is ignored
+        touch.stationary(0).press(1, control1, 0, 0).commit()
+        touch.stationary(0).move(1, control1).commit()
+        touch.stationary(0).release(1).commit()
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(movedSpy1.count, movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 1.0)
+
+        var control2 = createTemporaryObject(slider, testCase, {y: control1.height})
+        verify(control2)
+        waitForRendering(control2)
+
+        var pressedCount2 = 0
+        var movedCount2 = 0
+
+        var pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
+        verify(pressedSpy2.valid)
+
+        var movedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "moved"})
+        verify(movedSpy2.valid)
+
+        // press the second slider
+        touch.stationary(0).press(2, control2, 0, 0).commit()
+
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(movedSpy2.count, movedCount2)
+        compare(control2.pressed, true)
+        compare(control2.position, 0.0)
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(movedSpy1.count, movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 1.0)
+
+        // move both sliders
+        touch.move(0, control1).move(2, control2).commit()
+
+        compare(pressedSpy2.count, pressedCount2)
+        compare(movedSpy2.count, ++movedCount2)
+        compare(control2.pressed, true)
+        compare(control2.position, 0.5)
+        compare(control2.value, 0.0)
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(movedSpy1.count, ++movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 0.5)
+        compare(control1.value, 0.0)
+
+        // release both sliders
+        touch.release(0, control1).release(2, control2).commit()
+
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(movedSpy2.count, movedCount2)
+        compare(control2.pressed, false)
+        compare(control2.position, 0.5)
+        compare(control2.value, 0.5)
+
+        compare(pressedSpy1.count, ++pressedCount1)
+        compare(movedSpy1.count, movedCount1)
+        compare(control1.pressed, false)
+        compare(control1.position, 0.5)
+        compare(control1.value, 0.5)
+    }
+
     function test_keys_data() {
         return [
             { tag: "horizontal", orientation: Qt.Horizontal, decrease: Qt.Key_Left, increase: Qt.Key_Right },
@@ -468,7 +646,11 @@ TestCase {
         ]
     }
 
-    function test_snapMode(data) {
+    function test_snapMode_mouse_data() {
+        return test_snapMode_data()
+    }
+
+    function test_snapMode_mouse(data) {
         var control = createTemporaryObject(slider, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
@@ -486,6 +668,33 @@ TestCase {
         verify(sliderCompare(control.position, data.positions[1]))
 
         mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2))
+        verify(sliderCompare(control.value, data.values[2]))
+        verify(sliderCompare(control.position, data.positions[2]))
+    }
+
+    function test_snapMode_touch_data() {
+        return test_snapMode_data()
+    }
+
+    function test_snapMode_touch(data) {
+        var control = createTemporaryObject(slider, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        verify(control)
+
+        function sliderCompare(left, right) {
+            return Math.abs(left - right) < 0.05
+        }
+
+        var touch = touchEvent(control)
+        touch.press(0, control, control.leftPadding).commit()
+        compare(control.value, data.values[0])
+        compare(control.position, data.positions[0])
+
+        touch.move(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2)).commit()
+
+        verify(sliderCompare(control.value, data.values[1]))
+        verify(sliderCompare(control.position, data.positions[1]))
+
+        touch.release(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2)).commit()
         verify(sliderCompare(control.value, data.values[2]))
         verify(sliderCompare(control.position, data.positions[2]))
     }

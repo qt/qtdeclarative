@@ -136,6 +136,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
+    void touchEvent(QTouchEvent *event) override;
+    void touchUngrabEvent() override;
     void wheelEvent(QWheelEvent *event) override;
 
     void mirrorChange() override;
