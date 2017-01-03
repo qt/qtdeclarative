@@ -446,6 +446,7 @@ protected:
 private:
     bool tryLoadFromDiskCache();
     bool loadFromSource();
+    void restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit);
     void continueLoadFromIR();
     void resolveTypes();
     QQmlCompileError buildTypeResolutionCaches(

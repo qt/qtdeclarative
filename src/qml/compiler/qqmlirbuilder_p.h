@@ -622,6 +622,21 @@ private:
     int _importedScriptsTemp;
 };
 
+struct IRLoader {
+    IRLoader(const QV4::CompiledData::Unit *unit, QmlIR::Document *output);
+
+    void load();
+
+private:
+    QmlIR::Object *loadObject(const QV4::CompiledData::Object *serializedObject);
+
+    template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
+
+    const QV4::CompiledData::Unit *unit;
+    QmlIR::Document *output;
+    QQmlJS::MemoryPool *pool;
+};
+
 } // namespace QmlIR
 
 QT_END_NAMESPACE

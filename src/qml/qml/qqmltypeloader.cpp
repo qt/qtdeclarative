@@ -2075,6 +2075,11 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         }
     }
 
+    if (unit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
+        restoreIR(unit);
+        return true;
+    }
+
     m_compiledData = unit;
 
     for (int i = 0, count = m_compiledData->objectCount(); i < count; ++i)
@@ -2395,6 +2400,15 @@ bool QQmlTypeData::loadFromSource()
         return false;
     }
     return true;
+}
+
+void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit)
+{
+    m_document.reset(new QmlIR::Document(isDebugging()));
+    QmlIR::IRLoader loader(unit->data, m_document.data());
+    loader.load();
+    m_document->javaScriptCompilationUnit = unit;
+    continueLoadFromIR();
 }
 
 void QQmlTypeData::continueLoadFromIR()

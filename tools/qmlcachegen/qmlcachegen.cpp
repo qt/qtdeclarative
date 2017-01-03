@@ -144,6 +144,7 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
         QV4::CompiledData::ResolvedTypeReferenceMap dummyDependencies;
         QV4::CompiledData::Unit *unit = generator.generate(irDocument, /*engine*/nullptr, dummyDependencies);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
+        unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
         irDocument.javaScriptCompilationUnit->data = unit;
 
         if (!irDocument.javaScriptCompilationUnit->saveToDisk(inputFileName, &error->message))
