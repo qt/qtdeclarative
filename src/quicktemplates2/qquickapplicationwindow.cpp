@@ -293,6 +293,8 @@ QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent) :
 QQuickApplicationWindow::~QQuickApplicationWindow()
 {
     Q_D(QQuickApplicationWindow);
+    d->setActiveFocusControl(nullptr);
+    disconnect(this, SIGNAL(activeFocusItemChanged()), this, SLOT(_q_updateActiveFocus()));
     if (d->header)
         QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
                                                                     QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
