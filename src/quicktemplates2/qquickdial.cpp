@@ -112,10 +112,10 @@ public:
 
     qreal valueAt(qreal position) const;
     qreal snapPosition(qreal position) const;
-    qreal positionAt(const QPoint &point) const;
+    qreal positionAt(const QPointF &point) const;
     void setPosition(qreal position);
     void updatePosition();
-    bool isLargeChange(const QPoint &eventPos, qreal proposedPosition) const;
+    bool isLargeChange(const QPointF &eventPos, qreal proposedPosition) const;
 
     qreal from;
     qreal to;
@@ -124,7 +124,7 @@ public:
     qreal angle;
     qreal stepSize;
     bool pressed;
-    QPoint pressPoint;
+    QPointF pressPoint;
     QQuickDial::SnapMode snapMode;
     bool wrap;
     bool live;
@@ -149,7 +149,7 @@ qreal QQuickDialPrivate::snapPosition(qreal position) const
     return qRound(position / effectiveStep) * effectiveStep;
 }
 
-qreal QQuickDialPrivate::positionAt(const QPoint &point) const
+qreal QQuickDialPrivate::positionAt(const QPointF &point) const
 {
     qreal yy = height / 2.0 - point.y();
     qreal xx = point.x() - width / 2.0;
@@ -185,7 +185,7 @@ void QQuickDialPrivate::updatePosition()
     setPosition(pos);
 }
 
-bool QQuickDialPrivate::isLargeChange(const QPoint &eventPos, qreal proposedPosition) const
+bool QQuickDialPrivate::isLargeChange(const QPointF &eventPos, qreal proposedPosition) const
 {
     return qAbs(proposedPosition - position) >= 0.5 && eventPos.y() >= height / 2;
 }
@@ -592,7 +592,7 @@ void QQuickDial::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickDial);
     QQuickControl::mousePressEvent(event);
-    d->pressPoint = event->pos();
+    d->pressPoint = event->localPos();
     setPressed(true);
 }
 
@@ -601,21 +601,21 @@ void QQuickDial::mouseMoveEvent(QMouseEvent *event)
     Q_D(QQuickDial);
     QQuickControl::mouseMoveEvent(event);
     if (!keepMouseGrab()) {
-        bool overXDragThreshold = QQuickWindowPrivate::dragOverThreshold(event->pos().x() - d->pressPoint.x(), Qt::XAxis, event);
+        bool overXDragThreshold = QQuickWindowPrivate::dragOverThreshold(event->localPos().x() - d->pressPoint.x(), Qt::XAxis, event);
         setKeepMouseGrab(overXDragThreshold);
 
         if (!overXDragThreshold) {
-            bool overYDragThreshold = QQuickWindowPrivate::dragOverThreshold(event->pos().y() - d->pressPoint.y(), Qt::YAxis, event);
+            bool overYDragThreshold = QQuickWindowPrivate::dragOverThreshold(event->localPos().y() - d->pressPoint.y(), Qt::YAxis, event);
             setKeepMouseGrab(overYDragThreshold);
         }
     }
     if (keepMouseGrab()) {
         const qreal oldPos = d->position;
-        qreal pos = d->positionAt(event->pos());
+        qreal pos = d->positionAt(event->localPos());
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
 
-        if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos))) {
+        if (d->wrap || (!d->wrap && !d->isLargeChange(event->localPos(), pos))) {
             if (d->live)
                 setValue(d->valueAt(pos));
             else
@@ -633,11 +633,11 @@ void QQuickDial::mouseReleaseEvent(QMouseEvent *event)
 
     if (keepMouseGrab()) {
         const qreal oldPos = d->position;
-        qreal pos = d->positionAt(event->pos());
+        qreal pos = d->positionAt(event->localPos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
 
-        if (d->wrap || (!d->wrap && !d->isLargeChange(event->pos(), pos)))
+        if (d->wrap || (!d->wrap && !d->isLargeChange(event->localPos(), pos)))
             setValue(d->valueAt(pos));
         if (!qFuzzyCompare(pos, oldPos))
             emit moved();
@@ -646,14 +646,14 @@ void QQuickDial::mouseReleaseEvent(QMouseEvent *event)
     }
 
     setPressed(false);
-    d->pressPoint = QPoint();
+    d->pressPoint = QPointF();
 }
 
 void QQuickDial::mouseUngrabEvent()
 {
     Q_D(QQuickDial);
     QQuickControl::mouseUngrabEvent();
-    d->pressPoint = QPoint();
+    d->pressPoint = QPointF();
     setPressed(false);
 }
 
