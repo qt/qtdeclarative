@@ -605,64 +605,39 @@ void HugeItemAllocator::freeAll()
 }
 
 
-struct MemoryManager::Data
-{
-    ExecutionEngine *engine;
-
-    std::size_t unmanagedHeapSize; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
-    std::size_t unmanagedHeapSizeGCLimit;
-
-    bool gcBlocked;
-    bool aggressiveGC;
-    bool gcStats;
-
-    Data()
-        : engine(0)
-        , unmanagedHeapSize(0)
-        , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
-        , gcBlocked(false)
-        , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
-        , gcStats(!qEnvironmentVariableIsEmpty(QV4_MM_STATS))
-    {
-    }
-
-};
-
-
 MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
     , stackAllocator(chunkAllocator)
     , blockAllocator(chunkAllocator)
     , hugeItemAllocator(chunkAllocator)
-    , m_d(new Data)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
+    , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
+    , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
+    , gcStats(!qEnvironmentVariableIsEmpty(QV4_MM_STATS))
 {
 #ifdef V4_USE_VALGRIND
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
-    m_d->engine = engine;
-
-    // ### initialize chunkList and stringChunks
 }
 
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 {
-    if (m_d->aggressiveGC)
+    if (aggressiveGC)
         runGC();
 
-    m_d->unmanagedHeapSize += unmanagedSize;
+    unmanagedHeapSize += unmanagedSize;
     bool didGCRun = false;
-    if (m_d->unmanagedHeapSize > m_d->unmanagedHeapSizeGCLimit) {
+    if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
         runGC();
 
-        if (3*m_d->unmanagedHeapSizeGCLimit <= 4*m_d->unmanagedHeapSize)
+        if (3*unmanagedHeapSizeGCLimit <= 4*unmanagedHeapSize)
             // more than 75% full, raise limit
-            m_d->unmanagedHeapSizeGCLimit = std::max(m_d->unmanagedHeapSizeGCLimit, m_d->unmanagedHeapSize) * 2;
-        else if (m_d->unmanagedHeapSize * 4 <= m_d->unmanagedHeapSizeGCLimit)
+            unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit, unmanagedHeapSize) * 2;
+        else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit)
             // less than 25% full, lower limit
-            m_d->unmanagedHeapSizeGCLimit = qMax(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT, m_d->unmanagedHeapSizeGCLimit/2);
+            unmanagedHeapSizeGCLimit = qMax(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT, unmanagedHeapSizeGCLimit/2);
         didGCRun = true;
     }
 
@@ -678,7 +653,7 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 
 Heap::Base *MemoryManager::allocData(std::size_t size)
 {
-    if (m_d->aggressiveGC)
+    if (aggressiveGC)
         runGC();
 #ifdef DETAILED_MM_STATS
     willAllocate(size);
@@ -687,7 +662,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     Q_ASSERT(size >= Chunk::SlotSize);
     Q_ASSERT(size % Chunk::SlotSize == 0);
 
-//    qDebug() << "unmanagedHeapSize:" << m_d->unmanagedHeapSize << "limit:" << m_d->unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
+//    qDebug() << "unmanagedHeapSize:" << unmanagedHeapSize << "limit:" << unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
 
     if (size > Chunk::DataSize)
         return *hugeItemAllocator.allocate(size);
@@ -818,18 +793,18 @@ bool MemoryManager::shouldRunGC() const
 
 void MemoryManager::runGC()
 {
-    if (m_d->gcBlocked) {
+    if (gcBlocked) {
 //        qDebug() << "Not running GC.";
         return;
     }
 
-    QScopedValueRollback<bool> gcBlocker(m_d->gcBlocked, true);
+    QScopedValueRollback<bool> gcBlocker(gcBlocked, true);
 
-    if (!m_d->gcStats) {
-//        uint oldUsed = m_d->allocator.usedMem();
+    if (!gcStats) {
+//        uint oldUsed = allocator.usedMem();
         mark();
         sweep();
-//        DEBUG << "RUN GC: allocated:" << m_d->allocator.allocatedMem() << "used before" << oldUsed << "used now" << m_d->allocator.usedMem();
+//        DEBUG << "RUN GC: allocated:" << allocator.allocatedMem() << "used before" << oldUsed << "used now" << allocator.usedMem();
     } else {
         const size_t totalMem = getAllocatedMem();
 
@@ -873,11 +848,6 @@ size_t MemoryManager::getLargeItemsMem() const
     return hugeItemAllocator.usedMem();
 }
 
-void MemoryManager::changeUnmanagedHeapSizeUsage(qptrdiff delta)
-{
-    m_d->unmanagedHeapSize += delta;
-}
-
 MemoryManager::~MemoryManager()
 {
     delete m_persistentValues;
@@ -901,8 +871,8 @@ void MemoryManager::dumpStats() const
     std::cerr << "=================" << std::endl;
     std::cerr << "Allocation stats:" << std::endl;
     std::cerr << "Requests for each chunk size:" << std::endl;
-    for (int i = 0; i < m_d->allocSizeCounters.size(); ++i) {
-        if (unsigned count = m_d->allocSizeCounters[i]) {
+    for (int i = 0; i < allocSizeCounters.size(); ++i) {
+        if (unsigned count = allocSizeCounters[i]) {
             std::cerr << "\t" << (i << 4) << " bytes chunks: " << count << std::endl;
         }
     }
@@ -913,7 +883,7 @@ void MemoryManager::dumpStats() const
 void MemoryManager::willAllocate(std::size_t size)
 {
     unsigned alignedSize = (size + 15) >> 4;
-    QVector<unsigned> &counters = m_d->allocSizeCounters;
+    QVector<unsigned> &counters = allocSizeCounters;
     if ((unsigned) counters.size() < alignedSize + 1)
         counters.resize(alignedSize + 1);
     counters[alignedSize]++;

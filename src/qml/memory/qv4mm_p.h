@@ -198,9 +198,6 @@ class Q_QML_EXPORT MemoryManager
     Q_DISABLE_COPY(MemoryManager);
 
 public:
-    struct Data;
-
-public:
     MemoryManager(ExecutionEngine *engine);
     ~MemoryManager();
 
@@ -427,7 +424,9 @@ public:
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;
 
-    void changeUnmanagedHeapSizeUsage(qptrdiff delta); // called when a JS object grows itself. Specifically: Heap::String::append
+    // called when a JS object grows itself. Specifically: Heap::String::append
+    void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
+
 
 protected:
     /// expects size to be aligned
@@ -450,10 +449,16 @@ public:
     StackAllocator<Heap::CallContext> stackAllocator;
     BlockAllocator blockAllocator;
     HugeItemAllocator hugeItemAllocator;
-    QScopedPointer<Data> m_d;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
     QVector<Value *> m_pendingFreedObjectWrapperValue;
+
+    std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
+    std::size_t unmanagedHeapSizeGCLimit;
+
+    bool gcBlocked = false;
+    bool aggressiveGC = false;
+    bool gcStats = false;
 };
 
 }
