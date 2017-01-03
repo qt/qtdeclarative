@@ -165,6 +165,15 @@ TestCase {
         mouseRelease(dial, dial.width / 2, dial.height / 2);
         verify(!dial.pressed);
         compare(pressSpy.count, 2);
+
+        var touch = touchEvent(dial);
+        touch.press(0).commit();
+        verify(dial.pressed);
+        compare(pressSpy.count, 3);
+
+        touch.release(0).commit();
+        verify(!dial.pressed);
+        compare(pressSpy.count, 4);
     }
 
     SignalSpy {
@@ -272,6 +281,90 @@ TestCase {
         verify(dial.position > positionAtPress);
     }
 
+    function test_touch() {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
+        var touch = touchEvent(dial);
+
+        // Ensure that dragging from bottom left to bottom right doesn't work.
+        var yPos = dial.height * 0.75;
+        touch.press(0, dial, dial.width * 0.25, yPos).commit();
+        var positionAtPress = dial.position;
+        touch.move(0, dial, dial.width * 0.5, yPos).commit();
+        compare(dial.position, positionAtPress);
+        touch.move(0, dial, dial.width * 0.75, yPos).commit();
+        compare(dial.position, positionAtPress);
+        touch.release(0, dial, dial.width * 0.75, yPos).commit();
+        compare(dial.position, positionAtPress);
+
+        // Try the same thing, but a bit higher.
+        yPos = dial.height * 0.6;
+        touch.press(0, dial, dial.width * 0.25, yPos).commit();
+        positionAtPress = dial.position;
+        touch.move(0, dial, dial.width * 0.5, yPos).commit();
+        compare(dial.position, positionAtPress);
+        touch.move(0, dial, dial.width * 0.75, yPos).commit();
+        compare(dial.position, positionAtPress);
+        touch.release(0, dial, dial.width * 0.75, yPos).commit();
+        compare(dial.position, positionAtPress);
+
+        // Going from below the center of the dial to above it should work (once it gets above the center).
+        touch.press(0, dial, dial.width * 0.25, dial.height * 0.75).commit();
+        positionAtPress = dial.position;
+        touch.move(0, dial, dial.width * 0.5, dial.height * 0.6).commit();
+        compare(dial.position, positionAtPress);
+        touch.move(0, dial, dial.width * 0.75, dial.height * 0.4).commit();
+        verify(dial.position > positionAtPress);
+        touch.release(0, dial, dial.width * 0.75, dial.height * 0.3).commit();
+        verify(dial.position > positionAtPress);
+    }
+
+    function test_multiTouch() {
+        var dial1 = createTemporaryObject(dialComponent, testCase);
+        verify(dial1);
+
+        var touch = touchEvent(dial1);
+        touch.press(0, dial1).commit().move(0, dial1, dial1.width / 4, dial1.height / 4).commit();
+        compare(dial1.pressed, true);
+        verify(dial1.position > 0.0);
+
+        var pos1Before = dial1.position;
+
+        // second touch point on the same control is ignored
+        touch.stationary(0).press(1, dial1, 0, 0).commit()
+        touch.stationary(0).move(1, dial1).commit()
+        touch.stationary(0).release(1).commit()
+        compare(dial1.pressed, true);
+        compare(dial1.position, pos1Before);
+
+        var dial2 = createTemporaryObject(dialComponent, testCase, {y: dial1.height});
+        verify(dial2);
+        waitForRendering(dial2);
+
+        // press the second dial
+        touch.stationary(0).press(2, dial2, 0, 0).commit();
+        compare(dial2.pressed, true);
+        compare(dial2.position, 0.0);
+
+        pos1Before = dial1.position;
+        var pos2Before = dial2.position;
+
+        // move both dials
+        touch.move(0, dial1).move(2, dial2, dial2.width / 4, dial2.height / 4).commit();
+        compare(dial1.pressed, true);
+        verify(dial1.position !== pos1Before);
+        compare(dial2.pressed, true);
+        verify(dial2.position !== pos2Before);
+
+        // release both dials
+        touch.release(0, dial1).release(2, dial2).commit();
+        compare(dial1.pressed, false);
+        compare(dial1.value, dial1.position);
+        compare(dial2.pressed, false);
+        compare(dial2.value, dial2.position);
+    }
+
     property Component focusTest: Component {
         FocusScope {
             signal receivedKeyPress
@@ -376,7 +469,11 @@ TestCase {
         ]
     }
 
-    function test_snapMode(data) {
+    function test_snapMode_mouse_data() {
+        return test_snapMode_data()
+    }
+
+    function test_snapMode_mouse(data) {
         var dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
@@ -396,6 +493,35 @@ TestCase {
         fuzzyCompare(dial.position, data.positions[1], fuzz);
 
         mouseRelease(dial, dial.width * 0.5, dial.height * 0.25);
+        fuzzyCompare(dial.value, data.values[2], fuzz);
+        fuzzyCompare(dial.position, data.positions[2], fuzz);
+    }
+
+    function test_snapMode_touch_data() {
+        return test_snapMode_data()
+    }
+
+    function test_snapMode_touch(data) {
+        var dial = createTemporaryObject(dialComponent, testCase);
+        verify(dial);
+
+        dial.snapMode = data.snapMode;
+        dial.from = data.from;
+        dial.to = data.to;
+        dial.stepSize = 0.2;
+
+        var fuzz = 0.05;
+
+        var touch = touchEvent(dial);
+        touch.press(0, dial, dial.width * 0.25, dial.height * 0.75).commit()
+        compare(dial.value, data.values[0]);
+        compare(dial.position, data.positions[0]);
+
+        touch.move(0, dial, dial.width * 0.5, dial.height * 0.25).commit();
+        fuzzyCompare(dial.value, data.values[1], fuzz);
+        fuzzyCompare(dial.position, data.positions[1], fuzz);
+
+        touch.release(0, dial, dial.width * 0.5, dial.height * 0.25).commit();
         fuzzyCompare(dial.value, data.values[2], fuzz);
         fuzzyCompare(dial.position, data.positions[2], fuzz);
     }

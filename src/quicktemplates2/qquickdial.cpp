@@ -96,6 +96,7 @@ class QQuickDialPrivate : public QQuickControlPrivate
 
 public:
     QQuickDialPrivate() :
+        touchId(-1),
         from(0),
         to(1),
         value(0),
@@ -122,6 +123,7 @@ public:
     void handleRelease(const QPointF &point);
     void handleUngrab();
 
+    int touchId;
     qreal from;
     qreal to;
     qreal value;
@@ -241,12 +243,14 @@ void QQuickDialPrivate::handleRelease(const QPointF &point)
 
     q->setPressed(false);
     pressPoint = QPointF();
+    touchId = -1;
 }
 
 void QQuickDialPrivate::handleUngrab()
 {
     Q_Q(QQuickDial);
     pressPoint = QPointF();
+    touchId = -1;
     q->setPressed(false);
 }
 
@@ -682,6 +686,64 @@ void QQuickDial::mouseUngrabEvent()
 {
     Q_D(QQuickDial);
     QQuickControl::mouseUngrabEvent();
+    d->handleUngrab();
+}
+
+void QQuickDial::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickDial);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        if (d->touchId == -1) {
+            const QTouchEvent::TouchPoint point = event->touchPoints().first();
+            d->touchId = point.id();
+            d->handlePress(point.pos());
+        } else {
+            event->ignore();
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId)
+                continue;
+
+            if (!keepMouseGrab()) {
+                bool overXDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point);
+                setKeepMouseGrab(overXDragThreshold);
+
+                if (!overXDragThreshold) {
+                    bool overYDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point);
+                    setKeepMouseGrab(overYDragThreshold);
+                }
+            }
+            d->handleMove(point.pos());
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId)
+                continue;
+
+            d->handleRelease(point.pos());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleUngrab();
+        break;
+
+    default:
+        QQuickControl::touchEvent(event);
+        break;
+    }
+}
+
+void QQuickDial::touchUngrabEvent()
+{
+    Q_D(QQuickDial);
+    QQuickControl::touchUngrabEvent();
     d->handleUngrab();
 }
 
