@@ -39,11 +39,7 @@
 
 #include "qv4isel_masm_p.h"
 #include "qv4runtime_p.h"
-#include "qv4object_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4regexpobject_p.h"
 #include "qv4lookup_p.h"
-#include "qv4function_p.h"
 #include "qv4ssa_p.h"
 #include "qv4regalloc_p.h"
 #include "qv4assembler_p.h"

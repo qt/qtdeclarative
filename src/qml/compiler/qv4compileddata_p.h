@@ -841,10 +841,14 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
 #ifndef V4_BOOTSTRAP
     ExecutionEngine *engine;
+#endif
+
+    QV4::Heap::String **runtimeStrings; // Array
+
+#ifndef V4_BOOTSTRAP
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
 
-    QV4::Heap::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;

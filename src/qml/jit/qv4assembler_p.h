@@ -55,7 +55,8 @@
 #include "private/qv4isel_p.h"
 #include "private/qv4isel_util_p.h"
 #include "private/qv4value_p.h"
-#include "private/qv4lookup_p.h"
+#include "private/qv4context_p.h"
+#include "private/qv4engine_p.h"
 #include "qv4targetplatform_p.h"
 
 #include <config.h>
@@ -77,10 +78,12 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
 
+#if !defined(V4_BOOTSTRAP)
     void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
+    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
+#endif
     void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
     bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
-    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
 
     // Coderef + execution engine
 
