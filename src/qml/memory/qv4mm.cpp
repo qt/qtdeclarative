@@ -194,10 +194,8 @@ struct MemoryManager::Data
 
 namespace {
 
-bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, ExecutionEngine *engine, std::size_t *unmanagedHeapSize)
+bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, ExecutionEngine *engine)
 {
-    Q_ASSERT(unmanagedHeapSize);
-
     bool isEmpty = true;
     Heap::Base *tail = &header->freeItems;
 //    qDebug("chunkStart @ %p, size=%x, pos=%x", header->itemStart, header->itemSize, header->itemSize>>4);
@@ -222,13 +220,6 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (std::size_t(header->itemSize) == MemoryManager::align(sizeof(Heap::String)) && m->vtable()->isString) {
-                    std::size_t heapBytes = static_cast<Heap::String *>(m)->retainedTextSize();
-                    Q_ASSERT(*unmanagedHeapSize >= heapBytes);
-//                    qDebug() << "-- it's a string holding on to" << heapBytes << "bytes";
-                    *unmanagedHeapSize -= heapBytes;
-                }
-
                 if (m->vtable()->destroy) {
                     m->vtable()->destroy(m);
                     m->_checkIsDestroyed();
@@ -502,7 +493,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     for (size_t i = 0; i < m_d->heapChunks.size(); ++i) {
         Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(m_d->heapChunks[i].base());
-        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], engine, &m_d->unmanagedHeapSize);
+        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], engine);
     }
 
     std::vector<PageAllocation>::iterator chunkIter = m_d->heapChunks.begin();
@@ -642,7 +633,7 @@ size_t MemoryManager::getLargeItemsMem() const
     return total;
 }
 
-void MemoryManager::growUnmanagedHeapSizeUsage(size_t delta)
+void MemoryManager::changeUnmanagedHeapSizeUsage(qptrdiff delta)
 {
     m_d->unmanagedHeapSize += delta;
 }

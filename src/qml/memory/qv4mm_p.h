@@ -297,7 +297,7 @@ public:
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;
 
-    void growUnmanagedHeapSizeUsage(size_t delta); // called when a JS object grows itself. Specifically: Heap::String::append
+    void changeUnmanagedHeapSizeUsage(qptrdiff delta); // called when a JS object grows itself. Specifically: Heap::String::append
 
 protected:
     /// expects size to be aligned

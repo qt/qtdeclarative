@@ -114,6 +114,15 @@ void Heap::String::init(MemoryManager *mm, String *l, String *r)
         simplifyString();
 }
 
+void Heap::String::destroy() {
+    if (!largestSubLength) {
+        mm->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
+        if (!text->ref.deref())
+            QStringData::deallocate(text);
+    }
+    Base::destroy();
+}
+
 uint String::toUInt(bool *ok) const
 {
     *ok = true;
@@ -152,7 +161,7 @@ void Heap::String::simplifyString() const
     text->ref.ref();
     identifier = 0;
     largestSubLength = 0;
-    mm->growUnmanagedHeapSizeUsage(size_t(text->size) * sizeof(QChar));
+    mm->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
 }
 
 void Heap::String::append(const String *data, QChar *ch)
