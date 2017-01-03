@@ -52,6 +52,7 @@
 
 #include <QtCore/QString>
 #include <private/qv4global_p.h>
+#include <private/qv4mmdefs_p.h>
 #include <QSharedPointer>
 
 // To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
@@ -109,17 +110,23 @@ struct Q_QML_EXPORT Base {
         return reinterpret_cast<VTable *>(mm_data & PointerMask);
     }
     inline bool isMarked() const {
-        return mm_data & MarkBit;
+        const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+        Chunk *c = h->chunk();
+        Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
+        return Chunk::testBit(c->blackBitmap, h - c->realBase());
     }
     inline void setMarkBit() {
-        mm_data |= MarkBit;
-    }
-    inline void clearMarkBit() {
-        mm_data &= ~MarkBit;
+        const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+        Chunk *c = h->chunk();
+        Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
+        return Chunk::setBit(c->blackBitmap, h - c->realBase());
     }
 
     inline bool inUse() const {
-        return !(mm_data & NotInUse);
+        const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+        Chunk *c = h->chunk();
+        Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
+        return Chunk::testBit(c->objectBitmap, h - c->realBase());
     }
 
     Base *nextFree() {

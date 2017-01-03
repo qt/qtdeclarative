@@ -116,6 +116,57 @@ struct StackAllocator {
     uint currentChunk = 0;
 };
 
+struct BlockAllocator {
+    BlockAllocator(ChunkAllocator *chunkAllocator)
+        : chunkAllocator(chunkAllocator)
+    {
+        memset(freeBins, 0, sizeof(freeBins));
+#if MM_DEBUG
+        memset(allocations, 0, sizeof(allocations));
+#endif
+    }
+
+    enum { NumBins = 8 };
+
+    static inline size_t binForSlots(size_t nSlots) {
+        return nSlots >= NumBins ? NumBins - 1 : nSlots;
+    }
+
+#if MM_DEBUG
+    void stats();
+#endif
+
+    HeapItem *allocate(size_t size, bool forceAllocation = false);
+
+    size_t totalSlots() const {
+        return Chunk::AvailableSlots*chunks.size();
+    }
+
+    size_t allocatedMem() const {
+        return chunks.size()*Chunk::DataSize;
+    }
+    size_t usedMem() const {
+        uint used = 0;
+        for (auto c : chunks)
+            used += c->nUsedSlots()*Chunk::SlotSize;
+        return used;
+    }
+
+    void sweep();
+    void freeAll();
+
+    // bump allocations
+    HeapItem *nextFree = 0;
+    size_t nFree = 0;
+    size_t usedSlotsAfterLastSweep = 0;
+    HeapItem *freeBins[NumBins];
+    ChunkAllocator *chunkAllocator;
+    std::vector<Chunk *> chunks;
+#if MM_DEBUG
+    uint allocations[NumBins];
+#endif
+};
+
 struct HugeItemAllocator {
     HugeItemAllocator(ChunkAllocator *chunkAllocator)
         : chunkAllocator(chunkAllocator)
@@ -155,7 +206,7 @@ public:
 
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
     // Note: all occurrences of "16" in alloc/dealloc are also due to the alignment.
-    static inline std::size_t align(std::size_t size)
+    Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
     QV4::Heap::CallContext *allocSimpleCallContext()
@@ -164,11 +215,11 @@ public:
     { stackAllocator.free(); }
 
     template<typename ManagedType>
-    inline typename ManagedType::Data *allocManaged(std::size_t size, std::size_t unmanagedSize = 0)
+    inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
         V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
-        Heap::Base *o = allocData(size, unmanagedSize);
+        Heap::Base *o = allocData(size);
         memset(o, 0, size);
         o->setVtable(ManagedType::staticVTable());
         return static_cast<typename ManagedType::Data *>(o);
@@ -202,10 +253,11 @@ public:
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
-        t->d_unchecked()->init(this, arg1);
-        return t->d();
+        typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
+        memset(o, 0, sizeof(sizeof(typename ManagedType::Data)));
+        o->setVtable(ManagedType::staticVTable());
+        o->init(this, arg1);
+        return o;
     }
 
     template <typename ObjectType>
@@ -379,8 +431,8 @@ public:
 
 protected:
     /// expects size to be aligned
-    // TODO: try to inline
-    Heap::Base *allocData(std::size_t size, std::size_t unmanagedSize);
+    Heap::Base *allocString(std::size_t unmanagedSize);
+    Heap::Base *allocData(std::size_t size);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);
@@ -390,11 +442,13 @@ private:
     void collectFromJSStack() const;
     void mark();
     void sweep(bool lastSweep = false);
+    bool shouldRunGC() const;
 
 public:
     QV4::ExecutionEngine *engine;
     ChunkAllocator *chunkAllocator;
     StackAllocator<Heap::CallContext> stackAllocator;
+    BlockAllocator blockAllocator;
     HugeItemAllocator hugeItemAllocator;
     QScopedPointer<Data> m_d;
     PersistentValueStorage *m_persistentValues;

@@ -131,6 +131,8 @@ struct Chunk {
     }
     static void setBits(quintptr *bitmap, size_t index, size_t nBits) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index + nBits <= ChunkSize/SlotSize);
+        if (!nBits)
+            return;
         bitmap += index >> BitShift;
         index &= (Bits - 1);
         while (1) {
@@ -171,6 +173,11 @@ struct Chunk {
         }
         return usedSlots;
     }
+
+    void sweep();
+    void freeAll();
+
+    void sortIntoBins(HeapItem **bins, uint nBins);
 };
 
 struct HeapItem {
@@ -209,7 +216,7 @@ struct HeapItem {
     void setAllocatedSlots(size_t nSlots) {
 //        Q_ASSERT(size && !(size % sizeof(HeapItem)));
         Chunk *c = chunk();
-        uint index = this - c->realBase();
+        size_t index = this - c->realBase();
 //        Q_ASSERT(!Chunk::testBit(c->objectBitmap, index));
         Chunk::setBit(c->objectBitmap, index);
         Chunk::setBits(c->extendsBitmap, index + 1, nSlots - 1);

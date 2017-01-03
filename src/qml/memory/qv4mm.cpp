@@ -190,6 +190,7 @@ Chunk *MemorySegment::allocate(size_t size)
             pageReservation.commit(candidate, size);
             for (uint i = 0; i < requiredChunks; ++i)
                 setBit(candidate - base + i);
+            DEBUG << "allocated chunk " << candidate << hex << size;
             return candidate;
         }
     }
@@ -245,6 +246,125 @@ void ChunkAllocator::free(Chunk *chunk, size_t size)
 }
 
 
+void Chunk::sweep()
+{
+    //    DEBUG << "sweeping chunk" << this << (*freeList);
+    HeapItem *o = realBase();
+    for (uint i = 0; i < Chunk::EntriesInBitmap; ++i) {
+        Q_ASSERT((grayBitmap[i] | blackBitmap[i]) == blackBitmap[i]); // check that we don't have gray only objects
+        quintptr toFree = objectBitmap[i] ^ blackBitmap[i];
+        Q_ASSERT((toFree & objectBitmap[i]) == toFree); // check all black objects are marked as being used
+        quintptr e = extendsBitmap[i];
+        //        DEBUG << hex << "   index=" << i << toFree;
+        while (toFree) {
+            uint index = qCountTrailingZeroBits(toFree);
+            quintptr bit = (static_cast<quintptr>(1) << index);
+
+            toFree ^= bit; // mask out freed slot
+            //            DEBUG << "       index" << hex << index << toFree;
+
+            // remove all extends slots that have been freed
+            // this is a bit of bit trickery.
+            quintptr mask = (bit << 1) - 1; // create a mask of 1's to the right of and up to the current bit
+            quintptr objmask = e | mask; // or'ing mask with e gives all ones until the end of the current object
+            quintptr result = objmask + 1;
+            Q_ASSERT(qCountTrailingZeroBits(result) - index != 0); // ensure we freed something
+            result |= mask; // ensure we don't clear stuff to the right of the current object
+            e &= result;
+
+            HeapItem *itemToFree = o + index;
+            Heap::Base *b = *itemToFree;
+            if (b->vtable()->destroy) {
+                b->vtable()->destroy(b);
+                b->_checkIsDestroyed();
+            }
+        }
+        objectBitmap[i] = blackBitmap[i];
+        blackBitmap[i] = 0;
+        extendsBitmap[i] = e;
+        o += Chunk::Bits;
+    }
+    //    DEBUG << "swept chunk" << this << "freed" << slotsFreed << "slots.";
+}
+
+void Chunk::freeAll()
+{
+    //    DEBUG << "sweeping chunk" << this << (*freeList);
+    HeapItem *o = realBase();
+    for (uint i = 0; i < Chunk::EntriesInBitmap; ++i) {
+        quintptr toFree = objectBitmap[i];
+        quintptr e = extendsBitmap[i];
+        //        DEBUG << hex << "   index=" << i << toFree;
+        while (toFree) {
+            uint index = qCountTrailingZeroBits(toFree);
+            quintptr bit = (static_cast<quintptr>(1) << index);
+
+            toFree ^= bit; // mask out freed slot
+            //            DEBUG << "       index" << hex << index << toFree;
+
+            // remove all extends slots that have been freed
+            // this is a bit of bit trickery.
+            quintptr mask = (bit << 1) - 1; // create a mask of 1's to the right of and up to the current bit
+            quintptr objmask = e | mask; // or'ing mask with e gives all ones until the end of the current object
+            quintptr result = objmask + 1;
+            Q_ASSERT(qCountTrailingZeroBits(result) - index != 0); // ensure we freed something
+            result |= mask; // ensure we don't clear stuff to the right of the current object
+            e &= result;
+
+            HeapItem *itemToFree = o + index;
+            Heap::Base *b = *itemToFree;
+            if (b->vtable()->destroy) {
+                b->vtable()->destroy(b);
+                b->_checkIsDestroyed();
+            }
+        }
+        objectBitmap[i] = 0;
+        blackBitmap[i] = 0;
+        extendsBitmap[i] = e;
+        o += Chunk::Bits;
+    }
+    //    DEBUG << "swept chunk" << this << "freed" << slotsFreed << "slots.";
+}
+
+void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
+{
+    HeapItem *base = realBase();
+#if QT_POINTER_SIZE == 8
+    const int start = 0;
+#else
+    const int start = 1;
+#endif
+    for (int i = start; i < EntriesInBitmap; ++i) {
+        quintptr usedSlots = (objectBitmap[i]|extendsBitmap[i]);
+#if QT_POINTER_SIZE == 8
+        if (!i)
+            usedSlots |= (static_cast<quintptr>(1) << (HeaderSize/SlotSize)) - 1;
+#endif
+        uint index = qCountTrailingZeroBits(usedSlots + 1);
+        if (index == Bits)
+            continue;
+        uint freeStart = i*Bits + index;
+        usedSlots &= ~((static_cast<quintptr>(1) << index) - 1);
+        while (i < EntriesInBitmap && !usedSlots) {
+            ++i;
+            usedSlots = (objectBitmap[i]|extendsBitmap[i]);
+        }
+        if (i == EntriesInBitmap)
+            usedSlots = 1;
+        HeapItem *freeItem = base + freeStart;
+
+        uint freeEnd = i*Bits + qCountTrailingZeroBits(usedSlots);
+        uint nSlots = freeEnd - freeStart;
+        Q_ASSERT(freeEnd > freeStart && freeEnd <= NumSlots);
+        freeItem->freeData.availableSlots = nSlots;
+        uint bin = qMin(nBins - 1, nSlots);
+        freeItem->freeData.next = bins[bin];
+        bins[bin] = freeItem;
+    //            DEBUG << "binnig item" << freeItem << nSlots << bin << freeItem->freeData.availableSlots;
+    }
+}
+
+
 template<typename T>
 StackAllocator<T>::StackAllocator(ChunkAllocator *chunkAlloc)
     : chunkAllocator(chunkAlloc)
@@ -288,6 +408,164 @@ void QV4::StackAllocator<T>::prevChunk() {
 
 template struct StackAllocator<Heap::CallContext>;
 
+
+HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
+    Q_ASSERT((size % Chunk::SlotSize) == 0);
+    size_t slotsRequired = size >> Chunk::SlotSizeShift;
+#if MM_DEBUG
+    ++allocations[bin];
+#endif
+
+    HeapItem **last;
+
+    HeapItem *m;
+
+    if (slotsRequired < NumBins - 1) {
+        m = freeBins[slotsRequired];
+        if (m) {
+            freeBins[slotsRequired] = m->freeData.next;
+            goto done;
+        }
+    }
+#if 0
+    for (uint b = bin + 1; b < NumBins - 1; ++b) {
+        if ((m = freeBins[b])) {
+            Q_ASSERT(binForSlots(m->freeData.availableSlots) == b);
+            freeBins[b] = m->freeData.next;
+            //                DEBUG << "looking for empty bin" << bin << "size" << size << "found" << b;
+            uint remainingSlots = m->freeData.availableSlots - slotsRequired;
+            //                DEBUG << "found free slots of size" << m->freeData.availableSlots << m << "remaining" << remainingSlots;
+            if (remainingSlots < 2) {
+                // avoid too much fragmentation and rather mark the memory as used
+                size += remainingSlots*Chunk::SlotSize;
+                goto done;
+            }
+            HeapItem *remainder = m + slotsRequired;
+            remainder->freeData.availableSlots = remainingSlots;
+            uint binForRemainder = binForSlots(remainingSlots);
+            remainder->freeData.next = freeBins[binForRemainder];
+            freeBins[binForRemainder] = remainder;
+            goto done;
+        }
+    }
+#endif
+    if (nFree >= slotsRequired) {
+        // use bump allocation
+        Q_ASSERT(nextFree);
+        m = nextFree;
+        nextFree += slotsRequired;
+        nFree -= slotsRequired;
+        goto done;
+    }
+
+    //        DEBUG << "No matching bin found for item" << size << bin;
+    // search last bin for a large enough item
+    last = &freeBins[NumBins - 1];
+    while ((m = *last)) {
+        if (m->freeData.availableSlots >= slotsRequired) {
+            *last = m->freeData.next; // take it out of the list
+
+            size_t remainingSlots = m->freeData.availableSlots - slotsRequired;
+            //                DEBUG << "found large free slots of size" << m->freeData.availableSlots << m << "remaining" << remainingSlots;
+            if (remainingSlots < 2) {
+                // avoid too much fragmentation and rather mark the memory as used
+                size += remainingSlots*Chunk::SlotSize;
+                goto done;
+            }
+            HeapItem *remainder = m + slotsRequired;
+            if (remainingSlots >= 2*NumBins) {
+                if (nFree) {
+                    size_t bin = binForSlots(nFree);
+                    nextFree->freeData.next = freeBins[bin];
+                    nextFree->freeData.availableSlots = nFree;
+                    freeBins[bin] = nextFree;
+                }
+                nextFree = remainder;
+                nFree = remainingSlots;
+            } else {
+                remainder->freeData.availableSlots = remainingSlots;
+                size_t binForRemainder = binForSlots(remainingSlots);
+                remainder->freeData.next = freeBins[binForRemainder];
+                freeBins[binForRemainder] = remainder;
+            }
+            goto done;
+        }
+        last = &m->freeData.next;
+    }
+
+    if (!m) {
+        if (!forceAllocation)
+            return 0;
+        Chunk *newChunk = chunkAllocator->allocate();
+        chunks.push_back(newChunk);
+        nextFree = newChunk->first();
+        nFree = Chunk::AvailableSlots;
+        m = nextFree;
+        nextFree += slotsRequired;
+        nFree -= slotsRequired;
+    }
+
+done:
+    m->setAllocatedSlots(slotsRequired);
+    //        DEBUG << "   " << hex << m->chunk() << m->chunk()->objectBitmap[0] << m->chunk()->extendsBitmap[0] << (m - m->chunk()->realBase());
+    return m;
+}
+
+void BlockAllocator::sweep()
+{
+    nextFree = 0;
+    nFree = 0;
+    memset(freeBins, 0, sizeof(freeBins));
+
+//    qDebug() << "BlockAlloc: sweep";
+    usedSlotsAfterLastSweep = 0;
+    for (auto c : chunks) {
+        c->sweep();
+        c->sortIntoBins(freeBins, NumBins);
+//        qDebug() << "used slots in chunk" << c << ":" << c->nUsedSlots();
+        usedSlotsAfterLastSweep += c->nUsedSlots();
+    }
+}
+
+void BlockAllocator::freeAll()
+{
+    for (auto c : chunks) {
+        c->freeAll();
+        chunkAllocator->free(c);
+    }
+}
+
+#if MM_DEBUG
+void BlockAllocator::stats() {
+    DEBUG << "MM stats:";
+    QString s;
+    for (int i = 0; i < 10; ++i) {
+        uint c = 0;
+        HeapItem *item = freeBins[i];
+        while (item) {
+            ++c;
+            item = item->freeData.next;
+        }
+        s += QString::number(c) + QLatin1String(", ");
+    }
+    HeapItem *item = freeBins[NumBins - 1];
+    uint c = 0;
+    while (item) {
+        ++c;
+        item = item->freeData.next;
+    }
+    s += QLatin1String("..., ") + QString::number(c);
+    DEBUG << "bins:" << s;
+    QString a;
+    for (int i = 0; i < 10; ++i)
+        a += QString::number(allocations[i]) + QLatin1String(", ");
+    a += QLatin1String("..., ") + QString::number(allocations[NumBins - 1]);
+    DEBUG << "allocs:" << a;
+    memset(allocations, 0, sizeof(allocations));
+}
+#endif
+
+
 HeapItem *HugeItemAllocator::allocate(size_t size) {
     Chunk *c = chunkAllocator->allocate(size);
     chunks.push_back(HugeChunk{c, size});
@@ -329,128 +607,33 @@ void HugeItemAllocator::freeAll()
 
 struct MemoryManager::Data
 {
-    const size_t pageSize;
-
-    struct ChunkHeader {
-        Heap::Base freeItems;
-        ChunkHeader *nextNonFull;
-        char *itemStart;
-        char *itemEnd;
-        unsigned itemSize;
-    };
-
     ExecutionEngine *engine;
 
-    std::vector<PageAllocation> heapChunks;
     std::size_t unmanagedHeapSize; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;
-
-    enum { MaxItemSize = 512 };
-    ChunkHeader *nonFullChunks[MaxItemSize/16];
-    uint nChunks[MaxItemSize/16];
-    uint availableItems[MaxItemSize/16];
-    uint allocCount[MaxItemSize/16];
-    int totalItems;
-    int totalAlloc;
 
     bool gcBlocked;
     bool aggressiveGC;
     bool gcStats;
-    bool unused; // suppress padding warning
-
-    // statistics:
-#ifdef DETAILED_MM_STATS
-    QVector<unsigned> allocSizeCounters;
-#endif // DETAILED_MM_STATS
 
     Data()
-        : pageSize(WTF::pageSize())
-        , engine(0)
+        : engine(0)
         , unmanagedHeapSize(0)
         , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
-        , totalItems(0)
-        , totalAlloc(0)
         , gcBlocked(false)
         , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
         , gcStats(!qEnvironmentVariableIsEmpty(QV4_MM_STATS))
     {
-        memset(nonFullChunks, 0, sizeof(nonFullChunks));
-        memset(nChunks, 0, sizeof(nChunks));
-        memset(availableItems, 0, sizeof(availableItems));
-        memset(allocCount, 0, sizeof(allocCount));
     }
 
-    ~Data()
-    {
-        for (std::vector<PageAllocation>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i) {
-            Q_V4_PROFILE_DEALLOC(engine, i->size(), Profiling::HeapPage);
-            i->deallocate();
-        }
-    }
 };
 
-namespace {
-
-bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, ExecutionEngine *engine)
-{
-    bool isEmpty = true;
-    Heap::Base *tail = &header->freeItems;
-//    qDebug("chunkStart @ %p, size=%x, pos=%x", header->itemStart, header->itemSize, header->itemSize>>4);
-#ifdef V4_USE_VALGRIND
-    VALGRIND_DISABLE_ERROR_REPORTING;
-#endif
-    for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
-        Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
-//        qDebug("chunk @ %p, in use: %s, mark bit: %s",
-//               item, (m->inUse() ? "yes" : "no"), (m->isMarked() ? "true" : "false"));
-
-        Q_ASSERT(qintptr(item) % 16 == 0);
-
-        if (m->isMarked()) {
-            Q_ASSERT(m->inUse());
-            m->clearMarkBit();
-            isEmpty = false;
-            ++(*itemsInUse);
-        } else {
-            if (m->inUse()) {
-//                qDebug() << "-- collecting it." << m << tail << m->nextFree();
-#ifdef V4_USE_VALGRIND
-                VALGRIND_ENABLE_ERROR_REPORTING;
-#endif
-                if (m->vtable()->destroy) {
-                    m->vtable()->destroy(m);
-                    m->_checkIsDestroyed();
-                }
-
-                memset(m, 0, sizeof(Heap::Base));
-#ifdef V4_USE_VALGRIND
-                VALGRIND_DISABLE_ERROR_REPORTING;
-                VALGRIND_MEMPOOL_FREE(engine->memoryManager, m);
-#endif
-#ifdef V4_USE_HEAPTRACK
-                heaptrack_report_free(m);
-#endif
-                Q_V4_PROFILE_DEALLOC(engine, header->itemSize, Profiling::SmallItem);
-                ++(*itemsInUse);
-            }
-            // Relink all free blocks to rewrite references to any released chunk.
-            tail->setNextFree(m);
-            tail = m;
-        }
-    }
-    tail->setNextFree(0);
-#ifdef V4_USE_VALGRIND
-    VALGRIND_ENABLE_ERROR_REPORTING;
-#endif
-    return isEmpty;
-}
-
-} // namespace
 
 MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
     , stackAllocator(chunkAllocator)
+    , blockAllocator(chunkAllocator)
     , hugeItemAllocator(chunkAllocator)
     , m_d(new Data)
     , m_persistentValues(new PersistentValueStorage(engine))
@@ -460,20 +643,15 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
     m_d->engine = engine;
+
+    // ### initialize chunkList and stringChunks
 }
 
-Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize)
+Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 {
     if (m_d->aggressiveGC)
         runGC();
-#ifdef DETAILED_MM_STATS
-    willAllocate(size);
-#endif // DETAILED_MM_STATS
 
-    Q_ASSERT(size >= 16);
-    Q_ASSERT(size % 16 == 0);
-
-//    qDebug() << "unmanagedHeapSize:" << m_d->unmanagedHeapSize << "limit:" << m_d->unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
     m_d->unmanagedHeapSize += unmanagedSize;
     bool didGCRun = false;
     if (m_d->unmanagedHeapSize > m_d->unmanagedHeapSizeGCLimit) {
@@ -488,84 +666,39 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
         didGCRun = true;
     }
 
-    size_t pos = size >> 4;
-
-    // doesn't fit into a small bucket
-    if (size >= MemoryManager::Data::MaxItemSize) {
-        HeapItem *item = hugeItemAllocator.allocate(size);
-        return *item;
+    HeapItem *m = blockAllocator.allocate(align(sizeof(Heap::String)));
+    if (!m) {
+        if (!didGCRun && shouldRunGC())
+            runGC();
+        m = blockAllocator.allocate(align(sizeof(Heap::String)), true);
     }
 
-    Heap::Base *m = 0;
-    Data::ChunkHeader *header = m_d->nonFullChunks[pos];
-    if (header) {
-        m = header->freeItems.nextFree();
-        goto found;
-    }
+    return *m;
+}
 
-    // try to free up space, otherwise allocate
-    if (!didGCRun && m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && m_d->totalAlloc > (m_d->totalItems >> 1) && !m_d->aggressiveGC) {
+Heap::Base *MemoryManager::allocData(std::size_t size)
+{
+    if (m_d->aggressiveGC)
         runGC();
-        header = m_d->nonFullChunks[pos];
-        if (header) {
-            m = header->freeItems.nextFree();
-            goto found;
-        }
+#ifdef DETAILED_MM_STATS
+    willAllocate(size);
+#endif // DETAILED_MM_STATS
+
+    Q_ASSERT(size >= Chunk::SlotSize);
+    Q_ASSERT(size % Chunk::SlotSize == 0);
+
+//    qDebug() << "unmanagedHeapSize:" << m_d->unmanagedHeapSize << "limit:" << m_d->unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
+
+    if (size > Chunk::DataSize)
+        return *hugeItemAllocator.allocate(size);
+
+    HeapItem *m = blockAllocator.allocate(size);
+    if (!m) {
+        if (shouldRunGC())
+            runGC();
+        m = blockAllocator.allocate(size, true);
     }
-
-    // no free item available, allocate a new chunk
-    {
-        std::size_t allocSize = QV4::Chunk::ChunkSize;
-        Q_V4_PROFILE_ALLOC(engine, allocSize, Profiling::HeapPage);
-        PageAllocation allocation = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
-        m_d->heapChunks.push_back(allocation);
-
-        header = reinterpret_cast<Data::ChunkHeader *>(allocation.base());
-        Q_ASSERT(size <= UINT_MAX);
-        header->itemSize = unsigned(size);
-        header->itemStart = reinterpret_cast<char *>(allocation.base()) + roundUpToMultipleOf(16, sizeof(Data::ChunkHeader));
-        header->itemEnd = reinterpret_cast<char *>(allocation.base()) + allocation.size() - header->itemSize;
-
-        header->nextNonFull = m_d->nonFullChunks[pos];
-        m_d->nonFullChunks[pos] = header;
-
-        Heap::Base *last = &header->freeItems;
-        for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
-            Heap::Base *o = reinterpret_cast<Heap::Base *>(item);
-            last->setNextFree(o);
-            last = o;
-
-        }
-        last->setNextFree(0);
-        m = header->freeItems.nextFree();
-        Q_ASSERT(header->itemEnd >= header->itemStart);
-        const size_t increase = quintptr(header->itemEnd - header->itemStart) / header->itemSize;
-        m_d->availableItems[pos] += uint(increase);
-        m_d->totalItems += int(increase);
-#ifdef V4_USE_VALGRIND
-        VALGRIND_MAKE_MEM_NOACCESS(allocation.base(), allocSize);
-        VALGRIND_MEMPOOL_ALLOC(this, header, sizeof(Data::ChunkHeader));
-#endif
-#ifdef V4_USE_HEAPTRACK
-        heaptrack_report_alloc(header, sizeof(Data::ChunkHeader));
-#endif
-    }
-
-  found:
-#ifdef V4_USE_VALGRIND
-    VALGRIND_MEMPOOL_ALLOC(this, m, size);
-#endif
-#ifdef V4_USE_HEAPTRACK
-    heaptrack_report_alloc(m, size);
-#endif
-    Q_V4_PROFILE_ALLOC(engine, size, Profiling::SmallItem);
-
-    ++m_d->allocCount[pos];
-    ++m_d->totalAlloc;
-    header->freeItems.setNextFree(m->nextFree());
-    if (!header->freeItems.nextFree())
-        m_d->nonFullChunks[pos] = header->nextNonFull;
-    return m;
+    return *m;
 }
 
 static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
@@ -669,57 +802,19 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    bool *chunkIsEmpty = static_cast<bool *>(alloca(m_d->heapChunks.size() * sizeof(bool)));
-    uint itemsInUse[MemoryManager::Data::MaxItemSize/16];
-    memset(itemsInUse, 0, sizeof(itemsInUse));
-    memset(m_d->nonFullChunks, 0, sizeof(m_d->nonFullChunks));
-
-    for (size_t i = 0; i < m_d->heapChunks.size(); ++i) {
-        Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(m_d->heapChunks[i].base());
-        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], engine);
-    }
-
-    std::vector<PageAllocation>::iterator chunkIter = m_d->heapChunks.begin();
-    for (size_t i = 0; i < m_d->heapChunks.size(); ++i) {
-        Q_ASSERT(chunkIter != m_d->heapChunks.end());
-        Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(chunkIter->base());
-        const size_t pos = header->itemSize >> 4;
-        Q_ASSERT(header->itemEnd >= header->itemStart);
-        const size_t decrease = quintptr(header->itemEnd - header->itemStart) / header->itemSize;
-
-        // Release that chunk if it could have been spared since the last GC run without any difference.
-        if (chunkIsEmpty[i] && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
-            Q_V4_PROFILE_DEALLOC(engine, chunkIter->size(), Profiling::HeapPage);
-#ifdef V4_USE_VALGRIND
-            VALGRIND_MEMPOOL_FREE(this, header);
-#endif
-#ifdef V4_USE_HEAPTRACK
-            heaptrack_report_free(header);
-#endif
-            --m_d->nChunks[pos];
-            m_d->availableItems[pos] -= uint(decrease);
-            m_d->totalItems -= int(decrease);
-            chunkIter->deallocate();
-            chunkIter = m_d->heapChunks.erase(chunkIter);
-            continue;
-        } else if (header->freeItems.nextFree()) {
-            header->nextNonFull = m_d->nonFullChunks[pos];
-            m_d->nonFullChunks[pos] = header;
-        }
-        ++chunkIter;
-    }
-
+    blockAllocator.sweep();
     hugeItemAllocator.sweep();
-
-    // some execution contexts are allocated on the stack, make sure we clear their markBit as well
-    if (!lastSweep) {
-        QV4::ExecutionContext *ctx = engine->currentContext;
-        while (ctx) {
-            ctx->d()->clearMarkBit();
-            ctx = engine->parentContext(ctx);
-        }
-    }
 }
+
+bool MemoryManager::shouldRunGC() const
+{
+    size_t total = blockAllocator.totalSlots();
+    size_t usedSlots = blockAllocator.usedSlotsAfterLastSweep;
+    if (total > MinSlotsGCLimit && usedSlots * GCOverallocation < total * 100)
+        return true;
+    return false;
+}
+
 
 void MemoryManager::runGC()
 {
@@ -731,8 +826,10 @@ void MemoryManager::runGC()
     QScopedValueRollback<bool> gcBlocker(m_d->gcBlocked, true);
 
     if (!m_d->gcStats) {
+//        uint oldUsed = m_d->allocator.usedMem();
         mark();
         sweep();
+//        DEBUG << "RUN GC: allocated:" << m_d->allocator.allocatedMem() << "used before" << oldUsed << "used now" << m_d->allocator.usedMem();
     } else {
         const size_t totalMem = getAllocatedMem();
 
@@ -742,7 +839,6 @@ void MemoryManager::runGC()
         qint64 markTime = t.restart();
         const size_t usedBefore = getUsedMem();
         const size_t largeItemsBefore = getLargeItemsMem();
-        size_t chunksBefore = m_d->heapChunks.size();
         sweep();
         const size_t usedAfter = getUsedMem();
         const size_t largeItemsAfter = getLargeItemsMem();
@@ -751,42 +847,25 @@ void MemoryManager::runGC()
         qDebug() << "========== GC ==========";
         qDebug() << "Marked object in" << markTime << "ms.";
         qDebug() << "Sweeped object in" << sweepTime << "ms.";
-        qDebug() << "Allocated" << totalMem << "bytes in" << m_d->heapChunks.size() << "chunks.";
+        qDebug() << "Allocated" << totalMem << "bytes";
         qDebug() << "Used memory before GC:" << usedBefore;
         qDebug() << "Used memory after GC:" << usedAfter;
         qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
-        qDebug() << "Released chunks:" << (chunksBefore - m_d->heapChunks.size());
         qDebug() << "Large item memory before GC:" << largeItemsBefore;
         qDebug() << "Large item memory after GC:" << largeItemsAfter;
         qDebug() << "Large item memory freed up:" << (largeItemsBefore - largeItemsAfter);
         qDebug() << "======== End GC ========";
     }
-
-    memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
-    m_d->totalAlloc = 0;
 }
 
 size_t MemoryManager::getUsedMem() const
 {
-    size_t usedMem = 0;
-    for (std::vector<PageAllocation>::const_iterator i = m_d->heapChunks.cbegin(), ei = m_d->heapChunks.cend(); i != ei; ++i) {
-        Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(i->base());
-        for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
-            Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
-            Q_ASSERT(qintptr(item) % 16 == 0);
-            if (m->inUse())
-                usedMem += header->itemSize;
-        }
-    }
-    return usedMem;
+    return blockAllocator.usedMem();
 }
 
 size_t MemoryManager::getAllocatedMem() const
 {
-    size_t total = 0;
-    for (size_t i = 0; i < m_d->heapChunks.size(); ++i)
-        total += m_d->heapChunks.at(i).size();
-    return total;
+    return blockAllocator.allocatedMem() + hugeItemAllocator.usedMem();
 }
 
 size_t MemoryManager::getLargeItemsMem() const
@@ -814,7 +893,6 @@ MemoryManager::~MemoryManager()
 #endif
     delete chunkAllocator;
 }
-
 
 
 void MemoryManager::dumpStats() const
