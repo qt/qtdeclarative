@@ -92,7 +92,8 @@ public:
         handle(nullptr),
         slider(slider),
         pressed(false),
-        hovered(false)
+        hovered(false),
+        touchId(-1)
     {
     }
 
@@ -103,9 +104,6 @@ public:
 
     static QQuickRangeSliderNodePrivate *get(QQuickRangeSliderNode *node);
 
-private:
-    friend class QQuickRangeSlider;
-
     qreal value;
     bool isPendingValue;
     qreal pendingValue;
@@ -114,6 +112,7 @@ private:
     QQuickRangeSlider *slider;
     bool pressed;
     bool hovered;
+    int touchId;
 };
 
 bool QQuickRangeSliderNodePrivate::isFirst() const
@@ -327,9 +326,10 @@ public:
     {
     }
 
-    void handlePress(const QPointF &point);
-    void handleMove(const QPointF &point);
-    void handleRelease(const QPointF &point);
+    QQuickRangeSliderNode *pressedNode(int touchId = -1) const;
+    void handlePress(const QPointF &point, int touchId = -1);
+    void handleMove(const QPointF &point, int touchId = -1);
+    void handleRelease(const QPointF &point, int touchId = -1);
     void handleUngrab();
 
     void updateHover(const QPointF &pos);
@@ -384,15 +384,26 @@ static qreal positionAt(const QQuickRangeSlider *slider, QQuickItem *handle, con
     return 0;
 }
 
-void QQuickRangeSliderPrivate::handlePress(const QPointF &point)
+QQuickRangeSliderNode *QQuickRangeSliderPrivate::pressedNode(int touchId) const
+{
+    if (touchId == -1)
+        return first->isPressed() ? first : (second->isPressed() ? second : nullptr);
+    if (QQuickRangeSliderNodePrivate::get(first)->touchId == touchId)
+        return first;
+    if (QQuickRangeSliderNodePrivate::get(second)->touchId == touchId)
+        return second;
+    return nullptr;
+}
+
+void QQuickRangeSliderPrivate::handlePress(const QPointF &point, int touchId)
 {
     Q_Q(QQuickRangeSlider);
     pressPoint = point;
 
     QQuickItem *firstHandle = first->handle();
     QQuickItem *secondHandle = second->handle();
-    const bool firstHit = firstHandle && firstHandle->contains(q->mapToItem(firstHandle, point));
-    const bool secondHit = secondHandle && secondHandle->contains(q->mapToItem(secondHandle, point));
+    const bool firstHit = firstHandle && !first->isPressed() && firstHandle->contains(q->mapToItem(firstHandle, point));
+    const bool secondHit = secondHandle && !second->isPressed() && secondHandle->contains(q->mapToItem(secondHandle, point));
     QQuickRangeSliderNode *hitNode = nullptr;
     QQuickRangeSliderNode *otherNode = nullptr;
 
@@ -436,17 +447,18 @@ void QQuickRangeSliderPrivate::handlePress(const QPointF &point)
     if (hitNode) {
         hitNode->setPressed(true);
         hitNode->handle()->setZ(1);
+        QQuickRangeSliderNodePrivate::get(hitNode)->touchId = touchId;
     }
     if (otherNode)
         otherNode->handle()->setZ(0);
 }
 
-void QQuickRangeSliderPrivate::handleMove(const QPointF &point)
+void QQuickRangeSliderPrivate::handleMove(const QPointF &point, int touchId)
 {
     Q_Q(QQuickRangeSlider);
     if (!q->keepMouseGrab())
         return;
-    QQuickRangeSliderNode *pressedNode = first->isPressed() ? first : (second->isPressed() ? second : nullptr);
+    QQuickRangeSliderNode *pressedNode = QQuickRangeSliderPrivate::pressedNode(touchId);
     if (pressedNode) {
         qreal pos = positionAt(q, pressedNode->handle(), point);
         if (snapMode == QQuickRangeSlider::SnapAlways)
@@ -458,27 +470,29 @@ void QQuickRangeSliderPrivate::handleMove(const QPointF &point)
     }
 }
 
-void QQuickRangeSliderPrivate::handleRelease(const QPointF &point)
+void QQuickRangeSliderPrivate::handleRelease(const QPointF &point, int touchId)
 {
     Q_Q(QQuickRangeSlider);
     pressPoint = QPointF();
-    if (!q->keepMouseGrab())
-        return;
 
-    QQuickRangeSliderNode *pressedNode = first->isPressed() ? first : (second->isPressed() ? second : nullptr);
+    QQuickRangeSliderNode *pressedNode = QQuickRangeSliderPrivate::pressedNode(touchId);
     if (!pressedNode)
         return;
+    QQuickRangeSliderNodePrivate *pressedNodePrivate = QQuickRangeSliderNodePrivate::get(pressedNode);
 
-    qreal pos = positionAt(q, pressedNode->handle(), point);
-    if (snapMode != QQuickRangeSlider::NoSnap)
-        pos = snapPosition(q, pos);
-    qreal val = valueAt(q, pos);
-    if (!qFuzzyCompare(val, pressedNode->value()))
-        pressedNode->setValue(val);
-    else if (snapMode != QQuickRangeSlider::NoSnap)
-        QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
-    q->setKeepMouseGrab(false);
+    if (q->keepMouseGrab()) {
+        qreal pos = positionAt(q, pressedNode->handle(), point);
+        if (snapMode != QQuickRangeSlider::NoSnap)
+            pos = snapPosition(q, pos);
+        qreal val = valueAt(q, pos);
+        if (!qFuzzyCompare(val, pressedNode->value()))
+            pressedNode->setValue(val);
+        else if (snapMode != QQuickRangeSlider::NoSnap)
+            pressedNodePrivate->setPosition(pos);
+        q->setKeepMouseGrab(false);
+    }
     pressedNode->setPressed(false);
+    pressedNodePrivate->touchId = -1;
 }
 
 void QQuickRangeSliderPrivate::handleUngrab()
@@ -486,6 +500,8 @@ void QQuickRangeSliderPrivate::handleUngrab()
     pressPoint = QPointF();
     first->setPressed(false);
     second->setPressed(false);
+    QQuickRangeSliderNodePrivate::get(first)->touchId = -1;
+    QQuickRangeSliderNodePrivate::get(second)->touchId = -1;
 }
 
 void QQuickRangeSliderPrivate::updateHover(const QPointF &pos)
@@ -973,6 +989,73 @@ void QQuickRangeSlider::mouseUngrabEvent()
 {
     Q_D(QQuickRangeSlider);
     QQuickControl::mouseUngrabEvent();
+    d->handleUngrab();
+}
+
+void QQuickRangeSlider::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        if (!d->first->isPressed() || !d->second->isPressed()) {
+            const QTouchEvent::TouchPoint point = event->touchPoints().first();
+            d->handlePress(point.pos(), point.id());
+        } else {
+            event->ignore();
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                if (!d->first->isPressed() || !d->second->isPressed())
+                    d->handlePress(point.pos(), point.id());
+                break;
+            case Qt::TouchPointMoved:
+                if (!keepMouseGrab()) {
+                    if (d->orientation == Qt::Horizontal)
+                        setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - point.startPos().x(), Qt::XAxis, &point));
+                    else
+                        setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - point.startPos().y(), Qt::YAxis, &point));
+                }
+                if (point.id() == QQuickRangeSliderNodePrivate::get(d->first)->touchId
+                        || point.id() == QQuickRangeSliderNodePrivate::get(d->second)->touchId)
+                    d->handleMove(point.pos(), point.id());
+                break;
+            case Qt::TouchPointReleased:
+                if (point.id() == QQuickRangeSliderNodePrivate::get(d->first)->touchId
+                        || point.id() == QQuickRangeSliderNodePrivate::get(d->second)->touchId)
+                    d->handleRelease(point.pos(), point.id());
+                break;
+            default:
+                break;
+            }
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() == QQuickRangeSliderNodePrivate::get(d->first)->touchId
+                    || point.id() == QQuickRangeSliderNodePrivate::get(d->second)->touchId)
+                d->handleRelease(point.pos(), point.id());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleUngrab();
+        break;
+
+    default:
+        QQuickControl::touchEvent(event);
+        break;
+    }
+}
+
+void QQuickRangeSlider::touchUngrabEvent()
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::touchUngrabEvent();
     d->handleUngrab();
 }
 
