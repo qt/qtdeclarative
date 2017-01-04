@@ -373,6 +373,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
 
 #if QT_CONFIG(quick_path)
+    qmlRegisterType<QQuickPathArc, 2>(uri, 2, 9, "PathArc");
     qmlRegisterType<QQuickPathMove>(uri, 2, 9, "PathMove");
     qmlRegisterType<QQuickPathItem>(uri, 2, 9, "PathItem");
     qmlRegisterType<QQuickPathGradientStop>(uri, 2, 9, "PathGradientStop");

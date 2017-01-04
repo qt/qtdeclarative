@@ -1799,6 +1799,42 @@ void QQuickPathArc::setDirection(ArcDirection direction)
     emit changed();
 }
 
+/*!
+    \qmlproperty real QtQuick::PathArc::xAxisRotation
+
+    Defines the rotation of the arc, in degrees. The default value is 0.
+
+    An arc is a section of circles or ellipses. Given the radius and the start
+    and end points, there are two ellipses that connect the points. This
+    property defines the rotation of the X axis of these ellipses.
+
+    \note The value is only useful when the x and y radius differ, meaning the
+    arc is a section of ellipses.
+
+    The following QML demonstrates how different radius values can be used to change
+    the shape of the arc:
+    \table
+    \row
+    \li \image declarative-arcrotation.png
+    \li \snippet qml/path/arcrotation.qml 0
+    \endtable
+*/
+
+qreal QQuickPathArc::xAxisRotation() const
+{
+    return _xAxisRotation;
+}
+
+void QQuickPathArc::setXAxisRotation(qreal rotation)
+{
+    if (_xAxisRotation == rotation)
+        return;
+
+    _xAxisRotation = rotation;
+    emit xAxisRotationChanged();
+    emit changed();
+}
+
 void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 {
     const QPointF &startPoint = path.currentPosition();
@@ -1806,7 +1842,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     QQuickSvgParser::pathArc(path,
             _radiusX,
             _radiusY,
-            0,  //xAxisRotation
+            _xAxisRotation,
             _useLargeArc,
             _direction == Clockwise ? 1 : 0,
             endPoint.x(),
