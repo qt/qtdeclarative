@@ -242,7 +242,7 @@ void QQuickPathItemNvprRenderer::convertPath(const QQuickPath *path)
             m_path.cmd.append(cmd);
             m_path.coord.append(o->radiusX());
             m_path.coord.append(o->radiusY());
-            m_path.coord.append(0.0f); // X axis rotation
+            m_path.coord.append(o->xAxisRotation());
             appendCoords(&m_path.coord, o, &pos);
         } else {
             qWarning() << "PathItem/NVPR: unsupported Path element" << e;
