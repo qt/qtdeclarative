@@ -206,8 +206,15 @@ public:
     Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
-    QV4::Heap::CallContext *allocSimpleCallContext()
-    { return stackAllocator.allocate(); }
+    QV4::Heap::CallContext *allocSimpleCallContext(QV4::ExecutionEngine *v4)
+    {
+        Heap::CallContext *ctxt = stackAllocator.allocate();
+        memset(ctxt, 0, sizeof(Heap::CallContext));
+        ctxt->setVtable(QV4::CallContext::staticVTable());
+        ctxt->init(v4);
+        return ctxt;
+
+    }
     void freeSimpleCallContext()
     { stackAllocator.free(); }
 

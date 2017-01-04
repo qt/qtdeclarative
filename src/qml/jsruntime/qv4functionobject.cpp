@@ -484,14 +484,14 @@ void BuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = CallContext::Data::createSimpleContext(v4);
+    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);
     Q_ASSERT(v4->current == ctx);
 
     scope.result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext));
-    ctx->freeSimpleCallContext();
+    v4->memoryManager->freeSimpleCallContext();
 }
 
 void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
@@ -506,14 +506,14 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = CallContext::Data::createSimpleContext(v4);
+    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);
     Q_ASSERT(v4->current == ctx);
 
     scope.result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext), f->d()->index);
-    ctx->freeSimpleCallContext();
+    v4->memoryManager->freeSimpleCallContext();
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

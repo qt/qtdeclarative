@@ -109,14 +109,8 @@ struct ExecutionContext : Base {
     {
         Base::init();
 
-        callData = nullptr;
         this->engine = engine;
-        outer = nullptr;
-        lookups = nullptr;
-        constantTable = nullptr;
-        compilationUnit = nullptr;
         type = t;
-        strictMode = false;
         lineNumber = -1;
     }
 
@@ -141,10 +135,6 @@ struct CallContext : ExecutionContext {
     void init(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
     {
         ExecutionContext::init(engine, t);
-        function = 0;
-        v4Function = 0;
-        locals = 0;
-        activation = 0;
     }
 
     inline unsigned int formalParameterCount() const;

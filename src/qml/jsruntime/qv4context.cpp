@@ -97,10 +97,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
 
 Heap::CallContext *Heap::CallContext::createSimpleContext(ExecutionEngine *v4)
 {
-    Heap::CallContext *ctxt = v4->memoryManager->allocSimpleCallContext();
-    memset(ctxt, 0, sizeof(Heap::CallContext));
-    ctxt->setVtable(QV4::CallContext::staticVTable());
-    ctxt->init(v4);
+    Heap::CallContext *ctxt = v4->memoryManager->allocSimpleCallContext(v4);
     return ctxt;
 }
 
@@ -339,7 +336,7 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = CallContext::Data::createSimpleContext(scope.engine);
+    CallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext(scope.engine);
 
     ctx->strictMode = function->isStrict();
     ctx->callData = callData;
@@ -359,7 +356,7 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
-    ctx->freeSimpleCallContext();
+    scope.engine->memoryManager->freeSimpleCallContext();
 }
 
 void ExecutionContext::setProperty(String *name, const Value &value)
