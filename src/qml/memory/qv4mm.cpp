@@ -627,7 +627,7 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
     if (aggressiveGC)
         runGC();
 
-    const uint stringSize = align(sizeof(Heap::String));
+    const size_t stringSize = align(sizeof(Heap::String));
     unmanagedHeapSize += unmanagedSize;
     bool didGCRun = false;
     if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
@@ -678,6 +678,29 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
     memset(m, 0, size);
     return *m;
+}
+
+Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nMembers)
+{
+    Heap::Object *o = static_cast<Heap::Object *>(allocData(size));
+
+    // ### Could optimize this and allocate both in one go through the block allocator
+    if (nMembers) {
+        std::size_t memberSize = align(sizeof(Heap::MemberData) + (nMembers - 1)*sizeof(Value));
+//        qDebug() << "allocating member data for" << o << nMembers << memberSize;
+        Heap::Base *m;
+        if (memberSize > Chunk::DataSize)
+            m = *hugeItemAllocator.allocate(memberSize);
+        else
+            m = *blockAllocator.allocate(memberSize, true);
+        memset(m, 0, memberSize);
+        o->memberData = static_cast<Heap::MemberData *>(m);
+        o->memberData->setVtable(MemberData::staticVTable());
+        o->memberData->size = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
+        o->memberData->init();
+//        qDebug() << "    got" << o->memberData << o->memberData->size;
+    }
+    return o;
 }
 
 static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)

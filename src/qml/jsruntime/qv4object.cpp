@@ -61,9 +61,8 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
-    if ((ic->size > d()->inlineMemberSize && !d()->memberData) ||
-        (d()->memberData && d()->memberData->size < ic->size - d()->inlineMemberSize))
-        d()->memberData = MemberData::allocate(ic->engine, ic->size - d()->inlineMemberSize, d()->memberData);
+    if (!d()->memberData || (d()->memberData->size < ic->size))
+        d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -212,12 +211,6 @@ void Object::defineReadonlyProperty(String *name, const Value &value)
 void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     Heap::Object *o = static_cast<Heap::Object *>(that);
-
-    if (o->inlineMemberSize) {
-        Value *v = o->propertyData(0);
-        for (uint i = 0; i < o->inlineMemberSize; ++i)
-            v[i].mark(e);
-    }
 
     if (o->memberData)
         o->memberData->mark(e);

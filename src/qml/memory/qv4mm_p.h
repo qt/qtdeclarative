@@ -224,26 +224,22 @@ public:
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        typename ObjectType::Data *o = allocManaged<ObjectType>(size + ic->size*sizeof(Value));
+        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
+        o->setVtable(ObjectType::staticVTable());
         o->internalClass = ic;
-        o->inlineMemberSize = ic->size;
-        o->inlineMemberOffset = size/sizeof(Value);
-        return o;
+        return static_cast<typename ObjectType::Data *>(o);
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject()
     {
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        typename ObjectType::Data *o = allocManaged<ObjectType>(size + ic->size*sizeof(Value));
+        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
+        o->setVtable(ObjectType::staticVTable());
         Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
         o->prototype = prototype->d();
-        o->inlineMemberSize = ic->size;
-        o->inlineMemberOffset = size/sizeof(Value);
-        return o;
+        return static_cast<typename ObjectType::Data *>(o);
     }
 
     template <typename ManagedType, typename Arg1>
@@ -430,6 +426,7 @@ protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
     Heap::Base *allocData(std::size_t size);
+    Heap::Object *allocObjectWithMemberData(std::size_t size, uint nMembers);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);
