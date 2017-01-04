@@ -94,6 +94,7 @@ private:
 
     QPainterPath m_path;
     QPen m_pen;
+    float m_strokeWidth;
     QColor m_fillColor;
     QBrush m_brush;
     Qt::FillRule m_fillRule;
@@ -117,6 +118,7 @@ private:
 
     QPainterPath m_path;
     QPen m_pen;
+    float m_strokeWidth;
     QBrush m_brush;
 
     friend class QQuickPathItemSoftwareRenderer;

@@ -61,7 +61,9 @@ void QQuickPathItemSoftwareRenderer::setStrokeColor(const QColor &color)
 
 void QQuickPathItemSoftwareRenderer::setStrokeWidth(qreal w)
 {
-    m_pen.setWidthF(w);
+    m_strokeWidth = w;
+    if (w >= 0.0f)
+        m_pen.setWidthF(w);
     m_dirty |= DirtyPen;
 }
 
@@ -169,8 +171,10 @@ void QQuickPathItemSoftwareRenderer::updatePathRenderNode()
     if (m_dirty & DirtyFillRule)
         m_node->m_path.setFillRule(m_fillRule);
 
-    if (m_dirty & DirtyPen)
+    if (m_dirty & DirtyPen) {
         m_node->m_pen = m_pen;
+        m_node->m_strokeWidth = m_strokeWidth;
+    }
 
     if (m_dirty & DirtyBrush)
         m_node->m_brush = m_brush;
@@ -209,7 +213,7 @@ void QQuickPathItemSoftwareRenderNode::render(const RenderState *state)
     p->setTransform(matrix()->toTransform());
     p->setOpacity(inheritedOpacity());
 
-    p->setPen(!qFuzzyIsNull(m_pen.widthF()) && m_pen.color() != Qt::transparent ? m_pen : Qt::NoPen);
+    p->setPen(m_strokeWidth >= 0.0f && m_pen.color() != Qt::transparent ? m_pen : Qt::NoPen);
     p->setBrush(m_brush.color() != Qt::transparent ? m_brush : Qt::NoBrush);
     p->drawPath(m_path);
 
