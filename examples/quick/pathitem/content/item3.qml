@@ -58,48 +58,51 @@ Rectangle {
         height: 200
         anchors.centerIn: parent
 
-        strokeWidth: -1 // or strokeColor: "transparent"
-
-        SequentialAnimation on fillColor {
-            loops: Animation.Infinite
-            ColorAnimation {
-                from: "gray"
-                to: "purple"
-                duration: 3000
-            }
-            ColorAnimation {
-                from: "purple"
-                to: "red"
-                duration: 3000
-            }
-            ColorAnimation {
-                from: "red"
-                to: "gray"
-                duration: 3000
-            }
-        }
         SequentialAnimation on opacity {
             loops: Animation.Infinite
             NumberAnimation { from: 1.0; to: 0.0; duration: 5000 }
             NumberAnimation { from: 0.0; to: 1.0; duration: 5000 }
         }
 
-        path: Path {
-            id: p
-            property real r: 50
-            startX: pathItem.width / 2 - r
-            startY: pathItem.height / 2 - r
-            PathArc {
-                x: pathItem.width / 2 + p.r
-                y: pathItem.height / 2 + p.r
-                radiusX: p.r; radiusY: p.r
-                useLargeArc: true
+        VisualPath {
+            strokeWidth: -1 // or strokeColor: "transparent"
+
+            SequentialAnimation on fillColor {
+                loops: Animation.Infinite
+                ColorAnimation {
+                    from: "gray"
+                    to: "purple"
+                    duration: 3000
+                }
+                ColorAnimation {
+                    from: "purple"
+                    to: "red"
+                    duration: 3000
+                }
+                ColorAnimation {
+                    from: "red"
+                    to: "gray"
+                    duration: 3000
+                }
             }
-            PathArc {
-                x: pathItem.width / 2 - p.r
-                y: pathItem.height / 2 - p.r
-                radiusX: p.r; radiusY: p.r
-                useLargeArc: true
+
+            Path {
+                id: p
+                property real r: 50
+                startX: pathItem.width / 2 - r
+                startY: pathItem.height / 2 - r
+                PathArc {
+                    x: pathItem.width / 2 + p.r
+                    y: pathItem.height / 2 + p.r
+                    radiusX: p.r; radiusY: p.r
+                    useLargeArc: true
+                }
+                PathArc {
+                    x: pathItem.width / 2 - p.r
+                    y: pathItem.height / 2 - p.r
+                    radiusX: p.r; radiusY: p.r
+                    useLargeArc: true
+                }
             }
         }
     }

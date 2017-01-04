@@ -64,18 +64,20 @@ Rectangle {
             PathItem {
                 anchors.fill: parent
 
-                fillColor: "transparent"
-                strokeColor: model.index === 0 ? "red" : "blue"
-                strokeStyle: PathItem.DashLine
-                strokeWidth: 4
+                VisualPath {
+                    fillColor: "transparent"
+                    strokeColor: model.index === 0 ? "red" : "blue"
+                    strokeStyle: VisualPath.DashLine
+                    strokeWidth: 4
 
-                path: Path {
-                    startX: 4; startY: 4
-                    PathArc {
-                        id: arc
-                        x: 96; y: 96
-                        radiusX: 100; radiusY: 100
-                        direction: model.index === 0 ? PathArc.Clockwise : PathArc.Counterclockwise
+                    Path {
+                        startX: 4; startY: 4
+                        PathArc {
+                            id: arc
+                            x: 96; y: 96
+                            radiusX: 100; radiusY: 100
+                            direction: model.index === 0 ? PathArc.Clockwise : PathArc.Counterclockwise
+                        }
                     }
                 }
             }

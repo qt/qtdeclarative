@@ -68,26 +68,26 @@ public:
     virtual ~QQuickAbstractPathRenderer() { }
 
     // Gui thread
-    virtual void beginSync() = 0;
-    virtual void setPath(const QQuickPath *path) = 0;
-    virtual void setStrokeColor(const QColor &color) = 0;
-    virtual void setStrokeWidth(qreal w) = 0;
-    virtual void setFillColor(const QColor &color) = 0;
-    virtual void setFillRule(QQuickPathItem::FillRule fillRule) = 0;
-    virtual void setJoinStyle(QQuickPathItem::JoinStyle joinStyle, int miterLimit) = 0;
-    virtual void setCapStyle(QQuickPathItem::CapStyle capStyle) = 0;
-    virtual void setStrokeStyle(QQuickPathItem::StrokeStyle strokeStyle,
+    virtual void beginSync(int totalCount) = 0;
+    virtual void setPath(int index, const QQuickPath *path) = 0;
+    virtual void setStrokeColor(int index, const QColor &color) = 0;
+    virtual void setStrokeWidth(int index, qreal w) = 0;
+    virtual void setFillColor(int index, const QColor &color) = 0;
+    virtual void setFillRule(int index, QQuickVisualPath::FillRule fillRule) = 0;
+    virtual void setJoinStyle(int index, QQuickVisualPath::JoinStyle joinStyle, int miterLimit) = 0;
+    virtual void setCapStyle(int index, QQuickVisualPath::CapStyle capStyle) = 0;
+    virtual void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
-    virtual void setFillGradient(QQuickPathGradient *gradient) = 0;
+    virtual void setFillGradient(int index, QQuickPathGradient *gradient) = 0;
     virtual void endSync() = 0;
 
     // Render thread, with gui blocked
-    virtual void updatePathRenderNode() = 0;
+    virtual void updateNode() = 0;
 };
 
-class QQuickPathItemPrivate : public QQuickItemPrivate
+class QQuickVisualPathPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickPathItem)
+    Q_DECLARE_PUBLIC(QQuickVisualPath)
 
 public:
     enum Dirty {
@@ -103,31 +103,49 @@ public:
         DirtyAll = 0xFF
     };
 
-    QQuickPathItemPrivate();
-    ~QQuickPathItemPrivate();
-
-    void createRenderer();
-    QSGNode *createRenderNode();
-    void sync();
+    QQuickVisualPathPrivate();
 
     void _q_pathChanged();
     void _q_fillGradientChanged();
 
-    QQuickPathItem::RendererType rendererType;
-    QQuickAbstractPathRenderer *renderer;
+    static QQuickVisualPathPrivate *get(QQuickVisualPath *p) { return p->d_func(); }
+
     QQuickPath *path;
     int dirty;
     QColor strokeColor;
     qreal strokeWidth;
     QColor fillColor;
-    QQuickPathItem::FillRule fillRule;
-    QQuickPathItem::JoinStyle joinStyle;
+    QQuickVisualPath::FillRule fillRule;
+    QQuickVisualPath::JoinStyle joinStyle;
     int miterLimit;
-    QQuickPathItem::CapStyle capStyle;
-    QQuickPathItem::StrokeStyle strokeStyle;
+    QQuickVisualPath::CapStyle capStyle;
+    QQuickVisualPath::StrokeStyle strokeStyle;
     qreal dashOffset;
     QVector<qreal> dashPattern;
     QQuickPathGradient *fillGradient;
+};
+
+class QQuickPathItemPrivate : public QQuickItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickPathItem)
+
+public:
+    QQuickPathItemPrivate();
+    ~QQuickPathItemPrivate();
+
+    void createRenderer();
+    QSGNode *createNode();
+    void sync();
+
+    void _q_visualPathChanged();
+
+    static QQuickPathItemPrivate *get(QQuickPathItem *item) { return item->d_func(); }
+
+    bool componentComplete;
+    bool vpChanged;
+    QQuickPathItem::RendererType rendererType;
+    QQuickAbstractPathRenderer *renderer;
+    QVector<QQuickVisualPath *> vp;
 };
 
 #ifndef QT_NO_OPENGL

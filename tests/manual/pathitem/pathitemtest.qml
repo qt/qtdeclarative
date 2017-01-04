@@ -79,24 +79,26 @@ Rectangle {
                 PathItem {
                     id: triangle
                     anchors.fill: parent
-                    strokeWidth: 4
-                    strokeColor: "red"
-                    fillGradient: PathLinearGradient {
-                        x1: 0; y1: 0
-                        x2: 200; y2: 100
-                        PathGradientStop { position: 0; color: "blue" }
-                        PathGradientStop { position: 0.2; color: "green" }
-                        PathGradientStop { position: 0.4; color: "red" }
-                        PathGradientStop { position: 0.6; color: "yellow" }
-                        PathGradientStop { position: 1; color: "cyan" }
-                    }
-                    fillColor: "blue" // ignored with the gradient set
-                    strokeStyle: PathItem.DashLine
-                    dashPattern: [ 1, 4 ]
-                    path: Path {
-                        PathLine { x: 200; y: 100 }
-                        PathLine { x: 0; y: 100 }
-                        PathLine { x: 0; y: 0 }
+                    VisualPath {
+                        strokeWidth: 4
+                        strokeColor: "red"
+                        fillGradient: PathLinearGradient {
+                            x1: 0; y1: 0
+                            x2: 200; y2: 100
+                            PathGradientStop { position: 0; color: "blue" }
+                            PathGradientStop { position: 0.2; color: "green" }
+                            PathGradientStop { position: 0.4; color: "red" }
+                            PathGradientStop { position: 0.6; color: "yellow" }
+                            PathGradientStop { position: 1; color: "cyan" }
+                        }
+                        fillColor: "blue" // ignored with the gradient set
+                        strokeStyle: VisualPath.DashLine
+                        dashPattern: [ 1, 4 ]
+                        Path {
+                            PathLine { x: 200; y: 100 }
+                            PathLine { x: 0; y: 100 }
+                            PathLine { x: 0; y: 0 }
+                        }
                     }
                     transform: Rotation { origin.x: 100; origin.y: 50; axis { x: 0; y: 1; z: 0 }
                         SequentialAnimation on angle {
@@ -115,41 +117,43 @@ Rectangle {
                 width: 200
                 height: 100
                 PathItem {
-                    id: someCurve
                     anchors.fill: parent
-                    property color sc: "gray"
-                    strokeColor: sc
-                    property color fc: "yellow"
-                    fillColor: fc
-                    path: Path {
-                        startX: 20; startY: 10
-                        PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-                        PathLine { x: 150; y: 80 }
-                        PathQuad { x: 180; y: 10; controlX: 200; controlY: 80 }
-                        PathLine { x: 20; y: 10 }
+                    VisualPath {
+                        id: someCurve
+                        property color sc: "gray"
+                        strokeColor: sc
+                        property color fc: "yellow"
+                        fillColor: fc
+                        Path {
+                            startX: 20; startY: 10
+                            PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
+                            PathLine { x: 150; y: 80 }
+                            PathQuad { x: 180; y: 10; controlX: 200; controlY: 80 }
+                            PathLine { x: 20; y: 10 }
+                        }
+                        // Dynamic changes via property bindings etc. all work but can
+                        // be computationally expense with the generic backend for properties
+                        // that need retriangulating on every change. Should be cheap with NVPR.
+                        NumberAnimation on strokeWidth {
+                            from: 1; to: 20; duration: 10000
+                        }
                     }
-                    // Dynamic changes via property bindings etc. all work but can
-                    // be computationally expense with the generic backend for properties
-                    // that need retriangulating on every change. Should be cheap with NVPR.
-                    NumberAnimation on strokeWidth {
-                        from: 1; to: 20; duration: 10000
-                    }
-                    // Changing colors for a solid stroke or fill is simple and
-                    // (relatively) cheap. However, changing to/from transparent
-                    // stroke/fill color and stroke width 0 are special as these
-                    // change the scenegraph node tree (with the generic backend).
-                    Timer {
-                        interval: 2000
-                        running: true
-                        repeat: true
-                        onTriggered: someCurve.fillColor = (someCurve.fillColor === someCurve.fc ? "transparent" : someCurve.fc)
-                    }
-                    Timer {
-                        interval: 1000
-                        running: true
-                        repeat: true
-                        onTriggered: someCurve.strokeColor = (someCurve.strokeColor === someCurve.sc ? "transparent" : someCurve.sc)
-                    }
+                }
+                // Changing colors for a solid stroke or fill is simple and
+                // (relatively) cheap. However, changing to/from transparent
+                // stroke/fill color and stroke width 0 are special as these
+                // change the scenegraph node tree (with the generic backend).
+                Timer {
+                    interval: 2000
+                    running: true
+                    repeat: true
+                    onTriggered: someCurve.fillColor = (someCurve.fillColor === someCurve.fc ? "transparent" : someCurve.fc)
+                }
+                Timer {
+                    interval: 1000
+                    running: true
+                    repeat: true
+                    onTriggered: someCurve.strokeColor = (someCurve.strokeColor === someCurve.sc ? "transparent" : someCurve.sc)
                 }
             }
 
@@ -161,12 +165,14 @@ Rectangle {
                 PathItem {
                     id: linesAndMoves
                     anchors.fill: parent
-                    strokeColor: "black"
-                    path: Path {
-                        startX: 0; startY: 50
-                        PathLine { relativeX: 100; y: 50 }
-                        PathMove { relativeX: 100; y: 50 }
-                        PathLine { relativeX: 100; y: 50 }
+                    VisualPath {
+                        strokeColor: "black"
+                        Path {
+                            startX: 0; startY: 50
+                            PathLine { relativeX: 100; y: 50 }
+                            PathMove { relativeX: 100; y: 50 }
+                            PathLine { relativeX: 100; y: 50 }
+                        }
                     }
                 }
             }
@@ -177,58 +183,32 @@ Rectangle {
                 width: 200
                 height: 120
                 PathItem {
-                    id: joinTest
                     anchors.fill: parent
-                    strokeColor: "black"
-                    strokeWidth: 16
-                    fillColor: "transparent"
-                    capStyle: PathItem.RoundCap
-                    path: Path {
-                        startX: 30
-                        startY: 30
-                        PathLine { x: 100; y: 100 }
-                        PathLine { x: 30; y: 100 }
-                    }
-                    Timer {
-                        interval: 1000
-                        repeat: true
-                        running: true
-                        property variant styles: [ PathItem.BevelJoin, PathItem.MiterJoin, PathItem.RoundJoin ]
-                        onTriggered: {
-                            for (var i = 0; i < styles.length; ++i)
-                                if (styles[i] === joinTest.joinStyle) {
-                                    joinTest.joinStyle = styles[(i + 1) % styles.length];
-                                    break;
-                                }
+                    VisualPath {
+                        id: joinTest
+                        strokeColor: "black"
+                        strokeWidth: 16
+                        fillColor: "transparent"
+                        capStyle: VisualPath.RoundCap
+                        Path {
+                            startX: 30
+                            startY: 30
+                            PathLine { x: 100; y: 100 }
+                            PathLine { x: 30; y: 100 }
                         }
                     }
                 }
-            }
-
-            Rectangle {
-                border.color: "purple"
-                color: "transparent"
-                width: 200
-                height: 100
-                PathItem {
-                    id: star
-                    anchors.fill: parent
-                    strokeColor: "blue"
-                    fillColor: "lightGray"
-                    strokeWidth: 2
-                    path: Path {
-                        PathMove { x: 90; y: 50 }
-                        PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
-                        PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
-                        PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
-                        PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
-                        PathLine { x: 90; y: 50 }
-                    }
-                    Timer {
-                        interval: 1000
-                        onTriggered: star.fillRule = (star.fillRule === PathItem.OddEvenFill ? PathItem.WindingFill : PathItem.OddEvenFill)
-                        repeat: true
-                        running: true
+                Timer {
+                    interval: 1000
+                    repeat: true
+                    running: true
+                    property variant styles: [ VisualPath.BevelJoin, VisualPath.MiterJoin, VisualPath.RoundJoin ]
+                    onTriggered: {
+                        for (var i = 0; i < styles.length; ++i)
+                            if (styles[i] === joinTest.joinStyle) {
+                                joinTest.joinStyle = styles[(i + 1) % styles.length];
+                                break;
+                            }
                     }
                 }
             }
@@ -240,16 +220,48 @@ Rectangle {
                 height: 100
                 PathItem {
                     anchors.fill: parent
-                    strokeWidth: 4
-                    strokeColor: "black"
-                    fillColor: "transparent"
-                    path: Path {
-                        startX: 20; startY: 10
-                        PathCubic {
-                            id: cb
-                            x: 180; y: 10
-                            control1X: -10; control1Y: 90; control2Y: 90
-                            NumberAnimation on control2X { from: 400; to: 0; duration: 5000; loops: Animation.Infinite }
+                    VisualPath {
+                        id: star
+                        strokeColor: "blue"
+                        fillColor: "lightGray"
+                        strokeWidth: 2
+                        Path {
+                            PathMove { x: 90; y: 50 }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
+                            PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
+                            PathLine { x: 90; y: 50 }
+                        }
+                    }
+                }
+                Timer {
+                    interval: 1000
+                    onTriggered: star.fillRule = (star.fillRule === VisualPath.OddEvenFill ? VisualPath.WindingFill : VisualPath.OddEvenFill)
+                    repeat: true
+                    running: true
+                }
+            }
+
+            Rectangle {
+                border.color: "purple"
+                color: "transparent"
+                width: 200
+                height: 100
+                PathItem {
+                    anchors.fill: parent
+                    VisualPath {
+                        strokeWidth: 4
+                        strokeColor: "black"
+                        fillColor: "transparent"
+                        Path {
+                            startX: 20; startY: 10
+                            PathCubic {
+                                id: cb
+                                x: 180; y: 10
+                                control1X: -10; control1Y: 90; control2Y: 90
+                                NumberAnimation on control2X { from: 400; to: 0; duration: 5000; loops: Animation.Infinite }
+                            }
                         }
                     }
                 }
@@ -266,15 +278,17 @@ Rectangle {
                 height: 100
                 PathItem {
                     anchors.fill: parent
-                    fillColor: "transparent"
-                    strokeColor: "red"
-                    strokeWidth: 4
-                    path: Path {
-                        startX: 10; startY: 40
-                        PathArc {
-                            x: 10; y: 60
-                            radiusX: 40; radiusY: 40
-                            useLargeArc: true
+                    VisualPath {
+                        fillColor: "transparent"
+                        strokeColor: "red"
+                        strokeWidth: 4
+                        Path {
+                            startX: 10; startY: 40
+                            PathArc {
+                                x: 10; y: 60
+                                radiusX: 40; radiusY: 40
+                                useLargeArc: true
+                            }
                         }
                     }
                 }
@@ -301,15 +315,16 @@ Rectangle {
                         width: 150
                         height: 150
 
-                        fillColor: "blue"
-                        strokeColor: "red"
-                        strokeWidth: 4
-
-                        path: Path {
-                            startX: 10; startY: 10
-                            PathLine { x: 140; y: 140 }
-                            PathLine { x: 10; y: 140 }
-                            PathLine { x: 10; y: 10 }
+                        VisualPath {
+                            fillColor: "blue"
+                            strokeColor: "red"
+                            strokeWidth: 4
+                            Path {
+                                startX: 10; startY: 10
+                                PathLine { x: 140; y: 140 }
+                                PathLine { x: 10; y: 140 }
+                                PathLine { x: 10; y: 10 }
+                            }
                         }
                     }
                 }
@@ -330,26 +345,51 @@ Rectangle {
                         from: 0; to: 360; duration: 5000; loops: Animation.Infinite
                     }
                     PathItem {
-                        id: clippedStar
                         width: 100
                         height: 100
-                        strokeColor: "blue"
-                        fillColor: "lightGray"
-                        strokeWidth: 2
-                        path: Path {
-                            PathMove { x: 90; y: 50 }
-                            PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
-                            PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
-                            PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
-                            PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
-                            PathLine { x: 90; y: 50 }
+                        VisualPath {
+                            id: clippedStar
+                            strokeColor: "blue"
+                            fillColor: "lightGray"
+                            strokeWidth: 2
+                            Path {
+                                PathMove { x: 90; y: 50 }
+                                PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
+                                PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
+                                PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
+                                PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
+                                PathLine { x: 90; y: 50 }
+                            }
                         }
                     }
                     Timer {
                         interval: 1000
-                        onTriggered: clippedStar.fillRule = (clippedStar.fillRule === PathItem.OddEvenFill ? PathItem.WindingFill : PathItem.OddEvenFill)
+                        onTriggered: clippedStar.fillRule = (clippedStar.fillRule === VisualPath.OddEvenFill ? VisualPath.WindingFill : VisualPath.OddEvenFill)
                         repeat: true
                         running: true
+                    }
+                }
+            }
+
+            Rectangle {
+                border.color: "purple"
+                color: "transparent"
+                width: 100
+                height: 100
+                PathItem {
+                    anchors.fill: parent
+                    VisualPath {
+                        strokeColor: "red"
+                        Path {
+                            PathLine { x: 100; y: 100 }
+                        }
+                    }
+                    VisualPath {
+                        strokeColor: "blue"
+                        Path {
+                            startX: 100; startY: 0
+                            PathLine { x: 0; y: 100 }
+                        }
                     }
                 }
             }

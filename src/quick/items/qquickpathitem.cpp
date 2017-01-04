@@ -48,28 +48,265 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickPathItemPrivate::QQuickPathItemPrivate()
-    : rendererType(QQuickPathItem::UnknownRenderer),
-      renderer(nullptr),
-      path(nullptr),
+QQuickVisualPathPrivate::QQuickVisualPathPrivate()
+    : path(nullptr),
       dirty(DirtyAll),
       strokeColor(Qt::white),
       strokeWidth(1),
       fillColor(Qt::white),
-      fillRule(QQuickPathItem::OddEvenFill),
-      joinStyle(QQuickPathItem::BevelJoin),
+      fillRule(QQuickVisualPath::OddEvenFill),
+      joinStyle(QQuickVisualPath::BevelJoin),
       miterLimit(2),
-      capStyle(QQuickPathItem::SquareCap),
-      strokeStyle(QQuickPathItem::SolidLine),
+      capStyle(QQuickVisualPath::SquareCap),
+      strokeStyle(QQuickVisualPath::SolidLine),
       dashOffset(0),
       fillGradient(nullptr)
 {
     dashPattern << 4 << 2; // 4 * strokeWidth dash followed by 2 * strokeWidth space
 }
 
-QQuickPathItemPrivate::~QQuickPathItemPrivate()
+QQuickVisualPath::QQuickVisualPath(QObject *parent)
+    : QObject(*(new QQuickVisualPathPrivate), parent)
 {
-    delete renderer;
+}
+
+QQuickVisualPath::~QQuickVisualPath()
+{
+}
+
+QQuickPath *QQuickVisualPath::path() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->path;
+}
+
+void QQuickVisualPath::setPath(QQuickPath *path)
+{
+    Q_D(QQuickVisualPath);
+    if (d->path == path)
+        return;
+
+    if (d->path)
+        qmlobject_disconnect(d->path, QQuickPath, SIGNAL(changed()),
+                             this, QQuickVisualPath, SLOT(_q_pathChanged()));
+    d->path = path;
+    qmlobject_connect(d->path, QQuickPath, SIGNAL(changed()),
+                      this, QQuickVisualPath, SLOT(_q_pathChanged()));
+
+    d->dirty |= QQuickVisualPathPrivate::DirtyPath;
+    emit pathChanged();
+    emit changed();
+}
+
+void QQuickVisualPathPrivate::_q_pathChanged()
+{
+    Q_Q(QQuickVisualPath);
+    dirty |= DirtyPath;
+    emit q->changed();
+}
+
+QColor QQuickVisualPath::strokeColor() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->strokeColor;
+}
+
+void QQuickVisualPath::setStrokeColor(const QColor &color)
+{
+    Q_D(QQuickVisualPath);
+    if (d->strokeColor != color) {
+        d->strokeColor = color;
+        d->dirty |= QQuickVisualPathPrivate::DirtyStrokeColor;
+        emit strokeColorChanged();
+        emit changed();
+    }
+}
+
+qreal QQuickVisualPath::strokeWidth() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->strokeWidth;
+}
+
+void QQuickVisualPath::setStrokeWidth(qreal w)
+{
+    Q_D(QQuickVisualPath);
+    if (d->strokeWidth != w) {
+        d->strokeWidth = w;
+        d->dirty |= QQuickVisualPathPrivate::DirtyStrokeWidth;
+        emit strokeWidthChanged();
+        emit changed();
+    }
+}
+
+QColor QQuickVisualPath::fillColor() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->fillColor;
+}
+
+void QQuickVisualPath::setFillColor(const QColor &color)
+{
+    Q_D(QQuickVisualPath);
+    if (d->fillColor != color) {
+        d->fillColor = color;
+        d->dirty |= QQuickVisualPathPrivate::DirtyFillColor;
+        emit fillColorChanged();
+        emit changed();
+    }
+}
+
+QQuickVisualPath::FillRule QQuickVisualPath::fillRule() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->fillRule;
+}
+
+void QQuickVisualPath::setFillRule(FillRule fillRule)
+{
+    Q_D(QQuickVisualPath);
+    if (d->fillRule != fillRule) {
+        d->fillRule = fillRule;
+        d->dirty |= QQuickVisualPathPrivate::DirtyFillRule;
+        emit fillRuleChanged();
+        emit changed();
+    }
+}
+
+QQuickVisualPath::JoinStyle QQuickVisualPath::joinStyle() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->joinStyle;
+}
+
+void QQuickVisualPath::setJoinStyle(JoinStyle style)
+{
+    Q_D(QQuickVisualPath);
+    if (d->joinStyle != style) {
+        d->joinStyle = style;
+        d->dirty |= QQuickVisualPathPrivate::DirtyStyle;
+        emit joinStyleChanged();
+        emit changed();
+    }
+}
+
+int QQuickVisualPath::miterLimit() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->miterLimit;
+}
+
+void QQuickVisualPath::setMiterLimit(int limit)
+{
+    Q_D(QQuickVisualPath);
+    if (d->miterLimit != limit) {
+        d->miterLimit = limit;
+        d->dirty |= QQuickVisualPathPrivate::DirtyStyle;
+        emit miterLimitChanged();
+        emit changed();
+    }
+}
+
+QQuickVisualPath::CapStyle QQuickVisualPath::capStyle() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->capStyle;
+}
+
+void QQuickVisualPath::setCapStyle(CapStyle style)
+{
+    Q_D(QQuickVisualPath);
+    if (d->capStyle != style) {
+        d->capStyle = style;
+        d->dirty |= QQuickVisualPathPrivate::DirtyStyle;
+        emit capStyleChanged();
+        emit changed();
+    }
+}
+
+QQuickVisualPath::StrokeStyle QQuickVisualPath::strokeStyle() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->strokeStyle;
+}
+
+void QQuickVisualPath::setStrokeStyle(StrokeStyle style)
+{
+    Q_D(QQuickVisualPath);
+    if (d->strokeStyle != style) {
+        d->strokeStyle = style;
+        d->dirty |= QQuickVisualPathPrivate::DirtyDash;
+        emit strokeStyleChanged();
+        emit changed();
+    }
+}
+
+qreal QQuickVisualPath::dashOffset() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->dashOffset;
+}
+
+void QQuickVisualPath::setDashOffset(qreal offset)
+{
+    Q_D(QQuickVisualPath);
+    if (d->dashOffset != offset) {
+        d->dashOffset = offset;
+        d->dirty |= QQuickVisualPathPrivate::DirtyDash;
+        emit dashOffsetChanged();
+        emit changed();
+    }
+}
+
+QVector<qreal> QQuickVisualPath::dashPattern() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->dashPattern;
+}
+
+void QQuickVisualPath::setDashPattern(const QVector<qreal> &array)
+{
+    Q_D(QQuickVisualPath);
+    if (d->dashPattern != array) {
+        d->dashPattern = array;
+        d->dirty |= QQuickVisualPathPrivate::DirtyDash;
+        emit dashPatternChanged();
+        emit changed();
+    }
+}
+
+QQuickPathGradient *QQuickVisualPath::fillGradient() const
+{
+    Q_D(const QQuickVisualPath);
+    return d->fillGradient;
+}
+
+void QQuickVisualPath::setFillGradient(QQuickPathGradient *gradient)
+{
+    Q_D(QQuickVisualPath);
+    if (d->fillGradient != gradient) {
+        if (d->fillGradient)
+            qmlobject_disconnect(d->fillGradient, QQuickPathGradient, SIGNAL(updated()),
+                                 this, QQuickVisualPath, SLOT(_q_fillGradientChanged()));
+        d->fillGradient = gradient;
+        if (d->fillGradient)
+            qmlobject_connect(d->fillGradient, QQuickPathGradient, SIGNAL(updated()),
+                              this, QQuickVisualPath, SLOT(_q_fillGradientChanged()));
+        d->dirty |= QQuickVisualPathPrivate::DirtyFillGradient;
+        emit changed();
+    }
+}
+
+void QQuickVisualPathPrivate::_q_fillGradientChanged()
+{
+    Q_Q(QQuickVisualPath);
+    dirty |= DirtyFillGradient;
+    emit q->changed();
+}
+
+void QQuickVisualPath::resetFillGradient()
+{
+    setFillGradient(nullptr);
 }
 
 /*!
@@ -80,6 +317,7 @@ QQuickPathItemPrivate::~QQuickPathItemPrivate()
     \ingroup qtquick-views
     \inherits Item
     \brief Renders a path
+    \since 5.10
 
     Renders a path either by generating geometry via QPainterPath and manual
     triangulation or by using an extension like \c{GL_NV_path_rendering}.
@@ -103,14 +341,41 @@ QQuickPathItemPrivate::~QQuickPathItemPrivate()
     \c{GL_NV_path_rendering} where the cost of path property changes is much
     smaller.
 
-    \note The types for specifying path elements are shared between PathView
+    \note The types for specifying path elements are shared between \l PathView
     and PathItem. However, not all PathItem implementations support all path
     element types, while some may not make sense for PathView. PathItem's
     currently supported subset is: PathMove, PathLine, PathQuad, PathCubic,
     PathArc.
 
-    \sa Path, PathMove, PathLine, PathQuad, PathCubic, PathArc
+    \note Limited support for PathSvg is also provided in most cases. However,
+    there is no guarantee that this element is going to be supported for all
+    future PathItem backends. It is recommended to avoid the PathSvg element in
+    practice.
+
+    See \l Path for a detailed overview of the supported path elements.
+
+    \sa Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
+
+QQuickPathItemPrivate::QQuickPathItemPrivate()
+    : componentComplete(true),
+      vpChanged(false),
+      rendererType(QQuickPathItem::UnknownRenderer),
+      renderer(nullptr)
+{
+}
+
+QQuickPathItemPrivate::~QQuickPathItemPrivate()
+{
+    delete renderer;
+}
+
+void QQuickPathItemPrivate::_q_visualPathChanged()
+{
+    Q_Q(QQuickPathItem);
+    vpChanged = true;
+    q->polish();
+}
 
 QQuickPathItem::QQuickPathItem(QQuickItem *parent)
   : QQuickItem(*(new QQuickPathItemPrivate), parent)
@@ -128,252 +393,79 @@ QQuickPathItem::RendererType QQuickPathItem::rendererType() const
     return d->rendererType;
 }
 
-/*!
-    \qmlproperty Path QtQuick::PathItem::path
-    This property holds the path to be rendered.
-    For more information see the \l Path documentation.
-*/
-QQuickPath *QQuickPathItem::path() const
+static QQuickVisualPath *vpe_at(QQmlListProperty<QQuickVisualPath> *property, int index)
 {
-    Q_D(const QQuickPathItem);
-    return d->path;
+    QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(static_cast<QQuickPathItem *>(property->object));
+    return d->vp.at(index);
 }
 
-void QQuickPathItem::setPath(QQuickPath *path)
+static void vpe_append(QQmlListProperty<QQuickVisualPath> *property, QQuickVisualPath *obj)
 {
-    Q_D(QQuickPathItem);
-    if (d->path == path)
-        return;
+    QQuickPathItem *item = static_cast<QQuickPathItem *>(property->object);
+    QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(item);
+    d->vp.append(obj);
 
-    if (d->path)
-        qmlobject_disconnect(d->path, QQuickPath, SIGNAL(changed()),
-                             this, QQuickPathItem, SLOT(_q_pathChanged()));
-    d->path = path;
-    qmlobject_connect(d->path, QQuickPath, SIGNAL(changed()),
-                      this, QQuickPathItem, SLOT(_q_pathChanged()));
-
-    d->dirty |= QQuickPathItemPrivate::DirtyPath;
-    emit pathChanged();
-    polish();
-}
-
-void QQuickPathItemPrivate::_q_pathChanged()
-{
-    Q_Q(QQuickPathItem);
-    dirty |= DirtyPath;
-    q->polish();
-}
-
-QColor QQuickPathItem::strokeColor() const
-{
-    Q_D(const QQuickPathItem);
-    return d->strokeColor;
-}
-
-void QQuickPathItem::setStrokeColor(const QColor &color)
-{
-    Q_D(QQuickPathItem);
-    if (d->strokeColor != color) {
-        d->strokeColor = color;
-        d->dirty |= QQuickPathItemPrivate::DirtyStrokeColor;
-        emit strokeColorChanged();
-        polish();
+    if (d->componentComplete) {
+        QObject::connect(obj, SIGNAL(changed()), item, SLOT(_q_visualPathChanged()));
+        d->_q_visualPathChanged();
     }
 }
 
-qreal QQuickPathItem::strokeWidth() const
+static int vpe_count(QQmlListProperty<QQuickVisualPath> *property)
 {
-    Q_D(const QQuickPathItem);
-    return d->strokeWidth;
+    QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(static_cast<QQuickPathItem *>(property->object));
+    return d->vp.count();
 }
 
-void QQuickPathItem::setStrokeWidth(qreal w)
+static void vpe_clear(QQmlListProperty<QQuickVisualPath> *property)
+{
+    QQuickPathItem *item = static_cast<QQuickPathItem *>(property->object);
+    QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(item);
+
+    for (QQuickVisualPath *p : d->vp)
+        QObject::disconnect(p, SIGNAL(changed()), item, SLOT(_q_visualPathChanged()));
+
+    d->vp.clear();
+
+    if (d->componentComplete)
+        d->_q_visualPathChanged();
+}
+
+QQmlListProperty<QQuickVisualPath> QQuickPathItem::visualPaths()
+{
+    return QQmlListProperty<QQuickVisualPath>(this,
+                                              nullptr,
+                                              vpe_append,
+                                              vpe_count,
+                                              vpe_at,
+                                              vpe_clear);
+}
+
+void QQuickPathItem::classBegin()
 {
     Q_D(QQuickPathItem);
-    if (d->strokeWidth != w) {
-        d->strokeWidth = w;
-        d->dirty |= QQuickPathItemPrivate::DirtyStrokeWidth;
-        emit strokeWidthChanged();
-        polish();
-    }
+    d->componentComplete = false;
 }
 
-QColor QQuickPathItem::fillColor() const
-{
-    Q_D(const QQuickPathItem);
-    return d->fillColor;
-}
-
-void QQuickPathItem::setFillColor(const QColor &color)
+void QQuickPathItem::componentComplete()
 {
     Q_D(QQuickPathItem);
-    if (d->fillColor != color) {
-        d->fillColor = color;
-        d->dirty |= QQuickPathItemPrivate::DirtyFillColor;
-        emit fillColorChanged();
-        polish();
-    }
-}
+    d->componentComplete = true;
 
-QQuickPathItem::FillRule QQuickPathItem::fillRule() const
-{
-    Q_D(const QQuickPathItem);
-    return d->fillRule;
-}
+    for (QQuickVisualPath *p : d->vp)
+        connect(p, SIGNAL(changed()), this, SLOT(_q_visualPathChanged()));
 
-void QQuickPathItem::setFillRule(FillRule fillRule)
-{
-    Q_D(QQuickPathItem);
-    if (d->fillRule != fillRule) {
-        d->fillRule = fillRule;
-        d->dirty |= QQuickPathItemPrivate::DirtyFillRule;
-        emit fillRuleChanged();
-        polish();
-    }
-}
-
-QQuickPathItem::JoinStyle QQuickPathItem::joinStyle() const
-{
-    Q_D(const QQuickPathItem);
-    return d->joinStyle;
-}
-
-void QQuickPathItem::setJoinStyle(JoinStyle style)
-{
-    Q_D(QQuickPathItem);
-    if (d->joinStyle != style) {
-        d->joinStyle = style;
-        d->dirty |= QQuickPathItemPrivate::DirtyStyle;
-        emit joinStyleChanged();
-        polish();
-    }
-}
-
-int QQuickPathItem::miterLimit() const
-{
-    Q_D(const QQuickPathItem);
-    return d->miterLimit;
-}
-
-void QQuickPathItem::setMiterLimit(int limit)
-{
-    Q_D(QQuickPathItem);
-    if (d->miterLimit != limit) {
-        d->miterLimit = limit;
-        d->dirty |= QQuickPathItemPrivate::DirtyStyle;
-        emit miterLimitChanged();
-        polish();
-    }
-}
-
-QQuickPathItem::CapStyle QQuickPathItem::capStyle() const
-{
-    Q_D(const QQuickPathItem);
-    return d->capStyle;
-}
-
-void QQuickPathItem::setCapStyle(CapStyle style)
-{
-    Q_D(QQuickPathItem);
-    if (d->capStyle != style) {
-        d->capStyle = style;
-        d->dirty |= QQuickPathItemPrivate::DirtyStyle;
-        emit capStyleChanged();
-        polish();
-    }
-}
-
-QQuickPathItem::StrokeStyle QQuickPathItem::strokeStyle() const
-{
-    Q_D(const QQuickPathItem);
-    return d->strokeStyle;
-}
-
-void QQuickPathItem::setStrokeStyle(StrokeStyle style)
-{
-    Q_D(QQuickPathItem);
-    if (d->strokeStyle != style) {
-        d->strokeStyle = style;
-        d->dirty |= QQuickPathItemPrivate::DirtyDash;
-        emit strokeStyleChanged();
-        polish();
-    }
-}
-
-qreal QQuickPathItem::dashOffset() const
-{
-    Q_D(const QQuickPathItem);
-    return d->dashOffset;
-}
-
-void QQuickPathItem::setDashOffset(qreal offset)
-{
-    Q_D(QQuickPathItem);
-    if (d->dashOffset != offset) {
-        d->dashOffset = offset;
-        d->dirty |= QQuickPathItemPrivate::DirtyDash;
-        emit dashOffsetChanged();
-        polish();
-    }
-}
-
-QVector<qreal> QQuickPathItem::dashPattern() const
-{
-    Q_D(const QQuickPathItem);
-    return d->dashPattern;
-}
-
-void QQuickPathItem::setDashPattern(const QVector<qreal> &array)
-{
-    Q_D(QQuickPathItem);
-    if (d->dashPattern != array) {
-        d->dashPattern = array;
-        d->dirty |= QQuickPathItemPrivate::DirtyDash;
-        emit dashPatternChanged();
-        polish();
-    }
-}
-
-QQuickPathGradient *QQuickPathItem::fillGradient() const
-{
-    Q_D(const QQuickPathItem);
-    return d->fillGradient;
-}
-
-void QQuickPathItem::setFillGradient(QQuickPathGradient *gradient)
-{
-    Q_D(QQuickPathItem);
-    if (d->fillGradient != gradient) {
-        if (d->fillGradient)
-            qmlobject_disconnect(d->fillGradient, QQuickPathGradient, SIGNAL(updated()),
-                                 this, QQuickPathItem, SLOT(_q_fillGradientChanged()));
-        d->fillGradient = gradient;
-        if (d->fillGradient)
-            qmlobject_connect(d->fillGradient, QQuickPathGradient, SIGNAL(updated()),
-                                 this, QQuickPathItem, SLOT(_q_fillGradientChanged()));
-        d->dirty |= QQuickPathItemPrivate::DirtyFillGradient;
-        polish();
-    }
-}
-
-void QQuickPathItemPrivate::_q_fillGradientChanged()
-{
-    Q_Q(QQuickPathItem);
-    dirty |= DirtyFillGradient;
-    q->polish();
-}
-
-void QQuickPathItem::resetFillGradient()
-{
-    setFillGradient(nullptr);
+    d->_q_visualPathChanged();
 }
 
 void QQuickPathItem::updatePolish()
 {
     Q_D(QQuickPathItem);
 
-    if (!d->dirty)
+    if (!d->vpChanged)
         return;
+
+    d->vpChanged = false;
 
     if (!d->renderer) {
         d->createRenderer();
@@ -392,9 +484,11 @@ void QQuickPathItem::updatePolish()
 
 void QQuickPathItem::itemChange(ItemChange change, const ItemChangeData &data)
 {
+    Q_D(QQuickPathItem);
+
     // sync may have been deferred; do it now if the item became visible
     if (change == ItemVisibleHasChanged && data.boolValue)
-        polish();
+        d->_q_visualPathChanged();
 
     QQuickItem::itemChange(change, data);
 }
@@ -407,8 +501,8 @@ QSGNode *QQuickPathItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
     Q_D(QQuickPathItem);
     if (d->renderer) {
         if (!node)
-            node = d->createRenderNode();
-        d->renderer->updatePathRenderNode();
+            node = d->createNode();
+        d->renderer->updateNode();
     }
     return node;
 }
@@ -444,7 +538,7 @@ void QQuickPathItemPrivate::createRenderer()
 }
 
 // the node lives on the render thread
-QSGNode *QQuickPathItemPrivate::createRenderNode()
+QSGNode *QQuickPathItemPrivate::createNode()
 {
     Q_Q(QQuickPathItem);
     QSGNode *node = nullptr;
@@ -454,9 +548,6 @@ QSGNode *QQuickPathItemPrivate::createRenderNode()
     if (!ri)
         return node;
 
-    const bool hasFill = fillColor != Qt::transparent;
-    const bool hasStroke = strokeWidth >= 0.0f && strokeColor != Qt::transparent;
-
     switch (ri->graphicsApi()) {
 #ifndef QT_NO_OPENGL
     case QSGRendererInterface::OpenGL:
@@ -465,9 +556,9 @@ QSGNode *QQuickPathItemPrivate::createRenderNode()
             static_cast<QQuickPathItemNvprRenderer *>(renderer)->setNode(
                 static_cast<QQuickPathItemNvprRenderNode *>(node));
         } else {
-            node = new QQuickPathItemGenericRootRenderNode(q->window(), hasFill, hasStroke);
+            node = new QQuickPathItemGenericNode;
             static_cast<QQuickPathItemGenericRenderer *>(renderer)->setRootNode(
-                static_cast<QQuickPathItemGenericRootRenderNode *>(node));
+                static_cast<QQuickPathItemGenericNode *>(node));
         }
         break;
 #endif
@@ -486,29 +577,36 @@ QSGNode *QQuickPathItemPrivate::createRenderNode()
 
 void QQuickPathItemPrivate::sync()
 {
-    renderer->beginSync();
+    const int count = vp.count();
+    renderer->beginSync(count);
 
-    if (dirty & QQuickPathItemPrivate::DirtyPath)
-        renderer->setPath(path);
-    if (dirty & DirtyStrokeColor)
-        renderer->setStrokeColor(strokeColor);
-    if (dirty & DirtyStrokeWidth)
-        renderer->setStrokeWidth(strokeWidth);
-    if (dirty & DirtyFillColor)
-        renderer->setFillColor(fillColor);
-    if (dirty & DirtyFillRule)
-        renderer->setFillRule(fillRule);
-    if (dirty & DirtyStyle) {
-        renderer->setJoinStyle(joinStyle, miterLimit);
-        renderer->setCapStyle(capStyle);
+    for (int i = 0; i < count; ++i) {
+        QQuickVisualPath *p = vp[i];
+        int &dirty(QQuickVisualPathPrivate::get(p)->dirty);
+
+        if (dirty & QQuickVisualPathPrivate::DirtyPath)
+            renderer->setPath(i, p->path());
+        if (dirty & QQuickVisualPathPrivate::DirtyStrokeColor)
+            renderer->setStrokeColor(i, p->strokeColor());
+        if (dirty & QQuickVisualPathPrivate::DirtyStrokeWidth)
+            renderer->setStrokeWidth(i, p->strokeWidth());
+        if (dirty & QQuickVisualPathPrivate::DirtyFillColor)
+            renderer->setFillColor(i, p->fillColor());
+        if (dirty & QQuickVisualPathPrivate::DirtyFillRule)
+            renderer->setFillRule(i, p->fillRule());
+        if (dirty & QQuickVisualPathPrivate::DirtyStyle) {
+            renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
+            renderer->setCapStyle(i, p->capStyle());
+        }
+        if (dirty & QQuickVisualPathPrivate::DirtyDash)
+            renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
+        if (dirty & QQuickVisualPathPrivate::DirtyFillGradient)
+            renderer->setFillGradient(i, p->fillGradient());
+
+        dirty = 0;
     }
-    if (dirty & DirtyDash)
-        renderer->setStrokeStyle(strokeStyle, dashOffset, dashPattern);
-    if (dirty & DirtyFillGradient)
-        renderer->setFillGradient(fillGradient);
 
     renderer->endSync();
-    dirty = 0;
 }
 
 // ***** gradient support *****

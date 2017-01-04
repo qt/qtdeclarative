@@ -61,6 +61,7 @@ QT_REQUIRE_CONFIG(quick_path);
 
 QT_BEGIN_NAMESPACE
 
+class QQuickVisualPathPrivate;
 class QQuickPathItemPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPathGradientStop : public QObject
@@ -150,13 +151,12 @@ private:
     QPointF m_end;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathItem : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickVisualPath : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
-
     Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_CLASSINFO("DefaultProperty", "path")
 
     Q_PROPERTY(QColor strokeColor READ strokeColor WRITE setStrokeColor NOTIFY strokeColorChanged)
     Q_PROPERTY(qreal strokeWidth READ strokeWidth WRITE setStrokeWidth NOTIFY strokeWidthChanged)
@@ -197,18 +197,8 @@ public:
     };
     Q_ENUM(StrokeStyle)
 
-    enum RendererType {
-        UnknownRenderer,
-        GeometryRenderer,
-        NvprRenderer,
-        SoftwareRenderer
-    };
-    Q_ENUM(RendererType)
-
-    QQuickPathItem(QQuickItem *parent = nullptr);
-    ~QQuickPathItem();
-
-    RendererType rendererType() const;
+    QQuickVisualPath(QObject *parent = nullptr);
+    ~QQuickVisualPath();
 
     QQuickPath *path() const;
     void setPath(QQuickPath *path);
@@ -247,13 +237,8 @@ public:
     void setFillGradient(QQuickPathGradient *gradient);
     void resetFillGradient();
 
-protected:
-    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
-    void updatePolish() override;
-    void itemChange(ItemChange change, const ItemChangeData &data) override;
-
 Q_SIGNALS:
-    void rendererChanged();
+    void changed();
     void pathChanged();
     void strokeColorChanged();
     void strokeWidthChanged();
@@ -268,10 +253,49 @@ Q_SIGNALS:
     void fillGradientChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickPathItem)
-    Q_DECLARE_PRIVATE(QQuickPathItem)
+    Q_DISABLE_COPY(QQuickVisualPath)
+    Q_DECLARE_PRIVATE(QQuickVisualPath)
     Q_PRIVATE_SLOT(d_func(), void _q_pathChanged())
     Q_PRIVATE_SLOT(d_func(), void _q_fillGradientChanged())
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPathItem : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
+    Q_PROPERTY(QQmlListProperty<QQuickVisualPath> visualPaths READ visualPaths)
+    Q_CLASSINFO("DefaultProperty", "visualPaths")
+
+public:
+    enum RendererType {
+        UnknownRenderer,
+        GeometryRenderer,
+        NvprRenderer,
+        SoftwareRenderer
+    };
+    Q_ENUM(RendererType)
+
+    QQuickPathItem(QQuickItem *parent = nullptr);
+    ~QQuickPathItem();
+
+    RendererType rendererType() const;
+
+    QQmlListProperty<QQuickVisualPath> visualPaths();
+
+protected:
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
+    void updatePolish() override;
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
+    void componentComplete() override;
+    void classBegin() override;
+
+Q_SIGNALS:
+    void rendererChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickPathItem)
+    Q_DECLARE_PRIVATE(QQuickPathItem)
+    Q_PRIVATE_SLOT(d_func(), void _q_visualPathChanged())
 };
 
 QT_END_NAMESPACE

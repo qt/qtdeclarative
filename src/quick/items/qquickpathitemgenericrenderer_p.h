@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPathItemGenericRootRenderNode;
+class QQuickPathItemGenericNode;
 
 class QQuickPathItemGenericRenderer : public QQuickAbstractPathRenderer
 {
@@ -68,67 +68,69 @@ public:
         DirtyGeom = 0x01,
         DirtyColor = 0x02,
         DirtyFillGradient = 0x04,
-
-        DirtyAll = 0xFF
+        DirtyList = 0x08
     };
 
     QQuickPathItemGenericRenderer(QQuickItem *item)
         : m_item(item),
           m_rootNode(nullptr),
-          m_effectiveDirty(0)
+          m_accDirty(0)
     { }
 
-    void beginSync() override;
-    void setPath(const QQuickPath *path) override;
-    void setStrokeColor(const QColor &color) override;
-    void setStrokeWidth(qreal w) override;
-    void setFillColor(const QColor &color) override;
-    void setFillRule(QQuickPathItem::FillRule fillRule) override;
-    void setJoinStyle(QQuickPathItem::JoinStyle joinStyle, int miterLimit) override;
-    void setCapStyle(QQuickPathItem::CapStyle capStyle) override;
-    void setStrokeStyle(QQuickPathItem::StrokeStyle strokeStyle,
+    void beginSync(int totalCount) override;
+    void setPath(int index, const QQuickPath *path) override;
+    void setStrokeColor(int index, const QColor &color) override;
+    void setStrokeWidth(int index, qreal w) override;
+    void setFillColor(int index, const QColor &color) override;
+    void setFillRule(int index, QQuickVisualPath::FillRule fillRule) override;
+    void setJoinStyle(int index, QQuickVisualPath::JoinStyle joinStyle, int miterLimit) override;
+    void setCapStyle(int index, QQuickVisualPath::CapStyle capStyle) override;
+    void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
-    void setFillGradient(QQuickPathGradient *gradient) override;
+    void setFillGradient(int index, QQuickPathGradient *gradient) override;
     void endSync() override;
-    void updatePathRenderNode() override;
 
-    void setRootNode(QQuickPathItemGenericRootRenderNode *rn);
+    void updateNode() override;
+
+    void setRootNode(QQuickPathItemGenericNode *node);
 
     struct Color4ub { unsigned char r, g, b, a; };
 
 private:
-    void triangulateFill();
-    void triangulateStroke();
-    void updateFillNode();
-    void updateStrokeNode();
+    struct VisualPathData {
+        float strokeWidth;
+        QPen pen;
+        Color4ub strokeColor;
+        Color4ub fillColor;
+        Qt::FillRule fillRule;
+        QPainterPath path;
+        bool fillGradientActive;
+        QQuickPathItemGradientCache::GradientDesc fillGradient;
+        QVector<QSGGeometry::ColoredPoint2D> fillVertices;
+        QVector<quint16> fillIndices;
+        QVector<QSGGeometry::ColoredPoint2D> strokeVertices;
+        int syncDirty;
+        int effectiveDirty = 0;
+    };
+
+    void triangulateFill(VisualPathData *d);
+    void triangulateStroke(VisualPathData *d);
+
+    void updateFillNode(VisualPathData *d, QQuickPathItemGenericNode *node);
+    void updateStrokeNode(VisualPathData *d, QQuickPathItemGenericNode *node);
 
     QQuickItem *m_item;
-    QQuickPathItemGenericRootRenderNode *m_rootNode;
+    QQuickPathItemGenericNode *m_rootNode;
     QTriangulatingStroker m_stroker;
     QDashedStrokeProcessor m_dashStroker;
-
-    float m_strokeWidth;
-    QPen m_pen;
-    Color4ub m_strokeColor;
-    Color4ub m_fillColor;
-    Qt::FillRule m_fillRule;
-    QPainterPath m_path;
-    bool m_fillGradientActive;
-    QQuickPathItemGradientCache::GradientDesc m_fillGradient;
-
-    QVector<QSGGeometry::ColoredPoint2D> m_fillVertices;
-    QVector<quint16> m_fillIndices;
-    QVector<QSGGeometry::ColoredPoint2D> m_strokeVertices;
-
-    int m_syncDirty;
-    int m_effectiveDirty;
+    QVector<VisualPathData> m_vp;
+    int m_accDirty;
 };
 
-class QQuickPathItemGenericRenderNode : public QSGGeometryNode
+class QQuickPathItemGenericStrokeFillNode : public QSGGeometryNode
 {
 public:
-    QQuickPathItemGenericRenderNode(QQuickWindow *window, QQuickPathItemGenericRootRenderNode *rootNode);
-    ~QQuickPathItemGenericRenderNode();
+    QQuickPathItemGenericStrokeFillNode(QQuickWindow *window);
 
     enum Material {
         MatSolidColor,
@@ -138,7 +140,6 @@ public:
     void activateMaterial(Material m);
 
     QQuickWindow *window() const { return m_window; }
-    QQuickPathItemGenericRootRenderNode *rootNode() const { return m_rootNode; }
 
     // shadow data for custom materials
     QQuickPathItemGradientCache::GradientDesc m_fillGradient;
@@ -146,7 +147,6 @@ public:
 private:
     QSGGeometry m_geometry;
     QQuickWindow *m_window;
-    QQuickPathItemGenericRootRenderNode *m_rootNode;
     QSGMaterial *m_material;
     QScopedPointer<QSGMaterial> m_solidColorMaterial;
     QScopedPointer<QSGMaterial> m_linearGradientMaterial;
@@ -154,24 +154,19 @@ private:
     friend class QQuickPathItemGenericRenderer;
 };
 
-class QQuickPathItemGenericRootRenderNode : public QSGNode
+class QQuickPathItemGenericNode : public QSGNode
 {
 public:
-    QQuickPathItemGenericRootRenderNode(QQuickWindow *window, bool hasFill, bool hasStroke);
-    ~QQuickPathItemGenericRootRenderNode();
-
-private:
-    QQuickPathItemGenericRenderNode *m_fillNode;
-    QQuickPathItemGenericRenderNode *m_strokeNode;
-
-    friend class QQuickPathItemGenericRenderer;
+    QQuickPathItemGenericStrokeFillNode *m_fillNode = nullptr;
+    QQuickPathItemGenericStrokeFillNode *m_strokeNode = nullptr;
+    QQuickPathItemGenericNode *m_next = nullptr;
 };
 
 class QQuickPathItemGenericMaterialFactory
 {
 public:
     static QSGMaterial *createVertexColor(QQuickWindow *window);
-    static QSGMaterial *createLinearGradient(QQuickWindow *window, QQuickPathItemGenericRenderNode *node);
+    static QSGMaterial *createLinearGradient(QQuickWindow *window, QQuickPathItemGenericStrokeFillNode *node);
 };
 
 #ifndef QT_NO_OPENGL
@@ -197,7 +192,7 @@ private:
 class QQuickPathItemLinearGradientMaterial : public QSGMaterial
 {
 public:
-    QQuickPathItemLinearGradientMaterial(QQuickPathItemGenericRenderNode *node)
+    QQuickPathItemLinearGradientMaterial(QQuickPathItemGenericStrokeFillNode *node)
         : m_node(node)
     {
         // Passing RequiresFullMatrix is essential in order to prevent the
@@ -220,10 +215,10 @@ public:
         return new QQuickPathItemLinearGradientShader;
     }
 
-    QQuickPathItemGenericRenderNode *node() const { return m_node; }
+    QQuickPathItemGenericStrokeFillNode *node() const { return m_node; }
 
 private:
-    QQuickPathItemGenericRenderNode *m_node;
+    QQuickPathItemGenericStrokeFillNode *m_node;
 };
 
 #endif // QT_NO_OPENGL

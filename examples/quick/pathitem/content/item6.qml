@@ -53,26 +53,22 @@ import QtQuick 2.9 // to get PathItem
 Rectangle {
     color: "lightGray"
     PathItem {
-        id: star
         width: 100
         height: 100
         anchors.centerIn: parent
-        strokeColor: "blue"
-        fillColor: "magenta"
-        strokeWidth: 2
-        path: Path {
-            PathMove { x: 90; y: 50 }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
-            PathLine { x: 90; y: 50 }
-        }
-        Timer {
-            interval: 2000
-            onTriggered: star.fillRule = (star.fillRule === PathItem.OddEvenFill ? PathItem.WindingFill : PathItem.OddEvenFill)
-            repeat: true
-            running: true
+        VisualPath {
+            id: star
+            strokeColor: "blue"
+            fillColor: "magenta"
+            strokeWidth: 2
+            Path {
+                PathMove { x: 90; y: 50 }
+                PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
+                PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
+                PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
+                PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
+                PathLine { x: 90; y: 50 }
+            }
         }
         NumberAnimation on rotation {
             from: 0
@@ -81,8 +77,14 @@ Rectangle {
             loops: Animation.Infinite
         }
     }
+    Timer {
+        interval: 2000
+        onTriggered: star.fillRule = (star.fillRule === VisualPath.OddEvenFill ? VisualPath.WindingFill : VisualPath.OddEvenFill)
+        repeat: true
+        running: true
+    }
     Text {
         anchors.right: parent.right
-        text: star.fillRule === PathItem.OddEvenFill ? "OddEvenFill" : "WindingFill"
+        text: star.fillRule === VisualPath.OddEvenFill ? "OddEvenFill" : "WindingFill"
     }
 }

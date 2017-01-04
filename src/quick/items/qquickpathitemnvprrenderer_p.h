@@ -76,55 +76,61 @@ public:
         DirtyFillRule = 0x04,
         DirtyDash = 0x08,
         DirtyFillGradient = 0x10,
-
-        DirtyAll = 0xFF
+        DirtyList = 0x20
     };
 
     QQuickPathItemNvprRenderer(QQuickItem *item)
         : m_item(item)
     { }
 
-    void beginSync() override;
-    void setPath(const QQuickPath *path) override;
-    void setStrokeColor(const QColor &color) override;
-    void setStrokeWidth(qreal w) override;
-    void setFillColor(const QColor &color) override;
-    void setFillRule(QQuickPathItem::FillRule fillRule) override;
-    void setJoinStyle(QQuickPathItem::JoinStyle joinStyle, int miterLimit) override;
-    void setCapStyle(QQuickPathItem::CapStyle capStyle) override;
-    void setStrokeStyle(QQuickPathItem::StrokeStyle strokeStyle,
+    void beginSync(int totalCount) override;
+    void setPath(int index, const QQuickPath *path) override;
+    void setStrokeColor(int index, const QColor &color) override;
+    void setStrokeWidth(int index, qreal w) override;
+    void setFillColor(int index, const QColor &color) override;
+    void setFillRule(int index, QQuickVisualPath::FillRule fillRule) override;
+    void setJoinStyle(int index, QQuickVisualPath::JoinStyle joinStyle, int miterLimit) override;
+    void setCapStyle(int index, QQuickVisualPath::CapStyle capStyle) override;
+    void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
-    void setFillGradient(QQuickPathGradient *gradient) override;
+    void setFillGradient(int index, QQuickPathGradient *gradient) override;
     void endSync() override;
-    void updatePathRenderNode() override;
+
+    void updateNode() override;
 
     void setNode(QQuickPathItemNvprRenderNode *node);
 
     struct NvprPath {
         QVector<GLubyte> cmd;
         QVector<GLfloat> coord;
+        QByteArray str;
     };
 
 private:
-    void convertPath(const QQuickPath *path);
+    struct VisualPathGuiData {
+        int dirty = 0;
+        NvprPath path;
+        qreal strokeWidth;
+        QColor strokeColor;
+        QColor fillColor;
+        QQuickVisualPath::JoinStyle joinStyle;
+        int miterLimit;
+        QQuickVisualPath::CapStyle capStyle;
+        QQuickVisualPath::FillRule fillRule;
+        bool dashActive;
+        qreal dashOffset;
+        QVector<qreal> dashPattern;
+        bool fillGradientActive;
+        QQuickPathItemGradientCache::GradientDesc fillGradient;
+    };
+
+    void convertPath(const QQuickPath *path, VisualPathGuiData *d);
 
     QQuickItem *m_item;
     QQuickPathItemNvprRenderNode *m_node = nullptr;
-    int m_dirty = 0;
+    int m_accDirty = 0;
 
-    NvprPath m_path;
-    qreal m_strokeWidth;
-    QColor m_strokeColor;
-    QColor m_fillColor;
-    QQuickPathItem::JoinStyle m_joinStyle;
-    int m_miterLimit;
-    QQuickPathItem::CapStyle m_capStyle;
-    QQuickPathItem::FillRule m_fillRule;
-    bool m_dashActive;
-    qreal m_dashOffset;
-    QVector<qreal> m_dashPattern;
-    bool m_fillGradientActive;
-    QQuickPathItemGradientCache::GradientDesc m_fillGradient;
+    QVector<VisualPathGuiData> m_vp;
 };
 
 QDebug operator<<(QDebug debug, const QQuickPathItemNvprRenderer::NvprPath &path);
@@ -187,10 +193,28 @@ public:
     static bool isSupported();
 
 private:
-    void updatePath();
-    void renderStroke(int strokeStencilValue, int writeMask);
-    void renderFill();
-    void renderOffscreenFill();
+    struct VisualPathRenderData {
+        GLuint path = 0;
+        int dirty = 0;
+        QQuickPathItemNvprRenderer::NvprPath source;
+        GLfloat strokeWidth;
+        QVector4D strokeColor;
+        QVector4D fillColor;
+        GLenum joinStyle;
+        GLint miterLimit;
+        GLenum capStyle;
+        GLenum fillRule;
+        GLfloat dashOffset;
+        QVector<GLfloat> dashPattern;
+        bool fillGradientActive;
+        QQuickPathItemGradientCache::GradientDesc fillGradient;
+        QOpenGLFramebufferObject *fallbackFbo = nullptr;
+    };
+
+    void updatePath(VisualPathRenderData *d);
+    void renderStroke(VisualPathRenderData *d, int strokeStencilValue, int writeMask);
+    void renderFill(VisualPathRenderData *d);
+    void renderOffscreenFill(VisualPathRenderData *d);
     void setupStencilForCover(bool stencilClip, int sv);
 
     static bool nvprInited;
@@ -198,24 +222,10 @@ private:
     static QQuickNvprMaterialManager mtlmgr;
 
     QQuickPathItem *m_item;
-    GLuint m_path = 0;
-    int m_dirty = 0;
-
-    QQuickPathItemNvprRenderer::NvprPath m_source;
-    GLfloat m_strokeWidth;
-    QVector4D m_strokeColor;
-    QVector4D m_fillColor;
-    GLenum m_joinStyle;
-    GLint m_miterLimit;
-    GLenum m_capStyle;
-    GLenum m_fillRule;
-    GLfloat m_dashOffset;
-    QVector<GLfloat> m_dashPattern;
-    bool m_fillGradientActive;
-    QQuickPathItemGradientCache::GradientDesc m_fillGradient;
-    QOpenGLFramebufferObject *m_fallbackFbo = nullptr;
     QQuickNvprBlitter m_fallbackBlitter;
     QOpenGLExtraFunctions *f = nullptr;
+
+    QVector<VisualPathRenderData> m_vp;
 
     friend class QQuickPathItemNvprRenderer;
 };

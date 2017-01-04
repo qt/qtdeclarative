@@ -54,33 +54,20 @@ Rectangle {
     color: "lightGray"
     PathItem {
         id: pathItem
-        anchors.fill: parent
+        width: 200
+        height: 200
+        anchors.centerIn: parent
 
         VisualPath {
-            strokeWidth: 5
-            strokeColor: "blue"
-            strokeStyle: VisualPath.DashLine
-            dashPattern: [ 1, 4, 4, 4 ]
-            fillColor: "lightBlue"
+            fillGradient: PathLinearGradient {
+                x2: pathItem.width / 2; y2: pathItem.height
+                PathGradientStop { position: 0; color: "yellow" }
+                PathGradientStop { position: 1; color: "green" }
+            }
 
             Path {
-                id: p
-                property real xr: 70
-                property real yr: 30
-                startX: pathItem.width / 2 - xr
-                startY: pathItem.height / 2 - yr
-                PathArc {
-                    x: pathItem.width / 2 + p.xr
-                    y: pathItem.height / 2 + p.yr
-                    radiusX: p.xr; radiusY: p.yr
-                    useLargeArc: true
-                }
-                PathArc {
-                    x: pathItem.width / 2 - p.xr
-                    y: pathItem.height / 2 - p.yr
-                    radiusX: p.xr; radiusY: p.yr
-                    useLargeArc: true
-                }
+                startX: 50; startY: 50
+                PathSvg { path: "L 150 50 L 100 150 z" }
             }
         }
     }

@@ -59,34 +59,36 @@ Rectangle {
             anchors.fill: parent
             scale: 1.0 - 0.1 * model.index
 
-            fillColor: "transparent"
-            strokeWidth: 4
+            VisualPath {
+                fillColor: "transparent"
+                strokeWidth: 4
 
-            SequentialAnimation on strokeColor {
-                loops: Animation.Infinite
-                ColorAnimation {
-                    from: "red"
-                    to: "yellow"
-                    duration: 5000
+                SequentialAnimation on strokeColor {
+                    loops: Animation.Infinite
+                    ColorAnimation {
+                        from: "red"
+                        to: "yellow"
+                        duration: 5000
+                    }
+                    ColorAnimation {
+                        from: "yellow"
+                        to: "green"
+                        duration: 5000
+                    }
+                    ColorAnimation {
+                        from: "green"
+                        to: "red"
+                        duration: 5000
+                    }
                 }
-                ColorAnimation {
-                    from: "yellow"
-                    to: "green"
-                    duration: 5000
-                }
-                ColorAnimation {
-                    from: "green"
-                    to: "red"
-                    duration: 5000
-                }
-            }
 
-            path: Path {
-                startX: 60; startY: 50
-                PathLine { x: ctr.width - 70; y: 50 }
-                PathLine { x: ctr.width - 10; y: ctr.height - 50 }
-                PathLine { x: 10; y: ctr.height - 50 }
-                PathLine { x: 60; y: 50 }
+                Path {
+                    startX: 60; startY: 50
+                    PathLine { x: ctr.width - 70; y: 50 }
+                    PathLine { x: ctr.width - 10; y: ctr.height - 50 }
+                    PathLine { x: 10; y: ctr.height - 50 }
+                    PathLine { x: 60; y: 50 }
+                }
             }
         }
     }

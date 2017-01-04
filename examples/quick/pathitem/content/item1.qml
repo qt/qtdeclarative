@@ -52,25 +52,28 @@ import QtQuick 2.9 // to get PathItem
 
 Rectangle {
     color: "lightGray"
+
     PathItem {
         id: ctr
         anchors.fill: parent
 
-        strokeColor: "red"
-        fillColor: "blue"
+        VisualPath {
+            strokeColor: "red"
+            fillColor: "blue"
 
-        SequentialAnimation on strokeWidth {
-            loops: Animation.Infinite
-            NumberAnimation { from: 1; to: 30; duration: 5000 }
-            NumberAnimation { from: 30; to: 1; duration: 5000 }
-            PauseAnimation { duration: 2000 }
-        }
+            SequentialAnimation on strokeWidth {
+                loops: Animation.Infinite
+                NumberAnimation { from: 1; to: 30; duration: 5000 }
+                NumberAnimation { from: 30; to: 1; duration: 5000 }
+                PauseAnimation { duration: 2000 }
+            }
 
-        path: Path {
-            startX: 30; startY: 30
-            PathLine { x: ctr.width - 30; y: ctr.height - 30 }
-            PathLine { x: 30; y: ctr.height - 30 }
-            PathLine { x: 30; y: 30 }
+            Path {
+                startX: 30; startY: 30
+                PathLine { x: ctr.width - 30; y: ctr.height - 30 }
+                PathLine { x: 30; y: ctr.height - 30 }
+                PathLine { x: 30; y: 30 }
+            }
         }
     }
 }

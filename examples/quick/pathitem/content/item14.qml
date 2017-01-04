@@ -60,17 +60,19 @@ Rectangle {
             height: 200
             anchors.centerIn: parent
 
-            fillColor: "transparent"
-            strokeColor: model.index === 0 ? "red" : "blue"
-            strokeStyle: PathItem.DashLine
-            strokeWidth: 4
+            VisualPath {
+                fillColor: "transparent"
+                strokeColor: model.index === 0 ? "red" : "blue"
+                strokeStyle: VisualPath.DashLine
+                strokeWidth: 4
 
-            path: Path {
-                startX: 50; startY: 100
-                PathArc {
-                    x: 100; y: 150
-                    radiusX: 50; radiusY: 50
-                    useLargeArc: model.index === 1
+                Path {
+                    startX: 50; startY: 100
+                    PathArc {
+                        x: 100; y: 150
+                        radiusX: 50; radiusY: 50
+                        useLargeArc: model.index === 1
+                    }
                 }
             }
         }

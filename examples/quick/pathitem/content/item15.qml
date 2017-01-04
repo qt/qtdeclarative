@@ -60,17 +60,19 @@ Rectangle {
             height: 200
             anchors.centerIn: parent
 
-            fillColor: "transparent"
-            strokeColor: model.index === 0 ? "red" : "blue"
-            strokeStyle: PathItem.DashLine
-            strokeWidth: 4
+            VisualPath {
+                fillColor: "transparent"
+                strokeColor: model.index === 0 ? "red" : "blue"
+                strokeStyle: VisualPath.DashLine
+                strokeWidth: 4
 
-            path: Path {
-                startX: 50; startY: 100
-                PathArc {
-                    x: 150; y: 100
-                    radiusX: 50; radiusY: 20
-                    xAxisRotation: model.index === 0 ? 0 : 45
+                Path {
+                    startX: 50; startY: 100
+                    PathArc {
+                        x: 150; y: 100
+                        radiusX: 50; radiusY: 20
+                        xAxisRotation: model.index === 0 ? 0 : 45
+                    }
                 }
             }
         }
@@ -83,16 +85,18 @@ Rectangle {
             height: 200
             anchors.centerIn: parent
 
-            fillColor: "transparent"
-            strokeColor: model.index === 0 ? "red" : "blue"
+            VisualPath {
+                fillColor: "transparent"
+                strokeColor: model.index === 0 ? "red" : "blue"
 
-            path: Path {
-                startX: 50; startY: 100
-                PathArc {
-                    x: 150; y: 100
-                    radiusX: 50; radiusY: 20
-                    xAxisRotation: model.index === 0 ? 0 : 45
-                    direction: PathArc.Counterclockwise
+                Path {
+                    startX: 50; startY: 100
+                    PathArc {
+                        x: 150; y: 100
+                        radiusX: 50; radiusY: 20
+                        xAxisRotation: model.index === 0 ? 0 : 45
+                        direction: PathArc.Counterclockwise
+                    }
                 }
             }
         }

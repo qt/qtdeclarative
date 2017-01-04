@@ -52,35 +52,38 @@ import QtQuick 2.9 // to get PathItem
 
 Rectangle {
     color: "lightGray"
+
     PathItem {
-        id: capTest
         anchors.centerIn: parent
         width: 200
         height: 100
 
-        strokeColor: "green"
-        strokeWidth: 20
-        fillColor: "transparent"
+        VisualPath {
+            id: capTest
+            strokeColor: "green"
+            strokeWidth: 20
+            fillColor: "transparent"
 
-        property int capStyleIdx: 0
-        property variant styles: [ PathItem.FlatCap, PathItem.SquareCap, PathItem.RoundCap ]
-        property variant styleTexts: [ "FlatCap", "SquareCap", "RoundCap" ]
+            property int capStyleIdx: 0
+            property variant styles: [ VisualPath.FlatCap, VisualPath.SquareCap, VisualPath.RoundCap ]
+            property variant styleTexts: [ "FlatCap", "SquareCap", "RoundCap" ]
 
-        capStyle: styles[capStyleIdx]
+            capStyle: styles[capStyleIdx]
 
-        path: Path {
-            startX: 40; startY: 30
-            PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-            PathLine { x: 150; y: 80 }
-            PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
+            Path {
+                startX: 40; startY: 30
+                PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
+                PathLine { x: 150; y: 80 }
+                PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
+            }
         }
+    }
 
-        Timer {
-            interval: 1000
-            repeat: true
-            running: true
-            onTriggered: capTest.capStyleIdx = (capTest.capStyleIdx + 1) % capTest.styles.length
-        }
+    Timer {
+        interval: 1000
+        repeat: true
+        running: true
+        onTriggered: capTest.capStyleIdx = (capTest.capStyleIdx + 1) % capTest.styles.length
     }
 
     Text {

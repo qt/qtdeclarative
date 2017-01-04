@@ -58,29 +58,31 @@ Rectangle {
         height: 200
         anchors.centerIn: parent
 
-        fillGradient: PathLinearGradient {
-            y2: pathItem.height
-            PathGradientStop { position: 0; color: "yellow" }
-            PathGradientStop { position: 1; color: "green" }
-        }
+        VisualPath {
+            fillGradient: PathLinearGradient {
+                y2: pathItem.height
+                PathGradientStop { position: 0; color: "yellow" }
+                PathGradientStop { position: 1; color: "green" }
+            }
 
-        path: Path {
-            startX: 10; startY: 100
-            PathArc {
-                relativeX: 50; y: 100
-                radiusX: 25; radiusY: 25
-            }
-            PathArc {
-                relativeX: 50; y: 100
-                radiusX: 25; radiusY: 35
-            }
-            PathArc {
-                relativeX: 50; y: 100
-                radiusX: 25; radiusY: 60
-            }
-            PathArc {
-                relativeX: 50; y: 100
-                radiusX: 50; radiusY: 120
+            Path {
+                startX: 10; startY: 100
+                PathArc {
+                    relativeX: 50; y: 100
+                    radiusX: 25; radiusY: 25
+                }
+                PathArc {
+                    relativeX: 50; y: 100
+                    radiusX: 25; radiusY: 35
+                }
+                PathArc {
+                    relativeX: 50; y: 100
+                    radiusX: 25; radiusY: 60
+                }
+                PathArc {
+                    relativeX: 50; y: 100
+                    radiusX: 50; radiusY: 120
+                }
             }
         }
     }
@@ -93,17 +95,19 @@ Rectangle {
 
         scale: 0.5
 
-        fillColor: "transparent"
-        strokeColor: "darkBlue"
-        strokeWidth: 20
-        capStyle: PathItem.RoundCap
+        VisualPath {
+            fillColor: "transparent"
+            strokeColor: "darkBlue"
+            strokeWidth: 20
+            capStyle: VisualPath.RoundCap
 
-        path: Path {
-            startX: 20; startY: 50
-            PathArc {
-                x: 20; y: 90
-                radiusX: 45; radiusY: 45
-                useLargeArc: true
+            Path {
+                startX: 20; startY: 50
+                PathArc {
+                    x: 20; y: 90
+                    radiusX: 45; radiusY: 45
+                    useLargeArc: true
+                }
             }
         }
     }

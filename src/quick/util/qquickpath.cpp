@@ -79,6 +79,73 @@ QT_BEGIN_NAMESPACE
     PathAttribute allows named attributes with values to be defined
     along the path.
 
+    Path and the other types for specifying path elements are shared between
+    \l PathView and \l PathItem. The following table provides an overview of the
+    applicability of the various path elements:
+
+    \table
+    \header
+        \li Element
+        \li PathView
+        \li PathItem
+        \li PathItem, GL_NV_path_rendering
+        \li PathItem, software
+    \row
+        \li PathMove
+        \li N/A
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathLine
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathQuad
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathCubic
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathArc
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathSvg
+        \li Yes
+        \li Yes
+        \li Yes, with limitations
+        \li Yes
+    \row
+        \li PathAttribute
+        \li Yes
+        \li N/A
+        \li N/A
+        \li N/A
+    \row
+        \li PathPercent
+        \li Yes
+        \li N/A
+        \li N/A
+        \li N/A
+    \row
+        \li PathCurve
+        \li Yes
+        \li No
+        \li No
+        \li No
+    \endtable
+
     \sa PathView, PathItem, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 QQuickPath::QQuickPath(QObject *parent)
@@ -1872,6 +1939,11 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
+    \note Mixing PathSvg with other type of elements is not always supported,
+    therefore it is strongly recommended to avoid this. For example, when
+    \l PathItem is backed by \c{GL_NV_path_rendering}, a Path can contain one or
+    more PathSvg elements, or one or more other type of elements, but not both.
+
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathCurve
 */
 
@@ -1896,6 +1968,7 @@ void QQuickPathSvg::setPath(const QString &path)
 
     _path = path;
     emit pathChanged();
+    emit changed();
 }
 
 void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)

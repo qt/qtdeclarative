@@ -42,77 +42,97 @@
 
 QT_BEGIN_NAMESPACE
 
-void QQuickPathItemSoftwareRenderer::beginSync()
+void QQuickPathItemSoftwareRenderer::beginSync(int totalCount)
 {
-    // nothing to do here
+    if (m_vp.count() != totalCount) {
+        m_vp.resize(totalCount);
+        m_accDirty |= DirtyList;
+    }
 }
 
-void QQuickPathItemSoftwareRenderer::setPath(const QQuickPath *path)
+void QQuickPathItemSoftwareRenderer::setPath(int index, const QQuickPath *path)
 {
-    m_path = path ? path->path() : QPainterPath();
-    m_dirty |= DirtyPath;
+    VisualPathGuiData &d(m_vp[index]);
+    d.path = path ? path->path() : QPainterPath();
+    d.dirty |= DirtyPath;
+    m_accDirty |= DirtyPath;
 }
 
-void QQuickPathItemSoftwareRenderer::setStrokeColor(const QColor &color)
+void QQuickPathItemSoftwareRenderer::setStrokeColor(int index, const QColor &color)
 {
-    m_pen.setColor(color);
-    m_dirty |= DirtyPen;
+    VisualPathGuiData &d(m_vp[index]);
+    d.pen.setColor(color);
+    d.dirty |= DirtyPen;
+    m_accDirty |= DirtyPen;
 }
 
-void QQuickPathItemSoftwareRenderer::setStrokeWidth(qreal w)
+void QQuickPathItemSoftwareRenderer::setStrokeWidth(int index, qreal w)
 {
-    m_strokeWidth = w;
+    VisualPathGuiData &d(m_vp[index]);
+    d.strokeWidth = w;
     if (w >= 0.0f)
-        m_pen.setWidthF(w);
-    m_dirty |= DirtyPen;
+        d.pen.setWidthF(w);
+    d.dirty |= DirtyPen;
+    m_accDirty |= DirtyPen;
 }
 
-void QQuickPathItemSoftwareRenderer::setFillColor(const QColor &color)
+void QQuickPathItemSoftwareRenderer::setFillColor(int index, const QColor &color)
 {
-    m_fillColor = color;
-    m_brush.setColor(m_fillColor);
-    m_dirty |= DirtyBrush;
+    VisualPathGuiData &d(m_vp[index]);
+    d.fillColor = color;
+    d.brush.setColor(color);
+    d.dirty |= DirtyBrush;
+    m_accDirty |= DirtyBrush;
 }
 
-void QQuickPathItemSoftwareRenderer::setFillRule(QQuickPathItem::FillRule fillRule)
+void QQuickPathItemSoftwareRenderer::setFillRule(int index, QQuickVisualPath::FillRule fillRule)
 {
-    m_fillRule = Qt::FillRule(fillRule);
-    m_dirty |= DirtyFillRule;
+    VisualPathGuiData &d(m_vp[index]);
+    d.fillRule = Qt::FillRule(fillRule);
+    d.dirty |= DirtyFillRule;
+    m_accDirty |= DirtyFillRule;
 }
 
-void QQuickPathItemSoftwareRenderer::setJoinStyle(QQuickPathItem::JoinStyle joinStyle, int miterLimit)
+void QQuickPathItemSoftwareRenderer::setJoinStyle(int index, QQuickVisualPath::JoinStyle joinStyle, int miterLimit)
 {
-    m_pen.setJoinStyle(Qt::PenJoinStyle(joinStyle));
-    m_pen.setMiterLimit(miterLimit);
-    m_dirty |= DirtyPen;
+    VisualPathGuiData &d(m_vp[index]);
+    d.pen.setJoinStyle(Qt::PenJoinStyle(joinStyle));
+    d.pen.setMiterLimit(miterLimit);
+    d.dirty |= DirtyPen;
+    m_accDirty |= DirtyPen;
 }
 
-void QQuickPathItemSoftwareRenderer::setCapStyle(QQuickPathItem::CapStyle capStyle)
+void QQuickPathItemSoftwareRenderer::setCapStyle(int index, QQuickVisualPath::CapStyle capStyle)
 {
-    m_pen.setCapStyle(Qt::PenCapStyle(capStyle));
-    m_dirty |= DirtyPen;
+    VisualPathGuiData &d(m_vp[index]);
+    d.pen.setCapStyle(Qt::PenCapStyle(capStyle));
+    d.dirty |= DirtyPen;
+    m_accDirty |= DirtyPen;
 }
 
-void QQuickPathItemSoftwareRenderer::setStrokeStyle(QQuickPathItem::StrokeStyle strokeStyle,
-                                                   qreal dashOffset, const QVector<qreal> &dashPattern)
+void QQuickPathItemSoftwareRenderer::setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
+                                                    qreal dashOffset, const QVector<qreal> &dashPattern)
 {
+    VisualPathGuiData &d(m_vp[index]);
     switch (strokeStyle) {
-    case QQuickPathItem::SolidLine:
-        m_pen.setStyle(Qt::SolidLine);
+    case QQuickVisualPath::SolidLine:
+        d.pen.setStyle(Qt::SolidLine);
         break;
-    case QQuickPathItem::DashLine:
-        m_pen.setStyle(Qt::CustomDashLine);
-        m_pen.setDashPattern(dashPattern);
-        m_pen.setDashOffset(dashOffset);
+    case QQuickVisualPath::DashLine:
+        d.pen.setStyle(Qt::CustomDashLine);
+        d.pen.setDashPattern(dashPattern);
+        d.pen.setDashOffset(dashOffset);
         break;
     default:
         break;
     }
-    m_dirty |= DirtyPen;
+    d.dirty |= DirtyPen;
+    m_accDirty |= DirtyPen;
 }
 
-void QQuickPathItemSoftwareRenderer::setFillGradient(QQuickPathGradient *gradient)
+void QQuickPathItemSoftwareRenderer::setFillGradient(int index, QQuickPathGradient *gradient)
 {
+    VisualPathGuiData &d(m_vp[index]);
     if (QQuickPathLinearGradient *linearGradient = qobject_cast<QQuickPathLinearGradient *>(gradient)) {
         QLinearGradient painterGradient(linearGradient->x1(), linearGradient->y1(),
                                         linearGradient->x2(), linearGradient->y2());
@@ -130,57 +150,61 @@ void QQuickPathItemSoftwareRenderer::setFillGradient(QQuickPathGradient *gradien
         default:
             break;
         }
-        m_brush = QBrush(painterGradient);
+        d.brush = QBrush(painterGradient);
     } else {
-        m_brush = QBrush(m_fillColor);
+        d.brush = QBrush(d.fillColor);
     }
-    m_dirty |= DirtyBrush;
+    d.dirty |= DirtyBrush;
+    m_accDirty |= DirtyBrush;
 }
 
 void QQuickPathItemSoftwareRenderer::endSync()
 {
-    // nothing to do here
 }
 
 void QQuickPathItemSoftwareRenderer::setNode(QQuickPathItemSoftwareRenderNode *node)
 {
     if (m_node != node) {
         m_node = node;
-        // Scenegraph nodes can be destroyed and then replaced by new ones over
-        // time; hence it is important to mark everything dirty for
-        // updatePathRenderNode(). We can assume the renderer has a full sync
-        // of the data at this point.
-        m_dirty = DirtyAll;
+        m_accDirty |= DirtyList;
     }
 }
 
-void QQuickPathItemSoftwareRenderer::updatePathRenderNode()
+void QQuickPathItemSoftwareRenderer::updateNode()
 {
-    if (!m_dirty)
+    if (!m_accDirty)
         return;
 
-    // updatePathRenderNode() can be called several times with different dirty
-    // state before render() gets invoked. So accumulate.
-    m_node->m_dirty |= m_dirty;
+    const int count = m_vp.count();
+    const bool listChanged = m_accDirty & DirtyList;
+    if (listChanged)
+        m_node->m_vp.resize(count);
 
-    if (m_dirty & DirtyPath) {
-        m_node->m_path = m_path;
-        m_node->m_path.setFillRule(m_fillRule);
+    for (int i = 0; i < count; ++i) {
+        VisualPathGuiData &src(m_vp[i]);
+        QQuickPathItemSoftwareRenderNode::VisualPathRenderData &dst(m_node->m_vp[i]);
+
+        if (listChanged || (src.dirty & DirtyPath)) {
+            dst.path = src.path;
+            dst.path.setFillRule(src.fillRule);
+        }
+
+        if (listChanged || (src.dirty & DirtyFillRule))
+            dst.path.setFillRule(src.fillRule);
+
+        if (listChanged || (src.dirty & DirtyPen)) {
+            dst.pen = src.pen;
+            dst.strokeWidth = src.strokeWidth;
+        }
+
+        if (listChanged || (src.dirty & DirtyBrush))
+            dst.brush = src.brush;
+
+        src.dirty = 0;
     }
-
-    if (m_dirty & DirtyFillRule)
-        m_node->m_path.setFillRule(m_fillRule);
-
-    if (m_dirty & DirtyPen) {
-        m_node->m_pen = m_pen;
-        m_node->m_strokeWidth = m_strokeWidth;
-    }
-
-    if (m_dirty & DirtyBrush)
-        m_node->m_brush = m_brush;
 
     m_node->markDirty(QSGNode::DirtyMaterial);
-    m_dirty = 0;
+    m_accDirty = 0;
 }
 
 QQuickPathItemSoftwareRenderNode::QQuickPathItemSoftwareRenderNode(QQuickPathItem *item)
@@ -199,7 +223,7 @@ void QQuickPathItemSoftwareRenderNode::releaseResources()
 
 void QQuickPathItemSoftwareRenderNode::render(const RenderState *state)
 {
-    if (m_path.isEmpty())
+    if (m_vp.isEmpty())
         return;
 
     QSGRendererInterface *rif = m_item->window()->rendererInterface();
@@ -213,11 +237,11 @@ void QQuickPathItemSoftwareRenderNode::render(const RenderState *state)
     p->setTransform(matrix()->toTransform());
     p->setOpacity(inheritedOpacity());
 
-    p->setPen(m_strokeWidth >= 0.0f && m_pen.color() != Qt::transparent ? m_pen : Qt::NoPen);
-    p->setBrush(m_brush.color() != Qt::transparent ? m_brush : Qt::NoBrush);
-    p->drawPath(m_path);
-
-    m_dirty = 0;
+    for (const VisualPathRenderData &d : qAsConst(m_vp)) {
+        p->setPen(d.strokeWidth >= 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
+        p->setBrush(d.brush.color() != Qt::transparent ? d.brush : Qt::NoBrush);
+        p->drawPath(d.path);
+    }
 }
 
 QSGRenderNode::StateFlags QQuickPathItemSoftwareRenderNode::changedStates() const

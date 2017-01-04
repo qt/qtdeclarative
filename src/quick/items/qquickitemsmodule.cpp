@@ -376,6 +376,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathArc, 2>(uri, 2, 9, "PathArc");
     qmlRegisterType<QQuickPathMove>(uri, 2, 9, "PathMove");
     qmlRegisterType<QQuickPathItem>(uri, 2, 9, "PathItem");
+    qmlRegisterType<QQuickVisualPath>(uri, 2, 9, "VisualPath");
     qmlRegisterType<QQuickPathGradientStop>(uri, 2, 9, "PathGradientStop");
     qmlRegisterUncreatableType<QQuickPathGradient>(uri, 2, 9, "PathGradient", QQuickPathGradient::tr("PathGradient is an abstract base class"));
     qmlRegisterType<QQuickPathLinearGradient>(uri, 2, 9, "PathLinearGradient");

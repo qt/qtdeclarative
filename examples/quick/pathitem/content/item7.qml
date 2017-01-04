@@ -52,36 +52,42 @@ import QtQuick 2.9 // to get PathItem
 
 Rectangle {
     color: "lightGray"
+
     PathItem {
-        id: joinTest
         width: 120
         height: 120
         anchors.centerIn: parent
 
-        strokeColor: "black"
-        strokeWidth: 16
-        fillColor: "transparent"
-        capStyle: PathItem.RoundCap
+        VisualPath {
+            id: joinTest
 
-        property int joinStyleIdx: 0
-        property variant styles: [ PathItem.BevelJoin, PathItem.MiterJoin, PathItem.RoundJoin ]
-        property variant styleTexts: [ "BevelJoin", "MiterJoin", "RoundJoin" ]
+            strokeColor: "black"
+            strokeWidth: 16
+            fillColor: "transparent"
+            capStyle: VisualPath.RoundCap
 
-        joinStyle: styles[joinStyleIdx]
+            property int joinStyleIdx: 0
+            property variant styles: [ VisualPath.BevelJoin, VisualPath.MiterJoin, VisualPath.RoundJoin ]
+            property variant styleTexts: [ "BevelJoin", "MiterJoin", "RoundJoin" ]
 
-        path: Path {
-            startX: 30
-            startY: 30
-            PathLine { x: 100; y: 100 }
-            PathLine { x: 30; y: 100 }
-        }
-        Timer {
-            interval: 1000
-            repeat: true
-            running: true
-            onTriggered: joinTest.joinStyleIdx = (joinTest.joinStyleIdx + 1) % joinTest.styles.length
+            joinStyle: styles[joinStyleIdx]
+
+            Path {
+                startX: 30
+                startY: 30
+                PathLine { x: 100; y: 100 }
+                PathLine { x: 30; y: 100 }
+            }
         }
     }
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: true
+        onTriggered: joinTest.joinStyleIdx = (joinTest.joinStyleIdx + 1) % joinTest.styles.length
+    }
+
     Text {
         id: txt
         anchors.right: parent.right

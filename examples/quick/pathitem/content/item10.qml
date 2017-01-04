@@ -52,22 +52,29 @@ import QtQuick 2.9 // to get PathItem
 
 Rectangle {
     color: "lightGray"
-    PathItem {
-        id: pathItem
+
+    Item {
         width: 200
         height: 200
         anchors.centerIn: parent
 
-        strokeWidth: 4
-        strokeColor: "black"
-        fillColor: "lightBlue"
+        PathItem {
+            id: pathItem
+            anchors.fill: parent
 
-        path: Path {
-            startX: 50; startY: 100
-            PathCubic {
-                x: 150; y: 100
-                control1X: cp1.x; control1Y: cp1.y
-                control2X: cp2.x; control2Y: cp2.y
+            VisualPath {
+                strokeWidth: 4
+                strokeColor: "black"
+                fillColor: "lightBlue"
+
+                Path {
+                    startX: 50; startY: 100
+                    PathCubic {
+                        x: 150; y: 100
+                        control1X: cp1.x; control1Y: cp1.y
+                        control2X: cp2.x; control2Y: cp2.y
+                    }
+                }
             }
         }
 
@@ -108,6 +115,7 @@ Rectangle {
                 }
             }
         }
+
         Rectangle {
             id: cp2
             color: "blue"

@@ -46,93 +46,109 @@
 
 QT_BEGIN_NAMESPACE
 
-void QQuickPathItemNvprRenderer::beginSync()
+void QQuickPathItemNvprRenderer::beginSync(int totalCount)
 {
-    // nothing to do here
+    if (m_vp.count() != totalCount) {
+        m_vp.resize(totalCount);
+        m_accDirty |= DirtyList;
+    }
 }
 
-void QQuickPathItemNvprRenderer::setPath(const QQuickPath *path)
+void QQuickPathItemNvprRenderer::setPath(int index, const QQuickPath *path)
 {
-    convertPath(path);
-    m_dirty |= DirtyPath;
+    VisualPathGuiData &d(m_vp[index]);
+    convertPath(path, &d);
+    d.dirty |= DirtyPath;
+    m_accDirty |= DirtyPath;
 }
 
-void QQuickPathItemNvprRenderer::setStrokeColor(const QColor &color)
+void QQuickPathItemNvprRenderer::setStrokeColor(int index, const QColor &color)
 {
-    m_strokeColor = color;
-    m_dirty |= DirtyStyle;
+    VisualPathGuiData &d(m_vp[index]);
+    d.strokeColor = color;
+    d.dirty |= DirtyStyle;
+    m_accDirty |= DirtyStyle;
 }
 
-void QQuickPathItemNvprRenderer::setStrokeWidth(qreal w)
+void QQuickPathItemNvprRenderer::setStrokeWidth(int index, qreal w)
 {
-    m_strokeWidth = w;
-    m_dirty |= DirtyStyle;
+    VisualPathGuiData &d(m_vp[index]);
+    d.strokeWidth = w;
+    d.dirty |= DirtyStyle;
+    m_accDirty |= DirtyStyle;
 }
 
-void QQuickPathItemNvprRenderer::setFillColor(const QColor &color)
+void QQuickPathItemNvprRenderer::setFillColor(int index, const QColor &color)
 {
-    m_fillColor = color;
-    m_dirty |= DirtyStyle;
+    VisualPathGuiData &d(m_vp[index]);
+    d.fillColor = color;
+    d.dirty |= DirtyStyle;
+    m_accDirty |= DirtyStyle;
 }
 
-void QQuickPathItemNvprRenderer::setFillRule(QQuickPathItem::FillRule fillRule)
+void QQuickPathItemNvprRenderer::setFillRule(int index, QQuickVisualPath::FillRule fillRule)
 {
-    m_fillRule = fillRule;
-    m_dirty |= DirtyFillRule;
+    VisualPathGuiData &d(m_vp[index]);
+    d.fillRule = fillRule;
+    d.dirty |= DirtyFillRule;
+    m_accDirty |= DirtyFillRule;
 }
 
-void QQuickPathItemNvprRenderer::setJoinStyle(QQuickPathItem::JoinStyle joinStyle, int miterLimit)
+void QQuickPathItemNvprRenderer::setJoinStyle(int index, QQuickVisualPath::JoinStyle joinStyle, int miterLimit)
 {
-    m_joinStyle = joinStyle;
-    m_miterLimit = miterLimit;
-    m_dirty |= DirtyStyle;
+    VisualPathGuiData &d(m_vp[index]);
+    d.joinStyle = joinStyle;
+    d.miterLimit = miterLimit;
+    d.dirty |= DirtyStyle;
+    m_accDirty |= DirtyStyle;
 }
 
-void QQuickPathItemNvprRenderer::setCapStyle(QQuickPathItem::CapStyle capStyle)
+void QQuickPathItemNvprRenderer::setCapStyle(int index, QQuickVisualPath::CapStyle capStyle)
 {
-    m_capStyle = capStyle;
-    m_dirty |= DirtyStyle;
+    VisualPathGuiData &d(m_vp[index]);
+    d.capStyle = capStyle;
+    d.dirty |= DirtyStyle;
+    m_accDirty |= DirtyStyle;
 }
 
-void QQuickPathItemNvprRenderer::setStrokeStyle(QQuickPathItem::StrokeStyle strokeStyle,
-                                                   qreal dashOffset, const QVector<qreal> &dashPattern)
+void QQuickPathItemNvprRenderer::setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
+                                                qreal dashOffset, const QVector<qreal> &dashPattern)
 {
-    m_dashActive = strokeStyle == QQuickPathItem::DashLine;
-    m_dashOffset = dashOffset;
-    m_dashPattern = dashPattern;
-    m_dirty |= DirtyDash;
+    VisualPathGuiData &d(m_vp[index]);
+    d.dashActive = strokeStyle == QQuickVisualPath::DashLine;
+    d.dashOffset = dashOffset;
+    d.dashPattern = dashPattern;
+    d.dirty |= DirtyDash;
+    m_accDirty |= DirtyDash;
 }
 
-void QQuickPathItemNvprRenderer::setFillGradient(QQuickPathGradient *gradient)
+void QQuickPathItemNvprRenderer::setFillGradient(int index, QQuickPathGradient *gradient)
 {
-    m_fillGradientActive = gradient != nullptr;
+    VisualPathGuiData &d(m_vp[index]);
+    d.fillGradientActive = gradient != nullptr;
     if (gradient) {
-        m_fillGradient.stops = gradient->sortedGradientStops();
-        m_fillGradient.spread = gradient->spread();
+        d.fillGradient.stops = gradient->sortedGradientStops();
+        d.fillGradient.spread = gradient->spread();
         if (QQuickPathLinearGradient *g  = qobject_cast<QQuickPathLinearGradient *>(gradient)) {
-            m_fillGradient.start = QPointF(g->x1(), g->y1());
-            m_fillGradient.end = QPointF(g->x2(), g->y2());
+            d.fillGradient.start = QPointF(g->x1(), g->y1());
+            d.fillGradient.end = QPointF(g->x2(), g->y2());
         } else {
             Q_UNREACHABLE();
         }
     }
-    m_dirty |= DirtyFillGradient;
+    d.dirty |= DirtyFillGradient;
+    m_accDirty |= DirtyFillGradient;
 }
 
 void QQuickPathItemNvprRenderer::endSync()
 {
-    // nothing to do here
 }
 
 void QQuickPathItemNvprRenderer::setNode(QQuickPathItemNvprRenderNode *node)
 {
     if (m_node != node) {
         m_node = node;
-        // Scenegraph nodes can be destroyed and then replaced by new ones over
-        // time; hence it is important to mark everything dirty for
-        // updatePathRenderNode(). We can assume the renderer has a full sync
-        // of the data at this point.
-        m_dirty = DirtyAll;
+        m_accDirty |= DirtyList;
     }
 }
 
@@ -140,6 +156,10 @@ QDebug operator<<(QDebug debug, const QQuickPathItemNvprRenderer::NvprPath &path
 {
     QDebugStateSaver saver(debug);
     debug.space().noquote();
+    if (!path.str.isEmpty()) {
+        debug << "Path with SVG string" << path.str;
+        return debug;
+    }
     debug << "Path with" << path.cmd.count() << "commands";
     int ci = 0;
     for (GLubyte cmd : path.cmd) {
@@ -201,9 +221,9 @@ static inline void appendControl2Coords(QVector<GLfloat> *v, QQuickPathCubic *c,
     v->append(p.y());
 }
 
-void QQuickPathItemNvprRenderer::convertPath(const QQuickPath *path)
+void QQuickPathItemNvprRenderer::convertPath(const QQuickPath *path, VisualPathGuiData *d)
 {
-    m_path = NvprPath();
+    d->path = NvprPath();
     if (!path)
         return;
 
@@ -211,27 +231,31 @@ void QQuickPathItemNvprRenderer::convertPath(const QQuickPath *path)
     if (pp.isEmpty())
         return;
 
-    QPointF pos(path->startX(), path->startY());
-    m_path.cmd.append(GL_MOVE_TO_NV);
-    m_path.coord.append(pos.x());
-    m_path.coord.append(pos.y());
+    QPointF startPos(path->startX(), path->startY());
+    QPointF pos(startPos);
+    if (!qFuzzyIsNull(pos.x()) || !qFuzzyIsNull(pos.y())) {
+        d->path.cmd.append(GL_MOVE_TO_NV);
+        d->path.coord.append(pos.x());
+        d->path.coord.append(pos.y());
+    }
 
     for (QQuickPathElement *e : pp) {
         if (QQuickPathMove *o = qobject_cast<QQuickPathMove *>(e)) {
-            m_path.cmd.append(GL_MOVE_TO_NV);
-            appendCoords(&m_path.coord, o, &pos);
+            d->path.cmd.append(GL_MOVE_TO_NV);
+            appendCoords(&d->path.coord, o, &pos);
+            startPos = pos;
         } else if (QQuickPathLine *o = qobject_cast<QQuickPathLine *>(e)) {
-            m_path.cmd.append(GL_LINE_TO_NV);
-            appendCoords(&m_path.coord, o, &pos);
+            d->path.cmd.append(GL_LINE_TO_NV);
+            appendCoords(&d->path.coord, o, &pos);
         } else if (QQuickPathQuad *o = qobject_cast<QQuickPathQuad *>(e)) {
-            m_path.cmd.append(GL_QUADRATIC_CURVE_TO_NV);
-            appendControlCoords(&m_path.coord, o, pos);
-            appendCoords(&m_path.coord, o, &pos);
+            d->path.cmd.append(GL_QUADRATIC_CURVE_TO_NV);
+            appendControlCoords(&d->path.coord, o, pos);
+            appendCoords(&d->path.coord, o, &pos);
         } else if (QQuickPathCubic *o = qobject_cast<QQuickPathCubic *>(e)) {
-            m_path.cmd.append(GL_CUBIC_CURVE_TO_NV);
-            appendControl1Coords(&m_path.coord, o, pos);
-            appendControl2Coords(&m_path.coord, o, pos);
-            appendCoords(&m_path.coord, o, &pos);
+            d->path.cmd.append(GL_CUBIC_CURVE_TO_NV);
+            appendControl1Coords(&d->path.coord, o, pos);
+            appendControl2Coords(&d->path.coord, o, pos);
+            appendCoords(&d->path.coord, o, &pos);
         } else if (QQuickPathArc *o = qobject_cast<QQuickPathArc *>(e)) {
             const bool sweepFlag = o->direction() == QQuickPathArc::Clockwise; // maps to CCW, not a typo
             GLenum cmd;
@@ -239,18 +263,29 @@ void QQuickPathItemNvprRenderer::convertPath(const QQuickPath *path)
                 cmd = sweepFlag ? GL_LARGE_CCW_ARC_TO_NV : GL_LARGE_CW_ARC_TO_NV;
             else
                 cmd = sweepFlag ? GL_SMALL_CCW_ARC_TO_NV : GL_SMALL_CW_ARC_TO_NV;
-            m_path.cmd.append(cmd);
-            m_path.coord.append(o->radiusX());
-            m_path.coord.append(o->radiusY());
-            m_path.coord.append(o->xAxisRotation());
-            appendCoords(&m_path.coord, o, &pos);
+            d->path.cmd.append(cmd);
+            d->path.coord.append(o->radiusX());
+            d->path.coord.append(o->radiusY());
+            d->path.coord.append(o->xAxisRotation());
+            appendCoords(&d->path.coord, o, &pos);
+        } else if (QQuickPathSvg *o = qobject_cast<QQuickPathSvg *>(e)) {
+            // PathSvg cannot be combined with other elements. But take at
+            // least startX and startY into account.
+            if (d->path.str.isEmpty())
+                d->path.str = QString(QStringLiteral("M %1 %2 ")).arg(pos.x()).arg(pos.y()).toUtf8();
+            d->path.str.append(o->path().toUtf8());
         } else {
             qWarning() << "PathItem/NVPR: unsupported Path element" << e;
         }
     }
 
-    if (qFuzzyCompare(pos.x(), path->startX()) && qFuzzyCompare(pos.y(), path->startY()))
-        m_path.cmd.append(GL_CLOSE_PATH_NV);
+    // For compatibility with QTriangulatingStroker. SVG and others would not
+    // implicitly close the path when end_pos == start_pos (start_pos being the
+    // last moveTo pos); that would still need an explicit 'z' or similar. We
+    // don't have an explicit close command, so just fake a close when the
+    // positions match.
+    if (pos == startPos)
+        d->path.cmd.append(GL_CLOSE_PATH_NV);
 }
 
 static inline QVector4D qsg_premultiply(const QColor &c, float globalOpacity)
@@ -259,88 +294,103 @@ static inline QVector4D qsg_premultiply(const QColor &c, float globalOpacity)
     return QVector4D(c.redF() * o, c.greenF() * o, c.blueF() * o, o);
 }
 
-void QQuickPathItemNvprRenderer::updatePathRenderNode()
+void QQuickPathItemNvprRenderer::updateNode()
 {
     // Called on the render thread with gui blocked -> update the node with its
     // own copy of all relevant data.
 
-    if (!m_dirty)
+    if (!m_accDirty)
         return;
 
-    // updatePathRenderNode() can be called several times with different dirty
-    // state before render() gets invoked. So accumulate.
-    m_node->m_dirty |= m_dirty;
+    const int count = m_vp.count();
+    const bool listChanged = m_accDirty & DirtyList;
+    if (listChanged)
+        m_node->m_vp.resize(count);
 
-    if (m_dirty & DirtyPath)
-        m_node->m_source = m_path;
+    for (int i = 0; i < count; ++i) {
+        VisualPathGuiData &src(m_vp[i]);
+        QQuickPathItemNvprRenderNode::VisualPathRenderData &dst(m_node->m_vp[i]);
 
-    if (m_dirty & DirtyStyle) {
-        m_node->m_strokeWidth = m_strokeWidth;
-        m_node->m_strokeColor = qsg_premultiply(m_strokeColor, 1.0f);
-        m_node->m_fillColor = qsg_premultiply(m_fillColor, 1.0f);
-        switch (m_joinStyle) {
-        case QQuickPathItem::MiterJoin:
-            m_node->m_joinStyle = GL_MITER_TRUNCATE_NV;
-            break;
-        case QQuickPathItem::BevelJoin:
-            m_node->m_joinStyle = GL_BEVEL_NV;
-            break;
-        case QQuickPathItem::RoundJoin:
-            m_node->m_joinStyle = GL_ROUND_NV;
-            break;
-        default:
-            Q_UNREACHABLE();
+        int dirty = src.dirty;
+        src.dirty = 0;
+        if (listChanged)
+            dirty |= DirtyPath | DirtyStyle | DirtyFillRule | DirtyDash | DirtyFillGradient;
+
+        // updateNode() can be called several times with different dirty
+        // states before render() gets invoked. So accumulate.
+        dst.dirty |= dirty;
+
+        if (dirty & DirtyPath)
+            dst.source = src.path;
+
+        if (dirty & DirtyStyle) {
+            dst.strokeWidth = src.strokeWidth;
+            dst.strokeColor = qsg_premultiply(src.strokeColor, 1.0f);
+            dst.fillColor = qsg_premultiply(src.fillColor, 1.0f);
+            switch (src.joinStyle) {
+            case QQuickVisualPath::MiterJoin:
+                dst.joinStyle = GL_MITER_TRUNCATE_NV;
+                break;
+            case QQuickVisualPath::BevelJoin:
+                dst.joinStyle = GL_BEVEL_NV;
+                break;
+            case QQuickVisualPath::RoundJoin:
+                dst.joinStyle = GL_ROUND_NV;
+                break;
+            default:
+                Q_UNREACHABLE();
+            }
+            dst.miterLimit = src.miterLimit;
+            switch (src.capStyle) {
+            case QQuickVisualPath::FlatCap:
+                dst.capStyle = GL_FLAT;
+                break;
+            case QQuickVisualPath::SquareCap:
+                dst.capStyle = GL_SQUARE_NV;
+                break;
+            case QQuickVisualPath::RoundCap:
+                dst.capStyle = GL_ROUND_NV;
+                break;
+            default:
+                Q_UNREACHABLE();
+            }
         }
-        m_node->m_miterLimit = m_miterLimit;
-        switch (m_capStyle) {
-        case QQuickPathItem::FlatCap:
-            m_node->m_capStyle = GL_FLAT;
-            break;
-        case QQuickPathItem::SquareCap:
-            m_node->m_capStyle = GL_SQUARE_NV;
-            break;
-        case QQuickPathItem::RoundCap:
-            m_node->m_capStyle = GL_ROUND_NV;
-            break;
-        default:
-            Q_UNREACHABLE();
-        }
-    }
 
-    if (m_dirty & DirtyFillRule) {
-        switch (m_fillRule) {
-        case QQuickPathItem::OddEvenFill:
-            m_node->m_fillRule = GL_INVERT;
-            break;
-        case QQuickPathItem::WindingFill:
-            m_node->m_fillRule = GL_COUNT_UP_NV;
-            break;
-        default:
-            Q_UNREACHABLE();
+        if (dirty & DirtyFillRule) {
+            switch (src.fillRule) {
+            case QQuickVisualPath::OddEvenFill:
+                dst.fillRule = GL_INVERT;
+                break;
+            case QQuickVisualPath::WindingFill:
+                dst.fillRule = GL_COUNT_UP_NV;
+                break;
+            default:
+                Q_UNREACHABLE();
+            }
         }
-    }
 
-    if (m_dirty & DirtyDash) {
-        m_node->m_dashOffset = m_dashOffset;
-        if (m_dashActive) {
-            m_node->m_dashPattern.resize(m_dashPattern.count());
-            // Multiply by strokeWidth because the PathItem API follows QPen
-            // meaning the input dash pattern here is in width units.
-            for (int i = 0; i < m_dashPattern.count(); ++i)
-                m_node->m_dashPattern[i] = GLfloat(m_dashPattern[i]) * m_strokeWidth;
-        } else {
-            m_node->m_dashPattern.clear();
+        if (dirty & DirtyDash) {
+            dst.dashOffset = src.dashOffset;
+            if (src.dashActive) {
+                dst.dashPattern.resize(src.dashPattern.count());
+                // Multiply by strokeWidth because the PathItem API follows QPen
+                // meaning the input dash pattern here is in width units.
+                for (int i = 0; i < src.dashPattern.count(); ++i)
+                    dst.dashPattern[i] = GLfloat(src.dashPattern[i]) * src.strokeWidth;
+            } else {
+                dst.dashPattern.clear();
+            }
         }
-    }
 
-    if (m_dirty & DirtyFillGradient) {
-        m_node->m_fillGradientActive = m_fillGradientActive;
-        if (m_fillGradientActive)
-            m_node->m_fillGradient = m_fillGradient;
+        if (dirty & DirtyFillGradient) {
+            dst.fillGradientActive = src.fillGradientActive;
+            if (src.fillGradientActive)
+                dst.fillGradient = src.fillGradient;
+        }
     }
 
     m_node->markDirty(QSGNode::DirtyMaterial);
-    m_dirty = 0;
+    m_accDirty = 0;
 }
 
 bool QQuickPathItemNvprRenderNode::nvprInited = false;
@@ -359,14 +409,15 @@ QQuickPathItemNvprRenderNode::~QQuickPathItemNvprRenderNode()
 
 void QQuickPathItemNvprRenderNode::releaseResources()
 {
-    if (m_path) {
-        nvpr.deletePaths(m_path, 1);
-        m_path = 0;
-    }
-
-    if (m_fallbackFbo) {
-        delete m_fallbackFbo;
-        m_fallbackFbo = nullptr;
+    for (VisualPathRenderData &d : m_vp) {
+        if (d.path) {
+            nvpr.deletePaths(d.path, 1);
+            d.path = 0;
+        }
+        if (d.fallbackFbo) {
+            delete d.fallbackFbo;
+            d.fallbackFbo = nullptr;
+        }
     }
 
     m_fallbackBlitter.destroy();
@@ -449,48 +500,52 @@ QQuickNvprMaterialManager::MaterialDesc *QQuickNvprMaterialManager::activateMate
     return &mtl;
 }
 
-void QQuickPathItemNvprRenderNode::updatePath()
+void QQuickPathItemNvprRenderNode::updatePath(VisualPathRenderData *d)
 {
-    if (m_dirty & QQuickPathItemNvprRenderer::DirtyPath) {
-        if (!m_path) {
-            m_path = nvpr.genPaths(1);
-            Q_ASSERT(m_path != 0);
+    if (d->dirty & QQuickPathItemNvprRenderer::DirtyPath) {
+        if (!d->path) {
+            d->path = nvpr.genPaths(1);
+            Q_ASSERT(d->path != 0);
         }
-        nvpr.pathCommands(m_path, m_source.cmd.count(), m_source.cmd.constData(),
-                          m_source.coord.count(), GL_FLOAT, m_source.coord.constData());
+        if (d->source.str.isEmpty()) {
+            nvpr.pathCommands(d->path, d->source.cmd.count(), d->source.cmd.constData(),
+                              d->source.coord.count(), GL_FLOAT, d->source.coord.constData());
+        } else {
+            nvpr.pathString(d->path, GL_PATH_FORMAT_SVG_NV, d->source.str.count(), d->source.str.constData());
+        }
     }
 
-    if (m_dirty & QQuickPathItemNvprRenderer::DirtyStyle) {
-        nvpr.pathParameterf(m_path, GL_PATH_STROKE_WIDTH_NV, m_strokeWidth);
-        nvpr.pathParameteri(m_path, GL_PATH_JOIN_STYLE_NV, m_joinStyle);
-        nvpr.pathParameteri(m_path, GL_PATH_MITER_LIMIT_NV, m_miterLimit);
-        nvpr.pathParameteri(m_path, GL_PATH_END_CAPS_NV, m_capStyle);
-        nvpr.pathParameteri(m_path, GL_PATH_DASH_CAPS_NV, m_capStyle);
+    if (d->dirty & QQuickPathItemNvprRenderer::DirtyStyle) {
+        nvpr.pathParameterf(d->path, GL_PATH_STROKE_WIDTH_NV, d->strokeWidth);
+        nvpr.pathParameteri(d->path, GL_PATH_JOIN_STYLE_NV, d->joinStyle);
+        nvpr.pathParameteri(d->path, GL_PATH_MITER_LIMIT_NV, d->miterLimit);
+        nvpr.pathParameteri(d->path, GL_PATH_END_CAPS_NV, d->capStyle);
+        nvpr.pathParameteri(d->path, GL_PATH_DASH_CAPS_NV, d->capStyle);
     }
 
-    if (m_dirty & QQuickPathItemNvprRenderer::DirtyDash) {
-        nvpr.pathParameterf(m_path, GL_PATH_DASH_OFFSET_NV, m_dashOffset);
+    if (d->dirty & QQuickPathItemNvprRenderer::DirtyDash) {
+        nvpr.pathParameterf(d->path, GL_PATH_DASH_OFFSET_NV, d->dashOffset);
         // count == 0 -> no dash
-        nvpr.pathDashArray(m_path, m_dashPattern.count(), m_dashPattern.constData());
+        nvpr.pathDashArray(d->path, d->dashPattern.count(), d->dashPattern.constData());
     }
 }
 
-void QQuickPathItemNvprRenderNode::renderStroke(int strokeStencilValue, int writeMask)
+void QQuickPathItemNvprRenderNode::renderStroke(VisualPathRenderData *d, int strokeStencilValue, int writeMask)
 {
     QQuickNvprMaterialManager::MaterialDesc *mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
     f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
-            m_strokeColor.x(), m_strokeColor.y(), m_strokeColor.z(), m_strokeColor.w());
+            d->strokeColor.x(), d->strokeColor.y(), d->strokeColor.z(), d->strokeColor.w());
     f->glProgramUniform1f(mtl->prg, mtl->uniLoc[1], inheritedOpacity());
 
-    nvpr.stencilThenCoverStrokePath(m_path, strokeStencilValue, writeMask, GL_CONVEX_HULL_NV);
+    nvpr.stencilThenCoverStrokePath(d->path, strokeStencilValue, writeMask, GL_CONVEX_HULL_NV);
 }
 
-void QQuickPathItemNvprRenderNode::renderFill()
+void QQuickPathItemNvprRenderNode::renderFill(VisualPathRenderData *d)
 {
     QQuickNvprMaterialManager::MaterialDesc *mtl = nullptr;
-    if (m_fillGradientActive) {
+    if (d->fillGradientActive) {
         mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatLinearGradient);
-        QSGTexture *tx = QQuickPathItemGradientCache::currentCache()->get(m_fillGradient);
+        QSGTexture *tx = QQuickPathItemGradientCache::currentCache()->get(d->fillGradient);
         tx->bind();
         // uv = vec2(coeff[0] * x + coeff[1] * y + coeff[2], coeff[3] * x + coeff[4] * y + coeff[5])
         // where x and y are in path coordinate space, which is just what
@@ -498,20 +553,20 @@ void QQuickPathItemNvprRenderNode::renderFill()
         GLfloat coeff[6] = { 1, 0, 0,
                              0, 1, 0 };
         nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
-        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], m_fillGradient.start.x(), m_fillGradient.start.y());
-        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], m_fillGradient.end.x(), m_fillGradient.end.y());
+        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], d->fillGradient.start.x(), d->fillGradient.start.y());
+        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], d->fillGradient.end.x(), d->fillGradient.end.y());
     } else {
         mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
         f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
-                m_fillColor.x(), m_fillColor.y(), m_fillColor.z(), m_fillColor.w());
+                d->fillColor.x(), d->fillColor.y(), d->fillColor.z(), d->fillColor.w());
     }
     f->glProgramUniform1f(mtl->prg, mtl->uniLoc[1], inheritedOpacity());
 
     const int writeMask = 0xFF;
-    nvpr.stencilThenCoverFillPath(m_path, m_fillRule, writeMask, GL_BOUNDING_BOX_NV);
+    nvpr.stencilThenCoverFillPath(d->path, d->fillRule, writeMask, GL_BOUNDING_BOX_NV);
 }
 
-void QQuickPathItemNvprRenderNode::renderOffscreenFill()
+void QQuickPathItemNvprRenderNode::renderOffscreenFill(VisualPathRenderData *d)
 {
     QQuickWindow *w = m_item->window();
     const qreal dpr = w->effectiveDevicePixelRatio();
@@ -520,13 +575,13 @@ void QQuickPathItemNvprRenderNode::renderOffscreenFill()
     if (rtSize.isEmpty())
         rtSize = w->size() * dpr;
 
-    if (m_fallbackFbo && m_fallbackFbo->size() != itemSize) {
-        delete m_fallbackFbo;
-        m_fallbackFbo = nullptr;
+    if (d->fallbackFbo && d->fallbackFbo->size() != itemSize) {
+        delete d->fallbackFbo;
+        d->fallbackFbo = nullptr;
     }
-    if (!m_fallbackFbo)
-        m_fallbackFbo = new QOpenGLFramebufferObject(itemSize, QOpenGLFramebufferObject::CombinedDepthStencil);
-    if (!m_fallbackFbo->bind())
+    if (!d->fallbackFbo)
+        d->fallbackFbo = new QOpenGLFramebufferObject(itemSize, QOpenGLFramebufferObject::CombinedDepthStencil);
+    if (!d->fallbackFbo->bind())
         return;
 
     f->glViewport(0, 0, itemSize.width(), itemSize.height());
@@ -541,9 +596,9 @@ void QQuickPathItemNvprRenderNode::renderOffscreenFill()
     proj.ortho(0, itemSize.width(), itemSize.height(), 0, 1, -1);
     nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, proj.constData());
 
-    renderFill();
+    renderFill(d);
 
-    m_fallbackFbo->release();
+    d->fallbackFbo->release();
     f->glViewport(0, 0, rtSize.width(), rtSize.height());
 }
 
@@ -573,8 +628,6 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
         nvprInited = true;
     }
 
-    updatePath();
-
     f->glUseProgram(0);
     f->glStencilMask(~0);
     f->glEnable(GL_STENCIL_TEST);
@@ -583,70 +636,74 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
     // when true, the stencil buffer already has a clip path with a ref value of sv
     const int sv = state->stencilValue();
 
-    const bool hasFill = !qFuzzyIsNull(m_fillColor.w()) || m_fillGradientActive;
-    const bool hasStroke = m_strokeWidth >= 0.0f && !qFuzzyIsNull(m_strokeColor.w());
+    for (VisualPathRenderData &d : m_vp) {
+        updatePath(&d);
 
-    if (hasFill && stencilClip) {
-        // Fall back to a texture when complex clipping is in use and we have
-        // to fill. Reconciling glStencilFillPath's and the scenegraph's clip
-        // stencil semantics has not succeeded so far...
-        renderOffscreenFill();
-    }
+        const bool hasFill = !qFuzzyIsNull(d.fillColor.w()) || d.fillGradientActive;
+        const bool hasStroke = d.strokeWidth >= 0.0f && !qFuzzyIsNull(d.strokeColor.w());
 
-    // Depth test against the opaque batches rendered before.
-    f->glEnable(GL_DEPTH_TEST);
-    f->glDepthFunc(GL_LESS);
-    nvpr.pathCoverDepthFunc(GL_LESS);
-    nvpr.pathStencilDepthOffset(-0.05f, -1);
-
-    nvpr.matrixLoadf(GL_PATH_MODELVIEW_NV, matrix()->constData());
-    nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, state->projectionMatrix()->constData());
-
-    if (state->scissorEnabled()) {
-        // scissor rect is already set, just enable scissoring
-        f->glEnable(GL_SCISSOR_TEST);
-    }
-
-    // Fill!
-    if (hasFill) {
-        if (!stencilClip) {
-            setupStencilForCover(false, 0);
-            renderFill();
-        } else {
-            if (!m_fallbackBlitter.isCreated())
-                m_fallbackBlitter.create();
-            f->glStencilFunc(GL_EQUAL, sv, 0xFF);
-            f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-            m_fallbackBlitter.texturedQuad(m_fallbackFbo->texture(), m_fallbackFbo->size(),
-                                           *state->projectionMatrix(), *matrix(),
-                                           inheritedOpacity());
-        }
-    }
-
-    // Stroke!
-    if (hasStroke) {
-        const int strokeStencilValue = 0x80;
-        const int writeMask = 0x80;
-
-        setupStencilForCover(stencilClip, sv);
-        if (stencilClip) {
-            // for the stencil step (eff. read mask == 0xFF & ~writeMask)
-            nvpr.pathStencilFunc(GL_EQUAL, sv, 0xFF);
-            // With stencilCLip == true the read mask for the stencil test before the stencil step is 0x7F.
-            // This assumes the clip stencil value is <= 127.
-            if (sv >= strokeStencilValue)
-                qWarning("PathItem/NVPR: stencil clip ref value %d too large; expect rendering errors", sv);
+        if (hasFill && stencilClip) {
+            // Fall back to a texture when complex clipping is in use and we have
+            // to fill. Reconciling glStencilFillPath's and the scenegraph's clip
+            // stencil semantics has not succeeded so far...
+            renderOffscreenFill(&d);
         }
 
-        renderStroke(strokeStencilValue, writeMask);
-    }
+        // Depth test against the opaque batches rendered before.
+        f->glEnable(GL_DEPTH_TEST);
+        f->glDepthFunc(GL_LESS);
+        nvpr.pathCoverDepthFunc(GL_LESS);
+        nvpr.pathStencilDepthOffset(-0.05f, -1);
 
-    if (stencilClip)
-        nvpr.pathStencilFunc(GL_ALWAYS, 0, ~0);
+        nvpr.matrixLoadf(GL_PATH_MODELVIEW_NV, matrix()->constData());
+        nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, state->projectionMatrix()->constData());
+
+        if (state->scissorEnabled()) {
+            // scissor rect is already set, just enable scissoring
+            f->glEnable(GL_SCISSOR_TEST);
+        }
+
+        // Fill!
+        if (hasFill) {
+            if (!stencilClip) {
+                setupStencilForCover(false, 0);
+                renderFill(&d);
+            } else {
+                if (!m_fallbackBlitter.isCreated())
+                    m_fallbackBlitter.create();
+                f->glStencilFunc(GL_EQUAL, sv, 0xFF);
+                f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                m_fallbackBlitter.texturedQuad(d.fallbackFbo->texture(), d.fallbackFbo->size(),
+                                               *state->projectionMatrix(), *matrix(),
+                                               inheritedOpacity());
+            }
+        }
+
+        // Stroke!
+        if (hasStroke) {
+            const int strokeStencilValue = 0x80;
+            const int writeMask = 0x80;
+
+            setupStencilForCover(stencilClip, sv);
+            if (stencilClip) {
+                // for the stencil step (eff. read mask == 0xFF & ~writeMask)
+                nvpr.pathStencilFunc(GL_EQUAL, sv, 0xFF);
+                // With stencilCLip == true the read mask for the stencil test before the stencil step is 0x7F.
+                // This assumes the clip stencil value is <= 127.
+                if (sv >= strokeStencilValue)
+                    qWarning("PathItem/NVPR: stencil clip ref value %d too large; expect rendering errors", sv);
+            }
+
+            renderStroke(&d, strokeStencilValue, writeMask);
+        }
+
+        if (stencilClip)
+            nvpr.pathStencilFunc(GL_ALWAYS, 0, ~0);
+
+        d.dirty = 0;
+    }
 
     f->glBindProgramPipeline(0);
-
-    m_dirty = 0;
 }
 
 QSGRenderNode::StateFlags QQuickPathItemNvprRenderNode::changedStates() const

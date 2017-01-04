@@ -125,6 +125,14 @@ Rectangle {
             name: "Arc rotation"
             pathItemUrl: "item15.qml"
         }
+        ListElement {
+            name: "SVG path string"
+            pathItemUrl: "item16.qml"
+        }
+        ListElement {
+            name: "Surprise!"
+            pathItemUrl: "item17.qml"
+        }
     }
 
     property int gridSpacing: 10
@@ -175,7 +183,7 @@ Rectangle {
 
     Text {
         anchors.right: parent.right
-        PathItem { id: dummyPathItem; strokeWidth: 4 } // used only to get the renderer type
+        PathItem { id: dummyPathItem; VisualPath { } } // used only to get the renderer type
         color: "darkBlue"
         font.pointSize: 12
         property variant rendererStrings: [ "Unknown", "Generic (QtGui triangulator)", "GL_NV_path_rendering", "Software (QPainter)" ]

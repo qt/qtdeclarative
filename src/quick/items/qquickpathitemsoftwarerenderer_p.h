@@ -68,36 +68,39 @@ public:
         DirtyPen = 0x02,
         DirtyFillRule = 0x04,
         DirtyBrush = 0x08,
-
-        DirtyAll = 0xFF
+        DirtyList = 0x10
     };
 
-    void beginSync() override;
-    void setPath(const QQuickPath *path) override;
-    void setStrokeColor(const QColor &color) override;
-    void setStrokeWidth(qreal w) override;
-    void setFillColor(const QColor &color) override;
-    void setFillRule(QQuickPathItem::FillRule fillRule) override;
-    void setJoinStyle(QQuickPathItem::JoinStyle joinStyle, int miterLimit) override;
-    void setCapStyle(QQuickPathItem::CapStyle capStyle) override;
-    void setStrokeStyle(QQuickPathItem::StrokeStyle strokeStyle,
+    void beginSync(int totalCount) override;
+    void setPath(int index, const QQuickPath *path) override;
+    void setStrokeColor(int index, const QColor &color) override;
+    void setStrokeWidth(int index, qreal w) override;
+    void setFillColor(int index, const QColor &color) override;
+    void setFillRule(int index, QQuickVisualPath::FillRule fillRule) override;
+    void setJoinStyle(int index, QQuickVisualPath::JoinStyle joinStyle, int miterLimit) override;
+    void setCapStyle(int index, QQuickVisualPath::CapStyle capStyle) override;
+    void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
-    void setFillGradient(QQuickPathGradient *gradient) override;
+    void setFillGradient(int index, QQuickPathGradient *gradient) override;
     void endSync() override;
-    void updatePathRenderNode() override;
+
+    void updateNode() override;
 
     void setNode(QQuickPathItemSoftwareRenderNode *node);
 
 private:
     QQuickPathItemSoftwareRenderNode *m_node = nullptr;
-    int m_dirty = 0;
-
-    QPainterPath m_path;
-    QPen m_pen;
-    float m_strokeWidth;
-    QColor m_fillColor;
-    QBrush m_brush;
-    Qt::FillRule m_fillRule;
+    int m_accDirty = 0;
+    struct VisualPathGuiData {
+        int dirty = 0;
+        QPainterPath path;
+        QPen pen;
+        float strokeWidth;
+        QColor fillColor;
+        QBrush brush;
+        Qt::FillRule fillRule;
+    };
+    QVector<VisualPathGuiData> m_vp;
 };
 
 class QQuickPathItemSoftwareRenderNode : public QSGRenderNode
@@ -114,12 +117,14 @@ public:
 
 private:
     QQuickPathItem *m_item;
-    int m_dirty = 0;
 
-    QPainterPath m_path;
-    QPen m_pen;
-    float m_strokeWidth;
-    QBrush m_brush;
+    struct VisualPathRenderData {
+        QPainterPath path;
+        QPen pen;
+        float strokeWidth;
+        QBrush brush;
+    };
+    QVector<VisualPathRenderData> m_vp;
 
     friend class QQuickPathItemSoftwareRenderer;
 };
