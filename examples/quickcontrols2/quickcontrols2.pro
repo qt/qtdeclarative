@@ -3,4 +3,5 @@ SUBDIRS += \
     gallery \
     chattutorial \
     texteditor \
-    contactlist
+    contactlist \
+    flatstyle
