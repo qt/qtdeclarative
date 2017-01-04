@@ -217,7 +217,6 @@ public:
         V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
         Heap::Base *o = allocData(size);
-        memset(o, 0, size);
         o->setVtable(ManagedType::staticVTable());
         return static_cast<typename ManagedType::Data *>(o);
     }
@@ -251,7 +250,6 @@ public:
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
-        memset(o, 0, sizeof(sizeof(typename ManagedType::Data)));
         o->setVtable(ManagedType::staticVTable());
         o->init(this, arg1);
         return o;

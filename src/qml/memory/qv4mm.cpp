@@ -627,6 +627,7 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
     if (aggressiveGC)
         runGC();
 
+    const uint stringSize = align(sizeof(Heap::String));
     unmanagedHeapSize += unmanagedSize;
     bool didGCRun = false;
     if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
@@ -641,13 +642,14 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
         didGCRun = true;
     }
 
-    HeapItem *m = blockAllocator.allocate(align(sizeof(Heap::String)));
+    HeapItem *m = blockAllocator.allocate(stringSize);
     if (!m) {
         if (!didGCRun && shouldRunGC())
             runGC();
-        m = blockAllocator.allocate(align(sizeof(Heap::String)), true);
+        m = blockAllocator.allocate(stringSize, true);
     }
 
+    memset(m, 0, stringSize);
     return *m;
 }
 
@@ -673,6 +675,8 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
             runGC();
         m = blockAllocator.allocate(size, true);
     }
+
+    memset(m, 0, size);
     return *m;
 }
 
