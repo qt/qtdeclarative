@@ -19,5 +19,8 @@
         <file alias="item10.qml">content/item10.qml</file>
         <file alias="item11.qml">content/item11.qml</file>
         <file alias="item12.qml">content/item12.qml</file>
+        <file alias="item13.qml">content/item13.qml</file>
+        <file alias="item14.qml">content/item14.qml</file>
+        <file alias="item15.qml">content/item15.qml</file>
     </qresource>
 </RCC>

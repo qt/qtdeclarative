@@ -17,7 +17,10 @@ OTHER_FILES += content/pathitem.qml \
                content/item9.qml \
                content/item10.qml \
                content/item11.qml \
-               content/item12.qml
+               content/item12.qml \
+               content/item13.qml \
+               content/item14.qml \
+               content/item15.qml
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/pathitem
 INSTALLS += target

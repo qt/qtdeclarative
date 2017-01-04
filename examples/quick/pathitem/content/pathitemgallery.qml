@@ -113,6 +113,18 @@ Rectangle {
             name: "Gradient spread modes"
             pathItemUrl: "item12.qml"
         }
+        ListElement {
+            name: "Arc direction"
+            pathItemUrl: "item13.qml"
+        }
+        ListElement {
+            name: "Large/small arc"
+            pathItemUrl: "item14.qml"
+        }
+        ListElement {
+            name: "Arc rotation"
+            pathItemUrl: "item15.qml"
+        }
     }
 
     property int gridSpacing: 10
