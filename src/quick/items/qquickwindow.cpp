@@ -2593,9 +2593,14 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                         qCDebug(DBG_TOUCH) << " - second chance intercepted on childMouseEventFilter by " << target;
                         if (t != QEvent::MouseButtonRelease) {
                             qCDebug(DBG_TOUCH_TARGET) << "TP" << tp.id() << "->" << target;
-                            touchMouseId = tp.id();
                             touchMouseDevice = event->device();
-                            touchMouseDevice->pointerEvent()->pointById(tp.id())->setGrabber(target);
+                            if (touchMouseId == -1) {
+                                // the point was grabbed as a pure touch point before, now it will be treated as mouse
+                                // but the old receiver still needs to be informed
+                                if (auto oldGrabber = touchMouseDevice->pointerEvent()->pointById(tp.id())->grabber())
+                                    oldGrabber->touchUngrabEvent();
+                            }
+                            touchMouseId = tp.id();
                             target->grabMouse();
                         }
                         filtered = true;
