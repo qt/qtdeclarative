@@ -63,6 +63,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct BuiltinFunction;
+
 namespace Heap {
 
 struct Object : Base {
@@ -236,7 +238,9 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void defineDefaultProperty(const QString &name, const Value &value);
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
+    void defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
     void defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
+    void defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     void defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */

@@ -166,7 +166,28 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     defineDefaultProperty(s, function);
 }
 
+void Object::defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    ExecutionContext *global = e->rootContext();
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
+    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(s, function);
+}
+
 void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ExecutionContext *global = e->rootContext();
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
+    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(name, function);
+}
+
+void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);

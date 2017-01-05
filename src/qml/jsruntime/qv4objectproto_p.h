@@ -78,32 +78,32 @@ struct ObjectPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_getPrototypeOf(CallContext *ctx);
-    static ReturnedValue method_getOwnPropertyDescriptor(CallContext *ctx);
-    static ReturnedValue method_getOwnPropertyNames(CallContext *context);
-    static ReturnedValue method_create(CallContext *ctx);
-    static ReturnedValue method_defineProperty(CallContext *ctx);
-    static ReturnedValue method_defineProperties(CallContext *ctx);
-    static ReturnedValue method_seal(CallContext *ctx);
-    static ReturnedValue method_freeze(CallContext *ctx);
-    static ReturnedValue method_preventExtensions(CallContext *ctx);
-    static ReturnedValue method_isSealed(CallContext *ctx);
-    static ReturnedValue method_isFrozen(CallContext *ctx);
-    static ReturnedValue method_isExtensible(CallContext *ctx);
-    static ReturnedValue method_keys(CallContext *ctx);
+    static void method_getPrototypeOf(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_getOwnPropertyDescriptor(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_getOwnPropertyNames(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_create(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_defineProperty(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_defineProperties(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_seal(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_freeze(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_preventExtensions(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isSealed(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isFrozen(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isExtensible(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_keys(const BuiltinFunction *, Scope &scope, CallData *callData);
 
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_toLocaleString(CallContext *ctx);
-    static ReturnedValue method_valueOf(CallContext *ctx);
-    static ReturnedValue method_hasOwnProperty(CallContext *ctx);
-    static ReturnedValue method_isPrototypeOf(CallContext *ctx);
-    static ReturnedValue method_propertyIsEnumerable(CallContext *ctx);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_hasOwnProperty(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isPrototypeOf(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_propertyIsEnumerable(const BuiltinFunction *, Scope &scope, CallData *callData);
 
-    static ReturnedValue method_defineGetter(CallContext *ctx);
-    static ReturnedValue method_defineSetter(CallContext *ctx);
+    static void method_defineGetter(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_defineSetter(const BuiltinFunction *, Scope &scope, CallData *callData);
 
-    static ReturnedValue method_get_proto(CallContext *ctx);
-    static ReturnedValue method_set_proto(CallContext *ctx);
+    static void method_get_proto(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_set_proto(const BuiltinFunction *, Scope &scope, CallData *callData);
 
     static void toPropertyDescriptor(ExecutionEngine *engine, const Value &v, Property *desc, PropertyAttributes *attrs);
     static ReturnedValue fromPropertyDescriptor(ExecutionEngine *engine, const Property *desc, PropertyAttributes attrs);

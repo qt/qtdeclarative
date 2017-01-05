@@ -459,22 +459,22 @@ Heap::Object *ScriptFunction::protoForConstructor() const
 
 
 
-DEFINE_OBJECT_VTABLE(BuiltinFunction);
+DEFINE_OBJECT_VTABLE(OldBuiltinFunction);
 
-void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *))
+void Heap::OldBuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *))
 {
     Heap::FunctionObject::init(scope, name);
     this->code = code;
 }
 
-void BuiltinFunction::construct(const Managed *f, Scope &scope, CallData *)
+void OldBuiltinFunction::construct(const Managed *f, Scope &scope, CallData *)
 {
-    scope.result = static_cast<const BuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
+    scope.result = static_cast<const OldBuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
 }
 
-void BuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
+void OldBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
 {
-    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(that);
+    const OldBuiltinFunction *f = static_cast<const OldBuiltinFunction *>(that);
     ExecutionEngine *v4 = scope.engine;
     if (v4->hasException) {
         scope.result = Encode::undefined();
@@ -493,6 +493,31 @@ void BuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData
     scope.result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext));
     v4->memoryManager->freeSimpleCallContext();
 }
+
+DEFINE_OBJECT_VTABLE(BuiltinFunction);
+
+void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *))
+{
+    Heap::FunctionObject::init(scope, name);
+    this->code = code;
+}
+
+void BuiltinFunction::construct(const Managed *f, Scope &scope, CallData *)
+{
+    scope.result = static_cast<const BuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
+}
+
+void BuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
+{
+    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(that);
+    ExecutionEngine *v4 = scope.engine;
+    if (v4->hasException) {
+        scope.result = Encode::undefined();
+        return;
+    }
+    f->d()->code(f, scope, callData);
+}
+
 
 void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
 {
