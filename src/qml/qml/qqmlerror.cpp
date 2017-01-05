@@ -85,11 +85,12 @@ public:
     QString description;
     quint16 line;
     quint16 column;
+    QtMsgType messageType;
     QObject *object;
 };
 
 QQmlErrorPrivate::QQmlErrorPrivate()
-: line(0), column(0), object()
+: line(0), column(0), messageType(QtMsgType::QtWarningMsg), object()
 {
 }
 
@@ -125,6 +126,7 @@ QQmlError &QQmlError::operator=(const QQmlError &other)
         d->line = other.d->line;
         d->column = other.d->column;
         d->object = other.d->object;
+        d->messageType = other.d->messageType;
     }
     return *this;
 }
@@ -236,6 +238,29 @@ void QQmlError::setObject(QObject *object)
 {
     if (!d) d = new QQmlErrorPrivate;
     d->object = object;
+}
+
+/*!
+    \since 5.9
+
+    Returns the message type.
+ */
+QtMsgType QQmlError::messageType() const
+{
+    if (d) return d->messageType;
+    else return QtMsgType::QtWarningMsg;
+}
+
+/*!
+    \since 5.9
+
+    Sets the \a messageType for this message. The message type determines which
+    QDebug handlers are responsible for recieving the message.
+ */
+void QQmlError::setMessageType(QtMsgType messageType)
+{
+    if (!d) d = new QQmlErrorPrivate;
+    d->messageType = messageType;
 }
 
 /*!

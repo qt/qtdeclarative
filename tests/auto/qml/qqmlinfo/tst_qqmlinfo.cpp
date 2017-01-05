@@ -49,6 +49,7 @@ private slots:
     void nonQmlContextedObject();
     void types();
     void chaining();
+    void messageTypes();
 
 private:
     QQmlEngine engine;
@@ -200,6 +201,19 @@ void tst_qqmlinfo::chaining()
                << bool(true) << ' '
                << QString ("Quick") << ' '
                << QUrl("http://www.qt-project.org");
+}
+
+// Ensure that messages of different types are sent with the correct QtMsgType.
+void tst_qqmlinfo::messageTypes()
+{
+    QTest::ignoreMessage(QtDebugMsg, "<Unknown File>: debug");
+    qmlDebug(0) << QLatin1String("debug");
+
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: info");
+    qmlInfo(0) << QLatin1String("info");
+
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: warning");
+    qmlWarning(0) << QLatin1String("warning");
 }
 
 QTEST_MAIN(tst_qqmlinfo)

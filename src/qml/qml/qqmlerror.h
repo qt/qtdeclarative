@@ -47,6 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
+// ### Qt 6: should this be called QQmlMessage, since it can have a message type?
 class QDebug;
 class QQmlErrorPrivate;
 class Q_QML_EXPORT QQmlError
@@ -69,6 +70,8 @@ public:
     void setColumn(int);
     QObject *object() const;
     void setObject(QObject *);
+    QtMsgType messageType() const;
+    void setMessageType(QtMsgType messageType);
 
     QString toString() const;
 private:

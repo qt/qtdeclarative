@@ -48,11 +48,19 @@ QT_BEGIN_NAMESPACE
 
 class QQmlInfo;
 
+// declared in namespace to avoid symbol conflicts with QtDeclarative
 namespace QtQml {
-    // declared in namespace to avoid symbol conflicts with QtDeclarative
+    Q_QML_EXPORT QQmlInfo qmlDebug(const QObject *me);
+    Q_QML_EXPORT QQmlInfo qmlDebug(const QObject *me, const QQmlError &error);
+    Q_QML_EXPORT QQmlInfo qmlDebug(const QObject *me, const QList<QQmlError> &errors);
+
     Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me);
     Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QQmlError &error);
     Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors);
+
+    Q_QML_EXPORT QQmlInfo qmlWarning(const QObject *me);
+    Q_QML_EXPORT QQmlInfo qmlWarning(const QObject *me, const QQmlError &error);
+    Q_QML_EXPORT QQmlInfo qmlWarning(const QObject *me, const QList<QQmlError> &errors);
 }
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
@@ -93,9 +101,15 @@ public:
 #endif
 
 private:
+    friend Q_QML_EXPORT QQmlInfo QtQml::qmlDebug(const QObject *me);
+    friend Q_QML_EXPORT QQmlInfo QtQml::qmlDebug(const QObject *me, const QQmlError &error);
+    friend Q_QML_EXPORT QQmlInfo QtQml::qmlDebug(const QObject *me, const QList<QQmlError> &errors);
     friend Q_QML_EXPORT QQmlInfo QtQml::qmlInfo(const QObject *me);
     friend Q_QML_EXPORT QQmlInfo QtQml::qmlInfo(const QObject *me, const QQmlError &error);
     friend Q_QML_EXPORT QQmlInfo QtQml::qmlInfo(const QObject *me, const QList<QQmlError> &errors);
+    friend Q_QML_EXPORT QQmlInfo QtQml::qmlWarning(const QObject *me);
+    friend Q_QML_EXPORT QQmlInfo QtQml::qmlWarning(const QObject *me, const QQmlError &error);
+    friend Q_QML_EXPORT QQmlInfo QtQml::qmlWarning(const QObject *me, const QList<QQmlError> &errors);
 
     QQmlInfo(QQmlInfoPrivate *);
     QQmlInfoPrivate *d;

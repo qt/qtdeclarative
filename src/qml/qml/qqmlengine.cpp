@@ -1914,9 +1914,29 @@ void QQmlEnginePrivate::sendExit(int retCode)
 
 static void dumpwarning(const QQmlError &error)
 {
-    QMessageLogger(error.url().toString().toLatin1().constData(),
-                   error.line(), 0).warning().nospace()
-            << qPrintable(error.toString());
+    switch (error.messageType()) {
+    case QtDebugMsg:
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).debug().nospace()
+                << qPrintable(error.toString());
+        break;
+    case QtInfoMsg:
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).info().nospace()
+                << qPrintable(error.toString());
+        break;
+    case QtWarningMsg:
+    case QtFatalMsg: // fatal does not support streaming, and furthermore, is actually fatal. Probably not desirable for QML.
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).warning().nospace()
+                << qPrintable(error.toString());
+        break;
+    case QtCriticalMsg:
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).critical().nospace()
+                << qPrintable(error.toString());
+        break;
+    }
 }
 
 static void dumpwarning(const QList<QQmlError> &errors)
