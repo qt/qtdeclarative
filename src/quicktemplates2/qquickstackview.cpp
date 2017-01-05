@@ -474,7 +474,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
     if (args->length() <= 0) {
-        qmlInfo(this) << "push: missing arguments";
+        qmlWarning(this) << "push: missing arguments";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -498,7 +498,7 @@ void QQuickStackView::push(QQmlV4Function *args)
     }
 
     if (elements.isEmpty()) {
-        qmlInfo(this) << "push: nothing to push";
+        qmlWarning(this) << "push: nothing to push";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -559,7 +559,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     int argc = args->length();
     if (d->elements.count() <= 1 || argc > 2) {
         if (argc > 2)
-            qmlInfo(this) << "pop: too many arguments";
+            qmlWarning(this) << "pop: too many arguments";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -579,7 +579,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
             enter = d->findElement(item);
             if (!enter) {
                 if (item != d->currentItem)
-                    qmlInfo(this) << "pop: unknown argument: " << value->toQString(); // TODO: safe?
+                    qmlWarning(this) << "pop: unknown argument: " << value->toQString(); // TODO: safe?
                 args->setReturnValue(QV4::Encode::null());
                 d->elements.push(exit); // restore
                 return;
@@ -707,7 +707,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
     if (args->length() <= 0) {
-        qmlInfo(this) << "replace: missing arguments";
+        qmlWarning(this) << "replace: missing arguments";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -729,7 +729,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 
     QList<QQuickStackElement *> elements = d->parseElements(args, target ? 1 : 0);
     if (elements.isEmpty()) {
-        qmlInfo(this) << "replace: nothing to push";
+        qmlWarning(this) << "replace: nothing to push";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -1043,7 +1043,7 @@ QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent) :
         QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
         d->itemParentChanged(item, item->parentItem());
     } else if (parent) {
-        qmlInfo(parent) << "StackView must be attached to an Item";
+        qmlWarning(parent) << "StackView must be attached to an Item";
     }
 }
 

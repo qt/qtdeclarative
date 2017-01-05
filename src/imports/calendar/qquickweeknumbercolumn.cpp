@@ -144,7 +144,7 @@ void QQuickWeekNumberColumn::setMonth(int month)
 {
     Q_D(QQuickWeekNumberColumn);
     if (month < 0 || month > 11) {
-        qmlInfo(this) << "month " << month << " is out of range [0...11]";
+        qmlWarning(this) << "month " << month << " is out of range [0...11]";
         return;
     }
     d->model->setMonth(month + 1);
@@ -168,7 +168,7 @@ void QQuickWeekNumberColumn::setYear(int year)
 {
     Q_D(QQuickWeekNumberColumn);
     if (year < -271820 || year > 275759) {
-        qmlInfo(this) << "year " << year << " is out of range [-271820...275759]";
+        qmlWarning(this) << "year " << year << " is out of range [-271820...275759]";
         return;
     }
     d->model->setYear(year);

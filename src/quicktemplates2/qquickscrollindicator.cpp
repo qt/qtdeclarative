@@ -173,7 +173,7 @@ QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObj
 {
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(object);
     if (!flickable)
-        qmlInfo(object) << "ScrollIndicator must be attached to a Flickable";
+        qmlWarning(object) << "ScrollIndicator must be attached to a Flickable";
 
     return new QQuickScrollIndicatorAttached(flickable);
 }

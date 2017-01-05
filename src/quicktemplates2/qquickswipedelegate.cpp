@@ -339,7 +339,7 @@ void QQuickSwipePrivate::createLeftItem()
         Q_Q(QQuickSwipe);
         q->setLeftItem(createDelegateItem(left));
         if (!leftItem)
-            qmlInfo(control) << "Failed to create left item:" << left->errors();
+            qmlWarning(control) << "Failed to create left item:" << left->errors();
     }
 }
 
@@ -349,7 +349,7 @@ void QQuickSwipePrivate::createBehindItem()
         Q_Q(QQuickSwipe);
         q->setBehindItem(createDelegateItem(behind));
         if (!behindItem)
-            qmlInfo(control) << "Failed to create behind item:" << behind->errors();
+            qmlWarning(control) << "Failed to create behind item:" << behind->errors();
     }
 }
 
@@ -359,7 +359,7 @@ void QQuickSwipePrivate::createRightItem()
         Q_Q(QQuickSwipe);
         q->setRightItem(createDelegateItem(right));
         if (!rightItem)
-            qmlInfo(control) << "Failed to create right item:" << right->errors();
+            qmlWarning(control) << "Failed to create right item:" << right->errors();
     }
 }
 
@@ -397,12 +397,12 @@ void QQuickSwipePrivate::createAndShowRightItem()
 
 void QQuickSwipePrivate::warnAboutMixingDelegates()
 {
-    qmlInfo(control) << "cannot set both behind and left/right properties";
+    qmlWarning(control) << "cannot set both behind and left/right properties";
 }
 
 void QQuickSwipePrivate::warnAboutSettingDelegatesWhileVisible()
 {
-    qmlInfo(control) << "left/right/behind properties may only be set when swipe.position is 0";
+    qmlWarning(control) << "left/right/behind properties may only be set when swipe.position is 0";
 }
 
 bool QQuickSwipePrivate::hasDelegates() const
@@ -929,7 +929,7 @@ static void warnIfHorizontallyAnchored(QQuickItem *item, const QString &itemName
     QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
     if (anchors && (anchors->fill() || anchors->centerIn() || anchors->left().item || anchors->right().item)
             && !item->property("_q_QQuickSwipeDelegate_warned").toBool()) {
-        qmlInfo(item) << QString::fromLatin1("SwipeDelegate: cannot use horizontal anchors with %1; unable to layout the item.").arg(itemName);
+        qmlWarning(item) << QString::fromLatin1("SwipeDelegate: cannot use horizontal anchors with %1; unable to layout the item.").arg(itemName);
         item->setProperty("_q_QQuickSwipeDelegate_warned", true);
     }
 }

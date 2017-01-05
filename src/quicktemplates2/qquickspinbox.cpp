@@ -521,7 +521,7 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
 {
     Q_D(QQuickSpinBox);
     if (!callback.isCallable()) {
-        qmlInfo(this) << "textFromValue must be a callable function";
+        qmlWarning(this) << "textFromValue must be a callable function";
         return;
     }
     d->textFromValue = callback;
@@ -569,7 +569,7 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
 {
     Q_D(QQuickSpinBox);
     if (!callback.isCallable()) {
-        qmlInfo(this) << "valueFromText must be a callable function";
+        qmlWarning(this) << "valueFromText must be a callable function";
         return;
     }
     d->valueFromText = callback;

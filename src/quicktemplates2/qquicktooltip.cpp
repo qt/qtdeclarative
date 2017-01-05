@@ -265,7 +265,7 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (!item)
-        qmlInfo(object) << "ToolTip must be attached to an Item";
+        qmlWarning(object) << "ToolTip must be attached to an Item";
 
     return new QQuickToolTipAttached(object);
 }

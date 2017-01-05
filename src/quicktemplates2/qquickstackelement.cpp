@@ -274,7 +274,7 @@ bool QQuickStackElement::prepareTransition(QQuickItemViewTransitioner *transitio
             QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
             // TODO: expose QQuickAnchorLine so we can test for other conflicting anchors
             if (anchors && (anchors->fill() || anchors->centerIn()))
-                qmlInfo(item) << "StackView has detected conflicting anchors. Transitions may not execute properly.";
+                qmlWarning(item) << "StackView has detected conflicting anchors. Transitions may not execute properly.";
         }
 
         // TODO: add force argument to QQuickItemViewTransitionableItem::prepareTransition()?

@@ -1255,7 +1255,7 @@ bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, Q
     if (var.type() == QVariant::Int) {
         int val = var.toInt();
         if (val > BlueGrey) {
-            qmlInfo(parent()) << "unknown Material." << name << " value: " << val;
+            qmlWarning(parent()) << "unknown Material." << name << " value: " << val;
             return false;
         }
         *rgba = val;
@@ -1266,7 +1266,7 @@ bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, Q
         } else {
             QColor color(var.toString());
             if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Material." << name << " value: " << var.toString();
+                qmlWarning(parent()) << "unknown Material." << name << " value: " << var.toString();
                 return false;
             }
             *custom = true;

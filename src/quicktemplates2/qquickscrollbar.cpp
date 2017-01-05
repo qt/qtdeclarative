@@ -274,7 +274,7 @@ QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
 {
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(object);
     if (!flickable)
-        qmlInfo(object) << "ScrollBar must be attached to a Flickable";
+        qmlWarning(object) << "ScrollBar must be attached to a Flickable";
 
     return new QQuickScrollBarAttached(flickable);
 }

@@ -127,7 +127,7 @@ void QQuickSwipeViewPrivate::resizeItems()
             QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
             // TODO: expose QQuickAnchorLine so we can test for other conflicting anchors
             if (anchors && (anchors->fill() || anchors->centerIn()) && !item->property("_q_QQuickSwipeView_warned").toBool()) {
-                qmlInfo(item) << "SwipeView has detected conflicting anchors. Unable to layout the item.";
+                qmlWarning(item) << "SwipeView has detected conflicting anchors. Unable to layout the item.";
                 item->setProperty("_q_QQuickSwipeView_warned", true);
             }
 
@@ -439,7 +439,7 @@ QQuickSwipeViewAttached::QQuickSwipeViewAttached(QObject *parent) :
         QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
         p->addItemChangeListener(d, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
     } else if (parent) {
-        qmlInfo(parent) << "SwipeView: attached properties must be accessed from within a child item";
+        qmlWarning(parent) << "SwipeView: attached properties must be accessed from within a child item";
     }
 }
 

@@ -603,7 +603,7 @@ bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, 
     if (var.type() == QVariant::Int) {
         int val = var.toInt();
         if (val < Lime || val > Taupe) {
-            qmlInfo(parent()) << "unknown Universal." << name << " value: " << val;
+            qmlWarning(parent()) << "unknown Universal." << name << " value: " << val;
             return false;
         }
         *rgba = qquickuniversal_accent_color(static_cast<Color>(val));
@@ -614,7 +614,7 @@ bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, 
         } else {
             QColor color(var.toString());
             if (!color.isValid()) {
-                qmlInfo(parent()) << "unknown Universal." << name << " value: " << var.toString();
+                qmlWarning(parent()) << "unknown Universal." << name << " value: " << var.toString();
                 return false;
             }
             *rgba = color.rgba();

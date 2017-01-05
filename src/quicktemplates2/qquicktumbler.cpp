@@ -817,7 +817,7 @@ QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent) :
     if (delegateItem)
         d->init(delegateItem);
     else if (parent)
-        qmlInfo(parent) << "Tumbler: attached properties of Tumbler must be accessed through a delegate item";
+        qmlWarning(parent) << "Tumbler: attached properties of Tumbler must be accessed through a delegate item";
 
     if (d->tumbler) {
         // When the Tumbler is completed, wrapChanged() is emitted to let QQuickTumblerView

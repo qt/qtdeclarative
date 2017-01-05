@@ -279,7 +279,7 @@ bool QQuickPopupPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickPopup);
     if (!window) {
-        qmlInfo(q) << "cannot find any window to open popup in.";
+        qmlWarning(q) << "cannot find any window to open popup in.";
         return false;
     }
 
