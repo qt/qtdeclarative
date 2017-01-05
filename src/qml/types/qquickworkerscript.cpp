@@ -185,7 +185,7 @@ public:
 
     int m_nextId;
 
-    static QV4::ReturnedValue method_sendMessage(QV4::CallContext *ctx);
+    static void method_sendMessage(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
 signals:
     void stopThread();
@@ -292,14 +292,13 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::CallContext *ctx)
+void QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    WorkerEngine *engine = (WorkerEngine*)ctx->engine()->v8Engine;
+    WorkerEngine *engine = (WorkerEngine*)scope.engine->v8Engine;
 
-    int id = ctx->argc() > 1 ? ctx->args()[1].toInt32() : 0;
+    int id = callData->argc > 1 ? callData->args[1].toInt32() : 0;
 
-    QV4::Scope scope(ctx);
-    QV4::ScopedValue v(scope, ctx->argument(2));
+    QV4::ScopedValue v(scope, callData->argument(2));
     QByteArray data = QV4::Serialize::serialize(v, scope.engine);
 
     QMutexLocker locker(&engine->p->m_lock);
@@ -307,7 +306,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Call
     if (script && script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
-    return QV4::Encode::undefined();
+    scope.result = QV4::Encode::undefined();
 }
 
 QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)

@@ -94,6 +94,12 @@ struct ScopedValue;
         return; \
     } while (false)
 
+#define THROW_GENERIC_ERROR(str) \
+    do { \
+        scope.result = scope.engine->throwError(QString::fromUtf8(str)); \
+        return; \
+    } while (false)
+
 struct Scope {
     inline Scope(ExecutionContext *ctx)
         : engine(ctx->d()->engine)

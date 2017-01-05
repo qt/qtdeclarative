@@ -81,6 +81,14 @@ QT_BEGIN_NAMESPACE
     return ctx->engine()->throwError(ex); \
 }
 
+#define THROW_DOM(error, string) { \
+    QV4::ScopedValue v(scope, scope.engine->newString(QStringLiteral(string))); \
+    QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(error))); \
+    scope.result = scope.engine->throwError(ex); \
+    return; \
+}
+
 namespace QV4 {
 struct ExecutionEngine;
 }

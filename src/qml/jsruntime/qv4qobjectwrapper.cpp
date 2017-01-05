@@ -826,40 +826,39 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 } // namespace QV4
 
-ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
+void QObjectWrapper::method_connect(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    if (ctx->argc() == 0)
-        V4THROW_ERROR("Function.prototype.connect: no arguments given");
+    if (callData->argc == 0)
+        THROW_GENERIC_ERROR("Function.prototype.connect: no arguments given");
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject());
+    QPair<QObject *, int> signalInfo = extractQtSignal(callData->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second; // in method range, not signal range!
 
     if (signalIndex < 0)
-        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
+        THROW_GENERIC_ERROR("Function.prototype.connect: this object is not a signal");
 
     if (!signalObject)
-        V4THROW_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
+        THROW_GENERIC_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
 
     if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
-        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
+        THROW_GENERIC_ERROR("Function.prototype.connect: this object is not a signal");
 
-    QV4::Scope scope(ctx);
     QV4::ScopedFunctionObject f(scope);
     QV4::ScopedValue thisObject (scope, QV4::Encode::undefined());
 
-    if (ctx->argc() == 1) {
-        f = ctx->args()[0];
-    } else if (ctx->argc() >= 2) {
-        thisObject = ctx->args()[0];
-        f = ctx->args()[1];
+    if (callData->argc == 1) {
+        f = callData->args[0];
+    } else if (callData->argc >= 2) {
+        thisObject = callData->args[0];
+        f = callData->args[1];
     }
 
     if (!f)
-        V4THROW_ERROR("Function.prototype.connect: target is not a function");
+        THROW_GENERIC_ERROR("Function.prototype.connect: target is not a function");
 
     if (!thisObject->isUndefined() && !thisObject->isObject())
-        V4THROW_ERROR("Function.prototype.connect: target this is not an object");
+        THROW_GENERIC_ERROR("Function.prototype.connect: target this is not an object");
 
     QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
     slot->signalIndex = signalIndex;
@@ -874,49 +873,47 @@ ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
     }
     QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
 
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
-ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
+void QObjectWrapper::method_disconnect(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    if (ctx->argc() == 0)
-        V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
+    if (callData->argc == 0)
+        THROW_GENERIC_ERROR("Function.prototype.disconnect: no arguments given");
 
-    QV4::Scope scope(ctx);
-
-    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject());
+    QPair<QObject *, int> signalInfo = extractQtSignal(callData->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
     if (signalIndex == -1)
-        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
+        THROW_GENERIC_ERROR("Function.prototype.disconnect: this object is not a signal");
 
     if (!signalObject)
-        V4THROW_ERROR("Function.prototype.disconnect: cannot disconnect from deleted QObject");
+        THROW_GENERIC_ERROR("Function.prototype.disconnect: cannot disconnect from deleted QObject");
 
     if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
-        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
+        THROW_GENERIC_ERROR("Function.prototype.disconnect: this object is not a signal");
 
     QV4::ScopedFunctionObject functionValue(scope);
     QV4::ScopedValue functionThisValue(scope, QV4::Encode::undefined());
 
-    if (ctx->argc() == 1) {
-        functionValue = ctx->args()[0];
-    } else if (ctx->argc() >= 2) {
-        functionThisValue = ctx->args()[0];
-        functionValue = ctx->args()[1];
+    if (callData->argc == 1) {
+        functionValue = callData->args[0];
+    } else if (callData->argc >= 2) {
+        functionThisValue = callData->args[0];
+        functionValue = callData->args[1];
     }
 
     if (!functionValue)
-        V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
+        THROW_GENERIC_ERROR("Function.prototype.disconnect: target is not a function");
 
     if (!functionThisValue->isUndefined() && !functionThisValue->isObject())
-        V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
+        THROW_GENERIC_ERROR("Function.prototype.disconnect: target this is not an object");
 
     QPair<QObject *, int> functionData = QObjectMethod::extractQtMethod(functionValue);
 
     void *a[] = {
-        ctx->d()->engine,
+        scope.engine,
         functionValue.ptr,
         functionThisValue.ptr,
         functionData.first,
@@ -925,7 +922,7 @@ ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
 
     QObjectPrivate::disconnect(signalObject, signalIndex, reinterpret_cast<void**>(&a));
 
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
 static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *e)
