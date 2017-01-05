@@ -113,8 +113,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(QQmlListProperty<QQuickItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
 
-    Q_FLAGS(BoundsBehavior)
-
 public:
     QQuickFlickable(QQuickItem *parent=0);
     ~QQuickFlickable();
@@ -129,6 +127,7 @@ public:
         DragAndOvershootBounds = DragOverBounds | OvershootBounds
     };
     Q_DECLARE_FLAGS(BoundsBehavior, BoundsBehaviorFlag)
+    Q_FLAG(BoundsBehavior)
 
     BoundsBehavior boundsBehavior() const;
     void setBoundsBehavior(BoundsBehavior);

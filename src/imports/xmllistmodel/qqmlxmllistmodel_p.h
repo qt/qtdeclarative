@@ -79,7 +79,6 @@ class QQuickXmlListModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
-    Q_ENUMS(Status)
 
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
@@ -119,6 +118,7 @@ public:
     Q_INVOKABLE QQmlV4Handle get(int index) const;
 
     enum Status { Null, Ready, Loading, Error };
+    Q_ENUM(Status)
     Status status() const;
     qreal progress() const;
 
