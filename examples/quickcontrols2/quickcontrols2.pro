@@ -5,4 +5,5 @@ SUBDIRS += \
     texteditor \
     contactlist \
     sidepanel \
-    swipetoremove
+    swipetoremove \
+    flatstyle
