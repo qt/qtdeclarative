@@ -802,6 +802,27 @@ Item {
             layout.destroy()    // Do not crash
         }
 
+        Component {
+            id: rectangle_Component
+            Rectangle {
+                width: 100
+                height: 50
+            }
+        }
+
+        function test_destroyImplicitInvisibleLayout()
+        {
+            var root = rectangle_Component.createObject(container)
+            root.visible = false
+            var layout = layout_deleteLayout.createObject(root)
+            layout.visible = true
+            // at this point the layout is still invisible because root is invisible
+            layout.destroy()
+            // Do not crash when destructing the layout
+            waitForRendering(container)      // should ideally call gc(), but does not work
+            root.destroy()
+        }
+
         function test_sizeHintWithHiddenChildren(data) {
             var layout = layout_sizeHint_Component.createObject(container)
             var grid = layout.children[0]

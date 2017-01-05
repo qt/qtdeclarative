@@ -305,11 +305,7 @@ QQuickGridLayoutBase::~QQuickGridLayoutBase()
 
     // Remove item listeners so we do not act on signalling unnecessarily
     // (there is no point, as the layout will be torn down anyway).
-    for (int i = 0; i < itemCount(); ++i) {
-        QQuickItem *item = itemAt(i);
-        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
-    }
-
+    deactivateRecur();
     delete d->styleInfo;
 }
 
