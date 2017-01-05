@@ -87,14 +87,14 @@ struct NumberPrototype: NumberObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_isFinite(CallContext *ctx);
-    static ReturnedValue method_isNaN(CallContext *ctx);
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_toLocaleString(CallContext *ctx);
-    static ReturnedValue method_valueOf(CallContext *ctx);
-    static ReturnedValue method_toFixed(CallContext *ctx);
-    static ReturnedValue method_toExponential(CallContext *ctx);
-    static ReturnedValue method_toPrecision(CallContext *ctx);
+    static void method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toFixed(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toExponential(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toPrecision(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 

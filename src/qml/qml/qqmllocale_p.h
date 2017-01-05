@@ -67,13 +67,13 @@ public:
     static void registerExtension(QV4::ExecutionEngine *engine);
 
 private:
-    static QV4::ReturnedValue method_toLocaleString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_toLocaleTimeString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_toLocaleDateString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_fromLocaleString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_fromLocaleTimeString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_fromLocaleDateString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_timeZoneUpdated(QV4::CallContext *ctx);
+    static void method_toLocaleString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_toLocaleTimeString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_toLocaleDateString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_fromLocaleString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_fromLocaleTimeString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_fromLocaleDateString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_timeZoneUpdated(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 };
 
 
@@ -83,9 +83,9 @@ public:
     static void registerExtension(QV4::ExecutionEngine *engine);
 
 private:
-    static QV4::ReturnedValue method_toLocaleString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_fromLocaleString(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_toLocaleCurrencyString(QV4::CallContext *ctx);
+    static void method_toLocaleString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_fromLocaleString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_toLocaleCurrencyString(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 };
 
 
@@ -135,7 +135,7 @@ public:
 private:
     QQmlLocale();
 
-    static QV4::ReturnedValue method_localeCompare(QV4::CallContext *ctx);
+    static void method_localeCompare(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 };
 
 namespace QV4 {
@@ -158,43 +158,43 @@ struct QQmlLocaleData : public QV4::Object
     V4_OBJECT2(QQmlLocaleData, Object)
     V4_NEEDS_DESTROY
 
-    static QLocale *getThisLocale(QV4::CallContext *ctx) {
-        QV4::Object *o = ctx->thisObject().as<Object>();
+    static QLocale *getThisLocale(QV4::Scope &scope, QV4::CallData *callData) {
+        QV4::Object *o = callData->thisObject.as<Object>();
         QQmlLocaleData *thisObject = o ? o->as<QQmlLocaleData>() : 0;
         if (!thisObject) {
-            ctx->engine()->throwTypeError();
+            scope.engine->throwTypeError();
             return 0;
         }
         return thisObject->d()->locale;
     }
 
-    static QV4::ReturnedValue method_currencySymbol(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_dateTimeFormat(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_timeFormat(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_dateFormat(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_monthName(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_standaloneMonthName(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_dayName(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_standaloneDayName(QV4::CallContext *ctx);
+    static void method_currencySymbol(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_dateTimeFormat(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_timeFormat(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_dateFormat(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_monthName(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_standaloneMonthName(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_dayName(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_standaloneDayName(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
-    static QV4::ReturnedValue method_get_firstDayOfWeek(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_measurementSystem(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_textDirection(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_weekDays(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_uiLanguages(QV4::CallContext *ctx);
+    static void method_get_firstDayOfWeek(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_measurementSystem(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_textDirection(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_weekDays(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_uiLanguages(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
-    static QV4::ReturnedValue method_get_name(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_nativeLanguageName(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_nativeCountryName(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_decimalPoint(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_groupSeparator(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_percent(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_zeroDigit(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_negativeSign(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_positiveSign(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_exponential(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_amText(QV4::CallContext *ctx);
-    static QV4::ReturnedValue method_get_pmText(QV4::CallContext *ctx);
+    static void method_get_name(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_nativeLanguageName(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_nativeCountryName(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_decimalPoint(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_groupSeparator(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_percent(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_zeroDigit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_negativeSign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_positiveSign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_exponential(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_amText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_pmText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 };
 
 }
