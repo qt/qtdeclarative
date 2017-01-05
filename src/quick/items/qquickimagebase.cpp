@@ -281,7 +281,7 @@ void QQuickImageBase::requestFinished()
     Q_D(QQuickImageBase);
 
     if (d->pix.isError()) {
-        qmlInfo(this) << d->pix.error();
+        qmlWarning(this) << d->pix.error();
         d->pix.clear(this);
         d->status = Error;
         if (d->progress != 0.0) {

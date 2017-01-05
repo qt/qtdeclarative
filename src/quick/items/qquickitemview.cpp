@@ -487,7 +487,7 @@ void QQuickItemView::setCacheBuffer(int b)
 {
     Q_D(QQuickItemView);
     if (b < 0) {
-        qmlInfo(this) << "Cannot set a negative cache buffer";
+        qmlWarning(this) << "Cannot set a negative cache buffer";
         return;
     }
 
@@ -2345,7 +2345,7 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
             if (!delegateValidated) {
                 delegateValidated = true;
                 QObject* delegate = q->delegate();
-                qmlInfo(delegate ? delegate : q) << QQuickItemView::tr("Delegate must be of Item type");
+                qmlWarning(delegate ? delegate : q) << QQuickItemView::tr("Delegate must be of Item type");
             }
         }
         inRequest = false;

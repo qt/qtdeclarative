@@ -127,7 +127,7 @@ void SignalTransition::setSignal(const QJSValue &signal)
         Q_ASSERT(sender);
         signalMethod = sender->metaObject()->method(signalObject->signalIndex());
     } else {
-        qmlInfo(this) << tr("Specified signal does not exist.");
+        qmlWarning(this) << tr("Specified signal does not exist.");
         return;
     }
 

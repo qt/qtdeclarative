@@ -82,12 +82,12 @@ void QQmlBindPrivate::validate(QObject *binding) const
         return;
 
     if (!prop.isValid()) {
-        qmlInfo(binding) << "Property '" << propName << "' does not exist on " << QQmlMetaType::prettyTypeName(obj) << ".";
+        qmlWarning(binding) << "Property '" << propName << "' does not exist on " << QQmlMetaType::prettyTypeName(obj) << ".";
         return;
     }
 
     if (!prop.isWritable()) {
-        qmlInfo(binding) << "Property '" << propName << "' on " << QQmlMetaType::prettyTypeName(obj) << " is read-only.";
+        qmlWarning(binding) << "Property '" << propName << "' on " << QQmlMetaType::prettyTypeName(obj) << " is read-only.";
         return;
     }
 }

@@ -209,7 +209,7 @@ QSGSpriteNode *QQuickSpriteSequence::initNode()
     Q_D(QQuickSpriteSequence);
 
     if (!d->m_spriteEngine) {
-        qmlInfo(this) << "No sprite engine...";
+        qmlWarning(this) << "No sprite engine...";
         return nullptr;
     } else if (d->m_spriteEngine->status() == QQuickPixmap::Null) {
         d->m_spriteEngine->startAssemblingImage();

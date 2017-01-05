@@ -91,7 +91,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
         function += QQmlPropertyCache::signalParameterStringForJS(v4, signal.parameterNames(), &error);
 
         if (!error.isEmpty()) {
-            qmlInfo(scopeObject()) << error;
+            qmlWarning(scopeObject()) << error;
             return;
         }
     } else
@@ -129,7 +129,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
         QString error;
         QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
         if (!error.isEmpty()) {
-            qmlInfo(scopeObject()) << error;
+            qmlWarning(scopeObject()) << error;
             return;
         }
         runtimeFunction->updateInternalClass(engine, signalParameters);

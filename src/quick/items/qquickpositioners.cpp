@@ -957,7 +957,7 @@ void QQuickColumn::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict) {
-        qmlInfo(this) << "Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column."
+        qmlWarning(this) << "Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column."
             << " Column will not function.";
     }
 }
@@ -1224,7 +1224,7 @@ void QQuickRow::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict)
-        qmlInfo(this) << "Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row."
+        qmlWarning(this) << "Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row."
             << " Row will not function.";
 }
 
@@ -1808,7 +1808,7 @@ void QQuickGrid::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict)
-        qmlInfo(this) << "Cannot specify anchors for items inside Grid." << " Grid will not function.";
+        qmlWarning(this) << "Cannot specify anchors for items inside Grid." << " Grid will not function.";
 }
 
 /*!
@@ -2121,7 +2121,7 @@ void QQuickFlow::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict)
-        qmlInfo(this) << "Cannot specify anchors for items inside Flow." << " Flow will not function.";
+        qmlWarning(this) << "Cannot specify anchors for items inside Flow." << " Flow will not function.";
 }
 
 QT_END_NAMESPACE

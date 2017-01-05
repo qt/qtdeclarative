@@ -1566,7 +1566,7 @@ QQuickLayoutMirroringAttached::QQuickLayoutMirroringAttached(QObject *parent) : 
     if (itemPrivate)
         itemPrivate->extra.value().layoutDirectionAttached = this;
     else
-        qmlInfo(parent) << tr("LayoutDirection attached property only works with Items and Windows");
+        qmlWarning(parent) << tr("LayoutDirection attached property only works with Items and Windows");
 }
 
 QQuickLayoutMirroringAttached * QQuickLayoutMirroringAttached::qmlAttachedProperties(QObject *object)
@@ -1714,7 +1714,7 @@ QQuickEnterKeyAttached::QQuickEnterKeyAttached(QObject *parent)
         itemPrivate = QQuickItemPrivate::get(item);
         itemPrivate->extra.value().enterKeyAttached = this;
     } else
-        qmlInfo(parent) << tr("EnterKey attached property only works with Items");
+        qmlWarning(parent) << tr("EnterKey attached property only works with Items");
 }
 
 QQuickEnterKeyAttached *QQuickEnterKeyAttached::qmlAttachedProperties(QObject *object)
@@ -4374,7 +4374,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     }
 
     if (!itemObj && !item->isNull()) {
-        qmlInfo(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
+        qmlWarning(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
         v4->throwTypeError();
         return;
@@ -4462,7 +4462,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     }
 
     if (!itemObj && !item->isNull()) {
-        qmlInfo(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
+        qmlWarning(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
         v4->throwTypeError();
         return;

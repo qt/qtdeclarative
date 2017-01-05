@@ -211,7 +211,7 @@ QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(
     if (p->isError()) {
         if (!errors.contains(url)) {
             errors.insert(url);
-            qmlInfo(parent()) << p->error();
+            qmlWarning(parent()) << p->error();
         }
     }
     return p;

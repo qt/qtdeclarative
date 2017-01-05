@@ -191,7 +191,7 @@ void QQmlAbstractBinding::removeFromObject()
 
 void QQmlAbstractBinding::printBindingLoopError(QQmlProperty &prop)
 {
-    qmlInfo(prop.object()) << QString(QLatin1String("Binding loop detected for property \"%1\"")).arg(prop.name());
+    qmlWarning(prop.object()) << QString(QLatin1String("Binding loop detected for property \"%1\"")).arg(prop.name());
 }
 
 QString QQmlAbstractBinding::expression() const

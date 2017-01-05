@@ -1347,21 +1347,21 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
             if (m_colorTable->pix.isReady())
                 colortable = m_colorTable->pix.image();
             else
-                qmlInfo(this) << "Error loading color table: " << m_colorTable->pix.error();
+                qmlWarning(this) << "Error loading color table: " << m_colorTable->pix.error();
         }
 
         if (m_sizeTable) {
             if (m_sizeTable->pix.isReady())
                 sizetable = m_sizeTable->pix.image();
             else
-                qmlInfo(this) << "Error loading size table: " << m_sizeTable->pix.error();
+                qmlWarning(this) << "Error loading size table: " << m_sizeTable->pix.error();
         }
 
         if (m_opacityTable) {
             if (m_opacityTable->pix.isReady())
                 opacitytable = m_opacityTable->pix.image();
             else
-                qmlInfo(this) << "Error loading opacity table: " << m_opacityTable->pix.error();
+                qmlWarning(this) << "Error loading opacity table: " << m_opacityTable->pix.error();
         }
 
         if (colortable.isNull()){//###Goes through image just for this
@@ -1383,7 +1383,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         if (!imageLoaded) {
             if (!m_image || !m_image->pix.isReady()) {
                 if (m_image)
-                    qmlInfo(this) << m_image->pix.error();
+                    qmlWarning(this) << m_image->pix.error();
                 delete m_material;
                 return;
             }

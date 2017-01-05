@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
     by \a data, which is a block of data previously returned by a call
     to compile().
 
-    Errors should be reported using qmlInfo(object).
+    Errors should be reported using qmlWarning(object).
 
     The \a object will be an instance of the TypeClass specified by QML_REGISTER_CUSTOM_TYPE.
 */

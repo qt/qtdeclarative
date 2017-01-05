@@ -307,7 +307,7 @@ void QQuickDragAttached::setActive(bool active)
     Q_D(QQuickDragAttached);
     if (d->active != active) {
         if (d->inEvent)
-            qmlInfo(this) << "active cannot be changed from within a drag event handler";
+            qmlWarning(this) << "active cannot be changed from within a drag event handler";
         else if (active) {
             if (d->dragType == QQuickDrag::Internal) {
                 d->start(d->supportedActions);
@@ -629,7 +629,7 @@ void QQuickDragAttached::start(QQmlV4Function *args)
 {
     Q_D(QQuickDragAttached);
     if (d->inEvent) {
-        qmlInfo(this) << "start() cannot be called from within a drag event handler";
+        qmlWarning(this) << "start() cannot be called from within a drag event handler";
         return;
     }
 
@@ -675,7 +675,7 @@ int QQuickDragAttached::drop()
     Qt::DropAction acceptedAction = Qt::IgnoreAction;
 
     if (d->inEvent) {
-        qmlInfo(this) << "drop() cannot be called from within a drag event handler";
+        qmlWarning(this) << "drop() cannot be called from within a drag event handler";
         return acceptedAction;
     }
 
@@ -722,7 +722,7 @@ void QQuickDragAttached::cancel()
     Q_D(QQuickDragAttached);
 
     if (d->inEvent) {
-        qmlInfo(this) << "cancel() cannot be called from within a drag event handler";
+        qmlWarning(this) << "cancel() cannot be called from within a drag event handler";
         return;
     }
 
@@ -809,12 +809,12 @@ void QQuickDragAttached::startDrag(QQmlV4Function *args)
     Q_D(QQuickDragAttached);
 
     if (d->inEvent) {
-        qmlInfo(this) << "startDrag() cannot be called from within a drag event handler";
+        qmlWarning(this) << "startDrag() cannot be called from within a drag event handler";
         return;
     }
 
     if (!d->active) {
-        qmlInfo(this) << "startDrag() drag must be active";
+        qmlWarning(this) << "startDrag() drag must be active";
         return;
     }
 

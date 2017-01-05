@@ -137,7 +137,7 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
             if (!delegateValidated) {
                 delegateValidated = true;
                 QObject* delegate = q->delegate();
-                qmlInfo(delegate ? delegate : q) << QQuickPathView::tr("Delegate must be of Item type");
+                qmlWarning(delegate ? delegate : q) << QQuickPathView::tr("Delegate must be of Item type");
             }
         }
     } else {

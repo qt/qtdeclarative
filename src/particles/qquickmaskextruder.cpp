@@ -94,7 +94,7 @@ void QQuickMaskExtruder::startMaskLoading()
 void QQuickMaskExtruder::finishMaskLoading()
 {
     if (m_pix.isError())
-        qmlInfo(this) << m_pix.error();
+        qmlWarning(this) << m_pix.error();
 }
 
 QPointF QQuickMaskExtruder::extrude(const QRectF &r)

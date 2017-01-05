@@ -295,7 +295,7 @@ void QQmlConnections::connectSignals()
             d->boundsignals += signal;
         } else {
             if (!d->ignoreUnknownSignals)
-                qmlInfo(this) << tr("Cannot assign to non-existent property \"%1\"").arg(propName);
+                qmlWarning(this) << tr("Cannot assign to non-existent property \"%1\"").arg(propName);
         }
     }
 }

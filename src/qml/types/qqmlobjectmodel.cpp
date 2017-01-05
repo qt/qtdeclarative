@@ -373,7 +373,7 @@ void QQmlObjectModel::insert(int index, QObject *object)
 {
     Q_D(QQmlObjectModel);
     if (index < 0 || index > count()) {
-        qmlInfo(this) << tr("insert: index %1 out of range").arg(index);
+        qmlWarning(this) << tr("insert: index %1 out of range").arg(index);
         return;
     }
     d->insert(index, object);
@@ -400,7 +400,7 @@ void QQmlObjectModel::move(int from, int to, int n)
     if (n <= 0 || from == to)
         return;
     if (from < 0 || to < 0 || from + n > count() || to + n > count()) {
-        qmlInfo(this) << tr("move: out of range");
+        qmlWarning(this) << tr("move: out of range");
         return;
     }
     d->move(from, to, n);
@@ -418,7 +418,7 @@ void QQmlObjectModel::remove(int index, int n)
 {
     Q_D(QQmlObjectModel);
     if (index < 0 || n <= 0 || index + n > count()) {
-        qmlInfo(this) << tr("remove: indices [%1 - %2] out of range [0 - %3]").arg(index).arg(index+n).arg(count());
+        qmlWarning(this) << tr("remove: indices [%1 - %2] out of range [0 - %3]").arg(index).arg(index+n).arg(count());
         return;
     }
     d->remove(index, n);

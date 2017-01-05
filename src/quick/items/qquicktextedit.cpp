@@ -1741,7 +1741,7 @@ void QQuickTextEdit::select(int start, int end)
 bool QQuickTextEdit::isRightToLeft(int start, int end)
 {
     if (start > end) {
-        qmlInfo(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
+        qmlWarning(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
         return false;
     } else {
         return getText(start, end).isRightToLeft();

@@ -1135,7 +1135,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
                             needToUpdateLayout = true;
                         }
                     } else if (image->pix->isError()) {
-                        qmlInfo(q) << image->pix->error();
+                        qmlWarning(q) << image->pix->error();
                     }
                 }
 

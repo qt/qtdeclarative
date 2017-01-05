@@ -1244,7 +1244,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     if (args->length() >= 2) {
         QV4::ScopedValue v(scope, (*args)[1]);
         if (!v->as<QV4::Object>() || v->as<QV4::ArrayObject>()) {
-            qmlInfo(this) << tr("createObject: value is not an object");
+            qmlWarning(this) << tr("createObject: value is not an object");
             args->setReturnValue(QV4::Encode::null());
             return;
         }
@@ -1361,7 +1361,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
         QV4::ScopedValue v(scope, (*args)[1]);
         if (v->isNull()) {
         } else if (!v->as<QV4::Object>() || v->as<QV4::ArrayObject>()) {
-            qmlInfo(this) << tr("createObject: value is not an object");
+            qmlWarning(this) << tr("createObject: value is not an object");
             args->setReturnValue(QV4::Encode::null());
             return;
         } else {

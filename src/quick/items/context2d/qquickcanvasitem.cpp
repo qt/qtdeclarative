@@ -354,7 +354,7 @@ void QQuickCanvasItem::setContextType(const QString &contextType)
         return;
 
     if (d->context) {
-        qmlInfo(this) << "Canvas already initialized with a different context type";
+        qmlWarning(this) << "Canvas already initialized with a different context type";
         return;
     }
 
@@ -517,7 +517,7 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
     Q_D(QQuickCanvasItem);
     if (d->renderTarget != target) {
         if (d->context) {
-            qmlInfo(this) << "Canvas:renderTarget not changeble once context is active.";
+            qmlWarning(this) << "Canvas:renderTarget not changeble once context is active.";
             return;
         }
 
@@ -561,7 +561,7 @@ void QQuickCanvasItem::setRenderStrategy(QQuickCanvasItem::RenderStrategy strate
     Q_D(QQuickCanvasItem);
     if (d->renderStrategy != strategy) {
         if (d->context) {
-            qmlInfo(this) << "Canvas:renderStrategy not changeable once context is active.";
+            qmlWarning(this) << "Canvas:renderStrategy not changeable once context is active.";
             return;
         }
         d->renderStrategy = strategy;
@@ -840,13 +840,13 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
     QV4::Scope scope(args->v4engine());
     QV4::ScopedString str(scope, (*args)[0]);
     if (!str) {
-        qmlInfo(this) << "getContext should be called with a string naming the required context type";
+        qmlWarning(this) << "getContext should be called with a string naming the required context type";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
 
     if (!d->available) {
-        qmlInfo(this) << "Unable to use getContext() at this time, please wait for available: true";
+        qmlWarning(this) << "Unable to use getContext() at this time, please wait for available: true";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -859,7 +859,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
             return;
         }
 
-        qmlInfo(this) << "Canvas already initialized with a different context type";
+        qmlWarning(this) << "Canvas already initialized with a different context type";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -882,7 +882,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
     QV4::Scope scope(args->v4engine());
     QV4::ScopedFunctionObject f(scope, (*args)[0]);
     if (!f) {
-        qmlInfo(this) << "requestAnimationFrame should be called with an animation callback function";
+        qmlWarning(this) << "requestAnimationFrame should be called with an animation callback function";
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -910,7 +910,7 @@ void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV4Function *args)
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);
     if (!v->isInteger()) {
-        qmlInfo(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
+        qmlWarning(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
         args->setReturnValue(QV4::Encode::null());
         return;
     }

@@ -153,7 +153,7 @@ void QQuickFlipable::setFront(QQuickItem *front)
 {
     Q_D(QQuickFlipable);
     if (d->front) {
-        qmlInfo(this) << tr("front is a write-once property");
+        qmlWarning(this) << tr("front is a write-once property");
         return;
     }
     d->front = front;
@@ -175,7 +175,7 @@ void QQuickFlipable::setBack(QQuickItem *back)
 {
     Q_D(QQuickFlipable);
     if (d->back) {
-        qmlInfo(this) << tr("back is a write-once property");
+        qmlWarning(this) << tr("back is a write-once property");
         return;
     }
     if (back == 0)
