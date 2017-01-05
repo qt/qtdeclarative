@@ -148,6 +148,100 @@ TestCase {
         verify(sequenceSpy.success)
     }
 
+    function test_touch() {
+        var control = createTemporaryObject(button, testCase)
+        verify(control)
+
+        var touch = touchEvent(control)
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
+        // click
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // release outside
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }]]
+        touch.move(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["canceled", { "pressed": false }]]
+        touch.release(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+    }
+
+    function test_multiTouch() {
+        var control1 = createTemporaryObject(button, testCase)
+        verify(control1)
+
+        var pressedCount1 = 0
+
+        var pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
+        verify(pressedSpy1.valid)
+
+        var touch = touchEvent(control1)
+        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width, control1.height).commit()
+
+        compare(pressedSpy1.count, ++pressedCount1)
+        compare(control1.pressed, true)
+
+        // second touch point on the same control is ignored
+        touch.stationary(0).press(1, control1, 0, 0).commit()
+        touch.stationary(0).move(1, control1).commit()
+        touch.stationary(0).release(1).commit()
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(control1.pressed, true)
+
+        var control2 = createTemporaryObject(button, testCase, {y: control1.height})
+        verify(control2)
+        waitForRendering(control2)
+
+        var pressedCount2 = 0
+
+        var pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
+        verify(pressedSpy2.valid)
+
+        // press the second button
+        touch.stationary(0).press(2, control2, 0, 0).commit()
+
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(control2.pressed, true)
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(control1.pressed, true)
+
+        // release both buttons
+        touch.release(0, control1).release(2, control2).commit()
+
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(control2.pressed, false)
+
+        compare(pressedSpy1.count, ++pressedCount1)
+        compare(control1.pressed, false)
+    }
+
     function test_keys() {
         var control = createTemporaryObject(button, testCase)
         verify(control)

@@ -67,7 +67,7 @@ public:
         return button->d_func();
     }
 
-    virtual void handlePress(const QPointF &point, Qt::MouseButton button, Qt::MouseButtons buttons);
+    virtual void handlePress(const QPointF &point, Qt::MouseButton button = Qt::LeftButton, Qt::MouseButtons buttons = Qt::LeftButton);
     virtual void handleMove(const QPointF &point);
     virtual void handleRelease(const QPointF &point);
     virtual void handleCancel();
@@ -95,6 +95,7 @@ public:
     bool autoExclusive;
     bool autoRepeat;
     bool wasHeld;
+    int touchId;
     int holdTimer;
     int delayTimer;
     int repeatTimer;

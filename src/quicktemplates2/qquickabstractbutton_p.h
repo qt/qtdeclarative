@@ -125,6 +125,8 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
     void timerEvent(QTimerEvent *event) override;
+    void touchEvent(QTouchEvent *event) override;
+    void touchUngrabEvent() override;
 
     enum ButtonChange {
         ButtonAutoRepeatChange,

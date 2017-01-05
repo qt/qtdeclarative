@@ -196,6 +196,69 @@ TestCase {
         verify(sequenceSpy.success)
     }
 
+    function test_touch() {
+        var control = createTemporaryObject(checkBox, testCase)
+        verify(control)
+
+        var touch = touchEvent(control)
+
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
+        // check
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        ["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        "toggled",
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.checked, true)
+        compare(control.checkState, Qt.Checked)
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // uncheck
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true, "checkState": Qt.Checked }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true, "checkState": Qt.Checked }],
+                                        ["checkStateChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        ["checkedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }],
+                                        "toggled",
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.checked, false)
+        compare(control.checkState, Qt.Unchecked)
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // release outside
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false, "checkState": Qt.Unchecked }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }]]
+        touch.move(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+        sequenceSpy.expectedSequence = [["canceled", { "pressed": false, "checked": false, "checkState": Qt.Unchecked }]]
+        touch.release(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.checked, false)
+        compare(control.checkState, Qt.Unchecked)
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+    }
+
     function test_keys() {
         var control = createTemporaryObject(checkBox, testCase)
         verify(control)

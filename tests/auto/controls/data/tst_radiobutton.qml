@@ -156,6 +156,60 @@ TestCase {
         verify(sequenceSpy.success)
     }
 
+    function test_touch() {
+        var control = createTemporaryObject(radioButton, testCase)
+        verify(control)
+
+        var touch = touchEvent(control)
+
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
+        // check
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                        ["checkedChanged", { "pressed": false, "checked": true }],
+                                        "toggled",
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // attempt uncheck
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // release outside
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }]]
+        touch.move(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.pressed, false)
+        sequenceSpy.expectedSequence = [["canceled", { "pressed": false, "checked": true }]]
+        touch.release(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+    }
+
     function test_keys() {
         var control = createTemporaryObject(radioButton, testCase)
         verify(control)

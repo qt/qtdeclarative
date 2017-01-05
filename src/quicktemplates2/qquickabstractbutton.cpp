@@ -121,6 +121,7 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       autoExclusive(false),
       autoRepeat(false),
       wasHeld(false),
+      touchId(-1),
       holdTimer(0),
       delayTimer(0),
       repeatTimer(0),
@@ -164,6 +165,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
     Q_Q(QQuickAbstractButton);
     bool wasPressed = pressed;
     q->setPressed(false);
+    touchId = -1;
 
     if (!wasHeld && (keepPressed || q->contains(point)))
         q->nextCheckState();
@@ -189,6 +191,7 @@ void QQuickAbstractButtonPrivate::handleCancel()
         return;
 
     q->setPressed(false);
+    touchId = -1;
     stopPressRepeat();
     stopPressAndHold();
     emit q->canceled();
@@ -657,6 +660,63 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
         emit clicked();
         emit pressed();
     }
+}
+
+void QQuickAbstractButton::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickAbstractButton);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        if (d->touchId == -1) {
+            const QTouchEvent::TouchPoint point = event->touchPoints().first();
+            d->touchId = point.id();
+            d->handlePress(point.pos());
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId)
+                continue;
+
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                d->handlePress(point.pos());
+                break;
+            case Qt::TouchPointMoved:
+                d->handleMove(point.pos());
+                break;
+            case Qt::TouchPointReleased:
+                d->handleRelease(point.pos());
+                break;
+            default:
+                break;
+            }
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() == d->touchId)
+                d->handleRelease(point.pos());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleCancel();
+        break;
+
+    default:
+        QQuickControl::touchEvent(event);
+        break;
+    }
+}
+
+void QQuickAbstractButton::touchUngrabEvent()
+{
+    Q_D(QQuickAbstractButton);
+    QQuickControl::touchUngrabEvent();
+    d->handleCancel();
 }
 
 void QQuickAbstractButton::buttonChange(ButtonChange change)

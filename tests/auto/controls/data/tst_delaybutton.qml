@@ -169,6 +169,81 @@ TestCase {
         verify(sequenceSpy.success)
     }
 
+    function test_touch() {
+        var control = createTemporaryObject(delayButton, testCase)
+        verify(control)
+
+        var touch = touchEvent(control)
+
+        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+
+        // click
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
+                                        "pressed",
+                                        ["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
+                                        "released",
+                                        "clicked"]
+        touch.press(0, control).commit()
+        touch.release(0, control).commit()
+        verify(sequenceSpy.success)
+
+        // check
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
+                                        "pressed",
+                                        "activated"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        tryVerify(function() { return sequenceSpy.success})
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
+                                        ["checkedChanged", { "checked": true }],
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // uncheck
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }],
+                                        ["checkedChanged", { "checked": false }],
+                                        "released",
+                                        "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        // release outside
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        ["downChanged", { "down": true }],
+                                        "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        ["downChanged", { "down": false }]]
+        touch.move(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+
+        sequenceSpy.expectedSequence = [["canceled", { "pressed": false }]]
+        touch.release(0, control, control.width * 2, control.height * 2).commit()
+        compare(control.pressed, false)
+        verify(sequenceSpy.success)
+    }
+
     function test_keys() {
         var control = createTemporaryObject(delayButton, testCase)
         verify(control)
