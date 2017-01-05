@@ -270,23 +270,22 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 }
 
-ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
+void FunctionPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    FunctionObject *fun = ctx->thisObject().as<FunctionObject>();
+    FunctionObject *fun = callData->thisObject.as<FunctionObject>();
     if (!fun)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return ctx->d()->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
+    scope.result = scope.engine->newString(QStringLiteral("function() { [code] }"));
 }
 
-ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
+void FunctionPrototype::method_apply(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    FunctionObject *o = ctx->thisObject().as<FunctionObject>();
+    FunctionObject *o = callData->thisObject.as<FunctionObject>();
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    Scope scope(ctx);
-    ScopedValue arg(scope, ctx->argument(1));
+    ScopedValue arg(scope, callData->argument(1));
 
     ScopedObject arr(scope, arg);
 
@@ -294,75 +293,71 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     if (!arr) {
         len = 0;
         if (!arg->isNullOrUndefined())
-            return ctx->engine()->throwTypeError();
+            THROW_TYPE_ERROR();
     } else {
         len = arr->getLength();
     }
 
-    ScopedCallData callData(scope, len);
+    ScopedCallData cData(scope, len);
 
     if (len) {
         if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
             QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
             int l = qMin(len, (uint)a->d()->context->callData->argc);
-            memcpy(callData->args, a->d()->context->callData->args, l*sizeof(Value));
+            memcpy(cData->args, a->d()->context->callData->args, l*sizeof(Value));
             for (quint32 i = l; i < len; ++i)
-                callData->args[i] = Primitive::undefinedValue();
+                cData->args[i] = Primitive::undefinedValue();
         } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
             auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
             uint alen = sad ? sad->len : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
-                callData->args[i] = sad->data(i);
+                cData->args[i] = sad->data(i);
             for (quint32 i = alen; i < len; ++i)
-                callData->args[i] = Primitive::undefinedValue();
+                cData->args[i] = Primitive::undefinedValue();
         } else {
             for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = arr->getIndexed(i);
+                cData->args[i] = arr->getIndexed(i);
         }
     }
 
-    callData->thisObject = ctx->argument(0);
-    o->call(scope, callData);
-    return scope.result.asReturnedValue();
+    cData->thisObject = callData->argument(0);
+    o->call(scope, cData);
 }
 
-ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
+void FunctionPrototype::method_call(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    FunctionObject *o = ctx->thisObject().as<FunctionObject>();
+    FunctionObject *o = callData->thisObject.as<FunctionObject>();
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    Scope scope(ctx);
-    ScopedCallData callData(scope, ctx->argc() ? ctx->argc() - 1 : 0);
-    if (ctx->argc()) {
-        for (int i = 1; i < ctx->argc(); ++i)
-            callData->args[i - 1] = ctx->args()[i];
+    ScopedCallData cData(scope, callData->argc ? callData->argc - 1 : 0);
+    if (callData->argc) {
+        for (int i = 1; i < callData->argc; ++i)
+            cData->args[i - 1] = callData->args[i];
     }
-    callData->thisObject = ctx->argument(0);
+    cData->thisObject = callData->argument(0);
 
-    o->call(scope, callData);
-    return scope.result.asReturnedValue();
+    o->call(scope, cData);
 }
 
-ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
+void FunctionPrototype::method_bind(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    FunctionObject *target = ctx->thisObject().as<FunctionObject>();
+    FunctionObject *target = callData->thisObject.as<FunctionObject>();
     if (!target)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    Scope scope(ctx);
-    ScopedValue boundThis(scope, ctx->argument(0));
+    ScopedValue boundThis(scope, callData->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
-    if (ctx->argc() > 1) {
-        boundArgs = MemberData::allocate(scope.engine, ctx->argc() - 1);
-        boundArgs->d()->size = ctx->argc() - 1;
-        memcpy(boundArgs->data(), ctx->args() + 1, (ctx->argc() - 1)*sizeof(Value));
+    if (callData->argc > 1) {
+        boundArgs = MemberData::allocate(scope.engine, callData->argc - 1);
+        boundArgs->d()->size = callData->argc - 1;
+        memcpy(boundArgs->data(), callData->args + 1, (callData->argc - 1)*sizeof(Value));
     }
 
     ExecutionContext *global = scope.engine->rootContext();
-    return BoundFunction::create(global, target, boundThis, boundArgs)->asReturnedValue();
+    scope.result = BoundFunction::create(global, target, boundThis, boundArgs);
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);

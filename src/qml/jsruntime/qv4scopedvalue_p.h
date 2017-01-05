@@ -71,14 +71,14 @@ struct ScopedValue;
 #define CHECK_EXCEPTION() \
     do { \
         if (scope.hasException()) { \
-            scope.result = Encode::undefined(); \
+            scope.result = QV4::Encode::undefined(); \
             return; \
         } \
     } while (false)
 
 #define RETURN_UNDEFINED() \
     do { \
-        scope.result = Encode::undefined(); \
+        scope.result = QV4::Encode::undefined(); \
         return; \
     } while (false)
 

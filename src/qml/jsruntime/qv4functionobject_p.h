@@ -184,10 +184,10 @@ struct FunctionPrototype: FunctionObject
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_apply(CallContext *ctx);
-    static ReturnedValue method_call(CallContext *ctx);
-    static ReturnedValue method_bind(CallContext *ctx);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_apply(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_call(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {

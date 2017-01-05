@@ -149,17 +149,17 @@ struct RegExpPrototype: RegExpObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_exec(CallContext *ctx);
-    static ReturnedValue method_test(CallContext *ctx);
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_compile(CallContext *ctx);
+    static void method_exec(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_test(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_compile(const BuiltinFunction *, Scope &scope, CallData *callData);
 
     template <int index>
-    static ReturnedValue method_get_lastMatch_n(CallContext *ctx);
-    static ReturnedValue method_get_lastParen(CallContext *ctx);
-    static ReturnedValue method_get_input(CallContext *ctx);
-    static ReturnedValue method_get_leftContext(CallContext *ctx);
-    static ReturnedValue method_get_rightContext(CallContext *ctx);
+    static void method_get_lastMatch_n(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_get_lastParen(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_get_input(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_get_leftContext(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_get_rightContext(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 }
