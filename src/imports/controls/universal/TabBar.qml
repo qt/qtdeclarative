@@ -42,14 +42,13 @@ T.TabBar {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             contentHeight + topPadding + bottomPadding)
+
+    contentHeight: 48
 
     contentItem: PathView {
-        implicitWidth: 200
-        implicitHeight: 48
-
         model: control.contentModel
         currentIndex: control.currentIndex
 
