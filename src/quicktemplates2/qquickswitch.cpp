@@ -186,10 +186,14 @@ void QQuickSwitch::mirrorChange()
 void QQuickSwitch::nextCheckState()
 {
     Q_D(QQuickSwitch);
-    if (keepMouseGrab())
+    if (keepMouseGrab()) {
         setChecked(d->position > 0.5);
-    else
+        // the checked state might not change => force a position update to
+        // avoid that the handle is left somewhere in the middle (QTBUG-57944)
+        checkStateSet();
+    } else {
         QQuickAbstractButton::nextCheckState();
+    }
 }
 
 void QQuickSwitch::checkStateSet()
