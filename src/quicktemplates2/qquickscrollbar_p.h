@@ -65,6 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL REVISION 2)
 
 public:
     explicit QQuickScrollBar(QQuickItem *parent = nullptr);
@@ -86,6 +87,16 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
+    enum SnapMode {
+        NoSnap,
+        SnapAlways,
+        SnapOnRelease
+    };
+    Q_ENUM(SnapMode)
+
+    SnapMode snapMode() const;
+    void setSnapMode(SnapMode mode);
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -99,6 +110,7 @@ Q_SIGNALS:
     void activeChanged();
     void pressedChanged();
     void orientationChanged();
+    void snapModeChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

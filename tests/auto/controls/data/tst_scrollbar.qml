@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
@@ -338,5 +338,76 @@ TestCase {
         mouseMove(control, -1, -1)
         compare(control.hovered, false)
         compare(control.active, false)
+    }
+
+    function test_snapMode_data() {
+        return [
+            { tag: "NoSnap", snapMode: ScrollBar.NoSnap, stepSize: 0.1, size: 0.2, width: 100, steps: 80 }, /* 0.8*100 */
+            { tag: "NoSnap2", snapMode: ScrollBar.NoSnap, stepSize: 0.2, size: 0.1, width: 200, steps: 180 }, /* 0.9*200 */
+
+            { tag: "SnapAlways", snapMode: ScrollBar.SnapAlways, stepSize: 0.1, size: 0.2, width: 100, steps: 10 },
+            { tag: "SnapAlways2", snapMode: ScrollBar.SnapAlways, stepSize: 0.2, size: 0.1, width: 200, steps: 5 },
+
+            { tag: "SnapOnRelease", snapMode: ScrollBar.SnapOnRelease, stepSize: 0.1, size: 0.2, width: 100, steps: 80 }, /* 0.8*100 */
+            { tag: "SnapOnRelease2", snapMode: ScrollBar.SnapOnRelease, stepSize: 0.2, size: 0.1, width: 200, steps: 180 }, /* 0.9*200 */
+        ]
+    }
+
+    function test_snapMode_mouse_data() {
+        return test_snapMode_data()
+    }
+
+    function test_snapMode_mouse(data) {
+        var control = createTemporaryObject(scrollBar, testCase, {snapMode: data.snapMode, orientation: Qt.Horizontal, stepSize: data.stepSize, size: data.size, width: data.width})
+        verify(control)
+
+        function snappedPosition(pos) {
+            var effectiveStep = control.stepSize * (1.0 - control.size)
+            return Math.round(pos / effectiveStep) * effectiveStep
+        }
+
+        function boundPosition(pos) {
+            return Math.max(0, Math.min(pos, 1.0 - control.size))
+        }
+
+        mousePress(control, 0, 0)
+        compare(control.position, 0)
+
+        mouseMove(control, control.width * 0.3, 0)
+        var expectedMovePos = 0.3
+        if (control.snapMode === ScrollBar.SnapAlways) {
+            expectedMovePos = snappedPosition(expectedMovePos)
+            verify(expectedMovePos !== 0.3)
+        }
+        compare(control.position, expectedMovePos)
+
+        mouseRelease(control, control.width * 0.75, 0)
+        var expectedReleasePos = 0.75
+        if (control.snapMode !== ScrollBar.NoSnap) {
+            expectedReleasePos = snappedPosition(expectedReleasePos)
+            verify(expectedReleasePos !== 0.75)
+        }
+        compare(control.position, expectedReleasePos)
+
+        control.position = 0
+        mousePress(control, 0, 0)
+
+        var steps = 0
+        var prevPos = 0
+
+        for (var x = 0; x < control.width; ++x) {
+            mouseMove(control, x, 0)
+            expectedMovePos = boundPosition(x / control.width)
+            if (control.snapMode === ScrollBar.SnapAlways)
+                expectedMovePos = snappedPosition(expectedMovePos)
+            compare(control.position, expectedMovePos)
+
+            if (control.position !== prevPos)
+                ++steps
+            prevPos = control.position
+        }
+        compare(steps, data.steps)
+
+        mouseRelease(control, control.width - 1, 0)
     }
 }

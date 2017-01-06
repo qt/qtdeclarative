@@ -158,7 +158,7 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
 public:
     QQuickScrollBarPrivate() : size(0), position(0), stepSize(0), offset(0),
         active(false), pressed(false), moving(false),
-        orientation(Qt::Vertical)
+        orientation(Qt::Vertical), snapMode(QQuickScrollBar::NoSnap)
     {
     }
 
@@ -167,6 +167,7 @@ public:
         return bar->d_func();
     }
 
+    qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
     void updateActive();
     void resizeContent() override;
@@ -184,7 +185,17 @@ public:
     bool pressed;
     bool moving;
     Qt::Orientation orientation;
+    QQuickScrollBar::SnapMode snapMode;
 };
+
+qreal QQuickScrollBarPrivate::snapPosition(qreal position) const
+{
+    const qreal effectiveStep = stepSize * (1.0 - size);
+    if (qFuzzyIsNull(effectiveStep))
+        return position;
+
+    return qRound(position / effectiveStep) * effectiveStep;
+}
 
 qreal QQuickScrollBarPrivate::positionAt(const QPointF &point) const
 {
@@ -228,13 +239,19 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point)
 void QQuickScrollBarPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
-    q->setPosition(qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size));
+    qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
+    if (snapMode == QQuickScrollBar::SnapAlways)
+        pos = snapPosition(pos);
+    q->setPosition(pos);
 }
 
 void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
-    q->setPosition(qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size));
+    qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
+    if (snapMode != QQuickScrollBar::NoSnap)
+        pos = snapPosition(pos);
+    q->setPosition(pos);
     offset = 0.0;
     q->setPressed(false);
 }
@@ -325,7 +342,7 @@ void QQuickScrollBar::setPosition(qreal position)
 
     This property holds the step size. The default value is \c 0.0.
 
-    \sa increase(), decrease()
+    \sa snapMode, increase(), decrease()
 */
 qreal QQuickScrollBar::stepSize() const
 {
@@ -422,6 +439,46 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
     if (isComponentComplete())
         d->resizeContent();
     emit orientationChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty enumeration QtQuick.Controls::ScrollBar::snapMode
+
+    This property holds the snap mode.
+
+    Possible values:
+    \value ScrollBar.NoSnap The scrollbar does not snap (default).
+    \value ScrollBar.SnapAlways The scrollbar snaps while dragged.
+    \value ScrollBar.SnapOnRelease The scrollbar does not snap while being dragged, but only after released.
+
+    In the following table, the various modes are illustrated with animations.
+    The movement and the \l stepSize (\c 0.25) are identical in each animation.
+
+    \table
+    \header
+        \row \li \b Value \li \b Example
+        \row \li \c ScrollBar.NoSnap \li \image qtquickcontrols2-scrollbar-nosnap.gif
+        \row \li \c ScrollBar.SnapAlways \li \image qtquickcontrols2-scrollbar-snapalways.gif
+        \row \li \c ScrollBar.SnapOnRelease \li \image qtquickcontrols2-scrollbar-snaponrelease.gif
+    \endtable
+
+    \sa stepSize
+*/
+QQuickScrollBar::SnapMode QQuickScrollBar::snapMode() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->snapMode;
+}
+
+void QQuickScrollBar::setSnapMode(SnapMode mode)
+{
+    Q_D(QQuickScrollBar);
+    if (d->snapMode == mode)
+        return;
+
+    d->snapMode = mode;
+    emit snapModeChanged();
 }
 
 /*!
