@@ -175,7 +175,7 @@ void QQuickLabelPrivate::deleteDelegate(QObject *delegate)
 {
     if (componentComplete)
         delete delegate;
-    else
+    else if (delegate)
         pendingDeletions.append(delegate);
 }
 

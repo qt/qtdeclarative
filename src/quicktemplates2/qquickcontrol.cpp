@@ -850,7 +850,7 @@ void QQuickControlPrivate::deleteDelegate(QObject *delegate)
 {
     if (componentComplete)
         delete delegate;
-    else
+    else if (delegate)
         extra.value().pendingDeletions.append(delegate);
 }
 
