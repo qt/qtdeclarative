@@ -67,13 +67,23 @@ struct Binop {
         , op(operation)
     {}
 
+    using Jump = Assembler::Jump;
+    using Address = Assembler::Address;
+    using RegisterID = Assembler::RegisterID;
+    using FPRegisterID = Assembler::FPRegisterID;
+    using TrustedImm32 = Assembler::TrustedImm32;
+    using ResultCondition = Assembler::ResultCondition;
+    using RelationalCondition = Assembler::RelationalCondition;
+    using Pointer = Assembler::Pointer;
+    using PointerToValue = Assembler::PointerToValue;
+
     void generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target);
     void doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target);
     bool int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
-    Assembler::Jump genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
+    Jump genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
 
-    typedef Assembler::Jump (Binop::*MemRegOp)(Assembler::Address, Assembler::RegisterID);
-    typedef Assembler::Jump (Binop::*ImmRegOp)(Assembler::TrustedImm32, Assembler::RegisterID);
+    typedef Jump (Binop::*MemRegOp)(Address, RegisterID);
+    typedef Jump (Binop::*ImmRegOp)(TrustedImm32, RegisterID);
 
     struct OpInfo {
         const char *name;
@@ -88,97 +98,97 @@ struct Binop {
     static const OpInfo &operation(IR::AluOp operation)
     { return operations[operation]; }
 
-    Assembler::Jump inline_add32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_add32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
-        return as->branchAdd32(Assembler::Overflow, addr, reg);
+        return as->branchAdd32(ResultCondition::Overflow, addr, reg);
 #else
         as->load32(addr, Assembler::ScratchRegister);
-        return as->branchAdd32(Assembler::Overflow, Assembler::ScratchRegister, reg);
+        return as->branchAdd32(ResultCondition::Overflow, Assembler::ScratchRegister, reg);
 #endif
     }
 
-    Assembler::Jump inline_add32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_add32(TrustedImm32 imm, RegisterID reg)
     {
-        return as->branchAdd32(Assembler::Overflow, imm, reg);
+        return as->branchAdd32(ResultCondition::Overflow, imm, reg);
     }
 
-    Assembler::Jump inline_sub32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_sub32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
-        return as->branchSub32(Assembler::Overflow, addr, reg);
+        return as->branchSub32(ResultCondition::Overflow, addr, reg);
 #else
         as->load32(addr, Assembler::ScratchRegister);
-        return as->branchSub32(Assembler::Overflow, Assembler::ScratchRegister, reg);
+        return as->branchSub32(ResultCondition::Overflow, Assembler::ScratchRegister, reg);
 #endif
     }
 
-    Assembler::Jump inline_sub32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_sub32(TrustedImm32 imm, RegisterID reg)
     {
-        return as->branchSub32(Assembler::Overflow, imm, reg);
+        return as->branchSub32(ResultCondition::Overflow, imm, reg);
     }
 
-    Assembler::Jump inline_mul32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_mul32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         return as->branchMul32(Assembler::Overflow, addr, reg);
 #else
         as->load32(addr, Assembler::ScratchRegister);
-        return as->branchMul32(Assembler::Overflow, Assembler::ScratchRegister, reg);
+        return as->branchMul32(ResultCondition::Overflow, Assembler::ScratchRegister, reg);
 #endif
     }
 
-    Assembler::Jump inline_mul32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_mul32(TrustedImm32 imm, RegisterID reg)
     {
-        return as->branchMul32(Assembler::Overflow, imm, reg, reg);
+        return as->branchMul32(ResultCondition::Overflow, imm, reg, reg);
     }
 
-    Assembler::Jump inline_shl32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_shl32(Address addr, RegisterID reg)
     {
         as->load32(addr, Assembler::ScratchRegister);
-        as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+        as->and32(TrustedImm32(0x1f), Assembler::ScratchRegister);
         as->lshift32(Assembler::ScratchRegister, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_shl32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_shl32(TrustedImm32 imm, RegisterID reg)
     {
         imm.m_value &= 0x1f;
         as->lshift32(imm, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_shr32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_shr32(Address addr, RegisterID reg)
     {
         as->load32(addr, Assembler::ScratchRegister);
-        as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+        as->and32(TrustedImm32(0x1f), Assembler::ScratchRegister);
         as->rshift32(Assembler::ScratchRegister, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_shr32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_shr32(TrustedImm32 imm, RegisterID reg)
     {
         imm.m_value &= 0x1f;
         as->rshift32(imm, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_ushr32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_ushr32(Address addr, RegisterID reg)
     {
         as->load32(addr, Assembler::ScratchRegister);
-        as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
+        as->and32(TrustedImm32(0x1f), Assembler::ScratchRegister);
         as->urshift32(Assembler::ScratchRegister, reg);
-        return as->branchTest32(Assembler::Signed, reg, reg);
+        return as->branchTest32(ResultCondition::Signed, reg, reg);
     }
 
-    Assembler::Jump inline_ushr32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_ushr32(TrustedImm32 imm, RegisterID reg)
     {
         imm.m_value &= 0x1f;
         as->urshift32(imm, reg);
-        return as->branchTest32(Assembler::Signed, reg, reg);
+        return as->branchTest32(ResultCondition::Signed, reg, reg);
     }
 
-    Assembler::Jump inline_and32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_and32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         as->and32(addr, reg);
@@ -186,16 +196,16 @@ struct Binop {
         as->load32(addr, Assembler::ScratchRegister);
         as->and32(Assembler::ScratchRegister, reg);
 #endif
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_and32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_and32(TrustedImm32 imm, RegisterID reg)
     {
         as->and32(imm, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_or32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_or32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         as->or32(addr, reg);
@@ -203,16 +213,16 @@ struct Binop {
         as->load32(addr, Assembler::ScratchRegister);
         as->or32(Assembler::ScratchRegister, reg);
 #endif
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_or32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_or32(TrustedImm32 imm, RegisterID reg)
     {
         as->or32(imm, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_xor32(Assembler::Address addr, Assembler::RegisterID reg)
+    Jump inline_xor32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         as->xor32(addr, reg);
@@ -220,13 +230,13 @@ struct Binop {
         as->load32(addr, Assembler::ScratchRegister);
         as->xor32(Assembler::ScratchRegister, reg);
 #endif
-        return Assembler::Jump();
+        return Jump();
     }
 
-    Assembler::Jump inline_xor32(Assembler::TrustedImm32 imm, Assembler::RegisterID reg)
+    Jump inline_xor32(TrustedImm32 imm, RegisterID reg)
     {
         as->xor32(imm, reg);
-        return Assembler::Jump();
+        return Jump();
     }
 
 
