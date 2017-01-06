@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.2 as T
+import QtQuick.Controls 2.2
+import QtQuick.Controls.impl 2.2
 import QtQuick.Controls.Universal 2.2
 
 T.TextArea {
@@ -60,7 +62,7 @@ T.TextArea {
     selectionColor: Universal.accent
     selectedTextColor: Universal.chromeWhiteColor
 
-    Text {
+    PlaceholderText {
         id: placeholder
         x: control.leftPadding
         y: control.topPadding
@@ -72,7 +74,6 @@ T.TextArea {
         color: !control.enabled ? control.Universal.chromeDisabledLowColor :
                 control.activeFocus ? control.Universal.chromeBlackMediumLowColor : control.Universal.baseMediumColor
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
-        horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         elide: Text.ElideRight
     }

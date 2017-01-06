@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
@@ -34,41 +34,40 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Controls 2.2
-import QtQuick.Controls.impl 2.2
-import QtQuick.Templates 2.2 as T
+#include "qquickplaceholdertext_p.h"
 
-T.TextArea {
-    id: control
+#include <QtQuick/private/qquicktext_p_p.h>
+#include <QtQuick/private/qquicktextinput_p_p.h>
+#include <QtQuick/private/qquicktextedit_p_p.h>
 
-    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
-                             background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+QT_BEGIN_NAMESPACE
 
-    padding: 6
-    leftPadding: padding + 4
+QQuickPlaceholderText::QQuickPlaceholderText(QQuickItem *parent) : QQuickText(parent)
+{
+}
 
-    opacity: enabled ? 1 : 0.2
-    color: Default.textColor
-    selectionColor: Default.textSelectionColor
-    selectedTextColor: color
+void QQuickPlaceholderText::componentComplete()
+{
+    QQuickText::componentComplete();
+    connect(parentItem(), SIGNAL(effectiveHorizontalAlignmentChanged()), this, SLOT(updateAlignment()));
+    updateAlignment();
+}
 
-    PlaceholderText {
-        id: placeholder
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.width - (control.leftPadding + control.rightPadding)
-        height: control.height - (control.topPadding + control.bottomPadding)
-
-        text: control.placeholderText
-        font: control.font
-        color: Default.textDisabledLightColor
-        verticalAlignment: control.verticalAlignment
-        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
-        elide: Text.ElideRight
+void QQuickPlaceholderText::updateAlignment()
+{
+    if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(parentItem())) {
+        if (QQuickTextInputPrivate::get(input)->hAlignImplicit)
+            resetHAlign();
+        else
+            setHAlign(static_cast<HAlignment>(input->hAlign()));
+    } else if (QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(parentItem())) {
+        if (QQuickTextEditPrivate::get(edit)->hAlignImplicit)
+            resetHAlign();
+        else
+            setHAlign(static_cast<HAlignment>(edit->hAlign()));
+    } else {
+        resetHAlign();
     }
 }
+
+QT_END_NAMESPACE

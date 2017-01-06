@@ -58,7 +58,7 @@ T.TextField {
     selectedTextColor: color
     verticalAlignment: TextInput.AlignVCenter
 
-    Text {
+    PlaceholderText {
         id: placeholder
         x: control.leftPadding
         y: control.topPadding
@@ -68,7 +68,6 @@ T.TextField {
         text: control.placeholderText
         font: control.font
         color: Default.textDisabledColor
-        horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight

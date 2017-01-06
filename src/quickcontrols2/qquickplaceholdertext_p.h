@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
@@ -34,41 +34,41 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Controls 2.2
-import QtQuick.Controls.impl 2.2
-import QtQuick.Templates 2.2 as T
+#ifndef QQUICKPLACEHOLDERTEXT_P_H
+#define QQUICKPLACEHOLDERTEXT_P_H
 
-T.TextArea {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
-                             background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + topPadding + bottomPadding)
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
-    padding: 6
-    leftPadding: padding + 4
+QT_BEGIN_NAMESPACE
 
-    opacity: enabled ? 1 : 0.2
-    color: Default.textColor
-    selectionColor: Default.textSelectionColor
-    selectedTextColor: color
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickPlaceholderText : public QQuickText
+{
+    Q_OBJECT
 
-    PlaceholderText {
-        id: placeholder
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.width - (control.leftPadding + control.rightPadding)
-        height: control.height - (control.topPadding + control.bottomPadding)
+public:
+    explicit QQuickPlaceholderText(QQuickItem *parent = nullptr);
 
-        text: control.placeholderText
-        font: control.font
-        color: Default.textDisabledLightColor
-        verticalAlignment: control.verticalAlignment
-        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
-        elide: Text.ElideRight
-    }
-}
+protected:
+    void componentComplete() override;
+
+private Q_SLOTS:
+    void updateAlignment();
+};
+
+QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickPlaceholderText)
+
+#endif // QQUICKPLACEHOLDERTEXT_P_H

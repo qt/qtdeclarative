@@ -1,6 +1,7 @@
 HEADERS += \
     $$PWD/qquickanimatednode_p.h \
     $$PWD/qquickcolorimageprovider_p.h \
+    $$PWD/qquickplaceholdertext_p.h \
     $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickstyle.h \
     $$PWD/qquickstyle_p.h \
@@ -14,6 +15,7 @@ HEADERS += \
 SOURCES += \
     $$PWD/qquickanimatednode.cpp \
     $$PWD/qquickcolorimageprovider.cpp \
+    $$PWD/qquickplaceholdertext.cpp \
     $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickstyle.cpp \
     $$PWD/qquickstyleattached.cpp \
