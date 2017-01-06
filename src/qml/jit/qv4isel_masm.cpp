@@ -93,8 +93,8 @@ void InstructionSelection::run(int functionIndex)
     opt.run(qmlEngine);
 
     static const bool withRegisterAllocator = qEnvironmentVariableIsEmpty("QV4_NO_REGALLOC");
-    if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
-        RegisterAllocator regalloc(Assembler::getRegisterInfo());
+    if (JITTargetPlatform::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
+        RegisterAllocator regalloc(JITTargetPlatform::getRegisterInfo());
         regalloc.run(_function, opt);
         calculateRegistersToSave(regalloc.usedRegisters());
     } else {
@@ -103,7 +103,7 @@ void InstructionSelection::run(int functionIndex)
             opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
         IR::Optimizer::showMeTheCode(_function, "After stack slot allocation");
-        calculateRegistersToSave(Assembler::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
+        calculateRegistersToSave(JITTargetPlatform::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
     }
     BitVector removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
@@ -116,34 +116,34 @@ void InstructionSelection::run(int functionIndex)
     _as->enterStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
 
 #ifdef ARGUMENTS_IN_REGISTERS
-    _as->move(_as->registerForArgument(0), Assembler::EngineRegister);
+    _as->move(_as->registerForArgument(0), JITTargetPlatform::EngineRegister);
 #else
-    _as->loadPtr(addressForArgument(0), Assembler::EngineRegister);
+    _as->loadPtr(addressForArgument(0), JITTargetPlatform::EngineRegister);
 #endif
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     if (locals > 0) {
-        _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
+        _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), JITTargetPlatform::LocalsRegister);
 #ifdef VALUE_FITS_IN_REGISTER
-        _as->move(Assembler::TrustedImm64(0), Assembler::ReturnValueRegister);
-        _as->move(Assembler::TrustedImm32(locals), Assembler::ScratchRegister);
-        Assembler::Label loop = _as->label();
-        _as->store64(Assembler::ReturnValueRegister, Assembler::Address(Assembler::LocalsRegister));
-        _as->add64(Assembler::TrustedImm32(8), Assembler::LocalsRegister);
-        Assembler::Jump jump = _as->branchSub32(Assembler::NonZero, Assembler::TrustedImm32(1), Assembler::ScratchRegister);
+        _as->move(TrustedImm64(0), JITTargetPlatform::ReturnValueRegister);
+        _as->move(TrustedImm32(locals), JITTargetPlatform::ScratchRegister);
+        Label loop = _as->label();
+        _as->store64(JITTargetPlatform::ReturnValueRegister, Address(JITTargetPlatform::LocalsRegister));
+        _as->add64(TrustedImm32(8), JITTargetPlatform::LocalsRegister);
+        Jump jump = _as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), JITTargetPlatform::ScratchRegister);
         jump.linkTo(loop, _as);
 #else
-        _as->move(Assembler::TrustedImm32(0), Assembler::ReturnValueRegister);
-        _as->move(Assembler::TrustedImm32(locals), Assembler::ScratchRegister);
-        Assembler::Label loop = _as->label();
-        _as->store32(Assembler::ReturnValueRegister, Assembler::Address(Assembler::LocalsRegister));
-        _as->add32(Assembler::TrustedImm32(4), Assembler::LocalsRegister);
-        _as->store32(Assembler::ReturnValueRegister, Assembler::Address(Assembler::LocalsRegister));
-        _as->add32(Assembler::TrustedImm32(4), Assembler::LocalsRegister);
-        Assembler::Jump jump = _as->branchSub32(Assembler::NonZero, Assembler::TrustedImm32(1), Assembler::ScratchRegister);
+        _as->move(TrustedImm32(0), JITTargetPlatform::ReturnValueRegister);
+        _as->move(TrustedImm32(locals), JITTargetPlatform::ScratchRegister);
+        Label loop = _as->label();
+        _as->store32(JITTargetPlatform::ReturnValueRegister, Address(JITTargetPlatform::LocalsRegister));
+        _as->add32(TrustedImm32(4), JITTargetPlatform::LocalsRegister);
+        _as->store32(JITTargetPlatform::ReturnValueRegister, Address(JITTargetPlatform::LocalsRegister));
+        _as->add32(TrustedImm32(4), JITTargetPlatform::LocalsRegister);
+        Jump jump = _as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), JITTargetPlatform::ScratchRegister);
         jump.linkTo(loop, _as);
 #endif
-        _as->storePtr(Assembler::LocalsRegister, Address(Assembler::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+        _as->storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
     }
 
 
@@ -158,9 +158,9 @@ void InstructionSelection::run(int functionIndex)
         for (IR::Stmt *s : _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
-                    _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
-                    Assembler::Address lineAddr(Assembler::ScratchRegister, qOffsetOf(QV4::ExecutionContext::Data, lineNumber));
-                    _as->store32(Assembler::TrustedImm32(s->location.startLine), lineAddr);
+                    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
+                    Address lineAddr(JITTargetPlatform::ScratchRegister, qOffsetOf(QV4::ExecutionContext::Data, lineNumber));
+                    _as->store32(TrustedImm32(s->location.startLine), lineAddr);
                     lastLine = s->location.startLine;
                 }
             }
@@ -195,13 +195,13 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
         generateRuntimeCall(result, callGlobalLookup,
-                             Assembler::EngineRegister,
-                             Assembler::TrustedImm32(index),
+                             JITTargetPlatform::EngineRegister,
+                             TrustedImm32(index),
                              baseAddressForCallData());
     } else {
         generateRuntimeCall(result, callActivationProperty,
-                             Assembler::EngineRegister,
-                             Assembler::StringToIndex(*func->id),
+                             JITTargetPlatform::EngineRegister,
+                             StringToIndex(*func->id),
                              baseAddressForCallData());
     }
 }
@@ -211,13 +211,13 @@ void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base,
                                                                int propertyIndex, IR::Expr *result)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject) {
-        generateRuntimeCall(result, typeofScopeObjectProperty, Assembler::EngineRegister,
-                             Assembler::PointerToValue(base),
-                             Assembler::TrustedImm32(propertyIndex));
+        generateRuntimeCall(result, typeofScopeObjectProperty, JITTargetPlatform::EngineRegister,
+                             PointerToValue(base),
+                             TrustedImm32(propertyIndex));
     } else if (kind == IR::Member::MemberOfQmlContextObject) {
         generateRuntimeCall(result, typeofContextObjectProperty,
-                             Assembler::EngineRegister, Assembler::PointerToValue(base),
-                             Assembler::TrustedImm32(propertyIndex));
+                             JITTargetPlatform::EngineRegister, PointerToValue(base),
+                             TrustedImm32(propertyIndex));
     } else {
         Q_UNREACHABLE();
     }
@@ -226,47 +226,47 @@ void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base,
 void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
                                                    IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofMember, Assembler::EngineRegister,
-                         Assembler::PointerToValue(base), Assembler::StringToIndex(name));
+    generateRuntimeCall(result, typeofMember, JITTargetPlatform::EngineRegister,
+                         PointerToValue(base), StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index,
                                                       IR::Expr *result)
 {
     generateRuntimeCall(result, typeofElement,
-                         Assembler::EngineRegister,
-                         Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+                         JITTargetPlatform::EngineRegister,
+                         PointerToValue(base), PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofName, Assembler::EngineRegister,
-                         Assembler::StringToIndex(name));
+    generateRuntimeCall(result, typeofName, JITTargetPlatform::EngineRegister,
+                         StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofValue, Assembler::EngineRegister,
-                         Assembler::PointerToValue(value));
+    generateRuntimeCall(result, typeofValue, JITTargetPlatform::EngineRegister,
+                         PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Expr *base, const QString &name, IR::Expr *result)
 {
-    generateRuntimeCall(result, deleteMember, Assembler::EngineRegister,
-                         Assembler::Reference(base), Assembler::StringToIndex(name));
+    generateRuntimeCall(result, deleteMember, JITTargetPlatform::EngineRegister,
+                         Reference(base), StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(IR::Expr *base, IR::Expr *index,
                                                       IR::Expr *result)
 {
-    generateRuntimeCall(result, deleteElement, Assembler::EngineRegister,
-                         Assembler::Reference(base), Assembler::PointerToValue(index));
+    generateRuntimeCall(result, deleteElement, JITTargetPlatform::EngineRegister,
+                         Reference(base), PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Expr *result)
 {
-    generateRuntimeCall(result, deleteName, Assembler::EngineRegister,
-                         Assembler::StringToIndex(name));
+    generateRuntimeCall(result, deleteName, JITTargetPlatform::EngineRegister,
+                         StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinDeleteValue(IR::Expr *result)
@@ -276,8 +276,8 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Expr *result)
 
 void InstructionSelection::callBuiltinThrow(IR::Expr *arg)
 {
-    generateRuntimeCall(Assembler::ReturnValueRegister, throwException, Assembler::EngineRegister,
-                         Assembler::PointerToValue(arg));
+    generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, throwException, JITTargetPlatform::EngineRegister,
+                         PointerToValue(arg));
 }
 
 void InstructionSelection::callBuiltinReThrow()
@@ -287,13 +287,13 @@ void InstructionSelection::callBuiltinReThrow()
 
 void InstructionSelection::callBuiltinUnwindException(IR::Expr *result)
 {
-    generateRuntimeCall(result, unwindException, Assembler::EngineRegister);
+    generateRuntimeCall(result, unwindException, JITTargetPlatform::EngineRegister);
 
 }
 
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {
-    generateRuntimeCall(Assembler::Void, pushCatchScope, Assembler::EngineRegister, Assembler::StringToIndex(exceptionName));
+    generateRuntimeCall(Assembler::Void, pushCatchScope, JITTargetPlatform::EngineRegister, StringToIndex(exceptionName));
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Expr *result)
@@ -301,7 +301,7 @@ void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::E
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateRuntimeCall(result, foreachIterator, Assembler::EngineRegister, Assembler::PointerToValue(arg));
+    generateRuntimeCall(result, foreachIterator, JITTargetPlatform::EngineRegister, PointerToValue(arg));
 }
 
 void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Expr *arg, IR::Expr *result)
@@ -309,25 +309,25 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Expr *arg, IR:
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateRuntimeCall(result, foreachNextPropertyName, Assembler::Reference(arg));
+    generateRuntimeCall(result, foreachNextPropertyName, Reference(arg));
 }
 
 void InstructionSelection::callBuiltinPushWithScope(IR::Expr *arg)
 {
     Q_ASSERT(arg);
 
-    generateRuntimeCall(Assembler::Void, pushWithScope, Assembler::Reference(arg), Assembler::EngineRegister);
+    generateRuntimeCall(Assembler::Void, pushWithScope, Reference(arg), JITTargetPlatform::EngineRegister);
 }
 
 void InstructionSelection::callBuiltinPopScope()
 {
-    generateRuntimeCall(Assembler::Void, popScope, Assembler::EngineRegister);
+    generateRuntimeCall(Assembler::Void, popScope, JITTargetPlatform::EngineRegister);
 }
 
 void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)
 {
-    generateRuntimeCall(Assembler::Void, declareVar, Assembler::EngineRegister,
-                         Assembler::TrustedImm32(deletable), Assembler::StringToIndex(name));
+    generateRuntimeCall(Assembler::Void, declareVar, JITTargetPlatform::EngineRegister,
+                         TrustedImm32(deletable), StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinDefineArray(IR::Expr *result, IR::ExprList *args)
@@ -335,8 +335,8 @@ void InstructionSelection::callBuiltinDefineArray(IR::Expr *result, IR::ExprList
     Q_ASSERT(result);
 
     int length = prepareVariableArguments(args);
-    generateRuntimeCall(result, arrayLiteral, Assembler::EngineRegister,
-                         baseAddressForCallArguments(), Assembler::TrustedImm32(length));
+    generateRuntimeCall(result, arrayLiteral, JITTargetPlatform::EngineRegister,
+                         baseAddressForCallArguments(), TrustedImm32(length));
 }
 
 void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int keyValuePairCount, IR::ExprList *keyValuePairs, IR::ExprList *arrayEntries, bool needSparseArray)
@@ -415,19 +415,19 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
         it = it->next;
     }
 
-    generateRuntimeCall(result, objectLiteral, Assembler::EngineRegister,
-                         baseAddressForCallArguments(), Assembler::TrustedImm32(classId),
-                         Assembler::TrustedImm32(arrayValueCount), Assembler::TrustedImm32(arrayGetterSetterCount | (needSparseArray << 30)));
+    generateRuntimeCall(result, objectLiteral, JITTargetPlatform::EngineRegister,
+                         baseAddressForCallArguments(), TrustedImm32(classId),
+                         TrustedImm32(arrayValueCount), TrustedImm32(arrayGetterSetterCount | (needSparseArray << 30)));
 }
 
 void InstructionSelection::callBuiltinSetupArgumentObject(IR::Expr *result)
 {
-    generateRuntimeCall(result, setupArgumentsObject, Assembler::EngineRegister);
+    generateRuntimeCall(result, setupArgumentsObject, JITTargetPlatform::EngineRegister);
 }
 
 void InstructionSelection::callBuiltinConvertThisToObject()
 {
-    generateRuntimeCall(Assembler::Void, convertThisToObject, Assembler::EngineRegister);
+    generateRuntimeCall(Assembler::Void, convertThisToObject, JITTargetPlatform::EngineRegister);
 }
 
 void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
@@ -436,41 +436,41 @@ void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Ex
 
     prepareCallData(args, 0);
     if (value->asConst())
-        generateRuntimeCall(result, callValue, Assembler::EngineRegister,
-                             Assembler::PointerToValue(value),
+        generateRuntimeCall(result, callValue, JITTargetPlatform::EngineRegister,
+                             PointerToValue(value),
                              baseAddressForCallData());
     else
-        generateRuntimeCall(result, callValue, Assembler::EngineRegister,
-                             Assembler::Reference(value),
+        generateRuntimeCall(result, callValue, JITTargetPlatform::EngineRegister,
+                             Reference(value),
                              baseAddressForCallData());
 }
 
 void InstructionSelection::loadThisObject(IR::Expr *temp)
 {
-    _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
-    _as->loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(ExecutionContext::Data, callData)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
+    _as->loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, callData)), JITTargetPlatform::ScratchRegister);
 #if defined(VALUE_FITS_IN_REGISTER)
-    _as->load64(Pointer(Assembler::ScratchRegister, qOffsetOf(CallData, thisObject)),
-                Assembler::ReturnValueRegister);
+    _as->load64(Pointer(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)),
+                JITTargetPlatform::ReturnValueRegister);
     _as->storeReturnValue(temp);
 #else
-    _as->copyValue(temp, Pointer(Assembler::ScratchRegister, qOffsetOf(CallData, thisObject)));
+    _as->copyValue(temp, Pointer(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)));
 #endif
 }
 
 void InstructionSelection::loadQmlContext(IR::Expr *temp)
 {
-    generateRuntimeCall(temp, getQmlContext, Assembler::EngineRegister);
+    generateRuntimeCall(temp, getQmlContext, JITTargetPlatform::EngineRegister);
 }
 
 void InstructionSelection::loadQmlImportedScripts(IR::Expr *temp)
 {
-    generateRuntimeCall(temp, getQmlImportedScripts, Assembler::EngineRegister);
+    generateRuntimeCall(temp, getQmlImportedScripts, JITTargetPlatform::EngineRegister);
 }
 
 void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *temp)
 {
-    generateRuntimeCall(temp, getQmlSingleton, Assembler::EngineRegister, Assembler::StringToIndex(name));
+    generateRuntimeCall(temp, getQmlSingleton, JITTargetPlatform::EngineRegister, StringToIndex(name));
 }
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *target)
@@ -479,17 +479,17 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *target)
         if (targetTemp->kind == IR::Temp::PhysicalRegister) {
             if (targetTemp->type == IR::DoubleType) {
                 Q_ASSERT(sourceConst->type == IR::DoubleType);
-                _as->toDoubleRegister(sourceConst, (Assembler::FPRegisterID) targetTemp->index);
+                _as->toDoubleRegister(sourceConst, (FPRegisterID) targetTemp->index);
             } else if (targetTemp->type == IR::SInt32Type) {
                 Q_ASSERT(sourceConst->type == IR::SInt32Type);
-                _as->toInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
+                _as->toInt32Register(sourceConst, (RegisterID) targetTemp->index);
             } else if (targetTemp->type == IR::UInt32Type) {
                 Q_ASSERT(sourceConst->type == IR::UInt32Type);
-                _as->toUInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
+                _as->toUInt32Register(sourceConst, (RegisterID) targetTemp->index);
             } else if (targetTemp->type == IR::BoolType) {
                 Q_ASSERT(sourceConst->type == IR::BoolType);
-                _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32()),
-                          (Assembler::RegisterID) targetTemp->index);
+                _as->move(TrustedImm32(convertToValue(sourceConst).int_32()),
+                          (RegisterID) targetTemp->index);
             } else {
                 Q_UNREACHABLE();
             }
@@ -502,66 +502,66 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *target)
 
 void InstructionSelection::loadString(const QString &str, IR::Expr *target)
 {
-    Pointer srcAddr = _as->loadStringAddress(Assembler::ReturnValueRegister, str);
-    _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
-    Pointer destAddr = _as->loadAddress(Assembler::ScratchRegister, target);
+    Pointer srcAddr = _as->loadStringAddress(JITTargetPlatform::ReturnValueRegister, str);
+    _as->loadPtr(srcAddr, JITTargetPlatform::ReturnValueRegister);
+    Pointer destAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, target);
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    _as->store64(Assembler::ReturnValueRegister, destAddr);
+    _as->store64(JITTargetPlatform::ReturnValueRegister, destAddr);
 #else
-    _as->store32(Assembler::ReturnValueRegister, destAddr);
+    _as->store32(JITTargetPlatform::ReturnValueRegister, destAddr);
     destAddr.offset += 4;
-    _as->store32(Assembler::TrustedImm32(QV4::Value::Managed_Type_Internal), destAddr);
+    _as->store32(TrustedImm32(QV4::Value::Managed_Type_Internal), destAddr);
 #endif
 }
 
 void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target)
 {
     int id = registerRegExp(sourceRegexp);
-    generateRuntimeCall(target, regexpLiteral, Assembler::EngineRegister, Assembler::TrustedImm32(id));
+    generateRuntimeCall(target, regexpLiteral, JITTargetPlatform::EngineRegister, TrustedImm32(id));
 }
 
 void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Expr *target)
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), Assembler::EngineRegister, Assembler::Void);
+        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, Assembler::Void);
         return;
     }
-    generateRuntimeCall(target, getActivationProperty, Assembler::EngineRegister, Assembler::StringToIndex(*name->id));
+    generateRuntimeCall(target, getActivationProperty, JITTargetPlatform::EngineRegister, StringToIndex(*name->id));
 }
 
 void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
 {
     // ### should use a lookup call here
     generateRuntimeCall(Assembler::Void, setActivationProperty,
-                         Assembler::EngineRegister, Assembler::StringToIndex(targetName), Assembler::PointerToValue(source));
+                         JITTargetPlatform::EngineRegister, StringToIndex(targetName), PointerToValue(source));
 }
 
 void InstructionSelection::initClosure(IR::Closure *closure, IR::Expr *target)
 {
     int id = closure->value;
-    generateRuntimeCall(target, closure, Assembler::EngineRegister, Assembler::TrustedImm32(id));
+    generateRuntimeCall(target, closure, JITTargetPlatform::EngineRegister, TrustedImm32(id));
 }
 
 void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::Expr *target)
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::Void);
+        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), JITTargetPlatform::EngineRegister, PointerToValue(base), Assembler::Void);
     } else {
-        generateRuntimeCall(target, getProperty, Assembler::EngineRegister,
-                             Assembler::PointerToValue(base), Assembler::StringToIndex(name));
+        generateRuntimeCall(target, getProperty, JITTargetPlatform::EngineRegister,
+                             PointerToValue(base), StringToIndex(name));
     }
 }
 
 void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index), Assembler::TrustedImm32(captureRequired));
+        generateRuntimeCall(target, getQmlScopeObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index), TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(target, getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index), Assembler::TrustedImm32(captureRequired));
+        generateRuntimeCall(target, getQmlContextObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index), TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfIdObjectsArray)
-        generateRuntimeCall(target, getQmlIdObject, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlIdObject, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index));
     else
         Q_ASSERT(false);
 }
@@ -569,13 +569,13 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::Mem
 void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0)
-        generateRuntimeCall(target, getQmlAttachedProperty, Assembler::EngineRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
+        generateRuntimeCall(target, getQmlAttachedProperty, JITTargetPlatform::EngineRegister, TrustedImm32(attachedPropertiesId), TrustedImm32(propertyIndex));
     else if (isSingleton)
-        generateRuntimeCall(target, getQmlSingletonQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
-                             Assembler::TrustedImm32(captureRequired));
+        generateRuntimeCall(target, getQmlSingletonQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(propertyIndex),
+                             TrustedImm32(captureRequired));
     else
-        generateRuntimeCall(target, getQmlQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
-                             Assembler::TrustedImm32(captureRequired));
+        generateRuntimeCall(target, getQmlQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(propertyIndex),
+                             TrustedImm32(captureRequired));
 }
 
 void InstructionSelection::setProperty(IR::Expr *source, IR::Expr *targetBase,
@@ -584,32 +584,32 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Expr *targetBase,
     if (useFastLookups) {
         uint index = registerSetterLookup(targetName);
         generateLookupCall(Assembler::Void, index, qOffsetOf(QV4::Lookup, setter),
-                           Assembler::EngineRegister,
-                           Assembler::PointerToValue(targetBase),
-                           Assembler::PointerToValue(source));
+                           JITTargetPlatform::EngineRegister,
+                           PointerToValue(targetBase),
+                           PointerToValue(source));
     } else {
-        generateRuntimeCall(Assembler::Void, setProperty, Assembler::EngineRegister,
-                             Assembler::PointerToValue(targetBase), Assembler::StringToIndex(targetName),
-                             Assembler::PointerToValue(source));
+        generateRuntimeCall(Assembler::Void, setProperty, JITTargetPlatform::EngineRegister,
+                             PointerToValue(targetBase), StringToIndex(targetName),
+                             PointerToValue(source));
     }
 }
 
 void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(Assembler::Void, setQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
-                             Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
+        generateRuntimeCall(Assembler::Void, setQmlScopeObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
+                             TrustedImm32(propertyIndex), PointerToValue(source));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(Assembler::Void, setQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
-                             Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
+        generateRuntimeCall(Assembler::Void, setQmlContextObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
+                             TrustedImm32(propertyIndex), PointerToValue(source));
     else
         Q_ASSERT(false);
 }
 
 void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex)
 {
-    generateRuntimeCall(Assembler::Void, setQmlQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
-                         Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
+    generateRuntimeCall(Assembler::Void, setQmlQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
+                         TrustedImm32(propertyIndex), PointerToValue(source));
 }
 
 void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
@@ -617,13 +617,13 @@ void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr 
     if (useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
         generateLookupCall(target, lookup, qOffsetOf(QV4::Lookup, indexedGetter),
-                           Assembler::PointerToValue(base),
-                           Assembler::PointerToValue(index));
+                           PointerToValue(base),
+                           PointerToValue(index));
         return;
     }
 
-    generateRuntimeCall(target, getElement, Assembler::EngineRegister,
-                         Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+    generateRuntimeCall(target, getElement, JITTargetPlatform::EngineRegister,
+                         PointerToValue(base), PointerToValue(index));
 }
 
 void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex)
@@ -631,13 +631,13 @@ void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase, IR
     if (useFastLookups) {
         uint lookup = registerIndexedSetterLookup();
         generateLookupCall(Assembler::Void, lookup, qOffsetOf(QV4::Lookup, indexedSetter),
-                           Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex),
-                           Assembler::PointerToValue(source));
+                           PointerToValue(targetBase), PointerToValue(targetIndex),
+                           PointerToValue(source));
         return;
     }
-    generateRuntimeCall(Assembler::Void, setElement, Assembler::EngineRegister,
-                         Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex),
-                         Assembler::PointerToValue(source));
+    generateRuntimeCall(Assembler::Void, setElement, JITTargetPlatform::EngineRegister,
+                         PointerToValue(targetBase), PointerToValue(targetIndex),
+                         PointerToValue(source));
 }
 
 void InstructionSelection::copyValue(IR::Expr *source, IR::Expr *target)
@@ -655,25 +655,25 @@ void InstructionSelection::copyValue(IR::Expr *source, IR::Expr *target)
     if (sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister) {
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
             if (sourceTemp->type == IR::DoubleType)
-                _as->moveDouble((Assembler::FPRegisterID) sourceTemp->index,
-                                (Assembler::FPRegisterID) targetTemp->index);
+                _as->moveDouble((FPRegisterID) sourceTemp->index,
+                                (FPRegisterID) targetTemp->index);
             else
-                _as->move((Assembler::RegisterID) sourceTemp->index,
-                          (Assembler::RegisterID) targetTemp->index);
+                _as->move((RegisterID) sourceTemp->index,
+                          (RegisterID) targetTemp->index);
             return;
         } else {
             switch (sourceTemp->type) {
             case IR::DoubleType:
-                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, target);
+                _as->storeDouble((FPRegisterID) sourceTemp->index, target);
                 break;
             case IR::SInt32Type:
-                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, target);
+                _as->storeInt32((RegisterID) sourceTemp->index, target);
                 break;
             case IR::UInt32Type:
-                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, target);
+                _as->storeUInt32((RegisterID) sourceTemp->index, target);
                 break;
             case IR::BoolType:
-                _as->storeBool((Assembler::RegisterID) sourceTemp->index, target);
+                _as->storeBool((RegisterID) sourceTemp->index, target);
                 break;
             default:
                 Q_ASSERT(!"Unreachable");
@@ -685,19 +685,19 @@ void InstructionSelection::copyValue(IR::Expr *source, IR::Expr *target)
         switch (targetTemp->type) {
         case IR::DoubleType:
             Q_ASSERT(source->type == IR::DoubleType);
-            _as->toDoubleRegister(source, (Assembler::FPRegisterID) targetTemp->index);
+            _as->toDoubleRegister(source, (FPRegisterID) targetTemp->index);
             return;
         case IR::BoolType:
             Q_ASSERT(source->type == IR::BoolType);
-            _as->toInt32Register(source, (Assembler::RegisterID) targetTemp->index);
+            _as->toInt32Register(source, (RegisterID) targetTemp->index);
             return;
         case IR::SInt32Type:
             Q_ASSERT(source->type == IR::SInt32Type);
-            _as->toInt32Register(source, (Assembler::RegisterID) targetTemp->index);
+            _as->toInt32Register(source, (RegisterID) targetTemp->index);
             return;
         case IR::UInt32Type:
             Q_ASSERT(source->type == IR::UInt32Type);
-            _as->toUInt32Register(source, (Assembler::RegisterID) targetTemp->index);
+            _as->toUInt32Register(source, (RegisterID) targetTemp->index);
             return;
         default:
             Q_ASSERT(!"Unreachable");
@@ -706,7 +706,7 @@ void InstructionSelection::copyValue(IR::Expr *source, IR::Expr *target)
     }
 
     // The target is not a physical register, nor is the source. So we can do a memory-to-memory copy:
-    _as->memcopyValue(_as->loadAddress(Assembler::ReturnValueRegister, target), source, Assembler::ScratchRegister);
+    _as->memcopyValue(_as->loadAddress(JITTargetPlatform::ReturnValueRegister, target), source, JITTargetPlatform::ScratchRegister);
 }
 
 void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
@@ -719,26 +719,26 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
             Q_ASSERT(sourceTemp->type == targetTemp->type);
 
             if (sourceTemp->type == IR::DoubleType) {
-                _as->moveDouble((Assembler::FPRegisterID) targetTemp->index, Assembler::FPGpr0);
-                _as->moveDouble((Assembler::FPRegisterID) sourceTemp->index,
-                                (Assembler::FPRegisterID) targetTemp->index);
-                _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) sourceTemp->index);
+                _as->moveDouble((FPRegisterID) targetTemp->index, JITTargetPlatform::FPGpr0);
+                _as->moveDouble((FPRegisterID) sourceTemp->index,
+                                (FPRegisterID) targetTemp->index);
+                _as->moveDouble(JITTargetPlatform::FPGpr0, (FPRegisterID) sourceTemp->index);
             } else {
-                _as->swap((Assembler::RegisterID) sourceTemp->index,
-                          (Assembler::RegisterID) targetTemp->index);
+                _as->swap((RegisterID) sourceTemp->index,
+                          (RegisterID) targetTemp->index);
             }
             return;
         }
     } else if (!sourceTemp || sourceTemp->kind == IR::Temp::StackSlot) {
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
             // Note: a swap for two stack-slots can involve different types.
-            Assembler::Pointer sAddr = _as->loadAddress(Assembler::ScratchRegister, source);
-            Assembler::Pointer tAddr = _as->loadAddress(Assembler::ReturnValueRegister, target);
+            Pointer sAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
+            Pointer tAddr = _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target);
             // use the implementation in JSC::MacroAssembler, as it doesn't do bit swizzling
-            _as->JSC::MacroAssembler::loadDouble(sAddr, Assembler::FPGpr0);
+            _as->JSC::MacroAssembler::loadDouble(sAddr, JITTargetPlatform::FPGpr0);
             _as->JSC::MacroAssembler::loadDouble(tAddr, Assembler::FPGpr1);
             _as->JSC::MacroAssembler::storeDouble(Assembler::FPGpr1, sAddr);
-            _as->JSC::MacroAssembler::storeDouble(Assembler::FPGpr0, tAddr);
+            _as->JSC::MacroAssembler::storeDouble(JITTargetPlatform::FPGpr0, tAddr);
             return;
         }
     }
@@ -749,18 +749,18 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
     Q_ASSERT(memExpr);
     Q_ASSERT(regTemp);
 
-    Assembler::Pointer addr = _as->loadAddress(Assembler::ReturnValueRegister, memExpr);
+    Pointer addr = _as->loadAddress(JITTargetPlatform::ReturnValueRegister, memExpr);
     if (regTemp->type == IR::DoubleType) {
-        _as->loadDouble(addr, Assembler::FPGpr0);
-        _as->storeDouble((Assembler::FPRegisterID) regTemp->index, addr);
-        _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) regTemp->index);
+        _as->loadDouble(addr, JITTargetPlatform::FPGpr0);
+        _as->storeDouble((FPRegisterID) regTemp->index, addr);
+        _as->moveDouble(JITTargetPlatform::FPGpr0, (FPRegisterID) regTemp->index);
     } else if (regTemp->type == IR::UInt32Type) {
-        _as->toUInt32Register(addr, Assembler::ScratchRegister);
-        _as->storeUInt32((Assembler::RegisterID) regTemp->index, addr);
-        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) regTemp->index);
+        _as->toUInt32Register(addr, JITTargetPlatform::ScratchRegister);
+        _as->storeUInt32((RegisterID) regTemp->index, addr);
+        _as->move(JITTargetPlatform::ScratchRegister, (RegisterID) regTemp->index);
     } else {
-        _as->load32(addr, Assembler::ScratchRegister);
-        _as->store32((Assembler::RegisterID) regTemp->index, addr);
+        _as->load32(addr, JITTargetPlatform::ScratchRegister);
+        _as->store32((RegisterID) regTemp->index, addr);
         if (regTemp->type != memExpr->type) {
             addr.offset += 4;
             quint32 tag;
@@ -775,9 +775,9 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
                 tag = 31337; // bogus value
                 Q_UNREACHABLE();
             }
-            _as->store32(Assembler::TrustedImm32(tag), addr);
+            _as->store32(TrustedImm32(tag), addr);
         }
-        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) regTemp->index);
+        _as->move(JITTargetPlatform::ScratchRegister, (RegisterID) regTemp->index);
     }
 }
 
@@ -811,13 +811,13 @@ void InstructionSelection::callQmlContextProperty(IR::Expr *base, IR::Member::Me
 
     if (kind == IR::Member::MemberOfQmlScopeObject)
         generateRuntimeCall(result, callQmlScopeObjectProperty,
-                             Assembler::EngineRegister,
-                             Assembler::TrustedImm32(propertyIndex),
+                             JITTargetPlatform::EngineRegister,
+                             TrustedImm32(propertyIndex),
                              baseAddressForCallData());
     else if (kind == IR::Member::MemberOfQmlContextObject)
         generateRuntimeCall(result, callQmlContextObjectProperty,
-                             Assembler::EngineRegister,
-                             Assembler::TrustedImm32(propertyIndex),
+                             JITTargetPlatform::EngineRegister,
+                             TrustedImm32(propertyIndex),
                              baseAddressForCallData());
     else
         Q_ASSERT(false);
@@ -833,12 +833,12 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
         generateRuntimeCall(result, callPropertyLookup,
-                             Assembler::EngineRegister,
-                             Assembler::TrustedImm32(index),
+                             JITTargetPlatform::EngineRegister,
+                             TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateRuntimeCall(result, callProperty, Assembler::EngineRegister,
-                             Assembler::StringToIndex(name),
+        generateRuntimeCall(result, callProperty, JITTargetPlatform::EngineRegister,
+                             StringToIndex(name),
                              baseAddressForCallData());
     }
 }
@@ -849,8 +849,8 @@ void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::Ex
     Q_ASSERT(base != 0);
 
     prepareCallData(args, base);
-    generateRuntimeCall(result, callElement, Assembler::EngineRegister,
-                         Assembler::PointerToValue(index),
+    generateRuntimeCall(result, callElement, JITTargetPlatform::EngineRegister,
+                         PointerToValue(index),
                          baseAddressForCallData());
 }
 
@@ -897,51 +897,51 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
         convertUIntToDouble(source, target);
         break;
     case IR::UndefinedType:
-        _as->loadDouble(_as->loadAddress(Assembler::ScratchRegister, source), Assembler::FPGpr0);
-        _as->storeDouble(Assembler::FPGpr0, target);
+        _as->loadDouble(_as->loadAddress(JITTargetPlatform::ScratchRegister, source), JITTargetPlatform::FPGpr0);
+        _as->storeDouble(JITTargetPlatform::FPGpr0, target);
         break;
     case IR::StringType:
     case IR::VarType: {
         // load the tag:
-        Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, source);
+        Pointer tagAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
         tagAddr.offset += 4;
-        _as->load32(tagAddr, Assembler::ScratchRegister);
+        _as->load32(tagAddr, JITTargetPlatform::ScratchRegister);
 
         // check if it's an int32:
-        Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                                Assembler::TrustedImm32(Value::Integer_Type_Internal));
+        Jump isNoInt = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
+                                                TrustedImm32(Value::Integer_Type_Internal));
         convertIntToDouble(source, target);
-        Assembler::Jump intDone = _as->jump();
+        Jump intDone = _as->jump();
 
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        _as->rshift32(Assembler::TrustedImm32(Value::IsDoubleTag_Shift), Assembler::ScratchRegister);
-        Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                              Assembler::TrustedImm32(0));
+        _as->rshift32(TrustedImm32(Value::IsDoubleTag_Shift), JITTargetPlatform::ScratchRegister);
+        Jump isDbl = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
+                                              TrustedImm32(0));
 #else
-        _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
-        Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                              Assembler::TrustedImm32(Value::NotDouble_Mask));
+        _as->and32(TrustedImm32(Value::NotDouble_Mask), JITTargetPlatform::ScratchRegister);
+        Jump isDbl = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
+                                              TrustedImm32(Value::NotDouble_Mask));
 #endif
 
-        generateRuntimeCall(target, toDouble, Assembler::PointerToValue(source));
-        Assembler::Jump noDoubleDone = _as->jump();
+        generateRuntimeCall(target, toDouble, PointerToValue(source));
+        Jump noDoubleDone = _as->jump();
 
         // it is a double:
         isDbl.link(_as);
-        Assembler::Pointer addr2 = _as->loadAddress(Assembler::ScratchRegister, source);
+        Pointer addr2 = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
 #if Q_PROCESSOR_WORDSIZE == 8
-            _as->load64(addr2, Assembler::ScratchRegister);
-            _as->store64(Assembler::ScratchRegister, _as->loadAddress(Assembler::ReturnValueRegister, target));
+            _as->load64(addr2, JITTargetPlatform::ScratchRegister);
+            _as->store64(JITTargetPlatform::ScratchRegister, _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target));
 #else
-            _as->loadDouble(addr2, Assembler::FPGpr0);
-            _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(Assembler::ReturnValueRegister, target));
+            _as->loadDouble(addr2, JITTargetPlatform::FPGpr0);
+            _as->storeDouble(JITTargetPlatform::FPGpr0, _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target));
 #endif
         } else {
-            _as->loadDouble(addr2, (Assembler::FPRegisterID) targetTemp->index);
+            _as->loadDouble(addr2, (FPRegisterID) targetTemp->index);
         }
 
         noDoubleDone.link(_as);
@@ -965,16 +965,16 @@ void InstructionSelection::convertTypeToBool(IR::Expr *source, IR::Expr *target)
         // The source is in a register if the register allocator is used. If the register
         // allocator was not used, then that means that we can use any register for to
         // load the double into.
-        Assembler::FPRegisterID reg;
+        FPRegisterID reg;
         if (sourceTemp && sourceTemp->kind == IR::Temp::PhysicalRegister)
-            reg = (Assembler::FPRegisterID) sourceTemp->index;
+            reg = (FPRegisterID) sourceTemp->index;
         else
-            reg = _as->toDoubleRegister(source, (Assembler::FPRegisterID) 1);
-        Assembler::Jump nonZero = _as->branchDoubleNonZero(reg, Assembler::FPGpr0);
+            reg = _as->toDoubleRegister(source, (FPRegisterID) 1);
+        Jump nonZero = _as->branchDoubleNonZero(reg, JITTargetPlatform::FPGpr0);
 
         // it's 0, so false:
         _as->storeBool(false, target);
-        Assembler::Jump done = _as->jump();
+        Jump done = _as->jump();
 
         // it's non-zero, so true:
         nonZero.link(_as);
@@ -988,40 +988,40 @@ void InstructionSelection::convertTypeToBool(IR::Expr *source, IR::Expr *target)
         _as->storeBool(false, target);
         break;
     case IR::StringType:
-        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
-                            Assembler::PointerToValue(source));
-        _as->storeBool(Assembler::ReturnValueRegister, target);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toBoolean,
+                            PointerToValue(source));
+        _as->storeBool(JITTargetPlatform::ReturnValueRegister, target);
     case IR::VarType:
     default:
-        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
-        Assembler::Pointer tagAddr = addr;
+        Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
+        Pointer tagAddr = addr;
         tagAddr.offset += 4;
-        _as->load32(tagAddr, Assembler::ReturnValueRegister);
+        _as->load32(tagAddr, JITTargetPlatform::ReturnValueRegister);
 
         // checkif it's a bool:
-        Assembler::Jump notBool = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
-                                                Assembler::TrustedImm32(Value::Boolean_Type_Internal));
-        _as->load32(addr, Assembler::ReturnValueRegister);
-        Assembler::Jump boolDone = _as->jump();
+        Jump notBool = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ReturnValueRegister,
+                                                TrustedImm32(Value::Boolean_Type_Internal));
+        _as->load32(addr, JITTargetPlatform::ReturnValueRegister);
+        Jump boolDone = _as->jump();
         // check if it's an int32:
         notBool.link(_as);
-        Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
-                                                 Assembler::TrustedImm32(Value::Integer_Type_Internal));
-        _as->load32(addr, Assembler::ReturnValueRegister);
-        Assembler::Jump isZero = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister,
-                                               Assembler::TrustedImm32(0));
-        _as->move(Assembler::TrustedImm32(1), Assembler::ReturnValueRegister);
-        Assembler::Jump intDone = _as->jump();
+        Jump fallback = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ReturnValueRegister,
+                                                 TrustedImm32(Value::Integer_Type_Internal));
+        _as->load32(addr, JITTargetPlatform::ReturnValueRegister);
+        Jump isZero = _as->branch32(RelationalCondition::Equal, JITTargetPlatform::ReturnValueRegister,
+                                               TrustedImm32(0));
+        _as->move(TrustedImm32(1), JITTargetPlatform::ReturnValueRegister);
+        Jump intDone = _as->jump();
 
         // not an int:
         fallback.link(_as);
-        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
-                            Assembler::PointerToValue(source));
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toBoolean,
+                            PointerToValue(source));
 
         isZero.link(_as);
         intDone.link(_as);
         boolDone.link(_as);
-        _as->storeBool(Assembler::ReturnValueRegister, target);
+        _as->storeBool(JITTargetPlatform::ReturnValueRegister, target);
 
         break;
     }
@@ -1033,102 +1033,102 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
     case IR::VarType: {
 
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
-        _as->load64(addr, Assembler::ScratchRegister);
-        _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
+        _as->load64(addr, JITTargetPlatform::ScratchRegister);
+        _as->move(JITTargetPlatform::ScratchRegister, JITTargetPlatform::ReturnValueRegister);
 
         // check if it's integer convertible
-        _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsIntegerConvertible_Shift), Assembler::ScratchRegister);
-        Assembler::Jump isIntConvertible = _as->branch32(Assembler::Equal, Assembler::ScratchRegister, Assembler::TrustedImm32(3));
+        _as->urshift64(TrustedImm32(QV4::Value::IsIntegerConvertible_Shift), JITTargetPlatform::ScratchRegister);
+        Jump isIntConvertible = _as->branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(3));
 
         // nope, not integer convertible, so check for a double:
-        _as->urshift64(Assembler::TrustedImm32(
+        _as->urshift64(TrustedImm32(
                            QV4::Value::IsDoubleTag_Shift - QV4::Value::IsIntegerConvertible_Shift),
-                       Assembler::ScratchRegister);
-        Assembler::Jump fallback = _as->branch32(Assembler::GreaterThan, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
+                       JITTargetPlatform::ScratchRegister);
+        Jump fallback = _as->branch32(Assembler::GreaterThan, JITTargetPlatform::ScratchRegister, TrustedImm32(0));
 
         // it's a double
-        _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ScratchRegister);
-        _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
-        _as->move64ToDouble(Assembler::ReturnValueRegister, Assembler::FPGpr0);
-        Assembler::Jump success =
-                _as->branchTruncateDoubleToInt32(Assembler::FPGpr0, Assembler::ReturnValueRegister,
-                                                 Assembler::BranchIfTruncateSuccessful);
+        _as->move(TrustedImm64(QV4::Value::NaNEncodeMask), JITTargetPlatform::ScratchRegister);
+        _as->xor64(JITTargetPlatform::ScratchRegister, JITTargetPlatform::ReturnValueRegister);
+        _as->move64ToDouble(JITTargetPlatform::ReturnValueRegister, JITTargetPlatform::FPGpr0);
+        Jump success =
+                _as->branchTruncateDoubleToInt32(JITTargetPlatform::FPGpr0, JITTargetPlatform::ReturnValueRegister,
+                                                 BranchTruncateType::BranchIfTruncateSuccessful);
 
         // not an int:
         fallback.link(_as);
-        generateRuntimeCall(Assembler::ReturnValueRegister, toInt,
-                             _as->loadAddress(Assembler::ScratchRegister, source));
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toInt,
+                             _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
 
         isIntConvertible.link(_as);
         success.link(_as);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-            Assembler::Pointer targetAddr = _as->loadAddress(Assembler::ScratchRegister, target);
-            _as->store32(Assembler::ReturnValueRegister, targetAddr);
+            Pointer targetAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, target);
+            _as->store32(JITTargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
-            _as->store32(Assembler::TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+            _as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
         } else {
-            _as->storeInt32(Assembler::ReturnValueRegister, target);
+            _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
         }
 #else
         // load the tag:
-        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
-        Assembler::Pointer tagAddr = addr;
+        Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
+        Pointer tagAddr = addr;
         tagAddr.offset += 4;
-        _as->load32(tagAddr, Assembler::ReturnValueRegister);
+        _as->load32(tagAddr, JITTargetPlatform::ReturnValueRegister);
 
         // check if it's an int32:
-        Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
-                                                Assembler::TrustedImm32(Value::Integer_Type_Internal));
+        Jump fallback = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ReturnValueRegister,
+                                                TrustedImm32(Value::Integer_Type_Internal));
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-            _as->load32(addr, Assembler::ReturnValueRegister);
-            Assembler::Pointer targetAddr = _as->loadAddress(Assembler::ScratchRegister, target);
-            _as->store32(Assembler::ReturnValueRegister, targetAddr);
+            _as->load32(addr, JITTargetPlatform::ReturnValueRegister);
+            Pointer targetAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, target);
+            _as->store32(JITTargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
-            _as->store32(Assembler::TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+            _as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
         } else {
-            _as->load32(addr, (Assembler::RegisterID) targetTemp->index);
+            _as->load32(addr, (RegisterID) targetTemp->index);
         }
-        Assembler::Jump intDone = _as->jump();
+        Jump intDone = _as->jump();
 
         // not an int:
         fallback.link(_as);
-        generateRuntimeCall(Assembler::ReturnValueRegister, toInt,
-                             _as->loadAddress(Assembler::ScratchRegister, source));
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toInt,
+                             _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
+        _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
 
         intDone.link(_as);
 #endif
 
     } break;
     case IR::DoubleType: {
-        Assembler::Jump success =
+        Jump success =
                 _as->branchTruncateDoubleToInt32(_as->toDoubleRegister(source),
-                                                 Assembler::ReturnValueRegister,
-                                                 Assembler::BranchIfTruncateSuccessful);
-        generateRuntimeCall(Assembler::ReturnValueRegister, doubleToInt,
-                             Assembler::PointerToValue(source));
+                                                 JITTargetPlatform::ReturnValueRegister,
+                                                 BranchTruncateType::BranchIfTruncateSuccessful);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, doubleToInt,
+                             PointerToValue(source));
         success.link(_as);
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
     } break;
     case IR::UInt32Type:
-        _as->storeInt32(_as->toUInt32Register(source, Assembler::ReturnValueRegister), target);
+        _as->storeInt32(_as->toUInt32Register(source, JITTargetPlatform::ReturnValueRegister), target);
         break;
     case IR::NullType:
     case IR::UndefinedType:
-        _as->move(Assembler::TrustedImm32(0), Assembler::ReturnValueRegister);
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        _as->move(TrustedImm32(0), JITTargetPlatform::ReturnValueRegister);
+        _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
     case IR::BoolType:
-        _as->storeInt32(_as->toInt32Register(source, Assembler::ReturnValueRegister), target);
+        _as->storeInt32(_as->toInt32Register(source, JITTargetPlatform::ReturnValueRegister), target);
         break;
     case IR::StringType:
     default:
-        generateRuntimeCall(Assembler::ReturnValueRegister, toInt,
-                             _as->loadAddress(Assembler::ScratchRegister, source));
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toInt,
+                             _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
+        _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
     } // switch (source->type)
 }
@@ -1138,48 +1138,48 @@ void InstructionSelection::convertTypeToUInt32(IR::Expr *source, IR::Expr *targe
     switch (source->type) {
     case IR::VarType: {
         // load the tag:
-        Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, source);
+        Pointer tagAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
         tagAddr.offset += 4;
-        _as->load32(tagAddr, Assembler::ScratchRegister);
+        _as->load32(tagAddr, JITTargetPlatform::ScratchRegister);
 
         // check if it's an int32:
-        Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                                Assembler::TrustedImm32(Value::Integer_Type_Internal));
-        Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
-        _as->storeUInt32(_as->toInt32Register(addr, Assembler::ScratchRegister), target);
-        Assembler::Jump intDone = _as->jump();
+        Jump isNoInt = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
+                                                TrustedImm32(Value::Integer_Type_Internal));
+        Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
+        _as->storeUInt32(_as->toInt32Register(addr, JITTargetPlatform::ScratchRegister), target);
+        Jump intDone = _as->jump();
 
         // not an int:
         isNoInt.link(_as);
-        generateRuntimeCall(Assembler::ReturnValueRegister, toUInt,
-                             _as->loadAddress(Assembler::ScratchRegister, source));
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toUInt,
+                             _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
+        _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
 
         intDone.link(_as);
     } break;
     case IR::DoubleType: {
-        Assembler::FPRegisterID reg = _as->toDoubleRegister(source);
-        Assembler::Jump success =
-                _as->branchTruncateDoubleToUint32(reg, Assembler::ReturnValueRegister,
-                                                  Assembler::BranchIfTruncateSuccessful);
-        generateRuntimeCall(Assembler::ReturnValueRegister, doubleToUInt,
-                             Assembler::PointerToValue(source));
+        FPRegisterID reg = _as->toDoubleRegister(source);
+        Jump success =
+                _as->branchTruncateDoubleToUint32(reg, JITTargetPlatform::ReturnValueRegister,
+                                                  BranchTruncateType::BranchIfTruncateSuccessful);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, doubleToUInt,
+                             PointerToValue(source));
         success.link(_as);
-        _as->storeUInt32(Assembler::ReturnValueRegister, target);
+        _as->storeUInt32(JITTargetPlatform::ReturnValueRegister, target);
     } break;
     case IR::NullType:
     case IR::UndefinedType:
-        _as->move(Assembler::TrustedImm32(0), Assembler::ReturnValueRegister);
-        _as->storeUInt32(Assembler::ReturnValueRegister, target);
+        _as->move(TrustedImm32(0), JITTargetPlatform::ReturnValueRegister);
+        _as->storeUInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
     case IR::StringType:
-        generateRuntimeCall(Assembler::ReturnValueRegister, toUInt,
-                             Assembler::PointerToValue(source));
-        _as->storeUInt32(Assembler::ReturnValueRegister, target);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toUInt,
+                             PointerToValue(source));
+        _as->storeUInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
     case IR::SInt32Type:
     case IR::BoolType:
-        _as->storeUInt32(_as->toInt32Register(source, Assembler::ReturnValueRegister), target);
+        _as->storeUInt32(_as->toInt32Register(source, JITTargetPlatform::ReturnValueRegister), target);
         break;
     default:
         break;
@@ -1194,14 +1194,14 @@ void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprL
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
         generateRuntimeCall(result, constructGlobalLookup,
-                             Assembler::EngineRegister,
-                             Assembler::TrustedImm32(index), baseAddressForCallData());
+                             JITTargetPlatform::EngineRegister,
+                             TrustedImm32(index), baseAddressForCallData());
         return;
     }
 
     generateRuntimeCall(result, constructActivationProperty,
-                         Assembler::EngineRegister,
-                         Assembler::StringToIndex(*func->id),
+                         JITTargetPlatform::EngineRegister,
+                         StringToIndex(*func->id),
                          baseAddressForCallData());
 }
 
@@ -1212,14 +1212,14 @@ void InstructionSelection::constructProperty(IR::Expr *base, const QString &name
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
         generateRuntimeCall(result, constructPropertyLookup,
-                             Assembler::EngineRegister,
-                             Assembler::TrustedImm32(index),
+                             JITTargetPlatform::EngineRegister,
+                             TrustedImm32(index),
                              baseAddressForCallData());
         return;
     }
 
-    generateRuntimeCall(result, constructProperty, Assembler::EngineRegister,
-                         Assembler::StringToIndex(name),
+    generateRuntimeCall(result, constructProperty, JITTargetPlatform::EngineRegister,
+                         StringToIndex(name),
                          baseAddressForCallData());
 }
 
@@ -1229,8 +1229,8 @@ void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, I
 
     prepareCallData(args, 0);
     generateRuntimeCall(result, constructValue,
-                         Assembler::EngineRegister,
-                         Assembler::Reference(value),
+                         JITTargetPlatform::EngineRegister,
+                         Reference(value),
                          baseAddressForCallData());
 }
 
@@ -1244,27 +1244,27 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 {
     IR::Temp *t = s->cond->asTemp();
     if (t || s->cond->asArgLocal()) {
-        Assembler::RegisterID reg;
+        RegisterID reg;
         if (t && t->kind == IR::Temp::PhysicalRegister) {
             Q_ASSERT(t->type == IR::BoolType);
-            reg = (Assembler::RegisterID) t->index;
+            reg = (RegisterID) t->index;
         } else if (t && t->kind == IR::Temp::StackSlot && t->type == IR::BoolType) {
-            reg = Assembler::ReturnValueRegister;
+            reg = JITTargetPlatform::ReturnValueRegister;
             _as->toInt32Register(t, reg);
         } else {
-            Address temp = _as->loadAddress(Assembler::ScratchRegister, s->cond);
+            Address temp = _as->loadAddress(JITTargetPlatform::ScratchRegister, s->cond);
             Address tag = temp;
             tag.offset += QV4::Value::tagOffset();
-            Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type_Internal));
+            Jump booleanConversion = _as->branch32(RelationalCondition::NotEqual, tag, TrustedImm32(QV4::Value::Boolean_Type_Internal));
 
             Address data = temp;
             data.offset += QV4::Value::valueOffset();
-            _as->load32(data, Assembler::ReturnValueRegister);
-            Assembler::Jump testBoolean = _as->jump();
+            _as->load32(data, JITTargetPlatform::ReturnValueRegister);
+            Jump testBoolean = _as->jump();
 
             booleanConversion.link(_as);
-            reg = Assembler::ReturnValueRegister;
-            generateRuntimeCall(reg, toBoolean, Assembler::Reference(s->cond));
+            reg = JITTargetPlatform::ReturnValueRegister;
+            generateRuntimeCall(reg, toBoolean, Reference(s->cond));
 
             testBoolean.link(_as);
         }
@@ -1274,9 +1274,9 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     } else if (IR::Const *c = s->cond->asConst()) {
         // TODO: SSA optimization for constant condition evaluation should remove this.
         // See also visitCJump() in RegAllocInfo.
-        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
-                             Assembler::PointerToValue(c));
-        _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, s->iftrue, s->iffalse);
+        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toBoolean,
+                             PointerToValue(c));
+        _as->generateCJumpOnNonZero(JITTargetPlatform::ReturnValueRegister, _block, s->iftrue, s->iffalse);
         return;
     } else if (IR::Binop *b = s->cond->asBinop()) {
         if (b->left->type == IR::DoubleType && b->right->type == IR::DoubleType
@@ -1321,17 +1321,17 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         // elimination (which isn't there either) would remove the whole else block.
         if (opContext.isValid())
             _as->generateFunctionCallImp(needsExceptionCheck,
-                                         Assembler::ReturnValueRegister, opName, opContext,
-                                         Assembler::EngineRegister,
-                                         Assembler::PointerToValue(b->left),
-                                         Assembler::PointerToValue(b->right));
+                                         JITTargetPlatform::ReturnValueRegister, opName, opContext,
+                                         JITTargetPlatform::EngineRegister,
+                                         PointerToValue(b->left),
+                                         PointerToValue(b->right));
         else
             _as->generateFunctionCallImp(needsExceptionCheck,
-                                         Assembler::ReturnValueRegister, opName, op,
-                                         Assembler::PointerToValue(b->left),
-                                         Assembler::PointerToValue(b->right));
+                                         JITTargetPlatform::ReturnValueRegister, opName, op,
+                                         PointerToValue(b->left),
+                                         PointerToValue(b->right));
 
-        _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, s->iftrue, s->iffalse);
+        _as->generateCJumpOnNonZero(JITTargetPlatform::ReturnValueRegister, _block, s->iftrue, s->iffalse);
         return;
     }
     Q_UNREACHABLE();
@@ -1346,45 +1346,45 @@ void InstructionSelection::visitRet(IR::Ret *s)
 #if CPU(X86) || CPU(ARM) || CPU(MIPS)
 
 #  if CPU(X86)
-        Assembler::RegisterID lowReg = JSC::X86Registers::eax;
-        Assembler::RegisterID highReg = JSC::X86Registers::edx;
+        RegisterID lowReg = JSC::X86Registers::eax;
+        RegisterID highReg = JSC::X86Registers::edx;
 #  elif CPU(MIPS)
-        Assembler::RegisterID lowReg = JSC::MIPSRegisters::v0;
-        Assembler::RegisterID highReg = JSC::MIPSRegisters::v1;
+        RegisterID lowReg = JSC::MIPSRegisters::v0;
+        RegisterID highReg = JSC::MIPSRegisters::v1;
 #  else // CPU(ARM)
-        Assembler::RegisterID lowReg = JSC::ARMRegisters::r0;
-        Assembler::RegisterID highReg = JSC::ARMRegisters::r1;
+        RegisterID lowReg = JSC::ARMRegisters::r0;
+        RegisterID highReg = JSC::ARMRegisters::r1;
 #  endif
 
         if (t->kind == IR::Temp::PhysicalRegister) {
             switch (t->type) {
             case IR::DoubleType:
-                _as->moveDoubleToInts((Assembler::FPRegisterID) t->index, lowReg, highReg);
+                _as->moveDoubleToInts((FPRegisterID) t->index, lowReg, highReg);
                 break;
             case IR::UInt32Type: {
-                Assembler::RegisterID srcReg = (Assembler::RegisterID) t->index;
-                Assembler::Jump intRange = _as->branch32(Assembler::GreaterThanOrEqual, srcReg, Assembler::TrustedImm32(0));
-                _as->convertUInt32ToDouble(srcReg, Assembler::FPGpr0, Assembler::ReturnValueRegister);
-                _as->moveDoubleToInts(Assembler::FPGpr0, lowReg, highReg);
-                Assembler::Jump done = _as->jump();
+                RegisterID srcReg = (RegisterID) t->index;
+                Jump intRange = _as->branch32(Assembler::GreaterThanOrEqual, srcReg, TrustedImm32(0));
+                _as->convertUInt32ToDouble(srcReg, JITTargetPlatform::FPGpr0, JITTargetPlatform::ReturnValueRegister);
+                _as->moveDoubleToInts(JITTargetPlatform::FPGpr0, lowReg, highReg);
+                Jump done = _as->jump();
                 intRange.link(_as);
                 _as->move(srcReg, lowReg);
-                _as->move(Assembler::TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
+                _as->move(TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
                 done.link(_as);
             } break;
             case IR::SInt32Type:
-                _as->move((Assembler::RegisterID) t->index, lowReg);
-                _as->move(Assembler::TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
+                _as->move((RegisterID) t->index, lowReg);
+                _as->move(TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
                 break;
             case IR::BoolType:
-                _as->move((Assembler::RegisterID) t->index, lowReg);
-                _as->move(Assembler::TrustedImm32(QV4::Value::Boolean_Type_Internal), highReg);
+                _as->move((RegisterID) t->index, lowReg);
+                _as->move(TrustedImm32(QV4::Value::Boolean_Type_Internal), highReg);
                 break;
             default:
                 Q_UNREACHABLE();
             }
         } else {
-            Pointer addr = _as->loadAddress(Assembler::ScratchRegister, t);
+            Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, t);
             _as->load32(addr, lowReg);
             addr.offset += 4;
             _as->load32(addr, highReg);
@@ -1392,27 +1392,27 @@ void InstructionSelection::visitRet(IR::Ret *s)
 #else
         if (t->kind == IR::Temp::PhysicalRegister) {
             if (t->type == IR::DoubleType) {
-                _as->moveDoubleTo64((Assembler::FPRegisterID) t->index,
-                                    Assembler::ReturnValueRegister);
-                _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask),
-                          Assembler::ScratchRegister);
-                _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+                _as->moveDoubleTo64((FPRegisterID) t->index,
+                                    JITTargetPlatform::ReturnValueRegister);
+                _as->move(TrustedImm64(QV4::Value::NaNEncodeMask),
+                          JITTargetPlatform::ScratchRegister);
+                _as->xor64(JITTargetPlatform::ScratchRegister, JITTargetPlatform::ReturnValueRegister);
             } else if (t->type == IR::UInt32Type) {
-                Assembler::RegisterID srcReg = (Assembler::RegisterID) t->index;
-                Assembler::Jump intRange = _as->branch32(Assembler::GreaterThanOrEqual, srcReg, Assembler::TrustedImm32(0));
-                _as->convertUInt32ToDouble(srcReg, Assembler::FPGpr0, Assembler::ReturnValueRegister);
-                _as->moveDoubleTo64(Assembler::FPGpr0, Assembler::ReturnValueRegister);
-                _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ScratchRegister);
-                _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
-                Assembler::Jump done = _as->jump();
+                RegisterID srcReg = (RegisterID) t->index;
+                Jump intRange = _as->branch32(Assembler::GreaterThanOrEqual, srcReg, TrustedImm32(0));
+                _as->convertUInt32ToDouble(srcReg, JITTargetPlatform::FPGpr0, JITTargetPlatform::ReturnValueRegister);
+                _as->moveDoubleTo64(JITTargetPlatform::FPGpr0, JITTargetPlatform::ReturnValueRegister);
+                _as->move(TrustedImm64(QV4::Value::NaNEncodeMask), JITTargetPlatform::ScratchRegister);
+                _as->xor64(JITTargetPlatform::ScratchRegister, JITTargetPlatform::ReturnValueRegister);
+                Jump done = _as->jump();
                 intRange.link(_as);
-                _as->zeroExtend32ToPtr(srcReg, Assembler::ReturnValueRegister);
+                _as->zeroExtend32ToPtr(srcReg, JITTargetPlatform::ReturnValueRegister);
                 quint64 tag = QV4::Value::Integer_Type_Internal;
-                _as->or64(Assembler::TrustedImm64(tag << 32),
-                          Assembler::ReturnValueRegister);
+                _as->or64(TrustedImm64(tag << 32),
+                          JITTargetPlatform::ReturnValueRegister);
                 done.link(_as);
             } else {
-                _as->zeroExtend32ToPtr((Assembler::RegisterID) t->index, Assembler::ReturnValueRegister);
+                _as->zeroExtend32ToPtr((RegisterID) t->index, JITTargetPlatform::ReturnValueRegister);
                 quint64 tag;
                 switch (t->type) {
                 case IR::SInt32Type:
@@ -1425,39 +1425,39 @@ void InstructionSelection::visitRet(IR::Ret *s)
                     tag = 31337; // bogus value
                     Q_UNREACHABLE();
                 }
-                _as->or64(Assembler::TrustedImm64(tag << 32),
-                          Assembler::ReturnValueRegister);
+                _as->or64(TrustedImm64(tag << 32),
+                          JITTargetPlatform::ReturnValueRegister);
             }
         } else {
-            _as->copyValue(Assembler::ReturnValueRegister, t);
+            _as->copyValue(JITTargetPlatform::ReturnValueRegister, t);
         }
 #endif
     } else if (IR::Const *c = s->expr->asConst()) {
         QV4::Primitive retVal = convertToValue(c);
 #if CPU(X86)
-        _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::X86Registers::eax);
-        _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::X86Registers::edx);
+        _as->move(TrustedImm32(retVal.int_32()), JSC::X86Registers::eax);
+        _as->move(TrustedImm32(retVal.tag()), JSC::X86Registers::edx);
 #elif CPU(ARM)
-        _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::ARMRegisters::r0);
-        _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::ARMRegisters::r1);
+        _as->move(TrustedImm32(retVal.int_32()), JSC::ARMRegisters::r0);
+        _as->move(TrustedImm32(retVal.tag()), JSC::ARMRegisters::r1);
 #elif CPU(MIPS)
-        _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::MIPSRegisters::v0);
-        _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::MIPSRegisters::v1);
+        _as->move(TrustedImm32(retVal.int_32()), JSC::MIPSRegisters::v0);
+        _as->move(TrustedImm32(retVal.tag()), JSC::MIPSRegisters::v1);
 #else
-        _as->move(Assembler::TrustedImm64(retVal.rawValue()), Assembler::ReturnValueRegister);
+        _as->move(TrustedImm64(retVal.rawValue()), JITTargetPlatform::ReturnValueRegister);
 #endif
     } else {
         Q_UNREACHABLE();
         Q_UNUSED(s);
     }
 
-    Assembler::Label leaveStackFrame = _as->label();
+    Label leaveStackFrame = _as->label();
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
-    _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
-    _as->loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(ExecutionContext::Data, engine)), Assembler::ScratchRegister);
-    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+    _as->subPtr(TrustedImm32(sizeof(QV4::Value)*locals), JITTargetPlatform::LocalsRegister);
+    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
+    _as->loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, engine)), JITTargetPlatform::ScratchRegister);
+    _as->storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     _as->leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
     _as->ret();
@@ -1465,16 +1465,16 @@ void InstructionSelection::visitRet(IR::Ret *s)
     _as->exceptionReturnLabel = _as->label();
     QV4::Primitive retVal = Primitive::undefinedValue();
 #if CPU(X86)
-    _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::X86Registers::eax);
-    _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::X86Registers::edx);
+    _as->move(TrustedImm32(retVal.int_32()), JSC::X86Registers::eax);
+    _as->move(TrustedImm32(retVal.tag()), JSC::X86Registers::edx);
 #elif CPU(ARM)
-    _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::ARMRegisters::r0);
-    _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::ARMRegisters::r1);
+    _as->move(TrustedImm32(retVal.int_32()), JSC::ARMRegisters::r0);
+    _as->move(TrustedImm32(retVal.tag()), JSC::ARMRegisters::r1);
 #elif CPU(MIPS)
-    _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::MIPSRegisters::v0);
-    _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::MIPSRegisters::v1);
+    _as->move(TrustedImm32(retVal.int_32()), JSC::MIPSRegisters::v0);
+    _as->move(TrustedImm32(retVal.tag()), JSC::MIPSRegisters::v1);
 #else
-    _as->move(Assembler::TrustedImm64(retVal.rawValue()), Assembler::ReturnValueRegister);
+    _as->move(TrustedImm64(retVal.rawValue()), JITTargetPlatform::ReturnValueRegister);
 #endif
     _as->jump(leaveStackFrame);
 }
@@ -1492,7 +1492,7 @@ int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
         Q_ASSERT(arg != 0);
         Pointer dst(_as->stackLayout().argumentAddressForCall(i));
         if (arg->asTemp() && arg->asTemp()->kind != IR::Temp::PhysicalRegister)
-            _as->memcopyValue(dst, arg->asTemp(), Assembler::ScratchRegister);
+            _as->memcopyValue(dst, arg->asTemp(), JITTargetPlatform::ScratchRegister);
         else
             _as->copyValue(dst, arg);
     }
@@ -1508,9 +1508,9 @@ int InstructionSelection::prepareCallData(IR::ExprList* args, IR::Expr *thisObje
     }
 
     Pointer p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, tag));
-    _as->store32(Assembler::TrustedImm32(QV4::Value::Integer_Type_Internal), p);
+    _as->store32(TrustedImm32(QV4::Value::Integer_Type_Internal), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, argc));
-    _as->store32(Assembler::TrustedImm32(argc), p);
+    _as->store32(TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));
     if (!thisObject)
         _as->storeValue(QV4::Primitive::undefinedValue(), p);
@@ -1523,7 +1523,7 @@ int InstructionSelection::prepareCallData(IR::ExprList* args, IR::Expr *thisObje
         Q_ASSERT(arg != 0);
         Pointer dst(_as->stackLayout().argumentAddressForCall(i));
         if (arg->asTemp() && arg->asTemp()->kind != IR::Temp::PhysicalRegister)
-            _as->memcopyValue(dst, arg->asTemp(), Assembler::ScratchRegister);
+            _as->memcopyValue(dst, arg->asTemp(), JITTargetPlatform::ScratchRegister);
         else
             _as->copyValue(dst, arg);
     }
@@ -1535,7 +1535,7 @@ void InstructionSelection::calculateRegistersToSave(const RegisterInformation &u
     regularRegistersToSave.clear();
     fpRegistersToSave.clear();
 
-    for (const RegisterInfo &ri : Assembler::getRegisterInfo()) {
+    for (const RegisterInfo &ri : JITTargetPlatform::getRegisterInfo()) {
 #if defined(RESTORE_EBX_ON_CALL)
         if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
             regularRegistersToSave.append(ri);
@@ -1568,10 +1568,10 @@ bool InstructionSelection::visitCJumpDouble(IR::AluOp op, IR::Expr *left, IR::Ex
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
     if (_as->nextBlock() == iftrue) {
-        Assembler::Jump target = _as->branchDouble(true, op, left, right);
+        Jump target = _as->branchDouble(true, op, left, right);
         _as->addPatch(iffalse, target);
     } else {
-        Assembler::Jump target = _as->branchDouble(false, op, left, right);
+        Jump target = _as->branchDouble(false, op, left, right);
         _as->addPatch(iftrue, target);
         _as->jumpToBlock(_block, iffalse);
     }
@@ -1582,10 +1582,10 @@ bool InstructionSelection::visitCJumpSInt32(IR::AluOp op, IR::Expr *left, IR::Ex
                                             IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
     if (_as->nextBlock() == iftrue) {
-        Assembler::Jump target = _as->branchInt32(true, op, left, right);
+        Jump target = _as->branchInt32(true, op, left, right);
         _as->addPatch(iffalse, target);
     } else {
-        Assembler::Jump target = _as->branchInt32(false, op, left, right);
+        Jump target = _as->branchInt32(false, op, left, right);
         _as->addPatch(iftrue, target);
         _as->jumpToBlock(_block, iffalse);
     }
@@ -1607,10 +1607,10 @@ void InstructionSelection::visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *tr
     IR::Expr *left = binop->left;
     IR::Expr *right = binop->right;
 
-    generateRuntimeCall(Assembler::ReturnValueRegister, compareStrictEqual,
-                                 Assembler::PointerToValue(left), Assembler::PointerToValue(right));
-    _as->generateCJumpOnCompare(binop->op == IR::OpStrictEqual ? Assembler::NotEqual : Assembler::Equal,
-                                Assembler::ReturnValueRegister, Assembler::TrustedImm32(0),
+    generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, compareStrictEqual,
+                                 PointerToValue(left), PointerToValue(right));
+    _as->generateCJumpOnCompare(binop->op == IR::OpStrictEqual ? RelationalCondition::NotEqual : RelationalCondition::Equal,
+                                JITTargetPlatform::ReturnValueRegister, TrustedImm32(0),
                                 _block, trueBlock, falseBlock);
 }
 
@@ -1640,14 +1640,14 @@ bool InstructionSelection::visitCJumpStrictNull(IR::Binop *binop,
         return true;
     }
 
-    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    Pointer tagAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, varSrc);
     tagAddr.offset += 4;
-    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    const RegisterID tagReg = JITTargetPlatform::ScratchRegister;
     _as->load32(tagAddr, tagReg);
 
-    Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
-                                                                         : Assembler::NotEqual;
-    const Assembler::TrustedImm32 tag(QV4::Value::Null_Type_Internal);
+    RelationalCondition cond = binop->op == IR::OpStrictEqual ? RelationalCondition::Equal
+                                                                         : RelationalCondition::NotEqual;
+    const TrustedImm32 tag(QV4::Value::Null_Type_Internal);
     _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
 }
@@ -1677,22 +1677,22 @@ bool InstructionSelection::visitCJumpStrictUndefined(IR::Binop *binop,
         return true;
     }
 
-    Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
-                                                                         : Assembler::NotEqual;
-    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
+    RelationalCondition cond = binop->op == IR::OpStrictEqual ? RelationalCondition::Equal
+                                                                         : RelationalCondition::NotEqual;
+    const RegisterID tagReg = JITTargetPlatform::ReturnValueRegister;
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, varSrc);
     _as->load64(addr, tagReg);
-    const Assembler::TrustedImm64 tag(0);
+    const TrustedImm64 tag(0);
 #else // !QV4_USE_64_BIT_VALUE_ENCODING
-    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    Pointer tagAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, varSrc);
     _as->load32(tagAddr, tagReg);
-    Assembler::Jump j = _as->branch32(Assembler::invert(cond), tagReg, Assembler::TrustedImm32(0));
+    Jump j = _as->branch32(Assembler::invert(cond), tagReg, TrustedImm32(0));
     _as->addPatch(falseBlock, j);
 
     tagAddr.offset += 4;
     _as->load32(tagAddr, tagReg);
-    const Assembler::TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
+    const TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
 #endif
     _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
@@ -1720,12 +1720,12 @@ bool InstructionSelection::visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock
         return false;
     }
 
-    Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
-                                                                           : Assembler::NotEqual;
+    RelationalCondition cond = binop->op == IR::OpStrictEqual ? RelationalCondition::Equal
+                                                              : RelationalCondition::NotEqual;
 
     if (otherSrc->type == IR::BoolType) { // both are boolean
-        Assembler::RegisterID one = _as->toBoolRegister(boolSrc, Assembler::ReturnValueRegister);
-        Assembler::RegisterID two = _as->toBoolRegister(otherSrc, Assembler::ScratchRegister);
+        RegisterID one = _as->toBoolRegister(boolSrc, JITTargetPlatform::ReturnValueRegister);
+        RegisterID two = _as->toBoolRegister(otherSrc, JITTargetPlatform::ScratchRegister);
         _as->generateCJumpOnCompare(cond, one, two, _block, trueBlock, falseBlock);
         return true;
     }
@@ -1735,13 +1735,13 @@ bool InstructionSelection::visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock
         return true;
     }
 
-    Assembler::Pointer otherAddr = _as->loadAddress(Assembler::ReturnValueRegister, otherSrc);
+    Pointer otherAddr = _as->loadAddress(JITTargetPlatform::ReturnValueRegister, otherSrc);
     otherAddr.offset += 4; // tag address
 
     // check if the tag of the var operand is indicates 'boolean'
-    _as->load32(otherAddr, Assembler::ScratchRegister);
-    Assembler::Jump noBool = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                           Assembler::TrustedImm32(QV4::Value::Boolean_Type_Internal));
+    _as->load32(otherAddr, JITTargetPlatform::ScratchRegister);
+    Jump noBool = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
+                                           TrustedImm32(QV4::Value::Boolean_Type_Internal));
     if (binop->op == IR::OpStrictEqual)
         _as->addPatch(falseBlock, noBool);
     else
@@ -1749,9 +1749,9 @@ bool InstructionSelection::visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock
 
     // ok, both are boolean, so let's load them and compare them.
     otherAddr.offset -= 4; // int_32 address
-    _as->load32(otherAddr, Assembler::ReturnValueRegister);
-    Assembler::RegisterID boolReg = _as->toBoolRegister(boolSrc, Assembler::ScratchRegister);
-    _as->generateCJumpOnCompare(cond, boolReg, Assembler::ReturnValueRegister, _block, trueBlock,
+    _as->load32(otherAddr, JITTargetPlatform::ReturnValueRegister);
+    RegisterID boolReg = _as->toBoolRegister(boolSrc, JITTargetPlatform::ScratchRegister);
+    _as->generateCJumpOnCompare(cond, boolReg, JITTargetPlatform::ReturnValueRegister, _block, trueBlock,
                                 falseBlock);
     return true;
 }
@@ -1783,18 +1783,18 @@ bool InstructionSelection::visitCJumpNullUndefined(IR::Type nullOrUndef, IR::Bin
         return true;
     }
 
-    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    Pointer tagAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, varSrc);
     tagAddr.offset += 4;
-    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
+    const RegisterID tagReg = JITTargetPlatform::ReturnValueRegister;
     _as->load32(tagAddr, tagReg);
 
     if (binop->op == IR::OpNotEqual)
         qSwap(trueBlock, falseBlock);
-    Assembler::Jump isNull = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::Null_Type_Internal)));
-    Assembler::Jump isNotUndefinedTag = _as->branch32(Assembler::NotEqual, tagReg, Assembler::TrustedImm32(int(QV4::Value::Managed_Type_Internal)));
+    Jump isNull = _as->branch32(RelationalCondition::Equal, tagReg, TrustedImm32(int(QV4::Value::Null_Type_Internal)));
+    Jump isNotUndefinedTag = _as->branch32(RelationalCondition::NotEqual, tagReg, TrustedImm32(int(QV4::Value::Managed_Type_Internal)));
     tagAddr.offset -= 4;
     _as->load32(tagAddr, tagReg);
-    Assembler::Jump isNotUndefinedValue = _as->branch32(Assembler::NotEqual, tagReg, Assembler::TrustedImm32(0));
+    Jump isNotUndefinedValue = _as->branch32(RelationalCondition::NotEqual, tagReg, TrustedImm32(0));
     _as->addPatch(trueBlock, isNull);
     _as->addPatch(falseBlock, isNotUndefinedTag);
     _as->addPatch(falseBlock, isNotUndefinedValue);
@@ -1815,10 +1815,10 @@ void InstructionSelection::visitCJumpEqual(IR::Binop *binop, IR::BasicBlock *tru
     IR::Expr *left = binop->left;
     IR::Expr *right = binop->right;
 
-    generateRuntimeCall(Assembler::ReturnValueRegister, compareEqual,
-                                 Assembler::PointerToValue(left), Assembler::PointerToValue(right));
-    _as->generateCJumpOnCompare(binop->op == IR::OpEqual ? Assembler::NotEqual : Assembler::Equal,
-                                Assembler::ReturnValueRegister, Assembler::TrustedImm32(0),
+    generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, compareEqual,
+                                 PointerToValue(left), PointerToValue(right));
+    _as->generateCJumpOnCompare(binop->op == IR::OpEqual ? RelationalCondition::NotEqual : RelationalCondition::Equal,
+                                JITTargetPlatform::ReturnValueRegister, TrustedImm32(0),
                                 _block, trueBlock, falseBlock);
 }
 

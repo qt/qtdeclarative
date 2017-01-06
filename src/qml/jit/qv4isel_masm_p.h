@@ -136,8 +136,22 @@ protected:
     void unop(IR::AluOp oper, IR::Expr *sourceTemp, IR::Expr *target) override;
     void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target) override;
 
-    typedef Assembler::Address Address;
-    typedef Assembler::Pointer Pointer;
+    using Address = Assembler::Address;
+    using Pointer = Assembler::Pointer;
+    using PointerToValue = Assembler::PointerToValue;
+    using RegisterID = Assembler::RegisterID;
+    using FPRegisterID = Assembler::FPRegisterID;
+    using ResultCondition = Assembler::ResultCondition;
+    using TrustedImm32 = Assembler::TrustedImm32;
+    using TrustedImm64 = Assembler::TrustedImm64;
+    using Label = Assembler::Label;
+    using Jump = Assembler::Jump;
+    using StringToIndex = Assembler::StringToIndex;
+    using Reference = Assembler::Reference;
+    using RelationalCondition = Assembler::RelationalCondition;
+    using BranchTruncateType = Assembler::BranchTruncateType;
+
+    using JITTargetPlatform = Assembler::TargetPlatform;
 
 #if !defined(ARGUMENTS_IN_REGISTERS)
     Address addressForArgument(int index) const
@@ -145,7 +159,7 @@ protected:
         // FramePointerRegister points to its old value on the stack, and above
         // it we have the return address, hence the need to step over two
         // values before reaching the first argument.
-        return Address(Assembler::FramePointerRegister, (index + 2) * sizeof(void*));
+        return Address(JITTargetPlatform::FramePointerRegister, (index + 2) * sizeof(void*));
     }
 #endif
 
@@ -192,52 +206,52 @@ private:
             if (targetTemp->kind == IR::Temp::PhysicalRegister) {
                 if (IR::Temp *sourceTemp = source->asTemp()) {
                     if (sourceTemp->kind == IR::Temp::PhysicalRegister) {
-                        _as->convertInt32ToDouble((Assembler::RegisterID) sourceTemp->index,
-                                                  (Assembler::FPRegisterID) targetTemp->index);
+                        _as->convertInt32ToDouble((RegisterID) sourceTemp->index,
+                                                  (FPRegisterID) targetTemp->index);
                     } else {
-                        _as->convertInt32ToDouble(_as->loadAddress(Assembler::ReturnValueRegister, sourceTemp),
-                                                  (Assembler::FPRegisterID) targetTemp->index);
+                        _as->convertInt32ToDouble(_as->loadAddress(JITTargetPlatform::ReturnValueRegister, sourceTemp),
+                                                  (FPRegisterID) targetTemp->index);
                     }
                 } else {
-                    _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                              (Assembler::FPRegisterID) targetTemp->index);
+                    _as->convertInt32ToDouble(_as->toInt32Register(source, JITTargetPlatform::ScratchRegister),
+                                              (FPRegisterID) targetTemp->index);
                 }
 
                 return;
             }
         }
 
-        _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                  Assembler::FPGpr0);
-        _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(Assembler::ReturnValueRegister, target));
+        _as->convertInt32ToDouble(_as->toInt32Register(source, JITTargetPlatform::ScratchRegister),
+                                  JITTargetPlatform::FPGpr0);
+        _as->storeDouble(JITTargetPlatform::FPGpr0, _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target));
     }
 
     void convertUIntToDouble(IR::Expr *source, IR::Expr *target)
     {
-        Assembler::RegisterID tmpReg = Assembler::ScratchRegister;
-        Assembler::RegisterID reg = _as->toInt32Register(source, tmpReg);
+        RegisterID tmpReg = JITTargetPlatform::ScratchRegister;
+        RegisterID reg = _as->toInt32Register(source, tmpReg);
 
         if (IR::Temp *targetTemp = target->asTemp()) {
             if (targetTemp->kind == IR::Temp::PhysicalRegister) {
-                _as->convertUInt32ToDouble(reg, (Assembler::FPRegisterID) targetTemp->index, tmpReg);
+                _as->convertUInt32ToDouble(reg, (FPRegisterID) targetTemp->index, tmpReg);
                 return;
             }
         }
 
         _as->convertUInt32ToDouble(_as->toUInt32Register(source, tmpReg),
-                                   Assembler::FPGpr0, tmpReg);
-        _as->storeDouble(Assembler::FPGpr0, _as->loadAddress(tmpReg, target));
+                                   JITTargetPlatform::FPGpr0, tmpReg);
+        _as->storeDouble(JITTargetPlatform::FPGpr0, _as->loadAddress(tmpReg, target));
     }
 
     void convertIntToBool(IR::Expr *source, IR::Expr *target)
     {
-        Assembler::RegisterID reg = Assembler::ScratchRegister;
+        RegisterID reg = JITTargetPlatform::ScratchRegister;
 
         if (IR::Temp *targetTemp = target->asTemp())
             if (targetTemp->kind == IR::Temp::PhysicalRegister)
-                reg = (Assembler::RegisterID) targetTemp->index;
+                reg = (RegisterID) targetTemp->index;
         _as->move(_as->toInt32Register(source, reg), reg);
-        _as->compare32(Assembler::NotEqual, reg, Assembler::TrustedImm32(0), reg);
+        _as->compare32(RelationalCondition::NotEqual, reg, TrustedImm32(0), reg);
         _as->storeBool(reg, target);
     }
 
@@ -259,7 +273,7 @@ private:
         // goes into the same register as the return value (currently only ARM), the prepareCall
         // will combine loading the looupAddr into the register and calculating the indirect call
         // address.
-        Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
+        Pointer lookupAddr(JITTargetPlatform::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
          _as->generateFunctionCallImp(true, retval, "lookup getter/setter",
                                       LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
