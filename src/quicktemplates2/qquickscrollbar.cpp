@@ -167,9 +167,14 @@ public:
         return bar->d_func();
     }
 
-    qreal positionAt(const QPoint &point) const;
+    qreal positionAt(const QPointF &point) const;
     void updateActive();
     void resizeContent() override;
+
+    void handlePress(const QPointF &point);
+    void handleMove(const QPointF &point);
+    void handleRelease(const QPointF &point);
+    void handleUngrab();
 
     qreal size;
     qreal position;
@@ -181,7 +186,7 @@ public:
     Qt::Orientation orientation;
 };
 
-qreal QQuickScrollBarPrivate::positionAt(const QPoint &point) const
+qreal QQuickScrollBarPrivate::positionAt(const QPointF &point) const
 {
     Q_Q(const QQuickScrollBar);
     if (orientation == Qt::Horizontal)
@@ -209,6 +214,36 @@ void QQuickScrollBarPrivate::resizeContent()
         contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + position * q->availableHeight()));
         contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * size));
     }
+}
+
+void QQuickScrollBarPrivate::handlePress(const QPointF &point)
+{
+    Q_Q(QQuickScrollBar);
+    offset = positionAt(point) - position;
+    if (offset < 0 || offset > size)
+        offset = size / 2;
+    q->setPressed(true);
+}
+
+void QQuickScrollBarPrivate::handleMove(const QPointF &point)
+{
+    Q_Q(QQuickScrollBar);
+    q->setPosition(qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size));
+}
+
+void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
+{
+    Q_Q(QQuickScrollBar);
+    q->setPosition(qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size));
+    offset = 0.0;
+    q->setPressed(false);
+}
+
+void QQuickScrollBarPrivate::handleUngrab()
+{
+    Q_Q(QQuickScrollBar);
+    offset = 0.0;
+    q->setPressed(false);
 }
 
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
@@ -427,26 +462,28 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
-    d->offset = d->positionAt(event->pos()) - d->position;
-    if (d->offset < 0 || d->offset > d->size)
-        d->offset = d->size / 2;
-    setPressed(true);
+    d->handlePress(event->localPos());
 }
 
 void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseMoveEvent(event);
-    setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
+    d->handleMove(event->localPos());
 }
 
 void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseReleaseEvent(event);
-    setPosition(qBound<qreal>(0.0, d->positionAt(event->pos()) - d->offset, 1.0 - d->size));
-    d->offset = 0.0;
-    setPressed(false);
+    d->handleRelease(event->localPos());
+}
+
+void QQuickScrollBar::mouseUngrabEvent()
+{
+    Q_D(QQuickScrollBar);
+    QQuickControl::mouseUngrabEvent();
+    d->handleUngrab();
 }
 
 void QQuickScrollBar::hoverChange()
