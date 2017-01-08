@@ -585,6 +585,7 @@ void QQuickPathItemNvprRenderNode::renderOffscreenFill(VisualPathRenderData *d)
         return;
 
     f->glViewport(0, 0, itemSize.width(), itemSize.height());
+    f->glDisable(GL_DEPTH_TEST);
     f->glClearColor(0, 0, 0, 0);
     f->glClearStencil(0);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -599,6 +600,7 @@ void QQuickPathItemNvprRenderNode::renderOffscreenFill(VisualPathRenderData *d)
     renderFill(d);
 
     d->fallbackFbo->release();
+    f->glEnable(GL_DEPTH_TEST);
     f->glViewport(0, 0, rtSize.width(), rtSize.height());
 }
 
@@ -635,6 +637,20 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
     const bool stencilClip = state->stencilEnabled();
     // when true, the stencil buffer already has a clip path with a ref value of sv
     const int sv = state->stencilValue();
+    const bool hasScissor = state->scissorEnabled();
+
+    if (hasScissor) {
+        // scissor rect is already set, just enable scissoring
+        f->glEnable(GL_SCISSOR_TEST);
+    }
+
+    // Depth test against the opaque batches rendered before.
+    f->glEnable(GL_DEPTH_TEST);
+    f->glDepthFunc(GL_LESS);
+    nvpr.pathCoverDepthFunc(GL_LESS);
+    nvpr.pathStencilDepthOffset(-0.05f, -1);
+
+    bool reloadMatrices = true;
 
     for (VisualPathRenderData &d : m_vp) {
         updatePath(&d);
@@ -646,21 +662,18 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
             // Fall back to a texture when complex clipping is in use and we have
             // to fill. Reconciling glStencilFillPath's and the scenegraph's clip
             // stencil semantics has not succeeded so far...
+            if (hasScissor)
+                f->glDisable(GL_SCISSOR_TEST);
             renderOffscreenFill(&d);
+            reloadMatrices = true;
+            if (hasScissor)
+                f->glEnable(GL_SCISSOR_TEST);
         }
 
-        // Depth test against the opaque batches rendered before.
-        f->glEnable(GL_DEPTH_TEST);
-        f->glDepthFunc(GL_LESS);
-        nvpr.pathCoverDepthFunc(GL_LESS);
-        nvpr.pathStencilDepthOffset(-0.05f, -1);
-
-        nvpr.matrixLoadf(GL_PATH_MODELVIEW_NV, matrix()->constData());
-        nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, state->projectionMatrix()->constData());
-
-        if (state->scissorEnabled()) {
-            // scissor rect is already set, just enable scissoring
-            f->glEnable(GL_SCISSOR_TEST);
+        if (reloadMatrices) {
+            reloadMatrices = false;
+            nvpr.matrixLoadf(GL_PATH_MODELVIEW_NV, matrix()->constData());
+            nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, state->projectionMatrix()->constData());
         }
 
         // Fill!
