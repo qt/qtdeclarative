@@ -70,12 +70,8 @@ Rectangle {
             pathItemUrl: "item1.qml"
         }
         ListElement {
-            name: "Stroke only"
+            name: "Stroke or fill only"
             pathItemUrl: "item2.qml"
-        }
-        ListElement {
-            name: "Fill only"
-            pathItemUrl: "item3.qml"
         }
         ListElement {
             name: "Dash pattern"
@@ -126,11 +122,7 @@ Rectangle {
             pathItemUrl: "item15.qml"
         }
         ListElement {
-            name: "SVG path string"
-            pathItemUrl: "item16.qml"
-        }
-        ListElement {
-            name: "Surprise!"
+            name: "Tiger"
             pathItemUrl: "item17.qml"
         }
     }
@@ -178,6 +170,7 @@ Rectangle {
             cellHeight: 300
             delegate: pathGalleryDelegate
             model: pathGalleryModel
+            cacheBuffer: 1000
         }
     }
 

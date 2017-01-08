@@ -52,42 +52,103 @@ import QtQuick 2.9 // to get PathItem
 
 Rectangle {
     color: "lightGray"
-    Repeater {
-        model: 10
-        PathItem {
-            id: ctr
-            anchors.fill: parent
-            scale: 1.0 - 0.1 * model.index
 
-            VisualPath {
-                fillColor: "transparent"
-                strokeWidth: 4
+    PathItem {
+        id: circ1
+        anchors.fill: parent
 
-                SequentialAnimation on strokeColor {
-                    loops: Animation.Infinite
-                    ColorAnimation {
-                        from: "red"
-                        to: "yellow"
-                        duration: 5000
-                    }
-                    ColorAnimation {
-                        from: "yellow"
-                        to: "green"
-                        duration: 5000
-                    }
-                    ColorAnimation {
-                        from: "green"
-                        to: "red"
-                        duration: 5000
-                    }
+        VisualPath {
+            fillColor: "transparent" // stroke only
+            strokeWidth: 4
+
+            SequentialAnimation on strokeColor {
+                loops: Animation.Infinite
+                ColorAnimation {
+                    from: "black"
+                    to: "yellow"
+                    duration: 5000
                 }
+                ColorAnimation {
+                    from: "yellow"
+                    to: "green"
+                    duration: 5000
+                }
+                ColorAnimation {
+                    from: "green"
+                    to: "black"
+                    duration: 5000
+                }
+            }
 
-                Path {
-                    startX: 60; startY: 50
-                    PathLine { x: ctr.width - 70; y: 50 }
-                    PathLine { x: ctr.width - 10; y: ctr.height - 50 }
-                    PathLine { x: 10; y: ctr.height - 50 }
-                    PathLine { x: 60; y: 50 }
+            Path {
+                id: p1
+                property real r: 60
+                startX: circ1.width / 2 - r
+                startY: circ1.height / 2 - r
+                PathArc {
+                    x: circ1.width / 2 + p1.r
+                    y: circ1.height / 2 + p1.r
+                    radiusX: p1.r; radiusY: p1.r
+                    useLargeArc: true
+                }
+                PathArc {
+                    x: circ1.width / 2 - p1.r
+                    y: circ1.height / 2 - p1.r
+                    radiusX: p1.r; radiusY: p1.r
+                    useLargeArc: true
+                }
+            }
+        }
+    }
+
+    PathItem {
+        id: circ2
+        anchors.fill: parent
+
+        SequentialAnimation on opacity {
+            loops: Animation.Infinite
+            NumberAnimation { from: 1.0; to: 0.0; duration: 5000 }
+            NumberAnimation { from: 0.0; to: 1.0; duration: 5000 }
+        }
+
+        VisualPath {
+            strokeWidth: -1 // or strokeColor: "transparent"
+
+            SequentialAnimation on fillColor {
+                loops: Animation.Infinite
+                ColorAnimation {
+                    from: "gray"
+                    to: "purple"
+                    duration: 3000
+                }
+                ColorAnimation {
+                    from: "purple"
+                    to: "red"
+                    duration: 3000
+                }
+                ColorAnimation {
+                    from: "red"
+                    to: "gray"
+                    duration: 3000
+                }
+            }
+
+            Path {
+                id: p2
+                property real r: 40
+                startX: circ2.width / 2 - r
+                startY: circ2.height / 2 - r
+                PathArc {
+                    x: circ2.width / 2 + p2.r
+                    y: circ2.height / 2 + p2.r
+                    radiusX: p2.r; radiusY: p2.r
+                    useLargeArc: true
+                }
+                PathArc {
+                    x: circ2.width / 2 - p2.r
+                    y: circ2.height / 2 - p2.r
+                    radiusX: p2.r; radiusY: p2.r
+                    useLargeArc: true
                 }
             }
         }

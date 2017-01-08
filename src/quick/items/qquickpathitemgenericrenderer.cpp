@@ -73,6 +73,9 @@ QQuickPathItemGenericStrokeFillNode::QQuickPathItemGenericStrokeFillNode(QQuickW
 {
     setGeometry(&m_geometry);
     activateMaterial(MatSolidColor);
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("stroke-fill"));
+#endif
 }
 
 void QQuickPathItemGenericStrokeFillNode::activateMaterial(Material m)

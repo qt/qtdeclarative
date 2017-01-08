@@ -6,9 +6,9 @@ RESOURCES += pathitem.qrc
 OTHER_FILES += content/pathitem.qml \
                content/pathitemgallery.qml \
                content/pathiteminteract.qml \
+               content/tiger.qml \
                content/item1.qml \
                content/item2.qml \
-               content/item3.qml \
                content/item4.qml \
                content/item5.qml \
                content/item6.qml \
@@ -21,7 +21,6 @@ OTHER_FILES += content/pathitem.qml \
                content/item13.qml \
                content/item14.qml \
                content/item15.qml \
-               content/item16.qml \
                content/item17.qml
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/pathitem

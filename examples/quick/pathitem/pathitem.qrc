@@ -7,9 +7,9 @@
         <file alias="pathitem.qml">content/pathitem.qml</file>
         <file alias="pathitemgallery.qml">content/pathitemgallery.qml</file>
         <file alias="pathiteminteract.qml">content/pathiteminteract.qml</file>
+        <file alias="tiger.qml">content/tiger.qml</file>
         <file alias="item1.qml">content/item1.qml</file>
         <file alias="item2.qml">content/item2.qml</file>
-        <file alias="item3.qml">content/item3.qml</file>
         <file alias="item4.qml">content/item4.qml</file>
         <file alias="item5.qml">content/item5.qml</file>
         <file alias="item6.qml">content/item6.qml</file>
@@ -22,7 +22,6 @@
         <file alias="item13.qml">content/item13.qml</file>
         <file alias="item14.qml">content/item14.qml</file>
         <file alias="item15.qml">content/item15.qml</file>
-        <file alias="item16.qml">content/item16.qml</file>
         <file alias="item17.qml">content/item17.qml</file>
     </qresource>
 </RCC>
