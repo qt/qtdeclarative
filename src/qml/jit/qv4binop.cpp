@@ -125,8 +125,8 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
         info = stringAdd;
     }
 
-    RuntimeCall fallBack(info.fallbackImplementation);
-    RuntimeCall context(info.contextImplementation);
+    Assembler::RuntimeCall fallBack(info.fallbackImplementation);
+    Assembler::RuntimeCall context(info.contextImplementation);
     if (fallBack.isValid()) {
         as->generateFunctionCallImp(info.needsExceptionCheck, target, info.name, fallBack,
                                      PointerToValue(lhs),

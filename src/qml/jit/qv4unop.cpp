@@ -48,14 +48,14 @@ using namespace JIT;
 #define stringIfy(s) stringIfyx(s)
 #define setOp(operation) \
     do { \
-        call = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); \
+        call = Assembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); \
         needsExceptionCheck = Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 
 void Unop::generate(IR::Expr *source, IR::Expr *target)
 {
     bool needsExceptionCheck;
-    RuntimeCall call;
+    Assembler::RuntimeCall call;
     const char *name = 0;
     switch (op) {
     case IR::OpNot:

@@ -783,12 +783,12 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 
 #define setOp(op, opName, operation) \
     do { \
-        op = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        op = Assembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
         needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 #define setOpContext(op, opName, operation) \
     do { \
-        opContext = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        opContext = Assembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
         needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 
@@ -1296,8 +1296,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             return;
         }
 
-        RuntimeCall op;
-        RuntimeCall opContext;
+        Assembler::RuntimeCall op;
+        Assembler::RuntimeCall opContext;
         const char *opName = 0;
         bool needsExceptionCheck;
         switch (b->op) {

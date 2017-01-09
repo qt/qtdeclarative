@@ -89,29 +89,29 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
-struct LookupCall {
-    JSC::MacroAssembler::Address addr;
-    uint getterSetterOffset;
-
-    LookupCall(const JSC::MacroAssembler::Address &addr, uint getterSetterOffset)
-        : addr(addr)
-        , getterSetterOffset(getterSetterOffset)
-    {}
-};
-
-struct RuntimeCall {
-    JSC::MacroAssembler::Address addr;
-
-    inline RuntimeCall(uint offset = uint(INT_MIN));
-    bool isValid() const { return addr.offset >= 0; }
-};
-
 class Assembler : public JSC::MacroAssembler, public TargetPlatform
 {
     Q_DISABLE_COPY(Assembler)
 
 public:
     Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
+
+    struct LookupCall {
+        Address addr;
+        uint getterSetterOffset;
+
+        LookupCall(const Address &addr, uint getterSetterOffset)
+            : addr(addr)
+            , getterSetterOffset(getterSetterOffset)
+        {}
+    };
+
+    struct RuntimeCall {
+        Address addr;
+
+        inline RuntimeCall(uint offset = uint(INT_MIN));
+        bool isValid() const { return addr.offset >= 0; }
+    };
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -1141,7 +1141,7 @@ void Assembler::copyValue(Result result, IR::Expr* source)
     }
 }
 
-inline RuntimeCall::RuntimeCall(uint offset)
+inline Assembler::RuntimeCall::RuntimeCall(uint offset)
     : addr(Assembler::EngineRegister, offset + qOffsetOf(QV4::ExecutionEngine, runtime))
 {
 }
@@ -1151,7 +1151,7 @@ inline RuntimeCall::RuntimeCall(uint offset)
 template <typename T> inline bool prepareCall(T &, Assembler *)
 { return true; }
 
-template <> inline bool prepareCall(LookupCall &lookupCall, Assembler *as)
+template <> inline bool prepareCall(Assembler::LookupCall &lookupCall, Assembler *as)
 {
     // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
 
