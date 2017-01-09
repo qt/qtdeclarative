@@ -91,7 +91,7 @@ public:
 };
 
 // ### Qt 6: Make public moving to qquickimageprovider.h
-class Q_QUICK_EXPORT QQuickImageProviderOptions
+class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderOptions
 {
 public:
     enum AutoTransform {
@@ -188,7 +188,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
 
 // This class will disappear with Qt6 and will just be the regular QQuickImageProvider
 // ### Qt 6: Remove this class and fold it with QQuickImageProvider
-class Q_QUICK_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
+class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
 {
 public:
     QQuickImageProviderWithOptions(ImageType type, Flags flags = Flags());
