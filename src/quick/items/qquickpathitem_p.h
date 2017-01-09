@@ -263,6 +263,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathItem : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
+    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(QQmlListProperty<QQuickVisualPath> visualPaths READ visualPaths)
     Q_CLASSINFO("DefaultProperty", "visualPaths")
 
@@ -280,6 +281,9 @@ public:
 
     RendererType rendererType() const;
 
+    bool asynchronous() const;
+    void setAsynchronous(bool async);
+
     QQmlListProperty<QQuickVisualPath> visualPaths();
 
 protected:
@@ -291,6 +295,7 @@ protected:
 
 Q_SIGNALS:
     void rendererChanged();
+    void asynchronousChanged();
 
 private:
     Q_DISABLE_COPY(QQuickPathItem)

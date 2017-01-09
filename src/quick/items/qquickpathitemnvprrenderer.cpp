@@ -140,7 +140,7 @@ void QQuickPathItemNvprRenderer::setFillGradient(int index, QQuickPathGradient *
     m_accDirty |= DirtyFillGradient;
 }
 
-void QQuickPathItemNvprRenderer::endSync()
+void QQuickPathItemNvprRenderer::endSync(bool)
 {
 }
 

@@ -158,7 +158,7 @@ void QQuickPathItemSoftwareRenderer::setFillGradient(int index, QQuickPathGradie
     m_accDirty |= DirtyBrush;
 }
 
-void QQuickPathItemSoftwareRenderer::endSync()
+void QQuickPathItemSoftwareRenderer::endSync(bool)
 {
 }
 

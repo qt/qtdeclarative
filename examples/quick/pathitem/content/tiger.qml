@@ -53,6 +53,8 @@ import QtQuick 2.9
 PathItem {
     id: pathItem
 
+    asynchronous: true
+
     anchors.fill: parent
     scale: 0.4
 

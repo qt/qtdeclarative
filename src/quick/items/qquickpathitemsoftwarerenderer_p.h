@@ -82,7 +82,7 @@ public:
     void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickPathGradient *gradient) override;
-    void endSync() override;
+    void endSync(bool async) override;
 
     void updateNode() override;
 

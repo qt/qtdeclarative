@@ -361,6 +361,7 @@ QQuickPathItemPrivate::QQuickPathItemPrivate()
     : componentComplete(true),
       vpChanged(false),
       rendererType(QQuickPathItem::UnknownRenderer),
+      async(false),
       renderer(nullptr)
 {
 }
@@ -391,6 +392,23 @@ QQuickPathItem::RendererType QQuickPathItem::rendererType() const
 {
     Q_D(const QQuickPathItem);
     return d->rendererType;
+}
+
+bool QQuickPathItem::asynchronous() const
+{
+    Q_D(const QQuickPathItem);
+    return d->async;
+}
+
+void QQuickPathItem::setAsynchronous(bool async)
+{
+    Q_D(QQuickPathItem);
+    if (d->async != async) {
+        d->async = async;
+        emit asynchronousChanged();
+        if (d->componentComplete)
+            d->_q_visualPathChanged();
+    }
 }
 
 static QQuickVisualPath *vpe_at(QQmlListProperty<QQuickVisualPath> *property, int index)
@@ -606,7 +624,7 @@ void QQuickPathItemPrivate::sync()
         dirty = 0;
     }
 
-    renderer->endSync();
+    renderer->endSync(async);
 }
 
 // ***** gradient support *****

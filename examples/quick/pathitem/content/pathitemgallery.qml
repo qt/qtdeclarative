@@ -170,7 +170,6 @@ Rectangle {
             cellHeight: 300
             delegate: pathGalleryDelegate
             model: pathGalleryModel
-            cacheBuffer: 1000
         }
     }
 

@@ -55,11 +55,14 @@
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
-#include <QtGui/private/qtriangulatingstroker_p.h>
+#include <QtCore/qrunnable.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPathItemGenericNode;
+class QQuickPathItemGenericStrokeFillNode;
+class QQuickPathItemFillRunnable;
+class QQuickPathItemStrokeRunnable;
 
 class QQuickPathItemGenericRenderer : public QQuickAbstractPathRenderer
 {
@@ -88,15 +91,29 @@ public:
     void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickPathGradient *gradient) override;
-    void endSync() override;
+    void endSync(bool async) override;
 
     void updateNode() override;
 
     void setRootNode(QQuickPathItemGenericNode *node);
 
     struct Color4ub { unsigned char r, g, b, a; };
+    typedef QVector<QSGGeometry::ColoredPoint2D> VerticesType;
+    typedef QVector<quint16> IndicesType;
+
+    static void triangulateFill(const QPainterPath &path,
+                                const Color4ub &fillColor,
+                                VerticesType *fillVertices,
+                                IndicesType *fillIndices);
+    static void triangulateStroke(const QPainterPath &path,
+                                  const QPen &pen,
+                                  const Color4ub &strokeColor,
+                                  VerticesType *strokeVertices,
+                                  const QSize &clipSize);
 
 private:
+    void maybeUpdateAsyncItem();
+
     struct VisualPathData {
         float strokeWidth;
         QPen pen;
@@ -106,25 +123,58 @@ private:
         QPainterPath path;
         bool fillGradientActive;
         QQuickPathItemGradientCache::GradientDesc fillGradient;
-        QVector<QSGGeometry::ColoredPoint2D> fillVertices;
-        QVector<quint16> fillIndices;
-        QVector<QSGGeometry::ColoredPoint2D> strokeVertices;
+        VerticesType fillVertices;
+        IndicesType fillIndices;
+        VerticesType strokeVertices;
         int syncDirty;
         int effectiveDirty = 0;
+        QQuickPathItemFillRunnable *pendingFill = nullptr;
+        QQuickPathItemStrokeRunnable *pendingStroke = nullptr;
     };
 
-    void triangulateFill(VisualPathData *d);
-    void triangulateStroke(VisualPathData *d);
-
+    void updateShadowDataInNode(VisualPathData *d, QQuickPathItemGenericStrokeFillNode *n);
     void updateFillNode(VisualPathData *d, QQuickPathItemGenericNode *node);
     void updateStrokeNode(VisualPathData *d, QQuickPathItemGenericNode *node);
 
     QQuickItem *m_item;
     QQuickPathItemGenericNode *m_rootNode;
-    QTriangulatingStroker m_stroker;
-    QDashedStrokeProcessor m_dashStroker;
     QVector<VisualPathData> m_vp;
     int m_accDirty;
+};
+
+class QQuickPathItemFillRunnable : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    void run() override;
+
+    bool orphaned = false;
+    QPainterPath path;
+    QQuickPathItemGenericRenderer::Color4ub fillColor;
+    QQuickPathItemGenericRenderer::VerticesType fillVertices;
+    QQuickPathItemGenericRenderer::IndicesType fillIndices;
+
+Q_SIGNALS:
+    void done(QQuickPathItemFillRunnable *self);
+};
+
+class QQuickPathItemStrokeRunnable : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    void run() override;
+
+    bool orphaned = false;
+    QPainterPath path;
+    QPen pen;
+    QQuickPathItemGenericRenderer::Color4ub strokeColor;
+    QQuickPathItemGenericRenderer::VerticesType strokeVertices;
+    QSize clipSize;
+
+Q_SIGNALS:
+    void done(QQuickPathItemStrokeRunnable *self);
 };
 
 class QQuickPathItemGenericStrokeFillNode : public QSGGeometryNode

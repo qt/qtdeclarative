@@ -79,7 +79,7 @@ public:
     virtual void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickPathGradient *gradient) = 0;
-    virtual void endSync() = 0;
+    virtual void endSync(bool async) = 0;
 
     // Render thread, with gui blocked
     virtual void updateNode() = 0;
@@ -144,6 +144,7 @@ public:
     bool componentComplete;
     bool vpChanged;
     QQuickPathItem::RendererType rendererType;
+    bool async;
     QQuickAbstractPathRenderer *renderer;
     QVector<QQuickVisualPath *> vp;
 };

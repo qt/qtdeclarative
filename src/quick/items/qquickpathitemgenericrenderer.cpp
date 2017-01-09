@@ -39,7 +39,9 @@
 
 #include "qquickpathitemgenericrenderer_p.h"
 #include <QtGui/private/qtriangulator_p.h>
+#include <QtGui/private/qtriangulatingstroker_p.h>
 #include <QSGVertexColorMaterial>
+#include <QThreadPool>
 
 QT_BEGIN_NAMESPACE
 
@@ -103,6 +105,8 @@ void QQuickPathItemGenericStrokeFillNode::activateMaterial(Material m)
 }
 
 // sync, and so triangulation too, happens on the gui thread
+//    - except when async is set, in which case triangulation is moved to worker threads
+
 void QQuickPathItemGenericRenderer::beginSync(int totalCount)
 {
     if (m_vp.count() != totalCount) {
@@ -194,9 +198,22 @@ void QQuickPathItemGenericRenderer::setFillGradient(int index, QQuickPathGradien
     d.syncDirty |= DirtyFillGradient;
 }
 
-void QQuickPathItemGenericRenderer::endSync()
+void QQuickPathItemFillRunnable::run()
 {
-    for (VisualPathData &d : m_vp) {
+    QQuickPathItemGenericRenderer::triangulateFill(path, fillColor, &fillVertices, &fillIndices);
+    emit done(this);
+}
+
+void QQuickPathItemStrokeRunnable::run()
+{
+    QQuickPathItemGenericRenderer::triangulateStroke(path, pen, strokeColor, &strokeVertices, clipSize);
+    emit done(this);
+}
+
+void QQuickPathItemGenericRenderer::endSync(bool async)
+{
+    for (int i = 0; i < m_vp.count(); ++i) {
+        VisualPathData &d(m_vp[i]);
         if (!d.syncDirty)
             continue;
 
@@ -217,67 +234,145 @@ void QQuickPathItemGenericRenderer::endSync()
         }
 
         if (d.syncDirty & DirtyGeom) {
-            if (d.fillColor.a)
-                triangulateFill(&d);
-            if (d.strokeWidth >= 0.0f && d.strokeColor.a)
-                triangulateStroke(&d);
+            static QThreadPool threadPool;
+            static bool threadPoolReady = false;
+            if (async && !threadPoolReady) {
+                threadPoolReady = true;
+                const int idealCount = QThread::idealThreadCount();
+                threadPool.setMaxThreadCount(idealCount > 0 ? idealCount * 2 : 4);
+            }
+            if (d.fillColor.a) {
+                d.path.setFillRule(d.fillRule);
+                if (async) {
+                    QQuickPathItemFillRunnable *r = new QQuickPathItemFillRunnable;
+                    r->setAutoDelete(false);
+                    if (d.pendingFill)
+                        d.pendingFill->orphaned = true;
+                    d.pendingFill = r;
+                    r->path = d.path;
+                    r->fillColor = d.fillColor;
+                    // Unlikely in practice but in theory m_vp could be
+                    // resized. Therefore, capture 'i' instead of 'd'.
+                    QObject::connect(r, &QQuickPathItemFillRunnable::done, qApp, [this, i](QQuickPathItemFillRunnable *r) {
+                        if (!r->orphaned && i < m_vp.count()) {
+                            VisualPathData &d(m_vp[i]);
+                            d.fillVertices = r->fillVertices;
+                            d.fillIndices = r->fillIndices;
+                            d.pendingFill = nullptr;
+                            d.effectiveDirty |= DirtyGeom;
+                            maybeUpdateAsyncItem();
+                        }
+                        r->deleteLater();
+                    });
+                    threadPool.start(r);
+                } else {
+                    triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices);
+                }
+            }
+            if (d.strokeWidth >= 0.0f && d.strokeColor.a) {
+                if (async) {
+                    QQuickPathItemStrokeRunnable *r = new QQuickPathItemStrokeRunnable;
+                    r->setAutoDelete(false);
+                    if (d.pendingStroke)
+                        d.pendingStroke->orphaned = true;
+                    d.pendingStroke = r;
+                    r->path = d.path;
+                    r->pen = d.pen;
+                    r->strokeColor = d.strokeColor;
+                    r->clipSize = QSize(m_item->width(), m_item->height());
+                    QObject::connect(r, &QQuickPathItemStrokeRunnable::done, qApp, [this, i](QQuickPathItemStrokeRunnable *r) {
+                        if (!r->orphaned && i < m_vp.count()) {
+                            VisualPathData &d(m_vp[i]);
+                            d.strokeVertices = r->strokeVertices;
+                            d.pendingStroke = nullptr;
+                            d.effectiveDirty |= DirtyGeom;
+                            maybeUpdateAsyncItem();
+                        }
+                        r->deleteLater();
+                    });
+                    threadPool.start(r);
+                } else {
+                    triangulateStroke(d.path, d.pen, d.strokeColor, &d.strokeVertices,
+                                      QSize(m_item->width(), m_item->height()));
+                }
+            }
         }
     }
 }
 
-void QQuickPathItemGenericRenderer::triangulateFill(VisualPathData *d)
+void QQuickPathItemGenericRenderer::maybeUpdateAsyncItem()
 {
-    d->path.setFillRule(d->fillRule);
+    for (const VisualPathData &d : qAsConst(m_vp)) {
+        if (d.pendingFill || d.pendingStroke)
+            return;
+    }
+    m_accDirty |= DirtyGeom;
+    m_item->update();
+}
 
-    const QVectorPath &vp = qtVectorPathForPath(d->path);
+// the stroke/fill triangulation functions may be invoked either on the gui
+// thread or some worker thread and must thus be self-contained.
+void QQuickPathItemGenericRenderer::triangulateFill(const QPainterPath &path,
+                                                    const Color4ub &fillColor,
+                                                    VerticesType *fillVertices,
+                                                    IndicesType *fillIndices)
+{
+    const QVectorPath &vp = qtVectorPathForPath(path);
 
     QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(SCALE, SCALE));
     const int vertexCount = ts.vertices.count() / 2; // just a qreal vector with x,y hence the / 2
-    d->fillVertices.resize(vertexCount);
-    ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(d->fillVertices.data());
+    fillVertices->resize(vertexCount);
+    ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(fillVertices->data());
     const qreal *vsrc = ts.vertices.constData();
     for (int i = 0; i < vertexCount; ++i)
-        vdst[i].set(vsrc[i * 2] / SCALE, vsrc[i * 2 + 1] / SCALE, d->fillColor);
+        vdst[i].set(vsrc[i * 2] / SCALE, vsrc[i * 2 + 1] / SCALE, fillColor);
 
-    d->fillIndices.resize(ts.indices.size());
-    quint16 *idst = d->fillIndices.data();
+    fillIndices->resize(ts.indices.size());
+    quint16 *idst = fillIndices->data();
     if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
-        memcpy(idst, ts.indices.data(), d->fillIndices.count() * sizeof(quint16));
+        memcpy(idst, ts.indices.data(), fillIndices->count() * sizeof(quint16));
     } else {
         const quint32 *isrc = (const quint32 *) ts.indices.data();
-        for (int i = 0; i < d->fillIndices.count(); ++i)
+        for (int i = 0; i < fillIndices->count(); ++i)
             idst[i] = isrc[i];
     }
 }
 
-void QQuickPathItemGenericRenderer::triangulateStroke(VisualPathData *d)
+void QQuickPathItemGenericRenderer::triangulateStroke(const QPainterPath &path,
+                                                      const QPen &pen,
+                                                      const Color4ub &strokeColor,
+                                                      VerticesType *strokeVertices,
+                                                      const QSize &clipSize)
 {
-    const QVectorPath &vp = qtVectorPathForPath(d->path);
-
-    const QRectF clip(0, 0, m_item->width(), m_item->height());
+    const QVectorPath &vp = qtVectorPathForPath(path);
+    const QRectF clip(QPointF(0, 0), clipSize);
     const qreal inverseScale = 1.0 / SCALE;
-    m_stroker.setInvScale(inverseScale);
-    if (d->pen.style() == Qt::SolidLine) {
-        m_stroker.process(vp, d->pen, clip, 0);
+
+    QTriangulatingStroker stroker;
+    stroker.setInvScale(inverseScale);
+
+    if (pen.style() == Qt::SolidLine) {
+        stroker.process(vp, pen, clip, 0);
     } else {
-        m_dashStroker.setInvScale(inverseScale);
-        m_dashStroker.process(vp, d->pen, clip, 0);
-        QVectorPath dashStroke(m_dashStroker.points(), m_dashStroker.elementCount(),
-                               m_dashStroker.elementTypes(), 0);
-        m_stroker.process(dashStroke, d->pen, clip, 0);
+        QDashedStrokeProcessor dashStroker;
+        dashStroker.setInvScale(inverseScale);
+        dashStroker.process(vp, pen, clip, 0);
+        QVectorPath dashStroke(dashStroker.points(), dashStroker.elementCount(),
+                               dashStroker.elementTypes(), 0);
+        stroker.process(dashStroke, pen, clip, 0);
     }
 
-    if (!m_stroker.vertexCount()) {
-        d->strokeVertices.clear();
+    if (!stroker.vertexCount()) {
+        strokeVertices->clear();
         return;
     }
 
-    const int vertexCount = m_stroker.vertexCount() / 2; // just a float vector with x,y hence the / 2
-    d->strokeVertices.resize(vertexCount);
-    ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(d->strokeVertices.data());
-    const float *vsrc = m_stroker.vertices();
+    const int vertexCount = stroker.vertexCount() / 2; // just a float vector with x,y hence the / 2
+    strokeVertices->resize(vertexCount);
+    ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(strokeVertices->data());
+    const float *vsrc = stroker.vertices();
     for (int i = 0; i < vertexCount; ++i)
-        vdst[i].set(vsrc[i * 2], vsrc[i * 2 + 1], d->strokeColor);
+        vdst[i].set(vsrc[i * 2], vsrc[i * 2 + 1], strokeColor);
 }
 
 void QQuickPathItemGenericRenderer::setRootNode(QQuickPathItemGenericNode *node)
@@ -317,7 +412,7 @@ void QQuickPathItemGenericRenderer::updateNode()
         QQuickPathItemGenericNode *node = *nodePtr;
 
         if (m_accDirty & DirtyList)
-            d.effectiveDirty |= DirtyGeom;
+            d.effectiveDirty |= DirtyGeom | DirtyColor | DirtyFillGradient;
         if (!d.effectiveDirty)
             continue;
 
@@ -361,25 +456,36 @@ void QQuickPathItemGenericRenderer::updateNode()
     m_accDirty = 0;
 }
 
+void QQuickPathItemGenericRenderer::updateShadowDataInNode(VisualPathData *d, QQuickPathItemGenericStrokeFillNode *n)
+{
+    if (d->fillGradientActive) {
+        if (d->effectiveDirty & DirtyFillGradient)
+            n->m_fillGradient = d->fillGradient;
+    }
+}
+
 void QQuickPathItemGenericRenderer::updateFillNode(VisualPathData *d, QQuickPathItemGenericNode *node)
 {
     if (!node->m_fillNode)
         return;
 
+    // Make a copy of the data that will be accessed by the material on
+    // the render thread. This must be done even when we bail out below.
     QQuickPathItemGenericStrokeFillNode *n = node->m_fillNode;
+    updateShadowDataInNode(d, n);
+
     QSGGeometry *g = &n->m_geometry;
     if (d->fillVertices.isEmpty()) {
-        g->allocate(0, 0);
-        n->markDirty(QSGNode::DirtyGeometry);
+        if (g->vertexCount() || g->indexCount()) {
+            g->allocate(0, 0);
+            n->markDirty(QSGNode::DirtyGeometry);
+        }
         return;
     }
 
     if (d->fillGradientActive) {
         n->activateMaterial(QQuickPathItemGenericStrokeFillNode::MatLinearGradient);
         if (d->effectiveDirty & DirtyFillGradient) {
-            // Make a copy of the data that will be accessed by the material on
-            // the render thread.
-            n->m_fillGradient = d->fillGradient;
             // Gradients are implemented via a texture-based material.
             n->markDirty(QSGNode::DirtyMaterial);
             // stop here if only the gradient changed; no need to touch the geometry
@@ -414,13 +520,16 @@ void QQuickPathItemGenericRenderer::updateStrokeNode(VisualPathData *d, QQuickPa
         return;
 
     QQuickPathItemGenericStrokeFillNode *n = node->m_strokeNode;
-    n->markDirty(QSGNode::DirtyGeometry);
-
     QSGGeometry *g = &n->m_geometry;
     if (d->strokeVertices.isEmpty()) {
-        g->allocate(0, 0);
+        if (g->vertexCount() || g->indexCount()) {
+            g->allocate(0, 0);
+            n->markDirty(QSGNode::DirtyGeometry);
+        }
         return;
     }
+
+    n->markDirty(QSGNode::DirtyGeometry);
 
     if ((d->effectiveDirty & DirtyColor) && !(d->effectiveDirty & DirtyGeom)) {
         ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(g->vertexData());
