@@ -766,7 +766,6 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     if (!texture) {
         delete node;
         d->node = 0;
-        delete d->nodeTexture;
         d->nodeTexture = 0;
         if (d->textureProvider) {
             d->textureProvider->tex = 0;
