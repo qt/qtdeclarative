@@ -89,7 +89,23 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
-class Assembler : public JSC::MacroAssembler, public TargetPlatform
+#if CPU(ARM_THUMB2)
+typedef JSC::MacroAssemblerARMv7 PlatformAssembler;
+#elif CPU(ARM64)
+typedef JSC::MacroAssemblerARM64 PlatformAssembler;
+#elif CPU(ARM_TRADITIONAL)
+typedef JSC::MacroAssemblerARM PlatformAssembler;
+#elif CPU(MIPS)
+typedef JSC::MacroAssemblerMIPS PlatformAssembler;
+#elif CPU(X86)
+typedef JSC::MacroAssemblerX86 PlatformAssembler;
+#elif CPU(X86_64)
+typedef JSC::MacroAssemblerX86_64 PlatformAssembler;
+#elif CPU(SH4)
+typedef JSC::MacroAssemblerSH4 PlatformAssembler;
+#endif
+
+class Assembler : public JSC::MacroAssembler, public TargetPlatform<PlatformAssembler>
 {
     Q_DISABLE_COPY(Assembler)
 
@@ -821,7 +837,7 @@ public:
             loadArgumentOnStackOrRegister<0>(arg1);
 
 #ifdef RESTORE_EBX_ON_CALL
-        load32(ebxAddressOnStack(), JSC::X86Registers::ebx); // restore the GOT ptr
+        load32(this->ebxAddressOnStack(), JSC::X86Registers::ebx); // restore the GOT ptr
 #endif
 
         callAbsolute(functionName, function);

@@ -79,12 +79,12 @@ namespace JIT {
 // a call, we add a load it right before emitting the call instruction.
 //
 // NOTE: When adding new architecture, do not forget to whitelist it in qv4global_p.h!
+template <typename PlatformAssembler>
 class TargetPlatform
 {
 public:
-    typedef JSC::MacroAssembler PlatformAssembler;
-    using RegisterID = PlatformAssembler::RegisterID;
-    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using RegisterID = typename PlatformAssembler::RegisterID;
+    using FPRegisterID = typename PlatformAssembler::FPRegisterID;
 
 #if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX) || OS(FREEBSD) || defined(Q_OS_IOS))
     enum { RegAllocIsSupported = 1 };
@@ -133,7 +133,8 @@ public:
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
 
 #define RESTORE_EBX_ON_CALL
-    static PlatformAssembler::Address ebxAddressOnStack()
+    using Address = typename PlatformAssembler::Address;
+    static Address ebxAddressOnStack()
     {
         static int ebxIdx = -1;
         if (ebxIdx == -1) {
@@ -150,7 +151,7 @@ public:
             Q_ASSERT(ebxIdx >= 0);
             ebxIdx += 1;
         }
-        return PlatformAssembler::Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
+        return Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
     }
 #endif
 
