@@ -3751,10 +3751,10 @@ QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
 
 /*!
     This function is called when an item should release graphics
-    resources which are not already managed by the nodes returend from
+    resources which are not already managed by the nodes returned from
     QQuickItem::updatePaintNode().
 
-    This happens when the item is about to be removed from window it
+    This happens when the item is about to be removed from the window it
     was previously rendering to. The item is guaranteed to have a
     \l {QQuickItem::window()}{window} when the function is called.
 
