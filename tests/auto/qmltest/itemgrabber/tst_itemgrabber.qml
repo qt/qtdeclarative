@@ -37,8 +37,9 @@ Item {
     TestCase {
         id: testCase
         name: "item-grabber"
-        when: imageOnDisk.ready && imageOnDiskSmall.ready && imageInCache.ready && imageInCacheSmall.ready
-        function test_endresult() {
+        when: imageOnDisk.ready && imageOnDiskSmall.ready
+
+        function test_endresult_disk() {
             var image = grabImage(root);
 
             // imageOnDisk at (0, 0) - (100x100)
@@ -52,6 +53,40 @@ Item {
             compare(imageOnDiskSmall.height, 50);
             verify(image.pixel(100, 0) === Qt.rgba(1, 0, 0, 1));
             verify(image.pixel(149, 49) === Qt.rgba(0, 0, 1, 1));
+        }
+
+        function test_endresult_cache_data() {
+            return [
+                { cache: true, sourceSize: Qt.size(-1, -1), fillMode: Image.Stretch },
+                { cache: true, sourceSize: Qt.size(-1, -1), fillMode: Image.PreserveAspectFit },
+                { cache: true, sourceSize: Qt.size(-1, -1), fillMode: Image.PreserveAspectCrop },
+                { cache: true, sourceSize: Qt.size(10, 10), fillMode: Image.Stretch },
+                { cache: true, sourceSize: Qt.size(10, 10), fillMode: Image.PreserveAspectFit },
+                { cache: true, sourceSize: Qt.size(10, 10), fillMode: Image.PreserveAspectCrop },
+                { cache: false, sourceSize: Qt.size(-1, -1), fillMode: Image.Stretch },
+                { cache: false, sourceSize: Qt.size(-1, -1), fillMode: Image.PreserveAspectFit },
+                { cache: false, sourceSize: Qt.size(-1, -1), fillMode: Image.PreserveAspectCrop },
+                { cache: false, sourceSize: Qt.size(10, 10), fillMode: Image.Stretch },
+                { cache: false, sourceSize: Qt.size(10, 10), fillMode: Image.PreserveAspectFit },
+                { cache: false, sourceSize: Qt.size(10, 10), fillMode: Image.PreserveAspectCrop },
+            ];
+        }
+
+        function test_endresult_cache(data) {
+            imageInCache.cache = data.cache;
+            imageInCache.sourceSize = data.sourceSize;
+            imageInCache.fillMode = data.fillMode;
+            imageInCacheSmall.cache = data.cache;
+            imageInCacheSmall.sourceSize = data.sourceSize;
+            imageInCacheSmall.fillMode = data.fillMode;
+
+            box.grabToImage(imageInCache.handleGrab);
+            box.grabToImage(imageInCacheSmall.handleGrab, Qt.size(50, 50));
+
+            tryCompare(imageInCache, "ready", true);
+            tryCompare(imageInCacheSmall, "ready", true);
+
+            var image = grabImage(root);
 
             // imageInCache at (0, 100) - 100x100
             compare(imageInCache.width, 100);
@@ -72,8 +107,6 @@ Item {
         onWindowShownChanged: {
             box.grabToImage(imageOnDisk.handleGrab);
             box.grabToImage(imageOnDiskSmall.handleGrab, Qt.size(50, 50));
-            box.grabToImage(imageInCache.handleGrab);
-            box.grabToImage(imageInCacheSmall.handleGrab, Qt.size(50, 50));
         }
 
     }
