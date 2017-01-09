@@ -2178,6 +2178,27 @@ QString QQmlEngine::offlineStoragePath() const
     return d->offlineStoragePath;
 }
 
+/*!
+  Returns the file path where a \l{QtQuick.LocalStorage}{Local Storage}
+  database with the identifier \a databaseName is (or would be) located.
+
+  \sa LocalStorage.openDatabaseSync()
+  \since 5.9
+*/
+QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) const
+{
+    Q_D(const QQmlEngine);
+    QCryptographicHash md5(QCryptographicHash::Md5);
+    md5.addData(databaseName.toUtf8());
+    return d->offlineStorageDatabaseDirectory() + QLatin1String(md5.result().toHex());
+}
+
+QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
+{
+    Q_Q(const QQmlEngine);
+    return q->offlineStoragePath() + QDir::separator() + QLatin1String("Databases") + QDir::separator();
+}
+
 QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersion)
 {
     QList<QQmlType *> types;

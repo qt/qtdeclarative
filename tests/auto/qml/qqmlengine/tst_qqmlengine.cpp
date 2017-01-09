@@ -56,6 +56,7 @@ private slots:
     void baseUrl();
     void contextForObject();
     void offlineStoragePath();
+    void offlineDatabaseStoragePath();
     void clearComponentCache();
     void trimComponentCache();
     void trimComponentCache_data();
@@ -250,6 +251,34 @@ void tst_qqmlengine::offlineStoragePath()
 
     engine.setOfflineStoragePath(QDir::homePath());
     QCOMPARE(engine.offlineStoragePath(), QDir::homePath());
+}
+
+void tst_qqmlengine::offlineDatabaseStoragePath()
+{
+    // Without these set, QDesktopServices::storageLocation returns
+    // strings with extra "//" at the end. We set them to ignore this problem.
+    qApp->setApplicationName("tst_qqmlengine");
+    qApp->setOrganizationName("QtProject");
+    qApp->setOrganizationDomain("www.qt-project.org");
+
+    QQmlEngine engine;
+    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    const QString databaseName = QLatin1String("foo");
+    QString databaseLocation = engine.offlineStorageDatabaseFilePath(databaseName);
+    QCOMPARE(dataLocation.isEmpty(), databaseLocation.isEmpty());
+
+    QDir dir(dataLocation);
+    dir.mkpath("QML");
+    dir.cd("QML");
+    dir.mkpath("OfflineStorage");
+    dir.cd("OfflineStorage");
+    dir.mkpath("Databases");
+    dir.cd("Databases");
+    QCOMPARE(QFileInfo(databaseLocation).dir().path(), dir.path());
+
+    QCryptographicHash md5(QCryptographicHash::Md5);
+    md5.addData(databaseName.toUtf8());
+    QCOMPARE(databaseLocation, QDir::toNativeSeparators(dir.filePath(QLatin1String(md5.result().toHex()))));
 }
 
 void tst_qqmlengine::clearComponentCache()
