@@ -96,6 +96,10 @@ class Assembler : public JSC::MacroAssembler, public TargetPlatform
 public:
     Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 
+    typedef JSC::MacroAssembler MacroAssembler;
+    using RegisterID = MacroAssembler::RegisterID;
+    using FPRegisterID = MacroAssembler::FPRegisterID;
+
     struct LookupCall {
         Address addr;
         uint getterSetterOffset;

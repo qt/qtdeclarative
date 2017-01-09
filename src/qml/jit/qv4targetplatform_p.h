@@ -82,17 +82,21 @@ namespace JIT {
 class TargetPlatform
 {
 public:
+    typedef JSC::MacroAssembler PlatformAssembler;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+
 #if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX) || OS(FREEBSD) || defined(Q_OS_IOS))
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::edi;
-    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::esi;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::ecx;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister       = JSC::X86Registers::edi;
+    static const RegisterID EngineRegister      = JSC::X86Registers::esi;
+    static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
+    static const RegisterID ScratchRegister      = JSC::X86Registers::ecx;
+    static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -117,19 +121,19 @@ public:
 
 #  undef ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 0;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int) { Q_UNREACHABLE(); }
+    static RegisterID registerForArgument(int) { Q_UNREACHABLE(); }
 
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
 
 #if OS(WINDOWS) || OS(QNX) || \
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
 
 #define RESTORE_EBX_ON_CALL
-    static JSC::MacroAssembler::Address ebxAddressOnStack()
+    static PlatformAssembler::Address ebxAddressOnStack()
     {
         static int ebxIdx = -1;
         if (ebxIdx == -1) {
@@ -146,7 +150,7 @@ public:
             Q_ASSERT(ebxIdx >= 0);
             ebxIdx += 1;
         }
-        return JSC::MacroAssembler::Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
+        return PlatformAssembler::Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
     }
 #endif
 
@@ -155,14 +159,14 @@ public:
 #if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD) || OS(QNX) || defined(Q_OS_IOS))
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
-    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::r10;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister       = JSC::X86Registers::r12;
+    static const RegisterID EngineRegister      = JSC::X86Registers::r14;
+    static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
+    static const RegisterID ScratchRegister      = JSC::X86Registers::r10;
+    static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -193,9 +197,9 @@ public:
 
 #define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 6;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::X86Registers::edi,
             JSC::X86Registers::esi,
             JSC::X86Registers::edx,
@@ -210,8 +214,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
 #endif // Linux/MacOS on x86_64
 
 #if CPU(X86_64) && OS(WINDOWS)
@@ -220,14 +224,14 @@ public:
     // incoming function parameters to the shadow space is missing.
     enum { RegAllocIsSupported = 0 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
-    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::r10;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister       = JSC::X86Registers::r12;
+    static const RegisterID EngineRegister      = JSC::X86Registers::r14;
+    static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
+    static const RegisterID ScratchRegister      = JSC::X86Registers::r10;
+    static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -252,9 +256,9 @@ public:
 
 #define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::X86Registers::ecx,
             JSC::X86Registers::edx,
             JSC::X86Registers::r8,
@@ -267,8 +271,8 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 32;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
 #endif // Windows on x86_64
 
 #if CPU(ARM)
@@ -287,18 +291,18 @@ public:
     // is used for the subroutine: r7 for Thumb or Thumb2, and r11 for ARM. We assign the constants
     // accordingly, and assign the locals-register to the "other" register.
 #if CPU(ARM_THUMB2)
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARMRegisters::r7;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r11;
+    static const RegisterID FramePointerRegister = JSC::ARMRegisters::r7;
+    static const RegisterID LocalsRegister = JSC::ARMRegisters::r11;
 #else // Thumbs down
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARMRegisters::r11;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r7;
+    static const RegisterID FramePointerRegister = JSC::ARMRegisters::r11;
+    static const RegisterID LocalsRegister = JSC::ARMRegisters::r7;
 #endif
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARMRegisters::r5;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARMRegisters::r10;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
+    static const RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
+    static const RegisterID ScratchRegister = JSC::ARMRegisters::r5;
+    static const RegisterID EngineRegister = JSC::ARMRegisters::r10;
+    static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
+    static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
+    static const FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -344,9 +348,9 @@ public:
 
 #define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::ARMRegisters::r0,
             JSC::ARMRegisters::r1,
             JSC::ARMRegisters::r2,
@@ -361,13 +365,13 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
 
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->push(JSC::ARMRegisters::lr);
         as->push(FramePointerRegister);
     }
 
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as)
     {
         as->pop(FramePointerRegister);
         as->pop(JSC::ARMRegisters::lr);
@@ -377,14 +381,14 @@ public:
 #if CPU(ARM64)
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARM64Registers::fp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARM64Registers::x28;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARM64Registers::sp;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARM64Registers::x9;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARM64Registers::x27;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARM64Registers::x0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARM64Registers::q0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARM64Registers::q1;
+    static const RegisterID FramePointerRegister = JSC::ARM64Registers::fp;
+    static const RegisterID LocalsRegister = JSC::ARM64Registers::x28;
+    static const RegisterID StackPointerRegister = JSC::ARM64Registers::sp;
+    static const RegisterID ScratchRegister = JSC::ARM64Registers::x9;
+    static const RegisterID EngineRegister = JSC::ARM64Registers::x27;
+    static const RegisterID ReturnValueRegister = JSC::ARM64Registers::x0;
+    static const FPRegisterID FPGpr0 = JSC::ARM64Registers::q0;
+    static const FPRegisterID FPGpr1 = JSC::ARM64Registers::q1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -455,9 +459,9 @@ public:
 
 #define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 8;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::ARM64Registers::x0,
             JSC::ARM64Registers::x1,
             JSC::ARM64Registers::x2,
@@ -476,12 +480,12 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
 
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->pushPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
 
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as)
     {
         as->popPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
@@ -490,14 +494,14 @@ public:
 #if defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::MIPSRegisters::fp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::MIPSRegisters::sp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::MIPSRegisters::s0;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::MIPSRegisters::s1;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::MIPSRegisters::v0;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::MIPSRegisters::s2;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::MIPSRegisters::f0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::MIPSRegisters::f2;
+    static const RegisterID FramePointerRegister = JSC::MIPSRegisters::fp;
+    static const RegisterID StackPointerRegister = JSC::MIPSRegisters::sp;
+    static const RegisterID LocalsRegister = JSC::MIPSRegisters::s0;
+    static const RegisterID EngineRegister = JSC::MIPSRegisters::s1;
+    static const RegisterID ReturnValueRegister = JSC::MIPSRegisters::v0;
+    static const RegisterID ScratchRegister = JSC::MIPSRegisters::s2;
+    static const FPRegisterID FPGpr0 = JSC::MIPSRegisters::f0;
+    static const FPRegisterID FPGpr1 = JSC::MIPSRegisters::f2;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -532,9 +536,9 @@ public:
 
 #define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::MIPSRegisters::a0,
             JSC::MIPSRegisters::a1,
             JSC::MIPSRegisters::a2,
@@ -549,13 +553,13 @@ public:
     static const int StackShadowSpace = 4 * RegisterSize; // Stack space for 4 argument registers.
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
 
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->push(JSC::MIPSRegisters::ra);
         as->push(FramePointerRegister);
     }
 
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as)
     {
         as->pop(FramePointerRegister);
         as->pop(JSC::MIPSRegisters::ra);
