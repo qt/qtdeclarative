@@ -87,6 +87,8 @@ class QSGRenderNode;
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
 public:
+    virtual ~QSGNodeVisitorEx() {}
+
     // visit(...) returns true if the children are supposed to be
     // visisted and false if they're supposed to be skipped by the visitor.
 
