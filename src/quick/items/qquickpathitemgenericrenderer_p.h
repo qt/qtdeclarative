@@ -68,10 +68,11 @@ class QQuickPathItemGenericRenderer : public QQuickAbstractPathRenderer
 {
 public:
     enum Dirty {
-        DirtyGeom = 0x01,
-        DirtyColor = 0x02,
-        DirtyFillGradient = 0x04,
-        DirtyList = 0x08
+        DirtyFillGeom = 0x01,
+        DirtyStrokeGeom = 0x02,
+        DirtyColor = 0x04,
+        DirtyFillGradient = 0x08,
+        DirtyList = 0x10 // only for accDirty
     };
 
     QQuickPathItemGenericRenderer(QQuickItem *item)
