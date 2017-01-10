@@ -239,7 +239,7 @@ namespace QtQml {
     }
 
 MESSAGE_FUNCS(qmlDebug, QtMsgType::QtDebugMsg)
-MESSAGE_FUNCS(qmlInfo, QtMsgType::QtWarningMsg) // XXX: temporary, switch to QtInfoMsg when callers are ported
+MESSAGE_FUNCS(qmlInfo, QtMsgType::QtInfoMsg)
 MESSAGE_FUNCS(qmlWarning, QtMsgType::QtWarningMsg)
 
 
