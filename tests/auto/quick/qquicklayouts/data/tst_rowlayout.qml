@@ -263,6 +263,41 @@ Item {
             col.destroy()
         }
 
+        function test_dynamicSizeAdaptationsForInitiallyInvisibleItemsInLayout() {
+            var test_layoutStr =
+               'import QtQuick 2.2;                     \
+                import QtQuick.Layouts 1.0;             \
+                RowLayout {                             \
+                    id: row;                            \
+                    width: 10;                          \
+                    spacing: 0;                         \
+                    property alias r1: _r1;             \
+                    Rectangle {                         \
+                        id: _r1;                        \
+                        visible: false;                 \
+                        height: 10;                     \
+                        Layout.fillWidth: true;         \
+                        color: "#8080ff";               \
+                    }                                   \
+                    property alias r2: _r2;             \
+                    Rectangle {                         \
+                        id: _r2;                        \
+                        height: 10;                     \
+                        Layout.fillWidth: true;         \
+                        color: "#c0c0ff";               \
+                    }                                   \
+                }                                       '
+
+            var lay = Qt.createQmlObject(test_layoutStr, container, '');
+            compare(lay.r1.width, 0)
+            compare(lay.r2.width, 10)
+            lay.r1.visible = true;
+            waitForRendering(lay)
+            compare(lay.r1.width, 5)
+            compare(lay.r2.width, 5)
+            lay.destroy()
+        }
+
         Component {
             id: layoutItem_Component
             Rectangle {

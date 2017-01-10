@@ -294,6 +294,9 @@ private:
     qreal m_defaultMargins;
     QMarginsF m_margins;
 
+    qreal m_fallbackWidth;
+    qreal m_fallbackHeight;
+
     // GridLayout specific properties
     int m_row;
     int m_column;
