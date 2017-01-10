@@ -599,7 +599,7 @@ class YarrGenerator : private MacroAssembler {
         }
 
         // Called at the end of code generation to link all return addresses.
-        void linkDataLabels(LinkBuffer& linkBuffer)
+        void linkDataLabels(LinkBuffer<JSC::MacroAssembler>& linkBuffer)
         {
             ASSERT(isEmpty());
             for (unsigned i = 0; i < m_backtrackRecords.size(); ++i)
@@ -2676,7 +2676,7 @@ public:
         backtrack();
 
         // Link & finalize the code.
-        LinkBuffer linkBuffer(*globalData, this, REGEXP_CODE_ID);
+        LinkBuffer<JSC::MacroAssembler> linkBuffer(*globalData, this, REGEXP_CODE_ID);
         m_backtrackingState.linkDataLabels(linkBuffer);
 
         if (compileMode == MatchOnly) {

@@ -36,6 +36,7 @@
 
 #include "JITCompilationEffort.h"
 #include "MacroAssembler.h"
+#include "Options.h"
 #include <wtf/DataLog.h>
 #include <wtf/Noncopyable.h>
 
@@ -57,22 +58,23 @@ class JSGlobalData;
 //   * The address of a Label pointing into the code may be resolved.
 //   * The value referenced by a DataLabel may be set.
 //
+template <typename MacroAssembler>
 class LinkBuffer {
     WTF_MAKE_NONCOPYABLE(LinkBuffer);
     typedef MacroAssemblerCodeRef CodeRef;
     typedef MacroAssemblerCodePtr CodePtr;
-    typedef MacroAssembler::Label Label;
-    typedef MacroAssembler::Jump Jump;
-    typedef MacroAssembler::PatchableJump PatchableJump;
-    typedef MacroAssembler::JumpList JumpList;
-    typedef MacroAssembler::Call Call;
-    typedef MacroAssembler::DataLabelCompact DataLabelCompact;
-    typedef MacroAssembler::DataLabel32 DataLabel32;
-    typedef MacroAssembler::DataLabelPtr DataLabelPtr;
-    typedef MacroAssembler::ConvertibleLoadLabel ConvertibleLoadLabel;
+    typedef typename MacroAssembler::Label Label;
+    typedef typename MacroAssembler::Jump Jump;
+    typedef typename MacroAssembler::PatchableJump PatchableJump;
+    typedef typename MacroAssembler::JumpList JumpList;
+    typedef typename MacroAssembler::Call Call;
+    typedef typename MacroAssembler::DataLabelCompact DataLabelCompact;
+    typedef typename MacroAssembler::DataLabel32 DataLabel32;
+    typedef typename MacroAssembler::DataLabelPtr DataLabelPtr;
+    typedef typename MacroAssembler::ConvertibleLoadLabel ConvertibleLoadLabel;
 #if ENABLE(BRANCH_COMPACTION)
-    typedef MacroAssembler::LinkRecord LinkRecord;
-    typedef MacroAssembler::JumpLinkType JumpLinkType;
+    typedef typename MacroAssembler::LinkRecord LinkRecord;
+    typedef typename MacroAssembler::JumpLinkType JumpLinkType;
 #endif
 
 public:
@@ -204,8 +206,8 @@ public:
     // finalizeCodeWithoutDisassembly() directly if you have your own way of
     // displaying disassembly.
     
-    CodeRef finalizeCodeWithoutDisassembly();
-    CodeRef finalizeCodeWithDisassembly(const char* format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
+    inline CodeRef finalizeCodeWithoutDisassembly();
+    inline CodeRef finalizeCodeWithDisassembly(const char* format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
 
     CodePtr trampolineAt(Label label)
     {
@@ -237,9 +239,9 @@ private:
         return m_code;
     }
 
-    void linkCode(void* ownerUID, JITCompilationEffort);
+    inline void linkCode(void* ownerUID, JITCompilationEffort);
 
-    void performFinalization();
+    inline void performFinalization();
 
 #if DUMP_LINK_STATISTICS
     static void dumpLinkStatistics(void* code, size_t initialSize, size_t finalSize);
@@ -290,6 +292,144 @@ private:
 #define FINALIZE_DFG_CODE(linkBufferReference, dataLogFArgumentsForHeading)  \
     FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, dataLogFArgumentsForHeading)
 
+
+template <typename MacroAssembler>
+inline typename LinkBuffer<MacroAssembler>::CodeRef LinkBuffer<MacroAssembler>::finalizeCodeWithoutDisassembly()
+{
+    performFinalization();
+
+    return CodeRef(m_executableMemory);
+}
+
+template <typename MacroAssembler>
+inline typename LinkBuffer<MacroAssembler>::CodeRef LinkBuffer<MacroAssembler>::finalizeCodeWithDisassembly(const char* format, ...)
+{
+    ASSERT(Options::showDisassembly() || Options::showDFGDisassembly());
+
+    CodeRef result = finalizeCodeWithoutDisassembly();
+
+    dataLogF("Generated JIT code for ");
+    va_list argList;
+    va_start(argList, format);
+    WTF::dataLogFV(format, argList);
+    va_end(argList);
+    dataLogF(":\n");
+
+    dataLogF(
+#if OS(WINDOWS)
+                "    Code at [0x%p, 0x%p):\n",
+#else
+                "    Code at [%p, %p):\n",
+#endif
+                result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
+    disassemble(result.code(), m_size, "    ", WTF::dataFile());
+
+    return result;
+}
+
+template <typename MacroAssembler>
+inline void LinkBuffer<MacroAssembler>::linkCode(void* ownerUID, JITCompilationEffort effort)
+{
+    ASSERT(!m_code);
+#if !ENABLE(BRANCH_COMPACTION)
+    m_executableMemory = m_assembler->m_assembler.executableCopy(*m_globalData, ownerUID, effort);
+    if (!m_executableMemory)
+        return;
+    m_code = m_executableMemory->start();
+    m_size = m_assembler->m_assembler.codeSize();
+    ASSERT(m_code);
+#else
+    m_initialSize = m_assembler->m_assembler.codeSize();
+    m_executableMemory = m_globalData->executableAllocator.allocate(*m_globalData, m_initialSize, ownerUID, effort);
+    if (!m_executableMemory)
+        return;
+    m_code = (uint8_t*)m_executableMemory->start();
+    ASSERT(m_code);
+    ExecutableAllocator::makeWritable(m_code, m_initialSize);
+    uint8_t* inData = (uint8_t*)m_assembler->unlinkedCode();
+    uint8_t* outData = reinterpret_cast<uint8_t*>(m_code);
+    int readPtr = 0;
+    int writePtr = 0;
+    Vector<LinkRecord, 0, UnsafeVectorOverflow>& jumpsToLink = m_assembler->jumpsToLink();
+    unsigned jumpCount = jumpsToLink.size();
+    for (unsigned i = 0; i < jumpCount; ++i) {
+        int offset = readPtr - writePtr;
+        ASSERT(!(offset & 1));
+
+        // Copy the instructions from the last jump to the current one.
+        size_t regionSize = jumpsToLink[i].from() - readPtr;
+        uint16_t* copySource = reinterpret_cast_ptr<uint16_t*>(inData + readPtr);
+        uint16_t* copyEnd = reinterpret_cast_ptr<uint16_t*>(inData + readPtr + regionSize);
+        uint16_t* copyDst = reinterpret_cast_ptr<uint16_t*>(outData + writePtr);
+        ASSERT(!(regionSize % 2));
+        ASSERT(!(readPtr % 2));
+        ASSERT(!(writePtr % 2));
+        while (copySource != copyEnd)
+            *copyDst++ = *copySource++;
+        m_assembler->recordLinkOffsets(readPtr, jumpsToLink[i].from(), offset);
+        readPtr += regionSize;
+        writePtr += regionSize;
+
+        // Calculate absolute address of the jump target, in the case of backwards
+        // branches we need to be precise, forward branches we are pessimistic
+        const uint8_t* target;
+        if (jumpsToLink[i].to() >= jumpsToLink[i].from())
+            target = outData + jumpsToLink[i].to() - offset; // Compensate for what we have collapsed so far
+        else
+            target = outData + jumpsToLink[i].to() - m_assembler->executableOffsetFor(jumpsToLink[i].to());
+
+        JumpLinkType jumpLinkType = m_assembler->computeJumpType(jumpsToLink[i], outData + writePtr, target);
+        // Compact branch if we can...
+        if (m_assembler->canCompact(jumpsToLink[i].type())) {
+            // Step back in the write stream
+            int32_t delta = m_assembler->jumpSizeDelta(jumpsToLink[i].type(), jumpLinkType);
+            if (delta) {
+                writePtr -= delta;
+                m_assembler->recordLinkOffsets(jumpsToLink[i].from() - delta, readPtr, readPtr - writePtr);
+            }
+        }
+        jumpsToLink[i].setFrom(writePtr);
+    }
+    // Copy everything after the last jump
+    memcpy(outData + writePtr, inData + readPtr, m_initialSize - readPtr);
+    m_assembler->recordLinkOffsets(readPtr, m_initialSize, readPtr - writePtr);
+
+    for (unsigned i = 0; i < jumpCount; ++i) {
+        uint8_t* location = outData + jumpsToLink[i].from();
+        uint8_t* target = outData + jumpsToLink[i].to() - m_assembler->executableOffsetFor(jumpsToLink[i].to());
+        m_assembler->link(jumpsToLink[i], location, target);
+    }
+
+    jumpsToLink.clear();
+    m_size = writePtr + m_initialSize - readPtr;
+    m_executableMemory->shrink(m_size);
+
+#if DUMP_LINK_STATISTICS
+    dumpLinkStatistics(m_code, m_initialSize, m_size);
+#endif
+#if DUMP_CODE
+    dumpCode(m_code, m_size);
+#endif
+#endif
+}
+
+template <typename MacroAssembler>
+inline void LinkBuffer<MacroAssembler>::performFinalization()
+{
+#ifndef NDEBUG
+    ASSERT(!m_completed);
+    ASSERT(isValid());
+    m_completed = true;
+#endif
+
+#if ENABLE(BRANCH_COMPACTION)
+    ExecutableAllocator::makeExecutable(code(), m_initialSize);
+#else
+    ASSERT(m_size <= INT_MAX);
+    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
+#endif
+    MacroAssembler::cacheFlush(code(), m_size);
+}
 } // namespace JSC
 
 #endif // ENABLE(ASSEMBLER)

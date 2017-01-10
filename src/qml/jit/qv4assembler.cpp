@@ -577,7 +577,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     }
 
     JSC::JSGlobalData dummy(_executableAllocator);
-    JSC::LinkBuffer linkBuffer(dummy, this, 0);
+    JSC::LinkBuffer<JSC::MacroAssembler> linkBuffer(dummy, this, 0);
 
     for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));

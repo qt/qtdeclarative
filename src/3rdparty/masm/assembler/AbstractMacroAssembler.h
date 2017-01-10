@@ -47,6 +47,7 @@
 namespace JSC {
 
 class JumpReplacementWatchpoint;
+template <typename>
 class LinkBuffer;
 class RepatchBuffer;
 class Watchpoint;
@@ -325,7 +326,7 @@ public:
         friend class Jump;
         friend class JumpReplacementWatchpoint;
         friend class MacroAssemblerCodeRef;
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
         friend class Watchpoint;
 
     public:
@@ -356,7 +357,7 @@ public:
     class ConvertibleLoadLabel {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
         
     public:
         ConvertibleLoadLabel()
@@ -380,7 +381,7 @@ public:
     class DataLabelPtr {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
     public:
         DataLabelPtr()
         {
@@ -404,7 +405,7 @@ public:
     class DataLabel32 {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
     public:
         DataLabel32()
         {
@@ -428,7 +429,7 @@ public:
     class DataLabelCompact {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
     public:
         DataLabelCompact()
         {
@@ -503,7 +504,7 @@ public:
         friend class AbstractMacroAssembler;
         friend class Call;
         friend struct DFG::OSRExit;
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
     public:
         Jump()
         {
@@ -645,7 +646,7 @@ public:
     // A JumpList is a set of Jump objects.
     // All jumps in the set will be linked to the same destination.
     class JumpList {
-        friend class LinkBuffer;
+        template <typename> friend class LinkBuffer;
 
     public:
         typedef Vector<Jump, 2> JumpVector;
@@ -819,7 +820,7 @@ protected:
     static bool shouldBlindForSpecificArch(uint64_t) { return true; }
 #endif
 
-    friend class LinkBuffer;
+    template <typename> friend class LinkBuffer;
     friend class RepatchBuffer;
 
     static void linkJump(void* code, Jump jump, CodeLocationLabel target)

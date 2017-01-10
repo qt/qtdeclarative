@@ -2802,7 +2802,7 @@ private:
     // Otherwise, we can emit any number of instructions.
     bool m_fixedWidth;
 
-    friend class LinkBuffer;
+    template <typename> friend class LinkBuffer;
     friend class RepatchBuffer;
 
     static void linkCall(void* code, Call call, FunctionPtr function)
