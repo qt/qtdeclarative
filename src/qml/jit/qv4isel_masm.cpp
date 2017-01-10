@@ -794,14 +794,14 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *target)
 {
-    QV4::JIT::Unop unop(_as, oper);
+    QV4::JIT::Unop<Assembler> unop(_as, oper);
     unop.generate(source, target);
 }
 
 
 void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
-    QV4::JIT::Binop binop(_as, oper);
+    QV4::JIT::Binop<Assembler> binop(_as, oper);
     binop.generate(leftSource, rightSource, target);
 }
 

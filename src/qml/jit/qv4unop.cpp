@@ -48,14 +48,15 @@ using namespace JIT;
 #define stringIfy(s) stringIfyx(s)
 #define setOp(operation) \
     do { \
-        call = Assembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); \
+        call = typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); \
         needsExceptionCheck = Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 
-void Unop::generate(IR::Expr *source, IR::Expr *target)
+template <typename JITAssembler>
+void Unop<JITAssembler>::generate(IR::Expr *source, IR::Expr *target)
 {
     bool needsExceptionCheck;
-    Assembler::RuntimeCall call;
+    typename JITAssembler::RuntimeCall call;
     const char *name = 0;
     switch (op) {
     case IR::OpNot:
@@ -75,17 +76,18 @@ void Unop::generate(IR::Expr *source, IR::Expr *target)
     } // switch
 
     Q_ASSERT(call.isValid());
-    _as->generateFunctionCallImp(needsExceptionCheck, target, name, call, Assembler::PointerToValue(source));
+    _as->generateFunctionCallImp(needsExceptionCheck, target, name, call, PointerToValue(source));
 }
 
-void Unop::generateUMinus(IR::Expr *source, IR::Expr *target)
+template <typename JITAssembler>
+void Unop<JITAssembler>::generateUMinus(IR::Expr *source, IR::Expr *target)
 {
     IR::Temp *targetTemp = target->asTemp();
     if (source->type == IR::SInt32Type) {
-        Assembler::RegisterID tReg = Assembler::ScratchRegister;
+        typename JITAssembler::RegisterID tReg = JITAssembler::ScratchRegister;
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) targetTemp->index;
-        Assembler::RegisterID sReg = _as->toInt32Register(source, tReg);
+            tReg = (typename JITAssembler::RegisterID) targetTemp->index;
+        typename JITAssembler::RegisterID sReg = _as->toInt32Register(source, tReg);
         _as->move(sReg, tReg);
         _as->neg32(tReg);
         if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
@@ -93,26 +95,27 @@ void Unop::generateUMinus(IR::Expr *source, IR::Expr *target)
         return;
     }
 
-    generateRuntimeCall(target, uMinus, Assembler::PointerToValue(source));
+    generateRuntimeCall(target, uMinus, PointerToValue(source));
 }
 
-void Unop::generateNot(IR::Expr *source, IR::Expr *target)
+template <typename JITAssembler>
+void Unop<JITAssembler>::generateNot(IR::Expr *source, IR::Expr *target)
 {
     IR::Temp *targetTemp = target->asTemp();
     if (source->type == IR::BoolType) {
-        Assembler::RegisterID tReg = Assembler::ScratchRegister;
+        typename JITAssembler::RegisterID tReg = JITAssembler::ScratchRegister;
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) targetTemp->index;
-        _as->xor32(Assembler::TrustedImm32(0x1), _as->toInt32Register(source, tReg), tReg);
+            tReg = (typename JITAssembler::RegisterID) targetTemp->index;
+        _as->xor32(TrustedImm32(0x1), _as->toInt32Register(source, tReg), tReg);
         if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             _as->storeBool(tReg, target);
         return;
     } else if (source->type == IR::SInt32Type) {
-        Assembler::RegisterID tReg = Assembler::ScratchRegister;
+        typename JITAssembler::RegisterID tReg = JITAssembler::ScratchRegister;
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) targetTemp->index;
-        _as->compare32(Assembler::Equal,
-                      _as->toInt32Register(source, Assembler::ScratchRegister), Assembler::TrustedImm32(0),
+            tReg = (typename JITAssembler::RegisterID) targetTemp->index;
+        _as->compare32(RelationalCondition::Equal,
+                      _as->toInt32Register(source, JITAssembler::ScratchRegister), TrustedImm32(0),
                       tReg);
         if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             _as->storeBool(tReg, target);
@@ -122,22 +125,25 @@ void Unop::generateNot(IR::Expr *source, IR::Expr *target)
     }
     // ## generic implementation testing for int/bool
 
-    generateRuntimeCall(target, uNot, Assembler::PointerToValue(source));
+    generateRuntimeCall(target, uNot, PointerToValue(source));
 }
 
-void Unop::generateCompl(IR::Expr *source, IR::Expr *target)
+template <typename JITAssembler>
+void Unop<JITAssembler>::generateCompl(IR::Expr *source, IR::Expr *target)
 {
     IR::Temp *targetTemp = target->asTemp();
     if (source->type == IR::SInt32Type) {
-        Assembler::RegisterID tReg = Assembler::ScratchRegister;
+        typename JITAssembler::RegisterID tReg = JITAssembler::ScratchRegister;
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
-            tReg = (Assembler::RegisterID) targetTemp->index;
-        _as->xor32(Assembler::TrustedImm32(0xffffffff), _as->toInt32Register(source, tReg), tReg);
+            tReg = (typename JITAssembler::RegisterID) targetTemp->index;
+        _as->xor32(TrustedImm32(0xffffffff), _as->toInt32Register(source, tReg), tReg);
         if (!targetTemp || targetTemp->kind != IR::Temp::PhysicalRegister)
             _as->storeInt32(tReg, target);
         return;
     }
-    generateRuntimeCall(target, complement, Assembler::PointerToValue(source));
+    generateRuntimeCall(target, complement, PointerToValue(source));
 }
+
+template struct QV4::JIT::Unop<QV4::JIT::Assembler>;
 
 #endif
