@@ -109,7 +109,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_removableJumps, removableJumps);
 
     Assembler* oldAssembler = _as;
-    _as = new Assembler(this, _function, executableAllocator);
+    _as = new Assembler(jsGenerator, _function, executableAllocator);
     _as->setStackLayout(6, // 6 == max argc for calls to built-ins with an argument array
                         regularRegistersToSave.size(),
                         fpRegistersToSave.size());

@@ -148,11 +148,11 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
+Assembler::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
     : _function(function)
     , _nextBlock(0)
     , _executableAllocator(executableAllocator)
-    , _isel(isel)
+    , _jsGenerator(jsGenerator)
 {
     _addrs.resize(_function->basicBlockCount());
     _patches.resize(_function->basicBlockCount());
@@ -303,7 +303,7 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
     loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
-    const int id = _isel->registerString(string);
+    const int id = _jsGenerator->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
 }
 
@@ -316,13 +316,13 @@ Assembler::Address Assembler::loadConstant(const Primitive &v, RegisterID baseRe
 {
     loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), baseReg);
     loadPtr(Address(baseReg, qOffsetOf(QV4::Heap::ExecutionContext, constantTable)), baseReg);
-    const int index = _isel->jsUnitGenerator()->registerConstant(v.asReturnedValue());
+    const int index = _jsGenerator->registerConstant(v.asReturnedValue());
     return Address(baseReg, index * sizeof(QV4::Value));
 }
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
 {
-    const int id = _isel->registerString(string);
+    const int id = _jsGenerator->registerString(string);
     move(TrustedImm32(id), reg);
 }
 
