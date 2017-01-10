@@ -53,11 +53,23 @@ import QtQuick 2.9 // to get PathItem
 Rectangle {
     color: "lightGray"
 
-    Loader {
-        id: pathItemLoader
+    Item {
         anchors.fill: parent
-        source: "tiger.qml"
-        asynchronous: true
-        visible: status == Loader.Ready
+
+        Text {
+            anchors.centerIn: parent
+            text: "Loading"
+            // Phase #1: Loader loads tiger.qml. After this we have our item.
+            // Phase #2: With some backends (generic) the item will start async processing. Wait for this too.
+            visible: pathItemLoader.status != Loader.Ready || pathItemLoader.item.status === PathItem.Processing
+        }
+
+        Loader {
+            id: pathItemLoader
+            anchors.fill: parent
+            source: "tiger.qml"
+            asynchronous: true
+            visible: status == Loader.Ready
+        }
     }
 }

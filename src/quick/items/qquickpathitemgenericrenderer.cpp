@@ -210,8 +210,16 @@ void QQuickPathItemStrokeRunnable::run()
     emit done(this);
 }
 
+void QQuickPathItemGenericRenderer::setAsyncCallback(void (*callback)(void *), void *data)
+{
+    m_asyncCallback = callback;
+    m_asyncCallbackData = data;
+}
+
 void QQuickPathItemGenericRenderer::endSync(bool async)
 {
+    bool didKickOffAsync = false;
+
     for (int i = 0; i < m_vp.count(); ++i) {
         VisualPathData &d(m_vp[i]);
         if (!d.syncDirty)
@@ -264,6 +272,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                         }
                         r->deleteLater();
                     });
+                    didKickOffAsync = true;
                     threadPool.start(r);
                 } else {
                     triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices);
@@ -290,6 +299,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                         }
                         r->deleteLater();
                     });
+                    didKickOffAsync = true;
                     threadPool.start(r);
                 } else {
                     triangulateStroke(d.path, d.pen, d.strokeColor, &d.strokeVertices,
@@ -298,6 +308,9 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
             }
         }
     }
+
+    if (!didKickOffAsync && async && m_asyncCallback)
+        m_asyncCallback(m_asyncCallbackData);
 }
 
 void QQuickPathItemGenericRenderer::maybeUpdateAsyncItem()
@@ -308,6 +321,8 @@ void QQuickPathItemGenericRenderer::maybeUpdateAsyncItem()
     }
     m_accDirty |= DirtyGeom;
     m_item->update();
+    if (m_asyncCallback)
+        m_asyncCallback(m_asyncCallbackData);
 }
 
 // the stroke/fill triangulation functions may be invoked either on the gui

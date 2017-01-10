@@ -65,6 +65,11 @@ class QSGPlainTexture;
 class QQuickAbstractPathRenderer
 {
 public:
+    enum Flag {
+        SupportsAsync = 0x01
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
     virtual ~QQuickAbstractPathRenderer() { }
 
     // Gui thread
@@ -80,10 +85,14 @@ public:
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickPathGradient *gradient) = 0;
     virtual void endSync(bool async) = 0;
+    virtual void setAsyncCallback(void (*)(void *), void *) { }
+    virtual Flags flags() const { return 0; }
 
     // Render thread, with gui blocked
     virtual void updateNode() = 0;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickAbstractPathRenderer::Flags)
 
 class QQuickVisualPathPrivate : public QObjectPrivate
 {
@@ -138,6 +147,7 @@ public:
     void sync();
 
     void _q_visualPathChanged();
+    void setStatus(QQuickPathItem::Status newStatus);
 
     static QQuickPathItemPrivate *get(QQuickPathItem *item) { return item->d_func(); }
 
@@ -145,6 +155,7 @@ public:
     bool vpChanged;
     QQuickPathItem::RendererType rendererType;
     bool async;
+    QQuickPathItem::Status status;
     QQuickAbstractPathRenderer *renderer;
     QVector<QQuickVisualPath *> vp;
 };

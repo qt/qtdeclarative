@@ -362,6 +362,7 @@ QQuickPathItemPrivate::QQuickPathItemPrivate()
       vpChanged(false),
       rendererType(QQuickPathItem::UnknownRenderer),
       async(false),
+      status(QQuickPathItem::Null),
       renderer(nullptr)
 {
 }
@@ -376,6 +377,15 @@ void QQuickPathItemPrivate::_q_visualPathChanged()
     Q_Q(QQuickPathItem);
     vpChanged = true;
     q->polish();
+}
+
+void QQuickPathItemPrivate::setStatus(QQuickPathItem::Status newStatus)
+{
+    Q_Q(QQuickPathItem);
+    if (status != newStatus) {
+        status = newStatus;
+        emit q->statusChanged();
+    }
 }
 
 QQuickPathItem::QQuickPathItem(QQuickItem *parent)
@@ -409,6 +419,12 @@ void QQuickPathItem::setAsynchronous(bool async)
         if (d->componentComplete)
             d->_q_visualPathChanged();
     }
+}
+
+QQuickPathItem::Status QQuickPathItem::status() const
+{
+    Q_D(const QQuickPathItem);
+    return d->status;
 }
 
 static QQuickVisualPath *vpe_at(QQmlListProperty<QQuickVisualPath> *property, int index)
@@ -492,8 +508,9 @@ void QQuickPathItem::updatePolish()
         emit rendererChanged();
     }
 
-    // endSync() is where expensive calculations may happen, depending on the
-    // backend. Therefore do this only when the item is visible.
+    // endSync() is where expensive calculations may happen (or get kicked off
+    // on worker threads), depending on the backend. Therefore do this only
+    // when the item is visible.
     if (isVisible())
         d->sync();
 
@@ -593,8 +610,20 @@ QSGNode *QQuickPathItemPrivate::createNode()
     return node;
 }
 
+static void q_asyncPathItemReady(void *data)
+{
+    QQuickPathItemPrivate *self = static_cast<QQuickPathItemPrivate *>(data);
+    self->setStatus(QQuickPathItem::Ready);
+}
+
 void QQuickPathItemPrivate::sync()
 {
+    const bool useAsync = async && renderer->flags().testFlag(QQuickAbstractPathRenderer::SupportsAsync);
+    if (useAsync) {
+        setStatus(QQuickPathItem::Processing);
+        renderer->setAsyncCallback(q_asyncPathItemReady, this);
+    }
+
     const int count = vp.count();
     renderer->beginSync(count);
 
@@ -624,7 +653,10 @@ void QQuickPathItemPrivate::sync()
         dirty = 0;
     }
 
-    renderer->endSync(async);
+    renderer->endSync(useAsync);
+
+    if (!useAsync)
+        setStatus(QQuickPathItem::Ready);
 }
 
 // ***** gradient support *****

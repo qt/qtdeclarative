@@ -77,7 +77,8 @@ public:
     QQuickPathItemGenericRenderer(QQuickItem *item)
         : m_item(item),
           m_rootNode(nullptr),
-          m_accDirty(0)
+          m_accDirty(0),
+          m_asyncCallback(nullptr)
     { }
 
     void beginSync(int totalCount) override;
@@ -92,6 +93,8 @@ public:
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickPathGradient *gradient) override;
     void endSync(bool async) override;
+    void setAsyncCallback(void (*)(void *), void *) override;
+    Flags flags() const override { return SupportsAsync; }
 
     void updateNode() override;
 
@@ -140,6 +143,8 @@ private:
     QQuickPathItemGenericNode *m_rootNode;
     QVector<VisualPathData> m_vp;
     int m_accDirty;
+    void (*m_asyncCallback)(void *);
+    void *m_asyncCallbackData;
 };
 
 class QQuickPathItemFillRunnable : public QObject, public QRunnable
