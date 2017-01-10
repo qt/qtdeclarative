@@ -125,6 +125,7 @@ private:
         QBrush brush;
     };
     QVector<VisualPathRenderData> m_vp;
+    QRectF m_boundingRect;
 
     friend class QQuickPathItemSoftwareRenderer;
 };

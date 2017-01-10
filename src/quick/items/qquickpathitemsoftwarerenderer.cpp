@@ -180,6 +180,8 @@ void QQuickPathItemSoftwareRenderer::updateNode()
     if (listChanged)
         m_node->m_vp.resize(count);
 
+    m_node->m_boundingRect = QRectF();
+
     for (int i = 0; i < count; ++i) {
         VisualPathGuiData &src(m_vp[i]);
         QQuickPathItemSoftwareRenderNode::VisualPathRenderData &dst(m_node->m_vp[i]);
@@ -201,6 +203,11 @@ void QQuickPathItemSoftwareRenderer::updateNode()
             dst.brush = src.brush;
 
         src.dirty = 0;
+
+        QRectF br = dst.path.boundingRect();
+        const float sw = qMax(1.0f, dst.strokeWidth);
+        br.adjust(-sw, -sw, sw, sw);
+        m_node->m_boundingRect |= br;
     }
 
     m_node->markDirty(QSGNode::DirtyMaterial);
@@ -256,7 +263,7 @@ QSGRenderNode::RenderingFlags QQuickPathItemSoftwareRenderNode::flags() const
 
 QRectF QQuickPathItemSoftwareRenderNode::rect() const
 {
-    return QRect(0, 0, m_item->width(), m_item->height());
+    return m_boundingRect;
 }
 
 QT_END_NAMESPACE
