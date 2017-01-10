@@ -346,7 +346,7 @@ void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegist
     for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
         Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
         slotAddr.offset -= sizeof(double);
-        JSC::MacroAssembler::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
+        JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
     }
     for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
         Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
@@ -368,7 +368,7 @@ void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegist
     }
     for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
         Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
-        JSC::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
+        JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
         slotAddr.offset += sizeof(double);
     }
 
@@ -465,9 +465,9 @@ Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
         Q_UNREACHABLE();
     }
     if (invertCondition)
-        cond = JSC::MacroAssembler::invert(cond);
+        cond = JSC::MacroAssembler<PlatformMacroAssembler>::invert(cond);
 
-    return JSC::MacroAssembler::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, FPGpr1));
+    return JSC::MacroAssembler<PlatformMacroAssembler>::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, FPGpr1));
 }
 
 Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right)
@@ -486,11 +486,11 @@ Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::E
         Q_UNREACHABLE();
     }
     if (invertCondition)
-        cond = JSC::MacroAssembler::invert(cond);
+        cond = JSC::MacroAssembler<PlatformMacroAssembler>::invert(cond);
 
-    return JSC::MacroAssembler::branch32(cond,
-                                         toInt32Register(left, Assembler::ScratchRegister),
-                                         toInt32Register(right, Assembler::ReturnValueRegister));
+    return JSC::MacroAssembler<PlatformMacroAssembler>::branch32(cond,
+                                                                 toInt32Register(left, Assembler::ScratchRegister),
+                                                                 toInt32Register(right, Assembler::ReturnValueRegister));
 }
 
 void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
@@ -577,7 +577,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     }
 
     JSC::JSGlobalData dummy(_executableAllocator);
-    JSC::LinkBuffer<JSC::MacroAssembler> linkBuffer(dummy, this, 0);
+    JSC::LinkBuffer<JSC::MacroAssembler<PlatformMacroAssembler>> linkBuffer(dummy, this, 0);
 
     for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));

@@ -735,10 +735,10 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
             Pointer sAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
             Pointer tAddr = _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target);
             // use the implementation in JSC::MacroAssembler, as it doesn't do bit swizzling
-            _as->JSC::MacroAssembler::loadDouble(sAddr, JITTargetPlatform::FPGpr0);
-            _as->JSC::MacroAssembler::loadDouble(tAddr, Assembler::FPGpr1);
-            _as->JSC::MacroAssembler::storeDouble(Assembler::FPGpr1, sAddr);
-            _as->JSC::MacroAssembler::storeDouble(JITTargetPlatform::FPGpr0, tAddr);
+            _as->JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(sAddr, JITTargetPlatform::FPGpr0);
+            _as->JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(tAddr, JITTargetPlatform::FPGpr1);
+            _as->JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble(JITTargetPlatform::FPGpr1, sAddr);
+            _as->JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble(JITTargetPlatform::FPGpr0, tAddr);
             return;
         }
     }

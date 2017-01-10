@@ -90,29 +90,29 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 };
 
 #if CPU(ARM_THUMB2)
-typedef JSC::MacroAssemblerARMv7 PlatformAssembler;
+typedef JSC::MacroAssemblerARMv7 PlatformMacroAssembler;
 #elif CPU(ARM64)
-typedef JSC::MacroAssemblerARM64 PlatformAssembler;
+typedef JSC::MacroAssemblerARM64 PlatformMacroAssembler;
 #elif CPU(ARM_TRADITIONAL)
-typedef JSC::MacroAssemblerARM PlatformAssembler;
+typedef JSC::MacroAssemblerARM PlatformMacroAssembler;
 #elif CPU(MIPS)
-typedef JSC::MacroAssemblerMIPS PlatformAssembler;
+typedef JSC::MacroAssemblerMIPS PlatformMacroAssembler;
 #elif CPU(X86)
-typedef JSC::MacroAssemblerX86 PlatformAssembler;
+typedef JSC::MacroAssemblerX86 PlatformMacroAssembler;
 #elif CPU(X86_64)
-typedef JSC::MacroAssemblerX86_64 PlatformAssembler;
+typedef JSC::MacroAssemblerX86_64 PlatformMacroAssembler;
 #elif CPU(SH4)
-typedef JSC::MacroAssemblerSH4 PlatformAssembler;
+typedef JSC::MacroAssemblerSH4 PlatformMacroAssembler;
 #endif
 
-class Assembler : public JSC::MacroAssembler, public TargetPlatform<PlatformAssembler>
+class Assembler : public JSC::MacroAssembler<PlatformMacroAssembler>, public TargetPlatform<PlatformMacroAssembler>
 {
     Q_DISABLE_COPY(Assembler)
 
 public:
     Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 
-    typedef JSC::MacroAssembler MacroAssembler;
+    using MacroAssembler = JSC::MacroAssembler<PlatformMacroAssembler>;
     using RegisterID = MacroAssembler::RegisterID;
     using FPRegisterID = MacroAssembler::FPRegisterID;
 
@@ -697,8 +697,8 @@ public:
         store64(ReturnValueRegister, addr);
     }
 #else
-    using JSC::MacroAssembler::loadDouble;
-    using JSC::MacroAssembler::storeDouble;
+    using JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble;
+    using JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble;
 #endif
 
     template <typename Result, typename Source>
@@ -711,8 +711,8 @@ public:
     {
         Q_ASSERT(!source->asTemp() || source->asTemp()->kind != IR::Temp::PhysicalRegister);
         Q_ASSERT(target.base != scratchRegister);
-        JSC::MacroAssembler::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
-        JSC::MacroAssembler::storeDouble(FPGpr0, target);
+        JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
+        JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble(FPGpr0, target);
     }
 
     void storeValue(QV4::Primitive value, RegisterID destination)
@@ -1007,7 +1007,7 @@ public:
             move(TrustedImm64(i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
-            JSC::MacroAssembler::loadDouble(loadConstant(c, ScratchRegister), target);
+            JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(loadConstant(c, ScratchRegister), target);
 #endif
             return target;
         }

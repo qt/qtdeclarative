@@ -526,7 +526,9 @@ public:
     // operand objects to loads and store will be implicitly constructed if a
     // register is passed.
 
-private:
+    // internal function, but public because of "using load32;" in template sub-classes to pull
+    // in the other public overloads.
+
     void load32(ArmAddress address, RegisterID dest)
     {
         if (address.type == ArmAddress::HasIndex)
@@ -541,6 +543,7 @@ private:
         }
     }
 
+private:
     void load16(ArmAddress address, RegisterID dest)
     {
         if (address.type == ArmAddress::HasIndex)

@@ -68,6 +68,7 @@ typedef MacroAssemblerSH4 MacroAssemblerBase;
 
 namespace JSC {
 
+template <typename MacroAssemblerBase>
 class MacroAssembler : public MacroAssemblerBase {
 public:
     using DoubleCondition = typename MacroAssemblerBase::DoubleCondition;
@@ -96,6 +97,18 @@ public:
     using MacroAssemblerBase::jump;
     using MacroAssemblerBase::branch32;
     using MacroAssemblerBase::move;
+    using MacroAssemblerBase::store32;
+    using MacroAssemblerBase::add32;
+    using MacroAssemblerBase::xor32;
+    using MacroAssemblerBase::sub32;
+    using MacroAssemblerBase::load32;
+#if CPU(X86_64) || CPU(ARM64)
+    using MacroAssemblerBase::add64;
+    using MacroAssemblerBase::sub64;
+    using MacroAssemblerBase::xor64;
+    using MacroAssemblerBase::load64;
+    using MacroAssemblerBase::store64;
+#endif
 
 #if ENABLE(JIT_CONSTANT_BLINDING)
     using MacroAssemblerBase::add32;
@@ -344,7 +357,7 @@ public:
     static const unsigned BlindingModulus = 64;
     bool shouldConsiderBlinding()
     {
-        return !(random() & (BlindingModulus - 1));
+        return !(this->random() & (BlindingModulus - 1));
     }
 
     // Ptr methods
@@ -1467,6 +1480,22 @@ public:
     }
 #endif
 };
+
+#if CPU(ARM_THUMB2)
+typedef MacroAssembler<MacroAssemblerARMv7> DefaultMacroAssembler;
+#elif CPU(ARM64)
+typedef MacroAssembler<MacroAssemblerARM64> DefaultMacroAssembler;
+#elif CPU(ARM_TRADITIONAL)
+typedef MacroAssembler<MacroAssemblerARM> DefaultMacroAssembler;
+#elif CPU(MIPS)
+typedef MacroAssembler<MacroAssemblerMIPS> DefaultMacroAssembler;
+#elif CPU(X86)
+typedef MacroAssembler<MacroAssemblerX86> DefaultMacroAssembler;
+#elif CPU(X86_64)
+typedef MacroAssembler<MacroAssemblerX86_64> DefaultMacroAssembler;
+#elif CPU(SH4)
+typedef JSC::MacroAssemblerSH4 DefaultMacroAssembler;
+#endif
 
 } // namespace JSC
 
