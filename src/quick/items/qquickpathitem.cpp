@@ -520,7 +520,7 @@ void QQuickPathItemPrivate::createRenderer()
     case QSGRendererInterface::OpenGL:
         if (QQuickPathItemNvprRenderNode::isSupported()) {
             rendererType = QQuickPathItem::NvprRenderer;
-            renderer = new QQuickPathItemNvprRenderer(q);
+            renderer = new QQuickPathItemNvprRenderer;
         } else {
             rendererType = QQuickPathItem::GeometryRenderer;
             renderer = new QQuickPathItemGenericRenderer(q);

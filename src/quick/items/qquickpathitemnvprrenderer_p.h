@@ -79,10 +79,6 @@ public:
         DirtyList = 0x20
     };
 
-    QQuickPathItemNvprRenderer(QQuickItem *item)
-        : m_item(item)
-    { }
-
     void beginSync(int totalCount) override;
     void setPath(int index, const QQuickPath *path) override;
     void setStrokeColor(int index, const QColor &color) override;
@@ -126,7 +122,6 @@ private:
 
     void convertPath(const QQuickPath *path, VisualPathGuiData *d);
 
-    QQuickItem *m_item;
     QQuickPathItemNvprRenderNode *m_node = nullptr;
     int m_accDirty = 0;
 
