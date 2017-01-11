@@ -73,7 +73,8 @@
   For the object-based types (including Date and RegExp), use the
   newT() functions in QJSEngine (e.g. QJSEngine::newObject())
   to create a QJSValue of the desired type. For the primitive types,
-  use one of the QJSValue constructor overloads.
+  use one of the QJSValue constructor overloads. For other types, e.g.
+  registered gadget types such as QPoint, you can use QJSEngine::toScriptValue.
 
   The methods named isT() (e.g. isBool(), isUndefined()) can be
   used to test if a value is of a certain type. The methods named
