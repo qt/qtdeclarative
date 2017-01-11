@@ -89,7 +89,7 @@ QQuickStackElement::~QQuickStackElement()
             item->deleteLater();
             item = nullptr;
         } else {
-            item->setVisible(false);
+            setVisible(false);
             if (!widthValid)
                 item->resetWidth();
             if (!heightValid)
@@ -250,6 +250,15 @@ void QQuickStackElement::setStatus(QQuickStackView::Status value)
     }
 
     emit attached->statusChanged();
+}
+
+void QQuickStackElement::setVisible(bool visible)
+{
+    QQuickStackViewAttached *attached = attachedStackObject(this);
+    if (!item || (attached && QQuickStackViewAttachedPrivate::get(attached)->explicitVisible))
+        return;
+
+    item->setVisible(visible);
 }
 
 void QQuickStackElement::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)

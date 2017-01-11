@@ -50,15 +50,16 @@ QQuickStackViewPrivate::QQuickStackViewPrivate() : busy(false), currentItem(null
 {
 }
 
-void QQuickStackViewPrivate::setCurrentItem(QQuickItem *item)
+void QQuickStackViewPrivate::setCurrentItem(QQuickStackElement *element)
 {
     Q_Q(QQuickStackView);
+    QQuickItem *item = element ? element->item : nullptr;
     if (currentItem == item)
         return;
 
     currentItem = item;
-    if (item)
-        item->setVisible(true);
+    if (element)
+        element->setVisible(true);
     emit q->currentItemChanged();
 }
 
@@ -243,8 +244,7 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
         element->setStatus(QQuickStackView::Active);
     } else if (element->status == QQuickStackView::Deactivating) {
         element->setStatus(QQuickStackView::Inactive);
-        if (element->item)
-            element->item->setVisible(false);
+        element->setVisible(false);
         if (element->removal || element->isPendingRemoval())
             removals += element;
     }

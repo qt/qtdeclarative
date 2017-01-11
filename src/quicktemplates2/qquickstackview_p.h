@@ -168,6 +168,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackViewAttached : public QObject
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
     Q_PROPERTY(QQuickStackView *view READ view NOTIFY viewChanged FINAL)
     Q_PROPERTY(QQuickStackView::Status status READ status NOTIFY statusChanged FINAL)
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible RESET resetVisible NOTIFY visibleChanged FINAL) // REVISION 2
 
 public:
     explicit QQuickStackViewAttached(QObject *parent = nullptr);
@@ -177,10 +178,16 @@ public:
     QQuickStackView *view() const;
     QQuickStackView::Status status() const;
 
+    bool isVisible() const;
+    void setVisible(bool visible);
+    void resetVisible();
+
 Q_SIGNALS:
     void indexChanged();
     void viewChanged();
     void statusChanged();
+    /*Q_REVISION(2)*/ void visibleChanged();
+
     /*Q_REVISION(1)*/ void activated();
     /*Q_REVISION(1)*/ void activating();
     /*Q_REVISION(1)*/ void deactivated();

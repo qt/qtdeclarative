@@ -1048,4 +1048,57 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_visible() {
+        var control = stackView.createObject(testCase)
+        verify(control)
+
+        var item1 = component.createObject(control)
+        control.push(item1, StackView.Immediate)
+        compare(item1.visible, true)
+        compare(item1.StackView.visible, item1.visible)
+
+        var item2 = component.createObject(control)
+        control.push(item2, StackView.Immediate)
+        compare(item1.visible, false)
+        compare(item2.visible, true)
+        compare(item1.StackView.visible, false)
+        compare(item2.StackView.visible, true)
+
+        // keep explicitly visible
+        item2.StackView.visible = true
+        control.push(component, StackView.Immediate)
+        compare(item2.visible, true)
+        compare(item2.StackView.visible, true)
+
+        // show underneath
+        item1.StackView.visible = true
+        compare(item1.visible, true)
+        compare(item1.StackView.visible, true)
+
+        control.pop(StackView.Immediate)
+        compare(item2.visible, true)
+        compare(item2.StackView.visible, true)
+
+        // hide the top-most
+        item2.StackView.visible = false
+        compare(item2.visible, false)
+        compare(item2.StackView.visible, false)
+
+        // reset the top-most
+        item2.StackView.visible = undefined
+        compare(item2.visible, true)
+        compare(item2.StackView.visible, true)
+
+        // reset underneath
+        item1.StackView.visible = undefined
+        compare(item1.visible, false)
+        compare(item1.StackView.visible, false)
+
+        control.pop(StackView.Immediate)
+        compare(item1.visible, true)
+        compare(item1.StackView.visible, true)
+
+        control.destroy()
+    }
 }

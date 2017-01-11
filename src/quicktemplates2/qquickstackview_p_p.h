@@ -71,7 +71,7 @@ public:
         return view->d_func();
     }
 
-    void setCurrentItem(QQuickItem *item);
+    void setCurrentItem(QQuickStackElement *element);
 
     QList<QQuickStackElement *> parseElements(QQmlV4Function *args, int from = 0);
     QQuickStackElement *findElement(QQuickItem *item) const;
@@ -102,7 +102,7 @@ class QQuickStackViewAttachedPrivate : public QObjectPrivate, public QQuickItemC
     Q_DECLARE_PUBLIC(QQuickStackViewAttached)
 
 public:
-    QQuickStackViewAttachedPrivate() : element(nullptr) { }
+    QQuickStackViewAttachedPrivate() : explicitVisible(false), element(nullptr) { }
 
     static QQuickStackViewAttachedPrivate *get(QQuickStackViewAttached *attached)
     {
@@ -111,6 +111,7 @@ public:
 
     void itemParentChanged(QQuickItem *item, QQuickItem *parent);
 
+    bool explicitVisible;
     QQuickStackElement *element;
 };
 

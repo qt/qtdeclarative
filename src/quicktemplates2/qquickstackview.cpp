@@ -513,7 +513,7 @@ void QQuickStackView::push(QQmlV4Function *args)
         d->startTransition(QQuickStackTransition::pushEnter(operation, enter, this),
                            QQuickStackTransition::pushExit(operation, exit, this),
                            operation == Immediate);
-        d->setCurrentItem(enter->item);
+        d->setCurrentItem(enter);
     }
 
     if (d->currentItem) {
@@ -605,7 +605,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
         d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
                            QQuickStackTransition::popEnter(operation, enter, this),
                            operation == Immediate);
-        d->setCurrentItem(enter->item);
+        d->setCurrentItem(enter);
     }
 
     if (previousItem) {
@@ -748,7 +748,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
         d->startTransition(QQuickStackTransition::replaceExit(operation, exit, this),
                            QQuickStackTransition::replaceEnter(operation, enter, this),
                            operation == Immediate);
-        d->setCurrentItem(enter->item);
+        d->setCurrentItem(enter);
     }
 
     if (d->currentItem) {
@@ -971,7 +971,7 @@ void QQuickStackView::componentComplete()
         element = QQuickStackElement::fromString(d->initialItem.toString(), this);
     if (d->pushElement(element)) {
         emit depthChanged();
-        d->setCurrentItem(element->item);
+        d->setCurrentItem(element);
         element->setStatus(QQuickStackView::Active);
     }
 }
@@ -1039,6 +1039,7 @@ QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent) :
     Q_D(QQuickStackViewAttached);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (item) {
+        connect(item, &QQuickItem::visibleChanged, this, &QQuickStackViewAttached::visibleChanged);
         QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
         d->itemParentChanged(item, item->parentItem());
     } else if (parent) {
@@ -1097,6 +1098,54 @@ QQuickStackView::Status QQuickStackViewAttached::status() const
 {
     Q_D(const QQuickStackViewAttached);
     return d->element ? d->element->status : QQuickStackView::Inactive;
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlattachedproperty bool QtQuick.Controls::StackView::visible
+
+    This attached property holds the visibility of the item it's attached to.
+    The value follows the value of \l Item::visible.
+
+    By default, StackView shows incoming items when the enter transition begins,
+    and hides outgoing items when the exit transition ends. Setting this property
+    explicitly allows the default behavior to be overridden, making it possible
+    to keep items that are below the top-most item visible.
+
+    \note The default transitions of most styles slide outgoing items outside the
+          view, and may also animate their opacity. In order to keep a full stack
+          of items visible, consider customizing the \l transitions so that the
+          items underneath can be seen.
+
+    \image qtquickcontrols2-stackview-visible.png
+
+    \snippet qtquickcontrols2-stackview-visible.qml 1
+*/
+bool QQuickStackViewAttached::isVisible() const
+{
+    const QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
+    return parentItem && parentItem->isVisible();
+}
+
+void QQuickStackViewAttached::setVisible(bool visible)
+{
+    Q_D(QQuickStackViewAttached);
+    d->explicitVisible = true;
+    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
+    if (parentItem)
+        parentItem->setVisible(visible);
+}
+
+void QQuickStackViewAttached::resetVisible()
+{
+    Q_D(QQuickStackViewAttached);
+    d->explicitVisible = false;
+    if (!d->element || !d->element->view)
+        return;
+
+    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
+    if (parentItem)
+        parentItem->setVisible(parentItem == d->element->view->currentItem());
 }
 
 /*!
