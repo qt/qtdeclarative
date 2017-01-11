@@ -113,6 +113,11 @@
 #define GCCE_VERSION_AT_LEAST(major, minor, patch) (GCCE_VERSION >= (major * 10000 + minor * 100 + patch))
 #endif
 
+/* COMPILER(GHS) - Green Hills MULTI Compiler */
+#if defined(__ghs)
+#define WTF_COMPILER_GHS 1
+#endif
+
 /* COMPILER(GCC) - GNU Compiler Collection */
 /* --gnu option of the RVCT compiler also defines __GNUC__ */
 #if defined(__GNUC__) && !COMPILER(RVCT)
