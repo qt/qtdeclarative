@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
@@ -519,5 +519,28 @@ TestCase {
         compare(page.isCurrentItem, false);
         compare(page.isNextItem, false);
         compare(page.isPreviousItem, false);
+    }
+
+    function test_orientation() {
+        var control = createTemporaryObject(swipeView, testCase, {width: 200, height: 200})
+        verify(control)
+
+        for (var i = 0; i < 3; ++i)
+            control.addItem(page.createObject(control, {text: i}))
+
+        compare(control.orientation, Qt.Horizontal)
+
+        for (i = 0; i < control.count; ++i) {
+            control.currentIndex = i
+            compare(control.itemAt(i).y, 0)
+        }
+
+        control.orientation = Qt.Vertical
+        compare(control.orientation, Qt.Vertical)
+
+        for (i = 0; i < control.count; ++i) {
+            control.currentIndex = i
+            compare(control.itemAt(i).x, 0)
+        }
     }
 }

@@ -52,7 +52,7 @@ T.SwipeView {
         currentIndex: control.currentIndex
 
         spacing: control.spacing
-        orientation: Qt.Horizontal
+        orientation: control.orientation
         snapMode: ListView.SnapOneItem
         boundsBehavior: Flickable.StopAtBounds
 

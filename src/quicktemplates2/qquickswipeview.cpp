@@ -106,7 +106,7 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    QQuickSwipeViewPrivate() : interactive(true) { }
+    QQuickSwipeViewPrivate() : interactive(true), orientation(Qt::Horizontal) { }
 
     void resizeItem(QQuickItem *item);
     void resizeItems();
@@ -114,6 +114,7 @@ public:
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
 
     bool interactive;
+    Qt::Orientation orientation;
 };
 
 void QQuickSwipeViewPrivate::resizeItems()
@@ -130,6 +131,10 @@ void QQuickSwipeViewPrivate::resizeItems()
                 item->setProperty("_q_QQuickSwipeView_warned", true);
             }
 
+            if (orientation == Qt::Horizontal)
+                item->setY(0);
+            else
+                item->setX(0);
             item->setSize(QSizeF(contentItem->width(), contentItem->height()));
         }
     }
@@ -170,6 +175,33 @@ void QQuickSwipeView::setInteractive(bool interactive)
 
     d->interactive = interactive;
     emit interactiveChanged();
+}
+
+/*!
+    \qmlproperty enumeration QtQuick.Controls::SwipeView::orientation
+
+    This property holds the orientation.
+
+    Possible values:
+    \value Qt.Horizontal Horizontal (default)
+    \value Qt.Vertical Vertical
+*/
+Qt::Orientation QQuickSwipeView::orientation() const
+{
+    Q_D(const QQuickSwipeView);
+    return d->orientation;
+}
+
+void QQuickSwipeView::setOrientation(Qt::Orientation orientation)
+{
+    Q_D(QQuickSwipeView);
+    if (d->orientation == orientation)
+        return;
+
+    d->orientation = orientation;
+    if (isComponentComplete())
+        d->resizeItems();
+    emit orientationChanged();
 }
 
 QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)

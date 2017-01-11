@@ -59,6 +59,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 1)
+    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL REVISION 2)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = nullptr);
@@ -66,10 +67,14 @@ public:
     bool isInteractive() const;
     void setInteractive(bool interactive);
 
+    Qt::Orientation orientation() const;
+    void setOrientation(Qt::Orientation orientation);
+
     static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     Q_REVISION(1) void interactiveChanged();
+    Q_REVISION(2) void orientationChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
