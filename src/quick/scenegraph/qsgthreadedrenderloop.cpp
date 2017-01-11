@@ -826,13 +826,14 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
     }
 
     if (m_animation_timer != 0 && (exposedWindows == 1 || !m_animation_driver->isRunning())) {
+        qCDebug(QSG_LOG_RENDERLOOP) << "*** Stopping animation timer";
         killTimer(m_animation_timer);
         m_animation_timer = 0;
         // If animations are running, make sure we keep on animating
         if (m_animation_driver->isRunning())
             maybePostPolishRequest(const_cast<Window *>(theOne));
-
     } else if (m_animation_timer == 0 && exposedWindows != 1 && m_animation_driver->isRunning()) {
+        qCDebug(QSG_LOG_RENDERLOOP) << "*** Starting animation timer";
         m_animation_timer = startTimer(qsgrl_animation_interval());
     }
 }
@@ -887,6 +888,11 @@ void QSGThreadedRenderLoop::windowDestroyed(QQuickWindow *window)
             break;
         }
     }
+
+    // Now that we altered the window list, we may need to stop the animation
+    // timer even if we didn't via handleObscurity. This covers the case where
+    // we destroy a visible & exposed QQuickWindow.
+    startOrStopAnimationTimer();
 
     qCDebug(QSG_LOG_RENDERLOOP) << "done windowDestroyed()" << window;
 }
