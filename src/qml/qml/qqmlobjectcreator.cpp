@@ -53,6 +53,8 @@
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_USE_NAMESPACE
 
@@ -215,6 +217,17 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         return 0;
 
     phase = ObjectsCreated;
+
+    if (instance) {
+        if (QQmlEngineDebugService *service
+                = QQmlDebugConnector::service<QQmlEngineDebugService>()) {
+            if (!parentContext->isInternal)
+                parentContext->asQQmlContextPrivate()->instances.append(instance);
+            service->objectCreated(engine, instance);
+        } else if (!parentContext->isInternal && QQmlDebugConnector::service<QV4DebugService>()) {
+            parentContext->asQQmlContextPrivate()->instances.append(instance);
+        }
+    }
 
     return instance;
 }
