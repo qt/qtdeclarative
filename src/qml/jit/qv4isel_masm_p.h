@@ -136,22 +136,24 @@ protected:
     void unop(IR::AluOp oper, IR::Expr *sourceTemp, IR::Expr *target) override;
     void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target) override;
 
-    using Address = Assembler::Address;
-    using Pointer = Assembler::Pointer;
-    using PointerToValue = Assembler::PointerToValue;
-    using RegisterID = Assembler::RegisterID;
-    using FPRegisterID = Assembler::FPRegisterID;
-    using ResultCondition = Assembler::ResultCondition;
-    using TrustedImm32 = Assembler::TrustedImm32;
-    using TrustedImm64 = Assembler::TrustedImm64;
-    using Label = Assembler::Label;
-    using Jump = Assembler::Jump;
-    using StringToIndex = Assembler::StringToIndex;
-    using Reference = Assembler::Reference;
-    using RelationalCondition = Assembler::RelationalCondition;
-    using BranchTruncateType = Assembler::BranchTruncateType;
+    using JITAssembler = Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>;
+    using Address = JITAssembler::Address;
+    using Pointer = JITAssembler::Pointer;
+    using PointerToValue = JITAssembler::PointerToValue;
+    using RegisterID = JITAssembler::RegisterID;
+    using FPRegisterID = JITAssembler::FPRegisterID;
+    using ResultCondition = JITAssembler::ResultCondition;
+    using TrustedImm32 = JITAssembler::TrustedImm32;
+    using TrustedImm64 = JITAssembler::TrustedImm64;
+    using Label = JITAssembler::Label;
+    using Jump = JITAssembler::Jump;
+    using StringToIndex = JITAssembler::StringToIndex;
+    using Reference = JITAssembler::Reference;
+    using RelationalCondition = JITAssembler::RelationalCondition;
+    using BranchTruncateType = JITAssembler::BranchTruncateType;
+    using RuntimeCall = JITAssembler::RuntimeCall;
 
-    using JITTargetPlatform = Assembler::TargetPlatform;
+    using JITTargetPlatform = AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>::Platform;
 
 #if !defined(ARGUMENTS_IN_REGISTERS)
     Address addressForArgument(int index) const
@@ -259,7 +261,7 @@ private:
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
     #define generateRuntimeCall(t, function, ...) \
-        _as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), Assembler::RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
+        _as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
 
     int prepareVariableArguments(IR::ExprList* args);
     int prepareCallData(IR::ExprList* args, IR::Expr *thisObject);
@@ -276,19 +278,19 @@ private:
         Pointer lookupAddr(JITTargetPlatform::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
          _as->generateFunctionCallImp(true, retval, "lookup getter/setter",
-                                      Assembler::LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
+                                      JITAssembler::LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
                                       arg1, arg2, arg3);
     }
 
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, Assembler::VoidType());
+        generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, JITAssembler::VoidType());
     }
 
     IR::BasicBlock *_block;
     BitVector _removableJumps;
-    Assembler* _as;
+    JITAssembler* _as;
 
     QScopedPointer<CompilationUnit> compilationUnit;
     QQmlEnginePrivate *qmlEngine;

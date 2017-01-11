@@ -455,18 +455,18 @@ bool Binop<JITAssembler>::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource
         // Not all CPUs accept shifts over more than 31 bits, and some CPUs (like ARM) will do
         // surprising stuff when shifting over 0 bits.
 #define CHECK_RHS(op) { \
-    as->and32(TrustedImm32(0x1f), r, Assembler::ScratchRegister); \
-    Jump notZero = as->branch32(RelationalCondition::NotEqual, Assembler::ScratchRegister, TrustedImm32(0)); \
+    as->and32(TrustedImm32(0x1f), r, JITAssembler::ScratchRegister); \
+    Jump notZero = as->branch32(RelationalCondition::NotEqual, JITAssembler::ScratchRegister, TrustedImm32(0)); \
     as->move(l, targetReg); \
     Jump done = as->jump(); \
     notZero.link(as); \
     op; \
     done.link(as); \
 }
-        case IR::OpLShift: CHECK_RHS(as->lshift32(l, Assembler::ScratchRegister, targetReg)); break;
-        case IR::OpRShift: CHECK_RHS(as->rshift32(l, Assembler::ScratchRegister, targetReg)); break;
+        case IR::OpLShift: CHECK_RHS(as->lshift32(l, JITAssembler::ScratchRegister, targetReg)); break;
+        case IR::OpRShift: CHECK_RHS(as->rshift32(l, JITAssembler::ScratchRegister, targetReg)); break;
         case IR::OpURShift:
-            CHECK_RHS(as->urshift32(l, Assembler::ScratchRegister, targetReg));
+            CHECK_RHS(as->urshift32(l, JITAssembler::ScratchRegister, targetReg));
             as->storeUInt32(targetReg, target);
             // IMPORTANT: do NOT do a break here! The stored type of an urshift is different from the other binary operations!
             return true;
@@ -576,6 +576,6 @@ typename JITAssembler::Jump Binop<JITAssembler>::genInlineBinop(IR::Expr *leftSo
     return done;
 }
 
-template struct QV4::JIT::Binop<QV4::JIT::Assembler>;
+template struct QV4::JIT::Binop<QV4::JIT::Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>>;
 
 #endif

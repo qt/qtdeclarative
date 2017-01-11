@@ -146,9 +146,11 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
     return true;
 }
 
-const Assembler::VoidType Assembler::Void;
+template <typename TargetConfiguration>
+const typename Assembler<TargetConfiguration>::VoidType Assembler<TargetConfiguration>::Void;
 
-Assembler::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
+template <typename TargetConfiguration>
+Assembler<TargetConfiguration>::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
     : _function(function)
     , _nextBlock(0)
     , _executableAllocator(executableAllocator)
@@ -159,14 +161,16 @@ Assembler::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* 
     _labelPatches.resize(_function->basicBlockCount());
 }
 
-void Assembler::registerBlock(IR::BasicBlock* block, IR::BasicBlock *nextBlock)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::registerBlock(IR::BasicBlock* block, IR::BasicBlock *nextBlock)
 {
     _addrs[block->index()] = label();
     catchBlock = block->catchBlock;
     _nextBlock = nextBlock;
 }
 
-void Assembler::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
 {
     Q_UNUSED(current);
 
@@ -174,12 +178,14 @@ void Assembler::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
         _patches[target->index()].push_back(jump());
 }
 
-void Assembler::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
 {
     _patches[targetBlock->index()].push_back(targetJump);
 }
 
-void Assembler::addPatch(DataLabelPtr patch, Label target)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::addPatch(DataLabelPtr patch, Label target)
 {
     DataLabelPatch p;
     p.dataLabel = patch;
@@ -187,19 +193,22 @@ void Assembler::addPatch(DataLabelPtr patch, Label target)
     _dataLabelPatches.push_back(p);
 }
 
-void Assembler::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
 {
     _labelPatches[target->index()].push_back(patch);
 }
 
-void Assembler::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
                                        IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
 {
-    generateCJumpOnCompare(NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
+    generateCJumpOnCompare(RelationalCondition::NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
 }
 
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-void Assembler::generateCJumpOnCompare(RelationalCondition cond,
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
                                        RegisterID left,
                                        TrustedImm64 right,
                                        IR::BasicBlock *currentBlock,
@@ -217,7 +226,8 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond,
 }
 #endif
 
-void Assembler::generateCJumpOnCompare(RelationalCondition cond,
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
                                        RegisterID left,
                                        TrustedImm32 right,
                                        IR::BasicBlock *currentBlock,
@@ -234,7 +244,8 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond,
     }
 }
 
-void Assembler::generateCJumpOnCompare(RelationalCondition cond,
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
                                        RegisterID left,
                                        RegisterID right,
                                        IR::BasicBlock *currentBlock,
@@ -251,7 +262,8 @@ void Assembler::generateCJumpOnCompare(RelationalCondition cond,
     }
 }
 
-Assembler::Pointer Assembler::loadAddress(RegisterID tmp, IR::Expr *e)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadAddress(RegisterID tmp, IR::Expr *e)
 {
     IR::Temp *t = e->asTemp();
     if (t)
@@ -260,7 +272,8 @@ Assembler::Pointer Assembler::loadAddress(RegisterID tmp, IR::Expr *e)
         return loadArgLocalAddress(tmp, e->asArgLocal());
 }
 
-Assembler::Pointer Assembler::loadTempAddress(IR::Temp *t)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadTempAddress(IR::Temp *t)
 {
     if (t->kind == IR::Temp::StackSlot)
         return stackSlotPointer(t);
@@ -268,7 +281,8 @@ Assembler::Pointer Assembler::loadTempAddress(IR::Temp *t)
         Q_UNREACHABLE();
 }
 
-Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al)
 {
     int32_t offset = 0;
     int scope = al->scope;
@@ -298,7 +312,8 @@ Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLoc
     return Pointer(baseReg, offset);
 }
 
-Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadStringAddress(RegisterID reg, const QString &string)
 {
     loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
@@ -307,12 +322,14 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
     return Pointer(reg, id * sizeof(QV4::String*));
 }
 
-Assembler::Address Assembler::loadConstant(IR::Const *c, RegisterID baseReg)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(IR::Const *c, RegisterID baseReg)
 {
     return loadConstant(convertToValue(c), baseReg);
 }
 
-Assembler::Address Assembler::loadConstant(const Primitive &v, RegisterID baseReg)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const Primitive &v, RegisterID baseReg)
 {
     loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), baseReg);
     loadPtr(Address(baseReg, qOffsetOf(QV4::Heap::ExecutionContext, constantTable)), baseReg);
@@ -320,33 +337,36 @@ Assembler::Address Assembler::loadConstant(const Primitive &v, RegisterID baseRe
     return Address(baseReg, index * sizeof(QV4::Value));
 }
 
-void Assembler::loadStringRef(RegisterID reg, const QString &string)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::loadStringRef(RegisterID reg, const QString &string)
 {
     const int id = _jsGenerator->registerString(string);
     move(TrustedImm32(id), reg);
 }
 
-void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::storeValue(QV4::Primitive value, IR::Expr *destination)
 {
     Address addr = loadAddress(ScratchRegister, destination);
     storeValue(value, addr);
 }
 
-void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
                                         const RegisterInformation &fpRegistersToSave)
 {
     platformEnterStandardStackFrame(this);
 
-    move(StackPointerRegister, FramePointerRegister);
+    move(StackPointerRegister, JITTargetPlatform::FramePointerRegister);
 
     const int frameSize = _stackLayout->calculateStackFrameSize();
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
-    Address slotAddr(FramePointerRegister, 0);
+    Address slotAddr(JITTargetPlatform::FramePointerRegister, 0);
     for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
         Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
         slotAddr.offset -= sizeof(double);
-        JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
+        TargetConfiguration::MacroAssembler::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
     }
     for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
         Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
@@ -355,10 +375,11 @@ void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegist
     }
 }
 
-void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
                                         const RegisterInformation &fpRegistersToSave)
 {
-    Address slotAddr(FramePointerRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
+    Address slotAddr(JITTargetPlatform::FramePointerRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
 
     // restore the callee saved registers
     for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {
@@ -368,7 +389,7 @@ void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegist
     }
     for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
         Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
-        JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
+        TargetConfiguration::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
         slotAddr.offset += sizeof(double);
     }
 
@@ -393,7 +414,8 @@ void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegist
 // Try to load the source expression into the destination FP register. This assumes that two
 // general purpose (integer) registers are available: the ScratchRegister and the
 // ReturnValueRegister. It returns a Jump if no conversion can be performed.
-Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRegisterID dest)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::genTryDoubleConversion(IR::Expr *src, FPRegisterID dest)
 {
     switch (src->type) {
     case IR::DoubleType:
@@ -436,11 +458,10 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
     isNoInt.link(this);
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
     rshift32(TrustedImm32(Value::IsDoubleTag_Shift), ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(Equal, ScratchRegister, TrustedImm32(0));
+    Assembler::Jump isNoDbl = branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(0));
 #else
     and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(Assembler::Equal, Assembler::ScratchRegister,
-                                            Assembler::TrustedImm32(Value::NotDouble_Mask));
+    Assembler::Jump isNoDbl = branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(Value::NotDouble_Mask));
 #endif
     toDoubleRegister(src, dest);
     intDone.link(this);
@@ -448,10 +469,11 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
     return isNoDbl;
 }
 
-Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::branchDouble(bool invertCondition, IR::AluOp op,
                                                    IR::Expr *left, IR::Expr *right)
 {
-    Assembler::DoubleCondition cond;
+    DoubleCondition cond;
     switch (op) {
     case IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
     case IR::OpLt: cond = Assembler::DoubleLessThan; break;
@@ -465,12 +487,13 @@ Assembler::Jump Assembler::branchDouble(bool invertCondition, IR::AluOp op,
         Q_UNREACHABLE();
     }
     if (invertCondition)
-        cond = JSC::MacroAssembler<PlatformMacroAssembler>::invert(cond);
+        cond = TargetConfiguration::MacroAssembler::invert(cond);
 
-    return JSC::MacroAssembler<PlatformMacroAssembler>::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, FPGpr1));
+    return TargetConfiguration::MacroAssembler::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, JITTargetPlatform::FPGpr1));
 }
 
-Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right)
+template <typename TargetConfiguration>
+typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right)
 {
     Assembler::RelationalCondition cond;
     switch (op) {
@@ -486,14 +509,15 @@ Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::E
         Q_UNREACHABLE();
     }
     if (invertCondition)
-        cond = JSC::MacroAssembler<PlatformMacroAssembler>::invert(cond);
+        cond = TargetConfiguration::MacroAssembler::invert(cond);
 
-    return JSC::MacroAssembler<PlatformMacroAssembler>::branch32(cond,
-                                                                 toInt32Register(left, Assembler::ScratchRegister),
-                                                                 toInt32Register(right, Assembler::ReturnValueRegister));
+    return TargetConfiguration::MacroAssembler::branch32(cond,
+                                                         toInt32Register(left, Assembler::ScratchRegister),
+                                                         toInt32Register(right, Assembler::ReturnValueRegister));
 }
 
-void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
 {
     _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave, fpRegistersToSave));
 }
@@ -563,7 +587,8 @@ static void qt_closePmap()
 
 #endif
 
-JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
+template <typename TargetConfiguration>
+JSC::MacroAssemblerCodeRef Assembler<TargetConfiguration>::link(int *codeSize)
 {
     Label endOfCode = label();
 
@@ -577,7 +602,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     }
 
     JSC::JSGlobalData dummy(_executableAllocator);
-    JSC::LinkBuffer<JSC::MacroAssembler<PlatformMacroAssembler>> linkBuffer(dummy, this, 0);
+    JSC::LinkBuffer<typename TargetConfiguration::MacroAssembler> linkBuffer(dummy, this, 0);
 
     for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
@@ -667,5 +692,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     return codeRef;
 }
+
+template class QV4::JIT::Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>;
 
 #endif

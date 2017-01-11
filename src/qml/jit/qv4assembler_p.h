@@ -90,31 +90,99 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 };
 
 #if CPU(ARM_THUMB2)
-typedef JSC::MacroAssemblerARMv7 PlatformMacroAssembler;
+typedef JSC::MacroAssemblerARMv7 DefaultPlatformMacroAssembler;
 #elif CPU(ARM64)
-typedef JSC::MacroAssemblerARM64 PlatformMacroAssembler;
+typedef JSC::MacroAssemblerARM64 DefaultPlatformMacroAssembler;
 #elif CPU(ARM_TRADITIONAL)
-typedef JSC::MacroAssemblerARM PlatformMacroAssembler;
+typedef JSC::MacroAssemblerARM DefaultPlatformMacroAssembler;
 #elif CPU(MIPS)
-typedef JSC::MacroAssemblerMIPS PlatformMacroAssembler;
+typedef JSC::MacroAssemblerMIPS DefaultPlatformMacroAssembler;
 #elif CPU(X86)
-typedef JSC::MacroAssemblerX86 PlatformMacroAssembler;
+typedef JSC::MacroAssemblerX86 DefaultPlatformMacroAssembler;
 #elif CPU(X86_64)
-typedef JSC::MacroAssemblerX86_64 PlatformMacroAssembler;
+typedef JSC::MacroAssemblerX86_64 DefaultPlatformMacroAssembler;
 #elif CPU(SH4)
-typedef JSC::MacroAssemblerSH4 PlatformMacroAssembler;
+typedef JSC::MacroAssemblerSH4 DefaultPlatformMacroAssembler;
 #endif
 
-class Assembler : public JSC::MacroAssembler<PlatformMacroAssembler>, public TargetPlatform<PlatformMacroAssembler>
+template <typename PlatformAssembler>
+struct AssemblerTargetConfiguration
+{
+    typedef JSC::MacroAssembler<PlatformAssembler> MacroAssembler;
+    typedef TargetPlatform<PlatformAssembler> Platform;
+    // More things coming here in the future, such as Target OS
+};
+
+template <typename TargetConfiguration>
+class Assembler : public TargetConfiguration::MacroAssembler, public TargetConfiguration::Platform
 {
     Q_DISABLE_COPY(Assembler)
 
 public:
     Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 
-    using MacroAssembler = JSC::MacroAssembler<PlatformMacroAssembler>;
-    using RegisterID = MacroAssembler::RegisterID;
-    using FPRegisterID = MacroAssembler::FPRegisterID;
+    using MacroAssembler = typename TargetConfiguration::MacroAssembler;
+    using RegisterID = typename MacroAssembler::RegisterID;
+    using FPRegisterID = typename MacroAssembler::FPRegisterID;
+    using Address = typename MacroAssembler::Address;
+    using Label = typename MacroAssembler::Label;
+    using Jump = typename MacroAssembler::Jump;
+    using DataLabelPtr = typename MacroAssembler::DataLabelPtr;
+    using TrustedImm32 = typename MacroAssembler::TrustedImm32;
+    using TrustedImm64 = typename MacroAssembler::TrustedImm64;
+    using TrustedImmPtr = typename MacroAssembler::TrustedImmPtr;
+    using RelationalCondition = typename MacroAssembler::RelationalCondition;
+    using typename MacroAssembler::DoubleCondition;
+    using MacroAssembler::label;
+    using MacroAssembler::move;
+    using MacroAssembler::jump;
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+    using MacroAssembler::moveDoubleTo64;
+    using MacroAssembler::move64ToDouble;
+    using MacroAssembler::xor64;
+    using MacroAssembler::store64;
+    using MacroAssembler::load64;
+    using MacroAssembler::branch64;
+#endif
+    using MacroAssembler::add32;
+    using MacroAssembler::and32;
+    using MacroAssembler::store32;
+    using MacroAssembler::loadPtr;
+    using MacroAssembler::load32;
+    using MacroAssembler::branch32;
+    using MacroAssembler::subDouble;
+    using MacroAssembler::subPtr;
+    using MacroAssembler::addPtr;
+    using MacroAssembler::call;
+    using MacroAssembler::poke;
+    using MacroAssembler::xorPtr;
+    using MacroAssembler::branchTruncateDoubleToUint32;
+    using MacroAssembler::or32;
+    using MacroAssembler::moveDouble;
+    using MacroAssembler::convertUInt32ToDouble;
+    using MacroAssembler::invert;
+    using MacroAssembler::convertInt32ToDouble;
+    using MacroAssembler::rshift32;
+    using MacroAssembler::storePtr;
+
+#if !defined(VALUE_FITS_IN_REGISTER)
+    using MacroAssembler::moveIntsToDouble;
+#endif
+
+    using JITTargetPlatform = typename TargetConfiguration::Platform;
+    using JITTargetPlatform::RegisterArgumentCount;
+    using JITTargetPlatform::StackSpaceAllocatedUponFunctionEntry;
+    using JITTargetPlatform::RegisterSize;
+    using JITTargetPlatform::StackAlignment;
+    using JITTargetPlatform::ReturnValueRegister;
+    using JITTargetPlatform::StackPointerRegister;
+    using JITTargetPlatform::ScratchRegister;
+    using JITTargetPlatform::EngineRegister;
+    using JITTargetPlatform::StackShadowSpace;
+    using JITTargetPlatform::registerForArgument;
+    using JITTargetPlatform::FPGpr0;
+    using JITTargetPlatform::platformEnterStandardStackFrame;
+    using JITTargetPlatform::platformLeaveStandardStackFrame;
 
     struct LookupCall {
         Address addr;
@@ -350,9 +418,9 @@ public:
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
                                 IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
                                 IR::BasicBlock *falseBlock);
-    Jump genTryDoubleConversion(IR::Expr *src, Assembler::FPRegisterID dest);
-    Assembler::Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
-    Assembler::Jump branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
+    Jump genTryDoubleConversion(IR::Expr *src, FPRegisterID dest);
+    Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
+    Jump branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
 
     Pointer loadAddress(RegisterID tmp, IR::Expr *t);
     Pointer loadTempAddress(IR::Temp *t);
@@ -697,8 +765,8 @@ public:
         store64(ReturnValueRegister, addr);
     }
 #else
-    using JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble;
-    using JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble;
+    using MacroAssembler::loadDouble;
+    using MacroAssembler::storeDouble;
 #endif
 
     template <typename Result, typename Source>
@@ -711,8 +779,8 @@ public:
     {
         Q_ASSERT(!source->asTemp() || source->asTemp()->kind != IR::Temp::PhysicalRegister);
         Q_ASSERT(target.base != scratchRegister);
-        JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
-        JSC::MacroAssembler<PlatformMacroAssembler>::storeDouble(FPGpr0, target);
+        TargetConfiguration::MacroAssembler::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
+        TargetConfiguration::MacroAssembler::storeDouble(FPGpr0, target);
     }
 
     void storeValue(QV4::Primitive value, RegisterID destination)
@@ -742,7 +810,7 @@ public:
 
     void checkException() {
         load32(Address(EngineRegister, qOffsetOf(QV4::ExecutionEngine, hasException)), ScratchRegister);
-        Jump exceptionThrown = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
+        Jump exceptionThrown = branch32(RelationalCondition::NotEqual, ScratchRegister, TrustedImm32(0));
         if (catchBlock)
             addPatch(catchBlock, exceptionThrown);
         else
@@ -801,6 +869,27 @@ public:
         enum { Size = 0 };
     };
 
+    template <typename T> bool prepareCall(T &)
+    { return true; }
+
+    bool prepareCall(LookupCall &lookupCall)
+    {
+        // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
+
+        // load the table from the context
+        loadPtr(Address(EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), ScratchRegister);
+        loadPtr(Address(ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
+                    lookupCall.addr.base);
+        // pre-calculate the indirect address for the lookupCall table:
+        if (lookupCall.addr.offset)
+            addPtr(TrustedImm32(lookupCall.addr.offset), lookupCall.addr.base);
+        // store it as the first argument
+        loadArgumentOnStackOrRegister<0>(lookupCall.addr.base);
+        // set the destination addresses offset to the getterSetterOffset. The base is the lookupCall table's address
+        lookupCall.addr.offset = lookupCall.getterSetterOffset;
+        return false;
+    }
+
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
     void generateFunctionCallImp(bool needsExceptionCheck, ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
@@ -833,7 +922,7 @@ public:
         loadArgumentOnStackOrRegister<2>(arg3);
         loadArgumentOnStackOrRegister<1>(arg2);
 
-        if (prepareCall(function, this))
+        if (prepareCall(function))
             loadArgumentOnStackOrRegister<0>(arg1);
 
 #ifdef RESTORE_EBX_ON_CALL
@@ -977,7 +1066,7 @@ public:
     void storeUInt32(RegisterID reg, Pointer addr)
     {
         // The UInt32 representation in QV4::Value is really convoluted. See also toUInt32Register.
-        Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
+        Jump intRange = branch32(RelationalCondition::GreaterThanOrEqual, reg, TrustedImm32(0));
         convertUInt32ToDouble(reg, FPGpr0, ReturnValueRegister);
         storeDouble(FPGpr0, addr);
         Jump done = jump();
@@ -1007,7 +1096,7 @@ public:
             move(TrustedImm64(i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
-            JSC::MacroAssembler<PlatformMacroAssembler>::loadDouble(loadConstant(c, ScratchRegister), target);
+            MacroAssembler::loadDouble(loadConstant(c, ScratchRegister), target);
 #endif
             return target;
         }
@@ -1067,7 +1156,7 @@ public:
         Pointer tagAddr = addr;
         tagAddr.offset += 4;
         load32(tagAddr, scratchReg);
-        Jump inIntRange = branch32(Equal, scratchReg, TrustedImm32(QV4::Value::Integer_Type_Internal));
+        Jump inIntRange = branch32(RelationalCondition::Equal, scratchReg, TrustedImm32(QV4::Value::Integer_Type_Internal));
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
@@ -1115,8 +1204,9 @@ private:
     QV4::Compiler::JSUnitGenerator *_jsGenerator;
 };
 
+template <typename TargetConfiguration>
 template <typename Result, typename Source>
-void Assembler::copyValue(Result result, Source source)
+void Assembler<TargetConfiguration>::copyValue(Result result, Source source)
 {
 #ifdef VALUE_FITS_IN_REGISTER
     // Use ReturnValueRegister as "scratch" register because loadArgument
@@ -1129,8 +1219,9 @@ void Assembler::copyValue(Result result, Source source)
 #endif
 }
 
+template <typename TargetConfiguration>
 template <typename Result>
-void Assembler::copyValue(Result result, IR::Expr* source)
+void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source)
 {
     if (source->type == IR::BoolType) {
         RegisterID reg = toInt32Register(source, ScratchRegister);
@@ -1161,32 +1252,10 @@ void Assembler::copyValue(Result result, IR::Expr* source)
     }
 }
 
-inline Assembler::RuntimeCall::RuntimeCall(uint offset)
+template <typename TargetConfiguration>
+inline Assembler<TargetConfiguration>::RuntimeCall::RuntimeCall(uint offset)
     : addr(Assembler::EngineRegister, offset + qOffsetOf(QV4::ExecutionEngine, runtime))
 {
-}
-
-
-
-template <typename T> inline bool prepareCall(T &, Assembler *)
-{ return true; }
-
-template <> inline bool prepareCall(Assembler::LookupCall &lookupCall, Assembler *as)
-{
-    // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
-
-    // load the table from the context
-    as->loadPtr(Assembler::Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
-    as->loadPtr(Assembler::Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
-                lookupCall.addr.base);
-    // pre-calculate the indirect address for the lookupCall table:
-    if (lookupCall.addr.offset)
-        as->addPtr(Assembler::TrustedImm32(lookupCall.addr.offset), lookupCall.addr.base);
-    // store it as the first argument
-    as->loadArgumentOnStackOrRegister<0>(lookupCall.addr.base);
-    // set the destination addresses offset to the getterSetterOffset. The base is the lookupCall table's address
-    lookupCall.addr.offset = lookupCall.getterSetterOffset;
-    return false;
 }
 
 } // end of namespace JIT

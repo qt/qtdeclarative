@@ -144,6 +144,6 @@ void Unop<JITAssembler>::generateCompl(IR::Expr *source, IR::Expr *target)
     generateRuntimeCall(target, complement, PointerToValue(source));
 }
 
-template struct QV4::JIT::Unop<QV4::JIT::Assembler>;
+template struct QV4::JIT::Unop<QV4::JIT::Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>>;
 
 #endif
