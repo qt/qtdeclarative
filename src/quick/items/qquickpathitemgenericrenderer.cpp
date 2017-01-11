@@ -40,8 +40,14 @@
 #include "qquickpathitemgenericrenderer_p.h"
 #include <QtGui/private/qtriangulator_p.h>
 #include <QtGui/private/qtriangulatingstroker_p.h>
-#include <QSGVertexColorMaterial>
 #include <QThreadPool>
+
+#ifndef QT_NO_OPENGL
+#include <QSGVertexColorMaterial>
+#include <QOpenGLContext>
+#include <QOffscreenSurface>
+#include <QtGui/private/qopenglextensions_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -69,15 +75,20 @@ static inline QQuickPathItemGenericRenderer::Color4ub colorToColor4ub(const QCol
 }
 
 QQuickPathItemGenericStrokeFillNode::QQuickPathItemGenericStrokeFillNode(QQuickWindow *window)
-    : m_geometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0, 0),
+    : m_geometry(new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0, 0)),
       m_window(window),
       m_material(nullptr)
 {
-    setGeometry(&m_geometry);
+    setGeometry(m_geometry);
     activateMaterial(MatSolidColor);
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("stroke-fill"));
 #endif
+}
+
+QQuickPathItemGenericStrokeFillNode::~QQuickPathItemGenericStrokeFillNode()
+{
+    delete m_geometry;
 }
 
 void QQuickPathItemGenericStrokeFillNode::activateMaterial(Material m)
@@ -102,6 +113,39 @@ void QQuickPathItemGenericStrokeFillNode::activateMaterial(Material m)
 
     if (material() != m_material)
         setMaterial(m_material);
+}
+
+static bool q_supportsElementIndexUint(QSGRendererInterface::GraphicsApi api)
+{
+    static bool elementIndexUint = true;
+#ifndef QT_NO_OPENGL
+    if (api == QSGRendererInterface::OpenGL) {
+        static bool elementIndexUintChecked = false;
+        if (!elementIndexUintChecked) {
+            elementIndexUintChecked = true;
+            QOpenGLContext *context = QOpenGLContext::currentContext();
+            QScopedPointer<QOpenGLContext> dummyContext;
+            QScopedPointer<QOffscreenSurface> dummySurface;
+            bool ok = true;
+            if (!context) {
+                dummyContext.reset(new QOpenGLContext);
+                dummyContext->create();
+                context = dummyContext.data();
+                dummySurface.reset(new QOffscreenSurface);
+                dummySurface->setFormat(context->format());
+                dummySurface->create();
+                ok = context->makeCurrent(dummySurface.data());
+            }
+            if (ok) {
+                elementIndexUint = static_cast<QOpenGLExtensions *>(context->functions())->hasOpenGLExtension(
+                            QOpenGLExtensions::ElementIndexUint);
+            }
+        }
+    }
+#else
+    Q_UNUSED(api);
+#endif
+    return elementIndexUint;
 }
 
 QQuickPathItemGenericRenderer::~QQuickPathItemGenericRenderer()
@@ -210,7 +254,7 @@ void QQuickPathItemGenericRenderer::setFillGradient(int index, QQuickPathGradien
 
 void QQuickPathItemFillRunnable::run()
 {
-    QQuickPathItemGenericRenderer::triangulateFill(path, fillColor, &fillVertices, &fillIndices);
+    QQuickPathItemGenericRenderer::triangulateFill(path, fillColor, &fillVertices, &fillIndices, &indexType, supportsElementIndexUint);
     emit done(this);
 }
 
@@ -262,6 +306,8 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
 
         if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a) {
             d.path.setFillRule(d.fillRule);
+            if (m_api == QSGRendererInterface::Unknown)
+                m_api = m_item->window()->rendererInterface()->graphicsApi();
             if (async) {
                 QQuickPathItemFillRunnable *r = new QQuickPathItemFillRunnable;
                 r->setAutoDelete(false);
@@ -270,6 +316,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                 d.pendingFill = r;
                 r->path = d.path;
                 r->fillColor = d.fillColor;
+                r->supportsElementIndexUint = q_supportsElementIndexUint(m_api);
                 // Unlikely in practice but in theory m_vp could be
                 // resized. Therefore, capture 'i' instead of 'd'.
                 QObject::connect(r, &QQuickPathItemFillRunnable::done, qApp, [this, i](QQuickPathItemFillRunnable *r) {
@@ -279,6 +326,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                         VisualPathData &d(m_vp[i]);
                         d.fillVertices = r->fillVertices;
                         d.fillIndices = r->fillIndices;
+                        d.indexType = r->indexType;
                         d.pendingFill = nullptr;
                         d.effectiveDirty |= DirtyFillGeom;
                         maybeUpdateAsyncItem();
@@ -288,7 +336,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                 didKickOffAsync = true;
                 threadPool.start(r);
             } else {
-                triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices);
+                triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType, q_supportsElementIndexUint(m_api));
             }
         }
 
@@ -342,12 +390,14 @@ void QQuickPathItemGenericRenderer::maybeUpdateAsyncItem()
 // thread or some worker thread and must thus be self-contained.
 void QQuickPathItemGenericRenderer::triangulateFill(const QPainterPath &path,
                                                     const Color4ub &fillColor,
-                                                    VerticesType *fillVertices,
-                                                    IndicesType *fillIndices)
+                                                    VertexContainerType *fillVertices,
+                                                    IndexContainerType *fillIndices,
+                                                    QSGGeometry::Type *indexType,
+                                                    bool supportsElementIndexUint)
 {
     const QVectorPath &vp = qtVectorPathForPath(path);
 
-    QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(SCALE, SCALE));
+    QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(SCALE, SCALE), 1, supportsElementIndexUint);
     const int vertexCount = ts.vertices.count() / 2; // just a qreal vector with x,y hence the / 2
     fillVertices->resize(vertexCount);
     ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(fillVertices->data());
@@ -355,21 +405,25 @@ void QQuickPathItemGenericRenderer::triangulateFill(const QPainterPath &path,
     for (int i = 0; i < vertexCount; ++i)
         vdst[i].set(vsrc[i * 2] / SCALE, vsrc[i * 2 + 1] / SCALE, fillColor);
 
-    fillIndices->resize(ts.indices.size());
-    quint16 *idst = fillIndices->data();
+    size_t indexByteSize;
     if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
-        memcpy(idst, ts.indices.data(), fillIndices->count() * sizeof(quint16));
+        *indexType = QSGGeometry::UnsignedShortType;
+        // fillIndices is still QVector<quint32>. Just resize to N/2 and pack
+        // the N quint16s into it.
+        fillIndices->resize(ts.indices.size() / 2);
+        indexByteSize = ts.indices.size() * sizeof(quint16);
     } else {
-        const quint32 *isrc = (const quint32 *) ts.indices.data();
-        for (int i = 0; i < fillIndices->count(); ++i)
-            idst[i] = isrc[i];
+        *indexType = QSGGeometry::UnsignedIntType;
+        fillIndices->resize(ts.indices.size());
+        indexByteSize = ts.indices.size() * sizeof(quint32);
     }
+    memcpy(fillIndices->data(), ts.indices.data(), indexByteSize);
 }
 
 void QQuickPathItemGenericRenderer::triangulateStroke(const QPainterPath &path,
                                                       const QPen &pen,
                                                       const Color4ub &strokeColor,
-                                                      VerticesType *strokeVertices,
+                                                      VertexContainerType *strokeVertices,
                                                       const QSize &clipSize)
 {
     const QVectorPath &vp = qtVectorPathForPath(path);
@@ -504,7 +558,7 @@ void QQuickPathItemGenericRenderer::updateFillNode(VisualPathData *d, QQuickPath
     QQuickPathItemGenericStrokeFillNode *n = node->m_fillNode;
     updateShadowDataInNode(d, n);
 
-    QSGGeometry *g = &n->m_geometry;
+    QSGGeometry *g = n->m_geometry;
     if (d->fillVertices.isEmpty()) {
         if (g->vertexCount() || g->indexCount()) {
             g->allocate(0, 0);
@@ -534,7 +588,17 @@ void QQuickPathItemGenericRenderer::updateFillNode(VisualPathData *d, QQuickPath
         }
     }
 
-    g->allocate(d->fillVertices.count(), d->fillIndices.count());
+    const int indexCount = d->indexType == QSGGeometry::UnsignedShortType
+            ? d->fillIndices.count() * 2 : d->fillIndices.count();
+    if (g->indexType() != d->indexType) {
+        g = new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(),
+                            d->fillVertices.count(), indexCount, d->indexType);
+        n->setGeometry(g);
+        delete n->m_geometry;
+        n->m_geometry = g;
+    } else {
+        g->allocate(d->fillVertices.count(), indexCount);
+    }
     g->setDrawingMode(QSGGeometry::DrawTriangles);
     memcpy(g->vertexData(), d->fillVertices.constData(), g->vertexCount() * g->sizeOfVertex());
     memcpy(g->indexData(), d->fillIndices.constData(), g->indexCount() * g->sizeOfIndex());
@@ -550,7 +614,7 @@ void QQuickPathItemGenericRenderer::updateStrokeNode(VisualPathData *d, QQuickPa
         return;
 
     QQuickPathItemGenericStrokeFillNode *n = node->m_strokeNode;
-    QSGGeometry *g = &n->m_geometry;
+    QSGGeometry *g = n->m_geometry;
     if (d->strokeVertices.isEmpty()) {
         if (g->vertexCount() || g->indexCount()) {
             g->allocate(0, 0);

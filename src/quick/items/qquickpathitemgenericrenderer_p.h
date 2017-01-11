@@ -55,6 +55,7 @@
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
+#include <qsgrendererinterface.h>
 #include <QtCore/qrunnable.h>
 
 QT_BEGIN_NAMESPACE
@@ -77,6 +78,7 @@ public:
 
     QQuickPathItemGenericRenderer(QQuickItem *item)
         : m_item(item),
+          m_api(QSGRendererInterface::Unknown),
           m_rootNode(nullptr),
           m_accDirty(0),
           m_asyncCallback(nullptr)
@@ -103,17 +105,19 @@ public:
     void setRootNode(QQuickPathItemGenericNode *node);
 
     struct Color4ub { unsigned char r, g, b, a; };
-    typedef QVector<QSGGeometry::ColoredPoint2D> VerticesType;
-    typedef QVector<quint16> IndicesType;
+    typedef QVector<QSGGeometry::ColoredPoint2D> VertexContainerType;
+    typedef QVector<quint32> IndexContainerType;
 
     static void triangulateFill(const QPainterPath &path,
                                 const Color4ub &fillColor,
-                                VerticesType *fillVertices,
-                                IndicesType *fillIndices);
+                                VertexContainerType *fillVertices,
+                                IndexContainerType *fillIndices,
+                                QSGGeometry::Type *indexType,
+                                bool supportsElementIndexUint);
     static void triangulateStroke(const QPainterPath &path,
                                   const QPen &pen,
                                   const Color4ub &strokeColor,
-                                  VerticesType *strokeVertices,
+                                  VertexContainerType *strokeVertices,
                                   const QSize &clipSize);
 
 private:
@@ -128,9 +132,10 @@ private:
         QPainterPath path;
         bool fillGradientActive;
         QQuickPathItemGradientCache::GradientDesc fillGradient;
-        VerticesType fillVertices;
-        IndicesType fillIndices;
-        VerticesType strokeVertices;
+        VertexContainerType fillVertices;
+        IndexContainerType fillIndices;
+        QSGGeometry::Type indexType;
+        VertexContainerType strokeVertices;
         int syncDirty;
         int effectiveDirty = 0;
         QQuickPathItemFillRunnable *pendingFill = nullptr;
@@ -142,6 +147,7 @@ private:
     void updateStrokeNode(VisualPathData *d, QQuickPathItemGenericNode *node);
 
     QQuickItem *m_item;
+    QSGRendererInterface::GraphicsApi m_api;
     QQuickPathItemGenericNode *m_rootNode;
     QVector<VisualPathData> m_vp;
     int m_accDirty;
@@ -157,10 +163,16 @@ public:
     void run() override;
 
     bool orphaned = false;
+
+    // input
     QPainterPath path;
     QQuickPathItemGenericRenderer::Color4ub fillColor;
-    QQuickPathItemGenericRenderer::VerticesType fillVertices;
-    QQuickPathItemGenericRenderer::IndicesType fillIndices;
+    bool supportsElementIndexUint;
+
+    // output
+    QQuickPathItemGenericRenderer::VertexContainerType fillVertices;
+    QQuickPathItemGenericRenderer::IndexContainerType fillIndices;
+    QSGGeometry::Type indexType;
 
 Q_SIGNALS:
     void done(QQuickPathItemFillRunnable *self);
@@ -174,11 +186,15 @@ public:
     void run() override;
 
     bool orphaned = false;
+
+    // input
     QPainterPath path;
     QPen pen;
     QQuickPathItemGenericRenderer::Color4ub strokeColor;
-    QQuickPathItemGenericRenderer::VerticesType strokeVertices;
     QSize clipSize;
+
+    // output
+    QQuickPathItemGenericRenderer::VertexContainerType strokeVertices;
 
 Q_SIGNALS:
     void done(QQuickPathItemStrokeRunnable *self);
@@ -188,6 +204,7 @@ class QQuickPathItemGenericStrokeFillNode : public QSGGeometryNode
 {
 public:
     QQuickPathItemGenericStrokeFillNode(QQuickWindow *window);
+    ~QQuickPathItemGenericStrokeFillNode();
 
     enum Material {
         MatSolidColor,
@@ -202,7 +219,7 @@ public:
     QQuickPathItemGradientCache::GradientDesc m_fillGradient;
 
 private:
-    QSGGeometry m_geometry;
+    QSGGeometry *m_geometry;
     QQuickWindow *m_window;
     QSGMaterial *m_material;
     QScopedPointer<QSGMaterial> m_solidColorMaterial;
