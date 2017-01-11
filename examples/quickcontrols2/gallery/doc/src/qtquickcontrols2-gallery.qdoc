@@ -29,7 +29,7 @@
     \example gallery
     \title Qt Quick Controls 2 - Gallery
     \ingroup qtquickcontrols2-examples
-    \brief A gallery of controls
+    \brief A gallery of controls.
 
     \raw HTML
     <div class="table"><table style="background:transparent; border:0px">

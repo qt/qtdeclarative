@@ -29,7 +29,7 @@
     \example sidepanel
     \title Qt Quick Controls 2 - Side Panel
     \ingroup qtquickcontrols2-examples
-    \brief A non-closable persistent side panel with Drawer
+    \brief A non-closable persistent side panel with Drawer.
 
     This example demonstrates how \l Drawer can be used as a non-closable
     persistent side panel.
