@@ -56,7 +56,6 @@ PathItem {
     asynchronous: true
 
     anchors.fill: parent
-    scale: 0.4
 
     VisualPath {
         fillColor: "#ffffff"

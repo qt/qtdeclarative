@@ -397,11 +397,6 @@ bool QQuickPathItemNvprRenderNode::nvprInited = false;
 QQuickNvprFunctions QQuickPathItemNvprRenderNode::nvpr;
 QQuickNvprMaterialManager QQuickPathItemNvprRenderNode::mtlmgr;
 
-QQuickPathItemNvprRenderNode::QQuickPathItemNvprRenderNode(QQuickPathItem *item)
-    : m_item(item)
-{
-}
-
 QQuickPathItemNvprRenderNode::~QQuickPathItemNvprRenderNode()
 {
     releaseResources();
@@ -528,6 +523,9 @@ void QQuickPathItemNvprRenderNode::updatePath(VisualPathRenderData *d)
         // count == 0 -> no dash
         nvpr.pathDashArray(d->path, d->dashPattern.count(), d->dashPattern.constData());
     }
+
+    if (d->dirty)
+        d->fallbackValid = false;
 }
 
 void QQuickPathItemNvprRenderNode::renderStroke(VisualPathRenderData *d, int strokeStencilValue, int writeMask)
@@ -568,23 +566,28 @@ void QQuickPathItemNvprRenderNode::renderFill(VisualPathRenderData *d)
 
 void QQuickPathItemNvprRenderNode::renderOffscreenFill(VisualPathRenderData *d)
 {
-    QQuickWindow *w = m_item->window();
-    const qreal dpr = w->effectiveDevicePixelRatio();
-    QSize itemSize = QSize(m_item->width(), m_item->height()) * dpr;
-    QSize rtSize = w->renderTargetSize();
-    if (rtSize.isEmpty())
-        rtSize = w->size() * dpr;
+    if (d->fallbackValid && d->fallbackFbo)
+        return;
 
-    if (d->fallbackFbo && d->fallbackFbo->size() != itemSize) {
+    GLfloat bb[4];
+    nvpr.getPathParameterfv(d->path, GL_PATH_STROKE_BOUNDING_BOX_NV, bb);
+    QSize sz = QSizeF(bb[2] - bb[0] + 1, bb[3] - bb[1] + 1).toSize();
+    d->fallbackSize = QSize(qMax(32, sz.width()), qMax(32, sz.height()));
+    d->fallbackTopLeft = QPointF(bb[0], bb[1]);
+
+    if (d->fallbackFbo && d->fallbackFbo->size() != d->fallbackSize) {
         delete d->fallbackFbo;
         d->fallbackFbo = nullptr;
     }
     if (!d->fallbackFbo)
-        d->fallbackFbo = new QOpenGLFramebufferObject(itemSize, QOpenGLFramebufferObject::CombinedDepthStencil);
+        d->fallbackFbo = new QOpenGLFramebufferObject(d->fallbackSize, QOpenGLFramebufferObject::CombinedDepthStencil);
     if (!d->fallbackFbo->bind())
         return;
 
-    f->glViewport(0, 0, itemSize.width(), itemSize.height());
+    GLint prevViewport[4];
+    f->glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+    f->glViewport(0, 0, d->fallbackSize.width(), d->fallbackSize.height());
     f->glDisable(GL_DEPTH_TEST);
     f->glClearColor(0, 0, 0, 0);
     f->glClearStencil(0);
@@ -592,16 +595,20 @@ void QQuickPathItemNvprRenderNode::renderOffscreenFill(VisualPathRenderData *d)
     f->glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
     f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-    nvpr.matrixLoadIdentity(GL_PATH_MODELVIEW_NV);
+    QMatrix4x4 mv;
+    mv.translate(-d->fallbackTopLeft.x(), -d->fallbackTopLeft.y());
+    nvpr.matrixLoadf(GL_PATH_MODELVIEW_NV, mv.constData());
     QMatrix4x4 proj;
-    proj.ortho(0, itemSize.width(), itemSize.height(), 0, 1, -1);
+    proj.ortho(0, d->fallbackSize.width(), d->fallbackSize.height(), 0, 1, -1);
     nvpr.matrixLoadf(GL_PATH_PROJECTION_NV, proj.constData());
 
     renderFill(d);
 
     d->fallbackFbo->release();
     f->glEnable(GL_DEPTH_TEST);
-    f->glViewport(0, 0, rtSize.width(), rtSize.height());
+    f->glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+    d->fallbackValid = true;
 }
 
 void QQuickPathItemNvprRenderNode::setupStencilForCover(bool stencilClip, int sv)
@@ -655,8 +662,8 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
     for (VisualPathRenderData &d : m_vp) {
         updatePath(&d);
 
-        const bool hasFill = !qFuzzyIsNull(d.fillColor.w()) || d.fillGradientActive;
-        const bool hasStroke = d.strokeWidth >= 0.0f && !qFuzzyIsNull(d.strokeColor.w());
+        const bool hasFill = d.hasFill();
+        const bool hasStroke = d.hasStroke();
 
         if (hasFill && stencilClip) {
             // Fall back to a texture when complex clipping is in use and we have
@@ -686,8 +693,10 @@ void QQuickPathItemNvprRenderNode::render(const RenderState *state)
                     m_fallbackBlitter.create();
                 f->glStencilFunc(GL_EQUAL, sv, 0xFF);
                 f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                QMatrix4x4 mv = *matrix();
+                mv.translate(d.fallbackTopLeft.x(), d.fallbackTopLeft.y());
                 m_fallbackBlitter.texturedQuad(d.fallbackFbo->texture(), d.fallbackFbo->size(),
-                                               *state->projectionMatrix(), *matrix(),
+                                               *state->projectionMatrix(), mv,
                                                inheritedOpacity());
             }
         }
@@ -727,11 +736,6 @@ QSGRenderNode::StateFlags QQuickPathItemNvprRenderNode::changedStates() const
 QSGRenderNode::RenderingFlags QQuickPathItemNvprRenderNode::flags() const
 {
     return DepthAwareRendering; // avoid hitting the less optimal no-opaque-batch path in the renderer
-}
-
-QRectF QQuickPathItemNvprRenderNode::rect() const
-{
-    return QRect(0, 0, m_item->width(), m_item->height());
 }
 
 bool QQuickPathItemNvprRenderNode::isSupported()

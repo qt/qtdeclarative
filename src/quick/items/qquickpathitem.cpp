@@ -587,7 +587,7 @@ QSGNode *QQuickPathItemPrivate::createNode()
 #ifndef QT_NO_OPENGL
     case QSGRendererInterface::OpenGL:
         if (QQuickPathItemNvprRenderNode::isSupported()) {
-            node = new QQuickPathItemNvprRenderNode(q);
+            node = new QQuickPathItemNvprRenderNode;
             static_cast<QQuickPathItemNvprRenderer *>(renderer)->setNode(
                 static_cast<QQuickPathItemNvprRenderNode *>(node));
         } else {

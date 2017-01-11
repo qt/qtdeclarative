@@ -58,6 +58,7 @@ Item {
         Component.onCompleted: {
             addExample("PathItem Gallery", "Simple path rendering examples", Qt.resolvedUrl("pathitemgallery.qml"))
             addExample("Interactive paths", "Dynamic path examples", Qt.resolvedUrl("pathiteminteract.qml"))
+            addExample("Clip My Tiger!", "Clip examples, a.k.a. What Not To Do", Qt.resolvedUrl("pathitemtigers.qml"))
         }
     }
 }

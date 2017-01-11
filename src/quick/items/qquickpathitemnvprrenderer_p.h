@@ -176,14 +176,12 @@ private:
 class QQuickPathItemNvprRenderNode : public QSGRenderNode
 {
 public:
-    QQuickPathItemNvprRenderNode(QQuickPathItem *item);
     ~QQuickPathItemNvprRenderNode();
 
     void render(const RenderState *state) override;
     void releaseResources() override;
     StateFlags changedStates() const override;
     RenderingFlags flags() const override;
-    QRectF rect() const override;
 
     static bool isSupported();
 
@@ -204,6 +202,12 @@ private:
         bool fillGradientActive;
         QQuickPathItemGradientCache::GradientDesc fillGradient;
         QOpenGLFramebufferObject *fallbackFbo = nullptr;
+        bool fallbackValid = false;
+        QSize fallbackSize;
+        QPointF fallbackTopLeft;
+
+        bool hasFill() const { return !qFuzzyIsNull(fillColor.w()) || fillGradientActive; }
+        bool hasStroke() const { return strokeWidth >= 0.0f && !qFuzzyIsNull(strokeColor.w()); }
     };
 
     void updatePath(VisualPathRenderData *d);
@@ -216,7 +220,6 @@ private:
     static QQuickNvprFunctions nvpr;
     static QQuickNvprMaterialManager mtlmgr;
 
-    QQuickPathItem *m_item;
     QQuickNvprBlitter m_fallbackBlitter;
     QOpenGLExtraFunctions *f = nullptr;
 

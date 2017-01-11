@@ -6,6 +6,7 @@ RESOURCES += pathitem.qrc
 OTHER_FILES += content/pathitem.qml \
                content/pathitemgallery.qml \
                content/pathiteminteract.qml \
+               content/pathitemtigers.qml \
                content/tiger.qml \
                content/item1.qml \
                content/item2.qml \

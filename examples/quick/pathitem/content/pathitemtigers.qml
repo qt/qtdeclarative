@@ -51,26 +51,87 @@
 import QtQuick 2.9 // to get PathItem
 
 Rectangle {
-    color: "lightGray"
+    id: root
+    width: 1024
+    height: 768
 
-    Item {
-        anchors.fill: parent
+    property color col: "lightsteelblue"
+    gradient: Gradient {
+        GradientStop { position: 0.0; color: Qt.tint(root.col, "#20FFFFFF") }
+        GradientStop { position: 0.1; color: Qt.tint(root.col, "#20AAAAAA") }
+        GradientStop { position: 0.9; color: Qt.tint(root.col, "#20666666") }
+        GradientStop { position: 1.0; color: Qt.tint(root.col, "#20000000") }
+    }
 
-        Text {
-            anchors.centerIn: parent
-            text: "Loading"
-            // Phase #1: Loader loads tiger.qml. After this we have our item.
-            // Phase #2: With some backends (generic) the item will start async processing. Wait for this too.
-            visible: pathItemLoader.status != Loader.Ready || pathItemLoader.item.status === PathItem.Processing
-        }
+    Rectangle {
+        id: scissorRect
+        width: 200
+        height: 200
+        x: 150
+        property real centerY: parent.height / 2 - height / 2
+        property real dy: 0
+        y: centerY + dy
+        clip: true
 
         Loader {
-            id: pathItemLoader
-            anchors.fill: parent
+            id: loader1
+            width: parent.width
+            height: parent.height
+            y: 25 - scissorRect.dy
             source: "tiger.qml"
             asynchronous: true
-            visible: status == Loader.Ready
-            scale: 0.4
+            visible: status === Loader.Ready
+        }
+
+        SequentialAnimation on dy {
+            loops: Animation.Infinite
+            running: loader1.status === Loader.Ready && loader1.item.status === PathItem.Ready
+            NumberAnimation {
+                from: 0
+                to: -scissorRect.centerY
+                duration: 2000
+            }
+            NumberAnimation {
+                from: -scissorRect.centerY
+                to: scissorRect.centerY
+                duration: 4000
+            }
+            NumberAnimation {
+                from: scissorRect.centerY
+                to: 0
+                duration: 2000
+            }
+        }
+    }
+
+    // With a more complex transformation (like rotation), stenciling is used
+    // instead of scissoring, this is more expensive. It may also trigger a
+    // slower code path for PathItems, depending on the path rendering backend
+    // in use, and may affect rendering quality as well.
+    // So in short: do not do this.
+    Rectangle {
+        id: stencilRect
+        width: 300
+        height: 200
+        anchors.right: parent.right
+        anchors.rightMargin: 100
+        anchors.verticalCenter: parent.verticalCenter
+        clip: true // NB! still clips to bounding rect (not shape)
+
+        Loader {
+            id: loader2
+            width: parent.width
+            height: parent.height
+            source: "tiger.qml"
+            asynchronous: true
+            visible: status === Loader.Ready
+        }
+
+        NumberAnimation on rotation {
+            from: 0
+            to: 360
+            duration: 5000
+            loops: Animation.Infinite
         }
     }
 }
