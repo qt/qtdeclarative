@@ -110,7 +110,7 @@ Q_SIGNALS:
     void activeChanged();
     void pressedChanged();
     void orientationChanged();
-    void snapModeChanged();
+    Q_REVISION(2) void snapModeChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
