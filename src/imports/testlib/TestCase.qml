@@ -1084,6 +1084,24 @@ Item {
         does not occur, then the test will fail.  Similar to
         \c{QTest::ignoreMessage(QtWarningMsg, message)} in C++.
 
+        Since Qt 5.12, \a message can be either a string, or a regular
+        expression providing a pattern of messages to ignore.
+
+        For example, the following snippet will ignore a string warning message:
+        \qml
+        ignoreWarning("Something sort of bad happened")
+        \endqml
+
+        And the following snippet will ignore a regular expression matching a
+        number of possible warning messages:
+        \qml
+        ignoreWarning(new RegExp("[0-9]+ bad things happened"))
+        \endqml
+
+        \note Despite being a JavaScript RegExp object, it will not be
+        interpreted as such; instead, the pattern will be passed to
+        \l QRegularExpression.
+
         \sa warn()
     */
     function ignoreWarning(msg) {
