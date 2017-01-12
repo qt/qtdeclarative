@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include <QtQml/qqmlinfo.h>
 #include "qquickgravity_p.h"
 #include <cmath>
 QT_BEGIN_NAMESPACE
@@ -81,17 +82,14 @@ qreal QQuickGravityAffector::magnitude() const
 
 /*!
     \qmlproperty real QtQuick.Particles::Gravity::acceleration
+    \deprecated
 
-    Name changed to magnitude, will be removed soon.
+    \warning The name for this property has changed to magnitude, use it instead.
 */
 void QQuickGravityAffector::setAcceleration(qreal arg)
 {
-    qWarning() << "Gravity::acceleration has been renamed Gravity::magnitude";
-    if (m_magnitude != arg) {
-        m_magnitude = arg;
-        m_needRecalc = true;
-        emit magnitudeChanged(arg);
-    }
+    qmlWarning(this) << "The acceleration property is deprecated. Please use magnitude instead.";
+    setMagnitude(arg);
 }
 
 /*!
