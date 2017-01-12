@@ -664,25 +664,14 @@ void QQuickGridLayout::insertLayoutItems()
         int &columnSpan = span[0];
         int &rowSpan = span[1];
 
-        bool invalidRowColumn = false;
         if (info) {
             if (info->isRowSet() || info->isColumnSet()) {
                 // If row is specified and column is not specified (or vice versa),
                 // the unspecified component of the cell position should default to 0
-                row = column = 0;
-                if (info->isRowSet()) {
-                    row = info->row();
-                    invalidRowColumn = row < 0;
-                }
-                if (info->isColumnSet()) {
-                    column = info->column();
-                    invalidRowColumn = column < 0;
-                }
-            }
-            if (invalidRowColumn) {
-                qWarning("QQuickGridLayoutBase::insertLayoutItems: invalid row/column: %d",
-                         row < 0 ? row : column);
-                return;
+                // The getters do this for us, as they will return 0 for an
+                // unset (or negative) value.
+                row = info->row();
+                column = info->column();
             }
             rowSpan = info->rowSpan();
             columnSpan = info->columnSpan();
