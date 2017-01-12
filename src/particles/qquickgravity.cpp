@@ -64,16 +64,54 @@ const qreal CONV = 0.017453292520444443;
 
     Pixels per second that objects will be accelerated by.
 */
+void QQuickGravityAffector::setMagnitude(qreal arg)
+{
+    if (m_magnitude != arg) {
+        m_magnitude = arg;
+        m_needRecalc = true;
+        emit magnitudeChanged(arg);
+    }
+}
+
+qreal QQuickGravityAffector::magnitude() const
+{
+    return m_magnitude;
+}
+
+
 /*!
     \qmlproperty real QtQuick.Particles::Gravity::acceleration
 
     Name changed to magnitude, will be removed soon.
 */
+void QQuickGravityAffector::setAcceleration(qreal arg)
+{
+    qWarning() << "Gravity::acceleration has been renamed Gravity::magnitude";
+    if (m_magnitude != arg) {
+        m_magnitude = arg;
+        m_needRecalc = true;
+        emit magnitudeChanged(arg);
+    }
+}
+
 /*!
     \qmlproperty real QtQuick.Particles::Gravity::angle
 
     Angle of acceleration.
 */
+void QQuickGravityAffector::setAngle(qreal arg)
+{
+    if (m_angle != arg) {
+        m_angle = arg;
+        m_needRecalc = true;
+        emit angleChanged(arg);
+    }
+}
+
+qreal QQuickGravityAffector::angle() const
+{
+    return m_angle;
+}
 
 QQuickGravityAffector::QQuickGravityAffector(QQuickItem *parent) :
     QQuickParticleAffector(parent), m_magnitude(-10), m_angle(90), m_needRecalc(true)
@@ -94,4 +132,7 @@ bool QQuickGravityAffector::affectParticle(QQuickParticleData *d, qreal dt)
     d->setInstantaneousVY(d->curVY(m_system) + m_dy*dt, m_system);
     return true;
 }
+
+
+
 QT_END_NAMESPACE
