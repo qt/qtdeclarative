@@ -41,6 +41,7 @@
 #include "qquickgridlayoutengine_p.h"
 #include "qquicklayoutstyleinfo_p.h"
 #include <QtCore/private/qnumeric_p.h>
+#include <QtQml/qqmlinfo.h>
 #include "qdebug.h"
 #include <limits>
 
@@ -675,12 +676,14 @@ void QQuickGridLayout::insertLayoutItems()
             }
             rowSpan = info->rowSpan();
             columnSpan = info->columnSpan();
-            if (columnSpan < 1 || rowSpan < 1) {
-                qWarning("QQuickGridLayoutBase::addItem: invalid row span/column span: %d",
-                         rowSpan < 1 ? rowSpan : columnSpan);
+            if (columnSpan < 1) {
+                qmlWarning(child) << "Layout: invalid column span: " << columnSpan;
+                return;
+
+            } else if (rowSpan < 1) {
+                qmlWarning(child) << "Layout: invalid row span: " << rowSpan;
                 return;
             }
-
             alignment = info->alignment();
         }
 
