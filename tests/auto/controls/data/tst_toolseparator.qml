@@ -40,7 +40,7 @@
 
 import QtQuick 2.8
 import QtTest 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
