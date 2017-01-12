@@ -11,6 +11,6 @@ MyTypeObject {
      date.setHours(5);
      date.setMinutes(30);
      date.setSeconds(50);
-     stringProperty = stringProperty.arg("Hello World").arg(false).arg(true).arg(100).arg(-100).arg(3.1415926).arg(Qt.formatDateTime(date, "yyyy-MM-dd hh::mm:ss"));
+     stringProperty = stringProperty.arg("Hello World").arg(false).arg(true).arg(100).arg(-100).arg(Math.PI).arg(Qt.formatDateTime(date, "yyyy-MM-dd hh::mm:ss"));
   }
 }

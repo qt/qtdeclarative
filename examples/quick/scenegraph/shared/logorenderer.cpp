@@ -41,7 +41,7 @@
 #include "logorenderer.h"
 #include <QPainter>
 #include <QPaintEngine>
-#include <math.h>
+#include <qmath.h>
 
 LogoRenderer::LogoRenderer()
 {
@@ -166,7 +166,7 @@ void LogoRenderer::createGeometry()
     extrude(x4, y4, y4, x4);
     extrude(y4, x4, y3, x3);
 
-    const qreal Pi = 3.14159f;
+    const qreal Pi = M_PI;
     const int NumSectors = 100;
 
     for (int i = 0; i < NumSectors; ++i) {
