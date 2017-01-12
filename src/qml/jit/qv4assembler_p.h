@@ -73,8 +73,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-class InstructionSelection;
-
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();

@@ -72,6 +72,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
+template <typename JITAssembler = Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>>
 class Q_QML_EXPORT InstructionSelection:
         protected IR::IRDecoder,
         public EvalInstructionSelection
@@ -136,24 +137,23 @@ protected:
     void unop(IR::AluOp oper, IR::Expr *sourceTemp, IR::Expr *target) override;
     void binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target) override;
 
-    using JITAssembler = Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>;
-    using Address = JITAssembler::Address;
-    using Pointer = JITAssembler::Pointer;
-    using PointerToValue = JITAssembler::PointerToValue;
-    using RegisterID = JITAssembler::RegisterID;
-    using FPRegisterID = JITAssembler::FPRegisterID;
-    using ResultCondition = JITAssembler::ResultCondition;
-    using TrustedImm32 = JITAssembler::TrustedImm32;
-    using TrustedImm64 = JITAssembler::TrustedImm64;
-    using Label = JITAssembler::Label;
-    using Jump = JITAssembler::Jump;
-    using StringToIndex = JITAssembler::StringToIndex;
-    using Reference = JITAssembler::Reference;
-    using RelationalCondition = JITAssembler::RelationalCondition;
-    using BranchTruncateType = JITAssembler::BranchTruncateType;
-    using RuntimeCall = JITAssembler::RuntimeCall;
+    using Address = typename JITAssembler::Address;
+    using Pointer = typename JITAssembler::Pointer;
+    using PointerToValue = typename JITAssembler::PointerToValue;
+    using RegisterID = typename JITAssembler::RegisterID;
+    using FPRegisterID = typename JITAssembler::FPRegisterID;
+    using ResultCondition = typename JITAssembler::ResultCondition;
+    using TrustedImm32 = typename JITAssembler::TrustedImm32;
+    using TrustedImm64 = typename JITAssembler::TrustedImm64;
+    using Label = typename JITAssembler::Label;
+    using Jump = typename JITAssembler::Jump;
+    using StringToIndex = typename JITAssembler::StringToIndex;
+    using Reference = typename JITAssembler::Reference;
+    using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using BranchTruncateType = typename JITAssembler::BranchTruncateType;
+    using RuntimeCall = typename JITAssembler::RuntimeCall;
 
-    using JITTargetPlatform = AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>::Platform;
+    using JITTargetPlatform = typename JITAssembler::JITTargetPlatform;
 
 #if !defined(ARGUMENTS_IN_REGISTERS)
     Address addressForArgument(int index) const
@@ -278,14 +278,14 @@ private:
         Pointer lookupAddr(JITTargetPlatform::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
          _as->generateFunctionCallImp(true, retval, "lookup getter/setter",
-                                      JITAssembler::LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
+                                      typename JITAssembler::LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
                                       arg1, arg2, arg3);
     }
 
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, JITAssembler::VoidType());
+        generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, typename JITAssembler::VoidType());
     }
 
     IR::BasicBlock *_block;
@@ -304,7 +304,7 @@ public:
     ISelFactory() : EvalISelFactory(QStringLiteral("jit")) {}
     virtual ~ISelFactory() {}
     EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) Q_DECL_OVERRIDE Q_DECL_FINAL
-    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator, this); }
+    { return new InstructionSelection<>(qmlEngine, execAllocator, module, jsGenerator, this); }
     bool jitCompileRegexps() const Q_DECL_OVERRIDE Q_DECL_FINAL
     { return true; }
     QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE Q_DECL_FINAL;
