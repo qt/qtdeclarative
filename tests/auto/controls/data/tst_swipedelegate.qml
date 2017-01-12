@@ -184,7 +184,7 @@ TestCase {
         var distance = (to - from) * control.width;
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width / 2 + distance, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 + distance, control.height / 2);
         mouseRelease(control, control.width / 2 + distance, control.height / 2, Qt.LeftButton);
         compare(control.swipe.position, to);
 
@@ -850,7 +850,7 @@ TestCase {
         verify(control);
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width, control.height / 2);
         verify(control.swipe.leftItem);
         compare(control.swipe.leftItem.x, -control.width / 2);
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton);
@@ -862,11 +862,11 @@ TestCase {
 
         // Should be limited within the range -1.0 to 1.0.
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width * 1.5, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width * 1.5, control.height / 2);
         compare(control.swipe.position, 1.0);
-        mouseMove(control, control.width * 1.6, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width * 1.6, control.height / 2);
         compare(control.swipe.position, 1.0);
-        mouseMove(control, control.width * -1.6, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width * -1.6, control.height / 2);
         compare(control.swipe.position, -1.0);
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton);
     }
@@ -901,20 +901,20 @@ TestCase {
         // Ensure that the position is scaled to the width of the currently visible delegate.
         var overDragDistance = Math.round(dragDistance * 1.1);
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width / 2 + overDragDistance, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 + overDragDistance, control.height / 2);
         verify(control.swipe.leftItem);
         compare(control.swipe.position, overDragDistance / control.swipe.leftItem.width);
 
-        mouseMove(control, control.width / 2 + control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 + control.swipe.leftItem.width, control.height / 2);
         compare(control.swipe.position, 1.0);
 
         // Ensure that it's not possible to drag past the (left) delegate.
-        mouseMove(control, control.width / 2 + control.swipe.leftItem.width + 1, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 + control.swipe.leftItem.width + 1, control.height / 2);
         compare(control.swipe.position, 1.0);
 
         // Now release over the right side; the position should be 1.0 and the background
         // should be "anchored" to the right side of the left delegate item.
-        mouseMove(control, control.width / 2 + control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 + control.swipe.leftItem.width, control.height / 2);
         mouseRelease(control, control.width / 2 + control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
         compare(control.swipe.position, 1.0);
         tryCompare(control.background, "x", control.swipe.leftItem.width, 1000);
@@ -936,13 +936,13 @@ TestCase {
 
         // Ensure that both delegates are constructed.
         mousePress(control, 0, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width * 1.1, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width * 1.1, control.height / 2);
         verify(control.swipe.leftItem);
-        mouseMove(control, control.width * -0.1, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width * -0.1, control.height / 2);
         verify(control.swipe.rightItem);
 
         // Expose the left delegate.
-        mouseMove(control, control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.swipe.leftItem.width, control.height / 2);
         mouseRelease(control, control.swipe.leftItem.width, control.height / 2);
         verify(control.swipe.complete);
         compare(control.swipe.position, 1.0);
@@ -957,21 +957,21 @@ TestCase {
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
         var newX = control.swipe.leftItem.width - Math.round(dragDistance * 1.1);
-        mouseMove(control, newX, control.height / 2, Qt.LeftButton, Qt.LeftButton);
+        mouseMove(control, newX, control.height / 2);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
         compare(control.swipe.position, newX / control.swipe.leftItem.width);
 
-        mouseMove(control, 0, control.height / 2, Qt.LeftButton);
+        mouseMove(control, 0, control.height / 2);
         compare(control.swipe.position, 0);
 
         // Test swiping over a distance that is greater than the width of the left item.
-        mouseMove(control, -1, control.height / 2, Qt.LeftButton);
+        mouseMove(control, -1, control.height / 2);
         verify(control.swipe.rightItem);
         compare(control.swipe.position, -1 / control.swipe.rightItem.width);
 
         // Now go back to 1.0.
-        mouseMove(control, control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.swipe.leftItem.width, control.height / 2);
         compare(control.swipe.position, 1.0);
         tryCompare(control.background, "x", control.swipe.leftItem.width, 1000);
         mouseRelease(control, control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
@@ -1042,7 +1042,7 @@ TestCase {
 
         // Should be possible to "wrap" with a behind delegate specified.
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width / 2 + control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 + control.swipe.behindItem.width * 0.8, control.height / 2);
         compare(control.swipe.position, -0.2);
         mouseRelease(control, control.width / 2 + control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
         tryCompare(control.swipe, "position", 0.0);
@@ -1053,7 +1053,7 @@ TestCase {
         compare(control.swipe.behindItem.x, control.background.x + control.background.width);
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width / 2 - control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width / 2 - control.swipe.behindItem.width * 0.8, control.height / 2);
         compare(control.swipe.position, 0.2);
         mouseRelease(control, control.width / 2 - control.swipe.behindItem.width * 0.8, control.height / 2, Qt.LeftButton);
         tryCompare(control.swipe, "position", 0.0);
@@ -1275,7 +1275,7 @@ TestCase {
         mouseSignalSequenceSpy.target = control;
         mouseSignalSequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed", ["pressedChanged", { "pressed": false }]];
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width / 2, control.height + 10, Qt.LeftButton);
+        mouseMove(control, control.width / 2, control.height + 10);
         verify(mouseSignalSequenceSpy.success);
 
         mouseSignalSequenceSpy.expectedSequence = ["canceled"];
@@ -1289,7 +1289,7 @@ TestCase {
             ? [["pressedChanged", { "pressed": true }], "pressed"]
             : [["pressedChanged", { "pressed": true }], "pressed", ["pressedChanged", { "pressed": false }]];
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width + 10, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width + 10, control.height / 2);
         if (hasDelegates)
             verify(control.swipe.position > 0);
         verify(mouseSignalSequenceSpy.success);
@@ -1365,7 +1365,7 @@ TestCase {
         var rightLabel = control.swipe.rightItem.label;
         var overDragDistance = Math.round(dragDistance * 1.1);
         mousePress(rightLabel, rightLabel.width / 2, rightLabel.height / 2, Qt.rightButton);
-        mouseMove(rightLabel, rightLabel.width / 2 - overDragDistance, rightLabel.height / 2, Qt.LeftButton);
+        mouseMove(rightLabel, rightLabel.width / 2 - overDragDistance, rightLabel.height / 2);
         verify(!control.swipe.leftItem);
 
         mouseRelease(rightLabel, rightLabel.width / 2 - overDragDistance, control.height / 2, Qt.LeftButton);
@@ -1549,7 +1549,7 @@ TestCase {
         verify(control);
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
-        mouseMove(control, control.width - 1, control.height / 2, Qt.LeftButton);
+        mouseMove(control, control.width - 1, control.height / 2);
         verify(control.down);
         verify(!control.behavior.enabled);
         verify(!control.animation.running);

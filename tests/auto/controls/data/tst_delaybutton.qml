@@ -131,7 +131,7 @@ TestCase {
 
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false }],
                                         ["downChanged", { "down": false }]]
-        mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 2, control.height * 2, 0)
         compare(control.pressed, false)
         verify(sequenceSpy.success)
 

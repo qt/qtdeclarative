@@ -89,7 +89,7 @@ TestCase {
             skip("This test requires a startDragDistance that is less than the opening threshold of the drawer")
 
         mousePress(control, 0, 0, Qt.LeftButton)
-        mouseMove(control, distance, 0, Qt.LeftButton)
+        mouseMove(control, distance, 0)
         verify(control.position > 0)
         tryCompare(control, "position", distance / control.contentItem.width)
         mouseRelease(control, distance, 0, Qt.LeftButton)

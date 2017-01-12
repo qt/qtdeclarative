@@ -116,7 +116,7 @@ TestCase {
         compare(downSpy.count, 5)
         compare(control.pressed, true)
         compare(control.down, true)
-        mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftToolButton)
+        mouseMove(control, control.width * 2, control.height * 2, 0)
         compare(control.pressed, false)
         compare(control.down, false)
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftToolButton)

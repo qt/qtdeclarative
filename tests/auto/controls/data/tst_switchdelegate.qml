@@ -151,7 +151,7 @@ TestCase {
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, true)
         verify(spy.success)
-        mouseMove(control, control.width * 2, control.height / 2, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 2, control.height / 2, 0)
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 ["checkedChanged", { "pressed": false, "checked": true }],
@@ -169,7 +169,7 @@ TestCase {
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, true)
         verify(spy.success)
-        mouseMove(control, -control.width, control.height / 2, 0, Qt.LeftButton)
+        mouseMove(control, -control.width, control.height / 2, 0)
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
                                 ["checkedChanged", { "pressed": false, "checked": false }],

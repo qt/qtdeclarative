@@ -191,12 +191,12 @@ TestCase {
         compare(control.pressed, true)
         compare(control.position, 0.0)
 
-        mouseMove(control, -control.width, -control.height, 0, Qt.LeftButton)
+        mouseMove(control, -control.width, -control.height, 0)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         compare(control.position, 0.0)
 
-        mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         verify(control.position, 0.5)
@@ -211,12 +211,12 @@ TestCase {
         compare(control.pressed, true)
         compare(control.position, 0.5)
 
-        mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 2, control.height * 2, 0)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.position, 1.0)
 
-        mouseMove(control, control.width * 0.75, control.height * 0.75, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.75, control.height * 0.75, 0)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.position, 0.75)

@@ -137,7 +137,7 @@ TestCase {
         compare(control.pressed, true)
         verify(sequenceSpy.success)
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }]]
-        mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 2, control.height * 2, 0)
         compare(control.pressed, false)
         sequenceSpy.expectedSequence = [["canceled", { "pressed": false, "checked": true }]]
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftButton)

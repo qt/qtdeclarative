@@ -227,14 +227,14 @@ TestCase {
         compare(control.position, 0.0)
 
         // mininum on the left in horizontal vs. at the bottom in vertical
-        mouseMove(control, -control.width, 2 * control.height, 0, Qt.LeftButton)
+        mouseMove(control, -control.width, 2 * control.height, 0)
         compare(pressedSpy.count, pressedCount)
         compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
         compare(control.value, 0.0)
         compare(control.position, 0.0)
 
-        mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, pressedCount)
         compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
@@ -256,14 +256,14 @@ TestCase {
         compare(control.position, 0.5)
 
         // maximum on the right in horizontal vs. at the top in vertical
-        mouseMove(control, control.width * 2, -control.height, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 2, -control.height, 0)
         compare(pressedSpy.count, pressedCount)
         compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
         compare(control.value, data.live ? 1.0 : 0.5)
         compare(control.position, 1.0)
 
-        mouseMove(control, control.width * 0.75, control.height * 0.25, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.75, control.height * 0.25, 0)
         compare(pressedSpy.count, pressedCount)
         compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
@@ -578,14 +578,14 @@ TestCase {
         compare(control.position, 0.0)
         compare(control.visualPosition, 0.0)
 
-        mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         compare(control.value, 0.0)
         compare(control.position, 0.5)
         compare(control.visualPosition, 0.5)
 
-        mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         compare(control.value, 0.0)
@@ -610,14 +610,14 @@ TestCase {
         compare(control.position, 0.0)
         compare(control.visualPosition, 1.0)
 
-        mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.0)
         compare(control.position, 0.5)
         compare(control.visualPosition, 0.5)
 
-        mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.0)

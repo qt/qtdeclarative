@@ -252,9 +252,9 @@ TestCase {
         var yPos = dial.height * 0.75;
         mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
         var positionAtPress = dial.position;
-        mouseMove(dial, dial.width * 0.5, yPos, Qt.LeftButton);
+        mouseMove(dial, dial.width * 0.5, yPos);
         compare(dial.position, positionAtPress);
-        mouseMove(dial, dial.width * 0.75, yPos, Qt.LeftButton);
+        mouseMove(dial, dial.width * 0.75, yPos);
         compare(dial.position, positionAtPress);
         mouseRelease(dial, dial.width * 0.75, yPos, Qt.LeftButton);
         compare(dial.position, positionAtPress);
@@ -263,9 +263,9 @@ TestCase {
         yPos = dial.height * 0.6;
         mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
         positionAtPress = dial.position;
-        mouseMove(dial, dial.width * 0.5, yPos, Qt.LeftButton);
+        mouseMove(dial, dial.width * 0.5, yPos);
         compare(dial.position, positionAtPress);
-        mouseMove(dial, dial.width * 0.75, yPos, Qt.LeftButton);
+        mouseMove(dial, dial.width * 0.75, yPos);
         compare(dial.position, positionAtPress);
         mouseRelease(dial, dial.width * 0.75, yPos, Qt.LeftButton);
         compare(dial.position, positionAtPress);
@@ -273,9 +273,9 @@ TestCase {
         // Going from below the center of the dial to above it should work (once it gets above the center).
         mousePress(dial, dial.width * 0.25, dial.height * 0.75, Qt.LeftButton);
         positionAtPress = dial.position;
-        mouseMove(dial, dial.width * 0.5, dial.height * 0.6, Qt.LeftButton);
+        mouseMove(dial, dial.width * 0.5, dial.height * 0.6);
         compare(dial.position, positionAtPress);
-        mouseMove(dial, dial.width * 0.75, dial.height * 0.4, Qt.LeftButton);
+        mouseMove(dial, dial.width * 0.75, dial.height * 0.4);
         verify(dial.position > positionAtPress);
         mouseRelease(dial, dial.width * 0.75, dial.height * 0.3, Qt.LeftButton);
         verify(dial.position > positionAtPress);
