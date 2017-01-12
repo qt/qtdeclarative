@@ -42,6 +42,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qmath.h>
+#include <QtQml/qqmlinfo.h>
 #include <limits>
 
 /*!
@@ -678,7 +679,7 @@ QQuickLayout *QQuickLayoutAttached::parentLayout() const
         parentItem = parentItem->parentItem();
         return qobject_cast<QQuickLayout *>(parentItem);
     } else {
-        qWarning("Layout must be attached to Item elements");
+        qmlWarning(parent()) << "Layout must be attached to Item elements";
     }
     return 0;
 }
