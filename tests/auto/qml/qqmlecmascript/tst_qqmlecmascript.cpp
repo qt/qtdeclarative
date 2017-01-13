@@ -1410,6 +1410,7 @@ void tst_qqmlecmascript::signalParameterTypes()
     QVERIFY(object != 0);
 
     emit object->basicSignal();
+    emit object->qjsValueEmittingSignal(QJSValue());
 
     QCOMPARE(object->property("intProperty").toInt(), 10);
     QCOMPARE(object->property("realProperty").toReal(), 19.2);
