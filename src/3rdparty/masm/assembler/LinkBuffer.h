@@ -365,7 +365,7 @@ public:
     }
 };
 
-#if CPU(ARM_THUMB2) || CPU(ARM64)
+#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
 
 template <typename T>
 struct BranchCompactingExecutableOffsetCalculator {
@@ -440,13 +440,13 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::linkCode(void* ownerUID,
     int readPtr = 0;
     int writePtr = 0;
     Vector<LinkRecord, 0, UnsafeVectorOverflow>& jumpsToLink = m_assembler->jumpsToLink();
-    unsigned jumpCount = jumpsToLink.size();
+    unsigned jumpCount = unsigned(jumpsToLink.size());
     for (unsigned i = 0; i < jumpCount; ++i) {
         int offset = readPtr - writePtr;
         ASSERT(!(offset & 1));
 
         // Copy the instructions from the last jump to the current one.
-        size_t regionSize = jumpsToLink[i].from() - readPtr;
+        unsigned regionSize = unsigned(jumpsToLink[i].from() - readPtr);
         uint16_t* copySource = reinterpret_cast_ptr<uint16_t*>(inData + readPtr);
         uint16_t* copyEnd = reinterpret_cast_ptr<uint16_t*>(inData + readPtr + regionSize);
         uint16_t* copyDst = reinterpret_cast_ptr<uint16_t*>(outData + writePtr);
@@ -481,7 +481,7 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::linkCode(void* ownerUID,
     }
     // Copy everything after the last jump
     memcpy(outData + writePtr, inData + readPtr, m_initialSize - readPtr);
-    m_assembler->recordLinkOffsets(readPtr, m_initialSize, readPtr - writePtr);
+    m_assembler->recordLinkOffsets(readPtr, unsigned(m_initialSize), readPtr - writePtr);
 
     for (unsigned i = 0; i < jumpCount; ++i) {
         uint8_t* location = outData + jumpsToLink[i].from();
@@ -494,7 +494,7 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::linkCode(void* ownerUID,
     m_executableMemory->shrink(m_size);
 }
 
-#if CPU(ARM_THUMB2)
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
 template <>
 class LinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>> : public BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>>
 {

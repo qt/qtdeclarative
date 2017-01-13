@@ -310,7 +310,7 @@ public:
 };
 #endif // Windows on x86_64
 
-#if CPU(ARM)
+#if CPU(ARM) || defined(V4_BOOTSTRAP)
 template <>
 class TargetPlatform<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>
 {

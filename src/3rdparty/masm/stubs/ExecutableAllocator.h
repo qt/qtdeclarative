@@ -61,7 +61,7 @@ namespace JSC {
 class JSGlobalData;
 
 struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
-    ExecutableMemoryHandle(QV4::ExecutableAllocator *allocator, int size)
+    ExecutableMemoryHandle(QV4::ExecutableAllocator *allocator, size_t size)
         : m_allocator(allocator)
         , m_size(size)
     {
@@ -79,14 +79,14 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     inline bool isManaged() const { return true; }
 
     void* start() { return m_allocation->start(); }
-    int sizeInBytes() { return m_size; }
+    size_t sizeInBytes() { return m_size; }
 
     QV4::ExecutableAllocator::ChunkOfPages *chunk() const
     { return m_allocator->chunkForAllocation(m_allocation); }
 
     QV4::ExecutableAllocator *m_allocator;
     QV4::ExecutableAllocator::Allocation *m_allocation;
-    int m_size;
+    size_t m_size;
 };
 
 struct ExecutableAllocator {
@@ -94,7 +94,7 @@ struct ExecutableAllocator {
         : realAllocator(alloc)
     {}
 
-    PassRefPtr<ExecutableMemoryHandle> allocate(JSGlobalData&, int size, void*, int)
+    PassRefPtr<ExecutableMemoryHandle> allocate(JSGlobalData&, size_t size, void*, int)
     {
         return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }

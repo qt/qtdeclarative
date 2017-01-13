@@ -66,7 +66,9 @@ public:
     typedef MacroAssemblerCodePtr CodePtr;
     typedef MacroAssemblerCodeRef CodeRef;
 
+#if !CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
     class Jump;
+#endif
 
     typedef typename AssemblerType::RegisterID RegisterID;
     typedef typename AssemblerType::FPRegisterID FPRegisterID;
@@ -342,6 +344,8 @@ public:
         }
         
         bool isSet() const { return m_label.isSet(); }
+
+        const AssemblerLabel &label() const { return m_label; }
     private:
         AssemblerLabel m_label;
     };
@@ -451,6 +455,11 @@ public:
         AssemblerLabel m_label;
     };
 
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+    using Jump = typename AssemblerType::template Jump<Label>;
+    friend Jump;
+#endif
+
     // Call:
     //
     // A Call object is a reference to a call instruction that has been planted
@@ -501,6 +510,7 @@ public:
     // into the code buffer - it is typically used to link the jump, setting the
     // relative offset such that when executed it will jump to the desired
     // destination.
+#if !CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
     class Jump {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
@@ -512,7 +522,7 @@ public:
         {
         }
         
-#if CPU(ARM_THUMB2)
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
         // Fixme: this information should be stored in the instruction stream, not in the Jump object.
         Jump(AssemblerLabel jmp, ARMv7Assembler::JumpType type = ARMv7Assembler::JumpNoCondition, ARMv7Assembler::Condition condition = ARMv7Assembler::ConditionInvalid)
             : m_label(jmp)
@@ -613,10 +623,11 @@ public:
 
     private:
         AssemblerLabel m_label;
-#if CPU(ARM_THUMB2)
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
         ARMv7Assembler::JumpType m_type;
         ARMv7Assembler::Condition m_condition;
-#elif CPU(ARM64)
+#endif
+#if CPU(ARM64)
         ARM64Assembler::JumpType m_type;
         ARM64Assembler::Condition m_condition;
         bool m_is64Bit;
@@ -627,6 +638,7 @@ public:
         SH4Assembler::JumpType m_type;
 #endif
     };
+#endif
 
     struct PatchableJump {
         PatchableJump()
@@ -871,10 +883,12 @@ protected:
         AssemblerType::repatchPointer(dataLabelPtr.dataLocation(), value);
     }
     
+#if !defined(V4_BOOTSTRAP)
     static void* readPointer(CodeLocationDataLabelPtr dataLabelPtr)
     {
         return AssemblerType::readPointer(dataLabelPtr.dataLocation());
     }
+#endif
     
     static void replaceWithLoad(CodeLocationConvertibleLoad label)
     {

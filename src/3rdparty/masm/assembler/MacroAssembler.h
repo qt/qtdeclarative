@@ -30,8 +30,9 @@
 
 #if ENABLE(ASSEMBLER)
 
-#if CPU(ARM_THUMB2)
 #include "MacroAssemblerARMv7.h"
+
+#if CPU(ARM_THUMB2)
 namespace JSC { typedef MacroAssemblerARMv7 MacroAssemblerBase; };
 
 #elif CPU(ARM64)
@@ -71,6 +72,7 @@ namespace JSC {
 template <typename MacroAssemblerBase>
 class MacroAssembler : public MacroAssemblerBase {
 public:
+
     using DoubleCondition = typename MacroAssemblerBase::DoubleCondition;
     using ResultCondition = typename MacroAssemblerBase::ResultCondition;
     using RelationalCondition = typename MacroAssemblerBase::RelationalCondition;
@@ -102,7 +104,12 @@ public:
     using MacroAssemblerBase::xor32;
     using MacroAssemblerBase::sub32;
     using MacroAssemblerBase::load32;
-#if CPU(X86_64) || CPU(ARM64)
+
+
+#if defined(V4_BOOTSTRAP)
+    using MacroAssemblerBase::loadPtr;
+    using MacroAssemblerBase::storePtr;
+#elif CPU(X86_64) || CPU(ARM64)
     using MacroAssemblerBase::add64;
     using MacroAssemblerBase::sub64;
     using MacroAssemblerBase::xor64;
@@ -221,7 +228,7 @@ public:
         storePtr(imm, addressForPoke(index));
     }
 
-#if CPU(X86_64) || CPU(ARM64)
+#if (CPU(X86_64) || CPU(ARM64)) && !defined(V4_BOOTSTRAP)
     void peek64(RegisterID dest, int index = 0)
     {
         load64(Address(MacroAssemblerBase::stackPointerRegister, (index * sizeof(void*))), dest);
@@ -360,6 +367,7 @@ public:
         return !(this->random() & (BlindingModulus - 1));
     }
 
+#if !defined(V4_BOOTSTRAP)
     // Ptr methods
     // On 32-bit platforms (i.e. x86), these methods directly map onto their 32-bit equivalents.
     // FIXME: should this use a test for 32-bitness instead of this specific exception?
@@ -884,6 +892,7 @@ public:
     {
         return branchSub64(cond, src1, src2, dest);
     }
+#endif // !defined(V4_BOOTSTRAP)
 
 #if ENABLE(JIT_CONSTANT_BLINDING)
     using MacroAssemblerBase::and64;
