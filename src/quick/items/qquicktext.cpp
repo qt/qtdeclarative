@@ -2795,10 +2795,22 @@ void QQuickText::setRenderType(QQuickText::RenderType renderType)
 
 /*!
     \qmlmethod QtQuick::Text::doLayout()
+    \deprecated
+
+    Use \l forceLayout() instead.
+*/
+void QQuickText::doLayout()
+{
+    forceLayout();
+}
+
+/*!
+    \qmlmethod QtQuick::Text::forceLayout()
+    \since 5.9
 
     Triggers a re-layout of the displayed text.
 */
-void QQuickText::doLayout()
+void QQuickText::forceLayout()
 {
     Q_D(QQuickText);
     d->updateSize();
