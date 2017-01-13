@@ -249,6 +249,7 @@ signals:
     void signalWithGlobalName(int parseInt);
     void intChanged();
     void qjsvalueChanged();
+    void qjsValueEmittingSignal(QJSValue value);
 
 public slots:
     void deleteMe() { delete this; }
