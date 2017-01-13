@@ -1729,7 +1729,9 @@ void QQuickTextEdit::select(int start, int end)
 
     // QTBUG-11100
     updateSelection();
+#if QT_CONFIG(im)
     updateInputMethod();
+#endif
 }
 
 /*!
