@@ -104,9 +104,13 @@ TestCase {
         verify(cancelButton)
         compare(okButton.text.toUpperCase(), "OK")
         compare(cancelButton.text.toUpperCase(), "CANCEL")
+        compare(control.standardButton(DialogButtonBox.Ok), okButton)
+        compare(control.standardButton(DialogButtonBox.Cancel), cancelButton)
 
         control.standardButtons = 0
         compare(control.count, 0)
+        compare(control.standardButton(DialogButtonBox.Ok), null)
+        compare(control.standardButton(DialogButtonBox.Cancel), null)
 
         control.destroy()
     }

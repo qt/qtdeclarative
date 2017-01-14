@@ -187,6 +187,23 @@ TestCase {
         compare(control.pressed, false)
         verify(spy.success)
 
+        // release in the middle
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        mousePress(control, 0, 0, Qt.LeftButton)
+        compare(control.pressed, true)
+        verify(spy.success)
+        mouseMove(control, control.width / 4, control.height / 4, 0, Qt.LeftButton)
+        compare(control.pressed, true)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                "released",
+                                "clicked"]
+        mouseRelease(control, control.width / 4, control.height / 4, Qt.LeftButton)
+        compare(control.checked, false)
+        compare(control.pressed, false)
+        tryCompare(control, "position", 0) // QTBUG-57944
+        verify(spy.success)
+
         // right button
         spy.expectedSequence = []
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
