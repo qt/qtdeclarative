@@ -199,7 +199,10 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         //    for several cases (such as QVariant type and QObject-derived types)
         //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
         if (type == qMetaTypeId<QJSValue>()) {
-            callData->args[ii] = *QJSValuePrivate::getValue(reinterpret_cast<QJSValue *>(a[ii + 1]));
+            if (QV4::Value *v4Value = QJSValuePrivate::getValue(reinterpret_cast<QJSValue *>(a[ii + 1])))
+                callData->args[ii] = *v4Value;
+            else
+                callData->args[ii] = QV4::Encode::undefined();
         } else if (type == QMetaType::QVariant) {
             callData->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
         } else if (type == QMetaType::Int) {

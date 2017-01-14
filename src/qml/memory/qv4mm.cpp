@@ -565,16 +565,6 @@ void MemoryManager::sweep(bool lastSweep)
     }
 }
 
-bool MemoryManager::isGCBlocked() const
-{
-    return m_d->gcBlocked;
-}
-
-void MemoryManager::setGCBlocked(bool blockGC)
-{
-    m_d->gcBlocked = blockGC;
-}
-
 void MemoryManager::runGC()
 {
     if (m_d->gcBlocked) {

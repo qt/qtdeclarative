@@ -762,9 +762,11 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
 void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemChildAddedChange) {
+        Q_D(QQuickLayout);
         QQuickItem *item = value.item;
         qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
+        d->m_hasItemChangeListeners = true;
         if (isReady())
             updateLayoutItems();
     } else if (change == ItemChildRemovedChange) {
@@ -800,6 +802,30 @@ void QQuickLayout::invalidateSenderItem()
 bool QQuickLayout::isReady() const
 {
     return d_func()->m_isReady;
+}
+
+/*!
+ * \brief QQuickLayout::deactivateRecur
+ * \internal
+ *
+ * Call this from the dtor of the top-level layout.
+ * Otherwise, it will trigger lots of unneeded item change listeners (itemVisibleChanged()) for all its descendants
+ * that will have its impact thrown away.
+ */
+void QQuickLayout::deactivateRecur()
+{
+    if (d_func()->m_hasItemChangeListeners) {
+        for (int i = 0; i < itemCount(); ++i) {
+            QQuickItem *item = itemAt(i);
+            // When deleting a layout with children, there is no reason for the children to inform the layout that their
+            // e.g. visibility got changed. The layout already knows that all its children will eventually become invisible, so
+            // we therefore remove its change listener.
+            QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
+            if (QQuickLayout *layout = qobject_cast<QQuickLayout*>(item))
+                layout->deactivateRecur();
+        }
+        d_func()->m_hasItemChangeListeners = false;
+    }
 }
 
 void QQuickLayout::itemSiblingOrderChanged(QQuickItem *item)

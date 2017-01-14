@@ -45,6 +45,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlproperty.h>
+#include <QtQml/qqmlincubator.h>
 #include <QtQuick/qquickitem.h>
 
 #include <QtNetwork/qhostaddress.h>
@@ -136,6 +137,7 @@ private slots:
 
     void regression_QTCREATORBUG_7451();
     void queryObjectWithNonStreamableTypes();
+    void asynchronousCreate();
 };
 
 QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -1218,6 +1220,32 @@ void tst_QQmlEngineDebugService::queryObjectTree()
 
     QCOMPARE(findProperty(animation.properties,"property").value.toString(), QString("width"));
     QCOMPARE(findProperty(animation.properties,"duration").value.toInt(), 100);
+}
+
+void tst_QQmlEngineDebugService::asynchronousCreate() {
+    QmlDebugObjectReference object;
+    auto connection = connect(m_dbg, &QQmlEngineDebugClient::newObject, this, [&](int objectId) {
+        object.debugId = objectId;
+    });
+
+    QByteArray asynchronousComponent = "import QtQuick 2.5\n"
+                                       "Rectangle { id: asyncRect }";
+    QQmlComponent component(m_engine);
+    component.setData(asynchronousComponent, QUrl::fromLocalFile(""));
+    QVERIFY(component.isReady());  // fails if bad syntax
+    QQmlIncubator incubator(QQmlIncubator::Asynchronous);
+    component.create(incubator);
+
+    QVERIFY(m_dbg->object().idString != QLatin1String("asyncRect"));
+
+    QTRY_VERIFY(object.debugId != -1);
+    disconnect(connection);
+
+    bool success = false;
+    m_dbg->queryObject(object, &success);
+    QVERIFY(success);
+
+    QTRY_COMPARE(m_dbg->object().idString, QLatin1String("asyncRect"));
 }
 
 int main(int argc, char *argv[])
