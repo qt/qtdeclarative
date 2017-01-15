@@ -42,6 +42,7 @@ public:
 private slots:
     void initTestCase();
     void basicLoading();
+    void testNonResolvedPath();
     void application();
     void applicationProperties();
 private:
@@ -81,6 +82,29 @@ void tst_qqmlapplicationengine::basicLoading()
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
     delete test;
+}
+
+// make sure we resolve a relative URL to an absolute one, otherwise things
+// will break.
+void tst_qqmlapplicationengine::testNonResolvedPath()
+{
+    {
+        // NOTE NOTE NOTE! Missing testFileUrl is *WANTED* here! We want a
+        // non-resolved URL.
+        QQmlApplicationEngine test("data/nonResolvedLocal.qml");
+        QCOMPARE(test.rootObjects().size(), 1);
+        QVERIFY(test.rootObjects()[0]);
+        QVERIFY(test.rootObjects()[0]->property("success").toBool());
+    }
+    {
+        QQmlApplicationEngine test;
+        // NOTE NOTE NOTE! Missing testFileUrl is *WANTED* here! We want a
+        // non-resolved URL.
+        test.load("data/nonResolvedLocal.qml");
+        QCOMPARE(test.rootObjects().size(), 1);
+        QVERIFY(test.rootObjects()[0]);
+        QVERIFY(test.rootObjects()[0]->property("success").toBool());
+    }
 }
 
 void tst_qqmlapplicationengine::application()
