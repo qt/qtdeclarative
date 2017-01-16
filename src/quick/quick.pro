@@ -9,6 +9,8 @@ win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 win32:!winrt: LIBS += -luser32
 
+DEFINES += QT_NO_FOREACH
+
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov

@@ -8389,7 +8389,7 @@ void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine 
 {
     QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
     if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
-        foreach (QQuickItem *child, QQuickItemPrivate::get(item)->childItems)
+        for (QQuickItem *child : qAsConst(QQuickItemPrivate::get(item)->childItems))
             QV4::QObjectWrapper::markWrapper(child, e);
     }
     QV4::QObjectWrapper::markObjects(that, e);
