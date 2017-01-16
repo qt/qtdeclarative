@@ -177,7 +177,7 @@ public:
     void setQuery(const QString &query)
     {
         if (query.startsWith(QLatin1Char('/'))) {
-            qmlInfo(this) << tr("An XmlRole query must not start with '/'");
+            qmlWarning(this) << tr("An XmlRole query must not start with '/'");
             return;
         }
         if (m_query == query)
