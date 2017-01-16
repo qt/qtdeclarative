@@ -438,11 +438,12 @@ qreal QQuickListViewPrivate::lastPosition() const
         int invisibleCount = INT_MIN;
         int delayRemovedCount = 0;
         for (int i = visibleItems.count()-1; i >= 0; --i) {
-            if (visibleItems.at(i)->index != -1) {
+            FxViewItem *item = visibleItems.at(i);
+            if (item->index != -1) {
                 // Find the invisible count after the last visible item with known index
-                invisibleCount = model->count() - (visibleItems.at(i)->index + 1 + delayRemovedCount);
+                invisibleCount = model->count() - (item->index + 1 + delayRemovedCount);
                 break;
-            } else if (visibleItems.at(i)->attached->delayRemove()) {
+            } else if (item->attached->delayRemove()) {
                 ++delayRemovedCount;
             }
         }
@@ -1172,12 +1173,12 @@ void QQuickListViewPrivate::updateSections()
             FxViewItem *item = visibleItems.at(i);
             QQuickListViewAttached *attached = static_cast<QQuickListViewAttached*>(item->attached);
             attached->setPrevSection(prevSection);
-            if (visibleItems.at(i)->index != -1) {
-                QString propValue = model->stringValue(visibleItems.at(i)->index, sectionCriteria->property());
+            if (item->index != -1) {
+                QString propValue = model->stringValue(item->index, sectionCriteria->property());
                 attached->setSection(sectionCriteria->sectionString(propValue));
-                idx = visibleItems.at(i)->index;
+                idx = item->index;
             }
-            updateInlineSection(static_cast<FxListItemSG*>(visibleItems.at(i)));
+            updateInlineSection(static_cast<FxListItemSG*>(item));
             if (prevAtt)
                 prevAtt->setNextSection(sectionAt(prevIdx+1));
             prevSection = attached->section();
@@ -1210,9 +1211,12 @@ void QQuickListViewPrivate::updateCurrentSection()
     qreal startPos = hasStickyHeader() ? header->endPosition() : viewPos;
     int index = 0;
     int modelIndex = visibleIndex;
-    while (index < visibleItems.count() && visibleItems.at(index)->endPosition() <= startPos) {
-        if (visibleItems.at(index)->index != -1)
-            modelIndex = visibleItems.at(index)->index;
+    while (index < visibleItems.count()) {
+        FxViewItem *item = visibleItems.at(index);
+        if (item->endPosition() > startPos)
+            break;
+        if (item->index != -1)
+            modelIndex = item->index;
         ++index;
     }
 
@@ -1236,10 +1240,13 @@ void QQuickListViewPrivate::updateCurrentSection()
         qreal endPos = hasStickyFooter() ? footer->position() : viewPos + size();
         if (nextSectionItem && !inlineSections)
             endPos -= orient == QQuickListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
-        while (index < visibleItems.count() && static_cast<FxListItemSG*>(visibleItems.at(index))->itemPosition() < endPos) {
-            if (visibleItems.at(index)->index != -1)
-                modelIndex = visibleItems.at(index)->index;
-            lastSection = visibleItems.at(index)->attached->section();
+        while (index < visibleItems.count()) {
+            FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(index));
+            if (listItem->itemPosition() >= endPos)
+                break;
+            if (listItem->index != -1)
+                modelIndex = listItem->index;
+            lastSection = listItem->attached->section();
             ++index;
         }
 
@@ -3323,8 +3330,10 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     qreal sizeRemoved = -removalResult.sizeChangesAfterVisiblePos
             - (removalResult.countChangeAfterVisibleItems * (averageSize + spacing));
 
-    for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
+    for (int i=markerItemIndex+1; i<visibleItems.count(); i++) {
         FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
+        if (listItem->position() >= viewEndPos)
+            break;
         if (!listItem->transitionScheduledOrRunning()) {
             qreal pos = listItem->position();
             listItem->setPosition(pos - sizeRemoved);

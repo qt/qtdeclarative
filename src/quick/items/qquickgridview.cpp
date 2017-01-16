@@ -2535,8 +2535,10 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 
     countItemsRemoved -= removalResult.countChangeAfterVisibleItems;
 
-    for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
+    for (int i=markerItemIndex+1; i<visibleItems.count(); i++) {
         FxGridItemSG *gridItem = static_cast<FxGridItemSG *>(visibleItems.at(i));
+        if (gridItem->position() >= viewEndPos)
+            break;
         if (!gridItem->transitionScheduledOrRunning()) {
             qreal origRowPos = gridItem->colPos();
             qreal origColPos = gridItem->rowPos();
