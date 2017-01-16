@@ -465,7 +465,7 @@ static void vpe_clear(QQmlListProperty<QQuickVisualPath> *property)
         d->_q_visualPathChanged();
 }
 
-QQmlListProperty<QQuickVisualPath> QQuickPathItem::visualPaths()
+QQmlListProperty<QQuickVisualPath> QQuickPathItem::elements()
 {
     return QQmlListProperty<QQuickVisualPath>(this,
                                               nullptr,

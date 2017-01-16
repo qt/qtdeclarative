@@ -265,8 +265,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathItem : public QQuickItem
     Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickVisualPath> visualPaths READ visualPaths)
-    Q_CLASSINFO("DefaultProperty", "visualPaths")
+    Q_PROPERTY(QQmlListProperty<QQuickVisualPath> elements READ elements)
+    Q_CLASSINFO("DefaultProperty", "elements")
 
 public:
     enum RendererType {
@@ -294,7 +294,7 @@ public:
 
     Status status() const;
 
-    QQmlListProperty<QQuickVisualPath> visualPaths();
+    QQmlListProperty<QQuickVisualPath> elements();
 
 protected:
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
