@@ -48,12 +48,8 @@ Image {
 }
 \endqml
 
-Network transparency is supported throughout QML, for example:
-
-\list
-\li Fonts - the \c source property of FontLoader is a URL
-\li WebViews - the \c url property of WebView (obviously!)
-\endlist
+Network transparency is supported throughout QML, for example, both the FontLoader
+and Image elements support loading resources from a remote server.
 
 Even QML types themselves can be on the network - if the \l {Prototyping with qmlscene} is used to load
 \tt http://example.com/mystuff/Hello.qml and that content refers to a type "World", the engine
