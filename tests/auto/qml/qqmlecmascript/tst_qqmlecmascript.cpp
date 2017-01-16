@@ -1401,7 +1401,6 @@ void tst_qqmlecmascript::signalParameterTypes()
     QVERIFY(object != 0);
 
     emit object->basicSignal();
-    emit object->qjsValueEmittingSignal(QJSValue());
 
     QCOMPARE(object->property("intProperty").toInt(), 10);
     QCOMPARE(object->property("realProperty").toReal(), 19.2);
@@ -1409,6 +1408,12 @@ void tst_qqmlecmascript::signalParameterTypes()
     QVERIFY(object->property("variantProperty") == QVariant::fromValue(QColor(255, 0, 255, 255)));
     QVERIFY(object->property("enumProperty") == MyQmlObject::EnumValue3);
     QVERIFY(object->property("qtEnumProperty") == Qt::LeftButton);
+
+    emit object->qjsValueEmittingSignal(QJSValue());
+    QVERIFY(object->property("emittedQjsValueWasUndefined").toBool());
+    emit object->qjsValueEmittingSignal(QJSValue(42));
+    QVERIFY(!object->property("emittedQjsValueWasUndefined").toBool());
+    QCOMPARE(object->property("emittedQjsValueAsInt").value<int>(), 42);
 
     delete object;
 }
