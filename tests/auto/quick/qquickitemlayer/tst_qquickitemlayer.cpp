@@ -44,10 +44,6 @@ public:
 
     QImage runTest(const QString &fileName)
     {
-#if defined(Q_OS_BLACKBERRY)
-        QWindow dummy;            // On BlackBerry first window is always full screen,
-        dummy.showFullScreen();   // so make test window a second window.
-#endif
         QQuickView view;
         view.setSource(testFileUrl(fileName));
 

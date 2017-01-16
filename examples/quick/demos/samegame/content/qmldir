@@ -1,5 +1,4 @@
 singleton Settings 1.0 Settings.qml
-BBSettings 1.0 BBSettings.qml
 Block 1.0 Block.qml
 BlockEmitter 1.0 BlockEmitter.qml
 Button 1.0 Button.qml

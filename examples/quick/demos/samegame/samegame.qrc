@@ -3,8 +3,6 @@
         <file>samegame.qml</file>
         <file>content/qmldir</file>
         <file>content/Settings.qml</file>
-        <file>content/BBSettings.qml</file>
-        <file>content/+blackberry/Settings.qml</file>
         <file>content/gfx/text-p1-won.png</file>
         <file>content/gfx/background-puzzle.png</file>
         <file>content/gfx/background.png</file>

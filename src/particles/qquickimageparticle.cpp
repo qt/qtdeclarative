@@ -58,12 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if defined(Q_OS_BLACKBERRY)
-#define SHADER_PLATFORM_DEFINES "Q_OS_BLACKBERRY\n"
-#else
-#define SHADER_PLATFORM_DEFINES
-#endif
-
 //TODO: Make it larger on desktop? Requires fixing up shader code with the same define
 #define UNIFORM_ARRAY_SIZE 64
 
@@ -102,7 +96,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
@@ -113,7 +106,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
@@ -180,7 +172,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
@@ -190,7 +181,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
@@ -245,7 +235,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("SPRITE"));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
@@ -257,7 +246,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("SPRITE"));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
@@ -327,7 +315,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
             builder.removeVersion();
@@ -336,7 +323,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
             builder.removeVersion();
@@ -405,7 +391,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         if (isES)
             builder.removeVersion();
 
@@ -413,7 +398,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         if (isES)
             builder.removeVersion();
 

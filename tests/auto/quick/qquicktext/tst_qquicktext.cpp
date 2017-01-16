@@ -762,11 +762,6 @@ void tst_qquicktext::horizontalAlignment()
 
 void tst_qquicktext::horizontalAlignment_RightToLeft()
 {
-#if defined(Q_OS_BLACKBERRY)
-    QQuickWindow dummy;      // On BlackBerry first window is always full screen,
-    dummy.showFullScreen();  // so make test window a second window.
-#endif
-
     QScopedPointer<QQuickView> window(createView(testFile("horizontalAlignment_RightToLeft.qml")));
     QQuickText *text = window->rootObject()->findChild<QQuickText*>("text");
     QVERIFY(text != 0);
