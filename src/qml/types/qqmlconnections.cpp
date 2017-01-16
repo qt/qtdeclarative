@@ -168,7 +168,7 @@ void QQmlConnections::setTarget(QObject *obj)
     if (d->targetSet && d->target == obj)
         return;
     d->targetSet = true; // even if setting to 0, it is *set*
-    foreach (QQmlBoundSignal *s, d->boundsignals) {
+    for (QQmlBoundSignal *s : qAsConst(d->boundsignals)) {
         // It is possible that target is being changed due to one of our signal
         // handlers -> use deleteLater().
         if (s->isNotifying())
@@ -278,7 +278,7 @@ void QQmlConnections::connectSignals()
     QQmlContextData *ctxtdata = ddata ? ddata->outerContext : 0;
 
     const QV4::CompiledData::Unit *qmlUnit = d->compilationUnit->data;
-    foreach (const QV4::CompiledData::Binding *binding, d->bindings) {
+    for (const QV4::CompiledData::Binding *binding : qAsConst(d->bindings)) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
         QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
 

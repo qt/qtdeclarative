@@ -264,7 +264,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
 {
     Q_D(QQmlDelegateModel);
 
-    foreach (QQmlDelegateModelItem *cacheItem, d->m_cache) {
+    for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
         if (cacheItem->object) {
             delete cacheItem->object;
 
@@ -764,7 +764,8 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
             emit q->countChanged();
 
         if (m_parts) {
-            foreach (QQmlPartsModel *model, m_parts->models)
+            auto partsCopy = m_parts->models; // deliberate; this may alter m_parts
+            for (QQmlPartsModel *model : qAsConst(partsCopy))
                 model->updateFilterGroup(m_compositorGroup, changeSet);
         }
     }
@@ -1472,7 +1473,8 @@ void QQmlDelegateModelPrivate::emitChanges()
     for (int i = 1; i < m_groupCount; ++i)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
-    foreach (QQmlDelegateModelItem *cacheItem, m_cache) {
+    auto cacheCopy = m_cache; // deliberate; emitChanges may alter m_cache
+    for (QQmlDelegateModelItem *cacheItem : qAsConst(cacheCopy)) {
         if (cacheItem->attached)
             cacheItem->attached->emitChanges();
     }
