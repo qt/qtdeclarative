@@ -178,6 +178,38 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->store32(TargetPlatform::HighReturnValueRegister, destination);
     }
 
+    static void loadArgumentInRegister(JITAssembler *as, IR::Temp* temp, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(temp);
+        Q_UNUSED(dest);
+        Q_UNUSED(argumentNumber);
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, IR::ArgLocal* al, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(al);
+        Q_UNUSED(dest);
+        Q_UNUSED(argumentNumber);
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, IR::Const* c, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(c);
+        Q_UNUSED(dest);
+        Q_UNUSED(argumentNumber);
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, IR::Expr* expr, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(expr);
+        Q_UNUSED(dest);
+        Q_UNUSED(argumentNumber);
+    }
+
     static void generateCJumpOnCompare(JITAssembler *as,
                                        RelationalCondition cond,
                                        RegisterID,
@@ -264,6 +296,58 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, target);
     }
 
+    static void loadArgumentInRegister(JITAssembler *as, IR::Temp* temp, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+
+        if (temp) {
+            Pointer addr = as->loadTempAddress(temp);
+            as->load64(addr, dest);
+        } else {
+            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            as->move(TrustedImm64(undefined.rawValue()), dest);
+        }
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, IR::ArgLocal* al, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+
+        if (al) {
+            Pointer addr = as->loadArgLocalAddress(dest, al);
+            as->load64(addr, dest);
+        } else {
+            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            as->move(TrustedImm64(undefined.rawValue()), dest);
+        }
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, IR::Const* c, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+
+        QV4::Value v = convertToValue(c);
+        as->move(TrustedImm64(v.rawValue()), dest);
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, IR::Expr* expr, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+
+        if (!expr) {
+            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            as->move(TrustedImm64(undefined.rawValue()), dest);
+        } else if (IR::Temp *t = expr->asTemp()){
+            loadArgumentInRegister(as, t, dest, argumentNumber);
+        } else if (IR::ArgLocal *al = expr->asArgLocal()) {
+            loadArgumentInRegister(as, al, dest, argumentNumber);
+        } else if (IR::Const *c = expr->asConst()) {
+            loadArgumentInRegister(as, c, dest, argumentNumber);
+        } else {
+            Q_ASSERT(!"unimplemented expression type in loadArgument");
+        }
+    }
+
     static void generateCJumpOnCompare(JITAssembler *as,
                                        RelationalCondition cond,
                                        RegisterID left,
@@ -307,9 +391,6 @@ public:
     using MacroAssembler::label;
     using MacroAssembler::move;
     using MacroAssembler::jump;
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    using MacroAssembler::load64;
-#endif
     using MacroAssembler::add32;
     using MacroAssembler::and32;
     using MacroAssembler::store32;
@@ -667,64 +748,25 @@ public:
         loadArgumentInRegister(addr, dest, argumentNumber);
     }
 
-#ifdef VALUE_FITS_IN_REGISTER
     void loadArgumentInRegister(IR::Temp* temp, RegisterID dest, int argumentNumber)
     {
-        Q_UNUSED(argumentNumber);
-
-        if (temp) {
-            Pointer addr = loadTempAddress(temp);
-            load64(addr, dest);
-        } else {
-            QV4::Value undefined = QV4::Primitive::undefinedValue();
-            move(TrustedImm64(undefined.rawValue()), dest);
-        }
+        RegisterSizeDependentOps::loadArgumentInRegister(this, temp, dest, argumentNumber);
     }
 
     void loadArgumentInRegister(IR::ArgLocal* al, RegisterID dest, int argumentNumber)
     {
-        Q_UNUSED(argumentNumber);
-
-        if (al) {
-            Pointer addr = loadArgLocalAddress(dest, al);
-            load64(addr, dest);
-        } else {
-            QV4::Value undefined = QV4::Primitive::undefinedValue();
-            move(TrustedImm64(undefined.rawValue()), dest);
-        }
+        RegisterSizeDependentOps::loadArgumentInRegister(this, al, dest, argumentNumber);
     }
 
     void loadArgumentInRegister(IR::Const* c, RegisterID dest, int argumentNumber)
     {
-        Q_UNUSED(argumentNumber);
-
-        QV4::Value v = convertToValue(c);
-        move(TrustedImm64(v.rawValue()), dest);
+        RegisterSizeDependentOps::loadArgumentInRegister(this, c, dest, argumentNumber);
     }
 
     void loadArgumentInRegister(IR::Expr* expr, RegisterID dest, int argumentNumber)
     {
-        Q_UNUSED(argumentNumber);
-
-        if (!expr) {
-            QV4::Value undefined = QV4::Primitive::undefinedValue();
-            move(TrustedImm64(undefined.rawValue()), dest);
-        } else if (IR::Temp *t = expr->asTemp()){
-            loadArgumentInRegister(t, dest, argumentNumber);
-        } else if (IR::ArgLocal *al = expr->asArgLocal()) {
-            loadArgumentInRegister(al, dest, argumentNumber);
-        } else if (IR::Const *c = expr->asConst()) {
-            loadArgumentInRegister(c, dest, argumentNumber);
-        } else {
-            Q_ASSERT(!"unimplemented expression type in loadArgument");
-        }
+        RegisterSizeDependentOps::loadArgumentInRegister(this, expr, dest, argumentNumber);
     }
-#else
-    void loadArgumentInRegister(IR::Expr*, RegisterID)
-    {
-        Q_ASSERT(!"unimplemented: expression in loadArgument");
-    }
-#endif
 
     void loadArgumentInRegister(TrustedImm32 imm32, RegisterID dest, int argumentNumber)
     {
