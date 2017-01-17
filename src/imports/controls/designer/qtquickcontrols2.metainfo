@@ -454,4 +454,36 @@ MetaInfo {
             Property { name: "text"; type: "string"; value: "+" }
         }
     }
+
+    Type {
+        name: "QtQuick.Controls.StackView"
+        icon: "images/stackview-icon16.png"
+
+        ItemLibraryEntry {
+            name: "stack View"
+            category: "Qt Quick - Views"
+            libraryIcon: "images/stackview-icon.png"
+            version: "2.1"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.SwipeView"
+        icon: "images/swipeview-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Swipe View"
+            category: "Qt Quick - Views"
+            libraryIcon: "images/swipeview-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
 }
