@@ -64,7 +64,7 @@ public:
     bool *m_wasDeleted;
 
 protected:
-    void finished() Q_DECL_OVERRIDE;
+    void finished() override;
 };
 
 

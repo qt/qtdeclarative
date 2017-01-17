@@ -146,7 +146,7 @@ public:
     QQuickViewSection *sectionCriteria();
     QString currentSection() const;
 
-    void setHighlightFollowsCurrentItem(bool) Q_DECL_OVERRIDE;
+    void setHighlightFollowsCurrentItem(bool) override;
 
     qreal highlightMoveVelocity() const;
     void setHighlightMoveVelocity(qreal);
@@ -157,7 +157,7 @@ public:
     int highlightResizeDuration() const;
     void setHighlightResizeDuration(int);
 
-    void setHighlightMoveDuration(int) Q_DECL_OVERRIDE;
+    void setHighlightMoveDuration(int) override;
 
     enum SnapMode { NoSnap, SnapToItem, SnapOneItem };
     Q_ENUM(SnapMode)
@@ -192,12 +192,12 @@ Q_SIGNALS:
     Q_REVISION(2) void footerPositioningChanged();
 
 protected:
-    void viewportMoved(Qt::Orientations orient) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry,const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void initItem(int index, QObject *item) Q_DECL_OVERRIDE;
-    qreal maxYExtent() const Q_DECL_OVERRIDE;
-    qreal maxXExtent() const Q_DECL_OVERRIDE;
+    void viewportMoved(Qt::Orientations orient) override;
+    void keyPressEvent(QKeyEvent *) override;
+    void geometryChanged(const QRectF &newGeometry,const QRectF &oldGeometry) override;
+    void initItem(int index, QObject *item) override;
+    qreal maxYExtent() const override;
+    qreal maxXExtent() const override;
 };
 
 class QQuickListViewAttached : public QQuickItemViewAttached

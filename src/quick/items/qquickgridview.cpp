@@ -66,19 +66,19 @@ public:
     {
     }
 
-    qreal position() const Q_DECL_OVERRIDE {
+    qreal position() const override {
         return rowPos();
     }
 
-    qreal endPosition() const Q_DECL_OVERRIDE {
+    qreal endPosition() const override {
         return endRowPos();
     }
 
-    qreal size() const Q_DECL_OVERRIDE {
+    qreal size() const override {
         return view->flow() == QQuickGridView::FlowLeftToRight ? view->cellHeight() : view->cellWidth();
     }
 
-    qreal sectionSize() const Q_DECL_OVERRIDE {
+    qreal sectionSize() const override {
         return 0.0;
     }
 
@@ -122,7 +122,7 @@ public:
     void setPosition(qreal col, qreal row, bool immediate = false) {
         moveTo(pointForPosition(col, row), immediate);
     }
-    bool contains(qreal x, qreal y) const Q_DECL_OVERRIDE {
+    bool contains(qreal x, qreal y) const override {
         return (x >= itemX() && x < itemX() + view->cellWidth() &&
                 y >= itemY() && y < itemY() + view->cellHeight());
     }
@@ -159,13 +159,13 @@ class QQuickGridViewPrivate : public QQuickItemViewPrivate
     Q_DECLARE_PUBLIC(QQuickGridView)
 
 public:
-    Qt::Orientation layoutOrientation() const Q_DECL_OVERRIDE;
-    bool isContentFlowReversed() const Q_DECL_OVERRIDE;
+    Qt::Orientation layoutOrientation() const override;
+    bool isContentFlowReversed() const override;
 
-    qreal positionAt(int index) const Q_DECL_OVERRIDE;
-    qreal endPositionAt(int index) const Q_DECL_OVERRIDE;
-    qreal originPosition() const Q_DECL_OVERRIDE;
-    qreal lastPosition() const Q_DECL_OVERRIDE;
+    qreal positionAt(int index) const override;
+    qreal endPositionAt(int index) const override;
+    qreal originPosition() const override;
+    qreal lastPosition() const override;
 
     qreal rowSize() const;
     qreal colSize() const;
@@ -179,43 +179,43 @@ public:
 
     void resetColumns();
 
-    bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) Q_DECL_OVERRIDE;
-    bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) Q_DECL_OVERRIDE;
+    bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) override;
+    bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) override;
 
     void removeItem(FxViewItem *item);
 
-    FxViewItem *newViewItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-    void initializeViewItem(FxViewItem *item) Q_DECL_OVERRIDE;
-    void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer) Q_DECL_OVERRIDE;
-    void repositionPackageItemAt(QQuickItem *item, int index) Q_DECL_OVERRIDE;
-    void resetFirstItemPosition(qreal pos = 0.0) Q_DECL_OVERRIDE;
-    void adjustFirstItem(qreal forwards, qreal backwards, int changeBeforeVisible) Q_DECL_OVERRIDE;
+    FxViewItem *newViewItem(int index, QQuickItem *item) override;
+    void initializeViewItem(FxViewItem *item) override;
+    void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer) override;
+    void repositionPackageItemAt(QQuickItem *item, int index) override;
+    void resetFirstItemPosition(qreal pos = 0.0) override;
+    void adjustFirstItem(qreal forwards, qreal backwards, int changeBeforeVisible) override;
 
-    void createHighlight() Q_DECL_OVERRIDE;
-    void updateHighlight() Q_DECL_OVERRIDE;
-    void resetHighlightPosition() Q_DECL_OVERRIDE;
+    void createHighlight() override;
+    void updateHighlight() override;
+    void resetHighlightPosition() override;
 
-    void setPosition(qreal pos) Q_DECL_OVERRIDE;
-    void layoutVisibleItems(int fromModelIndex = 0) Q_DECL_OVERRIDE;
-    bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) Q_DECL_OVERRIDE;
-    void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) Q_DECL_OVERRIDE;
-    bool needsRefillForAddedOrRemovedIndex(int index) const Q_DECL_OVERRIDE;
+    void setPosition(qreal pos) override;
+    void layoutVisibleItems(int fromModelIndex = 0) override;
+    bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) override;
+    void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) override;
+    bool needsRefillForAddedOrRemovedIndex(int index) const override;
 
-    qreal headerSize() const Q_DECL_OVERRIDE;
-    qreal footerSize() const Q_DECL_OVERRIDE;
-    bool showHeaderForIndex(int index) const Q_DECL_OVERRIDE;
-    bool showFooterForIndex(int index) const Q_DECL_OVERRIDE;
-    void updateHeader() Q_DECL_OVERRIDE;
-    void updateFooter() Q_DECL_OVERRIDE;
+    qreal headerSize() const override;
+    qreal footerSize() const override;
+    bool showHeaderForIndex(int index) const override;
+    bool showFooterForIndex(int index) const override;
+    void updateHeader() override;
+    void updateFooter() override;
 
-    void changedVisibleIndex(int newIndex) Q_DECL_OVERRIDE;
-    void initializeCurrentItem() Q_DECL_OVERRIDE;
+    void changedVisibleIndex(int newIndex) override;
+    void initializeCurrentItem() override;
 
-    void updateViewport() Q_DECL_OVERRIDE;
-    void fixupPosition() Q_DECL_OVERRIDE;
-    void fixup(AxisData &data, qreal minExtent, qreal maxExtent) Q_DECL_OVERRIDE;
+    void updateViewport() override;
+    void fixupPosition() override;
+    void fixup(AxisData &data, qreal minExtent, qreal maxExtent) override;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-               QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) Q_DECL_OVERRIDE;
+               QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) override;
 
     QQuickGridView::Flow flow;
     qreal cellWidth;

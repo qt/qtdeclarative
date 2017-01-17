@@ -84,8 +84,8 @@ public:
     QQuickGridView(QQuickItem *parent=0);
     ~QQuickGridView();
 
-    void setHighlightFollowsCurrentItem(bool) Q_DECL_OVERRIDE;
-    void setHighlightMoveDuration(int) Q_DECL_OVERRIDE;
+    void setHighlightFollowsCurrentItem(bool) override;
+    void setHighlightMoveDuration(int) override;
 
     Flow flow() const;
     void setFlow(Flow);
@@ -117,10 +117,10 @@ Q_SIGNALS:
     void snapModeChanged();
 
 protected:
-    void viewportMoved(Qt::Orientations) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void initItem(int index, QObject *item) Q_DECL_OVERRIDE;
+    void viewportMoved(Qt::Orientations) override;
+    void keyPressEvent(QKeyEvent *) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void initItem(int index, QObject *item) override;
 };
 
 class QQuickGridViewAttached : public QQuickItemViewAttached
