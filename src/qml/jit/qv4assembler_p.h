@@ -139,6 +139,12 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->MacroAssembler::storeDouble(source, addr);
     }
 
+    static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
+    {
+        Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+        as->storeDouble(source, ptr);
+    }
+
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
     {
         as->moveIntsToDouble(TargetPlatform::LowReturnValueRegister, TargetPlatform::HighReturnValueRegister, dest, TargetPlatform::FPGpr0);
@@ -192,6 +198,15 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
         as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
+    }
+
+    static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
+    {
+        as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
+        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
+        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+        as->store64(TargetPlatform::ReturnValueRegister, ptr);
     }
 
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
@@ -250,9 +265,7 @@ public:
     using MacroAssembler::move;
     using MacroAssembler::jump;
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    using MacroAssembler::moveDoubleTo64;
     using MacroAssembler::move64ToDouble;
-    using MacroAssembler::xor64;
     using MacroAssembler::store64;
     using MacroAssembler::load64;
 #endif
@@ -804,16 +817,7 @@ public:
             moveDouble(source, (FPRegisterID) targetTemp->index);
             return;
         }
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        moveDoubleTo64(source, ReturnValueRegister);
-        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
-        xor64(ScratchRegister, ReturnValueRegister);
-        Pointer ptr = loadAddress(ScratchRegister, target);
-        store64(ReturnValueRegister, ptr);
-#else
-        Pointer ptr = loadAddress(ScratchRegister, target);
-        storeDouble(source, ptr);
-#endif
+        RegisterSizeDependentOps::storeDouble(this, source, target);
     }
 
     void loadDouble(Address addr, FPRegisterID dest)
