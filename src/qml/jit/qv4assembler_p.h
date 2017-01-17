@@ -153,6 +153,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->store32(TrustedImm32(value.tag()), destination);
     }
 
+    template <typename Source, typename Destination>
+    static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination)
+    {
+        as->loadDouble(source, TargetPlatform::FPGpr0);
+        as->storeDouble(TargetPlatform::FPGpr0, destination);
+    }
+
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
     {
         as->moveIntsToDouble(TargetPlatform::LowReturnValueRegister, TargetPlatform::HighReturnValueRegister, dest, TargetPlatform::FPGpr0);
@@ -232,6 +239,15 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
     {
         as->store64(TrustedImm64(value.rawValue()), destination);
+    }
+
+    template <typename Source, typename Destination>
+    static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination)
+    {
+        // Use ReturnValueRegister as "scratch" register because loadArgument
+        // and storeArgument are functions that may need a scratch register themselves.
+        as->loadArgumentInRegister(source, TargetPlatform::ReturnValueRegister, 0);
+        as->storeReturnValue(destination);
     }
 
     static void generateCJumpOnCompare(JITAssembler *as,
@@ -1275,15 +1291,7 @@ template <typename TargetConfiguration>
 template <typename Result, typename Source>
 void Assembler<TargetConfiguration>::copyValue(Result result, Source source)
 {
-#ifdef VALUE_FITS_IN_REGISTER
-    // Use ReturnValueRegister as "scratch" register because loadArgument
-    // and storeArgument are functions that may need a scratch register themselves.
-    loadArgumentInRegister(source, ReturnValueRegister, 0);
-    storeReturnValue(result);
-#else
-    loadDouble(source, FPGpr0);
-    storeDouble(FPGpr0, result);
-#endif
+    RegisterSizeDependentOps::copyValueViaRegisters(this, source, result);
 }
 
 template <typename TargetConfiguration>
@@ -1302,15 +1310,7 @@ void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source)
     } else if (source->type == IR::DoubleType) {
         storeDouble(toDoubleRegister(source), result);
     } else if (source->asTemp() || source->asArgLocal()) {
-#ifdef VALUE_FITS_IN_REGISTER
-            // Use ReturnValueRegister as "scratch" register because loadArgument
-            // and storeArgument are functions that may need a scratch register themselves.
-            loadArgumentInRegister(source, ReturnValueRegister, 0);
-            storeReturnValue(result);
-#else
-            loadDouble(source, FPGpr0);
-            storeDouble(FPGpr0, result);
-#endif
+        RegisterSizeDependentOps::copyValueViaRegisters(this, source, result);
     } else if (IR::Const *c = source->asConst()) {
         QV4::Primitive v = convertToValue(c);
         storeValue(v, result);
