@@ -126,6 +126,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using FPRegisterID = typename JITAssembler::FPRegisterID;
     using RelationalCondition = typename JITAssembler::RelationalCondition;
     using Address = typename JITAssembler::Address;
+    using Pointer = typename JITAssembler::Pointer;
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
@@ -136,6 +137,19 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
     {
         as->MacroAssembler::storeDouble(source, addr);
+    }
+
+    static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
+    {
+        as->moveIntsToDouble(TargetPlatform::LowReturnValueRegister, TargetPlatform::HighReturnValueRegister, dest, TargetPlatform::FPGpr0);
+    }
+
+    static void storeReturnValue(JITAssembler *as, const Pointer &dest)
+    {
+        Address destination = dest;
+        as->store32(TargetPlatform::LowReturnValueRegister, destination);
+        destination.offset += 4;
+        as->store32(TargetPlatform::HighReturnValueRegister, destination);
     }
 
     static void generateCJumpOnCompare(JITAssembler *as,
@@ -160,6 +174,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using FPRegisterID = typename JITAssembler::FPRegisterID;
     using Address = typename JITAssembler::Address;
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
+    using Pointer = typename JITAssembler::Pointer;
     using RelationalCondition = typename JITAssembler::RelationalCondition;
     using Jump = typename JITAssembler::Jump;
 
@@ -177,6 +192,18 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
         as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
+    }
+
+    static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
+    {
+        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
+        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
+    }
+
+    static void storeReturnValue(JITAssembler *as, const Pointer &dest)
+    {
+        as->store64(TargetPlatform::ReturnValueRegister, dest);
     }
 
     static void generateCJumpOnCompare(JITAssembler *as,
@@ -249,10 +276,6 @@ public:
     using MacroAssembler::convertInt32ToDouble;
     using MacroAssembler::rshift32;
     using MacroAssembler::storePtr;
-
-#if !defined(VALUE_FITS_IN_REGISTER)
-    using MacroAssembler::moveIntsToDouble;
-#endif
 
     using JITTargetPlatform = typename TargetConfiguration::Platform;
     using JITTargetPlatform::RegisterArgumentCount;
@@ -674,55 +697,13 @@ public:
 
     void storeReturnValue(FPRegisterID dest)
     {
-#ifdef VALUE_FITS_IN_REGISTER
-        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
-        xor64(ScratchRegister, ReturnValueRegister);
-        move64ToDouble(ReturnValueRegister, dest);
-#elif defined(Q_PROCESSOR_ARM)
-        moveIntsToDouble(JSC::ARMRegisters::r0, JSC::ARMRegisters::r1, dest, FPGpr0);
-#elif defined(Q_PROCESSOR_X86)
-        moveIntsToDouble(JSC::X86Registers::eax, JSC::X86Registers::edx, dest, FPGpr0);
-#elif defined(Q_PROCESSOR_MIPS)
-        moveIntsToDouble(JSC::MIPSRegisters::v0, JSC::MIPSRegisters::v1, dest, FPGpr0);
-#else
-        subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
-        Pointer tmp(StackPointerRegister, 0);
-        storeReturnValue(tmp);
-        loadDouble(tmp, dest);
-        addPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
-#endif
+        RegisterSizeDependentOps::storeReturnValue(this, dest);
     }
 
-#ifdef VALUE_FITS_IN_REGISTER
     void storeReturnValue(const Pointer &dest)
     {
-        store64(ReturnValueRegister, dest);
+        RegisterSizeDependentOps::storeReturnValue(this, dest);
     }
-#elif defined(Q_PROCESSOR_X86)
-    void storeReturnValue(const Pointer &dest)
-    {
-        Pointer destination = dest;
-        store32(JSC::X86Registers::eax, destination);
-        destination.offset += 4;
-        store32(JSC::X86Registers::edx, destination);
-    }
-#elif defined(Q_PROCESSOR_ARM)
-    void storeReturnValue(const Pointer &dest)
-    {
-        Pointer destination = dest;
-        store32(JSC::ARMRegisters::r0, destination);
-        destination.offset += 4;
-        store32(JSC::ARMRegisters::r1, destination);
-    }
-#elif defined(Q_PROCESSOR_MIPS)
-    void storeReturnValue(const Pointer &dest)
-    {
-        Pointer destination = dest;
-        store32(JSC::MIPSRegisters::v0, destination);
-        destination.offset += 4;
-        store32(JSC::MIPSRegisters::v1, destination);
-    }
-#endif
 
     void storeReturnValue(IR::Expr *target)
     {

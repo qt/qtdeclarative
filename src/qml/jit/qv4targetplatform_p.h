@@ -97,6 +97,8 @@ public:
     static const RegisterID ScratchRegister      = JSC::X86Registers::ecx;
     static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
     static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID LowReturnValueRegister = JSC::X86Registers::eax;
+    static const RegisterID HighReturnValueRegister = JSC::X86Registers::edx;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -304,6 +306,8 @@ public:
     static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
     static const FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
+    static const RegisterID LowReturnValueRegister = JSC::ARMRegisters::r0;
+    static const RegisterID HighReturnValueRegister = JSC::ARMRegisters::r1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
@@ -503,6 +507,8 @@ public:
     static const RegisterID ScratchRegister = JSC::MIPSRegisters::s2;
     static const FPRegisterID FPGpr0 = JSC::MIPSRegisters::f0;
     static const FPRegisterID FPGpr1 = JSC::MIPSRegisters::f2;
+    static const RegisterID LowReturnValueRegister = JSC::MIPSRegisters::v0;
+    static const RegisterID HighReturnValueRegister = JSC::MIPSRegisters::v1;
 
     static RegisterInformation getPlatformRegisterInfo()
     {
