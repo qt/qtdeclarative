@@ -383,8 +383,7 @@ qreal QQuickGridViewPrivate::snapPosAt(qreal pos) const
 
 FxViewItem *QQuickGridViewPrivate::snapItemAt(qreal pos) const
 {
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
+    for (FxViewItem *item : visibleItems) {
         if (item->index == -1)
             continue;
         qreal itemTop = item->position();
@@ -397,16 +396,16 @@ FxViewItem *QQuickGridViewPrivate::snapItemAt(qreal pos) const
 int QQuickGridViewPrivate::snapIndex() const
 {
     int index = currentIndex;
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.at(i));
+    for (FxViewItem *item : visibleItems) {
         if (item->index == -1)
             continue;
         qreal itemTop = item->position();
         FxGridItemSG *hItem = static_cast<FxGridItemSG*>(highlight);
         if (itemTop >= hItem->rowPos()-rowSize()/2 && itemTop < hItem->rowPos()+rowSize()/2) {
-            index = item->index;
-            if (item->colPos() >= hItem->colPos()-colSize()/2 && item->colPos() < hItem->colPos()+colSize()/2)
-                return item->index;
+            FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
+            index = gridItem->index;
+            if (gridItem->colPos() >= hItem->colPos()-colSize()/2 && gridItem->colPos() < hItem->colPos()+colSize()/2)
+                return gridItem->index;
         }
     }
     return index;
@@ -496,8 +495,8 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         // We've jumped more than a page.  Estimate which items are now
         // visible and fill from there.
         int count = (fillFrom - (rowPos + rowSize())) / (rowSize()) * columns;
-        for (int i = 0; i < visibleItems.count(); ++i)
-            releaseItem(visibleItems.at(i));
+        for (FxViewItem *item : qAsConst(visibleItems))
+            releaseItem(item);
         visibleItems.clear();
         modelIndex += count;
         if (modelIndex >= model->count())
@@ -2055,9 +2054,9 @@ void QQuickGridView::viewportMoved(Qt::Orientations orient)
     // Set visibility of items to eliminate cost of items outside the visible area.
     qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
     qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        FxGridItemSG *item = static_cast<FxGridItemSG*>(d->visibleItems.at(i));
-        QQuickItemPrivate::get(item->item)->setCulled(item->rowPos() + d->rowSize() < from || item->rowPos() > to);
+    for (FxViewItem *item : qAsConst(d->visibleItems)) {
+        FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
+        QQuickItemPrivate::get(gridItem->item)->setCulled(gridItem->rowPos() + d->rowSize() < from || gridItem->rowPos() > to);
     }
     if (d->currentItem) {
         FxGridItemSG *item = static_cast<FxGridItemSG*>(d->currentItem);
@@ -2357,8 +2356,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (modelIndex <= visibleIndex) {
                 // Insert before visible items
                 visibleIndex += count;
-                for (int i = 0; i < visibleItems.count(); ++i) {
-                    FxViewItem *item = visibleItems.at(i);
+                for (FxViewItem *item : qAsConst(visibleItems)) {
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
@@ -2391,8 +2389,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     }
 
     // Update the indexes of the following visible items.
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
+    for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
             if (change.isMove())
