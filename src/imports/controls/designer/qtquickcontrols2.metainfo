@@ -440,4 +440,18 @@ MetaInfo {
             Property { name: "text"; type: "binding"; value: "qsTr(\"Tab Button\")" }
         }
     }
+
+    Type {
+        name: "QtQuick.Controls.RoundButton"
+        icon: "images/roundbutton-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Round Button"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/roundbutton-icon.png"
+            version: "2.1"
+            requiredImport: "QtQuick.Controls"
+            Property { name: "text"; type: "string"; value: "+" }
+        }
+    }
 }
