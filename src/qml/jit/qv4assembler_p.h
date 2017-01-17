@@ -114,6 +114,52 @@ struct AssemblerTargetConfiguration
     // More things coming here in the future, such as Target OS
 };
 
+template <typename MacroAssembler, typename TargetPlatform, int RegisterSize>
+struct RegisterSizeDependentAssembler
+{
+};
+
+template <typename MacroAssembler, typename TargetPlatform>
+struct RegisterSizeDependentAssembler<MacroAssembler, TargetPlatform, 4>
+{
+    using FPRegisterID = typename MacroAssembler::FPRegisterID;
+    using Address = typename MacroAssembler::Address;
+
+    static void loadDouble(MacroAssembler *as, Address addr, FPRegisterID dest)
+    {
+        as->loadDouble(addr, dest);
+    }
+
+    static void storeDouble(MacroAssembler *as, FPRegisterID source, Address addr)
+    {
+        as->storeDouble(source, addr);
+    }
+};
+
+template <typename MacroAssembler, typename TargetPlatform>
+struct RegisterSizeDependentAssembler<MacroAssembler, TargetPlatform, 8>
+{
+    using FPRegisterID = typename MacroAssembler::FPRegisterID;
+    using Address = typename MacroAssembler::Address;
+    using TrustedImm64 = typename MacroAssembler::TrustedImm64;
+
+    static void loadDouble(MacroAssembler *as, Address addr, FPRegisterID dest)
+    {
+        as->load64(addr, TargetPlatform::ReturnValueRegister);
+        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
+        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
+    }
+
+    static void storeDouble(MacroAssembler *as, FPRegisterID source, Address addr)
+    {
+        as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
+        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
+        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->store64(TargetPlatform::ReturnValueRegister, addr);
+    }
+};
+
 template <typename TargetConfiguration>
 class Assembler : public TargetConfiguration::MacroAssembler, public TargetConfiguration::Platform
 {
@@ -184,6 +230,8 @@ public:
     using JITTargetPlatform::FPGpr0;
     using JITTargetPlatform::platformEnterStandardStackFrame;
     using JITTargetPlatform::platformLeaveStandardStackFrame;
+
+    using RegisterSizeDependentOps = RegisterSizeDependentAssembler<MacroAssembler, JITTargetPlatform, RegisterSize>;
 
     struct LookupCall {
         Address addr;
@@ -748,27 +796,16 @@ public:
         storeDouble(source, ptr);
 #endif
     }
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    // We need to (de)mangle the double
+
     void loadDouble(Address addr, FPRegisterID dest)
     {
-        load64(addr, ReturnValueRegister);
-        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
-        xor64(ScratchRegister, ReturnValueRegister);
-        move64ToDouble(ReturnValueRegister, dest);
+        RegisterSizeDependentOps::loadDouble(this, addr, dest);
     }
 
     void storeDouble(FPRegisterID source, Address addr)
     {
-        moveDoubleTo64(source, ReturnValueRegister);
-        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
-        xor64(ScratchRegister, ReturnValueRegister);
-        store64(ReturnValueRegister, addr);
+        RegisterSizeDependentOps::storeDouble(this, source, addr);
     }
-#else
-    using MacroAssembler::loadDouble;
-    using MacroAssembler::storeDouble;
-#endif
 
     template <typename Result, typename Source>
     void copyValue(Result result, Source source);
