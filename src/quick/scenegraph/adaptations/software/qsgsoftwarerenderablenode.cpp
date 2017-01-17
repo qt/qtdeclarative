@@ -293,10 +293,10 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
     case QSGSoftwareRenderableNode::SimpleTexture:
     {
         QSGTexture *texture = m_handle.simpleTextureNode->texture();
-        if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(texture)) {
+        if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(texture)) {
             const QPixmap &pm = pt->pixmap();
             painter->drawPixmap(m_handle.simpleTextureNode->rect(), pm, m_handle.simpleTextureNode->sourceRect());
-        } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(texture)) {
+        } else if (QSGPlainTexture *pt = qobject_cast<QSGPlainTexture *>(texture)) {
             const QImage &im = pt->image();
             painter->drawImage(m_handle.simpleTextureNode->rect(), im, m_handle.simpleTextureNode->sourceRect());
         }
