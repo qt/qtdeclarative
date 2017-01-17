@@ -114,36 +114,56 @@ struct AssemblerTargetConfiguration
     // More things coming here in the future, such as Target OS
 };
 
-template <typename MacroAssembler, typename TargetPlatform, int RegisterSize>
+template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform, int RegisterSize>
 struct RegisterSizeDependentAssembler
 {
 };
 
-template <typename MacroAssembler, typename TargetPlatform>
-struct RegisterSizeDependentAssembler<MacroAssembler, TargetPlatform, 4>
+template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
+struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatform, 4>
 {
-    using FPRegisterID = typename MacroAssembler::FPRegisterID;
-    using Address = typename MacroAssembler::Address;
+    using RegisterID = typename JITAssembler::RegisterID;
+    using FPRegisterID = typename JITAssembler::FPRegisterID;
+    using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using Address = typename JITAssembler::Address;
+    using TrustedImm64 = typename JITAssembler::TrustedImm64;
 
-    static void loadDouble(MacroAssembler *as, Address addr, FPRegisterID dest)
+    static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
-        as->loadDouble(addr, dest);
+        as->MacroAssembler::loadDouble(addr, dest);
     }
 
-    static void storeDouble(MacroAssembler *as, FPRegisterID source, Address addr)
+    static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
     {
-        as->storeDouble(source, addr);
+        as->MacroAssembler::storeDouble(source, addr);
+    }
+
+    static void generateCJumpOnCompare(JITAssembler *as,
+                                       RelationalCondition cond,
+                                       RegisterID,
+                                       TrustedImm64,
+                                       IR::BasicBlock *,
+                                       IR::BasicBlock *,
+                                       IR::BasicBlock *,
+                                       IR::BasicBlock *)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(cond);
+        Q_ASSERT(!"unimplemented generateCJumpOnCompare with TrustedImm64 for 32-bit");
     }
 };
 
-template <typename MacroAssembler, typename TargetPlatform>
-struct RegisterSizeDependentAssembler<MacroAssembler, TargetPlatform, 8>
+template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
+struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatform, 8>
 {
-    using FPRegisterID = typename MacroAssembler::FPRegisterID;
-    using Address = typename MacroAssembler::Address;
-    using TrustedImm64 = typename MacroAssembler::TrustedImm64;
+    using RegisterID = typename JITAssembler::RegisterID;
+    using FPRegisterID = typename JITAssembler::FPRegisterID;
+    using Address = typename JITAssembler::Address;
+    using TrustedImm64 = typename JITAssembler::TrustedImm64;
+    using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using Jump = typename JITAssembler::Jump;
 
-    static void loadDouble(MacroAssembler *as, Address addr, FPRegisterID dest)
+    static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->load64(addr, TargetPlatform::ReturnValueRegister);
         as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
@@ -151,12 +171,31 @@ struct RegisterSizeDependentAssembler<MacroAssembler, TargetPlatform, 8>
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
-    static void storeDouble(MacroAssembler *as, FPRegisterID source, Address addr)
+    static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
     {
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
         as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
         as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
+    }
+
+    static void generateCJumpOnCompare(JITAssembler *as,
+                                       RelationalCondition cond,
+                                       RegisterID left,
+                                       TrustedImm64 right,
+                                       IR::BasicBlock *nextBlock,
+                                       IR::BasicBlock *currentBlock,
+                                       IR::BasicBlock *trueBlock,
+                                       IR::BasicBlock *falseBlock)
+    {
+        if (trueBlock == nextBlock) {
+            Jump target = as->branch64(as->invert(cond), left, right);
+            as->addPatch(falseBlock, target);
+        } else {
+            Jump target = as->branch64(cond, left, right);
+            as->addPatch(trueBlock, target);
+            as->jumpToBlock(currentBlock, falseBlock);
+        }
     }
 };
 
@@ -189,7 +228,6 @@ public:
     using MacroAssembler::xor64;
     using MacroAssembler::store64;
     using MacroAssembler::load64;
-    using MacroAssembler::branch64;
 #endif
     using MacroAssembler::add32;
     using MacroAssembler::and32;
@@ -231,7 +269,7 @@ public:
     using JITTargetPlatform::platformEnterStandardStackFrame;
     using JITTargetPlatform::platformLeaveStandardStackFrame;
 
-    using RegisterSizeDependentOps = RegisterSizeDependentAssembler<MacroAssembler, JITTargetPlatform, RegisterSize>;
+    using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
 
     struct LookupCall {
         Address addr;
@@ -456,11 +494,11 @@ public:
     void addPatch(DataLabelPtr patch, IR::BasicBlock *target);
     void generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
                              IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm64 right,
                                 IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
                                 IR::BasicBlock *falseBlock);
-#endif
+
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm32 right,
                                 IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
                                 IR::BasicBlock *falseBlock);

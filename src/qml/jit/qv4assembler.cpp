@@ -209,7 +209,6 @@ void Assembler<TargetConfiguration>::generateCJumpOnNonZero(RegisterID reg, IR::
     generateCJumpOnCompare(RelationalCondition::NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
 }
 
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
 template <typename TargetConfiguration>
 void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
                                        RegisterID left,
@@ -218,16 +217,8 @@ void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition 
                                        IR::BasicBlock *trueBlock,
                                        IR::BasicBlock *falseBlock)
 {
-    if (trueBlock == _nextBlock) {
-        Jump target = branch64(invert(cond), left, right);
-        addPatch(falseBlock, target);
-    } else {
-        Jump target = branch64(cond, left, right);
-        addPatch(trueBlock, target);
-        jumpToBlock(currentBlock, falseBlock);
-    }
+    RegisterSizeDependentOps::generateCJumpOnCompare(this, cond, left, right, _nextBlock, currentBlock, trueBlock, falseBlock);
 }
-#endif
 
 template <typename TargetConfiguration>
 void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
