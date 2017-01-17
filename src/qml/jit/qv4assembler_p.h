@@ -136,6 +136,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Pointer = typename JITAssembler::Pointer;
     using TrustedImm32 = typename JITAssembler::TrustedImm32;
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
+    using Jump = typename JITAssembler::Jump;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
@@ -230,6 +231,39 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Q_UNUSED(cond);
         Q_ASSERT(!"unimplemented generateCJumpOnCompare with TrustedImm64 for 32-bit");
     }
+
+    static void convertVarToSInt32(JITAssembler *as, IR::Expr *source, IR::Expr *target)
+    {
+        Q_ASSERT(source->type == IR::VarType);
+        // load the tag:
+        Pointer addr = as->loadAddress(TargetPlatform::ScratchRegister, source);
+        Pointer tagAddr = addr;
+        tagAddr.offset += 4;
+        as->load32(tagAddr, TargetPlatform::ReturnValueRegister);
+
+        // check if it's an int32:
+        Jump fallback = as->branch32(RelationalCondition::NotEqual, TargetPlatform::ReturnValueRegister,
+                                      TrustedImm32(Value::Integer_Type_Internal));
+        IR::Temp *targetTemp = target->asTemp();
+        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
+            as->load32(addr, TargetPlatform::ReturnValueRegister);
+            Pointer targetAddr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+            as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
+            targetAddr.offset += 4;
+            as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+        } else {
+            as->load32(addr, (RegisterID) targetTemp->index);
+        }
+        Jump intDone = as->jump();
+
+        // not an int:
+        fallback.link(as);
+        generateRuntimeCall(as, TargetPlatform::ReturnValueRegister, toInt,
+                            as->loadAddress(TargetPlatform::ScratchRegister, source));
+        as->storeInt32(TargetPlatform::ReturnValueRegister, target);
+
+        intDone.link(as);
+    }
 };
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
@@ -238,9 +272,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using RegisterID = typename JITAssembler::RegisterID;
     using FPRegisterID = typename JITAssembler::FPRegisterID;
     using Address = typename JITAssembler::Address;
+    using TrustedImm32 = typename JITAssembler::TrustedImm32;
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
     using Pointer = typename JITAssembler::Pointer;
     using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using BranchTruncateType = typename JITAssembler::BranchTruncateType;
     using Jump = typename JITAssembler::Jump;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
@@ -371,6 +407,50 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             Jump target = as->branch64(cond, left, right);
             as->addPatch(trueBlock, target);
             as->jumpToBlock(currentBlock, falseBlock);
+        }
+    }
+
+    static void convertVarToSInt32(JITAssembler *as, IR::Expr *source, IR::Expr *target)
+    {
+        Q_ASSERT(source->type == IR::VarType);
+        Pointer addr = as->loadAddress(TargetPlatform::ScratchRegister, source);
+        as->load64(addr, TargetPlatform::ScratchRegister);
+        as->move(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+
+        // check if it's integer convertible
+        as->urshift64(TrustedImm32(QV4::Value::IsIntegerConvertible_Shift), TargetPlatform::ScratchRegister);
+        Jump isIntConvertible = as->branch32(RelationalCondition::Equal, TargetPlatform::ScratchRegister, TrustedImm32(3));
+
+        // nope, not integer convertible, so check for a double:
+        as->urshift64(TrustedImm32(
+                           QV4::Value::IsDoubleTag_Shift - QV4::Value::IsIntegerConvertible_Shift),
+                       TargetPlatform::ScratchRegister);
+        Jump fallback = as->branch32(RelationalCondition::GreaterThan, TargetPlatform::ScratchRegister, TrustedImm32(0));
+
+        // it's a double
+        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
+        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->move64ToDouble(TargetPlatform::ReturnValueRegister, TargetPlatform::FPGpr0);
+        Jump success =
+                as->branchTruncateDoubleToInt32(TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister,
+                                                 BranchTruncateType::BranchIfTruncateSuccessful);
+
+        // not an int:
+        fallback.link(as);
+        generateRuntimeCall(as, TargetPlatform::ReturnValueRegister, toInt,
+                            as->loadAddress(TargetPlatform::ScratchRegister, source));
+
+
+        isIntConvertible.link(as);
+        success.link(as);
+        IR::Temp *targetTemp = target->asTemp();
+        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
+            Pointer targetAddr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+            as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
+            targetAddr.offset += 4;
+            as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+        } else {
+            as->storeInt32(TargetPlatform::ReturnValueRegister, target);
         }
     }
 };

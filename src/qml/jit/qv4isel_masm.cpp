@@ -1086,77 +1086,7 @@ void InstructionSelection<JITAssembler>::convertTypeToSInt32(IR::Expr *source, I
 {
     switch (source->type) {
     case IR::VarType: {
-
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
-        _as->load64(addr, JITTargetPlatform::ScratchRegister);
-        _as->move(JITTargetPlatform::ScratchRegister, JITTargetPlatform::ReturnValueRegister);
-
-        // check if it's integer convertible
-        _as->urshift64(TrustedImm32(QV4::Value::IsIntegerConvertible_Shift), JITTargetPlatform::ScratchRegister);
-        Jump isIntConvertible = _as->branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(3));
-
-        // nope, not integer convertible, so check for a double:
-        _as->urshift64(TrustedImm32(
-                           QV4::Value::IsDoubleTag_Shift - QV4::Value::IsIntegerConvertible_Shift),
-                       JITTargetPlatform::ScratchRegister);
-        Jump fallback = _as->branch32(RelationalCondition::GreaterThan, JITTargetPlatform::ScratchRegister, TrustedImm32(0));
-
-        // it's a double
-        _as->move(TrustedImm64(QV4::Value::NaNEncodeMask), JITTargetPlatform::ScratchRegister);
-        _as->xor64(JITTargetPlatform::ScratchRegister, JITTargetPlatform::ReturnValueRegister);
-        _as->move64ToDouble(JITTargetPlatform::ReturnValueRegister, JITTargetPlatform::FPGpr0);
-        Jump success =
-                _as->branchTruncateDoubleToInt32(JITTargetPlatform::FPGpr0, JITTargetPlatform::ReturnValueRegister,
-                                                 BranchTruncateType::BranchIfTruncateSuccessful);
-
-        // not an int:
-        fallback.link(_as);
-        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toInt,
-                             _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
-
-        isIntConvertible.link(_as);
-        success.link(_as);
-        IR::Temp *targetTemp = target->asTemp();
-        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-            Pointer targetAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, target);
-            _as->store32(JITTargetPlatform::ReturnValueRegister, targetAddr);
-            targetAddr.offset += 4;
-            _as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
-        } else {
-            _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
-        }
-#else
-        // load the tag:
-        Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
-        Pointer tagAddr = addr;
-        tagAddr.offset += 4;
-        _as->load32(tagAddr, JITTargetPlatform::ReturnValueRegister);
-
-        // check if it's an int32:
-        Jump fallback = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ReturnValueRegister,
-                                                TrustedImm32(Value::Integer_Type_Internal));
-        IR::Temp *targetTemp = target->asTemp();
-        if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-            _as->load32(addr, JITTargetPlatform::ReturnValueRegister);
-            Pointer targetAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, target);
-            _as->store32(JITTargetPlatform::ReturnValueRegister, targetAddr);
-            targetAddr.offset += 4;
-            _as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
-        } else {
-            _as->load32(addr, (RegisterID) targetTemp->index);
-        }
-        Jump intDone = _as->jump();
-
-        // not an int:
-        fallback.link(_as);
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toInt,
-                             _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
-        _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
-
-        intDone.link(_as);
-#endif
-
+        JITAssembler::RegisterSizeDependentOps::convertVarToSInt32(_as, source, target);
     } break;
     case IR::DoubleType: {
         Jump success =
