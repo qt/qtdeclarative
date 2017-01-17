@@ -127,6 +127,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using RelationalCondition = typename JITAssembler::RelationalCondition;
     using Address = typename JITAssembler::Address;
     using Pointer = typename JITAssembler::Pointer;
+    using TrustedImm32 = typename JITAssembler::TrustedImm32;
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
@@ -143,6 +144,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     {
         Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
         as->storeDouble(source, ptr);
+    }
+
+    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
+    {
+        as->store32(TrustedImm32(value.int_32()), destination);
+        destination.offset += 4;
+        as->store32(TrustedImm32(value.tag()), destination);
     }
 
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
@@ -221,6 +229,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->store64(TargetPlatform::ReturnValueRegister, dest);
     }
 
+    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
+    {
+        as->store64(TrustedImm64(value.rawValue()), destination);
+    }
+
     static void generateCJumpOnCompare(JITAssembler *as,
                                        RelationalCondition cond,
                                        RegisterID left,
@@ -266,7 +279,6 @@ public:
     using MacroAssembler::jump;
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
     using MacroAssembler::move64ToDouble;
-    using MacroAssembler::store64;
     using MacroAssembler::load64;
 #endif
     using MacroAssembler::add32;
@@ -853,13 +865,7 @@ public:
 
     void storeValue(QV4::Primitive value, Address destination)
     {
-#ifdef VALUE_FITS_IN_REGISTER
-        store64(TrustedImm64(value.rawValue()), destination);
-#else
-        store32(TrustedImm32(value.int_32()), destination);
-        destination.offset += 4;
-        store32(TrustedImm32(value.tag()), destination);
-#endif
+        RegisterSizeDependentOps::storeValue(this, value, destination);
     }
 
     void storeValue(QV4::Primitive value, IR::Expr* temp);
