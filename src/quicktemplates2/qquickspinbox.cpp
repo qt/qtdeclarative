@@ -102,6 +102,7 @@ public:
 
     int boundValue(int value) const;
     void updateValue();
+    bool setValue(int value);
 
     int effectiveStepSize() const;
 
@@ -154,6 +155,24 @@ void QQuickSpinBoxPrivate::updateValue()
             }
         }
     }
+}
+
+bool QQuickSpinBoxPrivate::setValue(int newValue)
+{
+    Q_Q(QQuickSpinBox);
+    if (q->isComponentComplete())
+        newValue = boundValue(newValue);
+
+    if (value == newValue)
+        return false;
+
+    value = newValue;
+
+    updateUpEnabled();
+    updateDownEnabled();
+
+    emit q->valueChanged();
+    return true;
 }
 
 int QQuickSpinBoxPrivate::effectiveStepSize() const
@@ -322,8 +341,12 @@ void QQuickSpinBox::setFrom(int from)
 
     d->from = from;
     emit fromChanged();
-    if (isComponentComplete())
-        setValue(d->value);
+    if (isComponentComplete()) {
+        if (!d->setValue(d->value)) {
+            d->updateUpEnabled();
+            d->updateDownEnabled();
+        }
+    }
 }
 
 /*!
@@ -347,8 +370,12 @@ void QQuickSpinBox::setTo(int to)
 
     d->to = to;
     emit toChanged();
-    if (isComponentComplete())
-        setValue(d->value);
+    if (isComponentComplete()) {
+        if (!d->setValue(d->value)) {
+            d->updateUpEnabled();
+            d->updateDownEnabled();
+        }
+    }
 }
 
 /*!
@@ -365,18 +392,7 @@ int QQuickSpinBox::value() const
 void QQuickSpinBox::setValue(int value)
 {
     Q_D(QQuickSpinBox);
-    if (isComponentComplete())
-        value = d->boundValue(value);
-
-    if (d->value == value)
-        return;
-
-    d->value = value;
-
-    d->updateUpEnabled();
-    d->updateDownEnabled();
-
-    emit valueChanged();
+    d->setValue(value);
 }
 
 /*!

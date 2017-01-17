@@ -120,9 +120,21 @@ TestCase {
         compare(control.up.indicator.enabled, true)
         compare(control.down.indicator.enabled, false)
 
+        control.value = 30
+        compare(control.from, 25)
+        compare(control.value, 30)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
+
+        control.from = 30
+        compare(control.from, 30)
+        compare(control.value, 30)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, false)
+
         control.to = 75
         compare(control.to, 75)
-        compare(control.value, 25)
+        compare(control.value, 30)
         compare(control.up.indicator.enabled, true)
         compare(control.down.indicator.enabled, false)
 
@@ -131,7 +143,14 @@ TestCase {
         compare(control.up.indicator.enabled, true)
         compare(control.down.indicator.enabled, true)
 
-        control.to = 40;
+        control.to = 50
+        compare(control.to, 50)
+        compare(control.value, 50)
+        compare(control.up.indicator.enabled, false)
+        compare(control.down.indicator.enabled, true)
+
+        control.to = 40
+        compare(control.to, 40)
         compare(control.value, 40)
         compare(control.up.indicator.enabled, false)
         compare(control.down.indicator.enabled, true)
