@@ -160,6 +160,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->storeDouble(TargetPlatform::FPGpr0, destination);
     }
 
+    static void loadDoubleConstant(JITAssembler *as, IR::Const *c, FPRegisterID target)
+    {
+        as->MacroAssembler::loadDouble(as->loadConstant(c, TargetPlatform::ScratchRegister), target);
+    }
+
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
     {
         as->moveIntsToDouble(TargetPlatform::LowReturnValueRegister, TargetPlatform::HighReturnValueRegister, dest, TargetPlatform::FPGpr0);
@@ -250,6 +255,15 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->storeReturnValue(destination);
     }
 
+    static void loadDoubleConstant(JITAssembler *as, IR::Const *c, FPRegisterID target)
+    {
+        Q_STATIC_ASSERT(sizeof(int64_t) == sizeof(double));
+        int64_t i;
+        memcpy(&i, &c->value, sizeof(double));
+        as->move(TrustedImm64(i), TargetPlatform::ReturnValueRegister);
+        as->move64ToDouble(TargetPlatform::ReturnValueRegister, target);
+    }
+
     static void generateCJumpOnCompare(JITAssembler *as,
                                        RelationalCondition cond,
                                        RegisterID left,
@@ -294,7 +308,6 @@ public:
     using MacroAssembler::move;
     using MacroAssembler::jump;
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    using MacroAssembler::move64ToDouble;
     using MacroAssembler::load64;
 #endif
     using MacroAssembler::add32;
@@ -1172,15 +1185,7 @@ public:
     FPRegisterID toDoubleRegister(IR::Expr *e, FPRegisterID target = FPGpr0)
     {
         if (IR::Const *c = e->asConst()) {
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-            Q_STATIC_ASSERT(sizeof(int64_t) == sizeof(double));
-            int64_t i;
-            memcpy(&i, &c->value, sizeof(double));
-            move(TrustedImm64(i), ReturnValueRegister);
-            move64ToDouble(ReturnValueRegister, target);
-#else
-            MacroAssembler::loadDouble(loadConstant(c, ScratchRegister), target);
-#endif
+            RegisterSizeDependentOps::loadDoubleConstant(this, c, target);
             return target;
         }
 
