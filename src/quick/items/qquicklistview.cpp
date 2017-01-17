@@ -531,8 +531,7 @@ FxViewItem *QQuickListViewPrivate::snapItemAt(qreal pos)
 {
     FxViewItem *snapItem = 0;
     qreal prevItemSize = 0;
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
+    for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index == -1)
             continue;
         qreal itemTop = item->position();
@@ -661,8 +660,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         int newModelIdx = qBound(0, modelIndex + count, model->count());
         count = newModelIdx - modelIndex;
         if (count) {
-            for (int i = 0; i < visibleItems.count(); ++i)
-                releaseItem(visibleItems.at(i));
+            for (FxViewItem *item : qAsConst(visibleItems))
+                releaseItem(item);
             visibleItems.clear();
             modelIndex = newModelIdx;
             visibleIndex = modelIndex;
@@ -1009,8 +1008,8 @@ void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
 
 void QQuickListViewPrivate::releaseSectionItems()
 {
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
+    for (FxViewItem *item : qAsConst(visibleItems)) {
+        FxListItemSG *listItem = static_cast<FxListItemSG *>(item);
         if (listItem->section()) {
             qreal pos = listItem->position();
             releaseSectionItem(listItem->section());
@@ -1169,8 +1168,7 @@ void QQuickListViewPrivate::updateSections()
         QQuickListViewAttached *prevAtt = 0;
         int prevIdx = -1;
         int idx = -1;
-        for (int i = 0; i < visibleItems.count(); ++i) {
-            FxViewItem *item = visibleItems.at(i);
+        for (FxViewItem *item : qAsConst(visibleItems)) {
             QQuickListViewAttached *attached = static_cast<QQuickListViewAttached*>(item->attached);
             attached->setPrevSection(prevSection);
             if (item->index != -1) {
@@ -1295,8 +1293,8 @@ void QQuickListViewPrivate::updateAverage()
     if (!visibleItems.count())
         return;
     qreal sum = 0.0;
-    for (int i = 0; i < visibleItems.count(); ++i)
-        sum += visibleItems.at(i)->size();
+    for (FxViewItem *item : qAsConst(visibleItems))
+        sum += item->size();
     averageSize = qRound(sum / visibleItems.count());
 }
 
@@ -2933,8 +2931,7 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
     // Set visibility of items to eliminate cost of items outside the visible area.
     qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
     qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
+    for (FxViewItem *item : qAsConst(d->visibleItems)) {
         if (item->item)
             QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
     }
@@ -3169,8 +3166,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (modelIndex < visibleIndex) {
                 // Insert before visible items
                 visibleIndex += count;
-                for (int i = 0; i < visibleItems.count(); ++i) {
-                    FxViewItem *item = visibleItems.at(i);
+                for (FxViewItem *item : qAsConst(visibleItems)) {
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
@@ -3187,8 +3183,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     }
 
     // Update the indexes of the following visible items.
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
+    for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
             if (change.isMove())
