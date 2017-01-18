@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-template <typename JITAssembler = Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>>
+template <typename JITAssembler = Assembler<DefaultAssemblerTargetConfiguration>>
 class Q_QML_EXPORT InstructionSelection:
         protected IR::IRDecoder,
         public EvalInstructionSelection

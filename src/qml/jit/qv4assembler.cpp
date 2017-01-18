@@ -687,6 +687,6 @@ JSC::MacroAssemblerCodeRef Assembler<TargetConfiguration>::link(int *codeSize)
     return codeRef;
 }
 
-template class QV4::JIT::Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>;
+template class QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>;
 
 #endif

@@ -576,6 +576,6 @@ typename JITAssembler::Jump Binop<JITAssembler>::genInlineBinop(IR::Expr *leftSo
     return done;
 }
 
-template struct QV4::JIT::Binop<QV4::JIT::Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>>;
+template struct QV4::JIT::Binop<QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>>;
 
 #endif

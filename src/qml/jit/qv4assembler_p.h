@@ -90,29 +90,42 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
-#if CPU(ARM_THUMB2)
-typedef JSC::MacroAssemblerARMv7 DefaultPlatformMacroAssembler;
-#elif CPU(ARM64)
-typedef JSC::MacroAssemblerARM64 DefaultPlatformMacroAssembler;
-#elif CPU(ARM_TRADITIONAL)
-typedef JSC::MacroAssemblerARM DefaultPlatformMacroAssembler;
-#elif CPU(MIPS)
-typedef JSC::MacroAssemblerMIPS DefaultPlatformMacroAssembler;
-#elif CPU(X86)
-typedef JSC::MacroAssemblerX86 DefaultPlatformMacroAssembler;
-#elif CPU(X86_64)
-typedef JSC::MacroAssemblerX86_64 DefaultPlatformMacroAssembler;
-#elif CPU(SH4)
-typedef JSC::MacroAssemblerSH4 DefaultPlatformMacroAssembler;
-#endif
-
-template <typename PlatformAssembler>
+template <typename PlatformAssembler, TargetOperatingSystemSpecialization Specialization>
 struct AssemblerTargetConfiguration
 {
     typedef JSC::MacroAssembler<PlatformAssembler> MacroAssembler;
-    typedef TargetPlatform<PlatformAssembler> Platform;
+    typedef TargetPlatform<PlatformAssembler, Specialization> Platform;
     // More things coming here in the future, such as Target OS
 };
+
+#if CPU(ARM_THUMB2)
+typedef JSC::MacroAssemblerARMv7 DefaultPlatformMacroAssembler;
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#elif CPU(ARM64)
+typedef JSC::MacroAssemblerARM64 DefaultPlatformMacroAssembler;
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#elif CPU(ARM_TRADITIONAL)
+typedef JSC::MacroAssemblerARM DefaultPlatformMacroAssembler;
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#elif CPU(MIPS)
+typedef JSC::MacroAssemblerMIPS DefaultPlatformMacroAssembler;
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#elif CPU(X86)
+typedef JSC::MacroAssemblerX86 DefaultPlatformMacroAssembler;
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#elif CPU(X86_64)
+typedef JSC::MacroAssemblerX86_64 DefaultPlatformMacroAssembler;
+
+#if OS(WINDOWS)
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, WindowsSpecialization> DefaultAssemblerTargetConfiguration;
+#else
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#endif
+
+#elif CPU(SH4)
+typedef JSC::MacroAssemblerSH4 DefaultPlatformMacroAssembler;
+typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingSystemSpecialization> DefaultAssemblerTargetConfiguration;
+#endif
 
 #define isel_stringIfyx(s) #s
 #define isel_stringIfy(s) isel_stringIfyx(s)
