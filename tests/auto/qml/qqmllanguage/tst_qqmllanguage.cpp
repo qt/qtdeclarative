@@ -263,6 +263,9 @@ private slots:
     void qmlTypeCanBeResolvedByName_data();
     void qmlTypeCanBeResolvedByName();
 
+    void instanceof_data();
+    void instanceof();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -309,7 +312,7 @@ private:
     if (!errorfile) { \
         if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \
             qWarning() << "Unexpected Errors:" << component.errors(); \
-        QVERIFY(!component.isError()); \
+        QVERIFY2(!component.isError(), qPrintable(component.errorString())); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
         DETERMINE_ERRORS(errorfile,expected,actual);\
@@ -4336,6 +4339,200 @@ void tst_qqmllanguage::qmlTypeCanBeResolvedByName()
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+// Tests for the QML-only extensions of instanceof. Tests for the regular JS
+// instanceof belong in tst_qqmlecmascript!
+void tst_qqmllanguage::instanceof_data()
+{
+    QTest::addColumn<QUrl>("documentToTestIn");
+    QTest::addColumn<QVariant>("expectedValue");
+
+    // so the way this works is that the name of the test tag defines the test
+    // to run.
+    //
+    // the expectedValue is either a boolean true or false for whether the two
+    // operands are indeed an instanceof each other, or a string for the
+    // expected error message.
+
+    // assert that basic types don't convert to QObject
+    QTest::newRow("1 instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant("TypeError: Type error");
+    QTest::newRow("true instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant("TypeError: Type error");
+    QTest::newRow("\"foobar\" instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant("TypeError: Type error");
+
+    // assert that Managed don't either
+    QTest::newRow("new String(\"foobar\") instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant("TypeError: Type error");
+    QTest::newRow("new Object() instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant("TypeError: Type error");
+    QTest::newRow("new Date() instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant("TypeError: Type error");
+
+    // test that simple QtQml comparisons work
+    QTest::newRow("qtobjectInstance instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(true);
+    QTest::newRow("qtobjectInstance instanceof Timer")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(false);
+    QTest::newRow("timerInstance instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(true);
+    QTest::newRow("timerInstance instanceof Timer")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(true);
+    QTest::newRow("connectionsInstance instanceof QtObject")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(true);
+    QTest::newRow("connectionsInstance instanceof Timer")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(false);
+    QTest::newRow("connectionsInstance instanceof Connections")
+        << testFileUrl("instanceof_qtqml.qml")
+        << QVariant(true);
+
+    // make sure they still work when imported with a qualifier
+    QTest::newRow("qtobjectInstance instanceof QmlImport.QtObject")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("qtobjectInstance instanceof QmlImport.Timer")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(false);
+    QTest::newRow("timerInstance instanceof QmlImport.QtObject")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("timerInstance instanceof QmlImport.Timer")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("connectionsInstance instanceof QmlImport.QtObject")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("connectionsInstance instanceof QmlImport.Timer")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(false);
+    QTest::newRow("connectionsInstance instanceof QmlImport.Connections")
+        << testFileUrl("instanceof_qtqml_qualified.qml")
+        << QVariant(true);
+
+    // test that Quick C++ types work ok
+    QTest::newRow("itemInstance instanceof QtObject")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(true);
+    QTest::newRow("itemInstance instanceof Timer")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(false);
+    QTest::newRow("itemInstance instanceof Rectangle")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(false);
+    QTest::newRow("rectangleInstance instanceof Item")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(true);
+    QTest::newRow("rectangleInstance instanceof Rectangle")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(true);
+    QTest::newRow("rectangleInstance instanceof MouseArea")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(false);
+    QTest::newRow("mouseAreaInstance instanceof Item")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(true);
+    QTest::newRow("mouseAreaInstance instanceof Rectangle")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(false);
+    QTest::newRow("mouseAreaInstance instanceof MouseArea")
+        << testFileUrl("instanceof_qtquick.qml")
+        << QVariant(true);
+
+    // test that unqualified quick composite types work ok
+    QTest::newRow("rectangleInstance instanceof CustomRectangle")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(false);
+    QTest::newRow("customRectangleInstance instanceof Rectangle")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleInstance instanceof Item")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleWithPropInstance instanceof CustomRectangleWithProp")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleWithPropInstance instanceof CustomRectangle")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(false); // ### XXX: QTBUG-58477
+    QTest::newRow("customRectangleWithPropInstance instanceof Rectangle")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleInstance instanceof MouseArea")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(false);
+    QTest::newRow("customMouseAreaInstance instanceof MouseArea")
+        << testFileUrl("instanceof_qtquick_composite.qml")
+        << QVariant(true);
+
+    // test that they still work when qualified
+    QTest::newRow("rectangleInstance instanceof CustomImport.CustomRectangle")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(false);
+    QTest::newRow("customRectangleInstance instanceof QuickImport.Rectangle")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleInstance instanceof QuickImport.Item")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleWithPropInstance instanceof CustomImport.CustomRectangleWithProp")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleWithPropInstance instanceof CustomImport.CustomRectangle")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(false); // ### XXX: QTBUG-58477
+    QTest::newRow("customRectangleWithPropInstance instanceof QuickImport.Rectangle")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(true);
+    QTest::newRow("customRectangleInstance instanceof QuickImport.MouseArea")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(false);
+    QTest::newRow("customMouseAreaInstance instanceof QuickImport.MouseArea")
+        << testFileUrl("instanceof_qtquick_composite_qualified.qml")
+        << QVariant(true);
+}
+
+void tst_qqmllanguage::instanceof()
+{
+    QFETCH(QUrl, documentToTestIn);
+    QFETCH(QVariant, expectedValue);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, documentToTestIn);
+    VERIFY_ERRORS(0);
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != 0);
+
+    QQmlExpression expr(engine.contextForObject(o.data()), 0, QString::fromLatin1(QTest::currentDataTag()));
+    QVariant ret = expr.evaluate();
+
+    if (expectedValue.type() == QVariant::Bool) {
+        // no error expected
+        QVERIFY2(!expr.hasError(), qPrintable(expr.error().description()));
+        bool returnValue = ret.toBool();
+
+        if (QTest::currentDataTag() == QLatin1String("customRectangleWithPropInstance instanceof CustomRectangle") ||
+            QTest::currentDataTag() == QLatin1String("customRectangleWithPropInstance instanceof CustomImport.CustomRectangle"))
+            QEXPECT_FAIL("", "QTBUG-58477: QML type rules are a little lax", Continue);
+        QCOMPARE(returnValue, expectedValue.toBool());
+    } else {
+        QVERIFY(expr.hasError());
+        QCOMPARE(expr.error().description(), expectedValue.toString());
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

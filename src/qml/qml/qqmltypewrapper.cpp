@@ -342,4 +342,44 @@ bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
     return false;
 }
 
+ReturnedValue QmlTypeWrapper::instanceOf(const Object *typeObject, const Value &var)
+{
+    Q_ASSERT(typeObject->as<QV4::QmlTypeWrapper>());
+    const QV4::QmlTypeWrapper *typeWrapper = static_cast<const QV4::QmlTypeWrapper *>(typeObject);
+    QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
+    QQmlEnginePrivate *qenginepriv = QQmlEnginePrivate::get(engine->qmlEngine());
+
+    // can only compare a QObject* against a QML type
+    const QObjectWrapper *wrapper = var.as<QObjectWrapper>();
+    if (!wrapper)
+        return engine->throwTypeError();
+
+    // in case the wrapper outlived the QObject*
+    const QObject *wrapperObject = wrapper->object();
+    if (!wrapperObject)
+        return engine->throwTypeError();
+
+    const int myTypeId = typeWrapper->d()->type->typeId();
+    QQmlMetaObject myQmlType;
+    if (myTypeId == 0) {
+        // we're a composite type; a composite type cannot be equal to a
+        // non-composite object instance (Rectangle{} is never an instance of
+        // CustomRectangle)
+        QQmlData *theirDData = QQmlData::get(wrapperObject, /*create=*/false);
+        Q_ASSERT(theirDData); // must exist, otherwise how do we have a QObjectWrapper for it?!
+        if (!theirDData->compilationUnit)
+            return Encode(false);
+
+        QQmlTypeData *td = qenginepriv->typeLoader.getType(typeWrapper->d()->type->sourceUrl());
+        CompiledData::CompilationUnit *cu = td->compilationUnit();
+        myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
+    } else {
+        myQmlType = qenginepriv->metaObjectForType(myTypeId);
+    }
+
+    const QMetaObject *theirType = wrapperObject->metaObject();
+
+    return QV4::Encode(QQmlMetaObject::canConvert(theirType, myQmlType));
+}
+
 QT_END_NAMESPACE

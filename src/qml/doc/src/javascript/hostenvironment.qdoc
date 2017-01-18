@@ -74,6 +74,19 @@ Note that QML makes the following modifications to native objects:
 \li Locale-aware conversion functions are added to the \l Date and \l Number prototypes.
 \endlist
 
+In addition, QML also extends the behavior of the instanceof function to
+allow for type checking against QML types. This means that you may use it to
+verify that a variable is indeed the type you expect, for example:
+
+\qml
+    var v = something();
+    if (!v instanceof Item) {
+        throw new TypeError("I need an Item type!");
+    }
+
+    ...
+\endqml
+
 
 \section1 JavaScript Environment Restrictions
 
