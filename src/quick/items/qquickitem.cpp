@@ -5095,12 +5095,14 @@ bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoid
 {
     Q_Q(QQuickItem);
     bool delivered = false;
+    QVector<QQuickPointerHandler *> &eventDeliveryTargets = event->device()->eventDeliveryTargets();
     if (extra.isAllocated()) {
         for (QQuickPointerHandler *handler : extra->pointerHandlers) {
             qCDebug(lcPointerHandlerDispatch) << "   delivering" << event << "to" << handler << "on" << q;
-            if (!avoidGrabber || !event->hasGrabber(handler)) {
+            if ((!avoidGrabber || !event->hasGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
                 handler->handlePointerEvent(event);
                 delivered = true;
+                eventDeliveryTargets.append(handler);
             }
         }
     }

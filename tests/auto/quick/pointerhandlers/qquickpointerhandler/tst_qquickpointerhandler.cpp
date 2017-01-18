@@ -238,20 +238,19 @@ void tst_PointerHandlers::touchEventDelivery()
     QPoint p1 = QPoint(20, 20);
     QTest::touchEvent(window, touchDevice).press(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QTRY_COMPARE(eventItem1->eventList.size(), 4);
+    QTRY_COMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::Pointer);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::MouseButtonPress);
-    QCOMPARE(eventItem1->eventList.at(3).type, QEvent::Pointer);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 5);
-    QCOMPARE(eventItem1->eventList.at(4).type, QEvent::Pointer);
+    QCOMPARE(eventItem1->eventList.size(), 4);
+    QCOMPARE(eventItem1->eventList.at(3).type, QEvent::Pointer);
     QTest::touchEvent(window, touchDevice).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 6);
-    QCOMPARE(eventItem1->eventList.at(5).type, QEvent::Pointer);
+    QCOMPARE(eventItem1->eventList.size(), 5);
+    QCOMPARE(eventItem1->eventList.at(4).type, QEvent::Pointer);
     eventItem1->eventList.clear();
 
     // Accept touch
@@ -326,19 +325,18 @@ void tst_PointerHandlers::touchEventDelivery()
     p1 = QPoint(20, 20);
     QTest::touchEvent(window, touchDevice).press(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 4);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::Pointer);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::MouseButtonPress);
-    QCOMPARE(eventItem1->eventList.at(3).type, QEvent::Pointer);
     QCOMPARE(pointerEvent->point(0)->grabber(), nullptr);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 5);
+    QCOMPARE(eventItem1->eventList.size(), 4);
     QTest::touchEvent(window, touchDevice).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(eventItem1->eventList.size(), 6);
+    QCOMPARE(eventItem1->eventList.size(), 5);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event

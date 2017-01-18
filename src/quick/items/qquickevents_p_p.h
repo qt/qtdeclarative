@@ -553,6 +553,8 @@ public:
     static QQuickPointerDevice *genericMouseDevice();
     static QQuickPointerDevice *tabletDevice(qint64);
 
+    QVector<QQuickPointerHandler *> &eventDeliveryTargets() { return m_eventDeliveryTargets; }
+
 private:
     QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
       : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
@@ -579,6 +581,7 @@ private:
     QPointingDeviceUniqueId m_uniqueId;
     // the device-specific event instance which is reused during event delivery
     QQuickPointerEvent *m_event;
+    QVector<QQuickPointerHandler *> m_eventDeliveryTargets; // during delivery, handlers which have already seen the event
 
     Q_DISABLE_COPY(QQuickPointerDevice)
     friend struct ConstructableQQuickPointerDevice;
