@@ -1267,10 +1267,12 @@ void ModelNodeMetaObject::updateValues()
 {
     const int roleCount = m_model->m_listModel->roleCount();
     if (!m_initialized) {
-        int *changedRoles = reinterpret_cast<int *>(alloca(roleCount * sizeof(int)));
-        for (int i = 0; i < roleCount; ++i)
-            changedRoles[i] = i;
-        emitDirectNotifies(changedRoles, roleCount);
+        if (roleCount) {
+            int *changedRoles = reinterpret_cast<int *>(alloca(roleCount * sizeof(int)));
+            for (int i = 0; i < roleCount; ++i)
+                changedRoles[i] = i;
+            emitDirectNotifies(changedRoles, roleCount);
+        }
         return;
     }
     for (int i=0 ; i < roleCount ; ++i) {
