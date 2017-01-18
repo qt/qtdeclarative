@@ -45,6 +45,7 @@
 #include <QLineEdit>
 
 #include <QQuickView>
+#include "Headers.h"
 
 int main(int argc, char **argv)
 {
@@ -68,6 +69,11 @@ int main(int argc, char **argv)
     layout->addWidget(new QLineEdit(QStringLiteral("A QLineEdit")));
 
     rootWidget.show();
+    int startError = wd_setup(argc, argv);
+    if (startError){
+        std::cout << "Error while starting server, errorCode " << startError << std::endl;
+        return startError;
+    }
 
     return app.exec();
 }
