@@ -1155,6 +1155,49 @@ uint Object::getLength(const Managed *m)
     return v->toUInt32();
 }
 
+// 'var' is 'V' in 15.3.5.3.
+ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
+{
+    QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
+
+    // 15.3.5.3, Assume F is a Function object.
+    const FunctionObject *function = typeObject->as<FunctionObject>();
+    if (!function)
+        return engine->throwTypeError();
+
+    Heap::FunctionObject *f = function->d();
+    if (function->isBoundFunction())
+        f = function->cast<BoundFunction>()->target();
+
+    // 15.3.5.3, 1: HasInstance can only be used on an object
+    const Object *lhs = var.as<Object>();
+    if (!lhs)
+        return Encode(false);
+
+    // 15.3.5.3, 2
+    const Object *o = f->protoProperty();
+    if (!o) // 15.3.5.3, 3
+        return engine->throwTypeError();
+
+    Heap::Object *v = lhs->d();
+
+    // 15.3.5.3, 4
+    while (v) {
+        // 15.3.5.3, 4, a
+        v = v->prototype;
+
+        // 15.3.5.3, 4, b
+        if (!v)
+            break; // will return false
+
+        // 15.3.5.3, 4, c
+        else if (o->d() == v)
+            return Encode(true);
+    }
+
+    return Encode(false);
+}
+
 bool Object::setArrayLength(uint newLen)
 {
     Q_ASSERT(isArrayObject());
