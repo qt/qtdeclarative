@@ -31,18 +31,14 @@
 
 \section1 Scene Graph Adaptations in Qt Quick
 
-Originally Qt Quick only had one available renderer for parsing the scene graph
-and rendering the results to a render target. This renderer is now the default
-OpenGL Renderer which supports rendering either using the OpenGL ES 2.0 or
-OpenGL 2.0 (with framebuffer object extensions) APIs. The Qt Quick APIs have
-originally been designed with the assumption that OpenGL is always available.
-However, it is now possible to use other graphics API's to render Qt Quick
-scenes using the scene graph APIs.
+Originally Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) for parsing
+the scene graph and rendering the results to a render target. From Qt 5.8 onwards
+Qt Quick also supports rendering in software and with Direct3D 12.
 
 \section1 Switching between the adaptation used by the application
 
-The default of the OpenGL, or - in Qt builds with disabled OpenGL support - the
-software adaptation, can be overridden either by using an environment variable
+The default rendering backend is still OpenGL, or - in Qt builds with disabled OpenGL support -
+the software renderer. This can be overridden either by using an environment variable
 or a C++ API. The former consists of setting the \c{QT_QUICK_BACKEND} or the
 legacy \c{QMLSCENE_DEVICE} environment variable before launching applications.
 The latter is done by calling QQuickWindow::setSceneGraphBackend() early in the
