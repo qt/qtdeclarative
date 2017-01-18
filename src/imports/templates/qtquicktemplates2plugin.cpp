@@ -70,6 +70,7 @@
 #include <QtQuickTemplates2/private/qquickroundbutton_p.h>
 #include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 #include <QtQuickTemplates2/private/qquickscrollindicator_p.h>
+#include <QtQuickTemplates2/private/qquickscrollview_p.h>
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquickspinbox_p.h>
@@ -231,6 +232,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDrawer, 2>(uri, 2, 2, "Drawer");
     qmlRegisterType<QQuickRangeSlider, 2>(uri, 2, 2, "RangeSlider");
     qmlRegisterType<QQuickScrollBar, 2>(uri, 2, 2, "ScrollBar");
+    qmlRegisterType<QQuickScrollView>(uri, 2, 2, "ScrollView");
     qmlRegisterType<QQuickSlider, 2>(uri, 2, 2, "Slider");
     qmlRegisterType<QQuickSpinBox, 2>(uri, 2, 2, "SpinBox");
     qmlRegisterType<QQuickSwipeDelegate, 2>(uri, 2, 2, "SwipeDelegate");

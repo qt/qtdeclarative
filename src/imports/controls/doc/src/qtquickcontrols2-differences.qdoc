@@ -328,14 +328,9 @@
         \li
     \row
         \li \l [QML QtQuickControls] {ScrollView}
-        \li \mdash
-        \li \l [QML QtQuickControls2] {ScrollBar},\br
-            \l [QML QtQuickControls2] {ScrollIndicator} \br\sup {(Qt Quick Controls 2)}
-        \li \list
-                \li \b {Qt Quick Controls 2}: \c ScrollBar and \c ScrollIndicator offer
-                    similar functionality. They can be attached to any \c Flickable to
-                    build scrollable views.
-            \endlist
+        \li \l [QML QtQuickControls2] {ScrollView}
+        \li
+        \li
     \row
         \li \l [QML QtQuickControls] {Slider}
         \li \l [QML QtQuickControls2] {Slider}

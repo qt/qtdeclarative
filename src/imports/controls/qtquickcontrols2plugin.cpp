@@ -143,6 +143,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.2 (new types in Qt 5.9)
     qmlRegisterType(selector.select(QStringLiteral("DelayButton.qml")), uri, 2, 2, "DelayButton");
+    qmlRegisterType(selector.select(QStringLiteral("ScrollView.qml")), uri, 2, 2, "ScrollView");
 }
 
 static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)

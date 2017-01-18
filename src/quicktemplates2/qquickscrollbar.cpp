@@ -36,6 +36,7 @@
 
 #include "qquickscrollbar_p.h"
 #include "qquickscrollbar_p_p.h"
+#include "qquickscrollview_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
@@ -662,6 +663,11 @@ void QQuickScrollBarAttachedPrivate::initHorizontal()
     QObject::connect(area, SIGNAL(widthRatioChanged(qreal)), horizontal, SLOT(setSize(qreal)));
     QObject::connect(area, SIGNAL(xPositionChanged(qreal)), horizontal, SLOT(setPosition(qreal)));
 
+    // ensure that the ScrollBar is stacked above the Flickable in a ScrollView
+    QQuickItem *parent = horizontal->parentItem();
+    if (parent && parent == flickable->parentItem())
+        horizontal->stackAfter(flickable);
+
     layoutHorizontal();
     horizontal->setSize(area->property("widthRatio").toReal());
     horizontal->setPosition(area->property("xPosition").toReal());
@@ -677,6 +683,11 @@ void QQuickScrollBarAttachedPrivate::initVertical()
     QObject *area = flickable->property("visibleArea").value<QObject *>();
     QObject::connect(area, SIGNAL(heightRatioChanged(qreal)), vertical, SLOT(setSize(qreal)));
     QObject::connect(area, SIGNAL(yPositionChanged(qreal)), vertical, SLOT(setPosition(qreal)));
+
+    // ensure that the ScrollBar is stacked above the Flickable in a ScrollView
+    QQuickItem *parent = vertical->parentItem();
+    if (parent && parent == flickable->parentItem())
+        vertical->stackAfter(flickable);
 
     layoutVertical();
     vertical->setSize(area->property("heightRatio").toReal());
@@ -824,8 +835,8 @@ QQuickScrollBarAttached::QQuickScrollBarAttached(QObject *parent)
     Q_D(QQuickScrollBarAttached);
     d->setFlickable(qobject_cast<QQuickFlickable *>(parent));
 
-    if (parent && !d->flickable)
-        qmlWarning(parent) << "ScrollBar must be attached to a Flickable";
+    if (parent && !d->flickable && !qobject_cast<QQuickScrollView *>(parent))
+        qmlWarning(parent) << "ScrollBar must be attached to a Flickable or ScrollView";
 }
 
 QQuickScrollBarAttached::~QQuickScrollBarAttached()
