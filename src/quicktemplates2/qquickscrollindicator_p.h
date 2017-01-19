@@ -107,7 +107,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollIndicatorAttached : public QO
     Q_PROPERTY(QQuickScrollIndicator *vertical READ vertical WRITE setVertical NOTIFY verticalChanged FINAL)
 
 public:
-    explicit QQuickScrollIndicatorAttached(QQuickFlickable *flickable);
+    explicit QQuickScrollIndicatorAttached(QObject *parent = nullptr);
     ~QQuickScrollIndicatorAttached();
 
     QQuickScrollIndicator *horizontal() const;

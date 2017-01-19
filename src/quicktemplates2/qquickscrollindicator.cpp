@@ -174,11 +174,7 @@ QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent)
 
 QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObject *object)
 {
-    QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(object);
-    if (!flickable)
-        qmlWarning(object) << "ScrollIndicator must be attached to a Flickable";
-
-    return new QQuickScrollIndicatorAttached(flickable);
+    return new QQuickScrollIndicatorAttached(object);
 }
 
 /*!
@@ -298,8 +294,8 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollIndicatorAttachedPrivate(QQuickFlickable *flickable)
-        : flickable(flickable),
+    QQuickScrollIndicatorAttachedPrivate()
+        : flickable(nullptr),
           horizontal(nullptr),
           vertical(nullptr)
     {
@@ -379,14 +375,15 @@ void QQuickScrollIndicatorAttachedPrivate::itemDestroyed(QQuickItem *item)
         vertical = nullptr;
 }
 
-QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QQuickFlickable *flickable)
-    : QObject(*(new QQuickScrollIndicatorAttachedPrivate(flickable)), flickable)
+QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QObject *parent)
+    : QObject(*(new QQuickScrollIndicatorAttachedPrivate), parent)
 {
     Q_D(QQuickScrollIndicatorAttached);
-    if (flickable) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(flickable);
-        p->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
-    }
+    d->flickable = qobject_cast<QQuickFlickable *>(parent);
+    if (d->flickable)
+        QQuickItemPrivate::get(d->flickable)->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
+    else if (parent)
+        qmlWarning(parent) << "ScrollIndicator must be attached to a Flickable";
 }
 
 QQuickScrollIndicatorAttached::~QQuickScrollIndicatorAttached()
