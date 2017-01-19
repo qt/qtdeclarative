@@ -467,4 +467,29 @@ TestCase {
         mouseRelease(control, 0, 0, Qt.LeftButton)
         compare(control.pressed, false)
     }
+
+    function test_policy() {
+        var control = createTemporaryObject(scrollBar, testCase, {active: true})
+        verify(control)
+
+        compare(ScrollBar.AsNeeded, Qt.ScrollBarAsNeeded)
+        compare(ScrollBar.AlwaysOff, Qt.ScrollBarAlwaysOff)
+        compare(ScrollBar.AlwaysOn, Qt.ScrollBarAlwaysOn)
+
+        compare(control.visible, true)
+        compare(control.policy, ScrollBar.AsNeeded)
+
+        control.size = 0.5
+        verify(control.state === "active" || control.contentItem.state === "active")
+
+        control.size = 1.0
+        verify(control.state !== "active" && control.contentItem.state !== "active")
+
+        control.policy = ScrollBar.AlwaysOff
+        compare(control.visible, false)
+
+        control.policy = ScrollBar.AlwaysOn
+        compare(control.visible, true)
+        verify(control.state === "active" || control.contentItem.state === "active")
+    }
 }

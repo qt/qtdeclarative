@@ -48,6 +48,7 @@ T.ScrollBar {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: 2
+    visible: control.policy !== T.ScrollBar.AlwaysOff
 
     contentItem: Rectangle {
         id: handle
@@ -57,12 +58,11 @@ T.ScrollBar {
 
         radius: width / 2
         color: control.pressed ? Default.scrollBarPressedColor : Default.scrollBarColor
-        visible: control.size < 1.0
         opacity: 0.0
 
         states: State {
             name: "active"
-            when: control.active
+            when: control.policy === T.ScrollBar.AlwaysOn || (control.active && control.size < 1.0)
             PropertyChanges { target: handle; opacity: 0.75 }
         }
 

@@ -88,6 +88,7 @@ public:
     bool interactive;
     Qt::Orientation orientation;
     QQuickScrollBar::SnapMode snapMode;
+    QQuickScrollBar::Policy policy;
 };
 
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener

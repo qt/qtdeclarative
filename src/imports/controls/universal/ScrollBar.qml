@@ -46,6 +46,8 @@ T.ScrollBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
+    visible: control.policy !== T.ScrollBar.AlwaysOff
+
     // TODO: arrows
 
     contentItem: Rectangle {
@@ -54,7 +56,6 @@ T.ScrollBar {
 
         color: control.pressed ? control.Universal.baseMediumColor :
                control.interactive && control.hovered ? control.Universal.baseMediumLowColor : control.Universal.chromeHighColor
-        visible: control.size < 1.0
         opacity: 0.0
     }
 
@@ -70,7 +71,7 @@ T.ScrollBar {
     states: [
         State {
             name: "active"
-            when: control.active
+            when: control.policy === T.ScrollBar.AlwaysOn || (control.active && control.size < 1.0)
         }
     ]
 

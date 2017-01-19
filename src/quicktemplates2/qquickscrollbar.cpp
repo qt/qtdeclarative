@@ -164,7 +164,8 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       moving(false),
       interactive(true),
       orientation(Qt::Vertical),
-      snapMode(QQuickScrollBar::NoSnap)
+      snapMode(QQuickScrollBar::NoSnap),
+      policy(QQuickScrollBar::AsNeeded)
 {
 }
 
@@ -484,6 +485,37 @@ void QQuickScrollBar::setInteractive(bool interactive)
     if (!interactive)
         ungrabMouse();
     emit interactiveChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty enumeration QtQuick.Controls::ScrollBar::policy
+
+    This property holds the policy of the scroll bar. The default policy is \c ScrollBar.AsNeeded.
+
+    Possible values:
+    \value ScrollBar.AsNeeded The scroll bar is only shown when the content is too large to fit.
+    \value ScrollBar.AlwaysOff The scroll bar is never shown.
+    \value ScrollBar.AlwaysOn The scroll bar is always shown.
+
+    The following example keeps the vertical scroll bar always visible:
+
+    \snippet qtquickcontrols2-scrollbar-policy.qml 1
+*/
+QQuickScrollBar::Policy QQuickScrollBar::policy() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->policy;
+}
+
+void QQuickScrollBar::setPolicy(Policy policy)
+{
+    Q_D(QQuickScrollBar);
+    if (d->policy == policy)
+        return;
+
+    d->policy = policy;
+    emit policyChanged();
 }
 
 /*!
