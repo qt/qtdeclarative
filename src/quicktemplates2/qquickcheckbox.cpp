@@ -92,7 +92,8 @@ class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
 
 public:
     QQuickCheckBoxPrivate()
-        : tristate(false), checkState(Qt::Unchecked)
+        : tristate(false),
+          checkState(Qt::Unchecked)
     {
     }
 

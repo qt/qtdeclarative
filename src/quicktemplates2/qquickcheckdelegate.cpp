@@ -89,7 +89,8 @@ class QQuickCheckDelegatePrivate : public QQuickItemDelegatePrivate
 
 public:
     QQuickCheckDelegatePrivate()
-        : tristate(false), checkState(Qt::Unchecked)
+        : tristate(false),
+          checkState(Qt::Unchecked)
     {
     }
 

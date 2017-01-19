@@ -74,7 +74,9 @@ static void setPosition(QQuickItem *item, Position position)
 }
 
 QQuickPageLayout::QQuickPageLayout(QQuickControl *control)
-    : m_header(nullptr), m_footer(nullptr), m_control(control)
+    : m_header(nullptr),
+      m_footer(nullptr),
+      m_control(control)
 {
 }
 

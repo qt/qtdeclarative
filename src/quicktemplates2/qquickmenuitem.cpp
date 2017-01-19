@@ -93,8 +93,8 @@ public:
     bool highlighted;
 };
 
-QQuickMenuItemPrivate::QQuickMenuItemPrivate() :
-    highlighted(false)
+QQuickMenuItemPrivate::QQuickMenuItemPrivate()
+    : highlighted(false)
 {
 }
 

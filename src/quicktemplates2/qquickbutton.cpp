@@ -80,8 +80,9 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Button}, {Button Controls}
 */
 
-QQuickButtonPrivate::QQuickButtonPrivate() :
-    flat(false), highlighted(false)
+QQuickButtonPrivate::QQuickButtonPrivate()
+    : flat(false),
+      highlighted(false)
 {
 }
 

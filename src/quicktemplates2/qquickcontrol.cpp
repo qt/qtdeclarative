@@ -108,12 +108,26 @@ QQuickControlPrivate::ExtraData::ExtraData()
 {
 }
 
-QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
-    hasLocale(false), hovered(false), wheelEnabled(false), explicitHoverEnabled(false),
-    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
-    focusPolicy(Qt::NoFocus), focusReason(Qt::OtherFocusReason),
-    background(nullptr), contentItem(nullptr), accessibleAttached(nullptr)
+QQuickControlPrivate::QQuickControlPrivate()
+    : hasTopPadding(false),
+      hasLeftPadding(false),
+      hasRightPadding(false),
+      hasBottomPadding(false),
+      hasLocale(false),
+      hovered(false),
+      wheelEnabled(false),
+      explicitHoverEnabled(false),
+      padding(0),
+      topPadding(0),
+      leftPadding(0),
+      rightPadding(0),
+      bottomPadding(0),
+      spacing(0),
+      focusPolicy(Qt::NoFocus),
+      focusReason(Qt::OtherFocusReason),
+      background(nullptr),
+      contentItem(nullptr),
+      accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);

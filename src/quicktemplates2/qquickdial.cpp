@@ -95,19 +95,19 @@ class QQuickDialPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickDial)
 
 public:
-    QQuickDialPrivate() :
-        touchId(-1),
-        from(0),
-        to(1),
-        value(0),
-        position(0),
-        angle(startAngle),
-        stepSize(0),
-        pressed(false),
-        snapMode(QQuickDial::NoSnap),
-        wrap(false),
-        live(false),
-        handle(nullptr)
+    QQuickDialPrivate()
+        : touchId(-1),
+          from(0),
+          to(1),
+          value(0),
+          position(0),
+          angle(startAngle),
+          stepSize(0),
+          pressed(false),
+          snapMode(QQuickDial::NoSnap),
+          wrap(false),
+          live(false),
+          handle(nullptr)
     {
     }
 

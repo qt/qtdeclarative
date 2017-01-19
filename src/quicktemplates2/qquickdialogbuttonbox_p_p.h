@@ -86,9 +86,12 @@ class QQuickDialogButtonBoxAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickDialogButtonBoxAttached)
 
 public:
-    QQuickDialogButtonBoxAttachedPrivate() : buttonBox(nullptr),
-        buttonRole(QPlatformDialogHelper::InvalidRole),
-        standardButton(QPlatformDialogHelper::NoButton) { }
+    QQuickDialogButtonBoxAttachedPrivate()
+        : buttonBox(nullptr),
+          buttonRole(QPlatformDialogHelper::InvalidRole),
+          standardButton(QPlatformDialogHelper::NoButton)
+    {
+    }
 
     static QQuickDialogButtonBoxAttachedPrivate *get(QQuickDialogButtonBoxAttached *q)
     {

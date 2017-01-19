@@ -64,8 +64,8 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing ItemDelegate}, {Delegate Controls}
 */
 
-QQuickItemDelegatePrivate::QQuickItemDelegatePrivate() :
-    highlighted(false)
+QQuickItemDelegatePrivate::QQuickItemDelegatePrivate()
+    : highlighted(false)
 {
 }
 

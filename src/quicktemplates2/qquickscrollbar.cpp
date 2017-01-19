@@ -156,9 +156,16 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickScrollBar)
 
 public:
-    QQuickScrollBarPrivate() : size(0), position(0), stepSize(0), offset(0),
-        active(false), pressed(false), moving(false),
-        orientation(Qt::Vertical), snapMode(QQuickScrollBar::NoSnap)
+    QQuickScrollBarPrivate()
+        : size(0),
+          position(0),
+          stepSize(0),
+          offset(0),
+          active(false),
+          pressed(false),
+          moving(false),
+          orientation(Qt::Vertical),
+          snapMode(QQuickScrollBar::NoSnap)
     {
     }
 
@@ -568,7 +575,12 @@ QAccessible::Role QQuickScrollBar::accessibleRole() const
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollBarAttachedPrivate(QQuickFlickable *flickable) : flickable(flickable), horizontal(nullptr), vertical(nullptr) { }
+    QQuickScrollBarAttachedPrivate(QQuickFlickable *flickable)
+        : flickable(flickable),
+          horizontal(nullptr),
+          vertical(nullptr)
+    {
+    }
 
     void activateHorizontal();
     void activateVertical();

@@ -161,7 +161,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickDrawerPrivate::QQuickDrawerPrivate()
-    : edge(Qt::LeftEdge), offset(0), position(0),
+    : edge(Qt::LeftEdge),
+      offset(0),
+      position(0),
       dragMargin(QGuiApplication::styleHints()->startDragDistance())
 {
     setEdge(Qt::LeftEdge);

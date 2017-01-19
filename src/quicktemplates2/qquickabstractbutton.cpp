@@ -111,10 +111,22 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     This signal is emitted when the button is interactively double clicked by the user.
 */
 
-QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    down(false), explicitDown(false), pressed(false), keepPressed(false), checked(false), checkable(false),
-    autoExclusive(false), autoRepeat(false), wasHeld(false),
-    holdTimer(0), delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), indicator(nullptr), group(nullptr)
+QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
+    : down(false),
+      explicitDown(false),
+      pressed(false),
+      keepPressed(false),
+      checked(false),
+      checkable(false),
+      autoExclusive(false),
+      autoRepeat(false),
+      wasHeld(false),
+      holdTimer(0),
+      delayTimer(0),
+      repeatTimer(0),
+      repeatButton(Qt::NoButton),
+      indicator(nullptr),
+      group(nullptr)
 {
 }
 

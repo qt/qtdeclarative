@@ -46,7 +46,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickStackViewPrivate::QQuickStackViewPrivate() : busy(false), currentItem(nullptr), transitioner(nullptr)
+QQuickStackViewPrivate::QQuickStackViewPrivate()
+    : busy(false),
+      currentItem(nullptr),
+      transitioner(nullptr)
 {
 }
 

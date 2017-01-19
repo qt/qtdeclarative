@@ -58,7 +58,11 @@ static QQuickStackViewAttached *attachedStackObject(QQuickStackElement *element)
 class QQuickStackIncubator : public QQmlIncubator
 {
 public:
-    QQuickStackIncubator(QQuickStackElement *element) : QQmlIncubator(Synchronous), element(element) { }
+    QQuickStackIncubator(QQuickStackElement *element)
+        : QQmlIncubator(Synchronous),
+          element(element)
+    {
+    }
 
 protected:
     void setInitialState(QObject *object) override { element->incubate(object); }
@@ -67,10 +71,19 @@ private:
     QQuickStackElement *element;
 };
 
-QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(nullptr),
-    index(-1), init(false), removal(false), ownItem(false), ownComponent(false), widthValid(false), heightValid(false),
-    context(nullptr), component(nullptr), view(nullptr),
-    status(QQuickStackView::Inactive)
+QQuickStackElement::QQuickStackElement()
+    : QQuickItemViewTransitionableItem(nullptr),
+      index(-1),
+      init(false),
+      removal(false),
+      ownItem(false),
+      ownComponent(false),
+      widthValid(false),
+      heightValid(false),
+      context(nullptr),
+      component(nullptr),
+      view(nullptr),
+      status(QQuickStackView::Inactive)
 {
 }
 

@@ -144,8 +144,11 @@ static QQuickItem *effectiveContentItem(QQuickItem *item)
     return item;
 }
 
-QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(nullptr), currentIndex(-1), updatingCurrent(false),
-    changeTypes(Destroyed | Parent | SiblingOrder)
+QQuickContainerPrivate::QQuickContainerPrivate()
+    : contentModel(nullptr),
+      currentIndex(-1),
+      updatingCurrent(false),
+      changeTypes(Destroyed | Parent | SiblingOrder)
 {
 }
 

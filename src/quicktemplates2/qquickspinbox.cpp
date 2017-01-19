@@ -106,8 +106,20 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSpinBox)
 
 public:
-    QQuickSpinBoxPrivate() : editable(false), from(0), to(99), value(0), stepSize(1),
-        delayTimer(0), repeatTimer(0), up(nullptr), down(nullptr), validator(nullptr), inputMethodHints(Qt::ImhDigitsOnly) { }
+    QQuickSpinBoxPrivate()
+        : editable(false),
+          from(0),
+          to(99),
+          value(0),
+          stepSize(1),
+          delayTimer(0),
+          repeatTimer(0),
+          up(nullptr),
+          down(nullptr),
+          validator(nullptr),
+          inputMethodHints(Qt::ImhDigitsOnly)
+    {
+    }
 
     int boundValue(int value) const;
     void updateValue();
@@ -865,7 +877,13 @@ QAccessible::Role QQuickSpinBox::accessibleRole() const
 class QQuickSpinButtonPrivate : public QObjectPrivate
 {
 public:
-    QQuickSpinButtonPrivate() : pressed(false), hovered(false), indicator(nullptr) { }
+    QQuickSpinButtonPrivate()
+        : pressed(false),
+          hovered(false),
+          indicator(nullptr)
+    {
+    }
+
     bool pressed;
     bool hovered;
     QQuickItem *indicator;

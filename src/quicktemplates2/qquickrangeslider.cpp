@@ -84,16 +84,16 @@ class QQuickRangeSliderNodePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickRangeSliderNode)
 public:
-    QQuickRangeSliderNodePrivate(qreal value, QQuickRangeSlider *slider) :
-        value(value),
-        isPendingValue(false),
-        pendingValue(0),
-        position(0),
-        handle(nullptr),
-        slider(slider),
-        pressed(false),
-        hovered(false),
-        touchId(-1)
+    QQuickRangeSliderNodePrivate(qreal value, QQuickRangeSlider *slider)
+        : value(value),
+          isPendingValue(false),
+          pendingValue(0),
+          position(0),
+          handle(nullptr),
+          slider(slider),
+          pressed(false),
+          hovered(false),
+          touchId(-1)
     {
     }
 

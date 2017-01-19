@@ -188,49 +188,48 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickPopupPrivate::QQuickPopupPrivate()
-    : QObjectPrivate()
-    , focus(false)
-    , modal(false)
-    , dim(false)
-    , hasDim(false)
-    , visible(false)
-    , complete(false)
-    , positioning(false)
-    , hasWidth(false)
-    , hasHeight(false)
-    , hasTopMargin(false)
-    , hasLeftMargin(false)
-    , hasRightMargin(false)
-    , hasBottomMargin(false)
-    , allowVerticalFlip(false)
-    , allowHorizontalFlip(false)
-    , allowVerticalMove(true)
-    , allowHorizontalMove(true)
-    , allowVerticalResize(true)
-    , allowHorizontalResize(true)
-    , hadActiveFocusBeforeExitTransition(false)
-    , interactive(true)
-    , x(0)
-    , y(0)
-    , effectiveX(0)
-    , effectiveY(0)
-    , margins(-1)
-    , topMargin(0)
-    , leftMargin(0)
-    , rightMargin(0)
-    , bottomMargin(0)
-    , contentWidth(0)
-    , contentHeight(0)
-    , transitionState(QQuickPopupPrivate::NoTransition)
-    , closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside)
-    , parentItem(nullptr)
-    , dimmer(nullptr)
-    , window(nullptr)
-    , enter(nullptr)
-    , exit(nullptr)
-    , popupItem(nullptr)
-    , positioner(nullptr)
-    , transitionManager(this)
+    : focus(false),
+      modal(false),
+      dim(false),
+      hasDim(false),
+      visible(false),
+      complete(false),
+      positioning(false),
+      hasWidth(false),
+      hasHeight(false),
+      hasTopMargin(false),
+      hasLeftMargin(false),
+      hasRightMargin(false),
+      hasBottomMargin(false),
+      allowVerticalFlip(false),
+      allowHorizontalFlip(false),
+      allowVerticalMove(true),
+      allowHorizontalMove(true),
+      allowVerticalResize(true),
+      allowHorizontalResize(true),
+      hadActiveFocusBeforeExitTransition(false),
+      interactive(true),
+      x(0),
+      y(0),
+      effectiveX(0),
+      effectiveY(0),
+      margins(-1),
+      topMargin(0),
+      leftMargin(0),
+      rightMargin(0),
+      bottomMargin(0),
+      contentWidth(0),
+      contentHeight(0),
+      transitionState(QQuickPopupPrivate::NoTransition),
+      closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside),
+      parentItem(nullptr),
+      dimmer(nullptr),
+      window(nullptr),
+      enter(nullptr),
+      exit(nullptr),
+      popupItem(nullptr),
+      positioner(nullptr),
+      transitionManager(this)
 {
 }
 

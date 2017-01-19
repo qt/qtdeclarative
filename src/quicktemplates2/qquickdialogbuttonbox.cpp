@@ -143,11 +143,11 @@ static QPlatformDialogHelper::ButtonRole buttonRole(QQuickAbstractButton *button
     return attached ? attached->buttonRole() : QPlatformDialogHelper::InvalidRole;
 }
 
-QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate() :
-    alignment(0),
-    position(QQuickDialogButtonBox::Footer),
-    standardButtons(QPlatformDialogHelper::NoButton),
-    delegate(nullptr)
+QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
+    : alignment(0),
+      position(QQuickDialogButtonBox::Footer),
+      standardButtons(QPlatformDialogHelper::NoButton),
+      delegate(nullptr)
 {
 }
 

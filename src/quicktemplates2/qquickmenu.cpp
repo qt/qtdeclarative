@@ -101,9 +101,9 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Menu}, {Menu Controls}, {Popup Controls}
 */
 
-QQuickMenuPrivate::QQuickMenuPrivate() :
-    contentItem(nullptr),
-    contentModel(nullptr)
+QQuickMenuPrivate::QQuickMenuPrivate()
+    : contentItem(nullptr),
+      contentModel(nullptr)
 {
     Q_Q(QQuickMenu);
     contentModel = new QQmlObjectModel(q);

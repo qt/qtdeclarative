@@ -170,9 +170,9 @@ void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryC
     q->setSize(QSizeF(item->width(), item->height()));
 }
 
-QQuickOverlayPrivate::QQuickOverlayPrivate() :
-    modal(nullptr),
-    modeless(nullptr)
+QQuickOverlayPrivate::QQuickOverlayPrivate()
+    : modal(nullptr),
+      modeless(nullptr)
 {
 }
 

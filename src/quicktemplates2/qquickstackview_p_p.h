@@ -102,7 +102,11 @@ class QQuickStackViewAttachedPrivate : public QObjectPrivate, public QQuickItemC
     Q_DECLARE_PUBLIC(QQuickStackViewAttached)
 
 public:
-    QQuickStackViewAttachedPrivate() : explicitVisible(false), element(nullptr) { }
+    QQuickStackViewAttachedPrivate()
+        : explicitVisible(false),
+          element(nullptr)
+    {
+    }
 
     static QQuickStackViewAttachedPrivate *get(QQuickStackViewAttached *attached)
     {

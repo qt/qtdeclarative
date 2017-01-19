@@ -104,7 +104,9 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Pane}, {Container Controls}
 */
 
-QQuickPanePrivate::QQuickPanePrivate() : contentWidth(0), contentHeight(0)
+QQuickPanePrivate::QQuickPanePrivate()
+    : contentWidth(0),
+      contentHeight(0)
 {
 }
 

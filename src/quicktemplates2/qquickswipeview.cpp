@@ -106,7 +106,11 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    QQuickSwipeViewPrivate() : interactive(true), orientation(Qt::Horizontal) { }
+    QQuickSwipeViewPrivate()
+        : interactive(true),
+          orientation(Qt::Horizontal)
+    {
+    }
 
     void resizeItem(QQuickItem *item);
     void resizeItems();

@@ -135,21 +135,21 @@ class QQuickSwipePrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickSwipe)
 
 public:
-    QQuickSwipePrivate(QQuickSwipeDelegate *control) :
-        control(control),
-        positionBeforePress(0),
-        position(0),
-        wasComplete(false),
-        complete(false),
-        enabled(true),
-        left(nullptr),
-        behind(nullptr),
-        right(nullptr),
-        leftItem(nullptr),
-        behindItem(nullptr),
-        rightItem(nullptr),
-        transition(nullptr),
-        transitionManager(nullptr)
+    QQuickSwipePrivate(QQuickSwipeDelegate *control)
+        : control(control),
+          positionBeforePress(0),
+          position(0),
+          wasComplete(false),
+          complete(false),
+          enabled(true),
+          left(nullptr),
+          behind(nullptr),
+          right(nullptr),
+          leftItem(nullptr),
+          behindItem(nullptr),
+          rightItem(nullptr),
+          transition(nullptr),
+          transitionManager(nullptr)
     {
     }
 

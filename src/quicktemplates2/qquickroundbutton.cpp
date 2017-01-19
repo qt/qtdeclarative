@@ -73,9 +73,9 @@ public:
     void setRadius(qreal newRadius = -1.0);
 };
 
-QQuickRoundButtonPrivate::QQuickRoundButtonPrivate() :
-    radius(0),
-    explicitRadius(false)
+QQuickRoundButtonPrivate::QQuickRoundButtonPrivate()
+    : radius(0),
+      explicitRadius(false)
 {
 }
 

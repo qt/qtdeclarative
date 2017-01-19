@@ -138,14 +138,15 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
 
 public:
     QQuickApplicationWindowPrivate()
-        : complete(false)
-        , background(nullptr)
-        , contentItem(nullptr)
-        , header(nullptr)
-        , footer(nullptr)
-        , overlay(nullptr)
-        , activeFocusControl(nullptr)
-    { }
+        : complete(false),
+          background(nullptr),
+          contentItem(nullptr),
+          header(nullptr),
+          footer(nullptr),
+          overlay(nullptr),
+          activeFocusControl(nullptr)
+    {
+    }
 
     static QQuickApplicationWindowPrivate *get(QQuickApplicationWindow *window)
     {

@@ -131,8 +131,11 @@ class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickScrollIndicator)
 
 public:
-    QQuickScrollIndicatorPrivate() : size(0), position(0),
-        active(false), orientation(Qt::Vertical)
+    QQuickScrollIndicatorPrivate()
+        : size(0),
+          position(0),
+          active(false),
+          orientation(Qt::Vertical)
     {
     }
 
@@ -295,7 +298,12 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollIndicatorAttachedPrivate(QQuickFlickable *flickable) : flickable(flickable), horizontal(nullptr), vertical(nullptr) { }
+    QQuickScrollIndicatorAttachedPrivate(QQuickFlickable *flickable)
+        : flickable(flickable),
+          horizontal(nullptr),
+          vertical(nullptr)
+    {
+    }
 
     void activateHorizontal();
     void activateVertical();

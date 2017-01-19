@@ -89,8 +89,12 @@ class QQuickPageIndicatorPrivate : public QQuickControlPrivate, public QQuickIte
     Q_DECLARE_PUBLIC(QQuickPageIndicator)
 
 public:
-    QQuickPageIndicatorPrivate() : count(0), currentIndex(0),
-        interactive(false), delegate(nullptr), pressedItem(nullptr)
+    QQuickPageIndicatorPrivate()
+        : count(0),
+          currentIndex(0),
+          interactive(false),
+          delegate(nullptr),
+          pressedItem(nullptr)
     {
     }
 
