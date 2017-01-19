@@ -299,16 +299,16 @@ QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons(
     return buttons;
 }
 
-QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
-    QQuickControl(*(new QQuickAbstractButtonPrivate), parent)
+QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent)
+    : QQuickControl(*(new QQuickAbstractButtonPrivate), parent)
 {
     setActiveFocusOnTab(true);
     setFocusPolicy(Qt::StrongFocus);
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
-QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent) :
-    QQuickControl(dd, parent)
+QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent)
+    : QQuickControl(dd, parent)
 {
     setActiveFocusOnTab(true);
     setFocusPolicy(Qt::StrongFocus);

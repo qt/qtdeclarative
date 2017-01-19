@@ -166,8 +166,8 @@ void QQuickToolTipPrivate::stopTimeout()
     timeoutTimer.stop();
 }
 
-QQuickToolTip::QQuickToolTip(QQuickItem *parent) :
-    QQuickPopup(*(new QQuickToolTipPrivate), parent)
+QQuickToolTip::QQuickToolTip(QQuickItem *parent)
+    : QQuickPopup(*(new QQuickToolTipPrivate), parent)
 {
     Q_D(QQuickToolTip);
     d->allowVerticalFlip = true;
@@ -368,8 +368,8 @@ QQuickToolTip *QQuickToolTipAttachedPrivate::instance(bool create) const
     return tip;
 }
 
-QQuickToolTipAttached::QQuickToolTipAttached(QObject *parent) :
-    QObject(*(new QQuickToolTipAttachedPrivate), parent)
+QQuickToolTipAttached::QQuickToolTipAttached(QObject *parent)
+    : QObject(*(new QQuickToolTipAttachedPrivate), parent)
 {
 }
 

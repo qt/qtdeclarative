@@ -68,13 +68,13 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Frame}, {Container Controls}
 */
 
-QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickPane(*(new QQuickFramePrivate), parent)
+QQuickFrame::QQuickFrame(QQuickItem *parent)
+    : QQuickPane(*(new QQuickFramePrivate), parent)
 {
 }
 
-QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
-    QQuickPane(dd, parent)
+QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent)
+    : QQuickPane(dd, parent)
 {
 }
 

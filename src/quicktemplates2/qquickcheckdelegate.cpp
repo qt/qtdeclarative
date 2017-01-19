@@ -98,8 +98,8 @@ public:
     Qt::CheckState checkState;
 };
 
-QQuickCheckDelegate::QQuickCheckDelegate(QQuickItem *parent) :
-    QQuickItemDelegate(*(new QQuickCheckDelegatePrivate), parent)
+QQuickCheckDelegate::QQuickCheckDelegate(QQuickItem *parent)
+    : QQuickItemDelegate(*(new QQuickCheckDelegatePrivate), parent)
 {
     setCheckable(true);
 }

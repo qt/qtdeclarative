@@ -254,8 +254,8 @@ void QQuickDialPrivate::handleUngrab()
     q->setPressed(false);
 }
 
-QQuickDial::QQuickDial(QQuickItem *parent) :
-    QQuickControl(*(new QQuickDialPrivate), parent)
+QQuickDial::QQuickDial(QQuickItem *parent)
+    : QQuickControl(*(new QQuickDialPrivate), parent)
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);

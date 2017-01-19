@@ -371,8 +371,8 @@ public:
     QQuickButtonGroup *group;
 };
 
-QQuickButtonGroupAttached::QQuickButtonGroupAttached(QObject *parent) :
-    QObject(*(new QQuickButtonGroupAttachedPrivate), parent)
+QQuickButtonGroupAttached::QQuickButtonGroupAttached(QObject *parent)
+    : QObject(*(new QQuickButtonGroupAttachedPrivate), parent)
 {
 }
 

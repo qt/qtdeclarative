@@ -90,8 +90,8 @@ QT_BEGIN_NAMESPACE
     \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}, RadioDelegate
 */
 
-QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
-    QQuickAbstractButton(parent)
+QQuickRadioButton::QQuickRadioButton(QQuickItem *parent)
+    : QQuickAbstractButton(parent)
 {
     setCheckable(true);
     setAutoExclusive(true);

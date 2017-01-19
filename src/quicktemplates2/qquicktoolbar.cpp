@@ -104,8 +104,8 @@ public:
     QQuickToolBar::Position position;
 };
 
-QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
-    QQuickPane(*(new QQuickToolBarPrivate), parent)
+QQuickToolBar::QQuickToolBar(QQuickItem *parent)
+    : QQuickPane(*(new QQuickToolBarPrivate), parent)
 {
 }
 

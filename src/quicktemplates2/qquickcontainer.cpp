@@ -355,15 +355,15 @@ void QQuickContainerPrivate::contentChildren_clear(QQmlListProperty<QQuickItem> 
     p->contentModel->clear();
 }
 
-QQuickContainer::QQuickContainer(QQuickItem *parent) :
-    QQuickControl(*(new QQuickContainerPrivate), parent)
+QQuickContainer::QQuickContainer(QQuickItem *parent)
+    : QQuickControl(*(new QQuickContainerPrivate), parent)
 {
     Q_D(QQuickContainer);
     d->init();
 }
 
-QQuickContainer::QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent) :
-    QQuickControl(dd, parent)
+QQuickContainer::QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent)
+    : QQuickControl(dd, parent)
 {
     Q_D(QQuickContainer);
     d->init();

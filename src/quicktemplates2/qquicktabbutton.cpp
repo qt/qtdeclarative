@@ -63,8 +63,8 @@ QT_BEGIN_NAMESPACE
     \sa TabBar, {Customizing TabButton}, {Button Controls}, {Navigation Controls}
 */
 
-QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
-    QQuickAbstractButton(parent)
+QQuickTabButton::QQuickTabButton(QQuickItem *parent)
+    : QQuickAbstractButton(parent)
 {
     setCheckable(true);
     setAutoExclusive(true);

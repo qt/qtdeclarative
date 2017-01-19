@@ -284,8 +284,8 @@ void QQuickApplicationWindowPrivate::setActiveFocusControl(QQuickItem *control)
     }
 }
 
-QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent) :
-    QQuickWindowQmlImpl(parent), d_ptr(new QQuickApplicationWindowPrivate)
+QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent)
+    : QQuickWindowQmlImpl(parent), d_ptr(new QQuickApplicationWindowPrivate)
 {
     d_ptr->q_ptr = this;
     connect(this, SIGNAL(activeFocusItemChanged()), this, SLOT(_q_updateActiveFocus()));

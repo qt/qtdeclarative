@@ -115,8 +115,8 @@ QT_BEGIN_NAMESPACE
     \sa accepted()
 */
 
-QQuickDialog::QQuickDialog(QObject *parent) :
-    QQuickPopup(*(new QQuickDialogPrivate), parent)
+QQuickDialog::QQuickDialog(QObject *parent)
+    : QQuickPopup(*(new QQuickDialogPrivate), parent)
 {
     Q_D(QQuickDialog);
     d->layout.reset(new QQuickPageLayout(d->popupItem));

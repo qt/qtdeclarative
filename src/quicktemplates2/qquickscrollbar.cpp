@@ -270,8 +270,8 @@ void QQuickScrollBarPrivate::handleUngrab()
     q->setPressed(false);
 }
 
-QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
-    QQuickControl(*(new QQuickScrollBarPrivate), parent)
+QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
+    : QQuickControl(*(new QQuickScrollBarPrivate), parent)
 {
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
@@ -696,8 +696,8 @@ void QQuickScrollBarAttachedPrivate::itemDestroyed(QQuickItem *item)
         vertical = nullptr;
 }
 
-QQuickScrollBarAttached::QQuickScrollBarAttached(QQuickFlickable *flickable) :
-    QObject(*(new QQuickScrollBarAttachedPrivate(flickable)), flickable)
+QQuickScrollBarAttached::QQuickScrollBarAttached(QQuickFlickable *flickable)
+    : QObject(*(new QQuickScrollBarAttachedPrivate(flickable)), flickable)
 {
     Q_D(QQuickScrollBarAttached);
     if (flickable) {

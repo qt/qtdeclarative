@@ -170,8 +170,8 @@ void QQuickPageIndicatorPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
         setContextProperty(child, QStringLiteral("pressed"), false);
 }
 
-QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
-    QQuickControl(*(new QQuickPageIndicatorPrivate), parent)
+QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent)
+    : QQuickControl(*(new QQuickPageIndicatorPrivate), parent)
 {
 }
 

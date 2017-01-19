@@ -167,8 +167,8 @@ void QQuickScrollIndicatorPrivate::resizeContent()
     }
 }
 
-QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent) :
-    QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
+QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent)
+    : QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
 {
 }
 
@@ -379,8 +379,8 @@ void QQuickScrollIndicatorAttachedPrivate::itemDestroyed(QQuickItem *item)
         vertical = nullptr;
 }
 
-QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QQuickFlickable *flickable) :
-    QObject(*(new QQuickScrollIndicatorAttachedPrivate(flickable)), flickable)
+QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QQuickFlickable *flickable)
+    : QObject(*(new QQuickScrollIndicatorAttachedPrivate(flickable)), flickable)
 {
     Q_D(QQuickScrollIndicatorAttached);
     if (flickable) {

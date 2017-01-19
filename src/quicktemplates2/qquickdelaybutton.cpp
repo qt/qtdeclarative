@@ -164,8 +164,8 @@ void QQuickDelayButtonPrivate::cancelTransition()
         transitionManager->cancel();
 }
 
-QQuickDelayButton::QQuickDelayButton(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickDelayButtonPrivate), parent)
+QQuickDelayButton::QQuickDelayButton(QQuickItem *parent)
+    : QQuickAbstractButton(*(new QQuickDelayButtonPrivate), parent)
 {
     setCheckable(true);
 }

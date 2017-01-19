@@ -85,19 +85,19 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Tumbler}, {Input Controls}
 */
 
-QQuickTumblerPrivate::QQuickTumblerPrivate() :
-    delegate(nullptr),
-    visibleItemCount(5),
-    wrap(true),
-    explicitWrap(false),
-    ignoreWrapChanges(false),
-    view(nullptr),
-    viewContentItem(nullptr),
-    viewContentItemType(UnsupportedContentItemType),
-    currentIndex(-1),
-    pendingCurrentIndex(-1),
-    ignoreCurrentIndexChanges(false),
-    count(0)
+QQuickTumblerPrivate::QQuickTumblerPrivate()
+    : delegate(nullptr),
+      visibleItemCount(5),
+      wrap(true),
+      explicitWrap(false),
+      ignoreWrapChanges(false),
+      view(nullptr),
+      viewContentItem(nullptr),
+      viewContentItemType(UnsupportedContentItemType),
+      currentIndex(-1),
+      pendingCurrentIndex(-1),
+      ignoreCurrentIndexChanges(false),
+      count(0)
 {
 }
 
@@ -231,8 +231,8 @@ void QQuickTumblerPrivate::itemChildRemoved(QQuickItem *, QQuickItem *)
     _q_updateItemHeights();
 }
 
-QQuickTumbler::QQuickTumbler(QQuickItem *parent) :
-    QQuickControl(*(new QQuickTumblerPrivate), parent)
+QQuickTumbler::QQuickTumbler(QQuickItem *parent)
+    : QQuickControl(*(new QQuickTumblerPrivate), parent)
 {
     setActiveFocusOnTab(true);
 
@@ -682,10 +682,10 @@ class QQuickTumblerAttachedPrivate : public QObjectPrivate, public QQuickItemCha
 {
     Q_DECLARE_PUBLIC(QQuickTumblerAttached)
 public:
-    QQuickTumblerAttachedPrivate() :
-        tumbler(nullptr),
-        index(-1),
-        displacement(0)
+    QQuickTumblerAttachedPrivate()
+        : tumbler(nullptr),
+          index(-1),
+          displacement(0)
     {
     }
 
@@ -809,8 +809,8 @@ void QQuickTumblerAttachedPrivate::emitIfDisplacementChanged(qreal oldDisplaceme
         emit q->displacementChanged();
 }
 
-QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent) :
-    QObject(*(new QQuickTumblerAttachedPrivate), parent)
+QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent)
+    : QObject(*(new QQuickTumblerAttachedPrivate), parent)
 {
     Q_D(QQuickTumblerAttached);
     QQuickItem *delegateItem = qobject_cast<QQuickItem *>(parent);

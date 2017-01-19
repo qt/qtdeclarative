@@ -86,13 +86,13 @@ QQuickButtonPrivate::QQuickButtonPrivate()
 {
 }
 
-QQuickButton::QQuickButton(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
+QQuickButton::QQuickButton(QQuickItem *parent)
+    : QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
 {
 }
 
-QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
-    QQuickAbstractButton(dd, parent)
+QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent)
+    : QQuickAbstractButton(dd, parent)
 {
 }
 

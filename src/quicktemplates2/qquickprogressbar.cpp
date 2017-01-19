@@ -103,8 +103,8 @@ public:
     bool indeterminate;
 };
 
-QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
-    QQuickControl(*(new QQuickProgressBarPrivate), parent)
+QQuickProgressBar::QQuickProgressBar(QQuickItem *parent)
+    : QQuickControl(*(new QQuickProgressBarPrivate), parent)
 {
 }
 

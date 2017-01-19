@@ -305,8 +305,8 @@ void QQuickTextAreaPrivate::implicitHeightChanged()
     emit q->implicitHeightChanged3();
 }
 
-QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
-    QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
+QQuickTextArea::QQuickTextArea(QQuickItem *parent)
+    : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
     Q_D(QQuickTextArea);
     setActiveFocusOnTab(true);
@@ -743,8 +743,8 @@ public:
     QQuickTextArea *control;
 };
 
-QQuickTextAreaAttached::QQuickTextAreaAttached(QObject *parent) :
-    QObject(*(new QQuickTextAreaAttachedPrivate), parent)
+QQuickTextAreaAttached::QQuickTextAreaAttached(QObject *parent)
+    : QObject(*(new QQuickTextAreaAttachedPrivate), parent)
 {
 }
 

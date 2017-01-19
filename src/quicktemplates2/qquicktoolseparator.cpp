@@ -66,16 +66,13 @@ class QQuickToolSeparatorPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickToolSeparator)
 
 public:
-    QQuickToolSeparatorPrivate() :
-        orientation(Qt::Vertical)
-    {
-    }
+    QQuickToolSeparatorPrivate() : orientation(Qt::Vertical) { }
 
     Qt::Orientation orientation;
 };
 
-QQuickToolSeparator::QQuickToolSeparator(QQuickItem *parent) :
-    QQuickControl(*(new QQuickToolSeparatorPrivate), parent)
+QQuickToolSeparator::QQuickToolSeparator(QQuickItem *parent)
+    : QQuickControl(*(new QQuickToolSeparatorPrivate), parent)
 {
 }
 

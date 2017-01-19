@@ -186,8 +186,9 @@ private:
     QQuickComboBox *combo;
 };
 
-QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo) :
-    QQmlDelegateModel(qmlContext(combo), combo), combo(combo)
+QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo)
+    : QQmlDelegateModel(qmlContext(combo), combo),
+      combo(combo)
 {
 }
 
@@ -621,8 +622,8 @@ void QQuickComboBoxPrivate::createDelegateModel()
         delete oldModel;
 }
 
-QQuickComboBox::QQuickComboBox(QQuickItem *parent) :
-    QQuickControl(*(new QQuickComboBoxPrivate), parent)
+QQuickComboBox::QQuickComboBox(QQuickItem *parent)
+    : QQuickControl(*(new QQuickComboBoxPrivate), parent)
 {
     setFocusPolicy(Qt::StrongFocus);
     setFlag(QQuickItem::ItemIsFocusScope);

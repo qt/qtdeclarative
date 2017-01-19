@@ -318,8 +318,8 @@ bool QQuickSpinBoxPrivate::handleMouseUngrabEvent(QQuickItem *)
     return false;
 }
 
-QQuickSpinBox::QQuickSpinBox(QQuickItem *parent) :
-    QQuickControl(*(new QQuickSpinBoxPrivate), parent)
+QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
+    : QQuickControl(*(new QQuickSpinBoxPrivate), parent)
 {
     Q_D(QQuickSpinBox);
     d->up = new QQuickSpinButton(this);
@@ -889,8 +889,8 @@ public:
     QQuickItem *indicator;
 };
 
-QQuickSpinButton::QQuickSpinButton(QQuickSpinBox *parent) :
-    QObject(*(new QQuickSpinButtonPrivate), parent)
+QQuickSpinButton::QQuickSpinButton(QQuickSpinBox *parent)
+    : QObject(*(new QQuickSpinButtonPrivate), parent)
 {
 }
 

@@ -284,8 +284,8 @@ void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
     p->contentData.clear();
 }
 
-QQuickMenu::QQuickMenu(QObject *parent) :
-    QQuickPopup(*(new QQuickMenuPrivate), parent)
+QQuickMenu::QQuickMenu(QObject *parent)
+    : QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     setFocus(true);
     setClosePolicy(CloseOnEscape | CloseOnPressOutside | CloseOnReleaseOutside);

@@ -65,8 +65,8 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing MenuSeparator}, {Separator Controls}
 */
 
-QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent) :
-    QQuickControl(parent)
+QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)
+    : QQuickControl(parent)
 {
 }
 

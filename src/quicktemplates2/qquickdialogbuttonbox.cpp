@@ -350,8 +350,8 @@ void QQuickDialogButtonBoxPrivate::removeStandardButtons()
     }
 }
 
-QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickDialogButtonBoxPrivate), parent)
+QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent)
+    : QQuickContainer(*(new QQuickDialogButtonBoxPrivate), parent)
 {
 }
 
@@ -609,8 +609,8 @@ void QQuickDialogButtonBoxAttachedPrivate::setButtonBox(QQuickDialogButtonBox *b
     emit q->buttonBoxChanged();
 }
 
-QQuickDialogButtonBoxAttached::QQuickDialogButtonBoxAttached(QObject *parent) :
-    QObject(*(new QQuickDialogButtonBoxAttachedPrivate), parent)
+QQuickDialogButtonBoxAttached::QQuickDialogButtonBoxAttached(QObject *parent)
+    : QObject(*(new QQuickDialogButtonBoxAttachedPrivate), parent)
 {
     Q_D(QQuickDialogButtonBoxAttached);
     QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent);

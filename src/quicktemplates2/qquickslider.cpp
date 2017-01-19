@@ -236,8 +236,8 @@ void QQuickSliderPrivate::handleUngrab()
     q->setPressed(false);
 }
 
-QQuickSlider::QQuickSlider(QQuickItem *parent) :
-    QQuickControl(*(new QQuickSliderPrivate), parent)
+QQuickSlider::QQuickSlider(QQuickItem *parent)
+    : QQuickControl(*(new QQuickSliderPrivate), parent)
 {
     setActiveFocusOnTab(true);
     setFocusPolicy(Qt::StrongFocus);

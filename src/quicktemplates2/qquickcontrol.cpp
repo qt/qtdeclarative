@@ -476,13 +476,13 @@ bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVaria
     return false;
 }
 
-QQuickControl::QQuickControl(QQuickItem *parent) :
-    QQuickItem(*(new QQuickControlPrivate), parent)
+QQuickControl::QQuickControl(QQuickItem *parent)
+    : QQuickItem(*(new QQuickControlPrivate), parent)
 {
 }
 
-QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
-    QQuickItem(dd, parent)
+QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent)
+    : QQuickItem(dd, parent)
 {
 }
 

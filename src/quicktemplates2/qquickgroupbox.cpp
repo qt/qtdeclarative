@@ -92,8 +92,8 @@ public:
     QQuickItem *label;
 };
 
-QQuickGroupBox::QQuickGroupBox(QQuickItem *parent) :
-    QQuickFrame(*(new QQuickGroupBoxPrivate), parent)
+QQuickGroupBox::QQuickGroupBox(QQuickItem *parent)
+    : QQuickFrame(*(new QQuickGroupBoxPrivate), parent)
 {
 }
 

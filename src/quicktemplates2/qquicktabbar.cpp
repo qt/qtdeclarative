@@ -221,8 +221,8 @@ void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *)
         updateLayout();
 }
 
-QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickTabBarPrivate), parent)
+QQuickTabBar::QQuickTabBar(QQuickItem *parent)
+    : QQuickContainer(*(new QQuickTabBarPrivate), parent)
 {
     Q_D(QQuickTabBar);
     setFlag(ItemIsFocusScope);

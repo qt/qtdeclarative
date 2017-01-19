@@ -101,8 +101,8 @@ public:
     Qt::CheckState checkState;
 };
 
-QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickCheckBoxPrivate), parent)
+QQuickCheckBox::QQuickCheckBox(QQuickItem *parent)
+    : QQuickAbstractButton(*(new QQuickCheckBoxPrivate), parent)
 {
     setCheckable(true);
 }

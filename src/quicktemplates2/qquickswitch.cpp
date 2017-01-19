@@ -100,8 +100,8 @@ qreal QQuickSwitchPrivate::positionAt(const QPointF &point) const
     return pos;
 }
 
-QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickSwitchPrivate), parent)
+QQuickSwitch::QQuickSwitch(QQuickItem *parent)
+    : QQuickAbstractButton(*(new QQuickSwitchPrivate), parent)
 {
     Q_D(QQuickSwitch);
     d->keepPressed = true;

@@ -104,8 +104,8 @@ QQuickMenuItemPrivate::QQuickMenuItemPrivate()
     This signal is emitted when the menu item is triggered by the user.
 */
 
-QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickMenuItemPrivate), parent)
+QQuickMenuItem::QQuickMenuItem(QQuickItem *parent)
+    : QQuickAbstractButton(*(new QQuickMenuItemPrivate), parent)
 {
     connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuItem::triggered);
 }

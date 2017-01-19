@@ -98,8 +98,8 @@ QQuickItem *QQuickPopupItemPrivate::getContentItem()
     return contentItem;
 }
 
-QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup) :
-    QQuickControl(*(new QQuickPopupItemPrivate(popup)), nullptr)
+QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
+    : QQuickControl(*(new QQuickPopupItemPrivate(popup)), nullptr)
 {
     setParent(popup);
     setVisible(false);

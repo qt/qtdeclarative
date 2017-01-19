@@ -149,8 +149,8 @@ QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
     return view->d_func();
 }
 
-QQuickSwipeView::QQuickSwipeView(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickSwipeViewPrivate), parent)
+QQuickSwipeView::QQuickSwipeView(QQuickItem *parent)
+    : QQuickContainer(*(new QQuickSwipeViewPrivate), parent)
 {
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
@@ -286,11 +286,11 @@ class QQuickSwipeViewAttachedPrivate : public QObjectPrivate, public QQuickItemC
 {
     Q_DECLARE_PUBLIC(QQuickSwipeViewAttached)
 public:
-    QQuickSwipeViewAttachedPrivate() :
-        item(nullptr),
-        swipeView(nullptr),
-        index(-1),
-        currentIndex(-1)
+    QQuickSwipeViewAttachedPrivate()
+        : item(nullptr),
+          swipeView(nullptr),
+          index(-1),
+          currentIndex(-1)
     {
     }
 
@@ -431,8 +431,8 @@ void QQuickSwipeViewAttachedPrivate::itemDestroyed(QQuickItem *item)
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
 }
 
-QQuickSwipeViewAttached::QQuickSwipeViewAttached(QObject *parent) :
-    QObject(*(new QQuickSwipeViewAttachedPrivate), parent)
+QQuickSwipeViewAttached::QQuickSwipeViewAttached(QObject *parent)
+    : QObject(*(new QQuickSwipeViewAttachedPrivate), parent)
 {
     Q_D(QQuickSwipeViewAttached);
     d->item = qobject_cast<QQuickItem *>(parent);

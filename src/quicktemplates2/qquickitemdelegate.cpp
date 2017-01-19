@@ -69,14 +69,14 @@ QQuickItemDelegatePrivate::QQuickItemDelegatePrivate()
 {
 }
 
-QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent) :
-    QQuickAbstractButton(*(new QQuickItemDelegatePrivate), parent)
+QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent)
+    : QQuickAbstractButton(*(new QQuickItemDelegatePrivate), parent)
 {
     setFocusPolicy(Qt::NoFocus);
 }
 
-QQuickItemDelegate::QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem *parent) :
-    QQuickAbstractButton(dd, parent)
+QQuickItemDelegate::QQuickItemDelegate(QQuickItemDelegatePrivate &dd, QQuickItem *parent)
+    : QQuickAbstractButton(dd, parent)
 {
     setFocusPolicy(Qt::NoFocus);
 }

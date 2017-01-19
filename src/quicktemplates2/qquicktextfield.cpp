@@ -172,8 +172,8 @@ void QQuickTextFieldPrivate::implicitHeightChanged()
     emit q->implicitHeightChanged3();
 }
 
-QQuickTextField::QQuickTextField(QQuickItem *parent) :
-    QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
+QQuickTextField::QQuickTextField(QQuickItem *parent)
+    : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
     Q_D(QQuickTextField);
     d->pressHandler.control = this;

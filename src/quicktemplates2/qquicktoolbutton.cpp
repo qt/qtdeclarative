@@ -64,8 +64,8 @@ QT_BEGIN_NAMESPACE
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */
 
-QQuickToolButton::QQuickToolButton(QQuickItem *parent) :
-    QQuickButton(parent)
+QQuickToolButton::QQuickToolButton(QQuickItem *parent)
+    : QQuickButton(parent)
 {
 }
 

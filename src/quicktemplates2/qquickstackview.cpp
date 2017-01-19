@@ -297,8 +297,8 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
 */
 
-QQuickStackView::QQuickStackView(QQuickItem *parent) :
-    QQuickControl(*(new QQuickStackViewPrivate), parent)
+QQuickStackView::QQuickStackView(QQuickItem *parent)
+    : QQuickControl(*(new QQuickStackViewPrivate), parent)
 {
     setFlag(ItemIsFocusScope);
 }
@@ -1033,8 +1033,8 @@ void QQuickStackViewAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickI
         emit q->statusChanged();
 }
 
-QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent) :
-    QObject(*(new QQuickStackViewAttachedPrivate), parent)
+QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent)
+    : QObject(*(new QQuickStackViewAttachedPrivate), parent)
 {
     Q_D(QQuickStackViewAttached);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);

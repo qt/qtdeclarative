@@ -84,8 +84,8 @@ public:
     bool running;
 };
 
-QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
-    QQuickControl(*(new QQuickBusyIndicatorPrivate), parent)
+QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent)
+    : QQuickControl(*(new QQuickBusyIndicatorPrivate), parent)
 {
 }
 

@@ -440,8 +440,8 @@ void QQuickSwipePrivate::finishTransition()
         emit q->closed();
 }
 
-QQuickSwipe::QQuickSwipe(QQuickSwipeDelegate *control) :
-    QObject(*(new QQuickSwipePrivate(control)))
+QQuickSwipe::QQuickSwipe(QQuickSwipeDelegate *control)
+    : QObject(*(new QQuickSwipePrivate(control)))
 {
 }
 
@@ -719,8 +719,8 @@ void QQuickSwipe::close()
     d->velocityCalculator.reset();
 }
 
-QQuickSwipeDelegatePrivate::QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *control) :
-    swipe(control)
+QQuickSwipeDelegatePrivate::QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *control)
+    : swipe(control)
 {
 }
 
@@ -953,8 +953,8 @@ void QQuickSwipeDelegatePrivate::resizeContent()
     }
 }
 
-QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent) :
-    QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
+QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
+    : QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
 {
 }
 
@@ -1238,10 +1238,7 @@ class QQuickSwipeDelegateAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeDelegateAttached)
 
 public:
-    QQuickSwipeDelegateAttachedPrivate() :
-        pressed(false)
-    {
-    }
+    QQuickSwipeDelegateAttachedPrivate() : pressed(false) { }
 
     // True when left/right/behind is non-interactive and is pressed.
     bool pressed;
@@ -1267,8 +1264,8 @@ public:
     \sa pressed
 */
 
-QQuickSwipeDelegateAttached::QQuickSwipeDelegateAttached(QObject *object) :
-    QObject(*(new QQuickSwipeDelegateAttachedPrivate), object)
+QQuickSwipeDelegateAttached::QQuickSwipeDelegateAttached(QObject *object)
+    : QObject(*(new QQuickSwipeDelegateAttachedPrivate), object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (item) {

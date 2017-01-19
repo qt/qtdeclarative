@@ -79,8 +79,8 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Label}
 */
 
-QQuickLabel::QQuickLabel(QQuickItem *parent) :
-    QQuickText(*(new QQuickLabelPrivate), parent)
+QQuickLabel::QQuickLabel(QQuickItem *parent)
+    : QQuickText(*(new QQuickLabelPrivate), parent)
 {
     Q_D(QQuickLabel);
     QObjectPrivate::connect(this, &QQuickText::textChanged,

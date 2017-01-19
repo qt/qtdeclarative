@@ -91,8 +91,8 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing RadioDelegate}, {Delegate Controls}, RadioButton
 */
 
-QQuickRadioDelegate::QQuickRadioDelegate(QQuickItem *parent) :
-    QQuickItemDelegate(parent)
+QQuickRadioDelegate::QQuickRadioDelegate(QQuickItem *parent)
+    : QQuickItemDelegate(parent)
 {
     setCheckable(true);
     setAutoExclusive(true);

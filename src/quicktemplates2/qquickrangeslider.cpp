@@ -147,8 +147,8 @@ QQuickRangeSliderNodePrivate *QQuickRangeSliderNodePrivate::get(QQuickRangeSlide
     return node->d_func();
 }
 
-QQuickRangeSliderNode::QQuickRangeSliderNode(qreal value, QQuickRangeSlider *slider) :
-    QObject(*(new QQuickRangeSliderNodePrivate(value, slider)), slider)
+QQuickRangeSliderNode::QQuickRangeSliderNode(qreal value, QQuickRangeSlider *slider)
+    : QObject(*(new QQuickRangeSliderNodePrivate(value, slider)), slider)
 {
 }
 
@@ -314,15 +314,15 @@ class QQuickRangeSliderPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickRangeSlider)
 
 public:
-    QQuickRangeSliderPrivate() :
-        live(false),
-        from(defaultFrom),
-        to(defaultTo),
-        stepSize(0),
-        first(nullptr),
-        second(nullptr),
-        orientation(Qt::Horizontal),
-        snapMode(QQuickRangeSlider::NoSnap)
+    QQuickRangeSliderPrivate()
+        : live(false),
+          from(defaultFrom),
+          to(defaultTo),
+          stepSize(0),
+          first(nullptr),
+          second(nullptr),
+          orientation(Qt::Horizontal),
+          snapMode(QQuickRangeSlider::NoSnap)
     {
     }
 
@@ -513,8 +513,8 @@ void QQuickRangeSliderPrivate::updateHover(const QPointF &pos)
     second->setHovered(secondHandle && secondHandle->isEnabled() && secondHandle->contains(q->mapToItem(secondHandle, pos)));
 }
 
-QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent) :
-    QQuickControl(*(new QQuickRangeSliderPrivate), parent)
+QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
+    : QQuickControl(*(new QQuickRangeSliderPrivate), parent)
 {
     Q_D(QQuickRangeSlider);
     d->first = new QQuickRangeSliderNode(0.0, this);

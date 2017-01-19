@@ -92,8 +92,8 @@ void QQuickRoundButtonPrivate::setRadius(qreal newRadius)
         emit q->radiusChanged();
 }
 
-QQuickRoundButton::QQuickRoundButton(QQuickItem *parent) :
-    QQuickButton(*(new QQuickRoundButtonPrivate), parent)
+QQuickRoundButton::QQuickRoundButton(QQuickItem *parent)
+    : QQuickButton(*(new QQuickRoundButtonPrivate), parent)
 {
 }
 

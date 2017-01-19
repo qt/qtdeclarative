@@ -58,9 +58,9 @@ QT_BEGIN_NAMESPACE
         doSomethingElse();
 */
 
-QQuickVelocityCalculator::QQuickVelocityCalculator() :
-    m_point1Timestamp(0),
-    m_point2Timestamp(0)
+QQuickVelocityCalculator::QQuickVelocityCalculator()
+    : m_point1Timestamp(0),
+      m_point2Timestamp(0)
 {
 }
 

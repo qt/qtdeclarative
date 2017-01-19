@@ -470,8 +470,8 @@ void QQuickDrawerPrivate::setEdge(Qt::Edge e)
     }
 }
 
-QQuickDrawer::QQuickDrawer(QObject *parent) :
-    QQuickPopup(*(new QQuickDrawerPrivate), parent)
+QQuickDrawer::QQuickDrawer(QObject *parent)
+    : QQuickPopup(*(new QQuickDrawerPrivate), parent)
 {
     setFocus(true);
     setModal(true);

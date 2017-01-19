@@ -111,8 +111,8 @@ QQuickItem *QQuickPagePrivate::getContentItem()
     return contentItem;
 }
 
-QQuickPage::QQuickPage(QQuickItem *parent) :
-    QQuickControl(*(new QQuickPagePrivate), parent)
+QQuickPage::QQuickPage(QQuickItem *parent)
+    : QQuickControl(*(new QQuickPagePrivate), parent)
 {
     Q_D(QQuickPage);
     setFlag(ItemIsFocusScope);
