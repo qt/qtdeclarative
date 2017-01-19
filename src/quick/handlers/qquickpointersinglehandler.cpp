@@ -97,10 +97,8 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
     QQuickEventPoint *currentPoint = event->pointById(m_pointId);
     Q_ASSERT(currentPoint);
-    bool grab = false;
-    if (!m_pointId || !currentPoint->isAccepted() || currentPoint->state() == QQuickEventPoint::Released) {
+    if (!m_pointId || !currentPoint->isAccepted()) {
         reset();
-        grab = false;
     } else {
         if (event->asPointerTouchEvent()) {
             QQuickEventTouchPoint *tp = static_cast<QQuickEventTouchPoint *>(currentPoint);
@@ -117,19 +115,25 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
             m_ellipseDiameters = QSizeF();
         }
         m_pos = currentPoint->pos();
-        m_velocity = currentPoint->velocity();
+        if (currentPoint->state() == QQuickEventPoint::Updated)
+            m_velocity = currentPoint->velocity();
         handleEventPoint(currentPoint);
-        if (currentPoint->state() == QQuickEventPoint::Pressed) {
+        switch (currentPoint->state()) {
+        case QQuickEventPoint::Pressed:
             m_pressPos = currentPoint->pos();
+            setPressedButtons(event->buttons());
             emit pointIdChanged();
+            break;
+        case QQuickEventPoint::Released:
+            setGrab(currentPoint, false);
+            reset();
+            break;
+        default:
+            setPressedButtons(event->buttons());
+            break;
         }
-        setPressedButtons(event->buttons());
-        grab = true;
     }
     emit eventPointHandled();
-    // TODO don't call setGrab(true) here, only setGrab(false), because concrete subclasses may
-    // wait for the drag threshold to be exceeded, for example
-    setGrab(currentPoint, grab);
 }
 
 bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
