@@ -126,6 +126,10 @@ QT_BEGIN_NAMESPACE
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
 */
 
+static const QQuickItemPrivate::ChangeTypes changeTypes = QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed;
+static const QQuickItemPrivate::ChangeTypes horizontalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitHeight;
+static const QQuickItemPrivate::ChangeTypes verticalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitWidth;
+
 class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickScrollIndicator)
@@ -308,6 +312,8 @@ public:
     void layoutVertical(bool move = true);
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
 
     QQuickFlickable *flickable;
@@ -367,6 +373,18 @@ void QQuickScrollIndicatorAttachedPrivate::itemGeometryChanged(QQuickItem *item,
     }
 }
 
+void QQuickScrollIndicatorAttachedPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    if (item == vertical)
+        layoutVertical(true);
+}
+
+void QQuickScrollIndicatorAttachedPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    if (item == horizontal)
+        layoutHorizontal(true);
+}
+
 void QQuickScrollIndicatorAttachedPrivate::itemDestroyed(QQuickItem *item)
 {
     if (item == horizontal)
@@ -391,9 +409,9 @@ QQuickScrollIndicatorAttached::~QQuickScrollIndicatorAttached()
     Q_D(QQuickScrollIndicatorAttached);
     if (d->flickable) {
         if (d->horizontal)
-            QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+            QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, horizontalChangeTypes);
         if (d->vertical)
-            QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d,QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+            QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d,verticalChangeTypes);
         QQuickItemPrivate::get(d->flickable)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
     }
 }
@@ -425,7 +443,7 @@ void QQuickScrollIndicatorAttached::setHorizontal(QQuickScrollIndicator *horizon
         return;
 
     if (d->horizontal && d->flickable) {
-        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, horizontalChangeTypes);
         QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingHorizontallyChanged, d, &QQuickScrollIndicatorAttachedPrivate::activateHorizontal);
 
         // TODO: export QQuickFlickableVisibleArea
@@ -441,7 +459,7 @@ void QQuickScrollIndicatorAttached::setHorizontal(QQuickScrollIndicator *horizon
             horizontal->setParentItem(d->flickable);
         horizontal->setOrientation(Qt::Horizontal);
 
-        QQuickItemPrivate::get(horizontal)->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+        QQuickItemPrivate::get(horizontal)->addItemChangeListener(d, horizontalChangeTypes);
         QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingHorizontallyChanged, d, &QQuickScrollIndicatorAttachedPrivate::activateHorizontal);
 
         // TODO: export QQuickFlickableVisibleArea
@@ -483,7 +501,7 @@ void QQuickScrollIndicatorAttached::setVertical(QQuickScrollIndicator *vertical)
         return;
 
     if (d->vertical && d->flickable) {
-        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, verticalChangeTypes);
         QObjectPrivate::disconnect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollIndicatorAttachedPrivate::activateVertical);
 
         // TODO: export QQuickFlickableVisibleArea
@@ -499,7 +517,7 @@ void QQuickScrollIndicatorAttached::setVertical(QQuickScrollIndicator *vertical)
             vertical->setParentItem(d->flickable);
         vertical->setOrientation(Qt::Vertical);
 
-        QQuickItemPrivate::get(vertical)->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+        QQuickItemPrivate::get(vertical)->addItemChangeListener(d, verticalChangeTypes);
         QObjectPrivate::connect(d->flickable, &QQuickFlickable::movingVerticallyChanged, d, &QQuickScrollIndicatorAttachedPrivate::activateVertical);
 
         // TODO: export QQuickFlickableVisibleArea
