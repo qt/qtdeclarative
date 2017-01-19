@@ -331,6 +331,8 @@ private slots:
     void qtbug_54589();
     void qtbug_54687();
     void stringify_qtbug_50592();
+    void instanceof_data();
+    void instanceof();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8112,6 +8114,68 @@ void tst_qqmlecmascript::stringify_qtbug_50592()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != 0);
     QCOMPARE(obj->property("source").toString(), QString::fromLatin1("http://example.org/some_nonexistant_image.png"));
+}
+
+void tst_qqmlecmascript::instanceof_data()
+{
+    QTest::addColumn<QString>("setupCode");
+    QTest::addColumn<QVariant>("expectedValue");
+
+    // so the way this works is that the name of the test tag defines the test
+    // to run. the code in setupCode defines code run before the actual test
+    // (e.g. to create vars).
+    //
+    // the expectedValue is either a boolean true or false for whether the two
+    // operands are indeed an instanceof each other, or a string for the
+    // expected error message.
+    QTest::newRow("String instanceof String")
+            << ""
+            << QVariant(false);
+    QTest::newRow("s instanceof String")
+            << "var s = \"hello\""
+            << QVariant(false);
+    QTest::newRow("objectString instanceof String")
+            << "var objectString = new String(\"hello\")"
+            << QVariant(true);
+    QTest::newRow("o instanceof Object")
+            << "var o = new Object()"
+            << QVariant(true);
+    QTest::newRow("o instanceof String")
+            << "var o = new Object()"
+            << QVariant(false);
+    QTest::newRow("true instanceof true")
+            << ""
+            << QVariant("TypeError: Type error");
+    QTest::newRow("1 instanceof Math")
+            << ""
+            << QVariant("TypeError: Type error");
+    QTest::newRow("date instanceof Date")
+            << "var date = new Date"
+            << QVariant(true);
+    QTest::newRow("date instanceof Object")
+            << "var date = new Date"
+            << QVariant(true);
+    QTest::newRow("date instanceof String")
+            << "var date = new Date"
+            << QVariant(false);
+}
+
+void tst_qqmlecmascript::instanceof()
+{
+    QFETCH(QString, setupCode);
+    QFETCH(QVariant, expectedValue);
+
+    QJSEngine engine;
+    QJSValue ret = engine.evaluate(setupCode + ";\n" + QTest::currentDataTag());
+
+    if (expectedValue.type() == QMetaType::Bool) {
+        bool returnValue = ret.toBool();
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+        QCOMPARE(returnValue, expectedValue.toBool());
+    } else {
+        QVERIFY2(ret.isError(), qPrintable(ret.toString()));
+        QCOMPARE(ret.toString(), expectedValue.toString());
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
