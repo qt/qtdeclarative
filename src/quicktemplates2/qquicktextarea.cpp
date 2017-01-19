@@ -38,6 +38,7 @@
 #include "qquicktextarea_p_p.h"
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickscrollview_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -80,14 +81,13 @@ QT_BEGIN_NAMESPACE
     \section2 Scrollable TextArea
 
     If you want to make a TextArea scrollable, for example, when it covers
-    an entire application page, attach it to a \l Flickable and combine with a
-    \l ScrollBar or \l ScrollIndicator.
+    an entire application page, it can be placed inside a \l ScrollView.
 
-    \image qtquickcontrols2-textarea-flickable.png
+    \image qtquickcontrols2-textarea-scrollable.png
 
-    \snippet qtquickcontrols2-textarea-flickable.qml 1
+    \snippet qtquickcontrols2-textarea-scrollable.qml 1
 
-    A TextArea that is attached to a \l Flickable does the following:
+    A TextArea that is placed inside a \l ScrollView does the following:
 
     \list
     \li Sets the content size automatically
@@ -603,6 +603,13 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
         d->resolveFont();
         if (!d->explicitHoverEnabled)
             d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+
+        QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
+        if (flickable) {
+            QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
+            if (scrollView)
+                d->attachFlickable(flickable);
+        }
     }
 }
 

@@ -26,25 +26,22 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.2
 
 Item {
     width: 100
     height: 100
 
-    Binding { target: flickable.ScrollBar.vertical; property: "active"; value: true }
+    Binding { target: view.ScrollBar.vertical; property: "active"; value: true }
 
     //! [1]
-    Flickable {
-        id: flickable
+    ScrollView {
+        id: view
         anchors.fill: parent
 
-        TextArea.flickable: TextArea {
+        TextArea {
             text: "TextArea\n...\n...\n...\n...\n...\n...\n"
-            wrapMode: TextArea.Wrap
         }
-
-        ScrollBar.vertical: ScrollBar { }
     }
     //! [1]
 }
