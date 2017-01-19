@@ -41,7 +41,6 @@
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquickclipnode_p.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -78,18 +77,6 @@ QT_BEGIN_NAMESPACE
 
     \sa {Customizing Label}
 */
-
-QQuickLabel::QQuickLabel(QQuickItem *parent)
-    : QQuickText(*(new QQuickLabelPrivate), parent)
-{
-    Q_D(QQuickLabel);
-    QObjectPrivate::connect(this, &QQuickText::textChanged,
-                            d, &QQuickLabelPrivate::_q_textChanged);
-}
-
-QQuickLabel::~QQuickLabel()
-{
-}
 
 QQuickLabelPrivate::QQuickLabelPrivate()
     : background(nullptr),
@@ -136,7 +123,7 @@ void QQuickLabelPrivate::inheritFont(const QFont &f)
         emit q->fontChanged();
 }
 
-void QQuickLabelPrivate::_q_textChanged(const QString &text)
+void QQuickLabelPrivate::textChanged(const QString &text)
 {
 #ifndef QT_NO_ACCESSIBILITY
     if (accessibleAttached)
@@ -178,6 +165,13 @@ void QQuickLabelPrivate::deleteDelegate(QObject *delegate)
         delete delegate;
     else if (delegate)
         pendingDeletions.append(delegate);
+}
+
+QQuickLabel::QQuickLabel(QQuickItem *parent)
+    : QQuickText(*(new QQuickLabelPrivate), parent)
+{
+    Q_D(QQuickLabel);
+    QObjectPrivate::connect(this, &QQuickText::textChanged, d, &QQuickLabelPrivate::textChanged);
 }
 
 QFont QQuickLabel::font() const

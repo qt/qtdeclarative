@@ -69,14 +69,15 @@ public:
     QQuickLabelPrivate();
     ~QQuickLabelPrivate();
 
-    static QQuickLabelPrivate *get(QQuickLabel *item) {
-        return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item)); }
+    static QQuickLabelPrivate *get(QQuickLabel *item)
+    {
+        return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item));
+    }
 
-    void resizeBackground();
     void resolveFont();
     void inheritFont(const QFont &f);
 
-    void _q_textChanged(const QString &text);
+    void textChanged(const QString &text);
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;

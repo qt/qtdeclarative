@@ -63,7 +63,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickLabel : public QQuickText
 
 public:
     explicit QQuickLabel(QQuickItem *parent = nullptr);
-    ~QQuickLabel();
 
     QFont font() const;
     void setFont(const QFont &font);
