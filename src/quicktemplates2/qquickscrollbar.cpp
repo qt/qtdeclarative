@@ -164,6 +164,7 @@ public:
           active(false),
           pressed(false),
           moving(false),
+          interactive(true),
           orientation(Qt::Vertical),
           snapMode(QQuickScrollBar::NoSnap)
     {
@@ -191,6 +192,7 @@ public:
     bool active;
     bool pressed;
     bool moving;
+    bool interactive;
     Qt::Orientation orientation;
     QQuickScrollBar::SnapMode snapMode;
 };
@@ -216,7 +218,7 @@ qreal QQuickScrollBarPrivate::positionAt(const QPointF &point) const
 void QQuickScrollBarPrivate::updateActive()
 {
     Q_Q(QQuickScrollBar);
-    q->setActive(moving || pressed || hovered);
+    q->setActive(moving || (interactive && (pressed || hovered)));
 }
 
 void QQuickScrollBarPrivate::resizeContent()
@@ -486,6 +488,35 @@ void QQuickScrollBar::setSnapMode(SnapMode mode)
 
     d->snapMode = mode;
     emit snapModeChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2
+    \qmlproperty bool QtQuick.Controls::ScrollBar::interactive
+
+    This property holds whether the scroll bar is interactive. The default value is \c true.
+
+    A non-interactive scroll bar is visually and behaviorally similar to \l ScrollIndicator.
+    This property is useful for switching between typical mouse- and touch-orientated UIs
+    with interactive and non-interactive scroll bars, respectively.
+*/
+bool QQuickScrollBar::isInteractive() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->interactive;
+}
+
+void QQuickScrollBar::setInteractive(bool interactive)
+{
+    Q_D(QQuickScrollBar);
+    if (d->interactive == interactive)
+        return;
+
+    d->interactive = interactive;
+    setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
+    if (!interactive)
+        ungrabMouse();
+    emit interactiveChanged();
 }
 
 /*!

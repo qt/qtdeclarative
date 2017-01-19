@@ -49,18 +49,18 @@ T.ScrollBar {
     // TODO: arrows
 
     contentItem: Rectangle {
-        implicitWidth: 12
-        implicitHeight: 12
+        implicitWidth: control.interactive ? 12 : 6
+        implicitHeight: control.interactive ? 12: 6
 
         color: control.pressed ? control.Universal.baseMediumColor :
-               control.hovered ? control.Universal.baseMediumLowColor : control.Universal.chromeHighColor
+               control.interactive && control.hovered ? control.Universal.baseMediumLowColor : control.Universal.chromeHighColor
         visible: control.size < 1.0
         opacity: 0.0
     }
 
     background: Rectangle {
-        implicitWidth: 12
-        implicitHeight: 12
+        implicitWidth: control.interactive ? 12 : 6
+        implicitHeight: control.interactive ? 12: 6
 
         color: control.Universal.chromeLowColor
         visible: control.size < 1.0

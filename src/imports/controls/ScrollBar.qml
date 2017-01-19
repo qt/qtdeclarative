@@ -52,8 +52,8 @@ T.ScrollBar {
     contentItem: Rectangle {
         id: handle
 
-        implicitWidth: 6
-        implicitHeight: 6
+        implicitWidth: control.interactive ? 6 : 2
+        implicitHeight: control.interactive ? 6 : 2
 
         radius: width / 2
         color: control.pressed ? Default.scrollBarPressedColor : Default.scrollBarColor

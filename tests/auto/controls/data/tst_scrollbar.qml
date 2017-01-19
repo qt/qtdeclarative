@@ -320,20 +320,21 @@ TestCase {
 
     function test_hover_data() {
         return [
-            { tag: "enabled", hoverEnabled: true },
-            { tag: "disabled", hoverEnabled: false },
+            { tag: "enabled", hoverEnabled: true, interactive: true },
+            { tag: "disabled", hoverEnabled: false, interactive: true },
+            { tag: "non-interactive", hoverEnabled: true, interactive: false }
         ]
     }
 
     function test_hover(data) {
-        var control = createTemporaryObject(scrollBar, testCase, {hoverEnabled: data.hoverEnabled})
+        var control = createTemporaryObject(scrollBar, testCase, {hoverEnabled: data.hoverEnabled, interactive: data.interactive})
         verify(control)
 
         compare(control.hovered, false)
 
         mouseMove(control)
         compare(control.hovered, data.hoverEnabled)
-        compare(control.active, data.hoverEnabled)
+        compare(control.active, data.hoverEnabled && data.interactive)
 
         mouseMove(control, -1, -1)
         compare(control.hovered, false)
@@ -409,5 +410,57 @@ TestCase {
         compare(steps, data.steps)
 
         mouseRelease(control, control.width - 1, 0)
+    }
+
+    function test_interactive_data() {
+        return [
+            { tag: "true", interactive: true },
+            { tag: "false", interactive: false }
+        ]
+    }
+
+    function test_interactive(data) {
+        var control = createTemporaryObject(scrollBar, testCase, {interactive: data.interactive})
+        verify(control)
+
+        compare(control.interactive, data.interactive)
+
+        // press-move-release
+        mousePress(control, 0, 0, Qt.LeftButton)
+        compare(control.pressed, data.interactive)
+
+        mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.position, data.interactive ? 0.5 : 0.0)
+
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, false)
+
+        // change to non-interactive while pressed
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, data.interactive)
+
+        mouseMove(control, control.width, control.height)
+        compare(control.position, data.interactive ? 1.0 : 0.0)
+
+        control.interactive = false
+        compare(control.interactive, false)
+        compare(control.pressed, false)
+
+        mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.position, data.interactive ? 1.0 : 0.0)
+
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, false)
+
+        // change back to interactive & try press-move-release again
+        control.interactive = true
+        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.pressed, true)
+
+        mouseMove(control, 0, 0)
+        compare(control.position, 0.0)
+
+        mouseRelease(control, 0, 0, Qt.LeftButton)
+        compare(control.pressed, false)
     }
 }

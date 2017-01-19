@@ -46,25 +46,26 @@ T.ScrollBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    padding: 1
+    padding: control.interactive ? 1 : 2
 
     contentItem: Rectangle {
         id: handle
 
-        implicitWidth: 13
-        implicitHeight: 13
+        implicitWidth: control.interactive ? 13 : 4
+        implicitHeight: control.interactive ? 13 : 4
 
         color: control.pressed ? control.Material.scrollBarPressedColor :
-               control.hovered ? control.Material.scrollBarHoveredColor : control.Material.scrollBarColor
+               control.interactive && control.hovered ? control.Material.scrollBarHoveredColor : control.Material.scrollBarColor
         visible: control.size < 1.0
         opacity: 0.0
     }
 
     background: Rectangle {
-        implicitWidth: 16
-        implicitHeight: 16
+        implicitWidth: control.interactive ? 16 : 4
+        implicitHeight: control.interactive ? 16 : 4
         color: "#0e000000"
         opacity: 0.0
+        visible: control.interactive
     }
 
     states: State {
