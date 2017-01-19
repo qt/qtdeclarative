@@ -74,8 +74,10 @@ public:
     QQuickTextAreaPrivate();
     ~QQuickTextAreaPrivate();
 
-    static QQuickTextAreaPrivate *get(QQuickTextArea *item) {
-        return static_cast<QQuickTextAreaPrivate *>(QObjectPrivate::get(item)); }
+    static QQuickTextAreaPrivate *get(QQuickTextArea *item)
+    {
+        return static_cast<QQuickTextAreaPrivate *>(QObjectPrivate::get(item));
+    }
 
     void resizeBackground();
     void resolveFont();
@@ -97,7 +99,7 @@ public:
     void implicitWidthChanged() override;
     void implicitHeightChanged() override;
 
-    void _q_readOnlyChanged(bool isReadOnly);
+    void readOnlyChanged(bool isReadOnly);
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;

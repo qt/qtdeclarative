@@ -72,7 +72,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
 
 public:
     explicit QQuickTextArea(QQuickItem *parent = nullptr);
-    ~QQuickTextArea();
 
     static QQuickTextAreaAttached *qmlAttachedProperties(QObject *object);
 
@@ -142,7 +141,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextAreaAttached : public QObject
 
 public:
     explicit QQuickTextAreaAttached(QObject *parent);
-    ~QQuickTextAreaAttached();
 
     QQuickTextArea *flickable() const;
     void setFlickable(QQuickTextArea *control);

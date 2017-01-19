@@ -39,10 +39,8 @@
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
 
-#include <QtGui/qguiapplication.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 
@@ -133,8 +131,12 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : hovered(false), explicitHoverEnabled(false), background(nullptr),
-      focusReason(Qt::OtherFocusReason), accessibleAttached(nullptr), flickable(nullptr)
+    : hovered(false),
+      explicitHoverEnabled(false),
+      background(nullptr),
+      focusReason(Qt::OtherFocusReason),
+      accessibleAttached(nullptr),
+      flickable(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -167,6 +169,50 @@ void QQuickTextAreaPrivate::resizeBackground()
                 background->setHeight(q->height());
             p->heightValid = false;
         }
+    }
+}
+
+/*!
+    \internal
+
+    Determine which font is implicitly imposed on this control by its ancestors
+    and QGuiApplication::font, resolve this against its own font (attributes from
+    the implicit font are copied over). Then propagate this font to this
+    control's children.
+*/
+void QQuickTextAreaPrivate::resolveFont()
+{
+    Q_Q(QQuickTextArea);
+    inheritFont(QQuickControlPrivate::parentFont(q));
+}
+
+void QQuickTextAreaPrivate::inheritFont(const QFont &f)
+{
+    Q_Q(QQuickTextArea);
+    QFont parentFont = font.resolve(f);
+    parentFont.resolve(font.resolve() | f.resolve());
+
+    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
+    const QFont resolvedFont = parentFont.resolve(defaultFont);
+
+    const bool changed = resolvedFont != sourceFont;
+    q->QQuickTextEdit::setFont(resolvedFont);
+    if (changed)
+        emit q->fontChanged();
+}
+
+void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
+{
+    Q_Q(QQuickTextArea);
+    if (!xplicit && explicitHoverEnabled)
+        return;
+
+    bool wasEnabled = q->isHoverEnabled();
+    explicitHoverEnabled = xplicit;
+    if (wasEnabled != enabled) {
+        q->setAcceptHoverEvents(enabled);
+        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
+        emit q->hoverEnabledChanged();
     }
 }
 
@@ -305,75 +351,7 @@ void QQuickTextAreaPrivate::implicitHeightChanged()
     emit q->implicitHeightChanged3();
 }
 
-QQuickTextArea::QQuickTextArea(QQuickItem *parent)
-    : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
-{
-    Q_D(QQuickTextArea);
-    setActiveFocusOnTab(true);
-    setAcceptedMouseButtons(Qt::AllButtons);
-    d->setImplicitResizeEnabled(false);
-    d->pressHandler.control = this;
-#ifndef QT_NO_CURSOR
-    setCursor(Qt::IBeamCursor);
-#endif
-    QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
-                            d, &QQuickTextAreaPrivate::_q_readOnlyChanged);
-}
-
-QQuickTextArea::~QQuickTextArea()
-{
-}
-
-QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickTextAreaAttached(object);
-}
-
-/*!
-    \internal
-
-    Determine which font is implicitly imposed on this control by its ancestors
-    and QGuiApplication::font, resolve this against its own font (attributes from
-    the implicit font are copied over). Then propagate this font to this
-    control's children.
-*/
-void QQuickTextAreaPrivate::resolveFont()
-{
-    Q_Q(QQuickTextArea);
-    inheritFont(QQuickControlPrivate::parentFont(q));
-}
-
-void QQuickTextAreaPrivate::inheritFont(const QFont &f)
-{
-    Q_Q(QQuickTextArea);
-    QFont parentFont = font.resolve(f);
-    parentFont.resolve(font.resolve() | f.resolve());
-
-    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
-    const QFont resolvedFont = parentFont.resolve(defaultFont);
-
-    const bool changed = resolvedFont != sourceFont;
-    q->QQuickTextEdit::setFont(resolvedFont);
-    if (changed)
-        emit q->fontChanged();
-}
-
-void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
-{
-    Q_Q(QQuickTextArea);
-    if (!xplicit && explicitHoverEnabled)
-        return;
-
-    bool wasEnabled = q->isHoverEnabled();
-    explicitHoverEnabled = xplicit;
-    if (wasEnabled != enabled) {
-        q->setAcceptHoverEvents(enabled);
-        QQuickControlPrivate::updateHoverEnabledRecur(q, enabled);
-        emit q->hoverEnabledChanged();
-    }
-}
-
-void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
+void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
     if (accessibleAttached)
@@ -412,6 +390,26 @@ void QQuickTextAreaPrivate::deleteDelegate(QObject *delegate)
         delete delegate;
     else if (delegate)
         pendingDeletions.append(delegate);
+}
+
+QQuickTextArea::QQuickTextArea(QQuickItem *parent)
+    : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
+{
+    Q_D(QQuickTextArea);
+    setActiveFocusOnTab(true);
+    setAcceptedMouseButtons(Qt::AllButtons);
+    d->setImplicitResizeEnabled(false);
+    d->pressHandler.control = this;
+#ifndef QT_NO_CURSOR
+    setCursor(Qt::IBeamCursor);
+#endif
+    QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
+                            d, &QQuickTextAreaPrivate::readOnlyChanged);
+}
+
+QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickTextAreaAttached(object);
 }
 
 QFont QQuickTextArea::font() const
@@ -728,11 +726,10 @@ void QQuickTextArea::mouseDoubleClickEvent(QMouseEvent *event)
 void QQuickTextArea::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextArea);
-    if (event->timerId() == d->pressHandler.timer.timerId()) {
+    if (event->timerId() == d->pressHandler.timer.timerId())
         d->pressHandler.timerEvent(event);
-    } else {
+    else
         QQuickTextEdit::timerEvent(event);
-    }
 }
 
 class QQuickTextAreaAttachedPrivate : public QObjectPrivate
@@ -745,10 +742,6 @@ public:
 
 QQuickTextAreaAttached::QQuickTextAreaAttached(QObject *parent)
     : QObject(*(new QQuickTextAreaAttachedPrivate), parent)
-{
-}
-
-QQuickTextAreaAttached::~QQuickTextAreaAttached()
 {
 }
 
