@@ -15,6 +15,7 @@ qtHaveModule(quick) {
         layouts \
         qtquick2 \
         window \
+        sharedimage \
         testlib
 
     qtConfig(opengl(es1|es2)?): \
