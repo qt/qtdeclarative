@@ -281,11 +281,7 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
 
 QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
 {
-    QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(object);
-    if (!flickable)
-        qmlWarning(object) << "ScrollBar must be attached to a Flickable";
-
-    return new QQuickScrollBarAttached(flickable);
+    return new QQuickScrollBarAttached(object);
 }
 
 /*!
@@ -606,8 +602,8 @@ QAccessible::Role QQuickScrollBar::accessibleRole() const
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollBarAttachedPrivate(QQuickFlickable *flickable)
-        : flickable(flickable),
+    QQuickScrollBarAttachedPrivate()
+        : flickable(nullptr),
           horizontal(nullptr),
           vertical(nullptr)
     {
@@ -727,14 +723,15 @@ void QQuickScrollBarAttachedPrivate::itemDestroyed(QQuickItem *item)
         vertical = nullptr;
 }
 
-QQuickScrollBarAttached::QQuickScrollBarAttached(QQuickFlickable *flickable)
-    : QObject(*(new QQuickScrollBarAttachedPrivate(flickable)), flickable)
+QQuickScrollBarAttached::QQuickScrollBarAttached(QObject *parent)
+    : QObject(*(new QQuickScrollBarAttachedPrivate), parent)
 {
     Q_D(QQuickScrollBarAttached);
-    if (flickable) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(flickable);
-        p->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
-    }
+    d->flickable = qobject_cast<QQuickFlickable *>(parent);
+    if (d->flickable)
+        QQuickItemPrivate::get(d->flickable)->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
+    else if (parent)
+        qmlWarning(parent) << "ScrollBar must be attached to a Flickable";
 }
 
 QQuickScrollBarAttached::~QQuickScrollBarAttached()

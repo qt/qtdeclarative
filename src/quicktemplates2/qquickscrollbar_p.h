@@ -144,7 +144,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBarAttached : public QObject
     Q_PROPERTY(QQuickScrollBar *vertical READ vertical WRITE setVertical NOTIFY verticalChanged FINAL)
 
 public:
-    explicit QQuickScrollBarAttached(QQuickFlickable *flickable);
+    explicit QQuickScrollBarAttached(QObject *parent = nullptr);
     ~QQuickScrollBarAttached();
 
     QQuickScrollBar *horizontal() const;
