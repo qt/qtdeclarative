@@ -39,9 +39,7 @@
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
 
-#include <QtCore/qbasictimer.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 
@@ -114,11 +112,11 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
-    : hovered(false)
-    , explicitHoverEnabled(false)
-    , background(nullptr)
-    , focusReason(Qt::OtherFocusReason)
-    , accessibleAttached(nullptr)
+    : hovered(false),
+      explicitHoverEnabled(false),
+      background(nullptr),
+      focusReason(Qt::OtherFocusReason),
+      accessibleAttached(nullptr)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -146,51 +144,6 @@ void QQuickTextFieldPrivate::resizeBackground()
             p->heightValid = false;
         }
     }
-}
-
-qreal QQuickTextFieldPrivate::getImplicitWidth() const
-{
-    return QQuickItemPrivate::getImplicitWidth();
-}
-
-qreal QQuickTextFieldPrivate::getImplicitHeight() const
-{
-    return QQuickItemPrivate::getImplicitHeight();
-}
-
-void QQuickTextFieldPrivate::implicitWidthChanged()
-{
-    Q_Q(QQuickTextField);
-    QQuickItemPrivate::implicitWidthChanged();
-    emit q->implicitWidthChanged3();
-}
-
-void QQuickTextFieldPrivate::implicitHeightChanged()
-{
-    Q_Q(QQuickTextField);
-    QQuickItemPrivate::implicitHeightChanged();
-    emit q->implicitHeightChanged3();
-}
-
-QQuickTextField::QQuickTextField(QQuickItem *parent)
-    : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
-{
-    Q_D(QQuickTextField);
-    d->pressHandler.control = this;
-    d->setImplicitResizeEnabled(false);
-    setAcceptedMouseButtons(Qt::AllButtons);
-    setActiveFocusOnTab(true);
-#ifndef QT_NO_CURSOR
-    setCursor(Qt::IBeamCursor);
-#endif
-    QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged,
-                            d, &QQuickTextFieldPrivate::_q_readOnlyChanged);
-    QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged,
-                            d, &QQuickTextFieldPrivate::_q_echoModeChanged);
-}
-
-QQuickTextField::~QQuickTextField()
-{
 }
 
 /*!
@@ -237,7 +190,31 @@ void QQuickTextFieldPrivate::updateHoverEnabled(bool enabled, bool xplicit)
     }
 }
 
-void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
+qreal QQuickTextFieldPrivate::getImplicitWidth() const
+{
+    return QQuickItemPrivate::getImplicitWidth();
+}
+
+qreal QQuickTextFieldPrivate::getImplicitHeight() const
+{
+    return QQuickItemPrivate::getImplicitHeight();
+}
+
+void QQuickTextFieldPrivate::implicitWidthChanged()
+{
+    Q_Q(QQuickTextField);
+    QQuickItemPrivate::implicitWidthChanged();
+    emit q->implicitWidthChanged3();
+}
+
+void QQuickTextFieldPrivate::implicitHeightChanged()
+{
+    Q_Q(QQuickTextField);
+    QQuickItemPrivate::implicitHeightChanged();
+    emit q->implicitHeightChanged3();
+}
+
+void QQuickTextFieldPrivate::readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
     if (accessibleAttached)
@@ -247,7 +224,7 @@ void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
 #endif
 }
 
-void QQuickTextFieldPrivate::_q_echoModeChanged(QQuickTextField::EchoMode echoMode)
+void QQuickTextFieldPrivate::echoModeChanged(QQuickTextField::EchoMode echoMode)
 {
 #ifndef QT_NO_ACCESSIBILITY
     if (accessibleAttached)
@@ -291,6 +268,21 @@ void QQuickTextFieldPrivate::deleteDelegate(QObject *delegate)
         delete delegate;
     else if (delegate)
         pendingDeletions.append(delegate);
+}
+
+QQuickTextField::QQuickTextField(QQuickItem *parent)
+    : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
+{
+    Q_D(QQuickTextField);
+    d->pressHandler.control = this;
+    d->setImplicitResizeEnabled(false);
+    setAcceptedMouseButtons(Qt::AllButtons);
+    setActiveFocusOnTab(true);
+#ifndef QT_NO_CURSOR
+    setCursor(Qt::IBeamCursor);
+#endif
+    QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged, d, &QQuickTextFieldPrivate::readOnlyChanged);
+    QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged, d, &QQuickTextFieldPrivate::echoModeChanged);
 }
 
 QFont QQuickTextField::font() const
@@ -582,11 +574,10 @@ void QQuickTextField::mouseDoubleClickEvent(QMouseEvent *event)
 void QQuickTextField::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextField);
-    if (event->timerId() == d->pressHandler.timer.timerId()) {
+    if (event->timerId() == d->pressHandler.timer.timerId())
         d->pressHandler.timerEvent(event);
-    } else {
+    else
         QQuickTextInput::timerEvent(event);
-    }
 }
 
 QT_END_NAMESPACE

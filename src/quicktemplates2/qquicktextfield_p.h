@@ -71,7 +71,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
 
 public:
     explicit QQuickTextField(QQuickItem *parent = nullptr);
-    ~QQuickTextField();
 
     QFont font() const;
     void setFont(const QFont &font);

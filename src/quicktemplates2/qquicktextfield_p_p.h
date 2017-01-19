@@ -87,8 +87,8 @@ public:
     void implicitWidthChanged() override;
     void implicitHeightChanged() override;
 
-    void _q_readOnlyChanged(bool isReadOnly);
-    void _q_echoModeChanged(QQuickTextField::EchoMode echoMode);
+    void readOnlyChanged(bool isReadOnly);
+    void echoModeChanged(QQuickTextField::EchoMode echoMode);
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;
