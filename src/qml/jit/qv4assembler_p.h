@@ -231,6 +231,16 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Q_UNUSED(argumentNumber);
     }
 
+    static void zeroRegister(JITAssembler *as, RegisterID reg)
+    {
+        as->move(TrustedImm32(0), reg);
+    }
+
+    static void zeroStackSlot(JITAssembler *as, int slot)
+    {
+        as->poke(TrustedImm32(0), slot);
+    }
+
     static void generateCJumpOnCompare(JITAssembler *as,
                                        RelationalCondition cond,
                                        RegisterID,
@@ -404,6 +414,16 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         }
     }
 
+    static void zeroRegister(JITAssembler *as, RegisterID reg)
+    {
+        as->move(TrustedImm64(0), reg);
+    }
+
+    static void zeroStackSlot(JITAssembler *as, int slot)
+    {
+        as->store64(TrustedImm64(0), as->addressForPoke(slot));
+    }
+
     static void generateCJumpOnCompare(JITAssembler *as,
                                        RelationalCondition cond,
                                        RegisterID left,
@@ -502,7 +522,6 @@ public:
     using MacroAssembler::addPtr;
     using MacroAssembler::call;
     using MacroAssembler::poke;
-    using MacroAssembler::xorPtr;
     using MacroAssembler::branchTruncateDoubleToUint32;
     using MacroAssembler::or32;
     using MacroAssembler::moveDouble;
@@ -829,7 +848,7 @@ public:
     void loadArgumentInRegister(PointerToValue temp, RegisterID dest, int argumentNumber)
     {
         if (!temp.value) {
-            move(TrustedImmPtr(0), dest);
+            RegisterSizeDependentOps::zeroRegister(this, dest);
         } else {
             Pointer addr = toAddress(dest, temp.value, argumentNumber);
             loadArgumentInRegister(addr, dest, argumentNumber);
@@ -872,7 +891,7 @@ public:
     {
         Q_UNUSED(argumentNumber);
 
-        xorPtr(dest, dest);
+        RegisterSizeDependentOps::zeroRegister(this, dest);
         if (imm32.m_value)
             move(imm32, dest);
     }
@@ -961,7 +980,7 @@ public:
             Pointer ptr = toAddress(ScratchRegister, temp.value, argumentNumber);
             loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
         } else {
-            poke(TrustedImmPtr(0), StackSlot);
+            RegisterSizeDependentOps::zeroStackSlot(this, StackSlot);
         }
     }
 
