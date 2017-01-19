@@ -100,6 +100,8 @@ TestCase {
         // vertical scroll bar follows flickable's width
         container.width += 10
         compare(vertical.x, container.width - vertical.width)
+        vertical.implicitWidth -= 2
+        compare(vertical.x, container.width - vertical.width)
         // ...unless explicitly positioned
         vertical.x = 123
         container.width += 10
@@ -127,6 +129,8 @@ TestCase {
         verify(horizontal.height > 0)
         // horizontal scroll bar follows flickable's height
         container.height += 10
+        compare(horizontal.y, container.height - horizontal.height)
+        horizontal.implicitHeight -= 2
         compare(horizontal.y, container.height - horizontal.height)
         // ...unless explicitly positioned
         horizontal.y = 123
