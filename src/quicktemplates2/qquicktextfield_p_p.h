@@ -51,7 +51,7 @@
 #include <QtQuick/private/qquicktextinput_p_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
 
-#include "qquicktextfield_p.h"
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtGui/qaccessible.h>

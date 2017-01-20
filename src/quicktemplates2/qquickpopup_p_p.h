@@ -48,8 +48,8 @@
 // We mean it.
 //
 
-#include "qquickpopup_p.h"
-#include "qquickcontrol_p.h"
+#include <QtQuickTemplates2/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>

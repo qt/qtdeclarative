@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include "qquickoverlay_p.h"
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>

@@ -52,7 +52,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
 
-#include "qquicktextarea_p.h"
+#include <QtQuickTemplates2/private/qquicktextarea_p.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtGui/qaccessible.h>

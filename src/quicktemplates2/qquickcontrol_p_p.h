@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include "qquickcontrol_p.h"
+#include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQml/private/qlazilyallocated_p.h>
