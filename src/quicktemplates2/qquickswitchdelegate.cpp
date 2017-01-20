@@ -188,10 +188,14 @@ void QQuickSwitchDelegate::mirrorChange()
 void QQuickSwitchDelegate::nextCheckState()
 {
     Q_D(QQuickSwitchDelegate);
-    if (keepMouseGrab())
+    if (keepMouseGrab()) {
         d->toggle(d->position > 0.5);
-    else
+        // the checked state might not change => force a position update to
+        // avoid that the handle is left somewhere in the middle (QTBUG-57944)
+        setPosition(d->checked ? 1.0 : 0.0);
+    } else {
         QQuickItemDelegate::nextCheckState();
+    }
 }
 
 void QQuickSwitchDelegate::buttonChange(ButtonChange change)

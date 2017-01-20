@@ -499,7 +499,17 @@ void QQuickDialogButtonBox::setStandardButtons(QPlatformDialogHelper::StandardBu
 */
 QQuickAbstractButton *QQuickDialogButtonBox::standardButton(QPlatformDialogHelper::StandardButton button) const
 {
-    Q_UNUSED(button);
+    Q_D(const QQuickDialogButtonBox);
+    if (Q_UNLIKELY(!(d->standardButtons & button)))
+        return nullptr;
+    for (int i = 0, n = count(); i < n; ++i) {
+        QQuickAbstractButton *btn = qobject_cast<QQuickAbstractButton *>(d->itemAt(i));
+        if (Q_LIKELY(btn)) {
+            QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(btn, false));
+            if (attached && QQuickDialogButtonBoxAttachedPrivate::get(attached)->standardButton == button)
+                return btn;
+        }
+    }
     return nullptr;
 }
 
