@@ -52,6 +52,7 @@ HEADERS += \
     $$PWD/qquickrangeslider_p.h \
     $$PWD/qquickroundbutton_p.h \
     $$PWD/qquickscrollbar_p.h \
+    $$PWD/qquickscrollbar_p_p.h \
     $$PWD/qquickscrollindicator_p.h \
     $$PWD/qquickshortcutcontext_p_p.h \
     $$PWD/qquickslider_p.h \

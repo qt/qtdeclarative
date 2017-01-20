@@ -52,7 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickFlickable;
 class QQuickScrollBarAttached;
 class QQuickScrollBarPrivate;
 

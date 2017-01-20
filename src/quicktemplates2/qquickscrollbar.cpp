@@ -35,11 +35,10 @@
 ****************************************************************************/
 
 #include "qquickscrollbar_p.h"
-#include "qquickcontrol_p_p.h"
+#include "qquickscrollbar_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -155,51 +154,19 @@ static const QQuickItemPrivate::ChangeTypes changeTypes = QQuickItemPrivate::Geo
 static const QQuickItemPrivate::ChangeTypes horizontalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitHeight;
 static const QQuickItemPrivate::ChangeTypes verticalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitWidth;
 
-class QQuickScrollBarPrivate : public QQuickControlPrivate
+QQuickScrollBarPrivate::QQuickScrollBarPrivate()
+    : size(0),
+      position(0),
+      stepSize(0),
+      offset(0),
+      active(false),
+      pressed(false),
+      moving(false),
+      interactive(true),
+      orientation(Qt::Vertical),
+      snapMode(QQuickScrollBar::NoSnap)
 {
-    Q_DECLARE_PUBLIC(QQuickScrollBar)
-
-public:
-    QQuickScrollBarPrivate()
-        : size(0),
-          position(0),
-          stepSize(0),
-          offset(0),
-          active(false),
-          pressed(false),
-          moving(false),
-          interactive(true),
-          orientation(Qt::Vertical),
-          snapMode(QQuickScrollBar::NoSnap)
-    {
-    }
-
-    static QQuickScrollBarPrivate *get(QQuickScrollBar *bar)
-    {
-        return bar->d_func();
-    }
-
-    qreal snapPosition(qreal position) const;
-    qreal positionAt(const QPointF &point) const;
-    void updateActive();
-    void resizeContent() override;
-
-    void handlePress(const QPointF &point);
-    void handleMove(const QPointF &point);
-    void handleRelease(const QPointF &point);
-    void handleUngrab();
-
-    qreal size;
-    qreal position;
-    qreal stepSize;
-    qreal offset;
-    bool active;
-    bool pressed;
-    bool moving;
-    bool interactive;
-    Qt::Orientation orientation;
-    QQuickScrollBar::SnapMode snapMode;
-};
+}
 
 qreal QQuickScrollBarPrivate::snapPosition(qreal position) const
 {
@@ -603,34 +570,12 @@ QAccessible::Role QQuickScrollBar::accessibleRole() const
 }
 #endif
 
-class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
+QQuickScrollBarAttachedPrivate::QQuickScrollBarAttachedPrivate()
+    : flickable(nullptr),
+      horizontal(nullptr),
+      vertical(nullptr)
 {
-public:
-    QQuickScrollBarAttachedPrivate()
-        : flickable(nullptr),
-          horizontal(nullptr),
-          vertical(nullptr)
-    {
-    }
-
-    void activateHorizontal();
-    void activateVertical();
-    void scrollHorizontal();
-    void scrollVertical();
-    void mirrorVertical();
-
-    void layoutHorizontal(bool move = true);
-    void layoutVertical(bool move = true);
-
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
-    void itemImplicitWidthChanged(QQuickItem *item) override;
-    void itemImplicitHeightChanged(QQuickItem *item) override;
-    void itemDestroyed(QQuickItem *item) override;
-
-    QQuickFlickable *flickable;
-    QQuickScrollBar *horizontal;
-    QQuickScrollBar *vertical;
-};
+}
 
 void QQuickScrollBarAttachedPrivate::activateHorizontal()
 {
