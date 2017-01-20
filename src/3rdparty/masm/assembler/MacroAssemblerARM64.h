@@ -3353,7 +3353,7 @@ private:
         return makeBranch(cond);
     }
 
-    template <typename> friend class LinkBuffer;
+    template <typename, template <typename> class> friend class LinkBufferBase;
     void recordLinkOffsets(int32_t regionStart, int32_t regionEnd, int32_t offset) {return m_assembler.recordLinkOffsets(regionStart, regionEnd, offset); }
     int executableOffsetFor(int location) { return m_assembler.executableOffsetFor(location); }
 

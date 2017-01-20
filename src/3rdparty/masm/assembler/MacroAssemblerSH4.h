@@ -2278,7 +2278,7 @@ protected:
         return static_cast<SH4Assembler::Condition>(cond);
     }
 private:
-    template <typename>  friend class LinkBuffer;
+    template <typename, template <typename> class> friend class LinkBufferBase;
     friend class RepatchBuffer;
 
     static void linkCall(void*, Call, FunctionPtr);
