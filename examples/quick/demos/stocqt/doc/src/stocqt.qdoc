@@ -69,7 +69,7 @@
 
     \quotefromfile demos/stocqt/content/StockChart.qml
     \skipto Rectangle
-    \printuntil height
+    \printuntil id
     \dots
     \skipto Canvas
     \printuntil id
