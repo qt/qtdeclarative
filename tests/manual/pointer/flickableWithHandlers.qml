@@ -44,7 +44,7 @@ import "content"
 
 Rectangle {
     id: root
-    width: 300
+    width: 400
     height: 400
     objectName: "root"
     color: "#222222"

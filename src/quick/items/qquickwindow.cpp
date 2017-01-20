@@ -746,20 +746,27 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     if (q->mouseGrabberItem() == grabber)
         return;
 
-    qCDebug(DBG_MOUSE_TARGET) << "grabber" << q->mouseGrabberItem() << "->" << grabber;
     QQuickItem *oldGrabber = q->mouseGrabberItem();
+    qCDebug(DBG_MOUSE_TARGET) << "grabber" << oldGrabber << "->" << grabber;
 
     if (grabber && touchMouseId != -1 && touchMouseDevice) {
         // update the touch item for mouse touch id to the new grabber
         qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << touchMouseId << "->" << q->mouseGrabberItem();
         auto point = touchMouseDevice->pointerEvent()->pointById(touchMouseId);
-        if (point)
+        if (point) {
             point->setGrabberItem(grabber);
+            for (auto handler : point->passiveGrabbers())
+                point->cancelPassiveGrab(handler);
+        }
     } else {
         QQuickPointerEvent *event = QQuickPointerDevice::genericMouseDevice()->pointerEvent();
         Q_ASSERT(event->pointCount() == 1);
-        event->point(0)->setGrabberItem(grabber);
+        auto point = event->point(0);
+        point->setGrabberItem(grabber);
+        for (auto handler : point->passiveGrabbers())
+            point->cancelPassiveGrab(handler);
     }
+
 
     if (oldGrabber) {
         QEvent e(QEvent::UngrabMouse);
@@ -1679,7 +1686,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // if the grabber is not an Item, it must be a PointerHandler
             auto handler = point->grabberPointerHandler();
             pointerEvent->localize(handler->parentItem());
-            handler->handlePointerEvent(pointerEvent);
+            if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
+                handler->handlePointerEvent(pointerEvent);
             if (mouseIsReleased) {
                 point->setGrabberPointerHandler(nullptr, true);
                 point->clearPassiveGrabbers();
@@ -1698,18 +1706,21 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             for (auto handler : point->passiveGrabbers()) {
                 // a null pointer in passiveGrabbers is unlikely, unless the grabbing handler was deleted dynamically
                 if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
-                    handler->handlePointerEvent(pointerEvent);
+                    if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
+                        handler->handlePointerEvent(pointerEvent);
                     eventDeliveryTargets.append(handler);
                 }
             }
             // If some points weren't grabbed, deliver to non-grabber PointerHandlers in reverse paint order
-            if (!pointerEvent->allPointsGrabbed()) {
+            if (!pointerEvent->allPointsGrabbed() && pointerEvent->buttons()) {
                 QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePos(), false);
                 for (QQuickItem *item : targetItems) {
                     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
                     pointerEvent->localize(item);
-                    if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
-                        delivered = true;
+                    if (!sendFilteredPointerEvent(pointerEvent, item)) {
+                        if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
+                            delivered = true;
+                    }
                     if (point->grabber())
                         break;
                 }
@@ -2311,6 +2322,8 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
             QQuickEventPoint *point = event->point(i);
             for (auto handler : point->passiveGrabbers()) {
                 if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
+                    if (sendFilteredPointerEvent(event, handler->parentItem()))
+                        return;
                     handler->handlePointerEvent(event);
                     eventDeliveryTargets.append(handler);
                 }
@@ -2682,6 +2695,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
             }
         }
     } else if (QQuickPointerTouchEvent *pte = event->asPointerTouchEvent()) {
+        QVarLengthArray<QPair<QQuickPointerHandler *, QQuickEventPoint *>, 32> passiveGrabsToCancel;
         for (QPair<QQuickItem *,QQuickItem *> itemAndParent : filteringParentItems) {
             QQuickItem *item = receiver ? receiver : itemAndParent.first;
             QQuickItem *filteringParent = itemAndParent.second;
@@ -2730,6 +2744,12 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
                             touchMouseDevice = event->device();
                             touchMouseDevice->pointerEvent()->pointById(tp.id())->setGrabberItem(filteringParent);
                             filteringParent->grabMouse();
+                            auto pointerEventPoint = pte->pointById(tp.id());
+                            for (auto handler : pointerEventPoint->passiveGrabbers()) {
+                                QPair<QQuickPointerHandler *, QQuickEventPoint *> grab(handler, pointerEventPoint);
+                                if (!passiveGrabsToCancel.contains(grab))
+                                    passiveGrabsToCancel.append(grab);
+                            }
                         }
                         ret = true;
                     }
@@ -2739,6 +2759,8 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
                 }
             }
         }
+        for (auto grab : passiveGrabsToCancel)
+            grab.second->cancelPassiveGrab(grab.first);
     }
     return ret;
 }
