@@ -116,6 +116,32 @@ struct StackAllocator {
     uint currentChunk = 0;
 };
 
+struct HugeItemAllocator {
+    HugeItemAllocator(ChunkAllocator *chunkAllocator)
+        : chunkAllocator(chunkAllocator)
+    {}
+
+    HeapItem *allocate(size_t size);
+    void sweep();
+    void freeAll();
+
+    size_t usedMem() const {
+        size_t used = 0;
+        for (const auto &c : chunks)
+            used += c.size;
+        return used;
+    }
+
+    ChunkAllocator *chunkAllocator;
+    struct HugeChunk {
+        Chunk *chunk;
+        size_t size;
+    };
+
+    std::vector<HugeChunk> chunks;
+};
+
+
 class Q_QML_EXPORT MemoryManager
 {
     Q_DISABLE_COPY(MemoryManager);
@@ -369,6 +395,7 @@ public:
     QV4::ExecutionEngine *engine;
     ChunkAllocator *chunkAllocator;
     StackAllocator<Heap::CallContext> stackAllocator;
+    HugeItemAllocator hugeItemAllocator;
     QScopedPointer<Data> m_d;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;

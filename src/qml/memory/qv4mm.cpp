@@ -190,7 +190,6 @@ Chunk *MemorySegment::allocate(size_t size)
             pageReservation.commit(candidate, size);
             for (uint i = 0; i < requiredChunks; ++i)
                 setBit(candidate - base + i);
-            DEBUG << "allocated chunk " << candidate << hex << size;
             return candidate;
         }
     }
@@ -289,6 +288,45 @@ void QV4::StackAllocator<T>::prevChunk() {
 
 template struct StackAllocator<Heap::CallContext>;
 
+HeapItem *HugeItemAllocator::allocate(size_t size) {
+    Chunk *c = chunkAllocator->allocate(size);
+    chunks.push_back(HugeChunk{c, size});
+    Chunk::setBit(c->objectBitmap, c->first() - c->realBase());
+    return c->first();
+}
+
+static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocator::HugeChunk &c)
+{
+    HeapItem *itemToFree = c.chunk->first();
+    Heap::Base *b = *itemToFree;
+    if (b->vtable()->destroy) {
+        b->vtable()->destroy(b);
+        b->_checkIsDestroyed();
+    }
+    chunkAllocator->free(c.chunk, c.size);
+}
+
+void HugeItemAllocator::sweep() {
+    auto isBlack = [this] (const HugeChunk &c) {
+        bool b = c.chunk->first()->isBlack();
+        Chunk::clearBit(c.chunk->blackBitmap, c.chunk->first() - c.chunk->realBase());
+        if (!b)
+            freeHugeChunk(chunkAllocator, c);
+        return !b;
+    };
+
+    auto newEnd = std::remove_if(chunks.begin(), chunks.end(), isBlack);
+    chunks.erase(newEnd, chunks.end());
+}
+
+void HugeItemAllocator::freeAll()
+{
+    for (auto &c : chunks) {
+        freeHugeChunk(chunkAllocator, c);
+    }
+}
+
+
 struct MemoryManager::Data
 {
     const size_t pageSize;
@@ -306,19 +344,6 @@ struct MemoryManager::Data
     std::vector<PageAllocation> heapChunks;
     std::size_t unmanagedHeapSize; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;
-
-    struct LargeItem {
-        LargeItem *next;
-        size_t size;
-        void *data;
-
-        Heap::Base *heapObject() {
-            return reinterpret_cast<Heap::Base *>(&data);
-        }
-    };
-
-    LargeItem *largeItems;
-    std::size_t totalLargeItemsAllocated;
 
     enum { MaxItemSize = 512 };
     ChunkHeader *nonFullChunks[MaxItemSize/16];
@@ -343,8 +368,6 @@ struct MemoryManager::Data
         , engine(0)
         , unmanagedHeapSize(0)
         , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
-        , largeItems(0)
-        , totalLargeItemsAllocated(0)
         , totalItems(0)
         , totalAlloc(0)
         , gcBlocked(false)
@@ -428,6 +451,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
     , stackAllocator(chunkAllocator)
+    , hugeItemAllocator(chunkAllocator)
     , m_d(new Data)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
@@ -468,20 +492,8 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
 
     // doesn't fit into a small bucket
     if (size >= MemoryManager::Data::MaxItemSize) {
-        if (!didGCRun && m_d->totalLargeItemsAllocated > 8 * 1024 * 1024)
-            runGC();
-
-        // we use malloc for this
-        const size_t totalSize = size + sizeof(MemoryManager::Data::LargeItem);
-        Q_V4_PROFILE_ALLOC(engine, totalSize, Profiling::LargeItem);
-        MemoryManager::Data::LargeItem *item =
-                static_cast<MemoryManager::Data::LargeItem *>(malloc(totalSize));
-        memset(item, 0, totalSize);
-        item->next = m_d->largeItems;
-        item->size = size;
-        m_d->largeItems = item;
-        m_d->totalLargeItemsAllocated += size;
-        return item->heapObject();
+        HeapItem *item = hugeItemAllocator.allocate(size);
+        return *item;
     }
 
     Heap::Base *m = 0;
@@ -697,25 +709,7 @@ void MemoryManager::sweep(bool lastSweep)
         ++chunkIter;
     }
 
-    Data::LargeItem *i = m_d->largeItems;
-    Data::LargeItem **last = &m_d->largeItems;
-    while (i) {
-        Heap::Base *m = i->heapObject();
-        Q_ASSERT(m->inUse());
-        if (m->isMarked()) {
-            m->clearMarkBit();
-            last = &i->next;
-            i = i->next;
-            continue;
-        }
-        if (m->vtable()->destroy)
-            m->vtable()->destroy(m);
-
-        *last = i->next;
-        Q_V4_PROFILE_DEALLOC(engine, i->size + sizeof(Data::LargeItem), Profiling::LargeItem);
-        free(i);
-        i = *last;
-    }
+    hugeItemAllocator.sweep();
 
     // some execution contexts are allocated on the stack, make sure we clear their markBit as well
     if (!lastSweep) {
@@ -770,7 +764,6 @@ void MemoryManager::runGC()
 
     memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
     m_d->totalAlloc = 0;
-    m_d->totalLargeItemsAllocated = 0;
 }
 
 size_t MemoryManager::getUsedMem() const
@@ -798,10 +791,7 @@ size_t MemoryManager::getAllocatedMem() const
 
 size_t MemoryManager::getLargeItemsMem() const
 {
-    size_t total = 0;
-    for (const Data::LargeItem *i = m_d->largeItems; i != 0; i = i->next)
-        total += i->size;
-    return total;
+    return hugeItemAllocator.usedMem();
 }
 
 void MemoryManager::changeUnmanagedHeapSizeUsage(qptrdiff delta)
@@ -814,6 +804,8 @@ MemoryManager::~MemoryManager()
     delete m_persistentValues;
 
     sweep(/*lastSweep*/true);
+    blockAllocator.freeAll();
+    hugeItemAllocator.freeAll();
     stackAllocator.freeAll();
 
     delete m_weakValues;
