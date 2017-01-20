@@ -1654,10 +1654,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
     if (point->grabber()) {
         bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
         if (auto grabber = point->grabberItem()) {
-            if (allowChildEventFiltering) {
-                if (sendFilteredPointerEvent(pointerEvent, grabber))
-                    return;
-            }
+            if (sendFilteredPointerEvent(pointerEvent, grabber))
+                return;
             // if the grabber is an Item:
             // if the update consists of changing button state, don't accept it unless
             // the button is one in which the grabber is interested
@@ -2279,7 +2277,7 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
             // The grabber is not an item? It's a handler then.  Let it have the event first.
             QQuickPointerHandler *handler = static_cast<QQuickPointerHandler *>(grabber);
             receiver = static_cast<QQuickPointerHandler *>(grabber)->parentItem();
-            if (allowChildEventFiltering && sendFilteredPointerEvent(event, receiver))
+            if (sendFilteredPointerEvent(event, receiver))
                 return true;
             event->localize(receiver);
             handler->handlePointerEvent(event);
@@ -2725,6 +2723,8 @@ void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *>
 
 bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver)
 {
+    if (!allowChildEventFiltering)
+        return false;
     bool ret = false;
     if (QQuickPointerMouseEvent *pme = event->asPointerMouseEvent()) {
         for (QPair<QQuickItem *,QQuickItem *> itemAndParent : filteringParentItems) {
