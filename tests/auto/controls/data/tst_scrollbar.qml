@@ -492,4 +492,38 @@ TestCase {
         compare(control.visible, true)
         verify(control.state === "active" || control.contentItem.state === "active")
     }
+
+    function test_overshoot() {
+        var container = flickable.createObject(testCase)
+        verify(container)
+        waitForRendering(container)
+
+        var vertical = scrollBar.createObject(container, {size: 0.5})
+        container.ScrollBar.vertical = vertical
+
+        var horizontal = scrollBar.createObject(container, {size: 0.5})
+        container.ScrollBar.horizontal = horizontal
+
+        // negative vertical overshoot (pos < 0)
+        vertical.position = -0.1
+        compare(vertical.contentItem.y, vertical.topPadding)
+        compare(vertical.contentItem.height, 0.4 * vertical.availableHeight)
+
+        // positive vertical overshoot (pos + size > 1)
+        vertical.position = 0.8
+        compare(vertical.contentItem.y, vertical.topPadding + 0.8 * vertical.availableHeight)
+        compare(vertical.contentItem.height, 0.2 * vertical.availableHeight)
+
+        // negative horizontal overshoot (pos < 0)
+        horizontal.position = -0.1
+        compare(horizontal.contentItem.x, horizontal.leftPadding)
+        compare(horizontal.contentItem.width, 0.4 * horizontal.availableWidth)
+
+        // positive horizontal overshoot (pos + size > 1)
+        horizontal.position = 0.8
+        compare(horizontal.contentItem.x, horizontal.leftPadding + 0.8 * horizontal.availableWidth)
+        compare(horizontal.contentItem.width, 0.2 * horizontal.availableWidth)
+
+        container.destroy()
+    }
 }

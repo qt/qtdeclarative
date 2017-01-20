@@ -199,12 +199,17 @@ void QQuickScrollBarPrivate::resizeContent()
     if (!contentItem)
         return;
 
+    // - negative overshoot (pos < 0): clamp the pos to 0, and deduct the overshoot from the size
+    // - positive overshoot (pos + size > 1): clamp the size to 1-pos
+    const qreal clampedSize = qBound<qreal>(0, size + qMin<qreal>(0, position), 1.0 - position);
+    const qreal clampedPos = qBound<qreal>(0, position, 1.0 - clampedSize);
+
     if (orientation == Qt::Horizontal) {
-        contentItem->setPosition(QPointF(q->leftPadding() + position * q->availableWidth(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->availableWidth() * size, q->availableHeight()));
+        contentItem->setPosition(QPointF(q->leftPadding() + clampedPos * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * clampedSize, q->availableHeight()));
     } else {
-        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + position * q->availableHeight()));
-        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * size));
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + clampedPos * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * clampedSize));
     }
 }
 
@@ -275,7 +280,6 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
-    size = qBound<qreal>(0.0, size, 1.0 - d->position);
     if (qFuzzyCompare(d->size, size))
         return;
 
@@ -304,7 +308,6 @@ qreal QQuickScrollBar::position() const
 void QQuickScrollBar::setPosition(qreal position)
 {
     Q_D(QQuickScrollBar);
-    position = qBound<qreal>(0.0, position, 1.0 - d->size);
     if (qFuzzyCompare(d->position, position))
         return;
 
@@ -531,7 +534,7 @@ void QQuickScrollBar::increase()
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
     bool wasActive = d->active;
     setActive(true);
-    setPosition(d->position + step);
+    setPosition(qMin<qreal>(1.0 - d->size, d->position + step));
     setActive(wasActive);
 }
 
@@ -548,7 +551,7 @@ void QQuickScrollBar::decrease()
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
     bool wasActive = d->active;
     setActive(true);
-    setPosition(d->position - step);
+    setPosition(qMax<qreal>(0.0, d->position - step));
     setActive(wasActive);
 }
 
