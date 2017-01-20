@@ -2264,7 +2264,7 @@ public:
 
     unsigned debugOffset() { return m_formatter.debugOffset(); }
 
-#if OS(LINUX)
+#if OS(LINUX) && !defined(V4_BOOTSTRAP)
     static inline void linuxPageFlush(uintptr_t begin, uintptr_t end)
     {
         asm volatile(
@@ -2284,7 +2284,10 @@ public:
 
     static void cacheFlush(void* code, size_t size)
     {
-#if OS(IOS)
+#if defined(V4_BOOTSTRAP)
+        UNUSED_PARAM(code)
+        UNUSED_PARAM(size)
+#elif OS(IOS)
         sys_cache_control(kCacheFunctionPrepareForExecution, code, size);
 #elif OS(LINUX)
         size_t page = pageSize();
