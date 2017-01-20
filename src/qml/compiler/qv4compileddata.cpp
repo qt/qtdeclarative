@@ -356,6 +356,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
         return false;
     }
 
+#if QT_CONFIG(temporaryfile)
     // Foo.qml -> Foo.qmlc
     QSaveFile cacheFile(cacheFilePath(unitUrl));
     if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -388,6 +389,10 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
     }
 
     return true;
+#else
+    *errorString = QStringLiteral("features.temporaryfile is disabled.");
+    return false;
+#endif // QT_CONFIG(temporaryfile)
 }
 
 bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
