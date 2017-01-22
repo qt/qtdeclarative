@@ -67,6 +67,14 @@ public:
         Linear
     };
 
+    enum AnisotropyLevel {
+        AnisotropyNone,
+        Anisotropy2x,
+        Anisotropy4x,
+        Anisotropy8x,
+        Anisotropy16x
+    };
+
     virtual int textureId() const = 0;
     virtual QSize textureSize() const = 0;
     virtual bool hasAlphaChannel() const = 0;
@@ -86,6 +94,9 @@ public:
 
     void setFiltering(Filtering filter);
     QSGTexture::Filtering filtering() const;
+
+    void setAnisotropyLevel(AnisotropyLevel level);
+    QSGTexture::AnisotropyLevel anisotropyLevel() const;
 
     void setHorizontalWrapMode(WrapMode hwrap);
     QSGTexture::WrapMode horizontalWrapMode() const;

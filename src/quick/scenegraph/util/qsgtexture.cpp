@@ -83,6 +83,9 @@ static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK"
 #define GL_BGRA 0x80E1
 #endif
 
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -97,10 +100,12 @@ inline static bool isPowerOfTwo(int x)
 QSGTexturePrivate::QSGTexturePrivate()
     : wrapChanged(false)
     , filteringChanged(false)
+    , anisotropyChanged(false)
     , horizontalWrap(QSGTexture::ClampToEdge)
     , verticalWrap(QSGTexture::ClampToEdge)
     , mipmapMode(QSGTexture::None)
     , filterMode(QSGTexture::Nearest)
+    , anisotropyLevel(QSGTexture::AnisotropyNone)
 {
 }
 
@@ -271,6 +276,23 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
     \value Linear Sampling returns a linear interpolation of the
     neighboring texels.
+*/
+
+/*!
+    \enum QSGTexture::AnisotropyLevel
+
+    Specifies the anisotropic filtering level to be used when
+    the texture is not screen aligned.
+
+    \value AnisotropyNone No anisotropic filtering.
+
+    \value Anisotropy2x 2x anisotropic filtering.
+
+    \value Anisotropy4x 4x anisotropic filtering.
+
+    \value Anisotropy8x 8x anisotropic filtering.
+
+    \value Anisotropy16x 16x anisotropic filtering.
 */
 
 /*!
@@ -472,6 +494,31 @@ QSGTexture::Filtering QSGTexture::filtering() const
     return (QSGTexture::Filtering) d_func()->filterMode;
 }
 
+/*!
+    Sets the level of anisotropic filtering to be used for the upcoming bind() call to \a level.
+    The default value is QSGTexture::AnisotropyNone, which means no anisotropic filtering is enabled.
+
+    \since 5.9
+ */
+void QSGTexture::setAnisotropyLevel(AnisotropyLevel level)
+{
+    Q_D(QSGTexture);
+    if (d->anisotropyLevel != (uint) level) {
+        d->anisotropyLevel = level;
+        d->anisotropyChanged = true;
+    }
+}
+
+/*!
+    Returns the anisotropy level in use for filtering this texture.
+
+    \since 5.9
+ */
+QSGTexture::AnisotropyLevel QSGTexture::anisotropyLevel() const
+{
+    return (QSGTexture::AnisotropyLevel) d_func()->anisotropyLevel;
+}
+
 
 
 /*!
@@ -546,6 +593,12 @@ void QSGTexture::updateBindOptions(bool force)
         funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
         funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
         d->filteringChanged = false;
+    }
+
+    if (force || d->anisotropyChanged) {
+        d->anisotropyChanged = false;
+        if (QOpenGLContext::currentContext()->hasExtension(QByteArrayLiteral("GL_EXT_texture_filter_anisotropic")))
+            funcs->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, float(1 << (d->anisotropyLevel)));
     }
 
     if (force || d->wrapChanged) {
