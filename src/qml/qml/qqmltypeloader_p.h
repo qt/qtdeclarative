@@ -456,7 +456,7 @@ private:
                  const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
                                       const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
-    bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);
+    bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref, int lineNumber = -1, int columnNumber = -1, bool reportErrors = true);
 
     void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
 
