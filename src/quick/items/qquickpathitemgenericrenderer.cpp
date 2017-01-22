@@ -270,6 +270,14 @@ void QQuickPathItemGenericRenderer::setAsyncCallback(void (*callback)(void *), v
     m_asyncCallbackData = data;
 }
 
+static QThreadPool *pathWorkThreadPool = nullptr;
+
+static void deletePathWorkThreadPool()
+{
+    delete pathWorkThreadPool;
+    pathWorkThreadPool = nullptr;
+}
+
 void QQuickPathItemGenericRenderer::endSync(bool async)
 {
     bool didKickOffAsync = false;
@@ -295,13 +303,11 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
             continue;
         }
 
-        static QThreadPool threadPool;
-        static bool threadPoolReady = false;
-
-        if (async && !threadPoolReady) {
-            threadPoolReady = true;
+        if (async && !pathWorkThreadPool) {
+            qAddPostRoutine(deletePathWorkThreadPool);
+            pathWorkThreadPool = new QThreadPool;
             const int idealCount = QThread::idealThreadCount();
-            threadPool.setMaxThreadCount(idealCount > 0 ? idealCount * 2 : 4);
+            pathWorkThreadPool->setMaxThreadCount(idealCount > 0 ? idealCount * 2 : 4);
         }
 
         if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a) {
@@ -334,7 +340,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                     r->deleteLater();
                 });
                 didKickOffAsync = true;
-                threadPool.start(r);
+                pathWorkThreadPool->start(r);
             } else {
                 triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType, q_supportsElementIndexUint(m_api));
             }
@@ -362,7 +368,7 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                     r->deleteLater();
                 });
                 didKickOffAsync = true;
-                threadPool.start(r);
+                pathWorkThreadPool->start(r);
             } else {
                 triangulateStroke(d.path, d.pen, d.strokeColor, &d.strokeVertices,
                                   QSize(m_item->width(), m_item->height()));
