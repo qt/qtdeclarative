@@ -104,6 +104,16 @@ void QQuickPathItemGenericStrokeFillNode::activateMaterial(Material m)
         setMaterial(m_material);
 }
 
+QQuickPathItemGenericRenderer::~QQuickPathItemGenericRenderer()
+{
+    for (VisualPathData &d : m_vp) {
+        if (d.pendingFill)
+            d.pendingFill->orphaned = true;
+        if (d.pendingStroke)
+            d.pendingStroke->orphaned = true;
+    }
+}
+
 // sync, and so triangulation too, happens on the gui thread
 //    - except when async is set, in which case triangulation is moved to worker threads
 
@@ -263,6 +273,8 @@ void QQuickPathItemGenericRenderer::endSync(bool async)
                 // Unlikely in practice but in theory m_vp could be
                 // resized. Therefore, capture 'i' instead of 'd'.
                 QObject::connect(r, &QQuickPathItemFillRunnable::done, qApp, [this, i](QQuickPathItemFillRunnable *r) {
+                    // Bail out when orphaned (meaning either another run was
+                    // started after this one, or the renderer got destroyed).
                     if (!r->orphaned && i < m_vp.count()) {
                         VisualPathData &d(m_vp[i]);
                         d.fillVertices = r->fillVertices;

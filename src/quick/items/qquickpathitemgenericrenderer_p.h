@@ -81,6 +81,7 @@ public:
           m_accDirty(0),
           m_asyncCallback(nullptr)
     { }
+    ~QQuickPathItemGenericRenderer();
 
     void beginSync(int totalCount) override;
     void setPath(int index, const QQuickPath *path) override;
