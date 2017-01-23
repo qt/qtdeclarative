@@ -101,6 +101,12 @@ public:
         return attached->d_func();
     }
 
+    void setFlickable(QQuickFlickable *flickable);
+
+    void initHorizontal();
+    void initVertical();
+    void cleanupHorizontal();
+    void cleanupVertical();
     void activateHorizontal();
     void activateVertical();
     void scrollHorizontal();
