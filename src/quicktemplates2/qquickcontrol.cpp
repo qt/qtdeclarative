@@ -1194,6 +1194,7 @@ void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
     QQuickItem::componentComplete();
+    d->resizeContent();
     if (!d->hasLocale)
         d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
     if (!d->explicitHoverEnabled)

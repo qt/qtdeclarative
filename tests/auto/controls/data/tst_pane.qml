@@ -141,6 +141,18 @@ TestCase {
         verify(control.implicitHeight > 30)
     }
 
+    function test_implicitContentItem() {
+        var control = pane.createObject(testCase, {width: 100, height: 100})
+        verify(control)
+
+        compare(control.width, 100)
+        compare(control.height, 100)
+        compare(control.contentItem.width, control.availableWidth)
+        compare(control.contentItem.height, control.availableHeight)
+
+        control.destroy()
+    }
+
     function test_press() {
         var control = createTemporaryObject(pressPane, testCase)
         verify(control)

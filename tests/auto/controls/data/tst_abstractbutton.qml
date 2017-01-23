@@ -118,4 +118,40 @@ TestCase {
         mouseRelease(control)
         compare(control.checked, false)
     }
+
+    Component {
+        id: keyCatcher
+        Item {
+            property int lastKeyPress: -1
+            property int lastKeyRelease: -1
+            Keys.onPressed: lastKeyPress = event.key
+            Keys.onReleased: lastKeyRelease = event.key
+        }
+    }
+
+    function test_keyEvents_data() {
+        return [
+            { tag: "space", key: Qt.Key_Space, result: -1 },
+            { tag: "backspace", key: Qt.Key_Backspace, result: Qt.Key_Backspace }
+        ]
+    }
+
+    function test_keyEvents(data) {
+        var container = keyCatcher.createObject(testCase)
+        verify(container)
+
+        var control = button.createObject(container)
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        keyPress(data.key)
+        compare(container.lastKeyPress, data.result)
+
+        keyRelease(data.key)
+        compare(container.lastKeyRelease, data.result)
+
+        container.destroy()
+    }
 }
