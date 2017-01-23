@@ -496,6 +496,7 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
         }
 
         emit pressed();
+        event->accept();
     }
 }
 
@@ -512,6 +513,7 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 
         if (d->autoRepeat)
             d->stopPressRepeat();
+        event->accept();
     }
 }
 
