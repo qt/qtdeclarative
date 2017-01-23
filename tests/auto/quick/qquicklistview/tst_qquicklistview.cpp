@@ -53,6 +53,7 @@ Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::PositionMode)
 Q_DECLARE_METATYPE(QQuickListView::Orientation)
+Q_DECLARE_METATYPE(QQuickFlickable::FlickableDirection)
 Q_DECLARE_METATYPE(Qt::Key)
 
 using namespace QQuickViewTestUtil;
@@ -205,6 +206,8 @@ private slots:
     void multipleDisplaced();
 
     void flickBeyondBounds();
+    void flickBothDirections();
+    void flickBothDirections_data();
     void destroyItemOnCreation();
 
     void parentBinding();
@@ -7123,6 +7126,82 @@ void tst_QQuickListView::flickBeyondBounds()
     }
 }
 
+void tst_QQuickListView::flickBothDirections()
+{
+    QFETCH(bool, initValues);
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(QQuickFlickable::FlickableDirection, flickableDirection);
+    QFETCH(qreal, contentWidth);
+    QFETCH(qreal, contentHeight);
+    QFETCH(QPointF, targetPos);
+
+    QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("initialOrientation", initValues ? orientation : QQuickListView::Vertical);
+    ctxt->setContextProperty("initialFlickableDirection", initValues ? flickableDirection : QQuickFlickable::VerticalFlick);
+    ctxt->setContextProperty("initialContentWidth", initValues ? contentWidth : -1);
+    ctxt->setContextProperty("initialContentHeight", initValues ? contentHeight : -1);
+
+    window->setSource(testFileUrl("flickBothDirections.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listview);
+
+    if (!initValues) {
+        listview->setOrientation(orientation);
+        listview->setFlickableDirection(flickableDirection);
+        if (contentWidth > 0)
+            listview->setContentWidth(contentWidth);
+        if (contentHeight > 0)
+            listview->setContentHeight(contentHeight);
+    }
+
+    flick(window, QPoint(100, 100), QPoint(25, 25), 50);
+    QVERIFY(listview->isMoving());
+    QTRY_VERIFY(!listview->isMoving());
+    QCOMPARE(listview->contentX(), targetPos.x());
+    QCOMPARE(listview->contentY(), targetPos.y());
+}
+
+void tst_QQuickListView::flickBothDirections_data()
+{
+    QTest::addColumn<bool>("initValues");
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<QQuickFlickable::FlickableDirection>("flickableDirection");
+    QTest::addColumn<qreal>("contentWidth");
+    QTest::addColumn<qreal>("contentHeight");
+    QTest::addColumn<QPointF>("targetPos");
+
+    // model: 20
+    // listview: 100x100
+    // vertical delegate: 120x20 -> contentHeight: 20x20=400
+    // horizontal delegate: 10x110 -> contentWidth: 20x10=200
+
+    QTest::newRow("init:vertical,-1") << true << QQuickListView::Vertical << QQuickFlickable::VerticalFlick << -1. << -1. << QPointF(0, 300);
+    QTest::newRow("init:vertical,120") << true << QQuickListView::Vertical << QQuickFlickable::VerticalFlick<< 120. << -1. << QPointF(0, 300);
+    QTest::newRow("init:vertical,auto,-1") << true << QQuickListView::Vertical << QQuickFlickable::AutoFlickDirection << -1. << -1. << QPointF(0, 300);
+    QTest::newRow("init:vertical,auto,120") << true << QQuickListView::Vertical << QQuickFlickable::AutoFlickDirection << 120. << -1. << QPointF(20, 300);
+
+    QTest::newRow("completed:vertical,-1") << false << QQuickListView::Vertical << QQuickFlickable::VerticalFlick << -1. << -1. << QPointF(0, 300);
+    QTest::newRow("completed:vertical,120") << false << QQuickListView::Vertical << QQuickFlickable::VerticalFlick << 120. << -1. << QPointF(0, 300);
+    QTest::newRow("completed:vertical,auto,-1") << false << QQuickListView::Vertical << QQuickListView::AutoFlickDirection << -1. << -1. << QPointF(0, 300);
+    QTest::newRow("completed:vertical,auto,120") << false << QQuickListView::Vertical << QQuickListView::AutoFlickDirection << 120. << -1. << QPointF(20, 300);
+
+    QTest::newRow("init:horizontal,-1") << true << QQuickListView::Horizontal << QQuickFlickable::HorizontalFlick << -1. << -1. << QPointF(100, 0);
+    QTest::newRow("init:horizontal,110") << true << QQuickListView::Horizontal << QQuickFlickable::HorizontalFlick <<-1. << 110. << QPointF(100, 0);
+    QTest::newRow("init:horizontal,auto,-1") << true << QQuickListView::Horizontal << QQuickListView::AutoFlickDirection << -1. << -1. << QPointF(100, 0);
+    QTest::newRow("init:horizontal,auto,110") << true << QQuickListView::Horizontal << QQuickListView::AutoFlickDirection << -1. << 110. << QPointF(100, 10);
+
+    QTest::newRow("completed:horizontal,-1") << false << QQuickListView::Horizontal << QQuickFlickable::HorizontalFlick << -1. << -1. << QPointF(100, 0);
+    QTest::newRow("completed:horizontal,110") << false << QQuickListView::Horizontal << QQuickFlickable::HorizontalFlick << -1. << 110. << QPointF(100, 0);
+    QTest::newRow("completed:horizontal,auto,-1") << false << QQuickListView::Horizontal << QQuickListView::AutoFlickDirection << -1. << -1. << QPointF(100, 0);
+    QTest::newRow("completed:horizontal,auto,110") << false << QQuickListView::Horizontal << QQuickListView::AutoFlickDirection << -1. << 110. << QPointF(100, 10);
+}
+
 void tst_QQuickListView::destroyItemOnCreation()
 {
     QaimModel model;
@@ -8271,7 +8350,7 @@ void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
 void tst_QQuickListView::keyNavigationEnabled()
 {
     QScopedPointer<QQuickView> window(createView());
-    window->setSource(testFileUrl("simplelistview.qml"));
+    window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));

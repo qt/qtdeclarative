@@ -111,7 +111,7 @@ class Assembler : public JSC::MacroAssembler, public TargetPlatform
     Q_DISABLE_COPY(Assembler)
 
 public:
-    Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
+    Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -1092,7 +1092,7 @@ private:
     IR::BasicBlock *_nextBlock;
 
     QV4::ExecutableAllocator *_executableAllocator;
-    InstructionSelection *_isel;
+    QV4::Compiler::JSUnitGenerator *_jsGenerator;
 };
 
 template <typename Result, typename Source>

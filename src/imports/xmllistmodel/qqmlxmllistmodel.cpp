@@ -596,7 +596,7 @@ void QQuickXmlListModelPrivate::append_role(QQmlListProperty<QQuickXmlListModelR
         int i = _this->d_func()->roleObjects.count();
         _this->d_func()->roleObjects.append(role);
         if (_this->d_func()->roleNames.contains(role->name())) {
-            qmlInfo(role) << QQuickXmlListModel::tr("\"%1\" duplicates a previous role name and will be disabled.").arg(role->name());
+            qmlWarning(role) << QQuickXmlListModel::tr("\"%1\" duplicates a previous role name and will be disabled.").arg(role->name());
             return;
         }
         _this->d_func()->roles.insert(i, _this->d_func()->highestRole);
@@ -847,7 +847,7 @@ void QQuickXmlListModel::setQuery(const QString &query)
 {
     Q_D(QQuickXmlListModel);
     if (!query.startsWith(QLatin1Char('/'))) {
-        qmlInfo(this) << QCoreApplication::translate("QQuickXmlRoleList", "An XmlListModel query must start with '/' or \"//\"");
+        qmlWarning(this) << QCoreApplication::translate("QQuickXmlRoleList", "An XmlListModel query must start with '/' or \"//\"");
         return;
     }
 
@@ -1136,11 +1136,11 @@ void QQuickXmlListModel::queryError(void* object, const QString& error)
     Q_D(QQuickXmlListModel);
     for (int i=0; i<d->roleObjects.count(); i++) {
         if (d->roleObjects.at(i) == static_cast<QQuickXmlListModelRole*>(object)) {
-            qmlInfo(d->roleObjects.at(i)) << QQuickXmlListModel::tr("invalid query: \"%1\"").arg(error);
+            qmlWarning(d->roleObjects.at(i)) << QQuickXmlListModel::tr("invalid query: \"%1\"").arg(error);
             return;
         }
     }
-    qmlInfo(this) << QQuickXmlListModel::tr("invalid query: \"%1\"").arg(error);
+    qmlWarning(this) << QQuickXmlListModel::tr("invalid query: \"%1\"").arg(error);
 }
 
 void QQuickXmlListModel::queryCompleted(const QQuickXmlQueryResult &result)

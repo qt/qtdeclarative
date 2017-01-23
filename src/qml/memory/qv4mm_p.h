@@ -76,26 +76,6 @@ class Q_QML_EXPORT MemoryManager
 public:
     struct Data;
 
-    class GCBlocker
-    {
-    public:
-        GCBlocker(MemoryManager *mm)
-            : mm(mm)
-            , wasBlocked(mm->isGCBlocked())
-        {
-            mm->setGCBlocked(true);
-        }
-
-        ~GCBlocker()
-        {
-            mm->setGCBlocked(wasBlocked);
-        }
-
-    private:
-        MemoryManager *mm;
-        bool wasBlocked;
-    };
-
 public:
     MemoryManager(ExecutionEngine *engine);
     ~MemoryManager();
@@ -309,8 +289,6 @@ public:
         return t->d();
     }
 
-    bool isGCBlocked() const;
-    void setGCBlocked(bool blockGC);
     void runGC();
 
     void dumpStats() const;
@@ -319,7 +297,7 @@ public:
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;
 
-    void growUnmanagedHeapSizeUsage(size_t delta); // called when a JS object grows itself. Specifically: Heap::String::append
+    void changeUnmanagedHeapSizeUsage(qptrdiff delta); // called when a JS object grows itself. Specifically: Heap::String::append
 
 protected:
     /// expects size to be aligned

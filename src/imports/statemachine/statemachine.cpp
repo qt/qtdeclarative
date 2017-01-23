@@ -69,7 +69,7 @@ void StateMachine::setRunning(bool running)
 void StateMachine::componentComplete()
 {
     if (QStateMachine::initialState() == NULL && childMode() == QState::ExclusiveStates)
-         qmlInfo(this) << "No initial state set for StateMachine";
+         qmlWarning(this) << "No initial state set for StateMachine";
 
     // Everything is proper setup, now start the state-machine if we got
     // asked to do so.

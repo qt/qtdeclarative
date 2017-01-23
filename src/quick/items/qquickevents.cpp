@@ -137,6 +137,7 @@ Item {
     \li Qt.AltModifier - An Alt key on the keyboard is pressed.
     \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
     \li Qt.KeypadModifier - A keypad button is pressed.
+    \li Qt.GroupSwitchModifier - X11 only. A Mode_switch key on the keyboard is pressed.
     \endlist
 
     For example, to react to a Shift key + Enter key combination:
@@ -552,7 +553,7 @@ void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong times
     QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp);
     m_rotation = tp.rotation();
     m_pressure = tp.pressure();
-//    m_uniqueId = tp.uniqueId();
+    m_uniqueId = tp.uniqueId();
 }
 
 /*!

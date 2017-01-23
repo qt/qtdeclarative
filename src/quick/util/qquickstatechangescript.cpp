@@ -131,7 +131,7 @@ void QQuickStateChangeScript::execute()
         QQmlExpression expr(d->script);
         expr.evaluate();
         if (expr.hasError())
-            qmlInfo(this, expr.error());
+            qmlWarning(this, expr.error());
     }
 }
 

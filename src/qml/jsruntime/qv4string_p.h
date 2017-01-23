@@ -73,11 +73,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
 #ifndef V4_BOOTSTRAP
     void init(MemoryManager *mm, const QString &text);
     void init(MemoryManager *mm, String *l, String *n);
-    void destroy() {
-        if (!largestSubLength && !text->ref.deref())
-            QStringData::deallocate(text);
-        Base::destroy();
-    }
+    void destroy();
     void simplifyString() const;
     int length() const {
         Q_ASSERT((largestSubLength &&

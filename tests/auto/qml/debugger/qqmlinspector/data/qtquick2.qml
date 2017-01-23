@@ -29,16 +29,15 @@ Rectangle {
             }
 
             var milliDelta = millis - prevHit;
-            if (milliDelta < 0)
+            if (milliDelta <= 0)
                 milliDelta += 1000;
-            console.log(milliDelta, "milliseconds ");
             prevHit = millis;
 
             var delta = parent.rotation - prevRotation;
             if (delta < 0)
                 delta += 360
             prevRotation = parent.rotation
-            console.log(delta, "degrees ");
+            console.log(milliDelta, delta, "ms/degrees ");
         }
     }
 }

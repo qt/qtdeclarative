@@ -7,6 +7,7 @@ QtObject {
         locale = Qt.locale(l)
     }
 
+    // Month number 9 is October: JS Date()'s month range is 0 to 11.
     function toLocaleString(fmt) {
         var d = new Date(2011, 9, 7, 18, 53, 48, 345);
         if (fmt < 0)

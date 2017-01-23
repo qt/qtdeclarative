@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+// ![0]
 import QtQuick 2.0
 import People 1.0
 
@@ -52,7 +53,6 @@ BirthdayParty {
         Person { name: "Anne Brown" }
     ]
 
-// ![0]
     Component.onCompleted: invite("William Green")
-// ![0]
 }
+// ![0]

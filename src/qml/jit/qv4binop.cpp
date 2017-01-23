@@ -112,7 +112,7 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
             return;
     }
 
-    Assembler::Jump done;
+    Jump done;
     if (lhs->type != IR::StringType && rhs->type != IR::StringType)
         done = genInlineBinop(lhs, rhs, target);
 
@@ -129,13 +129,13 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
     RuntimeCall context(info.contextImplementation);
     if (fallBack.isValid()) {
         as->generateFunctionCallImp(info.needsExceptionCheck, target, info.name, fallBack,
-                                     Assembler::PointerToValue(lhs),
-                                     Assembler::PointerToValue(rhs));
+                                     PointerToValue(lhs),
+                                     PointerToValue(rhs));
     } else if (context.isValid()) {
         as->generateFunctionCallImp(info.needsExceptionCheck, target, info.name, context,
                                      Assembler::EngineRegister,
-                                     Assembler::PointerToValue(lhs),
-                                     Assembler::PointerToValue(rhs));
+                                     PointerToValue(lhs),
+                                     PointerToValue(rhs));
     } else {
         Q_ASSERT(!"unreachable");
     }
@@ -148,9 +148,9 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 {
     IR::Temp *targetTemp = target->asTemp();
-    Assembler::FPRegisterID targetReg;
+    FPRegisterID targetReg;
     if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)
-        targetReg = (Assembler::FPRegisterID) targetTemp->index;
+        targetReg = (FPRegisterID) targetTemp->index;
     else
         targetReg = Assembler::FPGpr0;
 
@@ -162,7 +162,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X + constant -> Y = X; Y += [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
+            Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->addDouble(addr, targetReg);
             break;
         }
@@ -184,7 +184,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X * constant -> Y = X; Y *= [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
+            Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->mulDouble(addr, targetReg);
             break;
         }
@@ -203,7 +203,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X - constant -> Y = X; Y -= [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
+            Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->subDouble(addr, targetReg);
             break;
         }
@@ -231,7 +231,7 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 #if CPU(X86)
         if (IR::Const *c = rhs->asConst()) { // Y = X / constant -> Y = X; Y /= [constant-address]
             as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Assembler::Address addr = as->loadConstant(c, Assembler::ScratchRegister);
+            Address addr = as->loadConstant(c, Assembler::ScratchRegister);
             as->divDouble(addr, targetReg);
             break;
         }
@@ -258,9 +258,9 @@ void Binop::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 
     default: {
         Q_ASSERT(target->type == IR::BoolType);
-        Assembler::Jump trueCase = as->branchDouble(false, op, lhs, rhs);
+        Jump trueCase = as->branchDouble(false, op, lhs, rhs);
         as->storeBool(false, target);
-        Assembler::Jump done = as->jump();
+        Jump done = as->jump();
         trueCase.link(as);
         as->storeBool(true, target);
         done.link(as);
@@ -305,13 +305,13 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
     bool inplaceOpWithAddress = false;
 
     IR::Temp *targetTemp = target->asTemp();
-    Assembler::RegisterID targetReg = Assembler::ReturnValueRegister;
+    RegisterID targetReg = Assembler::ReturnValueRegister;
     if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
         IR::Temp *rhs = rightSource->asTemp();
         if (!rhs || rhs->kind != IR::Temp::PhysicalRegister || rhs->index != targetTemp->index) {
             // We try to load leftSource into the target's register, but we can't do that if
             // the target register is the same as rightSource.
-            targetReg = (Assembler::RegisterID) targetTemp->index;
+            targetReg = (RegisterID) targetTemp->index;
         } else if (rhs && rhs->kind == IR::Temp::PhysicalRegister && targetTemp->index == rhs->index) {
             // However, if the target register is the same as the rightSource register, we can flip
             // the operands for certain operations.
@@ -323,7 +323,7 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
             case IR::OpMul:
                 // X = Y op X -> X = X op Y (or rephrased: X op= Y (so an in-place operation))
                 std::swap(leftSource, rightSource);
-                targetReg = (Assembler::RegisterID) targetTemp->index;
+                targetReg = (RegisterID) targetTemp->index;
                 break;
 
             case IR::OpLShift:
@@ -368,7 +368,7 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
                 && targetTemp->kind == IR::Temp::PhysicalRegister
                 && targetTemp->index == rightSource->asTemp()->index) {
             // X = Y - X -> Tmp = X; X = Y; X -= Tmp
-            targetReg = (Assembler::RegisterID) targetTemp->index;
+            targetReg = (RegisterID) targetTemp->index;
             as->move(targetReg, Assembler::ScratchRegister);
             as->move(as->toInt32Register(leftSource, targetReg), targetReg);
             as->sub32(Assembler::ScratchRegister, targetReg);
@@ -384,7 +384,7 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
     case IR::OpURShift:
         if (IR::Const *c = rightSource->asConst()) {
             if ((QV4::Primitive::toUInt32(c->value) & 0x1f) == 0) {
-                Assembler::RegisterID r = as->toInt32Register(leftSource, targetReg);
+                RegisterID r = as->toInt32Register(leftSource, targetReg);
                 as->storeInt32(r, target);
                 return true;
             }
@@ -395,10 +395,10 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         break;
     }
 
-    Assembler::RegisterID l = as->toInt32Register(leftSource, targetReg);
+    RegisterID l = as->toInt32Register(leftSource, targetReg);
     if (IR::Const *c = rightSource->asConst()) { // All cases of Y = X op Const
-        Assembler::TrustedImm32 r(int(c->value));
-        Assembler::TrustedImm32 ur(QV4::Primitive::toUInt32(c->value) & 0x1f);
+        TrustedImm32 r(int(c->value));
+        TrustedImm32 ur(QV4::Primitive::toUInt32(c->value) & 0x1f);
 
         switch (op) {
         case IR::OpBitAnd: as->and32(r, l, targetReg); break;
@@ -419,7 +419,7 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
             return false;
         }
     } else if (inplaceOpWithAddress) { // All cases of X = X op [address-of-Y]
-        Assembler::Pointer rhsAddr = as->loadAddress(Assembler::ScratchRegister, rightSource);
+        Pointer rhsAddr = as->loadAddress(Assembler::ScratchRegister, rightSource);
         switch (op) {
         case IR::OpBitAnd: as->and32(rhsAddr, targetReg); break;
         case IR::OpBitOr:  as->or32 (rhsAddr, targetReg); break;
@@ -433,7 +433,7 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
             return false;
         }
     } else { // All cases of Z = X op Y
-        Assembler::RegisterID r = as->toInt32Register(rightSource, Assembler::ScratchRegister);
+        RegisterID r = as->toInt32Register(rightSource, Assembler::ScratchRegister);
         switch (op) {
         case IR::OpBitAnd: as->and32(l, r, targetReg); break;
         case IR::OpBitOr:  as->or32 (l, r, targetReg); break;
@@ -452,10 +452,10 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         // Not all CPUs accept shifts over more than 31 bits, and some CPUs (like ARM) will do
         // surprising stuff when shifting over 0 bits.
 #define CHECK_RHS(op) { \
-    as->and32(Assembler::TrustedImm32(0x1f), r, Assembler::ScratchRegister); \
-    Assembler::Jump notZero = as->branch32(Assembler::NotEqual, Assembler::ScratchRegister, Assembler::TrustedImm32(0)); \
+    as->and32(TrustedImm32(0x1f), r, Assembler::ScratchRegister); \
+    Jump notZero = as->branch32(RelationalCondition::NotEqual, Assembler::ScratchRegister, TrustedImm32(0)); \
     as->move(l, targetReg); \
-    Assembler::Jump done = as->jump(); \
+    Jump done = as->jump(); \
     notZero.link(as); \
     op; \
     done.link(as); \
@@ -493,7 +493,7 @@ static inline Assembler::FPRegisterID getFreeFPReg(IR::Expr *shouldNotOverlap, u
 
 Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target)
 {
-    Assembler::Jump done;
+    Jump done;
 
     // Try preventing a call for a few common binary operations. This is used in two cases:
     // - no register allocation was performed (not available for the platform, or the IR was
@@ -505,10 +505,10 @@ Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSourc
     //       register.
     switch (op) {
     case IR::OpAdd: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
-        Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
-        Assembler::Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
+        FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        FPRegisterID rReg = getFreeFPReg(leftSource, 4);
+        Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
+        Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
 
         as->addDouble(rReg, lReg);
         as->storeDouble(lReg, target);
@@ -520,10 +520,10 @@ Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSourc
             rightIsNoDbl.link(as);
     } break;
     case IR::OpMul: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
-        Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
-        Assembler::Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
+        FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        FPRegisterID rReg = getFreeFPReg(leftSource, 4);
+        Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
+        Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
 
         as->mulDouble(rReg, lReg);
         as->storeDouble(lReg, target);
@@ -535,10 +535,10 @@ Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSourc
             rightIsNoDbl.link(as);
     } break;
     case IR::OpSub: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
-        Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
-        Assembler::Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
+        FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        FPRegisterID rReg = getFreeFPReg(leftSource, 4);
+        Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
+        Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
 
         as->subDouble(rReg, lReg);
         as->storeDouble(lReg, target);
@@ -550,10 +550,10 @@ Assembler::Jump Binop::genInlineBinop(IR::Expr *leftSource, IR::Expr *rightSourc
             rightIsNoDbl.link(as);
     } break;
     case IR::OpDiv: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
-        Assembler::Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
-        Assembler::Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
+        FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        FPRegisterID rReg = getFreeFPReg(leftSource, 4);
+        Jump leftIsNoDbl = as->genTryDoubleConversion(leftSource, lReg);
+        Jump rightIsNoDbl = as->genTryDoubleConversion(rightSource, rReg);
 
         as->divDouble(rReg, lReg);
         as->storeDouble(lReg, target);

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the manual tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,24 +38,29 @@
 **
 ****************************************************************************/
 
-import QtQml 2.0
+import QtQuick 2.9
 
-QtObject {
-    // This height/width is here for desktop testing, otherwise
-    // we could just use Screen.width/Screen.height.
-    property int screenHeight: 1280
-    property int screenWidth: 768
+Rectangle {
+    implicitWidth: text.implicitWidth * 1.2
+    implicitHeight: text.implicitHeight * 1.1
+    color: "lightgrey"
+    property color blipColor: "green"
+    property int blipDuration: 30 // ms
+    property alias label: text.text
 
-    property int menuDelay: 500
+    function blip() {
+        blipAnim.start()
+    }
 
-    property int headerHeight: 70
-    property int footerHeight: 100
+    SequentialAnimation on color {
+        id: blipAnim
+        PropertyAction { value: blipColor }
+        PauseAnimation { duration: blipDuration }
+        PropertyAction { value: "lightgrey" }
+    }
 
-    property int fontPixelSize: 55
-
-    property int blockSize: 64
-
-    property int toolButtonHeight: 64
-
-    property int menuButtonSpacing: 15
+    Text {
+        id: text
+        anchors.centerIn: parent
+    }
 }

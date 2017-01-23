@@ -47,8 +47,6 @@
 #include "qqml.h"
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
-#include <private/qqmldebugconnector_p.h>
-#include <private/qqmldebugserviceinterfaces_p.h>
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"
 #include <private/qqmljavascriptexpression_p.h>
@@ -876,15 +874,6 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         depthIncreased = false;
     }
 
-    if (rv) {
-        if (QQmlEngineDebugService *service =
-                QQmlDebugConnector::service<QQmlEngineDebugService>()) {
-            if (!context->isInternal)
-                context->asQQmlContextPrivate()->instances.append(rv);
-            service->objectCreated(engine, rv);
-        }
-    }
-
     return rv;
 }
 
@@ -1244,7 +1233,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     if (args->length() >= 2) {
         QV4::ScopedValue v(scope, (*args)[1]);
         if (!v->as<QV4::Object>() || v->as<QV4::ArrayObject>()) {
-            qmlInfo(this) << tr("createObject: value is not an object");
+            qmlWarning(this) << tr("createObject: value is not an object");
             args->setReturnValue(QV4::Encode::null());
             return;
         }
@@ -1361,7 +1350,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
         QV4::ScopedValue v(scope, (*args)[1]);
         if (v->isNull()) {
         } else if (!v->as<QV4::Object>() || v->as<QV4::ArrayObject>()) {
-            qmlInfo(this) << tr("createObject: value is not an object");
+            qmlWarning(this) << tr("createObject: value is not an object");
             args->setReturnValue(QV4::Encode::null());
             return;
         } else {

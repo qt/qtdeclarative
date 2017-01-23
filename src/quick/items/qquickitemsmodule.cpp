@@ -299,8 +299,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
 #endif
 #if QT_CONFIG(quick_itemview)
-    qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
-    qmlRegisterUncreatableType<QQuickItemView, 2>(uri, 2, 3, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
+    const char *itemViewName = "ItemView";
+    const QString itemViewMessage = QQuickItemView::tr("ItemView is an abstract base class");
+    qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, itemViewName, itemViewMessage);
+    qmlRegisterUncreatableType<QQuickItemView, 2>(uri, 2, 3, itemViewName, itemViewMessage);
 #endif
 #if QT_CONFIG(quick_listview)
     qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
@@ -362,6 +364,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView, 7>(uri, 2, 7, "PathView");
 #endif
+#if QT_CONFIG(quick_itemview)
+    qmlRegisterUncreatableType<QQuickItemView, 7>(uri, 2, 7, itemViewName, itemViewMessage);
+#endif
 
     qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
 
@@ -370,6 +375,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickBorderImageMesh>("QtQuick", 2, 8, "BorderImageMesh");
 #endif
 
+    qmlRegisterType<QQuickFlickable, 9>(uri, 2, 9, "Flickable");
     qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
 
 #if QT_CONFIG(quick_path)
@@ -380,6 +386,16 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathGradientStop>(uri, 2, 9, "PathGradientStop");
     qmlRegisterUncreatableType<QQuickPathGradient>(uri, 2, 9, "PathGradient", QQuickPathGradient::tr("PathGradient is an abstract base class"));
     qmlRegisterType<QQuickPathLinearGradient>(uri, 2, 9, "PathLinearGradient");
+#endif
+
+    qmlRegisterType<QQuickText, 9>(uri, 2, 9, "Text");
+    qmlRegisterType<QQuickTextInput, 9>(uri, 2, 9, "TextInput");
+    qmlRegisterType<QQuickTouchPoint>(uri, 2, 9, "TouchPoint");
+    qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
+    qmlRegisterUncreatableType<QPointingDeviceUniqueId>(uri, 2, 9, "PointingDeviceUniqueId", QQuickTouchPoint::tr("PointingDeviceUniqueId is only available via read-only properties"));
+#if QT_CONFIG(quick_positioners)
+    qmlRegisterUncreatableType<QQuickBasePositioner, 9>(uri, 2, 9, "Positioner",
+                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
 #endif
 }
 

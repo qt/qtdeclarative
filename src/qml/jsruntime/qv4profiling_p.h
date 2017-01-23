@@ -158,12 +158,11 @@ public:
 
     FunctionCall &operator=(const FunctionCall &other) {
         if (&other != this) {
-            if (m_function)
-                m_function->compilationUnit->release();
+            other.m_function->compilationUnit->addref();
+            m_function->compilationUnit->release();
             m_function = other.m_function;
             m_start = other.m_start;
             m_end = other.m_end;
-            m_function->compilationUnit->addref();
         }
         return *this;
     }

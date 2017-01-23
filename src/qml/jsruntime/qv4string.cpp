@@ -102,6 +102,7 @@ void Heap::String::init(MemoryManager *mm, String *l, String *r)
     stringHash = UINT_MAX;
     largestSubLength = qMax(l->largestSubLength, r->largestSubLength);
     len = l->len + r->len;
+    Q_ASSERT(largestSubLength <= len);
 
     if (!l->largestSubLength && l->len > largestSubLength)
         largestSubLength = l->len;
@@ -111,6 +112,15 @@ void Heap::String::init(MemoryManager *mm, String *l, String *r)
     // make sure we don't get excessive depth in our strings
     if (len > 256 && len >= 2*largestSubLength)
         simplifyString();
+}
+
+void Heap::String::destroy() {
+    if (!largestSubLength) {
+        mm->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
+        if (!text->ref.deref())
+            QStringData::deallocate(text);
+    }
+    Base::destroy();
 }
 
 uint String::toUInt(bool *ok) const
@@ -151,7 +161,7 @@ void Heap::String::simplifyString() const
     text->ref.ref();
     identifier = 0;
     largestSubLength = 0;
-    mm->growUnmanagedHeapSizeUsage(size_t(text->size) * sizeof(QChar));
+    mm->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
 }
 
 void Heap::String::append(const String *data, QChar *ch)

@@ -152,8 +152,8 @@ public:
     int rows() const;
     void setRows(int rows);
 
-    Q_ENUMS(Flow)
     enum Flow { LeftToRight, TopToBottom };
+    Q_ENUM(Flow)
     Flow flow() const;
     void setFlow(Flow flow);
 

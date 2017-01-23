@@ -48,11 +48,15 @@ int main(int argc, char ** argv)
 {
     QApplication app(argc, argv);
 
+// ![0]
     qmlRegisterExtendedType<QLineEdit, LineEditExtension>("People", 1,0, "QLineEdit");
+// ![0]
 
+// ![1]
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
     QLineEdit *edit = qobject_cast<QLineEdit *>(component.create());
+// ![1]
 
     if (edit) {
         edit->show();

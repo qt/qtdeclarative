@@ -169,7 +169,7 @@ void QQuickAnimationController::setAnimation(QQuickAbstractAnimation *animation)
     if (animation != d->animation) {
         if (animation) {
             if (animation->userControlDisabled()) {
-                qmlInfo(this) << "QQuickAnimationController::setAnimation: the animation is controlled by others, can't be used in AnimationController.";
+                qmlWarning(this) << "QQuickAnimationController::setAnimation: the animation is controlled by others, can't be used in AnimationController.";
                 return;
             }
             animation->setDisableUserControl();

@@ -41,6 +41,7 @@
 #include "qquickgridlayoutengine_p.h"
 #include "qquicklayoutstyleinfo_p.h"
 #include <QtCore/private/qnumeric_p.h>
+#include <QtQml/qqmlinfo.h>
 #include "qdebug.h"
 #include <limits>
 
@@ -305,11 +306,7 @@ QQuickGridLayoutBase::~QQuickGridLayoutBase()
 
     // Remove item listeners so we do not act on signalling unnecessarily
     // (there is no point, as the layout will be torn down anyway).
-    for (int i = 0; i < itemCount(); ++i) {
-        QQuickItem *item = itemAt(i);
-        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::SiblingOrder | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed | QQuickItemPrivate::Visibility);
-    }
-
+    deactivateRecur();
     delete d->styleInfo;
 }
 
@@ -668,34 +665,25 @@ void QQuickGridLayout::insertLayoutItems()
         int &columnSpan = span[0];
         int &rowSpan = span[1];
 
-        bool invalidRowColumn = false;
         if (info) {
             if (info->isRowSet() || info->isColumnSet()) {
                 // If row is specified and column is not specified (or vice versa),
                 // the unspecified component of the cell position should default to 0
-                row = column = 0;
-                if (info->isRowSet()) {
-                    row = info->row();
-                    invalidRowColumn = row < 0;
-                }
-                if (info->isColumnSet()) {
-                    column = info->column();
-                    invalidRowColumn = column < 0;
-                }
-            }
-            if (invalidRowColumn) {
-                qWarning("QQuickGridLayoutBase::insertLayoutItems: invalid row/column: %d",
-                         row < 0 ? row : column);
-                return;
+                // The getters do this for us, as they will return 0 for an
+                // unset (or negative) value.
+                row = info->row();
+                column = info->column();
             }
             rowSpan = info->rowSpan();
             columnSpan = info->columnSpan();
-            if (columnSpan < 1 || rowSpan < 1) {
-                qWarning("QQuickGridLayoutBase::addItem: invalid row span/column span: %d",
-                         rowSpan < 1 ? rowSpan : columnSpan);
+            if (columnSpan < 1) {
+                qmlWarning(child) << "Layout: invalid column span: " << columnSpan;
+                return;
+
+            } else if (rowSpan < 1) {
+                qmlWarning(child) << "Layout: invalid row span: " << rowSpan;
                 return;
             }
-
             alignment = info->alignment();
         }
 

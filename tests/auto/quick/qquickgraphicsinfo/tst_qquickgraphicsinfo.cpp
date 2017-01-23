@@ -51,7 +51,7 @@ private slots:
 void tst_QQuickGraphicsInfo::testProperties()
 {
     QQuickView view;
-    view.setSource(QUrl::fromLocalFile("data/basic.qml"));
+    view.setSource(QUrl("data/basic.qml"));
 
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));

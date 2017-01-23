@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animation
     \brief Is the base of all QML animators.
 
     Animator types are a special type of animation which operate

@@ -423,7 +423,7 @@ void QQuickRepeater::initItem(int index, QObject *object)
                 if (!d->delegateValidated) {
                     d->delegateValidated = true;
                     QObject* delegate = this->delegate();
-                    qmlInfo(delegate ? delegate : this) << QQuickRepeater::tr("Delegate must be of Item type");
+                    qmlWarning(delegate ? delegate : this) << QQuickRepeater::tr("Delegate must be of Item type");
                 }
             }
             return;

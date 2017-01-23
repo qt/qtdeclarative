@@ -214,7 +214,7 @@ void QQuickAnchorsPrivate::fillChanged()
         --updatingFill;
     } else {
         // ### Make this certain :)
-        qmlInfo(item) << QQuickAnchors::tr("Possible anchor loop detected on fill.");
+        qmlWarning(item) << QQuickAnchors::tr("Possible anchor loop detected on fill.");
     }
 
 }
@@ -243,7 +243,7 @@ void QQuickAnchorsPrivate::centerInChanged()
         --updatingCenterIn;
     } else {
         // ### Make this certain :)
-        qmlInfo(item) << QQuickAnchors::tr("Possible anchor loop detected on centerIn.");
+        qmlWarning(item) << QQuickAnchors::tr("Possible anchor loop detected on centerIn.");
     }
 }
 
@@ -529,7 +529,7 @@ void QQuickAnchors::setFill(QQuickItem *f)
         return;
     }
     if (f != readParentItem(d->item) && readParentItem(f) != readParentItem(d->item)){
-        qmlInfo(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
+        qmlWarning(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
         return;
     }
     QQuickItem *oldFill = d->fill;
@@ -565,7 +565,7 @@ void QQuickAnchors::setCenterIn(QQuickItem* c)
         return;
     }
     if (c != readParentItem(d->item) && readParentItem(c) != readParentItem(d->item)){
-        qmlInfo(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
+        qmlWarning(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
         return;
     }
     QQuickItem *oldCI = d->centerIn;
@@ -619,7 +619,7 @@ void QQuickAnchorsPrivate::updateVerticalAnchors()
 
     if (Q_UNLIKELY(updatingVerticalAnchor > 1)) {
         // ### Make this certain :)
-        qmlInfo(item) << QQuickAnchors::tr("Possible anchor loop detected on vertical anchor.");
+        qmlWarning(item) << QQuickAnchors::tr("Possible anchor loop detected on vertical anchor.");
         return;
     }
 
@@ -794,7 +794,7 @@ void QQuickAnchorsPrivate::updateHorizontalAnchors()
         --updatingHorizontalAnchor;
     } else {
         // ### Make this certain :)
-        qmlInfo(item) << QQuickAnchors::tr("Possible anchor loop detected on horizontal anchor.");
+        qmlWarning(item) << QQuickAnchors::tr("Possible anchor loop detected on horizontal anchor.");
     }
 }
 
@@ -1329,7 +1329,7 @@ bool QQuickAnchorsPrivate::checkHValid() const
     if (usedAnchors & QQuickAnchors::LeftAnchor &&
         usedAnchors & QQuickAnchors::RightAnchor &&
         usedAnchors & QQuickAnchors::HCenterAnchor) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot specify left, right, and horizontalCenter anchors at the same time.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot specify left, right, and horizontalCenter anchors at the same time.");
         return false;
     }
 
@@ -1339,17 +1339,17 @@ bool QQuickAnchorsPrivate::checkHValid() const
 bool QQuickAnchorsPrivate::checkHAnchorValid(QQuickAnchorLine anchor) const
 {
     if (!anchor.item) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor to a null item.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor to a null item.");
         return false;
     } else if (anchor.anchorLine & QQuickAnchors::Vertical_Mask) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor a horizontal edge to a vertical edge.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor a horizontal edge to a vertical edge.");
         return false;
     } else if (anchor.item != readParentItem(item)
                && readParentItem(anchor.item) != readParentItem(item)) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor to an item that isn't a parent or sibling.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor to an item that isn't a parent or sibling.");
         return false;
     } else if (anchor.item == item) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor item to self.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor item to self.");
         return false;
     }
 
@@ -1361,13 +1361,13 @@ bool QQuickAnchorsPrivate::checkVValid() const
     if (usedAnchors & QQuickAnchors::TopAnchor &&
         usedAnchors & QQuickAnchors::BottomAnchor &&
         usedAnchors & QQuickAnchors::VCenterAnchor) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot specify top, bottom, and verticalCenter anchors at the same time.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot specify top, bottom, and verticalCenter anchors at the same time.");
         return false;
     } else if (usedAnchors & QQuickAnchors::BaselineAnchor &&
                (usedAnchors & QQuickAnchors::TopAnchor ||
                 usedAnchors & QQuickAnchors::BottomAnchor ||
                 usedAnchors & QQuickAnchors::VCenterAnchor)) {
-        qmlInfo(item) << QQuickAnchors::tr("Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.");
+        qmlWarning(item) << QQuickAnchors::tr("Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.");
         return false;
     }
 
@@ -1377,17 +1377,17 @@ bool QQuickAnchorsPrivate::checkVValid() const
 bool QQuickAnchorsPrivate::checkVAnchorValid(QQuickAnchorLine anchor) const
 {
     if (!anchor.item) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor to a null item.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor to a null item.");
         return false;
     } else if (anchor.anchorLine & QQuickAnchors::Horizontal_Mask) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor a vertical edge to a horizontal edge.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor a vertical edge to a horizontal edge.");
         return false;
     } else if (anchor.item != readParentItem(item)
                && readParentItem(anchor.item) != readParentItem(item)) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor to an item that isn't a parent or sibling.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor to an item that isn't a parent or sibling.");
         return false;
     } else if (anchor.item == item){
-        qmlInfo(item) << QQuickAnchors::tr("Cannot anchor item to self.");
+        qmlWarning(item) << QQuickAnchors::tr("Cannot anchor item to self.");
         return false;
     }
 

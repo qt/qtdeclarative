@@ -65,51 +65,51 @@ class QQuickListViewPrivate : public QQuickItemViewPrivate
 public:
     static QQuickListViewPrivate* get(QQuickListView *item) { return item->d_func(); }
 
-    Qt::Orientation layoutOrientation() const Q_DECL_OVERRIDE;
-    bool isContentFlowReversed() const Q_DECL_OVERRIDE;
+    Qt::Orientation layoutOrientation() const override;
+    bool isContentFlowReversed() const override;
     bool isRightToLeft() const;
     bool isBottomToTop() const;
 
-    qreal positionAt(int index) const Q_DECL_OVERRIDE;
-    qreal endPositionAt(int index) const Q_DECL_OVERRIDE;
-    qreal originPosition() const Q_DECL_OVERRIDE;
-    qreal lastPosition() const Q_DECL_OVERRIDE;
+    qreal positionAt(int index) const override;
+    qreal endPositionAt(int index) const override;
+    qreal originPosition() const override;
+    qreal lastPosition() const override;
 
     FxViewItem *itemBefore(int modelIndex) const;
     QString sectionAt(int modelIndex);
     qreal snapPosAt(qreal pos);
     FxViewItem *snapItemAt(qreal pos);
 
-    void init() Q_DECL_OVERRIDE;
-    void clear() Q_DECL_OVERRIDE;
+    void init() override;
+    void clear() override;
 
-    bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) Q_DECL_OVERRIDE;
-    bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) Q_DECL_OVERRIDE;
-    void visibleItemsChanged() Q_DECL_OVERRIDE;
+    bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) override;
+    bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) override;
+    void visibleItemsChanged() override;
 
     void removeItem(FxViewItem *item);
 
-    FxViewItem *newViewItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-    void initializeViewItem(FxViewItem *item) Q_DECL_OVERRIDE;
-    bool releaseItem(FxViewItem *item) Q_DECL_OVERRIDE;
-    void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer) Q_DECL_OVERRIDE;
-    void repositionPackageItemAt(QQuickItem *item, int index) Q_DECL_OVERRIDE;
-    void resetFirstItemPosition(qreal pos = 0.0) Q_DECL_OVERRIDE;
-    void adjustFirstItem(qreal forwards, qreal backwards, int) Q_DECL_OVERRIDE;
-    void updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult) Q_DECL_OVERRIDE;
+    FxViewItem *newViewItem(int index, QQuickItem *item) override;
+    void initializeViewItem(FxViewItem *item) override;
+    bool releaseItem(FxViewItem *item) override;
+    void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer) override;
+    void repositionPackageItemAt(QQuickItem *item, int index) override;
+    void resetFirstItemPosition(qreal pos = 0.0) override;
+    void adjustFirstItem(qreal forwards, qreal backwards, int) override;
+    void updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult) override;
 
-    void createHighlight() Q_DECL_OVERRIDE;
-    void updateHighlight() Q_DECL_OVERRIDE;
-    void resetHighlightPosition() Q_DECL_OVERRIDE;
+    void createHighlight() override;
+    void updateHighlight() override;
+    void resetHighlightPosition() override;
 
-    void setPosition(qreal pos) Q_DECL_OVERRIDE;
-    void layoutVisibleItems(int fromModelIndex = 0) Q_DECL_OVERRIDE;
+    void setPosition(qreal pos) override;
+    void layoutVisibleItems(int fromModelIndex = 0) override;
 
-    bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) Q_DECL_OVERRIDE;
-    void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) Q_DECL_OVERRIDE;
+    bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) override;
+    void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) override;
 
-    void updateSectionCriteria() Q_DECL_OVERRIDE;
-    void updateSections() Q_DECL_OVERRIDE;
+    void updateSectionCriteria() override;
+    void updateSections() override;
     QQuickItem *getSectionItem(const QString &section);
     void releaseSectionItem(QQuickItem *item);
     void releaseSectionItems();
@@ -117,25 +117,25 @@ public:
     void updateCurrentSection();
     void updateStickySections();
 
-    qreal headerSize() const Q_DECL_OVERRIDE;
-    qreal footerSize() const Q_DECL_OVERRIDE;
-    bool showHeaderForIndex(int index) const Q_DECL_OVERRIDE;
-    bool showFooterForIndex(int index) const Q_DECL_OVERRIDE;
-    void updateHeader() Q_DECL_OVERRIDE;
-    void updateFooter() Q_DECL_OVERRIDE;
-    bool hasStickyHeader() const Q_DECL_OVERRIDE;
-    bool hasStickyFooter() const Q_DECL_OVERRIDE;
+    qreal headerSize() const override;
+    qreal footerSize() const override;
+    bool showHeaderForIndex(int index) const override;
+    bool showFooterForIndex(int index) const override;
+    void updateHeader() override;
+    void updateFooter() override;
+    bool hasStickyHeader() const override;
+    bool hasStickyFooter() const override;
 
-    void changedVisibleIndex(int newIndex) Q_DECL_OVERRIDE;
-    void initializeCurrentItem() Q_DECL_OVERRIDE;
+    void changedVisibleIndex(int newIndex) override;
+    void initializeCurrentItem() override;
 
     void updateAverage();
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void fixupPosition() Q_DECL_OVERRIDE;
-    void fixup(AxisData &data, qreal minExtent, qreal maxExtent) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) override;
+    void fixupPosition() override;
+    void fixup(AxisData &data, qreal minExtent, qreal maxExtent) override;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-               QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) Q_DECL_OVERRIDE;
+               QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) override;
 
     QQuickListView::Orientation orient;
     qreal visiblePos;
@@ -263,7 +263,7 @@ public:
         static_cast<QQuickListViewAttached*>(attached)->m_sectionItem = s;
     }
 
-    qreal position() const Q_DECL_OVERRIDE {
+    qreal position() const override {
         if (section()) {
             if (view->orientation() == QQuickListView::Vertical)
                 return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -section()->height()-section()->y() : section()->y());
@@ -279,7 +279,7 @@ public:
         else
             return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -itemWidth()-itemX() : itemX());
     }
-    qreal size() const Q_DECL_OVERRIDE {
+    qreal size() const override {
         if (section())
             return (view->orientation() == QQuickListView::Vertical ? itemHeight()+section()->height() : itemWidth()+section()->width());
         else
@@ -288,12 +288,12 @@ public:
     qreal itemSize() const {
         return (view->orientation() == QQuickListView::Vertical ? itemHeight() : itemWidth());
     }
-    qreal sectionSize() const Q_DECL_OVERRIDE {
+    qreal sectionSize() const override {
         if (section())
             return (view->orientation() == QQuickListView::Vertical ? section()->height() : section()->width());
         return 0.0;
     }
-    qreal endPosition() const Q_DECL_OVERRIDE {
+    qreal endPosition() const override {
         if (view->orientation() == QQuickListView::Vertical) {
             return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop
                     ? -itemY()
@@ -327,7 +327,7 @@ public:
         else
             item->setWidth(size);
     }
-    bool contains(qreal x, qreal y) const Q_DECL_OVERRIDE {
+    bool contains(qreal x, qreal y) const override {
         return (x >= itemX() && x < itemX() + itemWidth() &&
                 y >= itemY() && y < itemY() + itemHeight());
     }
@@ -438,11 +438,12 @@ qreal QQuickListViewPrivate::lastPosition() const
         int invisibleCount = INT_MIN;
         int delayRemovedCount = 0;
         for (int i = visibleItems.count()-1; i >= 0; --i) {
-            if (visibleItems.at(i)->index != -1) {
+            FxViewItem *item = visibleItems.at(i);
+            if (item->index != -1) {
                 // Find the invisible count after the last visible item with known index
-                invisibleCount = model->count() - (visibleItems.at(i)->index + 1 + delayRemovedCount);
+                invisibleCount = model->count() - (item->index + 1 + delayRemovedCount);
                 break;
-            } else if (visibleItems.at(i)->attached->delayRemove()) {
+            } else if (item->attached->delayRemove()) {
                 ++delayRemovedCount;
             }
         }
@@ -530,8 +531,7 @@ FxViewItem *QQuickListViewPrivate::snapItemAt(qreal pos)
 {
     FxViewItem *snapItem = 0;
     qreal prevItemSize = 0;
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
+    for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index == -1)
             continue;
         qreal itemTop = item->position();
@@ -660,8 +660,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         int newModelIdx = qBound(0, modelIndex + count, model->count());
         count = newModelIdx - modelIndex;
         if (count) {
-            for (int i = 0; i < visibleItems.count(); ++i)
-                releaseItem(visibleItems.at(i));
+            for (FxViewItem *item : qAsConst(visibleItems))
+                releaseItem(item);
             visibleItems.clear();
             modelIndex = newModelIdx;
             visibleIndex = modelIndex;
@@ -1008,8 +1008,8 @@ void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
 
 void QQuickListViewPrivate::releaseSectionItems()
 {
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
+    for (FxViewItem *item : qAsConst(visibleItems)) {
+        FxListItemSG *listItem = static_cast<FxListItemSG *>(item);
         if (listItem->section()) {
             qreal pos = listItem->position();
             releaseSectionItem(listItem->section());
@@ -1168,16 +1168,15 @@ void QQuickListViewPrivate::updateSections()
         QQuickListViewAttached *prevAtt = 0;
         int prevIdx = -1;
         int idx = -1;
-        for (int i = 0; i < visibleItems.count(); ++i) {
-            FxViewItem *item = visibleItems.at(i);
+        for (FxViewItem *item : qAsConst(visibleItems)) {
             QQuickListViewAttached *attached = static_cast<QQuickListViewAttached*>(item->attached);
             attached->setPrevSection(prevSection);
-            if (visibleItems.at(i)->index != -1) {
-                QString propValue = model->stringValue(visibleItems.at(i)->index, sectionCriteria->property());
+            if (item->index != -1) {
+                QString propValue = model->stringValue(item->index, sectionCriteria->property());
                 attached->setSection(sectionCriteria->sectionString(propValue));
-                idx = visibleItems.at(i)->index;
+                idx = item->index;
             }
-            updateInlineSection(static_cast<FxListItemSG*>(visibleItems.at(i)));
+            updateInlineSection(static_cast<FxListItemSG*>(item));
             if (prevAtt)
                 prevAtt->setNextSection(sectionAt(prevIdx+1));
             prevSection = attached->section();
@@ -1210,9 +1209,12 @@ void QQuickListViewPrivate::updateCurrentSection()
     qreal startPos = hasStickyHeader() ? header->endPosition() : viewPos;
     int index = 0;
     int modelIndex = visibleIndex;
-    while (index < visibleItems.count() && visibleItems.at(index)->endPosition() <= startPos) {
-        if (visibleItems.at(index)->index != -1)
-            modelIndex = visibleItems.at(index)->index;
+    while (index < visibleItems.count()) {
+        FxViewItem *item = visibleItems.at(index);
+        if (item->endPosition() > startPos)
+            break;
+        if (item->index != -1)
+            modelIndex = item->index;
         ++index;
     }
 
@@ -1236,10 +1238,13 @@ void QQuickListViewPrivate::updateCurrentSection()
         qreal endPos = hasStickyFooter() ? footer->position() : viewPos + size();
         if (nextSectionItem && !inlineSections)
             endPos -= orient == QQuickListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
-        while (index < visibleItems.count() && static_cast<FxListItemSG*>(visibleItems.at(index))->itemPosition() < endPos) {
-            if (visibleItems.at(index)->index != -1)
-                modelIndex = visibleItems.at(index)->index;
-            lastSection = visibleItems.at(index)->attached->section();
+        while (index < visibleItems.count()) {
+            FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(index));
+            if (listItem->itemPosition() >= endPos)
+                break;
+            if (listItem->index != -1)
+                modelIndex = listItem->index;
+            lastSection = listItem->attached->section();
             ++index;
         }
 
@@ -1288,8 +1293,8 @@ void QQuickListViewPrivate::updateAverage()
     if (!visibleItems.count())
         return;
     qreal sum = 0.0;
-    for (int i = 0; i < visibleItems.count(); ++i)
-        sum += visibleItems.at(i)->size();
+    for (FxViewItem *item : qAsConst(visibleItems))
+        sum += item->size();
     averageSize = qRound(sum / visibleItems.count());
 }
 
@@ -1462,9 +1467,15 @@ void QQuickListViewPrivate::fixupPosition()
 
 void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 {
-    if ((orient == QQuickListView::Horizontal && &data == &vData)
-        || (orient == QQuickListView::Vertical && &data == &hData))
+    if (orient == QQuickListView::Horizontal && &data == &vData) {
+        if (flickableDirection != QQuickFlickable::HorizontalFlick)
+            QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
         return;
+    } else if (orient == QQuickListView::Vertical && &data == &hData) {
+        if (flickableDirection != QQuickFlickable::VerticalFlick)
+            QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
+        return;
+    }
 
     correctFlick = false;
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
@@ -1813,6 +1824,19 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             \image listview-layout-righttoleft.png
     \endtable
 
+    \section1 Flickable Direction
+
+    By default, a vertical ListView sets \l {Flickable::}{flickableDirection} to \e Flickable.Vertical,
+    and a horizontal ListView sets it to \e Flickable.Horizontal. Furthermore, a vertical ListView only
+    calculates (estimates) the \l {Flickable::}{contentHeight}, and a horizontal ListView only calculates
+    the \l {Flickable::}{contentWidth}. The other dimension is set to \e -1.
+
+    Since Qt 5.9 (Qt Quick 2.9), it is possible to make a ListView that can be flicked to both directions.
+    In order to do this, the \l {Flickable::}{flickableDirection} can be set to \e Flickable.AutoFlickDirection
+    or \e Flickable.AutoFlickIfNeeded, and the desired \e contentWidth or \e contentHeight must be provided.
+
+    \snippet qml/listview/listview.qml flickBothDirections
+
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
@@ -2099,6 +2123,8 @@ void QQuickListView::setSpacing(qreal spacing)
     \li Vertical orientation:
     \image listview-highlight.png
     \endtable
+
+    \sa {Flickable Direction}
 */
 QQuickListView::Orientation QQuickListView::orientation() const
 {
@@ -2112,12 +2138,18 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     if (d->orient != orientation) {
         d->orient = orientation;
         if (d->orient == Vertical) {
-            setContentWidth(-1);
-            setFlickableDirection(VerticalFlick);
+            if (d->flickableDirection == HorizontalFlick) {
+                setFlickableDirection(VerticalFlick);
+                if (isComponentComplete())
+                    setContentWidth(-1);
+            }
             setContentX(0);
         } else {
-            setContentHeight(-1);
-            setFlickableDirection(HorizontalFlick);
+            if (d->flickableDirection == VerticalFlick) {
+                setFlickableDirection(HorizontalFlick);
+                if (isComponentComplete())
+                    setContentHeight(-1);
+            }
             setContentY(0);
         }
         d->regenerate(true);
@@ -2899,8 +2931,7 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
     // Set visibility of items to eliminate cost of items outside the visible area.
     qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
     qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
+    for (FxViewItem *item : qAsConst(d->visibleItems)) {
         if (item->item)
             QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
     }
@@ -3042,6 +3073,21 @@ void QQuickListView::initItem(int index, QObject *object)
     }
 }
 
+qreal QQuickListView::maxYExtent() const
+{
+    Q_D(const QQuickListView);
+    if (d->layoutOrientation() == Qt::Horizontal && d->flickableDirection != HorizontalFlick)
+        return QQuickFlickable::maxYExtent();
+    return QQuickItemView::maxYExtent();
+}
+
+qreal QQuickListView::maxXExtent() const
+{
+    Q_D(const QQuickListView);
+    if (d->layoutOrientation() == Qt::Vertical && d->flickableDirection != VerticalFlick)
+        return QQuickFlickable::maxXExtent();
+    return QQuickItemView::maxXExtent();
+}
 
 /*!
     \qmlmethod QtQuick::ListView::incrementCurrentIndex()
@@ -3120,8 +3166,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (modelIndex < visibleIndex) {
                 // Insert before visible items
                 visibleIndex += count;
-                for (int i = 0; i < visibleItems.count(); ++i) {
-                    FxViewItem *item = visibleItems.at(i);
+                for (FxViewItem *item : qAsConst(visibleItems)) {
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
@@ -3138,8 +3183,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     }
 
     // Update the indexes of the following visible items.
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
+    for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
             if (change.isMove())
@@ -3281,8 +3325,10 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     qreal sizeRemoved = -removalResult.sizeChangesAfterVisiblePos
             - (removalResult.countChangeAfterVisibleItems * (averageSize + spacing));
 
-    for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
+    for (int i=markerItemIndex+1; i<visibleItems.count(); i++) {
         FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
+        if (listItem->position() >= viewEndPos)
+            break;
         if (!listItem->transitionScheduledOrRunning()) {
             qreal pos = listItem->position();
             listItem->setPosition(pos - sizeRemoved);

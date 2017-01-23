@@ -102,29 +102,46 @@ void tst_QQmlInspector::startQmlProcess(const QString &qmlFile, bool restrictSer
 
 void tst_QQmlInspector::checkAnimationSpeed(int targetMillisPerDegree)
 {
-    QString degreesString = QStringLiteral("degrees");
-    QString millisecondsString = QStringLiteral("milliseconds");
-    for (int i = 0; i < 2; ++i) { // skip one period; the change might have happened inside it
-        int position = m_process->output().length();
-        while (!m_process->output().mid(position).contains(degreesString) ||
-               !m_process->output().mid(position).contains(millisecondsString)) {
+    const QString markerString = QStringLiteral("ms/degrees");
+
+    // Funny things can happen with time and VMs. Also the change might take a while to propagate.
+    // Thus, we wait until we either have 3 passes or 3 failures in a row, or 10 loops have passed.
+
+    int numFailures = 0;
+    int numPasses = 0;
+
+    for (int i = 0; i < 10; ++i) {
+        QString output = m_process->output();
+        int position = output.length();
+        do {
             QVERIFY(QQmlDebugTest::waitForSignal(m_process.data(),
                                                  SIGNAL(readyReadStandardOutput())));
+            output = m_process->output();
+        } while (!output.mid(position).contains(markerString));
+
+
+        QStringList words = output.split(QLatin1Char(' '));
+        const int marker = words.lastIndexOf(markerString);
+        QVERIFY(marker > 1);
+        const double degrees = words[marker - 1].toDouble();
+        const int milliseconds = words[marker - 2].toInt();
+        const double millisecondsPerDegree = milliseconds / degrees;
+
+        if (millisecondsPerDegree > targetMillisPerDegree - 3
+                || millisecondsPerDegree < targetMillisPerDegree + 3) {
+            if (++numPasses == 3)
+                return; // pass
+            numFailures = 0;
+        } else {
+            QVERIFY2(++numFailures < 3,
+                     QString("3 consecutive failures when checking for %1 milliseconds per degree")
+                     .arg(targetMillisPerDegree).toLocal8Bit().constData());
+            numPasses = 0;
         }
     }
 
-    QStringList words = m_process->output().split(QLatin1Char(' '));
-    int degreesMarker = words.lastIndexOf(degreesString);
-    QVERIFY(degreesMarker > 1);
-    double degrees = words[degreesMarker - 1].toDouble();
-    int millisecondsMarker = words.lastIndexOf(millisecondsString);
-    QVERIFY(millisecondsMarker > 1);
-    int milliseconds = words[millisecondsMarker - 1].toInt();
-
-    double millisecondsPerDegree = milliseconds / degrees;
-    QVERIFY(millisecondsPerDegree > targetMillisPerDegree - 3);
-    QVERIFY(millisecondsPerDegree < targetMillisPerDegree + 3);
-
+    QFAIL(QString("Animation speed won't settle to %1 milliseconds per degree")
+          .arg(targetMillisPerDegree).toLocal8Bit().constData());
 }
 
 void tst_QQmlInspector::cleanup()

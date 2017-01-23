@@ -397,10 +397,10 @@ QQuickPropertyChangesPrivate::property(const QString &property)
     Q_Q(QQuickPropertyChanges);
     QQmlProperty prop(object, property, qmlContext(q));
     if (!prop.isValid()) {
-        qmlInfo(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
+        qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
         return QQmlProperty();
     } else if (!(prop.type() & QQmlProperty::SignalProperty) && !prop.isWritable()) {
-        qmlInfo(q) << QQuickPropertyChanges::tr("Cannot assign to read-only property \"%1\"").arg(property);
+        qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to read-only property \"%1\"").arg(property);
         return QQmlProperty();
     }
     return prop;

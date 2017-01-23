@@ -2428,7 +2428,7 @@ void QQmlTypeData::continueLoadFromIR()
 
     QList<QQmlError> errors;
 
-    foreach (const QV4::CompiledData::Import *import, m_document->imports) {
+    for (const QV4::CompiledData::Import *import : qAsConst(m_document->imports)) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());

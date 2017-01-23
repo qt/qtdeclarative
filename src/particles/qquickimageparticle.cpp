@@ -58,12 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if defined(Q_OS_BLACKBERRY)
-#define SHADER_PLATFORM_DEFINES "Q_OS_BLACKBERRY\n"
-#else
-#define SHADER_PLATFORM_DEFINES
-#endif
-
 //TODO: Make it larger on desktop? Requires fixing up shader code with the same define
 #define UNIFORM_ARRAY_SIZE 64
 
@@ -102,7 +96,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
@@ -113,7 +106,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
@@ -180,7 +172,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
@@ -190,7 +181,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
@@ -245,7 +235,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("SPRITE"));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
@@ -257,7 +246,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("SPRITE"));
         builder.addDefinition(QByteArrayLiteral("TABLE"));
         builder.addDefinition(QByteArrayLiteral("DEFORM"));
@@ -327,7 +315,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
             builder.removeVersion();
@@ -336,7 +323,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         builder.addDefinition(QByteArrayLiteral("COLOR"));
         if (isES)
             builder.removeVersion();
@@ -405,7 +391,6 @@ public:
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.vert"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         if (isES)
             builder.removeVersion();
 
@@ -413,7 +398,6 @@ public:
         builder.clear();
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/imageparticle.frag"));
-        builder.addDefinition(QByteArray(SHADER_PLATFORM_DEFINES));
         if (isES)
             builder.removeVersion();
 
@@ -510,6 +494,8 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     So if you explicitly set an attribute affecting color, such as redVariation, and then reset it (by setting redVariation
     to undefined), all color data will be reset and it will begin to have an implicit value of any shared color from
     other ImageParticles.
+
+    \note The maximum number of image particles is limited to 16383.
 */
 /*!
     \qmlproperty url QtQuick.Particles::ImageParticle::source
@@ -1240,8 +1226,9 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     if (!QOpenGLContext::currentContext())
         return;
 
-    if (QOpenGLContext::currentContext()->isOpenGLES() && m_count * 4 > 0xffff) {
-        printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
+    if (m_count * 4 > 0xffff) {
+        // Index data is ushort.
+        qmlInfo(this) << "ImageParticle: Too many particles - maximum 16383 per ImageParticle";
         return;
     }
 
@@ -1344,21 +1331,21 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
             if (m_colorTable->pix.isReady())
                 colortable = m_colorTable->pix.image();
             else
-                qmlInfo(this) << "Error loading color table: " << m_colorTable->pix.error();
+                qmlWarning(this) << "Error loading color table: " << m_colorTable->pix.error();
         }
 
         if (m_sizeTable) {
             if (m_sizeTable->pix.isReady())
                 sizetable = m_sizeTable->pix.image();
             else
-                qmlInfo(this) << "Error loading size table: " << m_sizeTable->pix.error();
+                qmlWarning(this) << "Error loading size table: " << m_sizeTable->pix.error();
         }
 
         if (m_opacityTable) {
             if (m_opacityTable->pix.isReady())
                 opacitytable = m_opacityTable->pix.image();
             else
-                qmlInfo(this) << "Error loading opacity table: " << m_opacityTable->pix.error();
+                qmlWarning(this) << "Error loading opacity table: " << m_opacityTable->pix.error();
         }
 
         if (colortable.isNull()){//###Goes through image just for this
@@ -1380,7 +1367,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         if (!imageLoaded) {
             if (!m_image || !m_image->pix.isReady()) {
                 if (m_image)
-                    qmlInfo(this) << m_image->pix.error();
+                    qmlWarning(this) << m_image->pix.error();
                 delete m_material;
                 return;
             }

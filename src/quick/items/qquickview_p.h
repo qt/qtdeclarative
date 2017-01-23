@@ -88,7 +88,7 @@ public:
     ~QQuickViewPrivate();
 
     void execute();
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
     void initResize();
     void updateSize();
     void setRootObject(QObject *);

@@ -137,7 +137,7 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
             if (!delegateValidated) {
                 delegateValidated = true;
                 QObject* delegate = q->delegate();
-                qmlInfo(delegate ? delegate : q) << QQuickPathView::tr("Delegate must be of Item type");
+                qmlWarning(delegate ? delegate : q) << QQuickPathView::tr("Delegate must be of Item type");
             }
         }
     } else {
@@ -704,16 +704,23 @@ void QQuickPathView::setPath(QQuickPath *path)
         qmlobject_disconnect(d->path, QQuickPath, SIGNAL(changed()),
                              this, QQuickPathView, SLOT(pathUpdated()));
     d->path = path;
-    qmlobject_connect(d->path, QQuickPath, SIGNAL(changed()),
-                      this, QQuickPathView, SLOT(pathUpdated()));
-    if (d->isValid() && isComponentComplete()) {
-        d->clear();
-        if (d->attType) {
-            d->attType->release();
-            d->attType = nullptr;
-        }
-        d->regenerate();
+
+    if (path) {
+        qmlobject_connect(d->path, QQuickPath, SIGNAL(changed()),
+                          this, QQuickPathView, SLOT(pathUpdated()));
     }
+
+    if (isComponentComplete()) {
+        d->clear();
+        if (d->isValid()) {
+            if (d->attType) {
+                d->attType->release();
+                d->attType = nullptr;
+            }
+            d->regenerate();
+        }
+    }
+
     emit pathChanged();
 }
 

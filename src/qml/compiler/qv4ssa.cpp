@@ -2758,7 +2758,7 @@ public:
                 visit(s);
             }
 
-            foreach (const Conversion &conversion, _conversions) {
+            for (const Conversion &conversion : qAsConst(_conversions)) {
                 IR::Move *move = conversion.stmt->asMove();
 
                 // Note: isel only supports move into member when source is a temp, so convert

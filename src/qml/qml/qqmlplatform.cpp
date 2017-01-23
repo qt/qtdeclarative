@@ -59,16 +59,12 @@ QString QQmlPlatform::os()
 {
 #if defined(Q_OS_ANDROID)
     return QStringLiteral("android");
-#elif defined(Q_OS_BLACKBERRY)
-    return QStringLiteral("blackberry");
 #elif defined(Q_OS_IOS)
     return QStringLiteral("ios");
 #elif defined(Q_OS_TVOS)
     return QStringLiteral("tvos");
 #elif defined(Q_OS_MAC)
     return QStringLiteral("osx");
-#elif defined(Q_OS_WINPHONE)
-    return QStringLiteral("winphone");
 #elif defined(Q_OS_WINRT)
     return QStringLiteral("winrt");
 #elif defined(Q_OS_WIN)

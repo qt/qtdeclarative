@@ -190,9 +190,14 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
 /*!
   \fn QQmlApplicationEngine::objectCreated(QObject *object, const QUrl &url)
 
-  This signal is emitted when an object finishes loading. If loading was successful, \a object contains a pointer to the loaded object.
-  Otherwise the pointer is NULL. The \a url loaded is also provided, note that if a QString file path was initially passed to the
-  QQmlApplicationEngine, this url will be the equivalent of QUrl::fromLocalFile(filePath).
+  This signal is emitted when an object finishes loading. If loading was
+  successful, \a object contains a pointer to the loaded object, otherwise
+  the pointer is NULL.
+
+  The \a url to the component the \a object came from is also provided.
+
+  \note If the path to the component was provided as a QString containing a
+  relative path, the \a url will contain a fully resolved path to the file.
 */
 
 /*!
@@ -226,7 +231,7 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent)
   This is provided as a convenience, and is the same as using the empty constructor and calling load afterwards.
 */
 QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *parent)
-    : QQmlApplicationEngine(QUrl::fromLocalFile(filePath), parent)
+    : QQmlApplicationEngine(QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile), parent)
 {
 }
 
@@ -265,7 +270,7 @@ void QQmlApplicationEngine::load(const QUrl &url)
 void QQmlApplicationEngine::load(const QString &filePath)
 {
     Q_D(QQmlApplicationEngine);
-    d->startLoad(QUrl::fromLocalFile(filePath));
+    d->startLoad(QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile));
 }
 
 /*!

@@ -618,6 +618,11 @@ void QSGSoftwareThreadedRenderLoop::windowDestroyed(QQuickWindow *window)
             break;
         }
     }
+
+    // Now that we altered the window list, we may need to stop the animation
+    // timer even if we didn't via handleObscurity. This covers the case where
+    // we destroy a visible & exposed QQuickWindow.
+    startOrStopAnimationTimer();
 }
 
 void QSGSoftwareThreadedRenderLoop::exposureChanged(QQuickWindow *window)

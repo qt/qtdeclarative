@@ -341,7 +341,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     position of the release of the click, and whether the click was held.
 
     When handling this signal, changing the \l {MouseEvent::}{accepted} property of the \a mouse
-    parameter has no effect.
+    parameter has no effect, unless the \l propagateComposedEvents property is \c true.
 
     The corresponding handler is \c onClicked.
 */
@@ -385,7 +385,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     position of the press, and which button is pressed.
 
     When handling this signal, changing the \l {MouseEvent::}{accepted} property of the \a mouse
-    parameter has no effect.
+    parameter has no effect, unless the \l propagateComposedEvents property is \c true.
 
     The corresponding handler is \c onPressAndHold.
 */

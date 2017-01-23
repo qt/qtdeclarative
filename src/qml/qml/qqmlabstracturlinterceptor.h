@@ -47,7 +47,6 @@ QT_BEGIN_NAMESPACE
 
 class Q_QML_EXPORT QQmlAbstractUrlInterceptor
 {
-    Q_FLAGS(InterceptionPoint)
 public:
     enum DataType { //Matches QQmlDataBlob::Type
         QmlFile = 0,

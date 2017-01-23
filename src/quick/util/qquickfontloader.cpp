@@ -307,7 +307,7 @@ void QQuickFontLoader::updateFontInfo(const QString& name, QQuickFontLoader::Sta
     }
     if (status != d->status) {
         if (status == Error)
-            qmlInfo(this) << "Cannot load font: \"" << d->url.toString() << '"';
+            qmlWarning(this) << "Cannot load font: \"" << d->url.toString() << '"';
         d->status = status;
         emit statusChanged();
     }

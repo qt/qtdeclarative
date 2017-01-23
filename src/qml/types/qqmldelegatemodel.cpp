@@ -264,7 +264,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
 {
     Q_D(QQmlDelegateModel);
 
-    foreach (QQmlDelegateModelItem *cacheItem, d->m_cache) {
+    for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
         if (cacheItem->object) {
             delete cacheItem->object;
 
@@ -310,7 +310,7 @@ void QQmlDelegateModel::componentComplete()
             --d->m_groupCount;
             --i;
         } else if (name.at(0).isUpper()) {
-            qmlInfo(d->m_groups[i]) << QQmlDelegateModelGroup::tr("Group names must start with a lower case letter");
+            qmlWarning(d->m_groups[i]) << QQmlDelegateModelGroup::tr("Group names must start with a lower case letter");
             d->m_groups[i] = d->m_groups[d->m_groupCount - 1];
             --d->m_groupCount;
             --i;
@@ -404,7 +404,7 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQmlDelegateModel);
     if (d->m_transaction) {
-        qmlInfo(this) << tr("The delegate of a DelegateModel cannot be changed within onUpdated.");
+        qmlWarning(this) << tr("The delegate of a DelegateModel cannot be changed within onUpdated.");
         return;
     }
     bool wasValid = d->m_delegate != 0;
@@ -610,7 +610,7 @@ void QQmlDelegateModelPrivate::group_append(
     if (d->m_complete)
         return;
     if (d->m_groupCount == Compositor::MaximumGroupCount) {
-        qmlInfo(d->q_func()) << QQmlDelegateModel::tr("The maximum number of supported DelegateModelGroups is 8");
+        qmlWarning(d->q_func()) << QQmlDelegateModel::tr("The maximum number of supported DelegateModelGroups is 8");
         return;
     }
     d->m_groups[d->m_groupCount] = group;
@@ -719,7 +719,7 @@ void QQmlDelegateModel::setFilterGroup(const QString &group)
     Q_D(QQmlDelegateModel);
 
     if (d->m_transaction) {
-        qmlInfo(this) << tr("The group of a DelegateModel cannot be changed within onChanged");
+        qmlWarning(this) << tr("The group of a DelegateModel cannot be changed within onChanged");
         return;
     }
 
@@ -764,7 +764,8 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
             emit q->countChanged();
 
         if (m_parts) {
-            foreach (QQmlPartsModel *model, m_parts->models)
+            auto partsCopy = m_parts->models; // deliberate; this may alter m_parts
+            for (QQmlPartsModel *model : qAsConst(partsCopy))
                 model->updateFilterGroup(m_compositorGroup, changeSet);
         }
     }
@@ -889,7 +890,7 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
             emitCreatedItem(incubationTask, cacheItem->object);
         cacheItem->releaseObject();
     } else if (status == QQmlIncubator::Error) {
-        qmlInfo(q, m_delegate->errors()) << "Error creating delegate";
+        qmlWarning(q, m_delegate->errors()) << "Error creating delegate";
     }
 
     if (!cacheItem->isObjectReferenced()) {
@@ -1472,7 +1473,8 @@ void QQmlDelegateModelPrivate::emitChanges()
     for (int i = 1; i < m_groupCount; ++i)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
-    foreach (QQmlDelegateModelItem *cacheItem, m_cache) {
+    auto cacheCopy = m_cache; // deliberate; emitChanges may alter m_cache
+    for (QQmlDelegateModelItem *cacheItem : qAsConst(cacheCopy)) {
         if (cacheItem->attached)
             cacheItem->attached->emitChanges();
     }
@@ -2459,7 +2461,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     if (!model->m_context || !model->m_context->isValid()) {
         return QQmlV4Handle(QV4::Encode::undefined());
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
-        qmlInfo(this) << tr("get: index out of range");
+        qmlWarning(this) << tr("get: index out of range");
         return QQmlV4Handle(QV4::Encode::undefined());
     }
 
@@ -2552,7 +2554,7 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
     QV4::ScopedValue v(scope, (*args)[i]);
     if (d->parseIndex(v, &index, &group)) {
         if (index < 0 || index > model->m_compositor.count(group)) {
-            qmlInfo(this) << tr("insert: index out of range");
+            qmlWarning(this) << tr("insert: index out of range");
             return;
         }
         if (++i == args->length())
@@ -2637,7 +2639,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
         }
     }
     if (index < 0 || index >= model->m_compositor.count(group)) {
-        qmlInfo(this) << tr("create: index out of range");
+        qmlWarning(this) << tr("create: index out of range");
         return;
     }
 
@@ -2690,22 +2692,22 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
     QV4::ScopedValue v(scope, (*args)[0]);
     if (d->parseIndex(v, &from, &fromGroup)) {
         if (from < 0 || from >= model->m_compositor.count(fromGroup)) {
-            qmlInfo(this) << tr("resolve: from index out of range");
+            qmlWarning(this) << tr("resolve: from index out of range");
             return;
         }
     } else {
-        qmlInfo(this) << tr("resolve: from index invalid");
+        qmlWarning(this) << tr("resolve: from index invalid");
         return;
     }
 
     v = (*args)[1];
     if (d->parseIndex(v, &to, &toGroup)) {
         if (to < 0 || to >= model->m_compositor.count(toGroup)) {
-            qmlInfo(this) << tr("resolve: to index out of range");
+            qmlWarning(this) << tr("resolve: to index out of range");
             return;
         }
     } else {
-        qmlInfo(this) << tr("resolve: to index invalid");
+        qmlWarning(this) << tr("resolve: to index invalid");
         return;
     }
 
@@ -2713,11 +2715,11 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
     Compositor::iterator toIt = model->m_compositor.find(toGroup, to);
 
     if (!fromIt->isUnresolved()) {
-        qmlInfo(this) << tr("resolve: from is not an unresolved item");
+        qmlWarning(this) << tr("resolve: from is not an unresolved item");
         return;
     }
     if (!toIt->list) {
-        qmlInfo(this) << tr("resolve: to is not a model item");
+        qmlWarning(this) << tr("resolve: to is not a model item");
         return;
     }
 
@@ -2787,7 +2789,7 @@ void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);
     if (!d->parseIndex(v, &index, &group)) {
-        qmlInfo(this) << tr("remove: invalid index");
+        qmlWarning(this) << tr("remove: invalid index");
         return;
     }
 
@@ -2799,11 +2801,11 @@ void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (index < 0 || index >= model->m_compositor.count(group)) {
-        qmlInfo(this) << tr("remove: index out of range");
+        qmlWarning(this) << tr("remove: index out of range");
     } else if (count != 0) {
         Compositor::iterator it = model->m_compositor.find(group, index);
         if (count < 0 || count > model->m_compositor.count(d->group) - it.index[d->group]) {
-            qmlInfo(this) << tr("remove: invalid count");
+            qmlWarning(this) << tr("remove: invalid count");
         } else {
             model->removeGroups(it, count, d->group, 1 << d->group);
         }
@@ -2858,11 +2860,11 @@ void QQmlDelegateModelGroup::addGroups(QQmlV4Function *args)
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (index < 0 || index >= model->m_compositor.count(group)) {
-        qmlInfo(this) << tr("addGroups: index out of range");
+        qmlWarning(this) << tr("addGroups: index out of range");
     } else if (count != 0) {
         Compositor::iterator it = model->m_compositor.find(group, index);
         if (count < 0 || count > model->m_compositor.count(d->group) - it.index[d->group]) {
-            qmlInfo(this) << tr("addGroups: invalid count");
+            qmlWarning(this) << tr("addGroups: invalid count");
         } else {
             model->addGroups(it, count, d->group, groups);
         }
@@ -2888,11 +2890,11 @@ void QQmlDelegateModelGroup::removeGroups(QQmlV4Function *args)
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (index < 0 || index >= model->m_compositor.count(group)) {
-        qmlInfo(this) << tr("removeGroups: index out of range");
+        qmlWarning(this) << tr("removeGroups: index out of range");
     } else if (count != 0) {
         Compositor::iterator it = model->m_compositor.find(group, index);
         if (count < 0 || count > model->m_compositor.count(d->group) - it.index[d->group]) {
-            qmlInfo(this) << tr("removeGroups: invalid count");
+            qmlWarning(this) << tr("removeGroups: invalid count");
         } else {
             model->removeGroups(it, count, d->group, groups);
         }
@@ -2918,11 +2920,11 @@ void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (index < 0 || index >= model->m_compositor.count(group)) {
-        qmlInfo(this) << tr("setGroups: index out of range");
+        qmlWarning(this) << tr("setGroups: index out of range");
     } else if (count != 0) {
         Compositor::iterator it = model->m_compositor.find(group, index);
         if (count < 0 || count > model->m_compositor.count(d->group) - it.index[d->group]) {
-            qmlInfo(this) << tr("setGroups: invalid count");
+            qmlWarning(this) << tr("setGroups: invalid count");
         } else {
             model->setGroups(it, count, d->group, groups);
         }
@@ -2957,13 +2959,13 @@ void QQmlDelegateModelGroup::move(QQmlV4Function *args)
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);
     if (!d->parseIndex(v, &from, &fromGroup)) {
-        qmlInfo(this) << tr("move: invalid from index");
+        qmlWarning(this) << tr("move: invalid from index");
         return;
     }
 
     v = (*args)[1];
     if (!d->parseIndex(v, &to, &toGroup)) {
-        qmlInfo(this) << tr("move: invalid to index");
+        qmlWarning(this) << tr("move: invalid to index");
         return;
     }
 
@@ -2976,11 +2978,11 @@ void QQmlDelegateModelGroup::move(QQmlV4Function *args)
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
 
     if (count < 0) {
-        qmlInfo(this) << tr("move: invalid count");
+        qmlWarning(this) << tr("move: invalid count");
     } else if (from < 0 || from + count > model->m_compositor.count(fromGroup)) {
-        qmlInfo(this) << tr("move: from index out of range");
+        qmlWarning(this) << tr("move: from index out of range");
     } else if (!model->m_compositor.verifyMoveTo(fromGroup, from, toGroup, to, count, d->group)) {
-        qmlInfo(this) << tr("move: to index out of range");
+        qmlWarning(this) << tr("move: to index out of range");
     } else if (count > 0) {
         QVector<Compositor::Remove> removes;
         QVector<Compositor::Insert> inserts;
@@ -3038,7 +3040,7 @@ QString QQmlPartsModel::filterGroup() const
 void QQmlPartsModel::setFilterGroup(const QString &group)
 {
     if (QQmlDelegateModelPrivate::get(m_model)->m_transaction) {
-        qmlInfo(this) << tr("The group of a DelegateModel cannot be changed within onChanged");
+        qmlWarning(this) << tr("The group of a DelegateModel cannot be changed within onChanged");
         return;
     }
 
@@ -3151,7 +3153,7 @@ QObject *QQmlPartsModel::object(int index, bool asynchronous)
     model->release(object);
     if (!model->m_delegateValidated) {
         if (object)
-            qmlInfo(model->m_delegate) << tr("Delegate component must be Package type.");
+            qmlWarning(model->m_delegate) << tr("Delegate component must be Package type.");
         model->m_delegateValidated = true;
     }
 

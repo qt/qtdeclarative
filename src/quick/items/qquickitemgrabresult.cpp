@@ -47,6 +47,7 @@
 #endif
 
 #include <QtQml/QQmlEngine>
+#include <QtQml/QQmlInfo>
 
 #include <private/qquickpixmapcache_p.h>
 #include <private/qquickitem_p.h>
@@ -279,17 +280,17 @@ QQuickItemGrabResult *QQuickItemGrabResultPrivate::create(QQuickItem *item, cons
         size = QSize(item->width(), item->height());
 
     if (size.width() < 1 || size.height() < 1) {
-        qWarning("Item::grabToImage: item has invalid dimensions");
+        qmlWarning(item) << "grabToImage: item has invalid dimensions";
         return 0;
     }
 
     if (!item->window()) {
-        qWarning("Item::grabToImage: item is not attached to a window");
+        qmlWarning(item) << "grabToImage: item is not attached to a window";
         return 0;
     }
 
     if (!item->window()->isVisible()) {
-        qWarning("Item::grabToImage: item's window is not visible");
+        qmlWarning(item) << "grabToImage: item's window is not visible";
         return 0;
     }
 
@@ -377,12 +378,12 @@ bool QQuickItem::grabToImage(const QJSValue &callback, const QSize &targetSize)
 {
     QQmlEngine *engine = qmlEngine(this);
     if (!engine) {
-        qWarning("Item::grabToImage: no QML Engine");
+        qmlWarning(this) << "grabToImage: item has no QML engine";
         return false;
     }
 
     if (!callback.isCallable()) {
-        qWarning("Item::grabToImage: 'callback' is not a function");
+        qmlWarning(this) << "grabToImage: 'callback' is not a function";
         return false;
     }
 
@@ -391,12 +392,12 @@ bool QQuickItem::grabToImage(const QJSValue &callback, const QSize &targetSize)
         size = QSize(width(), height());
 
     if (size.width() < 1 || size.height() < 1) {
-        qWarning("Item::grabToImage: item has invalid dimensions");
+        qmlWarning(this) << "grabToImage: item has invalid dimensions";
         return false;
     }
 
     if (!window()) {
-        qWarning("Item::grabToImage: item is not attached to a window");
+        qmlWarning(this) << "grabToImage: item is not attached to a window";
         return false;
     }
 

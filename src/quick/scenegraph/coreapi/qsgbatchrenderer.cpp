@@ -898,6 +898,7 @@ void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
     } else if (buffer->size != byteSize) {
         free(buffer->data);
         buffer->data = (char *) malloc(byteSize);
+        Q_CHECK_PTR(buffer->data);
     }
     buffer->size = byteSize;
 }
@@ -2025,6 +2026,8 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
     }
 
     ClipType clipType = NoClip;
+    GLuint vbo = 0;
+    int vboSize = 0;
 
     glDisable(GL_SCISSOR_TEST);
 
@@ -2109,7 +2112,21 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
             const QSGGeometry *g = clip->geometry();
             Q_ASSERT(g->attributeCount() > 0);
             const QSGGeometry::Attribute *a = g->attributes();
-            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), g->vertexData());
+
+            if (!vbo)
+                glGenBuffers(1, &vbo);
+
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+            const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
+            if (vboSize < vertexByteSize) {
+                vboSize = vertexByteSize;
+                glBufferData(GL_ARRAY_BUFFER, vertexByteSize, g->vertexData(), GL_STATIC_DRAW);
+            } else {
+                glBufferSubData(GL_ARRAY_BUFFER, 0, vertexByteSize, g->vertexData());
+            }
+
+            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), 0);
 
             m_clipProgram.setUniformValue(m_clipMatrixId, m);
             if (g->indexCount()) {
@@ -2118,11 +2135,16 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
                 glDrawArrays(g->drawingMode(), 0, g->vertexCount());
             }
 
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
             ++m_currentStencilValue;
         }
 
         clip = clip->clipList();
     }
+
+    if (vbo)
+        glDeleteBuffers(1, &vbo);
 
     if (clipType & StencilClip) {
         m_clipProgram.disableAttributeArray(0);

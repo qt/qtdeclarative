@@ -741,7 +741,7 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     std::cerr << qPrintable(QString(
-                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] [-noforceqtquick] module.uri version [module/import/path]\n"
+                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] [-output <output-file.qmltypes>] [-noforceqtquick] module.uri version [module/import/path]\n"
                                  "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
@@ -998,6 +998,7 @@ int main(int argc, char *argv[])
         return EXIT_INVALIDARGUMENTS;
     }
 
+    QString outputFilename;
     QString pluginImportUri;
     QString pluginImportVersion;
     bool relocatable = true;
@@ -1051,6 +1052,13 @@ int main(int argc, char *argv[])
             } else if (arg == QLatin1String("--noforceqtquick")
                        || arg == QLatin1String("-noforceqtquick")){
                 forceQtQuickDependency = false;
+            } else if (arg == QLatin1String("--output")
+                       || arg == QLatin1String("-output")) {
+                if (++iArg == args.size()) {
+                    std::cerr << "missing output file" << std::endl;
+                    return EXIT_INVALIDARGUMENTS;
+                }
+                outputFilename = args.at(iArg);
             } else if (arg == QLatin1String("--defaultplatform")
                        || arg == QLatin1String("-defaultplatform")) {
                 continue;
@@ -1306,7 +1314,15 @@ int main(int argc, char *argv[])
     qml.writeEndObject();
     qml.writeEndDocument();
 
-    std::cout << bytes.constData() << std::flush;
+    if (!outputFilename.isEmpty()) {
+        QFile file(outputFilename);
+        if (file.open(QIODevice::WriteOnly)) {
+            QTextStream stream(&file);
+            stream << bytes.constData();
+        }
+    } else {
+        std::cout << bytes.constData() << std::flush;
+    }
 
     // workaround to avoid crashes on exit
     QTimer timer;

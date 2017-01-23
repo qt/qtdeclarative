@@ -567,7 +567,7 @@ Item {
         \qmlmethod object TestCase::createTemporaryObject(Component component, object parent, object properties)
 
         This function dynamically creates a QML object from the given
-        \a component with the specified \a parent and \a properties.
+        \a component with the specified optional \a parent and \a properties.
         The returned object will be destroyed (if it was not already) after
         \l cleanup() has finished executing, meaning that objects created with
         this function are guaranteed to be destroyed after each test,
@@ -585,12 +585,6 @@ Item {
     function createTemporaryObject(component, parent, properties) {
         if (typeof component !== "object") {
             qtest_results.fail("First argument must be a Component; actual type is " + typeof component,
-                util.callerFile(), util.callerLine());
-            throw new Error("QtQuickTest::fail");
-        }
-
-        if (!parent && parent !== null) {
-            qtest_results.fail("Second argument must be a parent object or null; actual type is " + typeof parent,
                 util.callerFile(), util.callerLine());
             throw new Error("QtQuickTest::fail");
         }
@@ -614,7 +608,8 @@ Item {
     function qtest_destroyTemporaryObjects() {
         for (var i = 0; i < qtest_temporaryObjects.length; ++i) {
             var temporaryObject = qtest_temporaryObjects[i];
-            if (temporaryObject)
+            // ### the typeof check can be removed when QTBUG-57749 is fixed
+            if (temporaryObject && typeof temporaryObject.destroy === "function")
                 temporaryObject.destroy();
         }
         qtest_temporaryObjects = [];
