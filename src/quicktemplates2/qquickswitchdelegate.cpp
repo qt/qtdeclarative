@@ -83,6 +83,10 @@ public:
 
     qreal positionAt(const QPointF &point) const;
 
+    bool canDrag(const QPointF &movePoint) const;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+
     qreal position;
 };
 
@@ -95,6 +99,32 @@ qreal QQuickSwitchDelegatePrivate::positionAt(const QPointF &point) const
     if (q->isMirrored())
         return 1.0 - pos;
     return pos;
+}
+
+bool QQuickSwitchDelegatePrivate::canDrag(const QPointF &movePoint) const
+{
+    // don't start dragging the handle unless the initial press was at the indicator,
+    // or the drag has reached the indicator area. this prevents unnatural jumps when
+    // dragging far outside the indicator.
+    const qreal pressPos = positionAt(pressPoint);
+    const qreal movePos = positionAt(movePoint);
+    return (pressPos >= 0.0 && pressPos <= 1.0) || (movePos >= 0.0 && movePos <= 1.0);
+}
+
+void QQuickSwitchDelegatePrivate::handleMove(const QPointF &point)
+{
+    Q_Q(QQuickSwitchDelegate);
+    QQuickItemDelegatePrivate::handleMove(point);
+    if (q->keepMouseGrab() || q->keepTouchGrab())
+        q->setPosition(positionAt(point));
+}
+
+void QQuickSwitchDelegatePrivate::handleRelease(const QPointF &point)
+{
+    Q_Q(QQuickSwitchDelegate);
+    QQuickItemDelegatePrivate::handleRelease(point);
+    q->setKeepMouseGrab(false);
+    q->setKeepTouchGrab(false);
 }
 
 QQuickSwitchDelegate::QQuickSwitchDelegate(QQuickItem *parent)
@@ -143,35 +173,29 @@ qreal QQuickSwitchDelegate::visualPosition() const
     return d->position;
 }
 
-void QQuickSwitchDelegate::mousePressEvent(QMouseEvent *event)
-{
-    QQuickItemDelegate::mousePressEvent(event);
-}
-
 void QQuickSwitchDelegate::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwitchDelegate);
-    QQuickItemDelegate::mouseMoveEvent(event);
-
-    const QPointF movePoint = event->localPos();
     if (!keepMouseGrab()) {
-        // don't start dragging the handle unless the initial press was at the indicator,
-        // or the drag has reached the indicator area. this prevents unnatural jumps when
-        // dragging far outside the indicator.
-        const qreal pressPos = d->positionAt(d->pressPoint);
-        const qreal movePos = d->positionAt(movePoint);
-        if ((pressPos >= 0.0 && pressPos <= 1.0) || (movePos >= 0.0 && movePos <= 1.0))
+        const QPointF movePoint = event->localPos();
+        if (d->canDrag(movePoint))
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(), Qt::XAxis, event));
     }
-
-    if (keepMouseGrab())
-        setPosition(d->positionAt(movePoint));
+    QQuickItemDelegate::mouseMoveEvent(event);
 }
 
-void QQuickSwitchDelegate::mouseReleaseEvent(QMouseEvent *event)
+void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
 {
-    QQuickItemDelegate::mouseReleaseEvent(event);
-    setKeepMouseGrab(false);
+    Q_D(QQuickSwitchDelegate);
+    if (!keepTouchGrab() && event->type() == QEvent::TouchUpdate) {
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId || point.state() != Qt::TouchPointMoved)
+                continue;
+            if (d->canDrag(point.pos()))
+                setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
+        }
+    }
+    QQuickItemDelegate::touchEvent(event);
 }
 
 QFont QQuickSwitchDelegate::defaultFont() const
@@ -188,7 +212,7 @@ void QQuickSwitchDelegate::mirrorChange()
 void QQuickSwitchDelegate::nextCheckState()
 {
     Q_D(QQuickSwitchDelegate);
-    if (keepMouseGrab()) {
+    if (keepMouseGrab() || keepTouchGrab()) {
         d->toggle(d->position > 0.5);
         // the checked state might not change => force a position update to
         // avoid that the handle is left somewhere in the middle (QTBUG-57944)
