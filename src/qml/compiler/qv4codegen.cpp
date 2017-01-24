@@ -842,9 +842,16 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     Q_ASSERT(expr.code);
     initializer = *expr;
 
-    int initialized = _block->newTemp();
-    move(_block->TEMP(initialized), initializer);
-    move(identifier(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), _block->TEMP(initialized));
+    IR::Expr *lhs = identifier(ast->name.toString(), ast->identifierToken.startLine,
+                               ast->identifierToken.startColumn);
+
+    if (lhs->asArgLocal()) {
+        move(lhs, initializer);
+    } else {
+        int initialized = _block->newTemp();
+        move(_block->TEMP(initialized), initializer);
+        move(lhs, _block->TEMP(initialized));
+    }
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
