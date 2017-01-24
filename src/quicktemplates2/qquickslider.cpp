@@ -194,7 +194,7 @@ void QQuickSliderPrivate::handlePress(const QPointF &point)
 void QQuickSliderPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickSlider);
-    if (!q->keepMouseGrab())
+    if (!q->keepMouseGrab() && !q->keepTouchGrab())
         return;
     const qreal oldPos = position;
     qreal pos = positionAt(point);
@@ -225,6 +225,7 @@ void QQuickSliderPrivate::handleRelease(const QPointF &point)
     if (!qFuzzyCompare(pos, oldPos))
         emit q->moved();
     q->setKeepMouseGrab(false);
+    q->setKeepTouchGrab(false);
     q->setPressed(false);
 }
 
@@ -676,11 +677,11 @@ void QQuickSlider::touchEvent(QTouchEvent *event)
             if (point.id() != d->touchId)
                 continue;
 
-            if (!keepMouseGrab()) {
+            if (!keepTouchGrab()) {
                 if (d->orientation == Qt::Horizontal)
-                    setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
+                    setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
                 else
-                    setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point));
+                    setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point));
             }
             d->handleMove(point.pos());
         }

@@ -456,7 +456,7 @@ void QQuickRangeSliderPrivate::handlePress(const QPointF &point, int touchId)
 void QQuickRangeSliderPrivate::handleMove(const QPointF &point, int touchId)
 {
     Q_Q(QQuickRangeSlider);
-    if (!q->keepMouseGrab())
+    if (!q->keepMouseGrab() && !q->keepTouchGrab())
         return;
     QQuickRangeSliderNode *pressedNode = QQuickRangeSliderPrivate::pressedNode(touchId);
     if (pressedNode) {
@@ -480,7 +480,7 @@ void QQuickRangeSliderPrivate::handleRelease(const QPointF &point, int touchId)
         return;
     QQuickRangeSliderNodePrivate *pressedNodePrivate = QQuickRangeSliderNodePrivate::get(pressedNode);
 
-    if (q->keepMouseGrab()) {
+    if (q->keepMouseGrab() || q->keepTouchGrab()) {
         qreal pos = positionAt(q, pressedNode->handle(), point);
         if (snapMode != QQuickRangeSlider::NoSnap)
             pos = snapPosition(q, pos);
@@ -490,6 +490,7 @@ void QQuickRangeSliderPrivate::handleRelease(const QPointF &point, int touchId)
         else if (snapMode != QQuickRangeSlider::NoSnap)
             pressedNodePrivate->setPosition(pos);
         q->setKeepMouseGrab(false);
+        q->setKeepTouchGrab(false);
     }
     pressedNode->setPressed(false);
     pressedNodePrivate->touchId = -1;
@@ -1013,11 +1014,11 @@ void QQuickRangeSlider::touchEvent(QTouchEvent *event)
                     d->handlePress(point.pos(), point.id());
                 break;
             case Qt::TouchPointMoved:
-                if (!keepMouseGrab()) {
+                if (!keepTouchGrab()) {
                     if (d->orientation == Qt::Horizontal)
-                        setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - point.startPos().x(), Qt::XAxis, &point));
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - point.startPos().x(), Qt::XAxis, &point));
                     else
-                        setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - point.startPos().y(), Qt::YAxis, &point));
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - point.startPos().y(), Qt::YAxis, &point));
                 }
                 if (point.id() == QQuickRangeSliderNodePrivate::get(d->first)->touchId
                         || point.id() == QQuickRangeSliderNodePrivate::get(d->second)->touchId)
