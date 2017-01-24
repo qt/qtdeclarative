@@ -21,4 +21,13 @@ macx {
     CONFIG -= app_bundle
 }
 
+QMAKE_TARGET_PRODUCT = qmlplugindump
+QMAKE_TARGET_DESCRIPTION = QML plugin dump tool
+
+win32 {
+   VERSION = $${QT_VERSION}.0
+} else {
+   VERSION = $${QT_VERSION}
+}
+
 load(qt_tool)
