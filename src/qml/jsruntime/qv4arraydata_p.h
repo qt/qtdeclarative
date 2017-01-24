@@ -90,7 +90,7 @@ struct ArrayVTable
 
 namespace Heap {
 
-struct ArrayData : public Base {
+struct ArrayDataData {
     enum Type {
         Simple = 0,
         Complex = 1,
@@ -110,6 +110,13 @@ struct ArrayData : public Base {
         SparseArray *sparse;
     };
     Value arrayData[1];
+};
+static Q_CONSTEXPR quint64 ArrayData_markTable = \
+        (MarkFlagsForType<decltype(ArrayDataData::arrayData)>::markFlags << (offsetof(ArrayDataData, arrayData) >> 2)) \
+        << (sizeof(Base) >> 2) | QV4::Heap::Base::markTable;
+
+struct ArrayData : public Base, ArrayDataData {
+    DECLARE_MARK_TABLE(ArrayData);
 
     bool isSparse() const { return type == Sparse; }
 
@@ -189,6 +196,9 @@ struct Q_QML_EXPORT ArrayData : public Managed
 {
     typedef Heap::ArrayData::Type Type;
     V4_MANAGED(ArrayData, Managed)
+    enum {
+        IsArrayData = true
+    };
 
     uint alloc() const { return d()->alloc; }
     uint &alloc() { return d()->alloc; }
@@ -246,8 +256,6 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     static Heap::ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
-    static void markObjects(Heap::Base *d, ExecutionEngine *e);
-
     static ReturnedValue get(const Heap::ArrayData *d, uint index);
     static bool put(Object *o, uint index, const Value &value);
     static bool putArray(Object *o, uint index, const Value *values, uint n);
@@ -273,8 +281,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static void free(Heap::ArrayData *d, uint idx);
 
     uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
-
-    static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
     static Heap::ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const Heap::ArrayData *d, uint index);

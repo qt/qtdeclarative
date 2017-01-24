@@ -184,6 +184,7 @@ namespace Heap {
     struct DataView;
     struct TypedArray;
 
+    template <typename T> struct Pointer;
 }
 
 class MemoryManager;

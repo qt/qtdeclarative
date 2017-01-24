@@ -72,6 +72,7 @@ namespace QV4 {
 struct VTable
 {
     const VTable * const parent;
+    const quint64 markTable;
     uint isExecutionContext : 1;
     uint isString : 1;
     uint isObject : 1;
@@ -90,6 +91,8 @@ namespace Heap {
 
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
+
+    static Q_CONSTEXPR quint64 markTable = 0;
 
     const VTable *vt;
 

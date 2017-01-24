@@ -740,13 +740,58 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
     return o;
 }
 
-static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
+void MemoryManager::drainMarkStack(Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
-        Q_ASSERT (h->vtable()->markObjects);
-        h->vtable()->markObjects(h, engine);
+        if (h->vtable()->markObjects)
+            h->vtable()->markObjects(h, engine);
+        if (quint64 m = h->vtable()->markTable) {
+//            qDebug() << "using mark table:" << hex << m << "for" << h;
+            void **mem = reinterpret_cast<void **>(h);
+            while (m) {
+                MarkFlags mark = static_cast<MarkFlags>(m & 3);
+                switch (mark) {
+                case Mark_NoMark:
+                    break;
+                case Mark_Value:
+//                    qDebug() << "marking value at " << mem;
+                    reinterpret_cast<Value *>(mem)->mark(engine);
+                    break;
+                case Mark_Pointer: {
+//                    qDebug() << "marking pointer at " << mem;
+                    Heap::Pointer<Heap::Base> *p = reinterpret_cast<Heap::Pointer<Heap::Base> *>(mem);
+                    if (*p)
+                        (*p)->mark(engine);
+                    break;
+                }
+                case Mark_ValueArray: {
+                    Q_ASSERT(m == Mark_ValueArray);
+//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
+                    uint size;
+                    Value *v = reinterpret_cast<Value *>(mem);
+                    if (h->vtable() == QV4::MemberData::staticVTable()) {
+                        size = static_cast<Heap::MemberData *>(h)->size;
+                    } else if (h->vtable()->isArrayData) {
+                        size = static_cast<Heap::ArrayData *>(h)->alloc;
+                    } else {
+                        size = 0;
+                        Q_ASSERT(false);
+                    }
+                    const Value *end = v + size;
+                    while (v < end) {
+                        v->mark(engine);
+                        ++v;
+                    }
+                    break;
+                }
+                }
+
+                m >>= 2;
+                ++mem;
+            }
+        }
     }
 }
 
@@ -788,10 +833,10 @@ void MemoryManager::mark()
             qobjectWrapper->mark(engine);
 
         if (engine->jsStackTop >= engine->jsStackLimit)
-            drainMarkStack(engine, markBase);
+            drainMarkStack(markBase);
     }
 
-    drainMarkStack(engine, markBase);
+    drainMarkStack(markBase);
 }
 
 void MemoryManager::sweep(bool lastSweep)

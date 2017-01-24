@@ -162,15 +162,6 @@ void RegExpObject::initProperties()
     *propertyData(Index_Multiline) = Primitive::fromBoolean(value()->multiLine);
 }
 
-
-void RegExpObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    RegExpObject::Data *re = static_cast<RegExpObject::Data *>(that);
-    if (re->value)
-        re->value->mark(e);
-    Object::markObjects(that, e);
-}
-
 Value *RegExpObject::lastIndexProperty()
 {
     Q_ASSERT(0 == internalClass()->find(engine()->id_lastIndex()));
@@ -301,15 +292,6 @@ void RegExpCtor::call(const Managed *that, Scope &scope, CallData *callData)
     }
 
     construct(that, scope, callData);
-}
-
-void RegExpCtor::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    RegExpCtor::Data *This = static_cast<RegExpCtor::Data *>(that);
-    This->lastMatch.mark(e);
-    if (This->lastInput)
-        This->lastInput->mark(e);
-    FunctionObject::markObjects(that, e);
 }
 
 void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)

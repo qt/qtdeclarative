@@ -45,13 +45,6 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(MemberData);
 
-void MemberData::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    Heap::MemberData *m = static_cast<Heap::MemberData *>(that);
-    for (uint i = 0; i < m->size; ++i)
-        m->data[i].mark(e);
-}
-
 Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberData *old)
 {
     Q_ASSERT(!old || old->size < n);

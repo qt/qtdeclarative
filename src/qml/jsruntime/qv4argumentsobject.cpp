@@ -235,17 +235,6 @@ void ArgumentsSetterFunction::call(const Managed *setter, Scope &scope, CallData
     scope.result = Encode::undefined();
 }
 
-void ArgumentsObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    ArgumentsObject::Data *o = static_cast<ArgumentsObject::Data *>(that);
-    if (o->context)
-        o->context->mark(e);
-    if (o->mappedArguments)
-        o->mappedArguments->mark(e);
-
-    Object::markObjects(that, e);
-}
-
 uint ArgumentsObject::getLength(const Managed *m)
 {
     const ArgumentsObject *a = static_cast<const ArgumentsObject *>(m);

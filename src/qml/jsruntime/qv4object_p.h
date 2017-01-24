@@ -67,17 +67,19 @@ struct BuiltinFunction;
 
 namespace Heap {
 
-struct Object : Base {
+#define ObjectMembers(class, Member) \
+    Member(class, InternalClass *, internalClass) \
+    Member(class, Pointer<Object>, prototype) \
+    Member(class, Pointer<MemberData>, memberData) \
+    Member(class, Pointer<ArrayData>, arrayData)
+
+DECLARE_HEAP_OBJECT(Object, Base) {
+    DECLARE_MARK_TABLE(Object);
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
     const Value *propertyData(uint index) const { return memberData->data + index; }
     Value *propertyData(uint index) { return memberData->data + index; }
-
-    InternalClass *internalClass;
-    Pointer<Object> prototype;
-    Pointer<MemberData> memberData;
-    Pointer<ArrayData> arrayData;
 };
 
 }
@@ -114,7 +116,8 @@ struct Object : Base {
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
+        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass); \
+        static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable;
 
 #define V4_INTERNALCLASS(c) \
     static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
@@ -400,7 +403,6 @@ public:
     inline void call(Scope &scope, CallData *d) const
     { vtable()->call(this, scope, d); }
 protected:
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static void construct(const Managed *m, Scope &scope, CallData *);
     static void call(const Managed *m, Scope &scope, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);

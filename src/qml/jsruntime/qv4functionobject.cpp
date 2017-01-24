@@ -69,6 +69,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
+Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
+
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
 {
     Object::init();
@@ -147,15 +149,6 @@ void FunctionObject::construct(const Managed *that, Scope &scope, CallData *)
 void FunctionObject::call(const Managed *, Scope &scope, CallData *)
 {
     scope.result = Encode::undefined();
-}
-
-void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    Heap::FunctionObject *o = static_cast<Heap::FunctionObject *>(that);
-    if (o->scope)
-        o->scope->mark(e);
-
-    Object::markObjects(that, e);
 }
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
@@ -605,15 +598,4 @@ void BoundFunction::construct(const Managed *that, Scope &scope, CallData *dd)
     memcpy(argp, dd->args, dd->argc*sizeof(Value));
     ScopedFunctionObject t(scope, f->target());
     t->construct(scope, callData);
-}
-
-void BoundFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    BoundFunction::Data *o = static_cast<BoundFunction::Data *>(that);
-    if (o->target)
-        o->target->mark(e);
-    o->boundThis.mark(e);
-    if (o->boundArgs)
-        o->boundArgs->mark(e);
-    FunctionObject::markObjects(that, e);
 }

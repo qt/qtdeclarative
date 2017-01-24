@@ -1597,10 +1597,12 @@ struct QQmlXMLHttpRequestWrapper : Object {
     QQmlXMLHttpRequest *request;
 };
 
-struct QQmlXMLHttpRequestCtor : FunctionObject {
-    void init(ExecutionEngine *engine);
+#define QQmlXMLHttpRequestCtorMembers(class, Member) \
+    Member(class, Pointer<Object>, proto)
 
-    Pointer<Object> proto;
+DECLARE_HEAP_OBJECT(QQmlXMLHttpRequestCtor, FunctionObject) {
+    DECLARE_MARK_TABLE(QQmlXMLHttpRequestCtor);
+    void init(ExecutionEngine *engine);
 };
 
 }
@@ -1614,12 +1616,7 @@ struct QQmlXMLHttpRequestWrapper : public Object
 struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
-    static void markObjects(Heap::Base *that, ExecutionEngine *e) {
-        QQmlXMLHttpRequestCtor::Data *c = static_cast<QQmlXMLHttpRequestCtor::Data *>(that);
-        if (c->proto)
-            c->proto->mark(e);
-        FunctionObject::markObjects(that, e);
-    }
+
     static void construct(const Managed *that, Scope &scope, QV4::CallData *)
     {
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());

@@ -375,12 +375,6 @@ Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type 
     return e->memoryManager->allocObject<TypedArray>(e->emptyClass, e->typedArrayPrototype + t, t);
 }
 
-void TypedArray::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    static_cast<TypedArray::Data *>(that)->buffer->mark(e);
-    Object::markObjects(that, e);
-}
-
 ReturnedValue TypedArray::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
     Scope scope(static_cast<const Object *>(m)->engine());

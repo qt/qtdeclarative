@@ -173,14 +173,6 @@ void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallDa
     scope.result = This->d()->stack;
 }
 
-void ErrorObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    ErrorObject::Data *This = static_cast<ErrorObject::Data *>(that);
-    if (This->stack)
-        This->stack->mark(e);
-    Object::markObjects(that, e);
-}
-
 DEFINE_OBJECT_VTABLE(ErrorObject);
 
 DEFINE_OBJECT_VTABLE(SyntaxErrorObject);

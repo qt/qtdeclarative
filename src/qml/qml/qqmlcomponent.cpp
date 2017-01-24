@@ -1046,14 +1046,18 @@ namespace QV4 {
 
 namespace Heap {
 
-struct QmlIncubatorObject : Object {
+#define QmlIncubatorObjectMembers(class, Member) \
+    Member(class, Value, valuemap) \
+    Member(class, Value, statusChanged) \
+    Member(class, Pointer<QmlContext>, qmlContext) \
+    Member(class, QQmlComponentIncubator *, incubator) \
+    Member(class, QQmlQPointer<QObject>, parent)
+
+DECLARE_HEAP_OBJECT(QmlIncubatorObject, Object) {
+    DECLARE_MARK_TABLE(QmlIncubatorObject);
+
     void init(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
     inline void destroy();
-    QQmlComponentIncubator *incubator;
-    QQmlQPointer<QObject> parent;
-    QV4::Value valuemap;
-    QV4::Value statusChanged;
-    Pointer<Heap::QmlContext> qmlContext;
 };
 
 }
@@ -1068,8 +1072,6 @@ struct QmlIncubatorObject : public QV4::Object
     static void method_get_status(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_get_object(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_forceCompletion(const BuiltinFunction *, Scope &scope, CallData *callData);
-
-    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
 
     void statusChanged(QQmlIncubator::Status);
     void setInitialState(QObject *);
@@ -1495,16 +1497,6 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
         QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, d()->qmlContext);
         QQmlComponentPrivate::setInitialProperties(v4, qmlCtxt, obj, d()->valuemap);
     }
-}
-
-void QV4::QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
-{
-    QmlIncubatorObject::Data *o = static_cast<QmlIncubatorObject::Data *>(that);
-    o->valuemap.mark(e);
-    o->statusChanged.mark(e);
-    if (o->qmlContext)
-        o->qmlContext->mark(e);
-    Object::markObjects(that, e);
 }
 
 void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)

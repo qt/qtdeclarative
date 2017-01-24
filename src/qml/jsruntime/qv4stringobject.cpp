@@ -145,13 +145,6 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
     return Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
-void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    StringObject::Data *o = static_cast<StringObject::Data *>(that);
-    o->string->mark(e);
-    Object::markObjects(that, e);
-}
-
 DEFINE_OBJECT_VTABLE(StringCtor);
 
 void Heap::StringCtor::init(QV4::ExecutionContext *scope)

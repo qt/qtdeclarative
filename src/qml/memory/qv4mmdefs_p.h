@@ -255,6 +255,54 @@ Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
+// Some helper classes and macros to automate the generation of our
+// tables used for marking objects
+
+enum MarkFlags {
+    Mark_NoMark = 0,
+    Mark_Value = 1,
+    Mark_Pointer = 2,
+    Mark_ValueArray = 3
+};
+
+template<typename T>
+struct MarkFlagsForType {
+    static const quint64 markFlags = Mark_NoMark;
+};
+template<typename T>
+struct MarkFlagsForType<Heap::Pointer<T>> {
+    static const quint64 markFlags = Mark_Pointer;
+};
+template<>
+struct MarkFlagsForType<Value> {
+    static const quint64 markFlags = Mark_Value;
+};
+
+typedef Value ValueArray[1];
+template<>
+struct MarkFlagsForType<ValueArray> {
+    static const quint64 markFlags = Mark_ValueArray;
+};
+
+#define HEAP_OBJECT_MEMBER_EXPANSION(c, type, name) type name;
+
+#define HEAP_OBJECT_MARK_EXPANSION(class, type, name) \
+    (MarkFlagsForType<decltype(class::name)>::markFlags << (offsetof(class, name) >> 2)) |
+
+#define DECLARE_HEAP_OBJECT(name, base) \
+struct name##Data { \
+    name##Members(name, HEAP_OBJECT_MEMBER_EXPANSION) \
+}; \
+struct name##SizeStruct : base, name##Data {}; \
+static Q_CONSTEXPR quint64 name##_markTable = \
+    (name##Members(name##Data, HEAP_OBJECT_MARK_EXPANSION) 0) << (((sizeof(name##SizeStruct) - sizeof(name##Data)) >> 2) | QV4::Heap::base::markTable; \
+    \
+struct name : base, name##Data
+
+#define DECLARE_MARK_TABLE(class) static Q_CONSTEXPR quint64 markTable = class##_markTable
+
+
+
 }
 
 QT_END_NAMESPACE

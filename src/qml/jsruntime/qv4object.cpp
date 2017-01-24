@@ -258,18 +258,6 @@ void Object::defineReadonlyConfigurableProperty(String *name, const Value &value
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
 
-void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    Heap::Object *o = static_cast<Heap::Object *>(that);
-
-    if (o->memberData)
-        o->memberData->mark(e);
-    if (o->arrayData)
-        o->arrayData->mark(e);
-    if (o->prototype)
-        o->prototype->mark(e);
-}
-
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;

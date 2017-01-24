@@ -84,13 +84,6 @@ void DataViewCtor::call(const Managed *that, Scope &scope, CallData *callData)
     construct(that, scope, callData);
 }
 
-
-void DataView::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    DataView::Data *v = static_cast<DataView::Data *>(that);
-    v->buffer->mark(e);
-}
-
 void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);

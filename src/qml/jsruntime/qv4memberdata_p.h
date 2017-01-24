@@ -59,12 +59,12 @@ namespace QV4 {
 
 namespace Heap {
 
-struct MemberData : Base {
-    union {
-        uint size;
-        double _dummy;
-    };
-    Value data[1];
+#define MemberDataMembers(class, Member) \
+    Member(class, uint, size) \
+    Member(class, ValueArray, data)
+
+DECLARE_HEAP_OBJECT(MemberData, Base) {
+    DECLARE_MARK_TABLE(MemberData);
 };
 V4_ASSERT_IS_TRIVIAL(MemberData)
 
@@ -80,8 +80,6 @@ struct MemberData : Managed
     inline uint size() const { return d()->size; }
 
     static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
-
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 }

@@ -65,7 +65,12 @@ struct BuiltinFunction;
 
 namespace Heap {
 
-struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
+#define FunctionObjectMembers(class, Member) \
+    Member(class, Pointer<ExecutionContext>, scope) \
+    Member(class, Function *, function)
+
+DECLARE_HEAP_OBJECT(FunctionObject, Object) {
+    DECLARE_MARK_TABLE(FunctionObject);
     enum {
         Index_Prototype = 0,
         Index_ProtoConstructor = 0
@@ -82,9 +87,6 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     bool needsActivation() const { return function ? function->needsActivation() : false; }
 
     const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->cast<QV4::Object>(); }
-
-    Pointer<ExecutionContext> scope;
-    Function *function;
 };
 
 struct FunctionCtor : FunctionObject {
@@ -119,11 +121,15 @@ struct ScriptFunction : FunctionObject {
     void init(QV4::ExecutionContext *scope, Function *function);
 };
 
-struct BoundFunction : FunctionObject {
+#define BoundFunctionMembers(class, Member) \
+    Member(class, Pointer<FunctionObject>, target) \
+    Member(class, Value, boundThis) \
+    Member(class, Pointer<MemberData>, boundArgs)
+
+DECLARE_HEAP_OBJECT(BoundFunction, FunctionObject) {
+    DECLARE_MARK_TABLE(BoundFunction);
+
     void init(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
-    Pointer<FunctionObject> target;
-    Value boundThis;
-    Pointer<MemberData> boundArgs;
 };
 
 }
@@ -160,8 +166,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool isBoundFunction() const;
 
     QQmlSourceLocation sourceLocation() const;
-
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 template<>
@@ -259,8 +263,6 @@ struct BoundFunction: FunctionObject {
 
     static void construct(const Managed *, Scope &scope, CallData *d);
     static void call(const Managed *that, Scope &scope, CallData *dd);
-
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 }

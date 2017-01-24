@@ -50,6 +50,7 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
 
 const QV4::VTable QV4::ArrayData::static_vtbl = {
     0,
+    0,
     QV4::ArrayData::IsExecutionContext,
     QV4::ArrayData::IsString,
     QV4::ArrayData::IsObject,
@@ -233,20 +234,6 @@ void ArrayData::ensureAttributes(Object *o)
     ArrayData::realloc(o, Heap::ArrayData::Simple, 0, true);
 }
 
-
-void SimpleArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
-{
-    Heap::SimpleArrayData *dd = static_cast<Heap::SimpleArrayData *>(d);
-    uint end = dd->offset + dd->len;
-    if (end > dd->alloc) {
-        for (uint i = 0; i < end - dd->alloc; ++i)
-            dd->arrayData[i].mark(e);
-        end = dd->alloc;
-    }
-    for (uint i = dd->offset; i < end; ++i)
-        dd->arrayData[i].mark(e);
-}
-
 ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
 {
     const Heap::SimpleArrayData *dd = static_cast<const Heap::SimpleArrayData *>(d);
@@ -378,15 +365,6 @@ void SparseArrayData::free(Heap::ArrayData *d, uint idx)
     d->freeList = Primitive::emptyValue(idx).asReturnedValue();
     if (d->attrs)
         d->attrs[idx].clear();
-}
-
-
-void SparseArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
-{
-    Heap::SparseArrayData *dd = static_cast<Heap::SparseArrayData *>(d);
-    uint l = dd->alloc;
-    for (uint i = 0; i < l; ++i)
-        dd->arrayData[i].mark(e);
 }
 
 Heap::ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes)

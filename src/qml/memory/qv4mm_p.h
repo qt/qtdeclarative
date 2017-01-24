@@ -427,6 +427,7 @@ public:
 
     // called when a JS object grows itself. Specifically: Heap::String::append
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
+    void drainMarkStack(Value *markBase);
 
 
 protected:

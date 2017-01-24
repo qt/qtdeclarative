@@ -1841,15 +1841,6 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
     }
 }
 
-void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    QObjectMethod::Data *This = static_cast<QObjectMethod::Data*>(that);
-    if (This->valueTypeWrapper)
-        This->valueTypeWrapper->mark(e);
-
-    FunctionObject::markObjects(that, e);
-}
-
 DEFINE_OBJECT_VTABLE(QObjectMethod);
 
 
