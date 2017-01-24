@@ -325,6 +325,15 @@ void tst_qqmldirparser::parse_data()
             << QStringList()
             << (QStringList() << "bar||1|0|true")
             << false;
+
+    QTest::newRow("classname")
+            << "classname/qmldir"
+            << QStringList()
+            << (QStringList() << "qtquick2plugin|")
+            << QStringList()
+            << QStringList()
+            << QStringList()
+            << true;
 }
 
 void tst_qqmldirparser::parse()
