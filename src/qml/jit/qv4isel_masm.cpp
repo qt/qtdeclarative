@@ -1712,6 +1712,13 @@ bool InstructionSelection::visitCJumpStrictBool(IR::Binop *binop, IR::BasicBlock
         // neither operands are statically typed as bool, so bail out.
         return false;
     }
+    if (otherSrc->type == IR::UnknownType) {
+        // Ok, we really need to call into the runtime.
+        // (This case doesn't happen when the optimizer ran, because everything will be typed (yes,
+        // possibly as "var" meaning anything), but it does happen for $0===true, which is generated
+        // for things where the optimizer didn't run (like functions with a try block).)
+        return false;
+    }
 
     Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
                                                                            : Assembler::NotEqual;

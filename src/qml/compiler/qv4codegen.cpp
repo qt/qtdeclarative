@@ -611,7 +611,7 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right, const AS
 
     if (IR::Const *c1 = left->asConst()) {
         if (IR::Const *c2 = right->asConst()) {
-            if (c1->type == IR::NumberType && c2->type == IR::NumberType) {
+            if ((c1->type & IR::NumberType) && (c2->type & IR::NumberType)) {
                 switch (op) {
                 case IR::OpAdd: return _block->CONST(IR::NumberType, c1->value + c2->value);
                 case IR::OpAnd: return _block->CONST(IR::BoolType, c1->value ? c2->value : 0);
@@ -659,20 +659,20 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right, const AS
         }
     }
 
-    if (!left->asTemp() && !left->asArgLocal()) {
+    if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
         const unsigned t = _block->newTemp();
         setLocation(move(_block->TEMP(t), left), loc);
         left = _block->TEMP(t);
     }
 
-    if (!right->asTemp() && !right->asArgLocal()) {
+    if (!right->asTemp() && !right->asArgLocal() && !right->asConst()) {
         const unsigned t = _block->newTemp();
         setLocation(move(_block->TEMP(t), right), loc);
         right = _block->TEMP(t);
     }
 
-    Q_ASSERT(left->asTemp() || left->asArgLocal());
-    Q_ASSERT(right->asTemp() || right->asArgLocal());
+    Q_ASSERT(left->asTemp() || left->asArgLocal() || left->asConst());
+    Q_ASSERT(right->asTemp() || right->asArgLocal() || right->asConst());
 
     return _block->BINOP(op, left, right);
 }
