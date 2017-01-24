@@ -1260,4 +1260,14 @@ TestCase {
         compare(control.y, (control.parent.height - control.height) / 2)
         window.destroy()
     }
+
+    function test_windowParent() {
+        var control = popupControl.createObject(applicationWindow, {width: 100, height: 100})
+        verify(control)
+
+        control.open()
+        verify(control.visible)
+
+        control.destroy()
+    }
 }
