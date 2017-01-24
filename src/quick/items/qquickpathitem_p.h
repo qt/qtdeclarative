@@ -55,6 +55,7 @@
 
 #include <private/qtquickglobal_p.h>
 #include <private/qquickpath_p.h>
+#include <private/qv8engine_p.h>
 #include <QGradientStops>
 
 QT_REQUIRE_CONFIG(quick_path);
@@ -295,6 +296,12 @@ public:
     Status status() const;
 
     QQmlListProperty<QQuickVisualPath> elements();
+
+    Q_INVOKABLE void newPath(QQmlV4Function *args);
+    Q_INVOKABLE void newStrokeFillParams(QQmlV4Function *args);
+    Q_INVOKABLE void clearVisualPaths(QQmlV4Function *args);
+    Q_INVOKABLE void commitVisualPaths(QQmlV4Function *args);
+    Q_INVOKABLE void appendVisualPath(QQmlV4Function *args);
 
 protected:
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;

@@ -43,15 +43,20 @@
 #include "qquickpathitemnvprrenderer_p.h"
 #include "qquickpathitemsoftwarerenderer_p.h"
 #include <private/qsgtexture_p.h>
+#include <private/qquicksvgparser_p.h>
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
 
+#include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qqmlengine_p.h>
+
 QT_BEGIN_NAMESPACE
 
-QQuickVisualPathPrivate::QQuickVisualPathPrivate()
-    : path(nullptr),
-      dirty(DirtyAll),
-      strokeColor(Qt::white),
+QQuickPathItemStrokeFillParams::QQuickPathItemStrokeFillParams()
+    : strokeColor(Qt::white),
       strokeWidth(1),
       fillColor(Qt::white),
       fillRule(QQuickVisualPath::OddEvenFill),
@@ -63,6 +68,56 @@ QQuickVisualPathPrivate::QQuickVisualPathPrivate()
       fillGradient(nullptr)
 {
     dashPattern << 4 << 2; // 4 * strokeWidth dash followed by 2 * strokeWidth space
+}
+
+QPainterPath QQuickPathItemPath::toPainterPath() const
+{
+    QPainterPath p;
+    int coordIdx = 0;
+    for (int i = 0; i < cmd.count(); ++i) {
+        switch (cmd[i]) {
+        case QQuickPathItemPath::MoveTo:
+            p.moveTo(coords[coordIdx], coords[coordIdx + 1]);
+            coordIdx += 2;
+            break;
+        case QQuickPathItemPath::LineTo:
+            p.lineTo(coords[coordIdx], coords[coordIdx + 1]);
+            coordIdx += 2;
+            break;
+        case QQuickPathItemPath::QuadTo:
+            p.quadTo(coords[coordIdx], coords[coordIdx + 1],
+                    coords[coordIdx + 2], coords[coordIdx + 3]);
+            coordIdx += 4;
+            break;
+        case QQuickPathItemPath::CubicTo:
+            p.cubicTo(coords[coordIdx], coords[coordIdx + 1],
+                    coords[coordIdx + 2], coords[coordIdx + 3],
+                    coords[coordIdx + 4], coords[coordIdx + 5]);
+            coordIdx += 6;
+            break;
+        case QQuickPathItemPath::ArcTo:
+            // does not map to the QPainterPath API; reuse the helper code from QQuickSvgParser
+            QQuickSvgParser::pathArc(p,
+                                     coords[coordIdx], coords[coordIdx + 1], // radius
+                                     coords[coordIdx + 2], // xAxisRotation
+                                     !qFuzzyIsNull(coords[coordIdx + 6]), // useLargeArc
+                                     !qFuzzyIsNull(coords[coordIdx + 5]), // sweep flag
+                                     coords[coordIdx + 3], coords[coordIdx + 4], // end
+                                     p.currentPosition().x(), p.currentPosition().y());
+            coordIdx += 7;
+            break;
+        default:
+            qWarning("Unknown JS path command: %d", cmd[i]);
+            break;
+        }
+    }
+    return p;
+}
+
+QQuickVisualPathPrivate::QQuickVisualPathPrivate()
+    : path(nullptr),
+      dirty(DirtyAll)
+{
 }
 
 QQuickVisualPath::QQuickVisualPath(QObject *parent)
@@ -108,14 +163,14 @@ void QQuickVisualPathPrivate::_q_pathChanged()
 QColor QQuickVisualPath::strokeColor() const
 {
     Q_D(const QQuickVisualPath);
-    return d->strokeColor;
+    return d->sfp.strokeColor;
 }
 
 void QQuickVisualPath::setStrokeColor(const QColor &color)
 {
     Q_D(QQuickVisualPath);
-    if (d->strokeColor != color) {
-        d->strokeColor = color;
+    if (d->sfp.strokeColor != color) {
+        d->sfp.strokeColor = color;
         d->dirty |= QQuickVisualPathPrivate::DirtyStrokeColor;
         emit strokeColorChanged();
         emit changed();
@@ -125,14 +180,14 @@ void QQuickVisualPath::setStrokeColor(const QColor &color)
 qreal QQuickVisualPath::strokeWidth() const
 {
     Q_D(const QQuickVisualPath);
-    return d->strokeWidth;
+    return d->sfp.strokeWidth;
 }
 
 void QQuickVisualPath::setStrokeWidth(qreal w)
 {
     Q_D(QQuickVisualPath);
-    if (d->strokeWidth != w) {
-        d->strokeWidth = w;
+    if (d->sfp.strokeWidth != w) {
+        d->sfp.strokeWidth = w;
         d->dirty |= QQuickVisualPathPrivate::DirtyStrokeWidth;
         emit strokeWidthChanged();
         emit changed();
@@ -142,14 +197,14 @@ void QQuickVisualPath::setStrokeWidth(qreal w)
 QColor QQuickVisualPath::fillColor() const
 {
     Q_D(const QQuickVisualPath);
-    return d->fillColor;
+    return d->sfp.fillColor;
 }
 
 void QQuickVisualPath::setFillColor(const QColor &color)
 {
     Q_D(QQuickVisualPath);
-    if (d->fillColor != color) {
-        d->fillColor = color;
+    if (d->sfp.fillColor != color) {
+        d->sfp.fillColor = color;
         d->dirty |= QQuickVisualPathPrivate::DirtyFillColor;
         emit fillColorChanged();
         emit changed();
@@ -159,14 +214,14 @@ void QQuickVisualPath::setFillColor(const QColor &color)
 QQuickVisualPath::FillRule QQuickVisualPath::fillRule() const
 {
     Q_D(const QQuickVisualPath);
-    return d->fillRule;
+    return d->sfp.fillRule;
 }
 
 void QQuickVisualPath::setFillRule(FillRule fillRule)
 {
     Q_D(QQuickVisualPath);
-    if (d->fillRule != fillRule) {
-        d->fillRule = fillRule;
+    if (d->sfp.fillRule != fillRule) {
+        d->sfp.fillRule = fillRule;
         d->dirty |= QQuickVisualPathPrivate::DirtyFillRule;
         emit fillRuleChanged();
         emit changed();
@@ -176,14 +231,14 @@ void QQuickVisualPath::setFillRule(FillRule fillRule)
 QQuickVisualPath::JoinStyle QQuickVisualPath::joinStyle() const
 {
     Q_D(const QQuickVisualPath);
-    return d->joinStyle;
+    return d->sfp.joinStyle;
 }
 
 void QQuickVisualPath::setJoinStyle(JoinStyle style)
 {
     Q_D(QQuickVisualPath);
-    if (d->joinStyle != style) {
-        d->joinStyle = style;
+    if (d->sfp.joinStyle != style) {
+        d->sfp.joinStyle = style;
         d->dirty |= QQuickVisualPathPrivate::DirtyStyle;
         emit joinStyleChanged();
         emit changed();
@@ -193,14 +248,14 @@ void QQuickVisualPath::setJoinStyle(JoinStyle style)
 int QQuickVisualPath::miterLimit() const
 {
     Q_D(const QQuickVisualPath);
-    return d->miterLimit;
+    return d->sfp.miterLimit;
 }
 
 void QQuickVisualPath::setMiterLimit(int limit)
 {
     Q_D(QQuickVisualPath);
-    if (d->miterLimit != limit) {
-        d->miterLimit = limit;
+    if (d->sfp.miterLimit != limit) {
+        d->sfp.miterLimit = limit;
         d->dirty |= QQuickVisualPathPrivate::DirtyStyle;
         emit miterLimitChanged();
         emit changed();
@@ -210,14 +265,14 @@ void QQuickVisualPath::setMiterLimit(int limit)
 QQuickVisualPath::CapStyle QQuickVisualPath::capStyle() const
 {
     Q_D(const QQuickVisualPath);
-    return d->capStyle;
+    return d->sfp.capStyle;
 }
 
 void QQuickVisualPath::setCapStyle(CapStyle style)
 {
     Q_D(QQuickVisualPath);
-    if (d->capStyle != style) {
-        d->capStyle = style;
+    if (d->sfp.capStyle != style) {
+        d->sfp.capStyle = style;
         d->dirty |= QQuickVisualPathPrivate::DirtyStyle;
         emit capStyleChanged();
         emit changed();
@@ -227,14 +282,14 @@ void QQuickVisualPath::setCapStyle(CapStyle style)
 QQuickVisualPath::StrokeStyle QQuickVisualPath::strokeStyle() const
 {
     Q_D(const QQuickVisualPath);
-    return d->strokeStyle;
+    return d->sfp.strokeStyle;
 }
 
 void QQuickVisualPath::setStrokeStyle(StrokeStyle style)
 {
     Q_D(QQuickVisualPath);
-    if (d->strokeStyle != style) {
-        d->strokeStyle = style;
+    if (d->sfp.strokeStyle != style) {
+        d->sfp.strokeStyle = style;
         d->dirty |= QQuickVisualPathPrivate::DirtyDash;
         emit strokeStyleChanged();
         emit changed();
@@ -244,14 +299,14 @@ void QQuickVisualPath::setStrokeStyle(StrokeStyle style)
 qreal QQuickVisualPath::dashOffset() const
 {
     Q_D(const QQuickVisualPath);
-    return d->dashOffset;
+    return d->sfp.dashOffset;
 }
 
 void QQuickVisualPath::setDashOffset(qreal offset)
 {
     Q_D(QQuickVisualPath);
-    if (d->dashOffset != offset) {
-        d->dashOffset = offset;
+    if (d->sfp.dashOffset != offset) {
+        d->sfp.dashOffset = offset;
         d->dirty |= QQuickVisualPathPrivate::DirtyDash;
         emit dashOffsetChanged();
         emit changed();
@@ -261,14 +316,14 @@ void QQuickVisualPath::setDashOffset(qreal offset)
 QVector<qreal> QQuickVisualPath::dashPattern() const
 {
     Q_D(const QQuickVisualPath);
-    return d->dashPattern;
+    return d->sfp.dashPattern;
 }
 
 void QQuickVisualPath::setDashPattern(const QVector<qreal> &array)
 {
     Q_D(QQuickVisualPath);
-    if (d->dashPattern != array) {
-        d->dashPattern = array;
+    if (d->sfp.dashPattern != array) {
+        d->sfp.dashPattern = array;
         d->dirty |= QQuickVisualPathPrivate::DirtyDash;
         emit dashPatternChanged();
         emit changed();
@@ -278,19 +333,19 @@ void QQuickVisualPath::setDashPattern(const QVector<qreal> &array)
 QQuickPathGradient *QQuickVisualPath::fillGradient() const
 {
     Q_D(const QQuickVisualPath);
-    return d->fillGradient;
+    return d->sfp.fillGradient;
 }
 
 void QQuickVisualPath::setFillGradient(QQuickPathGradient *gradient)
 {
     Q_D(QQuickVisualPath);
-    if (d->fillGradient != gradient) {
-        if (d->fillGradient)
-            qmlobject_disconnect(d->fillGradient, QQuickPathGradient, SIGNAL(updated()),
+    if (d->sfp.fillGradient != gradient) {
+        if (d->sfp.fillGradient)
+            qmlobject_disconnect(d->sfp.fillGradient, QQuickPathGradient, SIGNAL(updated()),
                                  this, QQuickVisualPath, SLOT(_q_fillGradientChanged()));
-        d->fillGradient = gradient;
-        if (d->fillGradient)
-            qmlobject_connect(d->fillGradient, QQuickPathGradient, SIGNAL(updated()),
+        d->sfp.fillGradient = gradient;
+        if (d->sfp.fillGradient)
+            qmlobject_connect(d->sfp.fillGradient, QQuickPathGradient, SIGNAL(updated()),
                               this, QQuickVisualPath, SLOT(_q_fillGradientChanged()));
         d->dirty |= QQuickVisualPathPrivate::DirtyFillGradient;
         emit changed();
@@ -430,14 +485,14 @@ QQuickPathItem::Status QQuickPathItem::status() const
 static QQuickVisualPath *vpe_at(QQmlListProperty<QQuickVisualPath> *property, int index)
 {
     QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(static_cast<QQuickPathItem *>(property->object));
-    return d->vp.at(index);
+    return d->qmlData.vp.at(index);
 }
 
 static void vpe_append(QQmlListProperty<QQuickVisualPath> *property, QQuickVisualPath *obj)
 {
     QQuickPathItem *item = static_cast<QQuickPathItem *>(property->object);
     QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(item);
-    d->vp.append(obj);
+    d->qmlData.vp.append(obj);
 
     if (d->componentComplete) {
         QObject::connect(obj, SIGNAL(changed()), item, SLOT(_q_visualPathChanged()));
@@ -448,7 +503,7 @@ static void vpe_append(QQmlListProperty<QQuickVisualPath> *property, QQuickVisua
 static int vpe_count(QQmlListProperty<QQuickVisualPath> *property)
 {
     QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(static_cast<QQuickPathItem *>(property->object));
-    return d->vp.count();
+    return d->qmlData.vp.count();
 }
 
 static void vpe_clear(QQmlListProperty<QQuickVisualPath> *property)
@@ -456,10 +511,10 @@ static void vpe_clear(QQmlListProperty<QQuickVisualPath> *property)
     QQuickPathItem *item = static_cast<QQuickPathItem *>(property->object);
     QQuickPathItemPrivate *d = QQuickPathItemPrivate::get(item);
 
-    for (QQuickVisualPath *p : d->vp)
+    for (QQuickVisualPath *p : d->qmlData.vp)
         QObject::disconnect(p, SIGNAL(changed()), item, SLOT(_q_visualPathChanged()));
 
-    d->vp.clear();
+    d->qmlData.vp.clear();
 
     if (d->componentComplete)
         d->_q_visualPathChanged();
@@ -486,7 +541,7 @@ void QQuickPathItem::componentComplete()
     Q_D(QQuickPathItem);
     d->componentComplete = true;
 
-    for (QQuickVisualPath *p : d->vp)
+    for (QQuickVisualPath *p : d->qmlData.vp)
         connect(p, SIGNAL(changed()), this, SLOT(_q_visualPathChanged()));
 
     d->_q_visualPathChanged();
@@ -624,36 +679,60 @@ void QQuickPathItemPrivate::sync()
         renderer->setAsyncCallback(q_asyncPathItemReady, this);
     }
 
-    const int count = vp.count();
-    renderer->beginSync(count);
+    if (!jsData.isValid()) {
+        // Standard route: The path and stroke/fill parameters are provided via
+        // VisualPath and Path.
+        const int count = qmlData.vp.count();
+        renderer->beginSync(count);
 
-    for (int i = 0; i < count; ++i) {
-        QQuickVisualPath *p = vp[i];
-        int &dirty(QQuickVisualPathPrivate::get(p)->dirty);
+        for (int i = 0; i < count; ++i) {
+            QQuickVisualPath *p = qmlData.vp[i];
+            int &dirty(QQuickVisualPathPrivate::get(p)->dirty);
 
-        if (dirty & QQuickVisualPathPrivate::DirtyPath)
-            renderer->setPath(i, p->path());
-        if (dirty & QQuickVisualPathPrivate::DirtyStrokeColor)
-            renderer->setStrokeColor(i, p->strokeColor());
-        if (dirty & QQuickVisualPathPrivate::DirtyStrokeWidth)
-            renderer->setStrokeWidth(i, p->strokeWidth());
-        if (dirty & QQuickVisualPathPrivate::DirtyFillColor)
-            renderer->setFillColor(i, p->fillColor());
-        if (dirty & QQuickVisualPathPrivate::DirtyFillRule)
-            renderer->setFillRule(i, p->fillRule());
-        if (dirty & QQuickVisualPathPrivate::DirtyStyle) {
-            renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
-            renderer->setCapStyle(i, p->capStyle());
+            if (dirty & QQuickVisualPathPrivate::DirtyPath)
+                renderer->setPath(i, p->path());
+            if (dirty & QQuickVisualPathPrivate::DirtyStrokeColor)
+                renderer->setStrokeColor(i, p->strokeColor());
+            if (dirty & QQuickVisualPathPrivate::DirtyStrokeWidth)
+                renderer->setStrokeWidth(i, p->strokeWidth());
+            if (dirty & QQuickVisualPathPrivate::DirtyFillColor)
+                renderer->setFillColor(i, p->fillColor());
+            if (dirty & QQuickVisualPathPrivate::DirtyFillRule)
+                renderer->setFillRule(i, p->fillRule());
+            if (dirty & QQuickVisualPathPrivate::DirtyStyle) {
+                renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
+                renderer->setCapStyle(i, p->capStyle());
+            }
+            if (dirty & QQuickVisualPathPrivate::DirtyDash)
+                renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
+            if (dirty & QQuickVisualPathPrivate::DirtyFillGradient)
+                renderer->setFillGradient(i, p->fillGradient());
+
+            dirty = 0;
         }
-        if (dirty & QQuickVisualPathPrivate::DirtyDash)
-            renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
-        if (dirty & QQuickVisualPathPrivate::DirtyFillGradient)
-            renderer->setFillGradient(i, p->fillGradient());
 
-        dirty = 0;
+        renderer->endSync(useAsync);
+    } else {
+        // Path and stroke/fill params provided from JavaScript. This avoids
+        // QObjects at the expense of not supporting changes afterwards.
+        const int count = jsData.paths.count();
+        renderer->beginSync(count);
+
+        for (int i = 0; i < count; ++i) {
+            renderer->setJSPath(i, jsData.paths[i]);
+            const QQuickPathItemStrokeFillParams sfp(jsData.sfp[i]);
+            renderer->setStrokeColor(i, sfp.strokeColor);
+            renderer->setStrokeWidth(i, sfp.strokeWidth);
+            renderer->setFillColor(i, sfp.fillColor);
+            renderer->setFillRule(i, sfp.fillRule);
+            renderer->setJoinStyle(i, sfp.joinStyle, sfp.miterLimit);
+            renderer->setCapStyle(i, sfp.capStyle);
+            renderer->setStrokeStyle(i, sfp.strokeStyle, sfp.dashOffset, sfp.dashPattern);
+            renderer->setFillGradient(i, sfp.fillGradient);
+        }
+
+        renderer->endSync(useAsync);
     }
-
-    renderer->endSync(useAsync);
 
     if (!useAsync)
         setStatus(QQuickPathItem::Ready);
@@ -934,6 +1013,593 @@ QSGTexture *QQuickPathItemGradientCache::get(const GradientDesc &grad)
 }
 
 #endif // QT_NO_OPENGL
+
+// ***** JS-based alternative for creating static paths, (mostly) without QObjects *****
+
+class QQuickPathItemJSEngineData : public QV8Engine::Deletable
+{
+public:
+    QQuickPathItemJSEngineData(QV4::ExecutionEngine *engine);
+
+    QV4::PersistentValue pathProto;
+    QV4::PersistentValue strokeFillParamsProto;
+};
+
+V4_DEFINE_EXTENSION(QQuickPathItemJSEngineData, engineData)
+
+namespace QV4 {
+namespace Heap {
+
+struct QQuickPathItemJSPathPrototype : Object {
+    void init() { Object::init(); }
+};
+
+struct QQuickPathItemJSPath : Object {
+    void init() { Object::init(); }
+    QQuickPathItemPathObject *obj;
+};
+
+struct QQuickPathItemJSStrokeFillParamsPrototype : Object {
+    void init() { Object::init(); }
+};
+
+struct QQuickPathItemJSStrokeFillParams : Object {
+    void init() { Object::init(); }
+    QQuickPathItemStrokeFillParamsObject *obj;
+};
+
+} // namespace Heap
+} // namespace QV4
+
+struct QQuickPathItemJSPathPrototype : public QV4::Object
+{
+    V4_OBJECT2(QQuickPathItemJSPathPrototype, QV4::Object)
+public:
+    static QV4::Heap::QQuickPathItemJSPathPrototype *create(QV4::ExecutionEngine *engine)
+    {
+        QV4::Scope scope(engine);
+        auto obj = engine->memoryManager->allocObject<QQuickPathItemJSPathPrototype>();
+        QV4::Scoped<QQuickPathItemJSPathPrototype> o(scope, obj);
+
+        o->defineDefaultProperty(QStringLiteral("clear"), method_clear, 0);
+        o->defineDefaultProperty(QStringLiteral("moveTo"), method_moveTo, 0);
+        o->defineDefaultProperty(QStringLiteral("lineTo"), method_lineTo, 0);
+        o->defineDefaultProperty(QStringLiteral("quadTo"), method_quadTo, 0);
+        o->defineDefaultProperty(QStringLiteral("cubicTo"), method_cubicTo, 0);
+        o->defineDefaultProperty(QStringLiteral("arcTo"), method_arcTo, 0);
+
+        return o->d();
+    }
+
+    static void method_clear(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_moveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_lineTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_quadTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_cubicTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_arcTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickPathItemJSPathPrototype);
+
+struct QQuickPathItemJSStrokeFillParamsPrototype : public QV4::Object
+{
+    V4_OBJECT2(QQuickPathItemJSStrokeFillParamsPrototype, QV4::Object)
+public:
+    static QV4::Heap::QQuickPathItemJSStrokeFillParamsPrototype *create(QV4::ExecutionEngine *engine)
+    {
+        QV4::Scope scope(engine);
+        auto obj = engine->memoryManager->allocObject<QQuickPathItemJSStrokeFillParamsPrototype>();
+        QV4::Scoped<QQuickPathItemJSStrokeFillParamsPrototype> o(scope, obj);
+
+        o->defineDefaultProperty(QStringLiteral("clear"), method_clear, 0);
+
+        return o->d();
+    }
+
+    static void method_clear(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickPathItemJSStrokeFillParamsPrototype);
+
+struct QQuickPathItemJSPath : public QV4::Object
+{
+    V4_OBJECT2(QQuickPathItemJSPath, QV4::Object)
+};
+
+DEFINE_OBJECT_VTABLE(QQuickPathItemJSPath);
+
+struct QQuickPathItemJSStrokeFillParams : public QV4::Object
+{
+    V4_OBJECT2(QQuickPathItemJSStrokeFillParams, QV4::Object)
+
+    static void method_get_strokeColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_strokeColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_strokeWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_strokeWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_fillColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_fillColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_joinStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_joinStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_capStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_capStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_dashOffset(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_dashOffset(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_dashPattern(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_dashPattern(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_get_fillGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static void method_set_fillGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+};
+
+DEFINE_OBJECT_VTABLE(QQuickPathItemJSStrokeFillParams);
+
+void QQuickPathItemJSPathPrototype::method_clear(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSPath> r(scope, callData->thisObject.as<QQuickPathItemJSPath>());
+
+    r->d()->obj->clear();
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+void QQuickPathItemJSPathPrototype::method_moveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSPath> r(scope, callData->thisObject.as<QQuickPathItemJSPath>());
+
+    if (callData->argc >= 2) {
+        QQuickPathItemPathObject *p = r->d()->obj;
+        p->path.cmd.append(QQuickPathItemPath::MoveTo);
+        p->path.coords.append(callData->args[0].toNumber());
+        p->path.coords.append(callData->args[1].toNumber());
+    }
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+void QQuickPathItemJSPathPrototype::method_lineTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSPath> r(scope, callData->thisObject.as<QQuickPathItemJSPath>());
+
+    if (callData->argc >= 2) {
+        QQuickPathItemPathObject *p = r->d()->obj;
+        p->path.cmd.append(QQuickPathItemPath::LineTo);
+        p->path.coords.append(callData->args[0].toNumber());
+        p->path.coords.append(callData->args[1].toNumber());
+    }
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+void QQuickPathItemJSPathPrototype::method_quadTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSPath> r(scope, callData->thisObject.as<QQuickPathItemJSPath>());
+
+    if (callData->argc >= 4) {
+        QQuickPathItemPathObject *p = r->d()->obj;
+        p->path.cmd.append(QQuickPathItemPath::QuadTo);
+        const QV4::Value *v = callData->args;
+        p->path.coords.append(v[0].toNumber()); // cx
+        p->path.coords.append(v[1].toNumber()); // cy
+        p->path.coords.append(v[2].toNumber()); // x
+        p->path.coords.append(v[3].toNumber()); // y
+    }
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+void QQuickPathItemJSPathPrototype::method_cubicTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSPath> r(scope, callData->thisObject.as<QQuickPathItemJSPath>());
+
+    if (callData->argc >= 6) {
+        QQuickPathItemPathObject *p = r->d()->obj;
+        p->path.cmd.append(QQuickPathItemPath::CubicTo);
+        const QV4::Value *v = callData->args;
+        p->path.coords.append(v[0].toNumber()); // c1x
+        p->path.coords.append(v[1].toNumber()); // c1y
+        p->path.coords.append(v[2].toNumber()); // c2x
+        p->path.coords.append(v[3].toNumber()); // c2y
+        p->path.coords.append(v[4].toNumber()); // x
+        p->path.coords.append(v[5].toNumber()); // y
+    }
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+void QQuickPathItemJSPathPrototype::method_arcTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSPath> r(scope, callData->thisObject.as<QQuickPathItemJSPath>());
+
+    if (callData->argc >= 7) {
+        QQuickPathItemPathObject *p = r->d()->obj;
+        p->path.cmd.append(QQuickPathItemPath::ArcTo);
+        const QV4::Value *v = callData->args;
+        p->path.coords.append(v[0].toNumber()); // radiusX
+        p->path.coords.append(v[1].toNumber()); // radiusY
+        p->path.coords.append(v[2].toNumber()); // xAxisRotation
+        p->path.coords.append(v[3].toNumber()); // x
+        p->path.coords.append(v[4].toNumber()); // y
+        p->path.coords.append(v[5].toNumber()); // sweepFlag
+        p->path.coords.append(v[6].toNumber()); // largeArc
+    }
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+void QQuickPathItemJSStrokeFillParamsPrototype::method_clear(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    r->d()->obj->clear();
+
+    scope.result = callData->thisObject.asReturnedValue();
+}
+
+extern QColor qt_color_from_string(const QV4::Value &name); // qquickcontext2d.cpp
+
+static inline QString qt_color_string(const QColor &color)
+{
+    if (color.alpha() == 255)
+        return color.name();
+    QString alphaString = QString::number(color.alphaF(), 'f');
+    while (alphaString.endsWith(QLatin1Char('0')))
+        alphaString.chop(1);
+    if (alphaString.endsWith(QLatin1Char('.')))
+        alphaString += QLatin1Char('0');
+    return QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_strokeColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = QV4::Encode(scope.engine->newString(qt_color_string(r->d()->obj->sfp.strokeColor)));
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_strokeColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isString())
+        r->d()->obj->sfp.strokeColor = qt_color_from_string(value);
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_strokeWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.strokeWidth);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_strokeWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    r->d()->obj->sfp.strokeWidth = value->toNumber();
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_fillColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = QV4::Encode(scope.engine->newString(qt_color_string(r->d()->obj->sfp.fillColor)));
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_fillColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isString())
+        r->d()->obj->sfp.fillColor = qt_color_from_string(value);
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.fillRule);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isInt32())
+        r->d()->obj->sfp.fillRule = QQuickVisualPath::FillRule(value->integerValue());
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_joinStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.joinStyle);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_joinStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isInt32())
+        r->d()->obj->sfp.joinStyle = QQuickVisualPath::JoinStyle(value->integerValue());
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.miterLimit);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    r->d()->obj->sfp.miterLimit = value->toNumber();
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_capStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.capStyle);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_capStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isInt32())
+        r->d()->obj->sfp.capStyle = QQuickVisualPath::CapStyle(value->integerValue());
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.strokeStyle);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isInt32())
+        r->d()->obj->sfp.strokeStyle = QQuickVisualPath::StrokeStyle(value->integerValue());
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_dashOffset(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = scope.engine->fromVariant(r->d()->obj->sfp.dashOffset);
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_dashOffset(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    r->d()->obj->sfp.dashOffset = value->toNumber();
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_dashPattern(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedArrayObject a(scope, scope.engine->newArrayObject());
+    QQuickPathItemStrokeFillParamsObject *p = r->d()->obj;
+    a->arrayReserve(p->sfp.dashPattern.count());
+    QV4::ScopedValue v(scope);
+    for (int i = 0; i < p->sfp.dashPattern.count(); ++i)
+        a->arrayPut(i, (v = scope.engine->fromVariant(p->sfp.dashPattern[i])));
+    a->setArrayLengthUnchecked(p->sfp.dashPattern.count());
+
+    scope.result = a.asReturnedValue();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_dashPattern(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    if (value->isObject()) {
+        QV4::Scoped<QV4::ArrayObject> ao(scope, value);
+       if (!!ao) {
+            QQuickPathItemStrokeFillParamsObject *p = r->d()->obj;
+            p->sfp.dashPattern.resize(ao->getLength());
+            QV4::ScopedValue val(scope);
+            for (int i = 0; i < p->sfp.dashPattern.count(); ++i) {
+                val = ao->getIndexed(i);
+                p->sfp.dashPattern[i] = val->toNumber();
+            }
+        }
+    }
+
+    scope.result = QV4::Encode::undefined();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_get_fillGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    scope.result = r->d()->obj->v4fillGradient.value();
+}
+
+void QQuickPathItemJSStrokeFillParams::method_set_fillGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+{
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> r(scope, callData->thisObject.as<QQuickPathItemJSStrokeFillParams>());
+
+    QV4::ScopedValue value(scope, callData->argument(0));
+    QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, value);
+    if (!!qobjectWrapper) {
+        if (QQuickPathGradient *grad = qobject_cast<QQuickPathGradient *>(qobjectWrapper->object())) {
+            r->d()->obj->v4fillGradient.set(scope.engine, value);
+            r->d()->obj->sfp.fillGradient = grad;
+        }
+    } else {
+        r->d()->obj->v4fillGradient.set(scope.engine, nullptr);
+        r->d()->obj->sfp.fillGradient = nullptr;
+    }
+
+    scope.result = QV4::Encode::undefined();
+}
+
+QQuickPathItemJSEngineData::QQuickPathItemJSEngineData(QV4::ExecutionEngine *v4)
+{
+    QV4::Scope scope(v4);
+
+    QV4::ScopedObject proto(scope, QQuickPathItemJSPathPrototype::create(v4));
+    pathProto = proto;
+
+    proto = QV4::ScopedObject(scope, QQuickPathItemJSStrokeFillParamsPrototype::create(v4));
+
+    proto->defineAccessorProperty(QStringLiteral("strokeColor"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_strokeColor,
+                                  QQuickPathItemJSStrokeFillParams::method_set_strokeColor);
+    proto->defineAccessorProperty(QStringLiteral("strokeWidth"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_strokeWidth,
+                                  QQuickPathItemJSStrokeFillParams::method_set_strokeWidth);
+    proto->defineAccessorProperty(QStringLiteral("fillColor"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_fillColor,
+                                  QQuickPathItemJSStrokeFillParams::method_set_fillColor);
+    proto->defineAccessorProperty(QStringLiteral("fillRule"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_fillRule,
+                                  QQuickPathItemJSStrokeFillParams::method_set_fillRule);
+    proto->defineAccessorProperty(QStringLiteral("joinStyle"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_joinStyle,
+                                  QQuickPathItemJSStrokeFillParams::method_set_joinStyle);
+    proto->defineAccessorProperty(QStringLiteral("miterLimit"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_miterLimit,
+                                  QQuickPathItemJSStrokeFillParams::method_set_miterLimit);
+    proto->defineAccessorProperty(QStringLiteral("capStyle"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_capStyle,
+                                  QQuickPathItemJSStrokeFillParams::method_set_capStyle);
+    proto->defineAccessorProperty(QStringLiteral("strokeStyle"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_strokeStyle,
+                                  QQuickPathItemJSStrokeFillParams::method_set_strokeStyle);
+    proto->defineAccessorProperty(QStringLiteral("dashOffset"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_dashOffset,
+                                  QQuickPathItemJSStrokeFillParams::method_set_dashOffset);
+    proto->defineAccessorProperty(QStringLiteral("dashPattern"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_dashPattern,
+                                  QQuickPathItemJSStrokeFillParams::method_set_dashPattern);
+    proto->defineAccessorProperty(QStringLiteral("fillGradient"),
+                                  QQuickPathItemJSStrokeFillParams::method_get_fillGradient,
+                                  QQuickPathItemJSStrokeFillParams::method_set_fillGradient);
+
+    strokeFillParamsProto = proto;
+}
+
+void QQuickPathItemPathObject::setV4Engine(QV4::ExecutionEngine *engine)
+{
+    QQuickPathItemJSEngineData *ed = engineData(engine);
+    QV4::Scope scope(engine);
+    QV4::Scoped<QQuickPathItemJSPath> wrapper(scope, engine->memoryManager->allocObject<QQuickPathItemJSPath>());
+    QV4::ScopedObject p(scope, ed->pathProto.value());
+    wrapper->setPrototype(p);
+    wrapper->d()->obj = this;
+    m_v4value = wrapper;
+}
+
+void QQuickPathItemPathObject::clear()
+{
+    path = QQuickPathItemPath();
+}
+
+void QQuickPathItemStrokeFillParamsObject::clear()
+{
+    sfp = QQuickPathItemStrokeFillParams();
+    if (!v4fillGradient.isNullOrUndefined())
+        v4fillGradient.set(v4fillGradient.engine(), nullptr);
+}
+
+void QQuickPathItemStrokeFillParamsObject::setV4Engine(QV4::ExecutionEngine *engine)
+{
+    QQuickPathItemJSEngineData *ed = engineData(engine);
+    QV4::Scope scope(engine);
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> wrapper(scope, engine->memoryManager->allocObject<QQuickPathItemJSStrokeFillParams>());
+    QV4::ScopedObject p(scope, ed->strokeFillParamsProto.value());
+    wrapper->setPrototype(p);
+    wrapper->d()->obj = this;
+    m_v4value = wrapper;
+}
+
+void QQuickPathItem::newPath(QQmlV4Function *args)
+{
+    QQuickPathItemPathObject *obj = new QQuickPathItemPathObject(this);
+    obj->setV4Engine(QQmlEnginePrivate::get(qmlEngine(this))->v4engine());
+    args->setReturnValue(obj->v4value());
+}
+
+void QQuickPathItem::newStrokeFillParams(QQmlV4Function *args)
+{
+    QQuickPathItemStrokeFillParamsObject *obj = new QQuickPathItemStrokeFillParamsObject(this);
+    obj->setV4Engine(QQmlEnginePrivate::get(qmlEngine(this))->v4engine());
+    args->setReturnValue(obj->v4value());
+}
+
+void QQuickPathItem::clearVisualPaths(QQmlV4Function *args)
+{
+    Q_UNUSED(args);
+    Q_D(QQuickPathItem);
+    d->jsData.paths.clear();
+    d->jsData.sfp.clear();
+}
+
+void QQuickPathItem::commitVisualPaths(QQmlV4Function *args)
+{
+    Q_UNUSED(args);
+    Q_D(QQuickPathItem);
+    d->_q_visualPathChanged();
+}
+
+void QQuickPathItem::appendVisualPath(QQmlV4Function *args)
+{
+    if (args->length() < 2)
+        return;
+
+    Q_D(QQuickPathItem);
+    QV4::Scope scope(args->v4engine());
+    QV4::Scoped<QQuickPathItemJSPath> jsp(scope, (*args)[0]);
+    QV4::Scoped<QQuickPathItemJSStrokeFillParams> jssfp(scope, (*args)[1]);
+
+    const QQuickPathItemPath &path(jsp->d()->obj->path);
+    const QQuickPathItemStrokeFillParams &sfp(jssfp->d()->obj->sfp);
+
+    d->jsData.paths.append(path);
+    d->jsData.sfp.append(sfp);
+}
 
 QT_END_NAMESPACE
 

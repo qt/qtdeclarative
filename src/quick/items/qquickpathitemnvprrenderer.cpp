@@ -62,6 +62,14 @@ void QQuickPathItemNvprRenderer::setPath(int index, const QQuickPath *path)
     m_accDirty |= DirtyPath;
 }
 
+void QQuickPathItemNvprRenderer::setJSPath(int index, const QQuickPathItemPath &path)
+{
+    VisualPathGuiData &d(m_vp[index]);
+    convertJSPath(path, &d);
+    d.dirty |= DirtyPath;
+    m_accDirty |= DirtyPath;
+}
+
 void QQuickPathItemNvprRenderer::setStrokeColor(int index, const QColor &color)
 {
     VisualPathGuiData &d(m_vp[index]);
@@ -284,6 +292,82 @@ void QQuickPathItemNvprRenderer::convertPath(const QQuickPath *path, VisualPathG
     // last moveTo pos); that would still need an explicit 'z' or similar. We
     // don't have an explicit close command, so just fake a close when the
     // positions match.
+    if (pos == startPos)
+        d->path.cmd.append(GL_CLOSE_PATH_NV);
+}
+
+void QQuickPathItemNvprRenderer::convertJSPath(const QQuickPathItemPath &path, VisualPathGuiData *d)
+{
+    d->path = NvprPath();
+    if (path.cmd.isEmpty())
+        return;
+
+    QPointF startPos(0, 0);
+    QPointF pos(startPos);
+    int coordIdx = 0;
+
+    for (QQuickPathItemPath::Command cmd : path.cmd) {
+        switch (cmd) {
+        case QQuickPathItemPath::MoveTo:
+            d->path.cmd.append(GL_MOVE_TO_NV);
+            pos = QPointF(path.coords[coordIdx], path.coords[coordIdx + 1]);
+            startPos = pos;
+            d->path.coord.append(pos.x());
+            d->path.coord.append(pos.y());
+            coordIdx += 2;
+            break;
+        case QQuickPathItemPath::LineTo:
+            d->path.cmd.append(GL_LINE_TO_NV);
+            pos = QPointF(path.coords[coordIdx], path.coords[coordIdx + 1]);
+            d->path.coord.append(pos.x());
+            d->path.coord.append(pos.y());
+            coordIdx += 2;
+            break;
+        case QQuickPathItemPath::QuadTo:
+            d->path.cmd.append(GL_QUADRATIC_CURVE_TO_NV);
+            d->path.coord.append(path.coords[coordIdx]);
+            d->path.coord.append(path.coords[coordIdx + 1]);
+            pos = QPointF(path.coords[coordIdx + 2], path.coords[coordIdx + 3]);
+            d->path.coord.append(pos.x());
+            d->path.coord.append(pos.y());
+            coordIdx += 4;
+            break;
+        case QQuickPathItemPath::CubicTo:
+            d->path.cmd.append(GL_CUBIC_CURVE_TO_NV);
+            d->path.coord.append(path.coords[coordIdx]);
+            d->path.coord.append(path.coords[coordIdx + 1]);
+            d->path.coord.append(path.coords[coordIdx + 2]);
+            d->path.coord.append(path.coords[coordIdx + 3]);
+            pos = QPointF(path.coords[coordIdx + 4], path.coords[coordIdx + 5]);
+            d->path.coord.append(pos.x());
+            d->path.coord.append(pos.y());
+            coordIdx += 6;
+            break;
+        case QQuickPathItemPath::ArcTo:
+        {
+            const bool sweepFlag = !qFuzzyIsNull(path.coords[coordIdx + 5]);
+            const bool useLargeArc = !qFuzzyIsNull(path.coords[coordIdx + 6]);
+            GLenum cmd;
+            if (useLargeArc)
+                cmd = sweepFlag ? GL_LARGE_CCW_ARC_TO_NV : GL_LARGE_CW_ARC_TO_NV;
+            else
+                cmd = sweepFlag ? GL_SMALL_CCW_ARC_TO_NV : GL_SMALL_CW_ARC_TO_NV;
+            d->path.cmd.append(cmd);
+            d->path.coord.append(path.coords[coordIdx]); // rx
+            d->path.coord.append(path.coords[coordIdx + 1]); // ry
+            d->path.coord.append(path.coords[coordIdx + 2]); // xrot
+            pos = QPointF(path.coords[coordIdx + 3], path.coords[coordIdx + 4]);
+            d->path.coord.append(pos.x());
+            d->path.coord.append(pos.y());
+            coordIdx += 7;
+        }
+            break;
+        default:
+            qWarning("Unknown JS path command: %d", cmd);
+            break;
+        }
+    }
+
     if (pos == startPos)
         d->path.cmd.append(GL_CLOSE_PATH_NV);
 }

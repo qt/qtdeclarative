@@ -62,6 +62,39 @@ QT_BEGIN_NAMESPACE
 
 class QSGPlainTexture;
 
+struct QQuickPathItemPath
+{
+    enum Command {
+        MoveTo,
+        LineTo,
+        QuadTo,
+        CubicTo,
+        ArcTo
+    };
+
+    QVector<Command> cmd;
+    QVector<float> coords;
+
+    QPainterPath toPainterPath() const;
+};
+
+struct QQuickPathItemStrokeFillParams
+{
+    QQuickPathItemStrokeFillParams();
+
+    QColor strokeColor;
+    qreal strokeWidth;
+    QColor fillColor;
+    QQuickVisualPath::FillRule fillRule;
+    QQuickVisualPath::JoinStyle joinStyle;
+    int miterLimit;
+    QQuickVisualPath::CapStyle capStyle;
+    QQuickVisualPath::StrokeStyle strokeStyle;
+    qreal dashOffset;
+    QVector<qreal> dashPattern;
+    QQuickPathGradient *fillGradient;
+};
+
 class QQuickAbstractPathRenderer
 {
 public:
@@ -74,7 +107,14 @@ public:
 
     // Gui thread
     virtual void beginSync(int totalCount) = 0;
+    virtual void endSync(bool async) = 0;
+    virtual void setAsyncCallback(void (*)(void *), void *) { }
+    virtual Flags flags() const { return 0; }
+    //  - QML API
     virtual void setPath(int index, const QQuickPath *path) = 0;
+    //  - JS API
+    virtual void setJSPath(int index, const QQuickPathItemPath &path) = 0;
+    // - stroke/fill parameters
     virtual void setStrokeColor(int index, const QColor &color) = 0;
     virtual void setStrokeWidth(int index, qreal w) = 0;
     virtual void setFillColor(int index, const QColor &color) = 0;
@@ -84,9 +124,6 @@ public:
     virtual void setStrokeStyle(int index, QQuickVisualPath::StrokeStyle strokeStyle,
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickPathGradient *gradient) = 0;
-    virtual void endSync(bool async) = 0;
-    virtual void setAsyncCallback(void (*)(void *), void *) { }
-    virtual Flags flags() const { return 0; }
 
     // Render thread, with gui blocked
     virtual void updateNode() = 0;
@@ -121,17 +158,7 @@ public:
 
     QQuickPath *path;
     int dirty;
-    QColor strokeColor;
-    qreal strokeWidth;
-    QColor fillColor;
-    QQuickVisualPath::FillRule fillRule;
-    QQuickVisualPath::JoinStyle joinStyle;
-    int miterLimit;
-    QQuickVisualPath::CapStyle capStyle;
-    QQuickVisualPath::StrokeStyle strokeStyle;
-    qreal dashOffset;
-    QVector<qreal> dashPattern;
-    QQuickPathGradient *fillGradient;
+    QQuickPathItemStrokeFillParams sfp;
 };
 
 class QQuickPathItemPrivate : public QQuickItemPrivate
@@ -157,7 +184,53 @@ public:
     bool async;
     QQuickPathItem::Status status;
     QQuickAbstractPathRenderer *renderer;
-    QVector<QQuickVisualPath *> vp;
+
+    struct {
+        QVector<QQuickVisualPath *> vp;
+    } qmlData;
+
+    struct {
+        bool isValid() const { Q_ASSERT(paths.count() == sfp.count()); return !paths.isEmpty(); }
+        QVector<QQuickPathItemPath> paths;
+        QVector<QQuickPathItemStrokeFillParams> sfp;
+    } jsData;
+};
+
+class QQuickPathItemPathObject : public QObject
+{
+    Q_OBJECT
+
+public:
+    QQuickPathItemPathObject(QObject *parent = nullptr) : QObject(parent) { }
+
+    void setV4Engine(QV4::ExecutionEngine *engine);
+    QV4::ReturnedValue v4value() const { return m_v4value.value(); }
+
+    QQuickPathItemPath path;
+
+    void clear();
+
+private:
+    QV4::PersistentValue m_v4value;
+};
+
+class QQuickPathItemStrokeFillParamsObject : public QObject
+{
+    Q_OBJECT
+
+public:
+    QQuickPathItemStrokeFillParamsObject(QObject *parent = nullptr) : QObject(parent) { }
+
+    void setV4Engine(QV4::ExecutionEngine *engine);
+    QV4::ReturnedValue v4value() const { return m_v4value.value(); }
+
+    QQuickPathItemStrokeFillParams sfp;
+    QV4::PersistentValue v4fillGradient;
+
+    void clear();
+
+private:
+    QV4::PersistentValue m_v4value;
 };
 
 #ifndef QT_NO_OPENGL

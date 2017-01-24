@@ -58,6 +58,14 @@ void QQuickPathItemSoftwareRenderer::setPath(int index, const QQuickPath *path)
     m_accDirty |= DirtyPath;
 }
 
+void QQuickPathItemSoftwareRenderer::setJSPath(int index, const QQuickPathItemPath &path)
+{
+    VisualPathGuiData &d(m_vp[index]);
+    d.path = path.toPainterPath();
+    d.dirty |= DirtyPath;
+    m_accDirty |= DirtyPath;
+}
+
 void QQuickPathItemSoftwareRenderer::setStrokeColor(int index, const QColor &color)
 {
     VisualPathGuiData &d(m_vp[index]);

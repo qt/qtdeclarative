@@ -178,6 +178,13 @@ void QQuickPathItemGenericRenderer::setPath(int index, const QQuickPath *path)
     d.syncDirty |= DirtyFillGeom | DirtyStrokeGeom;
 }
 
+void QQuickPathItemGenericRenderer::setJSPath(int index, const QQuickPathItemPath &path)
+{
+    VisualPathData &d(m_vp[index]);
+    d.path = path.toPainterPath();
+    d.syncDirty |= DirtyFillGeom | DirtyStrokeGeom;
+}
+
 void QQuickPathItemGenericRenderer::setStrokeColor(int index, const QColor &color)
 {
     VisualPathData &d(m_vp[index]);
