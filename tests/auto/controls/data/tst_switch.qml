@@ -213,7 +213,100 @@ TestCase {
         verify(spy.success)
     }
 
-    function test_drag() {
+    function test_touch() {
+        var control = createTemporaryObject(swtch, testCase)
+        verify(control)
+
+        var touch = touchEvent(control)
+
+        // check
+        var spy = signalSequenceSpy.createObject(control, {target: control})
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(spy.success)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // uncheck
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(spy.success)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.checked, false)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // release on the right
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(spy.success)
+        touch.move(0, control, control.width * 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control, control.width * 2, control.height / 2).commit()
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // release on the left
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed"]
+        touch.press(0, control, control.width / 2, control.height / 2).commit()
+        compare(control.pressed, true)
+        verify(spy.success)
+        touch.move(0, control, -control.width, control.height / 2).commit()
+        compare(control.pressed, true)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control, -control.width, control.height / 2).commit()
+        compare(control.checked, false)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // release in the middle
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        touch.press(0, control, 0, 0).commit()
+        compare(control.pressed, true)
+        verify(spy.success)
+        touch.move(0, control, control.width / 4, control.height / 4).commit()
+        compare(control.pressed, true)
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                "released",
+                                "clicked"]
+        touch.release(0, control, control.width / 4, control.height / 4).commit()
+        compare(control.checked, false)
+        compare(control.pressed, false)
+        tryCompare(control, "position", 0) // QTBUG-57944
+        verify(spy.success)
+    }
+
+    function test_mouseDrag() {
         var control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
@@ -312,6 +405,113 @@ TestCase {
                                 "released",
                                 "clicked"]
         mouseRelease(control, control.width)
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(spy.success)
+    }
+
+    function test_touchDrag() {
+        var control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
+        verify(control)
+
+        var touch = touchEvent(control)
+
+        var spy = signalSequenceSpy.createObject(control, {target: control})
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, false)
+
+        // press-drag-release inside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        touch.press(0, control.indicator, 0).commit()
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        touch.move(0, control.indicator, control.width).commit()
+        compare(control.position, 1.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control.indicator, control.indicator.width).commit()
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // press-drag-release outside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
+                                "pressed"]
+        touch.press(0, control, 0).commit()
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        touch.move(0, control, control.width - control.rightPadding).commit()
+        compare(control.position, 1.0)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+
+        touch.move(0, control, control.width / 2).commit()
+        compare(control.position, 0.5)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+
+        touch.move(0, control, control.leftPadding).commit()
+        compare(control.position, 0.0)
+        compare(control.checked, true)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": true }],
+                                ["checkedChanged", { "pressed": false, "checked": false }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control, control.width).commit()
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, false)
+        verify(spy.success)
+
+        // press-drag-release from and to outside the indicator
+        spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
+                                "pressed"]
+        touch.press(0, control, control.width).commit()
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+        verify(spy.success)
+
+        touch.move(0, control, control.width - control.rightPadding).commit()
+        compare(control.position, 0.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        touch.move(0, control, control.width / 2).commit()
+        compare(control.position, 0.5)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        touch.move(0, control, control.width - control.rightPadding).commit()
+        compare(control.position, 1.0)
+        compare(control.checked, false)
+        compare(control.pressed, true)
+
+        spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
+                                ["checkedChanged", { "pressed": false, "checked": true }],
+                                "toggled",
+                                "released",
+                                "clicked"]
+        touch.release(0, control, control.width).commit()
         compare(control.position, 1.0)
         compare(control.checked, true)
         compare(control.pressed, false)
