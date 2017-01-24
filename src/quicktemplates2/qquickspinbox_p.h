@@ -127,7 +127,6 @@ Q_SIGNALS:
     Q_REVISION(2) void inputMethodComposingChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverMoveEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
@@ -138,6 +137,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
     void timerEvent(QTimerEvent *event) override;
+    void touchEvent(QTouchEvent *event) override;
+    void touchUngrabEvent() override;
     void wheelEvent(QWheelEvent *event) override;
 
     void componentComplete() override;
