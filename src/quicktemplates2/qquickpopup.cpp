@@ -431,6 +431,9 @@ void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
 
     window = newWindow;
     emit q->windowChanged(newWindow);
+
+    if (complete && visible && window)
+        transitionManager.transitionEnter();
 }
 
 class QQuickPopupItemPrivate : public QQuickControlPrivate
@@ -2215,15 +2218,17 @@ void QQuickPopup::classBegin()
 void QQuickPopup::componentComplete()
 {
     Q_D(QQuickPopup);
-    d->complete = true;
     if (!parentItem()) {
         if (QQuickItem *item = qobject_cast<QQuickItem *>(parent()))
             setParentItem(item);
         else if (QQuickWindow *window = qobject_cast<QQuickWindow *>(parent()))
             setParentItem(window->contentItem());
     }
-    if (d->visible)
+
+    if (d->visible && d->window)
         d->transitionManager.transitionEnter();
+
+    d->complete = true;
     d->popupItem->componentComplete();
 }
 
