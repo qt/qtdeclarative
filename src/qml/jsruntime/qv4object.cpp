@@ -61,7 +61,7 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
-    if (!d()->memberData || (d()->memberData->size < ic->size))
+    if ((!d()->memberData && ic->size) || (d()->memberData->size < ic->size))
         d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
 }
 

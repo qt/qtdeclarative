@@ -325,9 +325,12 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
         if (compiledObject->nProperties || compiledObject->nFunctions) {
             Q_ASSERT(cache && cache->engine);
             QV4::ExecutionEngine *v4 = cache->engine;
-            QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, compiledObject->nProperties + compiledObject->nFunctions);
-            propertyAndMethodStorage.set(v4, data);
-            std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
+            uint size = compiledObject->nProperties + compiledObject->nFunctions;
+            if (size) {
+                QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, size);
+                propertyAndMethodStorage.set(v4, data);
+                std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
+            }
 
             // Need JS wrapper to ensure properties/methods are marked.
             ensureQObjectWrapper();
