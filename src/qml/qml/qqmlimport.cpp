@@ -747,15 +747,17 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
                 if ((candidate == end) ||
                     (c.majorVersion > candidate->majorVersion) ||
                     ((c.majorVersion == candidate->majorVersion) && (c.minorVersion > candidate->minorVersion))) {
-                    componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
-                    if (c.internal && base) {
-                        if (resolveLocalUrl(*base, c.fileName) != componentUrl)
-                            continue; // failed attempt to access an internal type
-                    }
-                    if (base && (*base == componentUrl)) {
-                        if (typeRecursionDetected)
-                            *typeRecursionDetected = true;
-                        continue; // no recursion
+                    if (base) {
+                        componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
+                        if (c.internal) {
+                            if (resolveLocalUrl(*base, c.fileName) != componentUrl)
+                                continue; // failed attempt to access an internal type
+                        }
+                        if (*base == componentUrl) {
+                            if (typeRecursionDetected)
+                                *typeRecursionDetected = true;
+                            continue; // no recursion
+                        }
                     }
 
                     // This is our best candidate so far
@@ -766,6 +768,8 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
 
         if (candidate != end) {
+            if (!base) // ensure we have a componentUrl
+                componentUrl = resolveLocalUrl(QString(url + candidate->typeName + dotqml_string), candidate->fileName);
             int major = vmajor ? *vmajor : -1;
             int minor = vminor ? *vminor : -1;
             QQmlType *returnType = fetchOrCreateTypeForUrl(componentUrl, type, isCompositeSingleton, 0,
