@@ -264,52 +264,21 @@ bool CallContext::needsOwnArguments() const
     return (f && f->needsActivation()) || (argc() < (f ? static_cast<int>(f->nFormals) : 0));
 }
 
-void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
+void CallContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
 {
-    ExecutionContext::Data *ctx = static_cast<ExecutionContext::Data *>(m);
+    QV4::Heap::CallContext *ctx = static_cast<Heap::CallContext *>(m);
 
-    if (ctx->outer)
-        ctx->outer->mark(engine);
-
-    switch (ctx->type) {
-    case Heap::ExecutionContext::Type_CatchContext: {
-        CatchContext::Data *c = static_cast<CatchContext::Data *>(ctx);
-        c->exceptionVarName->mark(engine);
-        c->exceptionValue.mark(engine);
-        break;
-    }
-    case Heap::ExecutionContext::Type_WithContext: {
-        WithContext::Data *w = static_cast<WithContext::Data *>(ctx);
-        if (w->withObject)
-            w->withObject->mark(engine);
-        break;
-    }
-    case Heap::ExecutionContext::Type_GlobalContext: {
-        GlobalContext::Data *g = static_cast<GlobalContext::Data *>(ctx);
-        g->global->mark(engine);
-        break;
-    }
-    case Heap::ExecutionContext::Type_SimpleCallContext:
-        break;
-    case Heap::ExecutionContext::Type_CallContext: {
-        QV4::Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-        Q_ASSERT(c->v4Function);
+    if (ctx->type == Heap::ExecutionContext::Type_CallContext) {
+        Q_ASSERT(ctx->v4Function);
         ctx->callData->thisObject.mark(engine);
-        for (int arg = 0; arg < qMax(ctx->callData->argc, (int)c->v4Function->nFormals); ++arg)
+        for (int arg = 0; arg < qMax(ctx->callData->argc, (int)ctx->v4Function->nFormals); ++arg)
             ctx->callData->args[arg].mark(engine);
-        for (unsigned local = 0, lastLocal = c->v4Function->compiledFunction->nLocals; local < lastLocal; ++local)
-            c->locals[local].mark(engine);
-        if (c->activation)
-            c->activation->mark(engine);
-        if (c->function)
-            c->function->mark(engine);
-        break;
-    }
-    case Heap::ExecutionContext::Type_QmlContext: {
-        QmlContext::Data *g = static_cast<QmlContext::Data *>(ctx);
-        g->qml->mark(engine);
-        break;
-    }
+        for (unsigned local = 0, lastLocal = ctx->v4Function->compiledFunction->nLocals; local < lastLocal; ++local)
+            ctx->locals[local].mark(engine);
+        if (ctx->activation)
+            ctx->activation->mark(engine);
+        if (ctx->function)
+            ctx->function->mark(engine);
     }
 }
 

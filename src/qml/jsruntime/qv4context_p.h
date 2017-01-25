@@ -95,7 +95,11 @@ namespace Heap {
 
 struct QmlContext;
 
-struct ExecutionContext : Base {
+#define ExecutionContextMembers(class, Member) \
+    Member(class, Pointer<ExecutionContext>, outer)
+
+DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
+    DECLARE_MARK_TABLE(ExecutionContext);
     enum ContextType {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
@@ -117,7 +121,6 @@ struct ExecutionContext : Base {
     CallData *callData;
 
     ExecutionEngine *engine;
-    Pointer<ExecutionContext> outer;
     Lookup *lookups;
     const QV4::Value *constantTable;
     CompiledData::CompilationUnit *compilationUnit;
@@ -128,7 +131,12 @@ struct ExecutionContext : Base {
 };
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
-struct CallContext : ExecutionContext {
+#define CallContextMembers(class, Member) \
+    Member(class, Pointer<FunctionObject>, function) \
+    Member(class, Pointer<Object>, activation)
+
+DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
+    DECLARE_MARK_TABLE(CallContext);
     static CallContext *createSimpleContext(ExecutionEngine *v4);
     void freeSimpleCallContext();
 
@@ -139,27 +147,38 @@ struct CallContext : ExecutionContext {
 
     inline unsigned int formalParameterCount() const;
 
-    Pointer<FunctionObject> function;
     QV4::Function *v4Function;
     Value *locals;
-    Pointer<Object> activation;
 };
 V4_ASSERT_IS_TRIVIAL(CallContext)
 
-struct GlobalContext : ExecutionContext {
+#define GlobalContextMembers(class, Member) \
+    Member(class, Pointer<Object>, global)
+
+DECLARE_HEAP_OBJECT(GlobalContext, ExecutionContext) {
+    DECLARE_MARK_TABLE(GlobalContext);
+
     void init(ExecutionEngine *engine);
-    Pointer<Object> global;
 };
 V4_ASSERT_IS_TRIVIAL(GlobalContext)
 
-struct CatchContext : ExecutionContext {
+#define CatchContextMembers(class, Member) \
+    Member(class, Pointer<String>, exceptionVarName) \
+    Member(class, Value, exceptionValue)
+
+DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
+    DECLARE_MARK_TABLE(CatchContext);
+
     void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
-    Pointer<String> exceptionVarName;
-    Value exceptionValue;
 };
 V4_ASSERT_IS_TRIVIAL(CatchContext)
 
-struct WithContext : ExecutionContext {
+#define WithContextMembers(class, Member) \
+    Member(class, Pointer<Object>, withObject)
+
+DECLARE_HEAP_OBJECT(WithContext, ExecutionContext) {
+    DECLARE_MARK_TABLE(WithContext);
+
     void init(ExecutionContext *outerContext, Object *with)
     {
         Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_WithContext);
@@ -171,8 +190,6 @@ struct WithContext : ExecutionContext {
 
         withObject = with;
     }
-
-    Pointer<Object> withObject;
 };
 V4_ASSERT_IS_TRIVIAL(WithContext)
 
@@ -207,8 +224,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     Function *getFunction() const;
 
-    static void markObjects(Heap::Base *m, ExecutionEngine *e);
-
     Value &thisObject() const {
         return d()->callData->thisObject;
     }
@@ -239,6 +254,7 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
     inline ReturnedValue argument(int i) const;
     bool needsOwnArguments() const;
 
+    static void markObjects(Heap::Base *m, ExecutionEngine *e);
 };
 
 inline ReturnedValue CallContext::argument(int i) const {
