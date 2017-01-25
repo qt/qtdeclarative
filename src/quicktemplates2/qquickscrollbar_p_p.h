@@ -70,6 +70,7 @@ public:
 
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
+    void setInteractive(bool interactive);
     void updateActive();
     void resizeContent() override;
 
@@ -86,6 +87,7 @@ public:
     bool pressed;
     bool moving;
     bool interactive;
+    bool explicitInteractive;
     Qt::Orientation orientation;
     QQuickScrollBar::SnapMode snapMode;
     QQuickScrollBar::Policy policy;

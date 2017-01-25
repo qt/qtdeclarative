@@ -163,6 +163,7 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       pressed(false),
       moving(false),
       interactive(true),
+      explicitInteractive(false),
       orientation(Qt::Vertical),
       snapMode(QQuickScrollBar::NoSnap),
       policy(QQuickScrollBar::AsNeeded)
@@ -185,6 +186,19 @@ qreal QQuickScrollBarPrivate::positionAt(const QPointF &point) const
         return (point.x() - q->leftPadding()) / q->availableWidth();
     else
         return (point.y() - q->topPadding()) / q->availableHeight();
+}
+
+void QQuickScrollBarPrivate::setInteractive(bool enabled)
+{
+    Q_Q(QQuickScrollBar);
+    if (interactive == enabled)
+        return;
+
+    interactive = enabled;
+    q->setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
+    if (!interactive)
+        q->ungrabMouse();
+    emit q->interactiveChanged();
 }
 
 void QQuickScrollBarPrivate::updateActive()
@@ -480,14 +494,15 @@ bool QQuickScrollBar::isInteractive() const
 void QQuickScrollBar::setInteractive(bool interactive)
 {
     Q_D(QQuickScrollBar);
-    if (d->interactive == interactive)
-        return;
+    d->explicitInteractive = true;
+    d->setInteractive(interactive);
+}
 
-    d->interactive = interactive;
-    setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
-    if (!interactive)
-        ungrabMouse();
-    emit interactiveChanged();
+void QQuickScrollBar::resetInteractive()
+{
+    Q_D(QQuickScrollBar);
+    d->explicitInteractive = false;
+    d->setInteractive(true);
 }
 
 /*!
