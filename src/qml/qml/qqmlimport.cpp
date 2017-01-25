@@ -236,20 +236,49 @@ void qmlClearEnginePlugins()
 typedef QPair<QStaticPlugin, QJsonArray> StaticPluginPair;
 #endif
 
+/*!
+    \internal
+
+    A QQmlImportNamespace is a way of seperating imports into a local namespace.
+
+    Within a QML document, there is at least one namespace (the
+    "unqualified set") where imports without a qualifier are placed, i.e:
+
+        import QtQuick 2.6
+
+    will have a single namespace (the unqualified set) containing a single import
+    for QtQuick 2.6. However, there may be others if an import statement gives
+    a qualifier, i.e the following will result in an additional new
+    QQmlImportNamespace in the qualified set:
+
+        import MyFoo 1.0 as Foo
+*/
 class QQmlImportNamespace
 {
 public:
     QQmlImportNamespace() : nextNamespace(0) {}
     ~QQmlImportNamespace() { qDeleteAll(imports); }
 
+    /*!
+        \internal
+
+        A QQmlImportNamespace::Import represents an actual instance of an import
+        within a namespace.
+
+        \note The uri here may not necessarily be unique (e.g. for file imports).
+
+        \note Version numbers may be -1 for file imports: this means that no
+        version was specified as part of the import. Type resolution will be
+        responsible for attempting to find the "best" possible version.
+    */
     struct Import {
-        QString uri;
-        QString url;
-        int majversion;
-        int minversion;
-        bool isLibrary;
-        QQmlDirComponents qmlDirComponents;
-        QQmlDirScripts qmlDirScripts;
+        QString uri; // e.g. QtQuick
+        QString url; // the base path of the import
+        int majversion; // the major version imported
+        int minversion; // the minor version imported
+        bool isLibrary; // true means that this is not a file import
+        QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
+        QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
         bool setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoader::QmldirContent *qmldir,
                               QQmlImportNamespace *nameSpace, QList<QQmlError> *errors);
@@ -305,9 +334,12 @@ public:
     QString base;
     int ref;
 
+    // storage of data related to imports without a namespace
     mutable QQmlImportNamespace unqualifiedset;
 
     QQmlImportNamespace *findQualifiedNamespace(const QHashedStringRef &) const;
+
+    // storage of data related to imports with a namespace
     mutable QFieldList<QQmlImportNamespace, &QQmlImportNamespace::nextNamespace> qualifiedSets;
 
     QQmlTypeLoader *typeLoader;
