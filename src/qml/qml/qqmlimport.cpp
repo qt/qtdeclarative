@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2017 Crimson AS <info@crimson.no>
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -505,6 +506,15 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
     }
 }
 
+/*
+    \internal
+
+    Returns a list of all composite singletons present in this document's
+    imports.
+
+    This information is used by QQmlTypeLoader to ensure that composite singletons
+    are marked as dependencies during type loading.
+*/
 QList<QQmlImports::CompositeSingletonReference> QQmlImports::resolvedCompositeSingletons() const
 {
     QList<QQmlImports::CompositeSingletonReference> compositeSingletons;
@@ -520,6 +530,12 @@ QList<QQmlImports::CompositeSingletonReference> QQmlImports::resolvedCompositeSi
     return compositeSingletons;
 }
 
+/*
+    \internal
+
+    Returns a list of scripts imported by this document. This is used by
+    QQmlTypeLoader to properly handle dependencies on imported scripts.
+*/
 QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
 {
     QList<QQmlImports::ScriptReference> scripts;
