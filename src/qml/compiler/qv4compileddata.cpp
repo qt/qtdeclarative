@@ -207,7 +207,7 @@ void CompilationUnit::unlink()
         dependentScripts.at(ii)->release();
     dependentScripts.clear();
 
-    importCache = nullptr;
+    typeNameCache = nullptr;
 
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
