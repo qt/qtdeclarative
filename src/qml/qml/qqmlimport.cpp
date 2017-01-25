@@ -281,7 +281,7 @@ public:
         QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
         QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
-        bool setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoader::QmldirContent *qmldir,
+        bool setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent *qmldir,
                               QQmlImportNamespace *nameSpace, QList<QQmlError> *errors);
 
         static QQmlDirScripts getVersionedScripts(const QQmlDirScripts &qmldirscripts, int vmaj, int vmin);
@@ -349,17 +349,17 @@ public:
                              QQmlImportDatabase *database,
                              QString *outQmldirFilePath, QString *outUrl);
 
-    static bool validateQmldirVersion(const QQmlTypeLoader::QmldirContent *qmldir, const QString &uri, int vmaj, int vmin,
+    static bool validateQmldirVersion(const QQmlTypeLoaderQmldirContent *qmldir, const QString &uri, int vmaj, int vmin,
                                       QList<QQmlError> *errors);
 
     bool importExtension(const QString &absoluteFilePath, const QString &uri,
                          int vmaj, int vmin,
                          QQmlImportDatabase *database,
-                         const QQmlTypeLoader::QmldirContent *qmldir,
+                         const QQmlTypeLoaderQmldirContent *qmldir,
                          QList<QQmlError> *errors);
 
     bool getQmldirContent(const QString &qmldirIdentifier, const QString &uri,
-                          const QQmlTypeLoader::QmldirContent **qmldir, QList<QQmlError> *errors);
+                          const QQmlTypeLoaderQmldirContent **qmldir, QList<QQmlError> *errors);
 
     QString resolvedUri(const QString &dir_arg, QQmlImportDatabase *database);
 
@@ -681,7 +681,7 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
     return false;
 }
 
-bool QQmlImportNamespace::Import::setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoader::QmldirContent *qmldir, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
+bool QQmlImportNamespace::Import::setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent *qmldir, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
 {
     Q_ASSERT(resolvedUrl.endsWith(Slash));
     url = resolvedUrl;
@@ -1058,7 +1058,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                                          const QString &uri,
                                          int vmaj, int vmin,
                                          QQmlImportDatabase *database,
-                                         const QQmlTypeLoader::QmldirContent *qmldir,
+                                         const QQmlTypeLoaderQmldirContent *qmldir,
                                          QList<QQmlError> *errors)
 {
 #if QT_CONFIG(library)
@@ -1194,7 +1194,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
 }
 
 bool QQmlImportsPrivate::getQmldirContent(const QString &qmldirIdentifier, const QString &uri,
-                                          const QQmlTypeLoader::QmldirContent **qmldir, QList<QQmlError> *errors)
+                                          const QQmlTypeLoaderQmldirContent **qmldir, QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
     Q_ASSERT(qmldir);
@@ -1319,7 +1319,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
     return false;
 }
 
-bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoader::QmldirContent *qmldir, const QString &uri, int vmaj, int vmin,
+bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent *qmldir, const QString &uri, int vmaj, int vmin,
                                                QList<QQmlError> *errors)
 {
     int lowest_min = INT_MAX;
@@ -1442,7 +1442,7 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     Q_ASSERT(inserted);
 
     if (!incomplete) {
-        const QQmlTypeLoader::QmldirContent *qmldir = 0;
+        const QQmlTypeLoaderQmldirContent *qmldir = 0;
 
         if (!qmldirIdentifier.isEmpty()) {
             if (!getQmldirContent(qmldirIdentifier, uri, &qmldir, errors))
@@ -1543,7 +1543,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
-        const QQmlTypeLoader::QmldirContent *qmldir = 0;
+        const QQmlTypeLoaderQmldirContent *qmldir = 0;
         if (!getQmldirContent(qmldirIdentifier, importUri, &qmldir, errors))
             return false;
 
@@ -1567,7 +1567,7 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
     Q_ASSERT(nameSpace);
 
     if (QQmlImportNamespace::Import *import = nameSpace->findImport(uri)) {
-        const QQmlTypeLoader::QmldirContent *qmldir = 0;
+        const QQmlTypeLoaderQmldirContent *qmldir = 0;
         if (!getQmldirContent(qmldirIdentifier, uri, &qmldir, errors))
             return false;
 

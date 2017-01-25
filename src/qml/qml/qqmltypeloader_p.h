@@ -218,6 +218,34 @@ private:
 
 class QQmlTypeLoaderThread;
 
+class QQmlTypeLoaderQmldirContent
+{
+private:
+    friend class QQmlTypeLoader;
+    QQmlTypeLoaderQmldirContent();
+
+    void setContent(const QString &location, const QString &content);
+    void setError(const QQmlError &);
+
+public:
+    bool hasError() const;
+    QList<QQmlError> errors(const QString &uri) const;
+
+    QString typeNamespace() const;
+
+    QQmlDirComponents components() const;
+    QQmlDirScripts scripts() const;
+    QQmlDirPlugins plugins() const;
+
+    QString pluginLocation() const;
+
+    bool designerSupported() const;
+
+private:
+    QQmlDirParser m_parser;
+    QString m_location;
+};
+
 class Q_AUTOTEST_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
@@ -256,34 +284,6 @@ public:
         QList<QQmlQmldirData *> m_qmldirs;
     };
 
-    class QmldirContent
-    {
-    private:
-        friend class QQmlTypeLoader;
-        QmldirContent();
-
-        void setContent(const QString &location, const QString &content);
-        void setError(const QQmlError &);
-
-    public:
-        bool hasError() const;
-        QList<QQmlError> errors(const QString &uri) const;
-
-        QString typeNamespace() const;
-
-        QQmlDirComponents components() const;
-        QQmlDirScripts scripts() const;
-        QQmlDirPlugins plugins() const;
-
-        QString pluginLocation() const;
-
-        bool designerSupported() const;
-
-    private:
-        QQmlDirParser m_parser;
-        QString m_location;
-    };
-
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
@@ -298,7 +298,7 @@ public:
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
 
-    const QmldirContent *qmldirContent(const QString &filePath);
+    const QQmlTypeLoaderQmldirContent *qmldirContent(const QString &filePath);
     void setQmldirContent(const QString &filePath, const QString &content);
 
     void clearCache();
@@ -363,7 +363,7 @@ private:
     typedef QHash<QUrl, QQmlQmldirData *> QmldirCache;
     typedef QStringHash<bool> StringSet;
     typedef QStringHash<StringSet*> ImportDirCache;
-    typedef QStringHash<QmldirContent *> ImportQmlDirCache;
+    typedef QStringHash<QQmlTypeLoaderQmldirContent *> ImportQmlDirCache;
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
