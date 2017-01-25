@@ -1729,8 +1729,12 @@ void QQuickPopup::componentComplete()
 {
     Q_D(QQuickPopup);
     d->complete = true;
-    if (!parentItem())
-        setParentItem(qobject_cast<QQuickItem *>(parent()));
+    if (!parentItem()) {
+        if (QQuickItem *item = qobject_cast<QQuickItem *>(parent()))
+            setParentItem(item);
+        else if (QQuickWindow *window = qobject_cast<QQuickWindow *>(parent()))
+            setParentItem(window->contentItem());
+    }
     if (d->visible)
         d->transitionManager.transitionEnter();
     d->popupItem->componentComplete();
