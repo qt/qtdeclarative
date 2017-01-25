@@ -427,6 +427,17 @@ QUrl QQmlImports::baseUrl() const
     return d->baseUrl;
 }
 
+/*
+    \internal
+
+    This method is responsible for populating data of all types visible in this
+    document's imports into the \a cache for resolution elsewhere (e.g. in JS,
+    or when loading additional types).
+
+    \note A current limitation of the implementation here is that only C++ types
+    are added to the type cache. This is due to file imports not having a
+    registered module.
+*/
 void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 {
     const QQmlImportNamespace &set = d->unqualifiedset;
