@@ -29,7 +29,9 @@
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
+#if QT_CONFIG(commandlineparser)
 #include <QCommandLineParser>
+#endif
 #include <QCoreApplication>
 
 #include <private/qv4value_p.h>
@@ -73,6 +75,7 @@ int main(int argv, char *argc[])
     QCoreApplication app(argv, argc);
     QCoreApplication::setApplicationName("qmllint");
     QCoreApplication::setApplicationVersion("1.0");
+#if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
     parser.setApplicationDescription(QLatin1String("QML syntax verifier"));
     parser.addHelpOption();
@@ -89,8 +92,16 @@ int main(int argv, char *argc[])
     }
 
     bool silent = parser.isSet(silentOption);
+#else
+    bool silent = false;
+#endif
     bool success = true;
+#if QT_CONFIG(commandlineparser)
     for (const QString &filename : positionalArguments)
+#else
+    const auto arguments = app.arguments();
+    for (const QString &filename : arguments)
+#endif
         success &= lint_file(filename, silent);
 
     return success ? 0 : -1;

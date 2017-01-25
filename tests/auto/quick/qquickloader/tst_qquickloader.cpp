@@ -469,7 +469,7 @@ void tst_QQuickLoader::networkComponent()
     // because in the synchronous case we're already done loading.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(item);
 
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->children().at(1));
@@ -481,7 +481,6 @@ void tst_QQuickLoader::networkComponent()
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->children().count(), 1);
 
-    delete loader;
 }
 
 void tst_QQuickLoader::failNetworkRequest()

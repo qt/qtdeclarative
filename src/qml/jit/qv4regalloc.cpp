@@ -973,7 +973,15 @@ private:
                 break;
 
             Q_ASSERT(!i->isFixedInterval());
-            _liveIntervals.push_back(i);
+            auto it = _liveIntervals.begin();
+            for (; it != _liveIntervals.end(); ++it) {
+                if ((*it)->temp() == i->temp()) {
+                    *it = i;
+                    break;
+                }
+            }
+            if (it == _liveIntervals.end())
+                _liveIntervals.push_back(i);
 //            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
             _unprocessedReverseOrder.removeLast();
