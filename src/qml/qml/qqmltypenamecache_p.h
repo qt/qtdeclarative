@@ -56,6 +56,7 @@
 #include "qqmlmetatype_p.h"
 
 #include <private/qhashedstring_p.h>
+#include <private/qqmlimport_p.h>
 
 #include <QtCore/qvector.h>
 
@@ -66,7 +67,7 @@ class QQmlEngine;
 class QQmlTypeNameCache : public QQmlRefCount
 {
 public:
-    QQmlTypeNameCache();
+    QQmlTypeNameCache(const QQmlImports &imports);
     virtual ~QQmlTypeNameCache();
 
     inline bool isEmpty() const;
@@ -105,6 +106,9 @@ private:
 
         // Or, imported compositeSingletons
         QStringHash<QUrl> compositeSingletons;
+
+        // The qualifier of this import
+        QString m_qualifier;
     };
 
     template<typename Key>
@@ -112,6 +116,7 @@ private:
     {
         Import *i = imports.value(key);
         if (i) {
+            Q_ASSERT(!i->m_qualifier.isEmpty());
             if (i->scriptIndex != -1) {
                 return Result(i->scriptIndex);
             } else {
@@ -151,6 +156,7 @@ private:
     QMap<const Import *, QStringHash<Import> > m_namespacedImports;
     QVector<QQmlTypeModuleVersion> m_anonymousImports;
     QStringHash<QUrl> m_anonymousCompositeSingletons;
+    QQmlImports m_imports;
 };
 
 QQmlTypeNameCache::Result::Result()

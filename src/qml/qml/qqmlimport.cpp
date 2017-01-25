@@ -400,9 +400,8 @@ QUrl QQmlImports::baseUrl() const
     document's imports into the \a cache for resolution elsewhere (e.g. in JS,
     or when loading additional types).
 
-    \note A current limitation of the implementation here is that only C++ types
-    are added to the type cache. This is due to file imports not having a
-    registered module.
+    \note This is for C++ types only. Composite types are handled separately,
+    as they do not have a QQmlTypeModule.
 */
 void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 {
@@ -420,11 +419,14 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 
         const QQmlImportNamespace &set = *ns;
 
+        // positioning is important; we must create the namespace even if there is no module.
+        QQmlTypeNameCache::Import &typeimport = cache->m_namedImports[set.prefix];
+        typeimport.m_qualifier = set.prefix;
+
         for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
             const QQmlImportInstance *import = set.imports.at(ii);
             QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
             if (module) {
-                QQmlTypeNameCache::Import &typeimport = cache->m_namedImports[set.prefix];
                 typeimport.modules.append(QQmlTypeModuleVersion(module, import->minversion));
             }
         }

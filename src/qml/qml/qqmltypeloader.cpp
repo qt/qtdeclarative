@@ -2602,7 +2602,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
         QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
         ) const
 {
-    typeNameCache->adopt(new QQmlTypeNameCache);
+    typeNameCache->adopt(new QQmlTypeNameCache(m_importCache));
 
     for (const QString &ns: m_namespaces)
         (*typeNameCache)->add(ns);
@@ -2946,7 +2946,7 @@ void QQmlScriptBlob::done()
         }
     }
 
-    m_scriptData->typeNameCache = new QQmlTypeNameCache();
+    m_scriptData->typeNameCache = new QQmlTypeNameCache(m_importCache);
 
     QSet<QString> ns;
 
