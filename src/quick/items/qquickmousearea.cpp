@@ -734,23 +734,34 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         bool dragY = drag()->axis() & QQuickDrag::YAxis;
 
         QPointF dragPos = d->drag->target()->position();
+        QPointF boundedDragPos = dragPos;
         if (dragX) {
-            dragPos.setX(qBound(
+            dragPos.setX(startPos.x() + curLocalPos.x() - startLocalPos.x());
+            boundedDragPos.setX(qBound(
                     d->drag->xmin(),
-                    startPos.x() + curLocalPos.x() - startLocalPos.x(),
+                    dragPos.x(),
                     d->drag->xmax()));
         }
         if (dragY) {
-            dragPos.setY(qBound(
+            dragPos.setY(startPos.y() + curLocalPos.y() - startLocalPos.y());
+            boundedDragPos.setY(qBound(
                     d->drag->ymin(),
-                    startPos.y() + curLocalPos.y() - startLocalPos.y(),
+                    dragPos.y(),
                     d->drag->ymax()));
         }
-        if (d->drag->active())
-            d->drag->target()->setPosition(dragPos);
 
-        if (!d->overThreshold && (QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(), Qt::XAxis, event, d->drag->threshold())
-                                  || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event, d->drag->threshold())))
+        QPointF targetPos = d->drag->target()->position();
+
+        if (d->drag->active())
+            d->drag->target()->setPosition(boundedDragPos);
+
+        bool dragOverThresholdX = QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(),
+                                                                         Qt::XAxis, event, d->drag->threshold());
+        bool dragOverThresholdY = QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(),
+                                                                         Qt::YAxis, event, d->drag->threshold());
+
+        if (!d->overThreshold && (((targetPos.x() != boundedDragPos.x()) && dragOverThresholdX) ||
+                                  ((targetPos.y() != boundedDragPos.y()) && dragOverThresholdY)))
         {
             d->overThreshold = true;
             if (d->drag->smoothed())
