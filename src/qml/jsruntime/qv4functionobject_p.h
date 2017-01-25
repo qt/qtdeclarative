@@ -61,6 +61,8 @@ struct QQmlSourceLocation;
 
 namespace QV4 {
 
+struct BuiltinFunction;
+
 namespace Heap {
 
 struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
@@ -93,9 +95,14 @@ struct FunctionPrototype : FunctionObject {
     void init();
 };
 
-struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
+struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
     void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *));
     ReturnedValue (*code)(QV4::CallContext *);
+};
+
+struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
+    void init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *));
+    void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *);
 };
 
 struct IndexedBuiltinFunction : FunctionObject {
@@ -177,16 +184,27 @@ struct FunctionPrototype: FunctionObject
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_apply(CallContext *ctx);
-    static ReturnedValue method_call(CallContext *ctx);
-    static ReturnedValue method_bind(CallContext *ctx);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_apply(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_call(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
-struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
+struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
+    V4_OBJECT2(OldBuiltinFunction, FunctionObject)
+
+    static void construct(const Managed *, Scope &scope, CallData *);
+    static void call(const Managed *that, Scope &scope, CallData *callData);
+};
+
+struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     V4_OBJECT2(BuiltinFunction, FunctionObject)
 
-    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
+    static Heap::OldBuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
+    {
+        return scope->engine()->memoryManager->allocObject<OldBuiltinFunction>(scope, name, code);
+    }
+    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *))
     {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
     }

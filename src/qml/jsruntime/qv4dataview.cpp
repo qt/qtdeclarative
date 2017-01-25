@@ -129,90 +129,84 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 0);
 }
 
-ReturnedValue DataViewPrototype::method_get_buffer(CallContext *ctx)
+void DataViewPrototype::method_get_buffer(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
+    Scoped<DataView> v(scope, callData->thisObject);
     if (!v)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return Encode(v->d()->buffer->asReturnedValue());
+    scope.result = v->d()->buffer;
 }
 
-ReturnedValue DataViewPrototype::method_get_byteLength(CallContext *ctx)
+void DataViewPrototype::method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
+    Scoped<DataView> v(scope, callData->thisObject);
     if (!v)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return Encode(v->d()->byteLength);
+    scope.result = Encode(v->d()->byteLength);
 }
 
-ReturnedValue DataViewPrototype::method_get_byteOffset(CallContext *ctx)
+void DataViewPrototype::method_get_byteOffset(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
+    Scoped<DataView> v(scope, callData->thisObject);
     if (!v)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return Encode(v->d()->byteOffset);
+    scope.result = Encode(v->d()->byteOffset);
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_getChar(CallContext *ctx)
+void DataViewPrototype::method_getChar(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
-    if (!v || ctx->argc() < 1)
-        return scope.engine->throwTypeError();
-    double l = ctx->args()[0].toNumber();
+    Scoped<DataView> v(scope, callData->thisObject);
+    if (!v || callData->argc < 1)
+        THROW_TYPE_ERROR();
+    double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
     idx += v->d()->byteOffset;
 
     T t = T(v->d()->buffer->data->data()[idx]);
 
-    return Encode((int)t);
+    scope.result = Encode((int)t);
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_get(CallContext *ctx)
+void DataViewPrototype::method_get(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
-    if (!v || ctx->argc() < 1)
-        return scope.engine->throwTypeError();
-    double l = ctx->args()[0].toNumber();
+    Scoped<DataView> v(scope, callData->thisObject);
+    if (!v || callData->argc < 1)
+        THROW_TYPE_ERROR();
+    double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
     idx += v->d()->byteOffset;
 
-    bool littleEndian = ctx->argc() < 2 ? false : ctx->args()[1].toBoolean();
+    bool littleEndian = callData->argc < 2 ? false : callData->args[1].toBoolean();
 
     T t = littleEndian
             ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data->data() + idx)
             : qFromBigEndian<T>((uchar *)v->d()->buffer->data->data() + idx);
 
-    return Encode(t);
+    scope.result = Encode(t);
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_getFloat(CallContext *ctx)
+void DataViewPrototype::method_getFloat(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
-    if (!v || ctx->argc() < 1)
-        return scope.engine->throwTypeError();
-    double l = ctx->args()[0].toNumber();
+    Scoped<DataView> v(scope, callData->thisObject);
+    if (!v || callData->argc < 1)
+        THROW_TYPE_ERROR();
+    double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
     idx += v->d()->byteOffset;
 
-    bool littleEndian = ctx->argc() < 2 ? false : ctx->args()[1].toBoolean();
+    bool littleEndian = callData->argc < 2 ? false : callData->args[1].toBoolean();
 
     if (sizeof(T) == 4) {
         // float
@@ -223,7 +217,7 @@ ReturnedValue DataViewPrototype::method_getFloat(CallContext *ctx)
         u.i = littleEndian
                 ? qFromLittleEndian<uint>((uchar *)v->d()->buffer->data->data() + idx)
                 : qFromBigEndian<uint>((uchar *)v->d()->buffer->data->data() + idx);
-        return Encode(u.f);
+        scope.result = Encode(u.f);
     } else {
         Q_ASSERT(sizeof(T) == 8);
         union {
@@ -233,69 +227,66 @@ ReturnedValue DataViewPrototype::method_getFloat(CallContext *ctx)
         u.i = littleEndian
                 ? qFromLittleEndian<quint64>((uchar *)v->d()->buffer->data->data() + idx)
                 : qFromBigEndian<quint64>((uchar *)v->d()->buffer->data->data() + idx);
-        return Encode(u.d);
+        scope.result = Encode(u.d);
     }
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_setChar(CallContext *ctx)
+void DataViewPrototype::method_setChar(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
-    if (!v || ctx->argc() < 1)
-        return scope.engine->throwTypeError();
-    double l = ctx->args()[0].toNumber();
+    Scoped<DataView> v(scope, callData->thisObject);
+    if (!v || callData->argc < 1)
+        THROW_TYPE_ERROR();
+    double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
     idx += v->d()->byteOffset;
 
-    int val = ctx->argc() >= 2 ? ctx->args()[1].toInt32() : 0;
+    int val = callData->argc >= 2 ? callData->args[1].toInt32() : 0;
     v->d()->buffer->data->data()[idx] = (char)val;
 
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_set(CallContext *ctx)
+void DataViewPrototype::method_set(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
-    if (!v || ctx->argc() < 1)
-        return scope.engine->throwTypeError();
-    double l = ctx->args()[0].toNumber();
+    Scoped<DataView> v(scope, callData->thisObject);
+    if (!v || callData->argc < 1)
+        THROW_TYPE_ERROR();
+    double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
     idx += v->d()->byteOffset;
 
-    int val = ctx->argc() >= 2 ? ctx->args()[1].toInt32() : 0;
+    int val = callData->argc >= 2 ? callData->args[1].toInt32() : 0;
 
-    bool littleEndian = ctx->argc() < 3 ? false : ctx->args()[2].toBoolean();
+    bool littleEndian = callData->argc < 3 ? false : callData->args[2].toBoolean();
 
     if (littleEndian)
         qToLittleEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
     else
         qToBigEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
 
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
+void DataViewPrototype::method_setFloat(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<DataView> v(scope, ctx->thisObject());
-    if (!v || ctx->argc() < 1)
-        return scope.engine->throwTypeError();
-    double l = ctx->args()[0].toNumber();
+    Scoped<DataView> v(scope, callData->thisObject);
+    if (!v || callData->argc < 1)
+        THROW_TYPE_ERROR();
+    double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
     idx += v->d()->byteOffset;
 
-    double val = ctx->argc() >= 2 ? ctx->args()[1].toNumber() : qt_qnan();
-    bool littleEndian = ctx->argc() < 3 ? false : ctx->args()[2].toBoolean();
+    double val = callData->argc >= 2 ? callData->args[1].toNumber() : qt_qnan();
+    bool littleEndian = callData->argc < 3 ? false : callData->args[2].toBoolean();
 
     if (sizeof(T) == 4) {
         // float
@@ -320,5 +311,5 @@ ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
         else
             qToBigEndian(u.i, (uchar *)v->d()->buffer->data->data() + idx);
     }
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }

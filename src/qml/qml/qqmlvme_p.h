@@ -131,6 +131,7 @@ public:
     ~QQmlVMEGuard();
 
     void guard(QQmlObjectCreator *);
+    void unguard(QObject *);
     void clear();
 
     bool isOK() const;

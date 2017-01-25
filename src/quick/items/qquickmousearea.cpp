@@ -206,6 +206,9 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     the proxied item. When disabled, the mouse area becomes transparent to
     mouse events.
 
+    MouseArea is an invisible Item, but it has a visible property.
+    When set to false, the mouse area becomes transparent to mouse events.
+
     The \l pressed read-only property indicates whether or not the user is
     holding down a mouse button over the mouse area. This property is often
     used in bindings between properties in a user interface. The containsMouse

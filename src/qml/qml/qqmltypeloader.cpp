@@ -2575,50 +2575,11 @@ void QQmlTypeData::resolveTypes()
 
         int majorVersion = -1;
         int minorVersion = -1;
-        QQmlImportNamespace *typeNamespace = 0;
-        QList<QQmlError> errors;
 
         const QString name = stringAt(unresolvedRef.key());
-        bool typeFound = m_importCache.resolveType(name, &ref.type,
-                &majorVersion, &minorVersion, &typeNamespace, &errors);
-        if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
-            // Lazy loading of implicit import
-            if (loadImplicitImport()) {
-                // Try again to find the type
-                errors.clear();
-                typeFound = m_importCache.resolveType(name, &ref.type,
-                    &majorVersion, &minorVersion, &typeNamespace, &errors);
-            } else {
-                return; //loadImplicitImport() hit an error, and called setError already
-            }
-        }
 
-        if ((!typeFound || typeNamespace) && reportErrors) {
-            // Known to not be a type:
-            //  - known to be a namespace (Namespace {})
-            //  - type with unknown namespace (UnknownNamespace.SomeType {})
-            QQmlError error;
-            if (typeNamespace) {
-                error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(name));
-            } else {
-                if (errors.size()) {
-                    error = errors.takeFirst();
-                } else {
-                    // this should not be possible!
-                    // Description should come from error provided by addImport() function.
-                    error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
-                }
-                error.setUrl(m_importCache.baseUrl());
-                error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(name).arg(error.description()));
-            }
-
-            error.setLine(unresolvedRef->location.line);
-            error.setColumn(unresolvedRef->location.column);
-
-            errors.prepend(error);
-            setError(errors);
+        if (!resolveType(name, majorVersion, minorVersion, ref, unresolvedRef->location.line, unresolvedRef->location.column, reportErrors) && reportErrors)
             return;
-        }
 
         if (ref.type && ref.type->isComposite()) {
             ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
@@ -2687,7 +2648,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
     return noError;
 }
 
-bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref)
+bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref, int lineNumber, int columnNumber, bool reportErrors)
 {
     QQmlImportNamespace *typeNamespace = 0;
     QList<QQmlError> errors;
@@ -2706,7 +2667,7 @@ bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &
         }
     }
 
-    if (!typeFound || typeNamespace) {
+    if ((!typeFound || typeNamespace) && reportErrors) {
         // Known to not be a type:
         //  - known to be a namespace (Namespace {})
         //  - type with unknown namespace (UnknownNamespace.SomeType {})
@@ -2724,6 +2685,11 @@ bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &
             error.setUrl(m_importCache.baseUrl());
             error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(typeName).arg(error.description()));
         }
+
+        if (lineNumber != -1)
+            error.setLine(lineNumber);
+        if (columnNumber != -1)
+            error.setColumn(columnNumber);
 
         errors.prepend(error);
         setError(errors);

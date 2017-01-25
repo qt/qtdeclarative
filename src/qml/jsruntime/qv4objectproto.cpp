@@ -121,100 +121,100 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     insertMember(v4->id___proto__(), p, Attr_Accessor|Attr_NotEnumerable);
 }
 
-ReturnedValue ObjectPrototype::method_getPrototypeOf(CallContext *ctx)
+void ObjectPrototype::method_getPrototypeOf(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
     ScopedObject p(scope, o->prototype());
-    return !!p ? p->asReturnedValue() : Encode::null();
+    scope.result = !!p ? p->asReturnedValue() : Encode::null();
 }
 
-ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
+void ObjectPrototype::method_getOwnPropertyDescriptor(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject O(scope, ctx->argument(0));
-    if (!O)
-        return ctx->engine()->throwTypeError();
+    ScopedObject O(scope, callData->argument(0));
+    if (!O) {
+        scope.result = scope.engine->throwTypeError();
+        return;
+    }
 
     if (ArgumentsObject::isNonStrictArgumentsObject(O))
         static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
 
-    ScopedValue v(scope, ctx->argument(1));
+    ScopedValue v(scope, callData->argument(1));
     ScopedString name(scope, v->toString(scope.engine));
-    if (scope.hasException())
-        return Encode::undefined();
+    CHECK_EXCEPTION();
+
     PropertyAttributes attrs;
     ScopedProperty desc(scope);
     O->getOwnProperty(name, &attrs, desc);
-    return fromPropertyDescriptor(scope.engine, desc, attrs);
+    scope.result = fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
-ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
+void ObjectPrototype::method_getOwnPropertyNames(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(context);
-    ScopedObject O(scope, context->argument(0));
-    if (!O)
-        return context->engine()->throwTypeError();
-
-    ScopedArrayObject array(scope, getOwnPropertyNames(context->d()->engine, context->args()[0]));
-    return array.asReturnedValue();
-}
-
-ReturnedValue ObjectPrototype::method_create(CallContext *ctx)
-{
-    Scope scope(ctx);
-    ScopedValue O(scope, ctx->argument(0));
-    if (!O->isObject() && !O->isNull())
-        return ctx->engine()->throwTypeError();
-
-    ScopedObject newObject(scope, ctx->d()->engine->newObject());
-    newObject->setPrototype(O->as<Object>());
-
-    if (ctx->argc() > 1 && !ctx->args()[1].isUndefined()) {
-        ctx->d()->callData->args[0] = newObject.asReturnedValue();
-        return method_defineProperties(ctx);
+    ScopedObject O(scope, callData->argument(0));
+    if (!O) {
+        scope.result = scope.engine->throwTypeError();
+        return;
     }
 
-    return newObject.asReturnedValue();
+    scope.result = getOwnPropertyNames(scope.engine, callData->args[0]);
 }
 
-ReturnedValue ObjectPrototype::method_defineProperty(CallContext *ctx)
+void ObjectPrototype::method_create(const BuiltinFunction *builtin, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject O(scope, ctx->argument(0));
-    if (!O)
-        return ctx->engine()->throwTypeError();
+    ScopedValue O(scope, callData->argument(0));
+    if (!O->isObject() && !O->isNull()) {
+        scope.result = scope.engine->throwTypeError();
+        return;
+    }
 
-    ScopedString name(scope, ctx->argument(1), ScopedString::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedObject newObject(scope, scope.engine->newObject());
+    newObject->setPrototype(O->as<Object>());
 
-    ScopedValue attributes(scope, ctx->argument(2));
+    if (callData->argc > 1 && !callData->args[1].isUndefined()) {
+        callData->args[0] = newObject;
+        method_defineProperties(builtin, scope, callData);
+        return;
+    }
+
+    scope.result = newObject;
+}
+
+void ObjectPrototype::method_defineProperty(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    ScopedObject O(scope, callData->argument(0));
+    if (!O) {
+        scope.result = scope.engine->throwTypeError();
+        return;
+    }
+
+    ScopedString name(scope, callData->argument(1), ScopedString::Convert);
+    CHECK_EXCEPTION();
+
+    ScopedValue attributes(scope, callData->argument(2));
     ScopedProperty pd(scope);
     PropertyAttributes attrs;
     toPropertyDescriptor(scope.engine, attributes, pd, &attrs);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    CHECK_EXCEPTION();
 
     if (!O->__defineOwnProperty__(scope.engine, name, pd, attrs))
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return O.asReturnedValue();
+    scope.result = O;
 }
 
-ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
+void ObjectPrototype::method_defineProperties(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject O(scope, ctx->argument(0));
+    ScopedObject O(scope, callData->argument(0));
     if (!O)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    ScopedObject o(scope, ctx->argument(1), ScopedObject::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedObject o(scope, callData->argument(1), ScopedObject::Convert);
+    CHECK_EXCEPTION();
+
     ScopedValue val(scope);
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
@@ -230,26 +230,24 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
         PropertyAttributes nattrs;
         val = o->getValue(pd->value, attrs);
         toPropertyDescriptor(scope.engine, val, n, &nattrs);
-        if (scope.engine->hasException)
-            return Encode::undefined();
+        CHECK_EXCEPTION();
         bool ok;
         if (name)
             ok = O->__defineOwnProperty__(scope.engine, name, n, nattrs);
         else
             ok = O->__defineOwnProperty__(scope.engine, index, n, nattrs);
         if (!ok)
-            return ctx->engine()->throwTypeError();
+            THROW_TYPE_ERROR();
     }
 
-    return O.asReturnedValue();
+    scope.result = O;
 }
 
-ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
+void ObjectPrototype::method_seal(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
     o->setInternalClass(o->internalClass()->sealed());
 
@@ -261,15 +259,14 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
         }
     }
 
-    return o.asReturnedValue();
+    scope.result = o;
 }
 
-ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
+void ObjectPrototype::method_freeze(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
     if (ArgumentsObject::isNonStrictArgumentsObject(o))
         static_cast<ArgumentsObject *>(o.getPointer())->fullyCreate();
@@ -285,96 +282,111 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
                 o->arrayData()->attrs[i].setWritable(false);
         }
     }
-    return o.asReturnedValue();
+    scope.result = o;
 }
 
-ReturnedValue ObjectPrototype::method_preventExtensions(CallContext *ctx)
+void ObjectPrototype::method_preventExtensions(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
     o->setInternalClass(o->internalClass()->nonExtensible());
-    return o.asReturnedValue();
+    scope.result = o;
 }
 
-ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
+void ObjectPrototype::method_isSealed(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    if (o->isExtensible())
-        return Encode(false);
+    if (o->isExtensible()) {
+        scope.result = Encode(false);
+        return;
+    }
 
-    if (o->internalClass() != o->internalClass()->sealed())
-        return Encode(false);
+    if (o->internalClass() != o->internalClass()->sealed()) {
+        scope.result = Encode(false);
+        return;
+    }
 
-    if (!o->arrayData() || !o->arrayData()->length())
-        return Encode(true);
+    if (!o->arrayData() || !o->arrayData()->length()) {
+        scope.result = Encode(true);
+        return;
+    }
 
     Q_ASSERT(o->arrayData() && o->arrayData()->length());
-    if (!o->arrayData()->attrs)
-        return Encode(false);
+    if (!o->arrayData()->attrs) {
+        scope.result = Encode(false);
+        return;
+    }
 
     for (uint i = 0; i < o->arrayData()->alloc; ++i) {
         if (!o->arrayData()->isEmpty(i))
-            if (o->arrayData()->attributes(i).isConfigurable())
-                return Encode(false);
+            if (o->arrayData()->attributes(i).isConfigurable()) {
+                scope.result = Encode(false);
+                return;
+            }
     }
 
-    return Encode(true);
+    scope.result = Encode(true);
 }
 
-ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
+void ObjectPrototype::method_isFrozen(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    if (o->isExtensible())
-        return Encode(false);
+    if (o->isExtensible()) {
+        scope.result = Encode(false);
+        return;
+    }
 
-    if (o->internalClass() != o->internalClass()->frozen())
-        return Encode(false);
+    if (o->internalClass() != o->internalClass()->frozen()) {
+        scope.result = Encode(false);
+        return;
+    }
 
-    if (!o->arrayData() || !o->arrayData()->length())
-        return Encode(true);
+    if (!o->arrayData() || !o->arrayData()->length()) {
+        scope.result = Encode(true);
+        return;
+    }
 
     Q_ASSERT(o->arrayData() && o->arrayData()->length());
-    if (!o->arrayData()->attrs)
-        return Encode(false);
+    if (!o->arrayData()->attrs) {
+        scope.result = Encode(false);
+        return;
+    }
 
     for (uint i = 0; i < o->arrayData()->alloc; ++i) {
         if (!o->arrayData()->isEmpty(i))
-            if (o->arrayData()->attributes(i).isConfigurable() || o->arrayData()->attributes(i).isWritable())
-                return Encode(false);
+            if (o->arrayData()->attributes(i).isConfigurable() || o->arrayData()->attributes(i).isWritable()) {
+                scope.result = Encode(false);
+                return;
+            }
     }
 
-    return Encode(true);
+    scope.result = Encode(true);
 }
 
-ReturnedValue ObjectPrototype::method_isExtensible(CallContext *ctx)
+void ObjectPrototype::method_isExtensible(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return Encode((bool)o->isExtensible());
+    scope.result = Encode((bool)o->isExtensible());
 }
 
-ReturnedValue ObjectPrototype::method_keys(CallContext *ctx)
+void ObjectPrototype::method_keys(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->argument(0));
+    ScopedObject o(scope, callData->argument(0));
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    ScopedArrayObject a(scope, ctx->d()->engine->newArrayObject());
+    ScopedArrayObject a(scope, scope.engine->newArrayObject());
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
@@ -385,175 +397,159 @@ ReturnedValue ObjectPrototype::method_keys(CallContext *ctx)
         a->push_back(name);
     }
 
-    return a.asReturnedValue();
+    scope.result = a;
 }
 
-ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
+void ObjectPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    if (ctx->thisObject().isUndefined()) {
-        return ctx->d()->engine->newString(QStringLiteral("[object Undefined]"))->asReturnedValue();
-    } else if (ctx->thisObject().isNull()) {
-        return ctx->d()->engine->newString(QStringLiteral("[object Null]"))->asReturnedValue();
+    if (callData->thisObject.isUndefined()) {
+        scope.result = scope.engine->newString(QStringLiteral("[object Undefined]"));
+    } else if (callData->thisObject.isNull()) {
+        scope.result = scope.engine->newString(QStringLiteral("[object Null]"));
     } else {
-        ScopedObject obj(scope, ctx->thisObject().toObject(scope.engine));
+        ScopedObject obj(scope, callData->thisObject.toObject(scope.engine));
         QString className = obj->className();
-        return ctx->d()->engine->newString(QStringLiteral("[object %1]").arg(className))->asReturnedValue();
+        scope.result = scope.engine->newString(QStringLiteral("[object %1]").arg(className));
     }
 }
 
-ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
+void ObjectPrototype::method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->thisObject().toObject(scope.engine));
+    ScopedObject o(scope, callData->thisObject.toObject(scope.engine));
     if (!o)
-        return Encode::undefined();
-    ScopedFunctionObject f(scope, o->get(ctx->d()->engine->id_toString()));
+        RETURN_UNDEFINED();
+
+    ScopedFunctionObject f(scope, o->get(scope.engine->id_toString()));
     if (!f)
-        return ctx->engine()->throwTypeError();
-    ScopedCallData callData(scope);
-    callData->thisObject = o;
+        THROW_TYPE_ERROR();
+    ScopedCallData cData(scope);
+    cData->thisObject = o;
     f->call(scope, callData);
-    return scope.result.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)
+void ObjectPrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedValue v(scope, ctx->thisObject().toObject(scope.engine));
-    if (ctx->d()->engine->hasException)
-        return Encode::undefined();
-    return v->asReturnedValue();
+    scope.result = callData->thisObject.toObject(scope.engine);
 }
 
-ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
+void ObjectPrototype::method_hasOwnProperty(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedString P(scope, ctx->argument(0), ScopedString::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    ScopedObject O(scope, ctx->thisObject(), ScopedObject::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedString P(scope, callData->argument(0), ScopedString::Convert);
+    CHECK_EXCEPTION();
+    ScopedObject O(scope, callData->thisObject, ScopedObject::Convert);
+    CHECK_EXCEPTION();
     bool r = O->hasOwnProperty(P);
     if (!r)
         r = !O->query(P).isEmpty();
-    return Encode(r);
+    scope.result = Encode(r);
 }
 
-ReturnedValue ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
+void ObjectPrototype::method_isPrototypeOf(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject V(scope, ctx->argument(0));
-    if (!V)
-        return Encode(false);
+    ScopedObject V(scope, callData->argument(0));
+    if (!V) {
+        scope.result = Encode(false);
+        return;
+    }
 
-    ScopedObject O(scope, ctx->thisObject(), ScopedObject::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedObject O(scope, callData->thisObject, ScopedObject::Convert);
+    CHECK_EXCEPTION();
     ScopedObject proto(scope, V->prototype());
     while (proto) {
-        if (O->d() == proto->d())
-            return Encode(true);
+        if (O->d() == proto->d()) {
+            scope.result = Encode(true);
+            return;
+        }
         proto = proto->prototype();
     }
-    return Encode(false);
+    scope.result = Encode(false);
 }
 
-ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
+void ObjectPrototype::method_propertyIsEnumerable(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedString p(scope, ctx->argument(0), ScopedString::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedString p(scope, callData->argument(0), ScopedString::Convert);
+    CHECK_EXCEPTION();
 
-    ScopedObject o(scope, ctx->thisObject(), ScopedObject::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedObject o(scope, callData->thisObject, ScopedObject::Convert);
+    CHECK_EXCEPTION();
     PropertyAttributes attrs;
     o->getOwnProperty(p, &attrs);
-    return Encode(attrs.isEnumerable());
+    scope.result = Encode(attrs.isEnumerable());
 }
 
-ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
+void ObjectPrototype::method_defineGetter(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    if (ctx->argc() < 2)
-        return ctx->engine()->throwTypeError();
+    if (callData->argc < 2)
+        THROW_TYPE_ERROR();
 
-    Scope scope(ctx);
-    ScopedFunctionObject f(scope, ctx->argument(1));
+    ScopedFunctionObject f(scope, callData->argument(1));
     if (!f)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    ScopedString prop(scope, ctx->argument(0), ScopedString::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedString prop(scope, callData->argument(0), ScopedString::Convert);
+    CHECK_EXCEPTION();
 
-    ScopedObject o(scope, ctx->thisObject());
+    ScopedObject o(scope, callData->thisObject);
     if (!o) {
-        if (!ctx->thisObject().isUndefined())
-            return Encode::undefined();
-        o = ctx->d()->engine->globalObject;
+        if (!callData->thisObject.isUndefined())
+            RETURN_UNDEFINED();
+        o = scope.engine->globalObject;
     }
 
     ScopedProperty pd(scope);
     pd->value = f;
     pd->set = Primitive::emptyValue();
     o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
-ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
+void ObjectPrototype::method_defineSetter(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    if (ctx->argc() < 2)
-        return ctx->engine()->throwTypeError();
+    if (callData->argc < 2)
+        THROW_TYPE_ERROR();
 
-    Scope scope(ctx);
-    ScopedFunctionObject f(scope, ctx->argument(1));
+    ScopedFunctionObject f(scope, callData->argument(1));
     if (!f)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    ScopedString prop(scope, ctx->argument(0), ScopedString::Convert);
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    ScopedString prop(scope, callData->argument(0), ScopedString::Convert);
+    CHECK_EXCEPTION();
 
-    ScopedObject o(scope, ctx->thisObject());
+    ScopedObject o(scope, callData->thisObject);
     if (!o) {
-        if (!ctx->thisObject().isUndefined())
-            return Encode::undefined();
-        o = ctx->d()->engine->globalObject;
+        if (!callData->thisObject.isUndefined())
+            RETURN_UNDEFINED();
+        o = scope.engine->globalObject;
     }
 
     ScopedProperty pd(scope);
     pd->value = Primitive::emptyValue();
     pd->set = f;
     o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
-    return Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
-ReturnedValue ObjectPrototype::method_get_proto(CallContext *ctx)
+void ObjectPrototype::method_get_proto(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->thisObject().as<Object>());
+    ScopedObject o(scope, callData->thisObject.as<Object>());
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return o->prototype()->asReturnedValue();
+    scope.result = o->prototype();
 }
 
-ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
+void ObjectPrototype::method_set_proto(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedObject o(scope, ctx->thisObject());
-    if (!o || !ctx->argc())
-        return ctx->engine()->throwTypeError();
+    ScopedObject o(scope, callData->thisObject);
+    if (!o || !callData->argc)
+        THROW_TYPE_ERROR();
 
-    if (ctx->args()[0].isNull()) {
+    if (callData->args[0].isNull()) {
         o->setPrototype(0);
-        return Encode::undefined();
+        RETURN_UNDEFINED();
     }
 
-    ScopedObject p(scope, ctx->args()[0]);
+    ScopedObject p(scope, callData->args[0]);
     bool ok = false;
     if (!!p) {
         if (o->prototype() == p->d()) {
@@ -562,9 +558,11 @@ ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
             ok = o->setPrototype(p);
         }
     }
-    if (!ok)
-        return ctx->engine()->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
-    return Encode::undefined();
+    if (!ok) {
+        scope.result = scope.engine->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
+        return;
+    }
+    RETURN_UNDEFINED();
 }
 
 void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value &v, Property *desc, PropertyAttributes *attrs)

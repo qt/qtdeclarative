@@ -695,15 +695,6 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
         QQuickImageProviderWithOptions *providerV2 = provider->d->isProviderWithOptions ? static_cast<QQuickImageProviderWithOptions *>(provider)
                                                                                         : nullptr;
 
-        if (!provider->d->isProviderWithOptions &&
-                (providerOptions.autoTransform() != QQuickImageProviderOptions::UsePluginDefaultTransform
-                 || providerOptions.preserveAspectRatioCrop()
-                 || providerOptions.preserveAspectRatioFit())
-           )
-        {
-            qWarning() << "Trying to pass extra request flags to provider but it is not a QQuickImageProviderWithOptions";
-        }
-
         switch (imageType) {
             case QQuickImageProvider::Invalid:
             {

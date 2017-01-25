@@ -109,14 +109,8 @@ struct ExecutionContext : Base {
     {
         Base::init();
 
-        callData = nullptr;
         this->engine = engine;
-        outer = nullptr;
-        lookups = nullptr;
-        constantTable = nullptr;
-        compilationUnit = nullptr;
         type = t;
-        strictMode = false;
         lineNumber = -1;
     }
 
@@ -135,15 +129,12 @@ struct ExecutionContext : Base {
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
 struct CallContext : ExecutionContext {
-    static CallContext createOnStack(ExecutionEngine *v4);
+    static CallContext *createSimpleContext(ExecutionEngine *v4);
+    void freeSimpleCallContext();
 
     void init(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
     {
         ExecutionContext::init(engine, t);
-        function = 0;
-        v4Function = 0;
-        locals = 0;
-        activation = 0;
     }
 
     inline unsigned int formalParameterCount() const;
@@ -247,6 +238,7 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
 
     inline ReturnedValue argument(int i) const;
     bool needsOwnArguments() const;
+
 };
 
 inline ReturnedValue CallContext::argument(int i) const {
@@ -287,16 +279,6 @@ inline const CatchContext *ExecutionContext::asCatchContext() const
 inline const WithContext *ExecutionContext::asWithContext() const
 {
     return d()->type == Heap::ExecutionContext::Type_WithContext ? static_cast<const WithContext *>(this) : 0;
-}
-
-inline Heap::CallContext Heap::CallContext::createOnStack(ExecutionEngine *v4)
-{
-    Heap::CallContext ctxt;
-    memset(&ctxt, 0, sizeof(Heap::CallContext));
-    ctxt.mm_data = 0;
-    ctxt.setVtable(QV4::CallContext::staticVTable());
-    ctxt.init(v4);
-    return ctxt;
 }
 
 } // namespace QV4

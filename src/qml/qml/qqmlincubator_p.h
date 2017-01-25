@@ -40,6 +40,8 @@
 #ifndef QQMLINCUBATOR_P_H
 #define QQMLINCUBATOR_P_H
 
+#include "qqmlincubator.h"
+
 #include <private/qintrusivelist_p.h>
 #include <private/qqmlvme_p.h>
 #include <private/qrecursionwatcher_p.h>
@@ -100,6 +102,9 @@ public:
 
     void forceCompletion(QQmlInstantiationInterrupt &i);
     void incubate(QQmlInstantiationInterrupt &i);
+
+    // used by Qt Quick Controls 2
+    Q_QML_PRIVATE_EXPORT static void cancel(QObject *object, QQmlContext *context = 0);
 };
 
 QT_END_NAMESPACE

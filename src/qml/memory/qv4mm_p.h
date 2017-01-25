@@ -55,6 +55,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4mmdefs_p.h>
 #include <QVector>
 
 //#define DETAILED_MM_STATS
@@ -63,18 +64,138 @@
 #define QV4_MM_MAX_CHUNK_SIZE "QV4_MM_MAX_CHUNK_SIZE"
 #define QV4_MM_STATS "QV4_MM_STATS"
 
+#define MM_DEBUG 0
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct GCDeletable;
+struct ChunkAllocator;
+
+template<typename T>
+struct StackAllocator {
+    Q_STATIC_ASSERT(sizeof(T) < Chunk::DataSize);
+    static const uint requiredSlots = (sizeof(T) + sizeof(HeapItem) - 1)/sizeof(HeapItem);
+
+    StackAllocator(ChunkAllocator *chunkAlloc);
+
+    T *allocate() {
+        T *m = nextFree->as<T>();
+        if (Q_UNLIKELY(nextFree == lastInChunk)) {
+            nextChunk();
+        } else {
+            nextFree += requiredSlots;
+        }
+#if MM_DEBUG
+        Chunk *c = m->chunk();
+        Chunk::setBit(c->objectBitmap, m - c->realBase());
+#endif
+        return m;
+    }
+    void free() {
+#if MM_DEBUG
+        Chunk::clearBit(item->chunk()->objectBitmap, item - item->chunk()->realBase());
+#endif
+        if (Q_UNLIKELY(nextFree == firstInChunk)) {
+            prevChunk();
+        } else {
+            nextFree -= requiredSlots;
+        }
+    }
+
+    void nextChunk();
+    void prevChunk();
+
+    void freeAll();
+
+    ChunkAllocator *chunkAllocator;
+    HeapItem *nextFree = 0;
+    HeapItem *firstInChunk = 0;
+    HeapItem *lastInChunk = 0;
+    std::vector<Chunk *> chunks;
+    uint currentChunk = 0;
+};
+
+struct BlockAllocator {
+    BlockAllocator(ChunkAllocator *chunkAllocator)
+        : chunkAllocator(chunkAllocator)
+    {
+        memset(freeBins, 0, sizeof(freeBins));
+#if MM_DEBUG
+        memset(allocations, 0, sizeof(allocations));
+#endif
+    }
+
+    enum { NumBins = 8 };
+
+    static inline size_t binForSlots(size_t nSlots) {
+        return nSlots >= NumBins ? NumBins - 1 : nSlots;
+    }
+
+#if MM_DEBUG
+    void stats();
+#endif
+
+    HeapItem *allocate(size_t size, bool forceAllocation = false);
+
+    size_t totalSlots() const {
+        return Chunk::AvailableSlots*chunks.size();
+    }
+
+    size_t allocatedMem() const {
+        return chunks.size()*Chunk::DataSize;
+    }
+    size_t usedMem() const {
+        uint used = 0;
+        for (auto c : chunks)
+            used += c->nUsedSlots()*Chunk::SlotSize;
+        return used;
+    }
+
+    void sweep();
+    void freeAll();
+
+    // bump allocations
+    HeapItem *nextFree = 0;
+    size_t nFree = 0;
+    size_t usedSlotsAfterLastSweep = 0;
+    HeapItem *freeBins[NumBins];
+    ChunkAllocator *chunkAllocator;
+    std::vector<Chunk *> chunks;
+#if MM_DEBUG
+    uint allocations[NumBins];
+#endif
+};
+
+struct HugeItemAllocator {
+    HugeItemAllocator(ChunkAllocator *chunkAllocator)
+        : chunkAllocator(chunkAllocator)
+    {}
+
+    HeapItem *allocate(size_t size);
+    void sweep();
+    void freeAll();
+
+    size_t usedMem() const {
+        size_t used = 0;
+        for (const auto &c : chunks)
+            used += c.size;
+        return used;
+    }
+
+    ChunkAllocator *chunkAllocator;
+    struct HugeChunk {
+        Chunk *chunk;
+        size_t size;
+    };
+
+    std::vector<HugeChunk> chunks;
+};
+
 
 class Q_QML_EXPORT MemoryManager
 {
     Q_DISABLE_COPY(MemoryManager);
-
-public:
-    struct Data;
 
 public:
     MemoryManager(ExecutionEngine *engine);
@@ -82,16 +203,27 @@ public:
 
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
     // Note: all occurrences of "16" in alloc/dealloc are also due to the alignment.
-    static inline std::size_t align(std::size_t size)
-    { return (size + 15) & ~0xf; }
+    Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
+    { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
+
+    QV4::Heap::CallContext *allocSimpleCallContext(QV4::ExecutionEngine *v4)
+    {
+        Heap::CallContext *ctxt = stackAllocator.allocate();
+        memset(ctxt, 0, sizeof(Heap::CallContext));
+        ctxt->setVtable(QV4::CallContext::staticVTable());
+        ctxt->init(v4);
+        return ctxt;
+
+    }
+    void freeSimpleCallContext()
+    { stackAllocator.free(); }
 
     template<typename ManagedType>
-    inline typename ManagedType::Data *allocManaged(std::size_t size, std::size_t unmanagedSize = 0)
+    inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
         V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
-        Heap::Base *o = allocData(size, unmanagedSize);
-        memset(o, 0, size);
+        Heap::Base *o = allocData(size);
         o->setVtable(ManagedType::staticVTable());
         return static_cast<typename ManagedType::Data *>(o);
     }
@@ -99,35 +231,31 @@ public:
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        typename ObjectType::Data *o = allocManaged<ObjectType>(size + ic->size*sizeof(Value));
+        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
+        o->setVtable(ObjectType::staticVTable());
         o->internalClass = ic;
-        o->inlineMemberSize = ic->size;
-        o->inlineMemberOffset = size/sizeof(Value);
-        return o;
+        return static_cast<typename ObjectType::Data *>(o);
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject()
     {
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        typename ObjectType::Data *o = allocManaged<ObjectType>(size + ic->size*sizeof(Value));
+        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
+        o->setVtable(ObjectType::staticVTable());
         Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
         o->prototype = prototype->d();
-        o->inlineMemberSize = ic->size;
-        o->inlineMemberOffset = size/sizeof(Value);
-        return o;
+        return static_cast<typename ObjectType::Data *>(o);
     }
 
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
-        t->d_unchecked()->init(this, arg1);
-        return t->d();
+        typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
+        o->setVtable(ManagedType::staticVTable());
+        o->init(this, arg1);
+        return o;
     }
 
     template <typename ObjectType>
@@ -297,12 +425,15 @@ public:
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;
 
-    void changeUnmanagedHeapSizeUsage(qptrdiff delta); // called when a JS object grows itself. Specifically: Heap::String::append
+    // called when a JS object grows itself. Specifically: Heap::String::append
+    void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
+
 
 protected:
     /// expects size to be aligned
-    // TODO: try to inline
-    Heap::Base *allocData(std::size_t size, std::size_t unmanagedSize);
+    Heap::Base *allocString(std::size_t unmanagedSize);
+    Heap::Base *allocData(std::size_t size);
+    Heap::Object *allocObjectWithMemberData(std::size_t size, uint nMembers);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);
@@ -312,13 +443,24 @@ private:
     void collectFromJSStack() const;
     void mark();
     void sweep(bool lastSweep = false);
+    bool shouldRunGC() const;
 
 public:
     QV4::ExecutionEngine *engine;
-    QScopedPointer<Data> m_d;
+    ChunkAllocator *chunkAllocator;
+    StackAllocator<Heap::CallContext> stackAllocator;
+    BlockAllocator blockAllocator;
+    HugeItemAllocator hugeItemAllocator;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
     QVector<Value *> m_pendingFreedObjectWrapperValue;
+
+    std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
+    std::size_t unmanagedHeapSizeGCLimit;
+
+    bool gcBlocked = false;
+    bool aggressiveGC = false;
+    bool gcStats = false;
 };
 
 }

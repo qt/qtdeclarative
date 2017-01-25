@@ -39,8 +39,6 @@
 
 #include "qsgopenvgcontext_p.h"
 #include "qsgopenvgrenderer_p.h"
-#include "qsgopenvginternalrectanglenode.h"
-#include "qsgopenvginternalimagenode.h"
 #include "qsgopenvgpublicnodes.h"
 #include "qsgopenvgtexture.h"
 #include "qsgopenvglayer.h"
@@ -52,6 +50,8 @@
 #include "qopenvgcontext_p.h"
 
 #include <private/qsgrenderer_p.h>
+#include "qsgopenvginternalrectanglenode.h"
+#include "qsgopenvginternalimagenode.h"
 
 // polish, animations, sync, render and swap in the render loop
 Q_LOGGING_CATEGORY(QSG_OPENVG_LOG_TIME_RENDERLOOP,     "qt.scenegraph.time.renderloop")

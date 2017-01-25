@@ -883,10 +883,9 @@ void Heap::JsonObject::init()
 }
 
 
-ReturnedValue JsonObject::method_parse(CallContext *ctx)
+void JsonObject::method_parse(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    ScopedValue v(scope, ctx->argument(0));
+    ScopedValue v(scope, callData->argument(0));
     QString jtext = v->toQString();
 
     DEBUG << "parsing source = " << jtext;
@@ -895,19 +894,17 @@ ReturnedValue JsonObject::method_parse(CallContext *ctx)
     ScopedValue result(scope, parser.parse(&error));
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        return ctx->engine()->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));
+        RETURN_RESULT(scope.engine->throwSyntaxError(QStringLiteral("JSON.parse: Parse error")));
     }
 
-    return result->asReturnedValue();
+    scope.result = result;
 }
 
-ReturnedValue JsonObject::method_stringify(CallContext *ctx)
+void JsonObject::method_stringify(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-
     Stringify stringify(scope.engine);
 
-    ScopedObject o(scope, ctx->argument(1));
+    ScopedObject o(scope, callData->argument(1));
     if (o) {
         stringify.replacerFunction = o->as<FunctionObject>();
         if (o->isArrayObject()) {
@@ -932,7 +929,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
         }
     }
 
-    ScopedValue s(scope, ctx->argument(2));
+    ScopedValue s(scope, callData->argument(2));
     if (NumberObject *n = s->as<NumberObject>())
         s = Encode(n->value());
     else if (StringObject *so = s->as<StringObject>())
@@ -945,11 +942,11 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
     }
 
 
-    ScopedValue arg0(scope, ctx->argument(0));
+    ScopedValue arg0(scope, callData->argument(0));
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty() || scope.engine->hasException)
-        return Encode::undefined();
-    return ctx->d()->engine->newString(result)->asReturnedValue();
+        RETURN_UNDEFINED();
+    scope.result = scope.engine->newString(result);
 }
 
 

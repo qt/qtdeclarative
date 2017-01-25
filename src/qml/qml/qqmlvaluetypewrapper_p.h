@@ -111,7 +111,7 @@ public:
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
-    static QV4::ReturnedValue method_toString(CallContext *ctx);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
 
     static void initProto(ExecutionEngine *v4);
 };

@@ -81,7 +81,7 @@ struct ArrayBufferCtor: FunctionObject
     static void construct(const Managed *m, Scope &scope, CallData *callData);
     static void call(const Managed *that, Scope &scope, CallData *callData);
 
-    static ReturnedValue method_isView(CallContext *ctx);
+    static void method_isView(const BuiltinFunction *, Scope &scope, CallData *callData);
 
 };
 
@@ -104,9 +104,9 @@ struct ArrayBufferPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_get_byteLength(CallContext *ctx);
-    static ReturnedValue method_slice(CallContext *ctx);
-    static ReturnedValue method_toString(CallContext *ctx);
+    static void method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_slice(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 

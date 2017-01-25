@@ -195,23 +195,22 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
+void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    if (!ctx->argc())
-        return QV4::Encode::undefined();
+    if (!callData->argc)
+        RETURN_UNDEFINED();
 
-    QV4::Scope scope(ctx->engine());
     QQmlContextData *context = scope.engine->callingQmlContext();
 
     if (!context || !context->isJSContext)
-        V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
+        RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (ctx->argc() >= 2 && ctx->args()[1].as<QV4::FunctionObject>())
-        callbackFunction = ctx->args()[1];
+    if (callData->argc >= 2 && callData->args[1].as<QV4::FunctionObject>())
+        callbackFunction = callData->args[1];
 
 #if QT_CONFIG(qml_network)
-    QUrl url(scope.engine->resolvedUrl(ctx->args()[0].toQStringNoThrow()));
+    QUrl url(scope.engine->resolvedUrl(callData->args[0].toQStringNoThrow()));
     if (scope.engine->qmlEngine() && scope.engine->qmlEngine()->urlInterceptor())
         url = scope.engine->qmlEngine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
 
@@ -261,12 +260,12 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         callback(callbackFunction, result);
     }
 
-    return result->asReturnedValue();
+    scope.result = result;
 #else
     QV4::ScopedValue result(scope);
     result = resultValue(scope.engine, NetworkError);
     callback(callbackFunction, result);
-    return result->asReturnedValue();
+    scope.result = result;
 #endif
 }
 

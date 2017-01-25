@@ -128,48 +128,22 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
 
 static void insertHoleIntoPropertyData(Object *object, int idx)
 {
-    int inlineSize = object->d()->inlineMemberSize;
     int icSize = object->internalClass()->size;
-    int from = qMax(idx, inlineSize);
+    int from = idx;
     int to = from + 1;
-    if (from < icSize) {
+    if (from < icSize)
         memmove(object->propertyData(to), object->propertyData(from),
                 (icSize - from - 1) * sizeof(Value));
-    }
-    if (from == idx)
-        return;
-    if (inlineSize < icSize)
-        *object->propertyData(inlineSize) = *object->propertyData(inlineSize - 1);
-    from = idx;
-    to = from + 1;
-    if (from < inlineSize - 1) {
-        memmove(object->propertyData(to), object->propertyData(from),
-                (inlineSize - from - 1) * sizeof(Value));
-    }
 }
 
 static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
 {
-    int inlineSize = object->d()->inlineMemberSize;
     int delta = (accessor ? 2 : 1);
     int oldSize = object->internalClass()->size + delta;
     int to = idx;
     int from = to + delta;
-    if (from < inlineSize) {
-        memmove(object->propertyData(to), object->d()->propertyData(from), (inlineSize - from)*sizeof(Value));
-        to = inlineSize - delta;
-        from = inlineSize;
-    }
-    if (to < inlineSize && from < oldSize) {
-        Q_ASSERT(from >= inlineSize);
-        memcpy(object->propertyData(to), object->d()->propertyData(from), (inlineSize - to)*sizeof(Value));
-        to = inlineSize;
-        from = inlineSize + delta;
-    }
-    if (from < oldSize) {
-        Q_ASSERT(to >= inlineSize && from > to);
+    if (from < oldSize)
         memmove(object->propertyData(to), object->d()->propertyData(from), (oldSize - to)*sizeof(Value));
-    }
 }
 
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)

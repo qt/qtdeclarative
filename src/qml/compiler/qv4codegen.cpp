@@ -526,21 +526,21 @@ IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
     if (hasError)
         return 0;
 
-    if (! base->asTemp() || base->asArgLocal()) {
+    if (! base->asTemp() && !base->asArgLocal()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), base);
         base = _block->TEMP(t);
     }
 
-    if (! index->asTemp() || index->asArgLocal()) {
+    if (! index->asTemp() && !index->asArgLocal() && !index->asConst()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), index);
         index = _block->TEMP(t);
     }
 
     Q_ASSERT(base->asTemp() || base->asArgLocal());
-    Q_ASSERT(index->asTemp() || index->asArgLocal());
-    return _block->SUBSCRIPT(base->asTemp(), index->asTemp());
+    Q_ASSERT(index->asTemp() || index->asArgLocal() || index->asConst());
+    return _block->SUBSCRIPT(base, index);
 }
 
 IR::Expr *Codegen::argument(IR::Expr *expr)

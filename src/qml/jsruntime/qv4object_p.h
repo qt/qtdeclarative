@@ -63,17 +63,17 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct BuiltinFunction;
+
 namespace Heap {
 
 struct Object : Base {
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
-    const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
-    Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
+    const Value *propertyData(uint index) const { return memberData->data + index; }
+    Value *propertyData(uint index) { return memberData->data + index; }
 
-    uint inlineMemberOffset;
-    uint inlineMemberSize;
     InternalClass *internalClass;
     Pointer<Object> prototype;
     Pointer<MemberData> memberData;
@@ -238,9 +238,15 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void defineDefaultProperty(const QString &name, const Value &value);
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
+    void defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
     void defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
+    void defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     void defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
+    void defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
+                                void (*setter)(const BuiltinFunction *, Scope &, CallData *));
+    void defineAccessorProperty(String *name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
+                                void (*setter)(const BuiltinFunction *, Scope &, CallData *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);

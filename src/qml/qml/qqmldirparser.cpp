@@ -188,6 +188,15 @@ bool QQmlDirParser::parse(const QString &source)
 
             _plugins.append(entry);
 
+        } else if (sections[0] == QLatin1String("classname")) {
+            if (sectionCount < 2) {
+                reportError(lineNumber, 0,
+                            QStringLiteral("classname directive requires an argument, but %1 were provided").arg(sectionCount - 1));
+
+                continue;
+            }
+
+            // Ignore these. qmlimportscanner uses them.
         } else if (sections[0] == QLatin1String("internal")) {
             if (sectionCount != 3) {
                 reportError(lineNumber, 0,
