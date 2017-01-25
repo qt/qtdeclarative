@@ -544,7 +544,7 @@ inline bool Value::asArrayIndex(uint &idx) const
     }
     double d = doubleValue();
     idx = (uint)d;
-    return (idx == d);
+    return (idx == d && idx != UINT_MAX);
 }
 #endif
 
