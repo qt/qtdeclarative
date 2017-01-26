@@ -1529,7 +1529,7 @@ static inline int indexOfRangeCoveringPosition(const LifeTimeInterval::Ranges &r
     return -1;
 }
 
-static inline int intersectionPosition(const LifeTimeInterval::Range &one, const LifeTimeInterval::Range &two)
+static inline int intersectionPosition(const LifeTimeIntervalRange &one, const LifeTimeIntervalRange &two)
 {
     if (one.covers(two.start))
         return two.start;
@@ -1787,9 +1787,9 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
         return -1;
 
     for (int currentEnd = currentRanges.size(); currentIt < currentEnd; ++currentIt) {
-        const LifeTimeInterval::Range currentRange = currentRanges.at(currentIt);
+        const LifeTimeIntervalRange currentRange = currentRanges.at(currentIt);
         for (int anotherIt = anotherItStart, anotherEnd = anotherRanges.size(); anotherIt < anotherEnd; ++anotherIt) {
-            const LifeTimeInterval::Range anotherRange = anotherRanges.at(anotherIt);
+            const LifeTimeIntervalRange anotherRange = anotherRanges.at(anotherIt);
             if (anotherRange.start > currentRange.end)
                 break;
             int intersectPos = intersectionPosition(currentRange, anotherRange);

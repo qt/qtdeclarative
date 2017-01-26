@@ -639,7 +639,7 @@ static QByteArray ownLibraryChecksum()
     if (checksumInitialized)
         return libraryChecksum;
     checksumInitialized = true;
-#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST)
+#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST) && !defined(Q_OS_INTEGRITY)
     Dl_info libInfo;
     if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
         QFile library(QFile::decodeName(libInfo.dli_fname));

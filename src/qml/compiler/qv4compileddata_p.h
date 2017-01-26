@@ -777,31 +777,7 @@ struct TypeReferenceMap : QHash<int, TypeReference>
 };
 
 #ifndef V4_BOOTSTRAP
-struct ResolvedTypeReference
-{
-    ResolvedTypeReference()
-        : type(0)
-        , majorVersion(0)
-        , minorVersion(0)
-        , isFullyDynamicType(false)
-    {}
-
-    QQmlType *type;
-    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-
-    int majorVersion;
-    int minorVersion;
-    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-    // therefore cannot have a property cache installed when instantiated.
-    bool isFullyDynamicType;
-
-    QQmlPropertyCache *propertyCache() const;
-    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
-    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
-
-    void doDynamicTypeCheck();
-};
+struct ResolvedTypeReference;
 // map from name index
 // While this could be a hash, a map is chosen here to provide a stable
 // order, which is used to calculating a check-sum on dependent meta-objects.
@@ -940,6 +916,34 @@ protected:
     virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
     virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
 };
+
+#ifndef V4_BOOTSTRAP
+struct ResolvedTypeReference
+{
+    ResolvedTypeReference()
+        : type(0)
+        , majorVersion(0)
+        , minorVersion(0)
+        , isFullyDynamicType(false)
+    {}
+
+    QQmlType *type;
+    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+
+    int majorVersion;
+    int minorVersion;
+    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+    // therefore cannot have a property cache installed when instantiated.
+    bool isFullyDynamicType;
+
+    QQmlPropertyCache *propertyCache() const;
+    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
+
+    void doDynamicTypeCheck();
+};
+#endif
 
 }
 
