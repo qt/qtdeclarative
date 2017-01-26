@@ -168,8 +168,9 @@
   from \a uri having version number composed from \a versionMajor and
   \a versionMinor.
 
-  While the type has a name and a type, it cannot be created, and the
-  given error \a reason will result if creation is attempted.
+  While the type has a name and a type, it cannot be created. An error
+  message with the given \a reason is printed if the user attempts to
+  create an instance of this type.
 
   This is useful where the type is only intended for providing attached
   properties, enum values or an abstract base class with its extension.
@@ -189,11 +190,14 @@
   from \a uri having version number composed from \a versionMajor and
   \a versionMinor.
 
-  This function is useful to register Q_NAMESPACE namespaces.
+  An instance of the meta object cannot be created. An error message with
+  the given \a reason is printed if the user attempts to create it.
+
+  This function is useful for registering Q_NAMESPACE namespaces.
 
   Returns the QML type id.
 
-  Example:
+  For example:
 
   \code
   namespace MyNamespace {
@@ -209,7 +213,7 @@
   qmlRegisterUncreatableMetaObject(MyNamespace::staticMetaObject, "io.qt", 1, 0, "MyNamespace", "Access to enums & flags only");
   \endcode
 
-  Now on QML side you can use the registered enums:
+  On the QML side, you can now use the registered enums:
   \code
   Component.onCompleted: console.log(MyNamespace.Key2)
   \endcode

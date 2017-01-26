@@ -4466,8 +4466,8 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     \note The call to the function must happen before constructing the first
     QQuickWindow in the application. It cannot be changed afterwards.
 
-    If \a backend is invalid or an error occurs, the default backend (OpenGL or
-    software, depending on the Qt configuration) is used.
+    If the selected backend is invalid or an error occurs, the default backend
+    (OpenGL or software, depending on the Qt configuration) is used.
 
     \since 5.8
  */
