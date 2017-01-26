@@ -195,12 +195,12 @@ void InstructionSelection<JITAssembler>::callBuiltinInvalid(IR::Name *func, IR::
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateRuntimeCall(result, callGlobalLookup,
+        generateRuntimeCall(_as, result, callGlobalLookup,
                              JITTargetPlatform::EngineRegister,
                              TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateRuntimeCall(result, callActivationProperty,
+        generateRuntimeCall(_as, result, callActivationProperty,
                              JITTargetPlatform::EngineRegister,
                              StringToIndex(*func->id),
                              baseAddressForCallData());
@@ -213,11 +213,11 @@ void InstructionSelection<JITAssembler>::callBuiltinTypeofQmlContextProperty(IR:
                                                                int propertyIndex, IR::Expr *result)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject) {
-        generateRuntimeCall(result, typeofScopeObjectProperty, JITTargetPlatform::EngineRegister,
+        generateRuntimeCall(_as, result, typeofScopeObjectProperty, JITTargetPlatform::EngineRegister,
                              PointerToValue(base),
                              TrustedImm32(propertyIndex));
     } else if (kind == IR::Member::MemberOfQmlContextObject) {
-        generateRuntimeCall(result, typeofContextObjectProperty,
+        generateRuntimeCall(_as, result, typeofContextObjectProperty,
                              JITTargetPlatform::EngineRegister, PointerToValue(base),
                              TrustedImm32(propertyIndex));
     } else {
@@ -229,7 +229,7 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
                                                    IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofMember, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, typeofMember, JITTargetPlatform::EngineRegister,
                          PointerToValue(base), StringToIndex(name));
 }
 
@@ -237,7 +237,7 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index,
                                                       IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofElement,
+    generateRuntimeCall(_as, result, typeofElement,
                          JITTargetPlatform::EngineRegister,
                          PointerToValue(base), PointerToValue(index));
 }
@@ -245,21 +245,21 @@ void InstructionSelection<JITAssembler>::callBuiltinTypeofSubscript(IR::Expr *ba
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinTypeofName(const QString &name, IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofName, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, typeofName, JITTargetPlatform::EngineRegister,
                          StringToIndex(name));
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinTypeofValue(IR::Expr *value, IR::Expr *result)
 {
-    generateRuntimeCall(result, typeofValue, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, typeofValue, JITTargetPlatform::EngineRegister,
                          PointerToValue(value));
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinDeleteMember(IR::Expr *base, const QString &name, IR::Expr *result)
 {
-    generateRuntimeCall(result, deleteMember, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, deleteMember, JITTargetPlatform::EngineRegister,
                          Reference(base), StringToIndex(name));
 }
 
@@ -267,14 +267,14 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinDeleteSubscript(IR::Expr *base, IR::Expr *index,
                                                       IR::Expr *result)
 {
-    generateRuntimeCall(result, deleteElement, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, deleteElement, JITTargetPlatform::EngineRegister,
                          Reference(base), PointerToValue(index));
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinDeleteName(const QString &name, IR::Expr *result)
 {
-    generateRuntimeCall(result, deleteName, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, deleteName, JITTargetPlatform::EngineRegister,
                          StringToIndex(name));
 }
 
@@ -287,7 +287,7 @@ void InstructionSelection<JITAssembler>::callBuiltinDeleteValue(IR::Expr *result
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinThrow(IR::Expr *arg)
 {
-    generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, throwException, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, throwException, JITTargetPlatform::EngineRegister,
                          PointerToValue(arg));
 }
 
@@ -300,14 +300,14 @@ void InstructionSelection<JITAssembler>::callBuiltinReThrow()
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinUnwindException(IR::Expr *result)
 {
-    generateRuntimeCall(result, unwindException, JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, result, unwindException, JITTargetPlatform::EngineRegister);
 
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinPushCatchScope(const QString &exceptionName)
 {
-    generateRuntimeCall(JITAssembler::Void, pushCatchScope, JITTargetPlatform::EngineRegister, StringToIndex(exceptionName));
+    generateRuntimeCall(_as, JITAssembler::Void, pushCatchScope, JITTargetPlatform::EngineRegister, StringToIndex(exceptionName));
 }
 
 template <typename JITAssembler>
@@ -316,7 +316,7 @@ void InstructionSelection<JITAssembler>::callBuiltinForeachIteratorObject(IR::Ex
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateRuntimeCall(result, foreachIterator, JITTargetPlatform::EngineRegister, PointerToValue(arg));
+    generateRuntimeCall(_as, result, foreachIterator, JITTargetPlatform::EngineRegister, PointerToValue(arg));
 }
 
 template <typename JITAssembler>
@@ -325,7 +325,7 @@ void InstructionSelection<JITAssembler>::callBuiltinForeachNextPropertyname(IR::
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateRuntimeCall(result, foreachNextPropertyName, Reference(arg));
+    generateRuntimeCall(_as, result, foreachNextPropertyName, Reference(arg));
 }
 
 template <typename JITAssembler>
@@ -333,19 +333,19 @@ void InstructionSelection<JITAssembler>::callBuiltinPushWithScope(IR::Expr *arg)
 {
     Q_ASSERT(arg);
 
-    generateRuntimeCall(JITAssembler::Void, pushWithScope, Reference(arg), JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, JITAssembler::Void, pushWithScope, Reference(arg), JITTargetPlatform::EngineRegister);
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinPopScope()
 {
-    generateRuntimeCall(JITAssembler::Void, popScope, JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, JITAssembler::Void, popScope, JITTargetPlatform::EngineRegister);
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinDeclareVar(bool deletable, const QString &name)
 {
-    generateRuntimeCall(JITAssembler::Void, declareVar, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, JITAssembler::Void, declareVar, JITTargetPlatform::EngineRegister,
                          TrustedImm32(deletable), StringToIndex(name));
 }
 
@@ -355,7 +355,7 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineArray(IR::Expr *result
     Q_ASSERT(result);
 
     int length = prepareVariableArguments(args);
-    generateRuntimeCall(result, arrayLiteral, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, arrayLiteral, JITTargetPlatform::EngineRegister,
                          baseAddressForCallArguments(), TrustedImm32(length));
 }
 
@@ -436,7 +436,7 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineObjectLiteral(IR::Expr
         it = it->next;
     }
 
-    generateRuntimeCall(result, objectLiteral, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, objectLiteral, JITTargetPlatform::EngineRegister,
                          baseAddressForCallArguments(), TrustedImm32(classId),
                          TrustedImm32(arrayValueCount), TrustedImm32(arrayGetterSetterCount | (needSparseArray << 30)));
 }
@@ -444,13 +444,13 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineObjectLiteral(IR::Expr
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinSetupArgumentObject(IR::Expr *result)
 {
-    generateRuntimeCall(result, setupArgumentsObject, JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, result, setupArgumentsObject, JITTargetPlatform::EngineRegister);
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinConvertThisToObject()
 {
-    generateRuntimeCall(JITAssembler::Void, convertThisToObject, JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, JITAssembler::Void, convertThisToObject, JITTargetPlatform::EngineRegister);
 }
 
 template <typename JITAssembler>
@@ -460,11 +460,11 @@ void InstructionSelection<JITAssembler>::callValue(IR::Expr *value, IR::ExprList
 
     prepareCallData(args, 0);
     if (value->asConst())
-        generateRuntimeCall(result, callValue, JITTargetPlatform::EngineRegister,
+        generateRuntimeCall(_as, result, callValue, JITTargetPlatform::EngineRegister,
                              PointerToValue(value),
                              baseAddressForCallData());
     else
-        generateRuntimeCall(result, callValue, JITTargetPlatform::EngineRegister,
+        generateRuntimeCall(_as, result, callValue, JITTargetPlatform::EngineRegister,
                              Reference(value),
                              baseAddressForCallData());
 }
@@ -486,19 +486,19 @@ void InstructionSelection<JITAssembler>::loadThisObject(IR::Expr *temp)
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::loadQmlContext(IR::Expr *temp)
 {
-    generateRuntimeCall(temp, getQmlContext, JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, temp, getQmlContext, JITTargetPlatform::EngineRegister);
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::loadQmlImportedScripts(IR::Expr *temp)
 {
-    generateRuntimeCall(temp, getQmlImportedScripts, JITTargetPlatform::EngineRegister);
+    generateRuntimeCall(_as, temp, getQmlImportedScripts, JITTargetPlatform::EngineRegister);
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::loadQmlSingleton(const QString &name, IR::Expr *temp)
 {
-    generateRuntimeCall(temp, getQmlSingleton, JITTargetPlatform::EngineRegister, StringToIndex(name));
+    generateRuntimeCall(_as, temp, getQmlSingleton, JITTargetPlatform::EngineRegister, StringToIndex(name));
 }
 
 template <typename JITAssembler>
@@ -548,7 +548,7 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target)
 {
     int id = registerRegExp(sourceRegexp);
-    generateRuntimeCall(target, regexpLiteral, JITTargetPlatform::EngineRegister, TrustedImm32(id));
+    generateRuntimeCall(_as, target, regexpLiteral, JITTargetPlatform::EngineRegister, TrustedImm32(id));
 }
 
 template <typename JITAssembler>
@@ -559,14 +559,14 @@ void InstructionSelection<JITAssembler>::getActivationProperty(const IR::Name *n
         generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, JITAssembler::Void);
         return;
     }
-    generateRuntimeCall(target, getActivationProperty, JITTargetPlatform::EngineRegister, StringToIndex(*name->id));
+    generateRuntimeCall(_as, target, getActivationProperty, JITTargetPlatform::EngineRegister, StringToIndex(*name->id));
 }
 
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::setActivationProperty(IR::Expr *source, const QString &targetName)
 {
     // ### should use a lookup call here
-    generateRuntimeCall(JITAssembler::Void, setActivationProperty,
+    generateRuntimeCall(_as, JITAssembler::Void, setActivationProperty,
                          JITTargetPlatform::EngineRegister, StringToIndex(targetName), PointerToValue(source));
 }
 
@@ -574,7 +574,7 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::initClosure(IR::Closure *closure, IR::Expr *target)
 {
     int id = closure->value;
-    generateRuntimeCall(target, closure, JITTargetPlatform::EngineRegister, TrustedImm32(id));
+    generateRuntimeCall(_as, target, closure, JITTargetPlatform::EngineRegister, TrustedImm32(id));
 }
 
 template <typename JITAssembler>
@@ -584,7 +584,7 @@ void InstructionSelection<JITAssembler>::getProperty(IR::Expr *base, const QStri
         uint index = registerGetterLookup(name);
         generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), JITTargetPlatform::EngineRegister, PointerToValue(base), JITAssembler::Void);
     } else {
-        generateRuntimeCall(target, getProperty, JITTargetPlatform::EngineRegister,
+        generateRuntimeCall(_as, target, getProperty, JITTargetPlatform::EngineRegister,
                              PointerToValue(base), StringToIndex(name));
     }
 }
@@ -593,11 +593,11 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(target, getQmlScopeObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index), TrustedImm32(captureRequired));
+        generateRuntimeCall(_as, target, getQmlScopeObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index), TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(target, getQmlContextObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index), TrustedImm32(captureRequired));
+        generateRuntimeCall(_as, target, getQmlContextObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index), TrustedImm32(captureRequired));
     else if (kind == IR::Member::MemberOfIdObjectsArray)
-        generateRuntimeCall(target, getQmlIdObject, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index));
+        generateRuntimeCall(_as, target, getQmlIdObject, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(index));
     else
         Q_ASSERT(false);
 }
@@ -606,12 +606,12 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0)
-        generateRuntimeCall(target, getQmlAttachedProperty, JITTargetPlatform::EngineRegister, TrustedImm32(attachedPropertiesId), TrustedImm32(propertyIndex));
+        generateRuntimeCall(_as, target, getQmlAttachedProperty, JITTargetPlatform::EngineRegister, TrustedImm32(attachedPropertiesId), TrustedImm32(propertyIndex));
     else if (isSingleton)
-        generateRuntimeCall(target, getQmlSingletonQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(propertyIndex),
+        generateRuntimeCall(_as, target, getQmlSingletonQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(propertyIndex),
                              TrustedImm32(captureRequired));
     else
-        generateRuntimeCall(target, getQmlQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(propertyIndex),
+        generateRuntimeCall(_as, target, getQmlQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(base), TrustedImm32(propertyIndex),
                              TrustedImm32(captureRequired));
 }
 
@@ -626,7 +626,7 @@ void InstructionSelection<JITAssembler>::setProperty(IR::Expr *source, IR::Expr 
                            PointerToValue(targetBase),
                            PointerToValue(source));
     } else {
-        generateRuntimeCall(JITAssembler::Void, setProperty, JITTargetPlatform::EngineRegister,
+        generateRuntimeCall(_as, JITAssembler::Void, setProperty, JITTargetPlatform::EngineRegister,
                              PointerToValue(targetBase), StringToIndex(targetName),
                              PointerToValue(source));
     }
@@ -636,10 +636,10 @@ template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(JITAssembler::Void, setQmlScopeObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
+        generateRuntimeCall(_as, JITAssembler::Void, setQmlScopeObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
                              TrustedImm32(propertyIndex), PointerToValue(source));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(JITAssembler::Void, setQmlContextObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
+        generateRuntimeCall(_as, JITAssembler::Void, setQmlContextObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
                              TrustedImm32(propertyIndex), PointerToValue(source));
     else
         Q_ASSERT(false);
@@ -648,7 +648,7 @@ void InstructionSelection<JITAssembler>::setQmlContextProperty(IR::Expr *source,
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex)
 {
-    generateRuntimeCall(JITAssembler::Void, setQmlQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
+    generateRuntimeCall(_as, JITAssembler::Void, setQmlQObjectProperty, JITTargetPlatform::EngineRegister, PointerToValue(targetBase),
                          TrustedImm32(propertyIndex), PointerToValue(source));
 }
 
@@ -663,7 +663,7 @@ void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *in
         return;
     }
 
-    generateRuntimeCall(target, getElement, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, target, getElement, JITTargetPlatform::EngineRegister,
                          PointerToValue(base), PointerToValue(index));
 }
 
@@ -677,7 +677,7 @@ void InstructionSelection<JITAssembler>::setElement(IR::Expr *source, IR::Expr *
                            PointerToValue(source));
         return;
     }
-    generateRuntimeCall(JITAssembler::Void, setElement, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, JITAssembler::Void, setElement, JITTargetPlatform::EngineRegister,
                          PointerToValue(targetBase), PointerToValue(targetIndex),
                          PointerToValue(source));
 }
@@ -858,12 +858,12 @@ void InstructionSelection<JITAssembler>::callQmlContextProperty(IR::Expr *base, 
     prepareCallData(args, base);
 
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateRuntimeCall(result, callQmlScopeObjectProperty,
+        generateRuntimeCall(_as, result, callQmlScopeObjectProperty,
                              JITTargetPlatform::EngineRegister,
                              TrustedImm32(propertyIndex),
                              baseAddressForCallData());
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateRuntimeCall(result, callQmlContextObjectProperty,
+        generateRuntimeCall(_as, result, callQmlContextObjectProperty,
                              JITTargetPlatform::EngineRegister,
                              TrustedImm32(propertyIndex),
                              baseAddressForCallData());
@@ -881,12 +881,12 @@ void InstructionSelection<JITAssembler>::callProperty(IR::Expr *base, const QStr
 
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateRuntimeCall(result, callPropertyLookup,
+        generateRuntimeCall(_as, result, callPropertyLookup,
                              JITTargetPlatform::EngineRegister,
                              TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateRuntimeCall(result, callProperty, JITTargetPlatform::EngineRegister,
+        generateRuntimeCall(_as, result, callProperty, JITTargetPlatform::EngineRegister,
                              StringToIndex(name),
                              baseAddressForCallData());
     }
@@ -899,7 +899,7 @@ void InstructionSelection<JITAssembler>::callSubscript(IR::Expr *base, IR::Expr 
     Q_ASSERT(base != 0);
 
     prepareCallData(args, base);
-    generateRuntimeCall(result, callElement, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, callElement, JITTargetPlatform::EngineRegister,
                          PointerToValue(index),
                          baseAddressForCallData());
 }
@@ -978,7 +978,7 @@ void InstructionSelection<JITAssembler>::convertTypeToDouble(IR::Expr *source, I
                                               TrustedImm32(Value::NotDouble_Mask));
 #endif
 
-        generateRuntimeCall(target, toDouble, PointerToValue(source));
+        generateRuntimeCall(_as, target, toDouble, PointerToValue(source));
         Jump noDoubleDone = _as->jump();
 
         // it is a double:
@@ -1042,7 +1042,7 @@ void InstructionSelection<JITAssembler>::convertTypeToBool(IR::Expr *source, IR:
         _as->storeBool(false, target);
         break;
     case IR::StringType:
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toBoolean,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toBoolean,
                             PointerToValue(source));
         _as->storeBool(JITTargetPlatform::ReturnValueRegister, target);
     case IR::VarType:
@@ -1069,7 +1069,7 @@ void InstructionSelection<JITAssembler>::convertTypeToBool(IR::Expr *source, IR:
 
         // not an int:
         fallback.link(_as);
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toBoolean,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toBoolean,
                             PointerToValue(source));
 
         isZero.link(_as);
@@ -1112,7 +1112,7 @@ void InstructionSelection<JITAssembler>::convertTypeToSInt32(IR::Expr *source, I
 
         // not an int:
         fallback.link(_as);
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toInt,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toInt,
                              _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
 
         isIntConvertible.link(_as);
@@ -1163,7 +1163,7 @@ void InstructionSelection<JITAssembler>::convertTypeToSInt32(IR::Expr *source, I
                 _as->branchTruncateDoubleToInt32(_as->toDoubleRegister(source),
                                                  JITTargetPlatform::ReturnValueRegister,
                                                  BranchTruncateType::BranchIfTruncateSuccessful);
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, doubleToInt,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, doubleToInt,
                              PointerToValue(source));
         success.link(_as);
         _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
@@ -1181,7 +1181,7 @@ void InstructionSelection<JITAssembler>::convertTypeToSInt32(IR::Expr *source, I
         break;
     case IR::StringType:
     default:
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toInt,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toInt,
                              _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
         _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
@@ -1207,7 +1207,7 @@ void InstructionSelection<JITAssembler>::convertTypeToUInt32(IR::Expr *source, I
 
         // not an int:
         isNoInt.link(_as);
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toUInt,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toUInt,
                              _as->loadAddress(JITTargetPlatform::ScratchRegister, source));
         _as->storeInt32(JITTargetPlatform::ReturnValueRegister, target);
 
@@ -1218,7 +1218,7 @@ void InstructionSelection<JITAssembler>::convertTypeToUInt32(IR::Expr *source, I
         Jump success =
                 _as->branchTruncateDoubleToUint32(reg, JITTargetPlatform::ReturnValueRegister,
                                                   BranchTruncateType::BranchIfTruncateSuccessful);
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, doubleToUInt,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, doubleToUInt,
                              PointerToValue(source));
         success.link(_as);
         _as->storeUInt32(JITTargetPlatform::ReturnValueRegister, target);
@@ -1229,7 +1229,7 @@ void InstructionSelection<JITAssembler>::convertTypeToUInt32(IR::Expr *source, I
         _as->storeUInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
     case IR::StringType:
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toUInt,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toUInt,
                              PointerToValue(source));
         _as->storeUInt32(JITTargetPlatform::ReturnValueRegister, target);
         break;
@@ -1250,13 +1250,13 @@ void InstructionSelection<JITAssembler>::constructActivationProperty(IR::Name *f
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateRuntimeCall(result, constructGlobalLookup,
+        generateRuntimeCall(_as, result, constructGlobalLookup,
                              JITTargetPlatform::EngineRegister,
                              TrustedImm32(index), baseAddressForCallData());
         return;
     }
 
-    generateRuntimeCall(result, constructActivationProperty,
+    generateRuntimeCall(_as, result, constructActivationProperty,
                          JITTargetPlatform::EngineRegister,
                          StringToIndex(*func->id),
                          baseAddressForCallData());
@@ -1269,14 +1269,14 @@ void InstructionSelection<JITAssembler>::constructProperty(IR::Expr *base, const
     prepareCallData(args, base);
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateRuntimeCall(result, constructPropertyLookup,
+        generateRuntimeCall(_as, result, constructPropertyLookup,
                              JITTargetPlatform::EngineRegister,
                              TrustedImm32(index),
                              baseAddressForCallData());
         return;
     }
 
-    generateRuntimeCall(result, constructProperty, JITTargetPlatform::EngineRegister,
+    generateRuntimeCall(_as, result, constructProperty, JITTargetPlatform::EngineRegister,
                          StringToIndex(name),
                          baseAddressForCallData());
 }
@@ -1287,7 +1287,7 @@ void InstructionSelection<JITAssembler>::constructValue(IR::Expr *value, IR::Exp
     Q_ASSERT(value != 0);
 
     prepareCallData(args, 0);
-    generateRuntimeCall(result, constructValue,
+    generateRuntimeCall(_as, result, constructValue,
                          JITTargetPlatform::EngineRegister,
                          Reference(value),
                          baseAddressForCallData());
@@ -1325,7 +1325,7 @@ void InstructionSelection<JITAssembler>::visitCJump(IR::CJump *s)
 
             booleanConversion.link(_as);
             reg = JITTargetPlatform::ReturnValueRegister;
-            generateRuntimeCall(reg, toBoolean, Reference(s->cond));
+            generateRuntimeCall(_as, reg, toBoolean, Reference(s->cond));
 
             testBoolean.link(_as);
         }
@@ -1335,7 +1335,7 @@ void InstructionSelection<JITAssembler>::visitCJump(IR::CJump *s)
     } else if (IR::Const *c = s->cond->asConst()) {
         // TODO: SSA optimization for constant condition evaluation should remove this.
         // See also visitCJump() in RegAllocInfo.
-        generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, toBoolean,
+        generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toBoolean,
                              PointerToValue(c));
         _as->generateCJumpOnNonZero(JITTargetPlatform::ReturnValueRegister, _block, s->iftrue, s->iffalse);
         return;
@@ -1675,7 +1675,7 @@ void InstructionSelection<JITAssembler>::visitCJumpStrict(IR::Binop *binop, IR::
     IR::Expr *left = binop->left;
     IR::Expr *right = binop->right;
 
-    generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, compareStrictEqual,
+    generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, compareStrictEqual,
                                  PointerToValue(left), PointerToValue(right));
     _as->generateCJumpOnCompare(binop->op == IR::OpStrictEqual ? RelationalCondition::NotEqual : RelationalCondition::Equal,
                                 JITTargetPlatform::ReturnValueRegister, TrustedImm32(0),
@@ -1888,7 +1888,7 @@ void InstructionSelection<JITAssembler>::visitCJumpEqual(IR::Binop *binop, IR::B
     IR::Expr *left = binop->left;
     IR::Expr *right = binop->right;
 
-    generateRuntimeCall(JITTargetPlatform::ReturnValueRegister, compareEqual,
+    generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, compareEqual,
                                  PointerToValue(left), PointerToValue(right));
     _as->generateCJumpOnCompare(binop->op == IR::OpEqual ? RelationalCondition::NotEqual : RelationalCondition::Equal,
                                 JITTargetPlatform::ReturnValueRegister, TrustedImm32(0),

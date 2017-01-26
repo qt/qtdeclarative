@@ -95,7 +95,7 @@ void Unop<JITAssembler>::generateUMinus(IR::Expr *source, IR::Expr *target)
         return;
     }
 
-    generateRuntimeCall(target, uMinus, PointerToValue(source));
+    generateRuntimeCall(_as, target, uMinus, PointerToValue(source));
 }
 
 template <typename JITAssembler>
@@ -125,7 +125,7 @@ void Unop<JITAssembler>::generateNot(IR::Expr *source, IR::Expr *target)
     }
     // ## generic implementation testing for int/bool
 
-    generateRuntimeCall(target, uNot, PointerToValue(source));
+    generateRuntimeCall(_as, target, uNot, PointerToValue(source));
 }
 
 template <typename JITAssembler>
@@ -141,7 +141,7 @@ void Unop<JITAssembler>::generateCompl(IR::Expr *source, IR::Expr *target)
             _as->storeInt32(tReg, target);
         return;
     }
-    generateRuntimeCall(target, complement, PointerToValue(source));
+    generateRuntimeCall(_as, target, complement, PointerToValue(source));
 }
 
 template struct QV4::JIT::Unop<QV4::JIT::Assembler<AssemblerTargetConfiguration<DefaultPlatformMacroAssembler>>>;

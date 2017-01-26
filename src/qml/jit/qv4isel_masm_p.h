@@ -257,12 +257,6 @@ private:
         _as->storeBool(reg, target);
     }
 
-    #define isel_stringIfyx(s) #s
-    #define isel_stringIfy(s) isel_stringIfyx(s)
-
-    #define generateRuntimeCall(t, function, ...) \
-        _as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
-
     int prepareVariableArguments(IR::ExprList* args);
     int prepareCallData(IR::ExprList* args, IR::Expr *thisObject);
 

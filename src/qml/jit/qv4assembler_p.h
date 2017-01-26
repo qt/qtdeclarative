@@ -114,6 +114,13 @@ struct AssemblerTargetConfiguration
     // More things coming here in the future, such as Target OS
 };
 
+#define isel_stringIfyx(s) #s
+#define isel_stringIfy(s) isel_stringIfyx(s)
+
+#define generateRuntimeCall(as, t, function, ...) \
+    as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
+
+
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform, int RegisterSize>
 struct RegisterSizeDependentAssembler
 {
