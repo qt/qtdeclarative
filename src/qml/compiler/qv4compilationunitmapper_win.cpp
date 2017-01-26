@@ -75,7 +75,6 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         CloseHandle(handle);
     });
 
-#if !defined(Q_OS_WINRT) || _MSC_VER >= 1900
     CompiledData::Unit header;
     DWORD bytesRead;
     if (!ReadFile(handle, reinterpret_cast<char *>(&header), sizeof(header), &bytesRead, nullptr)) {
@@ -115,19 +114,12 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
     }
 
     return reinterpret_cast<CompiledData::Unit*>(dataPtr);
-#else
-    Q_UNUSED(sourcePath);
-    *errorString = QStringLiteral("Compilation unit mapping not supported on WinRT 8.1");
-    return nullptr;
-#endif
 }
 
 void CompilationUnitMapper::close()
 {
-#if !defined(Q_OS_WINRT) || _MSC_VER >= 1900
     if (dataPtr != nullptr)
         UnmapViewOfFile(dataPtr);
-#endif
     dataPtr = nullptr;
 }
 

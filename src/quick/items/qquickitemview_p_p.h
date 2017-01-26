@@ -201,10 +201,10 @@ public:
 
     void regenerate(bool orientationChanged=false);
     void layout();
-    virtual void animationFinished(QAbstractAnimationJob *) Q_DECL_OVERRIDE;
+    virtual void animationFinished(QAbstractAnimationJob *) override;
     void refill();
     void refill(qreal from, qreal to);
-    void mirrorChange() Q_DECL_OVERRIDE;
+    void mirrorChange() override;
 
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
     virtual bool releaseItem(FxViewItem *item);
@@ -236,7 +236,7 @@ public:
     void prepareVisibleItemTransitions();
     void prepareRemoveTransitions(QHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
-    void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) Q_DECL_OVERRIDE;
+    void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
 
     int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const;
 
@@ -348,8 +348,8 @@ protected:
     virtual bool showFooterForIndex(int index) const = 0;
     virtual void updateHeader() = 0;
     virtual void updateFooter() = 0;
-    virtual bool hasStickyHeader() const { return false; };
-    virtual bool hasStickyFooter() const { return false; };
+    virtual bool hasStickyHeader() const { return false; }
+    virtual bool hasStickyFooter() const { return false; }
 
     virtual void createHighlight() = 0;
     virtual void updateHighlight() = 0;
@@ -382,7 +382,7 @@ protected:
     virtual void updateSectionCriteria() {}
     virtual void updateSections() {}
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
 };
 
 

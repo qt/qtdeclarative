@@ -94,6 +94,21 @@ QSGTexture::Filtering QSGDefaultImageNode::mipmapFiltering() const
     return m_material.mipmapFiltering();
 }
 
+void QSGDefaultImageNode::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)
+{
+    if (m_material.anisotropyLevel() == level)
+        return;
+
+    m_material.setAnisotropyLevel(level);
+    m_opaque_material.setAnisotropyLevel(level);
+    markDirty(DirtyMaterial);
+}
+
+QSGTexture::AnisotropyLevel QSGDefaultImageNode::anisotropyLevel() const
+{
+    return m_material.anisotropyLevel();
+}
+
 void QSGDefaultImageNode::setRect(const QRectF &r)
 {
     if (m_rect == r)

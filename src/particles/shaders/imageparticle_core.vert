@@ -69,11 +69,7 @@ void main()
         fTex = vPosTex.zw;
 #endif
         float currentSize = mix(vData.z, vData.w, t * t);
-#if defined (Q_OS_BLACKBERRY)
         float fade = 1.;
-#else
-        float fade = 1.;
-#endif
         float fadeIn = min(t * 10., 1.);
         float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);
 

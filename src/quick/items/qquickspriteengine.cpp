@@ -378,7 +378,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
     if (!m_errorsPrinted && stat == QQuickPixmap::Error) {
         for (QQuickSprite* s : qAsConst(m_sprites))
             if (s->m_pix.isError())
-                qmlInfo(s) << s->m_pix.error();
+                qmlWarning(s) << s->m_pix.error();
         m_errorsPrinted = true;
     }
 
@@ -399,7 +399,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
         {
             const QSize frameSize(state->m_frameWidth, state->m_frameHeight);
             if (!(img.size() - frameSize).isValid()) {
-                qmlInfo(state).nospace() << "SpriteEngine: Invalid frame size " << frameSize << "."
+                qmlWarning(state).nospace() << "SpriteEngine: Invalid frame size " << frameSize << "."
                                             " It's bigger than image size " << img.size() << ".";
                 return QImage();
             }
@@ -419,10 +419,10 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
             int rowsNeeded = helper::divRoundUp(state->frames(), (maxSize / state->frameWidth()));
             if (h + rowsNeeded * state->frameHeight() > maxSize){
                 if (rowsNeeded * state->frameHeight() > maxSize)
-                    qmlInfo(state) << "SpriteEngine: Animation too large to fit in one texture:" << state->source().toLocalFile();
+                    qmlWarning(state) << "SpriteEngine: Animation too large to fit in one texture:" << state->source().toLocalFile();
                 else
-                    qmlInfo(state) << "SpriteEngine: Animations too large to fit in one texture, pushed over the edge by:" << state->source().toLocalFile();
-                qmlInfo(state) << "SpriteEngine: Your texture max size today is " << maxSize;
+                    qmlWarning(state) << "SpriteEngine: Animations too large to fit in one texture, pushed over the edge by:" << state->source().toLocalFile();
+                qmlWarning(state) << "SpriteEngine: Your texture max size today is " << maxSize;
                 return QImage();
             }
             state->m_generatedCount = rowsNeeded;

@@ -973,7 +973,15 @@ private:
                 break;
 
             Q_ASSERT(!i->isFixedInterval());
-            _liveIntervals.push_back(i);
+            auto it = _liveIntervals.begin();
+            for (; it != _liveIntervals.end(); ++it) {
+                if ((*it)->temp() == i->temp()) {
+                    *it = i;
+                    break;
+                }
+            }
+            if (it == _liveIntervals.end())
+                _liveIntervals.push_back(i);
 //            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
             _unprocessedReverseOrder.removeLast();
@@ -1087,12 +1095,12 @@ private:
                 if (_info->def(it->temp()) != successorStart && !it->isSplitFromInterval()) {
                     const int successorEnd = successor->terminator()->id();
                     const int idx = successor->in.indexOf(predecessor);
-                    foreach (const Use &use, _info->uses(it->temp())) {
+                    for (const Use &use : _info->uses(it->temp)) {
                         if (use.pos == static_cast<unsigned>(successorStart)) {
                             // only check the current edge, not all other possible ones. This is
                             // important for phi nodes: they have uses that are only valid when
                             // coming in over a specific edge.
-                            foreach (Stmt *s, successor->statements()) {
+                            for (Stmt *s : successor->statements()) {
                                 if (Phi *phi = s->asPhi()) {
                                     Q_ASSERT(it->temp().index != phi->targetTemp->index);
                                     Q_ASSERT(phi->d->incoming[idx]->asTemp() == 0

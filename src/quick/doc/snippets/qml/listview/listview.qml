@@ -146,4 +146,19 @@ ListView {
 }
 //![isCurrentItem]
 
+//![flickBothDirections]
+ListView {
+    width: 180; height: 200
+
+    contentWidth: 320
+    flickableDirection: Flickable.AutoFlickDirection
+
+    model: ContactModel {}
+    delegate: Row {
+        Text { text: '<b>Name:</b> ' + name; width: 160 }
+        Text { text: '<b>Number:</b> ' + number; width: 160 }
+    }
+}
+//![flickBothDirections]
+
 }

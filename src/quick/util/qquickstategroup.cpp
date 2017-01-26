@@ -438,7 +438,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
     }
 
     if (applyingState) {
-        qmlInfo(q) << "Can't apply a state change as part of a state definition.";
+        qmlWarning(q) << "Can't apply a state change as part of a state definition.";
         return;
     }
 

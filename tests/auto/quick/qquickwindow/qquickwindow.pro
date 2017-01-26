@@ -16,4 +16,5 @@ OTHER_FILES += \
     data/AnimationsWhileHidden.qml \
     data/Headless.qml \
     data/showHideAnimate.qml \
-    data/windoworder.qml
+    data/windoworder.qml \
+    data/grabContentItemToImage.qml

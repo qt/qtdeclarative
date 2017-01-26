@@ -78,7 +78,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
         bool ok;
         const QTransform &transform = target->parentItem()->itemTransform(targetParent, &ok);
         if (transform.type() >= QTransform::TxShear || !ok) {
-            qmlInfo(q) << QQuickParentChange::tr("Unable to preserve appearance under complex transform");
+            qmlWarning(q) << QQuickParentChange::tr("Unable to preserve appearance under complex transform");
             ok = false;
         }
 
@@ -89,21 +89,21 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
             if (transform.m11() == transform.m22())
                 scale = transform.m11();
             else {
-                qmlInfo(q) << QQuickParentChange::tr("Unable to preserve appearance under non-uniform scale");
+                qmlWarning(q) << QQuickParentChange::tr("Unable to preserve appearance under non-uniform scale");
                 ok = false;
             }
         } else if (ok && isRotate) {
             if (transform.m11() == transform.m22())
                 scale = qSqrt(transform.m11()*transform.m11() + transform.m12()*transform.m12());
             else {
-                qmlInfo(q) << QQuickParentChange::tr("Unable to preserve appearance under non-uniform scale");
+                qmlWarning(q) << QQuickParentChange::tr("Unable to preserve appearance under non-uniform scale");
                 ok = false;
             }
 
             if (scale != 0)
                 rotation = qAtan2(transform.m12()/scale, transform.m11()/scale) * 180/M_PI;
             else {
-                qmlInfo(q) << QQuickParentChange::tr("Unable to preserve appearance under scale of 0");
+                qmlWarning(q) << QQuickParentChange::tr("Unable to preserve appearance under scale of 0");
                 ok = false;
             }
         }

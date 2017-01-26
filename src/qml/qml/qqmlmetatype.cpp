@@ -79,7 +79,7 @@ struct QQmlMetaTypeData
     Files urlToNonFileImportType; // For non-file imported composite and composite
                                   // singleton types. This way we can locate any
                                   // of them by url, even if it was registered as
-                                  // a module via qmlRegisterCompositeType.
+                                  // a module via QQmlPrivate::RegisterCompositeType
     typedef QHash<const QMetaObject *, QQmlType *> MetaObjects;
     MetaObjects metaObjectToType;
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;

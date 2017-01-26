@@ -51,6 +51,9 @@ private slots:
     void jsparser_data();
     void jsparser();
 
+    void bigimport_data();
+    void bigimport();
+
 private:
     QQmlEngine engine;
 };
@@ -112,6 +115,74 @@ void tst_compilation::jsparser()
         QQmlJS::Parser parser(&engine);
         parser.parse();
         parser.ast();
+    }
+}
+
+void tst_compilation::bigimport_data()
+{
+    QTest::addColumn<int>("filesToCreate");
+    QTest::addColumn<bool>("writeQmldir");
+
+    QTest::newRow("10, qmldir")
+        << 10 << true;
+    QTest::newRow("100, qmldir")
+        << 100 << true;
+    QTest::newRow("1000, qmldir")
+        << 1000 << true;
+
+    QTest::newRow("10, noqmldir")
+        << 10 << false;
+    QTest::newRow("100, noqmldir")
+        << 100 << false;
+    QTest::newRow("1000, noqmldir")
+        << 1000 << false;
+}
+
+void tst_compilation::bigimport()
+{
+    QFETCH(int, filesToCreate);
+    QFETCH(bool, writeQmldir);
+    QTemporaryDir d;
+    //d.setAutoRemove(false); // for debugging
+
+    QString p;
+    {
+        for (int i = 0; i < filesToCreate; ++i) {
+            QFile f(d.path() + QDir::separator() + QString::fromLatin1("Type%1.qml").arg(i));
+            QVERIFY(f.open(QIODevice::WriteOnly));
+            f.write("import QtQuick 2.0\n");
+            f.write("import \".\"\n");
+            f.write("Item {}\n");
+        }
+
+        QFile qmldir(d.path() + QDir::separator() + "qmldir");
+        if (writeQmldir)
+            QVERIFY(qmldir.open(QIODevice::WriteOnly));
+        QFile main(d.path() + QDir::separator() + "main.qml");
+        QVERIFY(main.open(QIODevice::WriteOnly));
+        p = QFileInfo(main).absoluteFilePath();
+        //qDebug() << p; // for debugging
+
+        main.write("import QtQuick 2.0\n");
+        main.write("import \".\"\n");
+        main.write("\n");
+        main.write("Item {\n");
+
+        for (int i = 0; i < filesToCreate; ++i) {
+            main.write(qPrintable(QString::fromLatin1("Type%1 {}\n").arg(i)));
+            if (writeQmldir)
+                qmldir.write(qPrintable(QString::fromLatin1("Type%1 1.0 Type%1.qml\n").arg(i)));
+        }
+
+        main.write("}");
+    }
+
+    QBENCHMARK {
+        QQmlEngine e;
+        QQmlComponent c(&e, p);
+        QCOMPARE(c.status(), QQmlComponent::Ready);
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o->children().count() == filesToCreate);
     }
 }
 

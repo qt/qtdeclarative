@@ -213,7 +213,7 @@ public:
     bool valid() { return m_valid; }
 
 signals:
-    void newObjects();
+    void newObject(int objectId);
     void valueChanged(QByteArray,QVariant);
     void result();
 

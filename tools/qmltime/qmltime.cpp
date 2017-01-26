@@ -222,7 +222,7 @@ int main(int argc, char ** argv)
                 QByteArray its(argv[ii]);
                 bool ok = false;
                 iterations = its.toUInt(&ok);
-                if (!ok)
+                if (!ok || iterations == 0)
                     usage(argv[0]);
             } else {
                 usage(argv[0]);

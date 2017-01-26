@@ -1571,12 +1571,52 @@ void QQuickFlickablePrivate::replayDelayedPress()
 //XXX pixelAligned ignores the global position of the Flickable, i.e. assumes Flickable itself is pixel aligned.
 void QQuickFlickablePrivate::setViewportX(qreal x)
 {
-    contentItem->setX(pixelAligned ? -Round(-x) : x);
+    Q_Q(QQuickFlickable);
+    if (pixelAligned)
+        x = -Round(-x);
+
+    contentItem->setX(x);
+    if (contentItem->x() != x)
+        return; // reentered
+
+    const qreal maxX = q->maxXExtent();
+    const qreal minX = q->minXExtent();
+
+    qreal overshoot = 0.0;
+    if (x <= maxX)
+        overshoot = maxX - x;
+    else if (x >= minX)
+        overshoot = minX - x;
+
+    if (overshoot != hData.overshoot) {
+        hData.overshoot = overshoot;
+        emit q->horizontalOvershootChanged();
+    }
 }
 
 void QQuickFlickablePrivate::setViewportY(qreal y)
 {
-    contentItem->setY(pixelAligned ? -Round(-y) : y);
+    Q_Q(QQuickFlickable);
+    if (pixelAligned)
+        y = -Round(-y);
+
+    contentItem->setY(y);
+    if (contentItem->y() != y)
+        return; // reentered
+
+    const qreal maxY = q->maxYExtent();
+    const qreal minY = q->minYExtent();
+
+    qreal overshoot = 0.0;
+    if (y <= maxY)
+        overshoot = maxY - y;
+    else if (y >= minY)
+        overshoot = minY - y;
+
+    if (overshoot != vData.overshoot) {
+        vData.overshoot = overshoot;
+        emit q->verticalOvershootChanged();
+    }
 }
 
 void QQuickFlickable::timerEvent(QTimerEvent *event)
@@ -1842,6 +1882,8 @@ QQmlListProperty<QQuickItem> QQuickFlickable::flickableChildren()
     beyond the boundary of the Flickable, and can overshoot the
     boundary when flicked.
     \endlist
+
+    \sa horizontalOvershoot, verticalOvershoot
 */
 QQuickFlickable::BoundsBehavior QQuickFlickable::boundsBehavior() const
 {
@@ -2637,6 +2679,40 @@ void QQuickFlickablePrivate::updateVelocity()
     Q_Q(QQuickFlickable);
     emit q->horizontalVelocityChanged();
     emit q->verticalVelocityChanged();
+}
+
+/*!
+    \qmlproperty real QtQuick::Flickable::horizontalOvershoot
+    \since 5.9
+
+    This property holds the horizontal overshoot, that is, the horizontal distance by
+    which the contents has been dragged or flicked past the bounds of the flickable.
+    The value is negative when the content is dragged or flicked beyond the beginning,
+    and positive when beyond the end; \c 0.0 otherwise.
+
+    \sa verticalOvershoot, boundsBehavior
+*/
+qreal QQuickFlickable::horizontalOvershoot() const
+{
+    Q_D(const QQuickFlickable);
+    return d->hData.overshoot;
+}
+
+/*!
+    \qmlproperty real QtQuick::Flickable::verticalOvershoot
+    \since 5.9
+
+    This property holds the vertical overshoot, that is, the vertical distance by
+    which the contents has been dragged or flicked past the bounds of the flickable.
+    The value is negative when the content is dragged or flicked beyond the beginning,
+    and positive when beyond the end; \c 0.0 otherwise.
+
+    \sa horizontalOvershoot, boundsBehavior
+*/
+qreal QQuickFlickable::verticalOvershoot() const
+{
+    Q_D(const QQuickFlickable);
+    return d->vData.overshoot;
 }
 
 QT_END_NAMESPACE

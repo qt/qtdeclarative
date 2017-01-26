@@ -129,7 +129,7 @@ void QQuickBehavior::setAnimation(QQuickAbstractAnimation *animation)
 {
     Q_D(QQuickBehavior);
     if (d->animation) {
-        qmlInfo(this) << tr("Cannot change the animation assigned to a Behavior.");
+        qmlWarning(this) << tr("Cannot change the animation assigned to a Behavior.");
         return;
     }
 

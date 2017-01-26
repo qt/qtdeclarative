@@ -130,42 +130,74 @@ bool isPathAbsolute(const QString &path)
 #endif
 }
 
-// If the type does not already exist as a file import, add the type and return the new type
-QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeName,
+/*
+    \internal
+
+    Fetches the QQmlType instance registered for \a urlString, creating a
+    registration for it if it is not already registered, using the associated
+    \a typeName, \a isCompositeSingleton, \a majorVersion and \a minorVersion
+    details.
+
+    Errors (if there are any) are placed into \a errors, if it is nonzero. Note
+    that errors are treated as fatal if \a errors is not set.
+*/
+QQmlType *fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRef& typeName,
                         bool isCompositeSingleton, QList<QQmlError> *errors,
                         int majorVersion=-1, int minorVersion=-1)
 {
-    QUrl url(urlString);
+    QUrl url(urlString); // ### unfortunate (costly) conversion
     QQmlType *ret = QQmlMetaType::qmlType(url);
-    if (!ret) { //QQmlType not yet existing for composite or composite singleton type
-        int dot = typeName.indexOf(QLatin1Char('.'));
-        QHashedStringRef unqualifiedtype = dot < 0 ? typeName : QHashedStringRef(typeName.constData() + dot + 1, typeName.length() - dot - 1);
+    if (ret)
+        return ret;
 
-        //XXX: The constData of the string ref is pointing somewhere unsafe in qmlregister, so we need to create a temporary copy
-        QByteArray buf(unqualifiedtype.toString().toUtf8());
+    int dot = typeName.indexOf(QLatin1Char('.'));
+    QHashedStringRef unqualifiedtype = dot < 0 ? typeName : QHashedStringRef(typeName.constData() + dot + 1, typeName.length() - dot - 1);
 
-        if (isCompositeSingleton) {
-            QQmlPrivate::RegisterCompositeSingletonType reg = {
-                url,
-                "", //Empty URI indicates loaded via file imports
-                majorVersion,
-                minorVersion,
-                buf.constData()
-            };
-            ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &reg));
-        } else {
-            QQmlPrivate::RegisterCompositeType reg = {
-                url,
-                "", //Empty URI indicates loaded via file imports
-                majorVersion,
-                minorVersion,
-                buf.constData()
-            };
-            ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
-        }
+    // We need a pointer, but we were passed a string. Take a copy so we
+    // can guarentee it will live long enough to reach qmlregister.
+    QByteArray buf(unqualifiedtype.toString().toUtf8());
+
+    // Register the type. Note that the URI parameters here are empty; for
+    // file type imports, we do not place them in a URI as we don't
+    // necessarily have a good and unique one (picture a library import,
+    // which may be found in multiple plugin locations on disk), but there
+    // are other reasons for this too.
+    //
+    // By not putting them in a URI, we prevent the types from being
+    // registered on a QQmlTypeModule; this is important, as once types are
+    // placed on there, they cannot be easily removed, meaning if the
+    // developer subsequently loads a different import (meaning different
+    // types) with the same URI (using, say, a different plugin path), it is
+    // very undesirable that we continue to associate the types from the
+    // "old" URI with that new module.
+    //
+    // Not having URIs also means that the types cannot be found by name
+    // etc, the only way to look them up is through QQmlImports -- for
+    // better or worse.
+    if (isCompositeSingleton) {
+        QQmlPrivate::RegisterCompositeSingletonType reg = {
+            url,
+            "", // uri
+            majorVersion,
+            minorVersion,
+            buf.constData()
+        };
+        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &reg));
+    } else {
+        QQmlPrivate::RegisterCompositeType reg = {
+            url,
+            "", // uri
+            majorVersion,
+            minorVersion,
+            buf.constData()
+        };
+        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
     }
-    if (!ret) {//Usually when a type name is "found" but invalid
-        //qDebug() << ret << urlString << QQmlMetaType::qmlType(url);
+
+    // This means that the type couldn't be found by URL, but could not be
+    // registered either, meaning we most likely were passed some kind of bad
+    // data.
+    if (!ret) {
         if (!errors) // Cannot list errors properly, just quit
             qFatal("%s", QQmlMetaType::typeRegistrationFailures().join('\n').toLatin1().constData());
         QQmlError error;
@@ -204,20 +236,49 @@ void qmlClearEnginePlugins()
 typedef QPair<QStaticPlugin, QJsonArray> StaticPluginPair;
 #endif
 
+/*!
+    \internal
+
+    A QQmlImportNamespace is a way of seperating imports into a local namespace.
+
+    Within a QML document, there is at least one namespace (the
+    "unqualified set") where imports without a qualifier are placed, i.e:
+
+        import QtQuick 2.6
+
+    will have a single namespace (the unqualified set) containing a single import
+    for QtQuick 2.6. However, there may be others if an import statement gives
+    a qualifier, i.e the following will result in an additional new
+    QQmlImportNamespace in the qualified set:
+
+        import MyFoo 1.0 as Foo
+*/
 class QQmlImportNamespace
 {
 public:
     QQmlImportNamespace() : nextNamespace(0) {}
     ~QQmlImportNamespace() { qDeleteAll(imports); }
 
+    /*!
+        \internal
+
+        A QQmlImportNamespace::Import represents an actual instance of an import
+        within a namespace.
+
+        \note The uri here may not necessarily be unique (e.g. for file imports).
+
+        \note Version numbers may be -1 for file imports: this means that no
+        version was specified as part of the import. Type resolution will be
+        responsible for attempting to find the "best" possible version.
+    */
     struct Import {
-        QString uri;
-        QString url;
-        int majversion;
-        int minversion;
-        bool isLibrary;
-        QQmlDirComponents qmlDirComponents;
-        QQmlDirScripts qmlDirScripts;
+        QString uri; // e.g. QtQuick
+        QString url; // the base path of the import
+        int majversion; // the major version imported
+        int minversion; // the minor version imported
+        bool isLibrary; // true means that this is not a file import
+        QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
+        QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
         bool setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoader::QmldirContent *qmldir,
                               QQmlImportNamespace *nameSpace, QList<QQmlError> *errors);
@@ -273,9 +334,12 @@ public:
     QString base;
     int ref;
 
+    // storage of data related to imports without a namespace
     mutable QQmlImportNamespace unqualifiedset;
 
     QQmlImportNamespace *findQualifiedNamespace(const QHashedStringRef &) const;
+
+    // storage of data related to imports with a namespace
     mutable QFieldList<QQmlImportNamespace, &QQmlImportNamespace::nextNamespace> qualifiedSets;
 
     QQmlTypeLoader *typeLoader;
@@ -683,15 +747,17 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
                 if ((candidate == end) ||
                     (c.majorVersion > candidate->majorVersion) ||
                     ((c.majorVersion == candidate->majorVersion) && (c.minorVersion > candidate->minorVersion))) {
-                    componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
-                    if (c.internal && base) {
-                        if (resolveLocalUrl(*base, c.fileName) != componentUrl)
-                            continue; // failed attempt to access an internal type
-                    }
-                    if (base && (*base == componentUrl)) {
-                        if (typeRecursionDetected)
-                            *typeRecursionDetected = true;
-                        continue; // no recursion
+                    if (base) {
+                        componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
+                        if (c.internal) {
+                            if (resolveLocalUrl(*base, c.fileName) != componentUrl)
+                                continue; // failed attempt to access an internal type
+                        }
+                        if (*base == componentUrl) {
+                            if (typeRecursionDetected)
+                                *typeRecursionDetected = true;
+                            continue; // no recursion
+                        }
                     }
 
                     // This is our best candidate so far
@@ -702,9 +768,11 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
 
         if (candidate != end) {
+            if (!base) // ensure we have a componentUrl
+                componentUrl = resolveLocalUrl(QString(url + candidate->typeName + dotqml_string), candidate->fileName);
             int major = vmajor ? *vmajor : -1;
             int minor = vminor ? *vminor : -1;
-            QQmlType *returnType = getTypeForUrl(componentUrl, type, isCompositeSingleton, 0,
+            QQmlType *returnType = fetchOrCreateTypeForUrl(componentUrl, type, isCompositeSingleton, 0,
                                                  major, minor);
             if (type_return)
                 *type_return = returnType;
@@ -732,7 +800,7 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
                 if (typeRecursionDetected)
                     *typeRecursionDetected = true;
             } else {
-                QQmlType *returnType = getTypeForUrl(qmlUrl, type, false, 0);
+                QQmlType *returnType = fetchOrCreateTypeForUrl(qmlUrl, type, false, 0);
                 if (type_return)
                     *type_return = returnType;
                 return returnType != 0;
@@ -777,7 +845,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0)->isLibrary && type_return && s != &unqualifiedset) {
             // qualified, and only 1 url
-            *type_return = getTypeForUrl(resolveLocalUrl(s->imports.at(0)->url, unqualifiedtype.toString() + QLatin1String(".qml")), type, false, errors);
+            *type_return = fetchOrCreateTypeForUrl(resolveLocalUrl(s->imports.at(0)->url, unqualifiedtype.toString() + QLatin1String(".qml")), type, false, errors);
             return (*type_return != 0);
         }
     }

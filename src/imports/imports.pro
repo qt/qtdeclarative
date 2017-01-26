@@ -5,10 +5,10 @@ SUBDIRS += \
     qtqml \
     folderlistmodel \
     localstorage \
-    models \
-    statemachine
+    models
 
 qtConfig(settings): SUBDIRS += settings
+qtConfig(statemachine): SUBDIRS += statemachine
 
 qtHaveModule(quick) {
     SUBDIRS += \

@@ -53,6 +53,8 @@
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_USE_NAMESPACE
 
@@ -168,7 +170,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     context = new QQmlContextData;
     context->isInternal = true;
-    context->imports = compilationUnit->importCache;
+    context->imports = compilationUnit->typeNameCache;
     context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
     context->setParent(parentContext);
 
@@ -215,6 +217,17 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         return 0;
 
     phase = ObjectsCreated;
+
+    if (instance) {
+        if (QQmlEngineDebugService *service
+                = QQmlDebugConnector::service<QQmlEngineDebugService>()) {
+            if (!parentContext->isInternal)
+                parentContext->asQQmlContextPrivate()->instances.append(instance);
+            service->objectCreated(engine, instance);
+        } else if (!parentContext->isInternal && QQmlDebugConnector::service<QV4DebugService>()) {
+            parentContext->asQQmlContextPrivate()->instances.append(instance);
+        }
+    }
 
     return instance;
 }
@@ -1137,7 +1150,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     if (customParser && obj->flags & QV4::CompiledData::Object::HasCustomParserBindings) {
         customParser->engine = QQmlEnginePrivate::get(engine);
-        customParser->imports = compilationUnit->importCache;
+        customParser->imports = compilationUnit->typeNameCache;
 
         QList<const QV4::CompiledData::Binding *> bindings;
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
@@ -1255,6 +1268,21 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     phase = Done;
 
     return sharedState->rootContext;
+}
+
+void QQmlObjectCreator::cancel(QObject *object)
+{
+    int last = sharedState->allCreatedObjects.count() - 1;
+    int i = last;
+    while (i >= 0) {
+        if (sharedState->allCreatedObjects.at(i) == object) {
+            if (i < last)
+                qSwap(sharedState->allCreatedObjects[i], sharedState->allCreatedObjects[last]);
+            sharedState->allCreatedObjects.pop();
+            break;
+        }
+        --i;
+    }
 }
 
 void QQmlObjectCreator::clear()

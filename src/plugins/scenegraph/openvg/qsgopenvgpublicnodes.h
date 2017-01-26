@@ -44,10 +44,6 @@
 #include <QtQuick/qsgimagenode.h>
 #include <QtQuick/qsgninepatchnode.h>
 
-#include <QtGui/QPixmap>
-
-#include <VG/openvg.h>
-
 #include "qsgopenvgrenderable.h"
 
 QT_BEGIN_NAMESPACE
@@ -59,10 +55,10 @@ public:
     ~QSGOpenVGRectangleNode();
 
     void setRect(const QRectF &rect) override;
-    QRectF rect() const override { return m_rect; }
+    QRectF rect() const override;
 
     void setColor(const QColor &color) override;
-    QColor color() const override { return m_color; }
+    QColor color() const override;
 
     void setTransform(const QOpenVGMatrix &transform) override;
 
@@ -86,26 +82,26 @@ public:
     QSGOpenVGImageNode();
     ~QSGOpenVGImageNode();
 
-    void setRect(const QRectF &rect) override { m_rect = rect; markDirty(DirtyMaterial); }
-    QRectF rect() const override { return m_rect; }
+    void setRect(const QRectF &rect) override;
+    QRectF rect() const override;
 
-    void setSourceRect(const QRectF &r) override { m_sourceRect = r; }
-    QRectF sourceRect() const override { return m_sourceRect; }
+    void setSourceRect(const QRectF &r) override;
+    QRectF sourceRect() const override;
 
     void setTexture(QSGTexture *texture) override;
-    QSGTexture *texture() const override { return m_texture; }
+    QSGTexture *texture() const override;
 
-    void setFiltering(QSGTexture::Filtering filtering) override { m_filtering = filtering; markDirty(DirtyMaterial); }
-    QSGTexture::Filtering filtering() const override { return m_filtering; }
+    void setFiltering(QSGTexture::Filtering filtering) override;
+    QSGTexture::Filtering filtering() const override;
 
-    void setMipmapFiltering(QSGTexture::Filtering) override { }
-    QSGTexture::Filtering mipmapFiltering() const override { return QSGTexture::None; }
+    void setMipmapFiltering(QSGTexture::Filtering) override;
+    QSGTexture::Filtering mipmapFiltering() const override;
 
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode transformNode) override;
-    TextureCoordinatesTransformMode textureCoordinatesTransform() const override { return m_transformMode; }
+    TextureCoordinatesTransformMode textureCoordinatesTransform() const override;
 
-    void setOwnsTexture(bool owns) override { m_owns = owns; }
-    bool ownsTexture() const override { return m_owns; }
+    void setOwnsTexture(bool owns) override;
+    bool ownsTexture() const override;
 
     void render() override;
 

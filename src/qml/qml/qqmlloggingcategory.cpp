@@ -112,13 +112,13 @@ void QQmlLoggingCategory::componentComplete()
 {
     m_initialized = true;
     if (m_name.isNull())
-        qmlInfo(this) << QLatin1String("Declaring the name of the LoggingCategory is mandatory and cannot be changed later !");
+        qmlWarning(this) << QLatin1String("Declaring the name of the LoggingCategory is mandatory and cannot be changed later !");
 }
 
 void QQmlLoggingCategory::setName(const QString &name)
 {
     if (m_initialized) {
-        qmlInfo(this) << QLatin1String("The name of a LoggingCategory cannot be changed after the Item is created");
+        qmlWarning(this) << QLatin1String("The name of a LoggingCategory cannot be changed after the Item is created");
         return;
     }
 

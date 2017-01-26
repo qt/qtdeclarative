@@ -640,9 +640,7 @@ void tst_qqmllocale::dateToLocaleString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -701,9 +699,7 @@ void tst_qqmllocale::dateToLocaleStringFormatted()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -732,9 +728,7 @@ void tst_qqmllocale::dateToLocaleDateString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -793,9 +787,7 @@ void tst_qqmllocale::dateToLocaleDateStringFormatted()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -824,9 +816,7 @@ void tst_qqmllocale::dateToLocaleTimeString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -885,9 +875,7 @@ void tst_qqmllocale::dateToLocaleTimeStringFormatted()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7)); // weirdly, JS Date month range is 0-11
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
@@ -927,21 +915,20 @@ void tst_qqmllocale::dateFromLocaleString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
 
     QLocale l(locale);
+    const QString localeText(l.toString(dt, format));
     QVariant val;
     QMetaObject::invokeMethod(obj, "fromLocaleString", Qt::DirectConnection,
         Q_RETURN_ARG(QVariant, val),
-        Q_ARG(QVariant, QVariant(l.toString(dt, format))),
+        Q_ARG(QVariant, QVariant(localeText)),
         Q_ARG(QVariant, QVariant(format)));
 
-    QDateTime pd = l.toDateTime(l.toString(dt, format), format);
+    QDateTime pd = l.toDateTime(localeText, format);
     QCOMPARE(val.toDateTime(), pd);
 }
 
@@ -971,21 +958,20 @@ void tst_qqmllocale::dateFromLocaleDateString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
 
     QLocale l(locale);
+    const QString localeText(l.toString(dt, format));
     QVariant val;
     QMetaObject::invokeMethod(obj, "fromLocaleDateString", Qt::DirectConnection,
         Q_RETURN_ARG(QVariant, val),
-        Q_ARG(QVariant, QVariant(l.toString(dt, format))),
+        Q_ARG(QVariant, QVariant(localeText)),
         Q_ARG(QVariant, QVariant(format)));
 
-    QDate pd = l.toDate(l.toString(dt, format), format);
+    QDate pd = l.toDate(localeText, format);
     QCOMPARE(val.toDate(), pd);
 }
 
@@ -1015,21 +1001,20 @@ void tst_qqmllocale::dateFromLocaleTimeString()
     QObject *obj = c.create();
     QVERIFY(obj);
 
-    QDateTime dt;
-    dt.setDate(QDate(2011, 10, 7));
-    dt.setTime(QTime(18, 53, 48, 345));
+    const QDateTime dt(QDate(2011, 10, 7), QTime(18, 53, 48, 345));
 
     QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(locale)));
 
     QLocale l(locale);
+    const QString localeText(l.toString(dt, format));
     QVariant val;
     QMetaObject::invokeMethod(obj, "fromLocaleTimeString", Qt::DirectConnection,
         Q_RETURN_ARG(QVariant, val),
-        Q_ARG(QVariant, QVariant(l.toString(dt, format))),
+        Q_ARG(QVariant, QVariant(localeText)),
         Q_ARG(QVariant, QVariant(format)));
 
-    QTime pd = l.toTime(l.toString(dt, format), format);
+    QTime pd = l.toTime(localeText, format);
     QCOMPARE(val.toTime(), pd);
 }
 
@@ -1267,7 +1252,10 @@ QString DateFormatter::getLocalizedForm(const QString &isoTimestamp)
 // which will require linking to a different library to access that API.
 static void setTimeZone(const QByteArray &tz)
 {
-    qputenv("TZ", tz);
+    if (tz.isEmpty())
+        qunsetenv("TZ");
+    else
+        qputenv("TZ", tz);
     ::tzset();
 
 // following left for future reference, see comment above
@@ -1291,7 +1279,7 @@ void tst_qqmllocale::timeZoneUpdated()
     QQmlComponent c(&e, testFileUrl("timeZoneUpdated.qml"));
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
-    QCOMPARE(obj->property("success").toBool(), true);
+    QVERIFY(obj->property("success").toBool());
 
     // Change to Indian time
     setTimeZone(QByteArray("IST-05:30"));
@@ -1302,7 +1290,7 @@ void tst_qqmllocale::timeZoneUpdated()
     setTimeZone(original);
     QMetaObject::invokeMethod(obj.data(), "resetTimeZone");
 
-    QCOMPARE(obj->property("success").toBool(), true);
+    QVERIFY(obj->property("success").toBool());
 }
 #endif
 

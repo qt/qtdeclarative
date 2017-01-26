@@ -514,9 +514,9 @@ public:
 
 /*!
     \class QQuickImageProviderOptions
-    \since 5.9
     \brief The QQuickImageProviderOptions class provides options for QQuickImageProviderWithOptions image requests.
     \inmodule QtQuick
+    \internal
 
     \sa QQuickImageProviderWithOptions
 */

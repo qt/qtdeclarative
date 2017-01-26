@@ -515,7 +515,7 @@ void QQuickBorderImage::requestFinished()
     QSize impsize = d->pix.implicitSize();
     if (d->pix.isError()) {
         d->status = Error;
-        qmlInfo(this) << d->pix.error();
+        qmlWarning(this) << d->pix.error();
         if (d->progress != 0) {
             d->progress = 0;
             emit progressChanged(d->progress);

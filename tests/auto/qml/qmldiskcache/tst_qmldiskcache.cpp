@@ -53,6 +53,7 @@ private slots:
     void registerImportForImplicitComponent();
     void basicVersionChecks();
     void recompileAfterChange();
+    void recompileAfterDirectoryChange();
     void fileSelectors();
     void localAliases();
     void cacheResources();
@@ -95,11 +96,17 @@ struct TestCompiler
     TestCompiler(QQmlEngine *engine)
         : engine(engine)
         , tempDir()
-        , testFilePath(tempDir.path() + QStringLiteral("/test.qml"))
-        , cacheFilePath(tempDir.path() + QStringLiteral("/test.qmlc"))
-        , mappedFile(cacheFilePath)
         , currentMapping(nullptr)
     {
+        init(tempDir.path());
+    }
+
+    void init(const QString &baseDirectory)
+    {
+        closeMapping();
+        testFilePath = baseDirectory + QStringLiteral("/test.qml");
+        cacheFilePath = baseDirectory + QStringLiteral("/test.qmlc");
+        mappedFile.setFileName(cacheFilePath);
     }
 
     bool compile(const QByteArray &contents)
@@ -187,8 +194,8 @@ struct TestCompiler
 
     QQmlEngine *engine;
     const QTemporaryDir tempDir;
-    const QString testFilePath;
-    const QString cacheFilePath;
+    QString testFilePath;
+    QString cacheFilePath;
     QString lastErrorString;
     QFile mappedFile;
     uchar *currentMapping;
@@ -439,6 +446,47 @@ void tst_qmldiskcache::recompileAfterChange()
         QVERIFY(!obj.isNull());
         QVERIFY(QFileInfo(testCompiler.cacheFilePath).lastModified() > initialCacheTimeStamp);
     }
+}
+
+void tst_qmldiskcache::recompileAfterDirectoryChange()
+{
+    QQmlEngine engine;
+    TestCompiler testCompiler(&engine);
+
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    QVERIFY(QDir(testCompiler.tempDir.path()).mkdir("source1"));
+    testCompiler.init(testCompiler.tempDir.path() + QLatin1String("/source1"));
+
+    {
+        const QByteArray contents = QByteArrayLiteral("import QtQml 2.0\n"
+                                                      "QtObject {\n"
+                                                       "    property int blah: 42;\n"
+                                                       "}");
+
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+        testCompiler.closeMapping();
+    }
+
+    const QDateTime initialCacheTimeStamp = QFileInfo(testCompiler.cacheFilePath).lastModified();
+
+    QDir(testCompiler.tempDir.path()).rename(QStringLiteral("source1"), QStringLiteral("source2"));
+    waitForFileSystem();
+
+    testCompiler.init(testCompiler.tempDir.path() + QLatin1String("/source2"));
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("blah").toInt(), 42);
+    }
+
+    QFile cacheFile(testCompiler.cacheFilePath);
+    QVERIFY2(cacheFile.exists(), qPrintable(cacheFile.fileName()));
+    QVERIFY(QFileInfo(testCompiler.cacheFilePath).lastModified() > initialCacheTimeStamp);
 }
 
 void tst_qmldiskcache::fileSelectors()

@@ -855,7 +855,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QQmlPropertyCacheVector propertyCaches;
     QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(data->indexOfRootObject); }
 
-    QQmlRefPointer<QQmlTypeNameCache> importCache;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
 
     // index is object index. This allows fast access to the
     // property data when initializing bindings, avoiding expensive

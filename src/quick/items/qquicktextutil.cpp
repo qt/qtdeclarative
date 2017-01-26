@@ -61,7 +61,7 @@ QQuickItem *QQuickTextUtil::createCursor(
                 item->setPosition(rectangle.topLeft());
                 item->setHeight(rectangle.height());
             } else {
-                qmlInfo(parent) << tr("%1 does not support loading non-visual cursor delegates.")
+                qmlWarning(parent) << tr("%1 does not support loading non-visual cursor delegates.")
                         .arg(QString::fromUtf8(className));
             }
             component->completeCreate();
@@ -72,7 +72,7 @@ QQuickItem *QQuickTextUtil::createCursor(
                 parent, SLOT(createCursor()), Qt::UniqueConnection);
         return item;
     }
-    qmlInfo(parent, component->errors()) << tr("Could not load cursor delegate");
+    qmlWarning(parent, component->errors()) << tr("Could not load cursor delegate");
     return item;
 }
 

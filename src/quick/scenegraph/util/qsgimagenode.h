@@ -67,6 +67,8 @@ public:
     virtual void setMipmapFiltering(QSGTexture::Filtering filtering) = 0;
     virtual QSGTexture::Filtering mipmapFiltering() const = 0;
 
+    // ### Qt6: Add anisotropy support here, and possibly a virtual hook or another mean to extend this class.
+
     enum TextureCoordinatesTransformFlag {
         NoTransform        = 0x00,
         MirrorHorizontally = 0x01,

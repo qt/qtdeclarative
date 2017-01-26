@@ -52,6 +52,8 @@
 #include <WTFStubs.h>
 
 #include <iostream>
+#include <QBuffer>
+#include <QCoreApplication>
 
 #if ENABLE(ASSEMBLER)
 
@@ -146,11 +148,11 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
+Assembler::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
     : _function(function)
     , _nextBlock(0)
     , _executableAllocator(executableAllocator)
-    , _isel(isel)
+    , _jsGenerator(jsGenerator)
 {
     _addrs.resize(_function->basicBlockCount());
     _patches.resize(_function->basicBlockCount());
@@ -301,7 +303,7 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
     loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
-    const int id = _isel->registerString(string);
+    const int id = _jsGenerator->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
 }
 
@@ -314,13 +316,13 @@ Assembler::Address Assembler::loadConstant(const Primitive &v, RegisterID baseRe
 {
     loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), baseReg);
     loadPtr(Address(baseReg, qOffsetOf(QV4::Heap::ExecutionContext, constantTable)), baseReg);
-    const int index = _isel->jsUnitGenerator()->registerConstant(v.asReturnedValue());
+    const int index = _jsGenerator->registerConstant(v.asReturnedValue());
     return Address(baseReg, index * sizeof(QV4::Value));
 }
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
 {
-    const int id = _isel->registerString(string);
+    const int id = _jsGenerator->registerString(string);
     move(TrustedImm32(id), reg);
 }
 
@@ -494,6 +496,176 @@ Assembler::Jump Assembler::branchInt32(bool invertCondition, IR::AluOp op, IR::E
 void Assembler::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
 {
     _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave, fpRegistersToSave));
+}
+
+
+namespace {
+class QIODevicePrintStream: public FilePrintStream
+{
+    Q_DISABLE_COPY(QIODevicePrintStream)
+
+public:
+    explicit QIODevicePrintStream(QIODevice *dest)
+        : FilePrintStream(0)
+        , dest(dest)
+        , buf(4096, '0')
+    {
+        Q_ASSERT(dest);
+    }
+
+    ~QIODevicePrintStream()
+    {}
+
+    void vprintf(const char* format, va_list argList) WTF_ATTRIBUTE_PRINTF(2, 0)
+    {
+        const int written = qvsnprintf(buf.data(), buf.size(), format, argList);
+        if (written > 0)
+            dest->write(buf.constData(), written);
+        memset(buf.data(), 0, qMin(written, buf.size()));
+    }
+
+    void flush()
+    {}
+
+private:
+    QIODevice *dest;
+    QByteArray buf;
+};
+} // anonymous namespace
+
+static void printDisassembledOutputWithCalls(QByteArray processedOutput, const QHash<void*, const char*>& functions)
+{
+    for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
+         it != end; ++it) {
+        const QByteArray ptrString = "0x" + QByteArray::number(quintptr(it.key()), 16);
+        int idx = processedOutput.indexOf(ptrString);
+        if (idx < 0)
+            continue;
+        idx = processedOutput.lastIndexOf('\n', idx);
+        if (idx < 0)
+            continue;
+        processedOutput = processedOutput.insert(idx, QByteArrayLiteral("                          ; call ") + it.value());
+    }
+
+    qDebug("%s", processedOutput.constData());
+}
+
+#if defined(Q_OS_LINUX)
+static FILE *pmap;
+
+static void qt_closePmap()
+{
+    if (pmap) {
+        fclose(pmap);
+        pmap = 0;
+    }
+}
+
+#endif
+
+JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
+{
+    Label endOfCode = label();
+
+    {
+        for (size_t i = 0, ei = _patches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
+            Q_ASSERT(target.isSet());
+            for (Jump jump : qAsConst(_patches.at(i)))
+                jump.linkTo(target, this);
+        }
+    }
+
+    JSC::JSGlobalData dummy(_executableAllocator);
+    JSC::LinkBuffer linkBuffer(dummy, this, 0);
+
+    for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
+        linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
+
+    // link exception handlers
+    for (Jump jump : qAsConst(exceptionPropagationJumps))
+        linkBuffer.link(jump, linkBuffer.locationOf(exceptionReturnLabel));
+
+    {
+        for (size_t i = 0, ei = _labelPatches.size(); i != ei; ++i) {
+            Label target = _addrs.at(i);
+            Q_ASSERT(target.isSet());
+            for (DataLabelPtr label : _labelPatches.at(i))
+                linkBuffer.patch(label, linkBuffer.locationOf(target));
+        }
+    }
+
+    *codeSize = linkBuffer.offsetOf(endOfCode);
+
+    QByteArray name;
+
+    JSC::MacroAssemblerCodeRef codeRef;
+
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
+    if (showCode) {
+        QHash<void*, const char*> functions;
+#ifndef QT_NO_DEBUG
+        for (CallInfo call : qAsConst(_callInfos))
+            functions[linkBuffer.locationOf(call.label).dataLocation()] = call.functionName;
+#endif
+
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        WTF::setDataFile(new QIODevicePrintStream(&buf));
+
+        name = _function->name->toUtf8();
+        if (name.isEmpty())
+            name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
+        codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
+
+        WTF::setDataFile(stderr);
+        printDisassembledOutputWithCalls(buf.data(), functions);
+    } else {
+        codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
+    }
+
+#if defined(Q_OS_LINUX)
+    // This implements writing of JIT'd addresses so that perf can find the
+    // symbol names.
+    //
+    // Perf expects the mapping to be in a certain place and have certain
+    // content, for more information, see:
+    // https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/jit-interface.txt
+    static bool doProfile = !qEnvironmentVariableIsEmpty("QV4_PROFILE_WRITE_PERF_MAP");
+    static bool profileInitialized = false;
+    if (doProfile && !profileInitialized) {
+        profileInitialized = true;
+
+        char pname[PATH_MAX];
+        snprintf(pname, PATH_MAX - 1, "/tmp/perf-%lu.map",
+                                      (unsigned long)QCoreApplication::applicationPid());
+
+        pmap = fopen(pname, "w");
+        if (!pmap)
+            qWarning("QV4: Can't write %s, call stacks will not contain JavaScript function names", pname);
+
+        // make sure we clean up nicely
+        std::atexit(qt_closePmap);
+    }
+
+    if (pmap) {
+        // this may have been pre-populated, if QV4_SHOW_ASM was on
+        if (name.isEmpty()) {
+            name = _function->name->toUtf8();
+            if (name.isEmpty())
+                name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
+        }
+
+        fprintf(pmap, "%llx %x %.*s\n",
+                      (long long unsigned int)codeRef.code().executableAddress(),
+                      *codeSize,
+                      name.length(),
+                      name.constData());
+        fflush(pmap);
+    }
+#endif
+
+    return codeRef;
 }
 
 #endif

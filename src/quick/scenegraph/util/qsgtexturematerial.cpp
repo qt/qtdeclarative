@@ -110,6 +110,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     Q_UNUSED(state)
 #endif
     t->setMipmapFiltering(tx->mipmapFiltering());
+    t->setAnisotropyLevel(tx->anisotropyLevel());
 
     if (oldTx == 0 || oldTx->texture()->textureId() != t->textureId())
         t->bind();
@@ -173,6 +174,7 @@ QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
     , m_mipmap_filtering(QSGTexture::None)
     , m_horizontal_wrap(QSGTexture::ClampToEdge)
     , m_vertical_wrap(QSGTexture::ClampToEdge)
+    , m_anisotropy_level(QSGTexture::AnisotropyNone)
 {
 }
 

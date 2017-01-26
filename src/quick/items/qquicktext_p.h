@@ -218,7 +218,8 @@ public:
 
     QRectF boundingRect() const Q_DECL_OVERRIDE;
     QRectF clipRect() const Q_DECL_OVERRIDE;
-    Q_INVOKABLE void doLayout();
+    Q_INVOKABLE void doLayout(); // ### Qt 6: remove
+    Q_REVISION(9) Q_INVOKABLE void forceLayout();
 
     RenderType renderType() const;
     void setRenderType(RenderType renderType);

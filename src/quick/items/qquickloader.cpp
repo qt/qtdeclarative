@@ -971,7 +971,7 @@ QV4::ReturnedValue QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Funct
         QV4::ScopedValue v(scope, (*args)[1]);
         if (!v->isObject() || v->as<QV4::ArrayObject>()) {
             *error = true;
-            qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
+            qmlWarning(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {
             *error = false;
             valuemap = v;

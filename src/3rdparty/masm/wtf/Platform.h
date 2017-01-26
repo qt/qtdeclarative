@@ -224,7 +224,8 @@
 
 #elif defined(__ARM_ARCH_7A__) \
     || defined(__ARM_ARCH_7R__) \
-    || defined(__ARM_ARCH_7S__)
+    || defined(__ARM_ARCH_7S__) \
+    || defined(__CORE_CORTEXA__) // GHS-specific
 #define WTF_ARM_ARCH_VERSION 7
 
 /* MSVC sets _M_ARM */
@@ -268,7 +269,8 @@
     || defined(__ARM_ARCH_7A__) \
     || defined(__ARM_ARCH_7M__) \
     || defined(__ARM_ARCH_7R__) \
-    || defined(__ARM_ARCH_7S__)
+    || defined(__ARM_ARCH_7S__) \
+    || defined(__CORE_CORTEXA__) // GHS-specific
 #define WTF_THUMB_ARCH_VERSION 4
 
 /* RVCT sets __TARGET_ARCH_THUMB */
@@ -385,6 +387,11 @@
 #define WTF_OS_HURD 1
 #endif
 
+/* OS(INTEGRITY) - INTEGRITY */
+#ifdef __INTEGRITY
+#define WTF_OS_INTEGRITY 1
+#endif
+
 /* OS(LINUX) - Linux */
 #ifdef __linux__
 #define WTF_OS_LINUX 1
@@ -433,6 +440,7 @@
     || OS(DARWIN)           \
     || OS(FREEBSD)          \
     || OS(HURD)             \
+    || OS(INTEGRITY)        \
     || OS(LINUX)            \
     || OS(NETBSD)           \
     || OS(OPENBSD)          \
@@ -603,7 +611,9 @@
 
 #if OS(UNIX)
 #define HAVE_ERRNO_H 1
-#define HAVE_MMAP 1   
+#if !OS(INTEGRITY)
+#define HAVE_MMAP 1
+#endif
 #define HAVE_SIGNAL_H 1
 #define HAVE_STRINGS_H 1
 #define HAVE_SYS_PARAM_H 1

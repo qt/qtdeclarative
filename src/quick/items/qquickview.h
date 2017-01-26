@@ -97,14 +97,14 @@ private Q_SLOTS:
     void continueExecute();
 
 protected:
-    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent*) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent *) override;
+    void timerEvent(QTimerEvent*) override;
 
-    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *) override;
+    void keyReleaseEvent(QKeyEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
 private:
     Q_DISABLE_COPY(QQuickView)
     Q_DECLARE_PRIVATE(QQuickView)

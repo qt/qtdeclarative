@@ -95,6 +95,7 @@ public:
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)  Q_DECL_OVERRIDE;
     bool isReady() const;
+    void deactivateRecur();
 
 
     /* QQuickItemChangeListener */
@@ -134,6 +135,7 @@ public:
 protected:
     unsigned m_isReady : 1;
     unsigned m_disableRearrange : 1;
+    unsigned m_hasItemChangeListeners : 1;      // if false, we don't need to remove its item change listeners...
     mutable QSet<QQuickItem *> m_ignoredItems;
 };
 

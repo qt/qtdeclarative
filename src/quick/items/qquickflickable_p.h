@@ -106,11 +106,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
 
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
 
+    Q_PROPERTY(qreal horizontalOvershoot READ horizontalOvershoot NOTIFY horizontalOvershootChanged REVISION 9)
+    Q_PROPERTY(qreal verticalOvershoot READ verticalOvershoot NOTIFY verticalOvershootChanged REVISION 9)
+
     Q_PROPERTY(QQmlListProperty<QObject> flickableData READ flickableData)
     Q_PROPERTY(QQmlListProperty<QQuickItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
-
-    Q_FLAGS(BoundsBehavior)
 
 public:
     QQuickFlickable(QQuickItem *parent=0);
@@ -126,6 +127,7 @@ public:
         DragAndOvershootBounds = DragOverBounds | OvershootBounds
     };
     Q_DECLARE_FLAGS(BoundsBehavior, BoundsBehaviorFlag)
+    Q_FLAG(BoundsBehavior)
 
     BoundsBehavior boundsBehavior() const;
     void setBoundsBehavior(BoundsBehavior);
@@ -201,6 +203,9 @@ public:
     bool pixelAligned() const;
     void setPixelAligned(bool align);
 
+    qreal horizontalOvershoot() const;
+    qreal verticalOvershoot() const;
+
     Q_INVOKABLE void resizeContent(qreal w, qreal h, QPointF center);
     Q_INVOKABLE void returnToBounds();
     Q_INVOKABLE void flick(qreal xVelocity, qreal yVelocity);
@@ -243,6 +248,8 @@ Q_SIGNALS:
     void dragStarted();
     void dragEnded();
     void pixelAlignedChanged();
+    Q_REVISION(9) void horizontalOvershootChanged();
+    Q_REVISION(9) void verticalOvershootChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *, QEvent *) Q_DECL_OVERRIDE;
@@ -286,6 +293,7 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickFlickable)
     Q_DECLARE_PRIVATE(QQuickFlickable)
+    friend class QQuickFlickableContentItem;
     friend class QQuickFlickableVisibleArea;
     friend class QQuickFlickableReboundTransition;
 };

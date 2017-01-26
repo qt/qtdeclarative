@@ -50,13 +50,45 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \fn QQmlInfo QtQml::qmlDebug(const QObject *object)
+    \relates QQmlEngine
+    \since 5.9
+
+    Prints debug messages that include the file and line number for the
+    specified QML \a object.
+
+    When QML types produce logging messages, it improves traceability
+    if they include the QML file and line number on which the
+    particular instance was instantiated.
+
+    To include the file and line number, an object must be passed.  If
+    the file and line number is not available for that instance
+    (either it was not instantiated by the QML engine or location
+    information is disabled), "unknown location" will be used instead.
+
+    For example,
+
+    \code
+    qmlDebug(object) << "Internal state: 42";
+    \endcode
+
+    prints
+
+    \code
+    QML MyCustomType (unknown location): Internal state: 42
+    \endcode
+
+    \sa QtQml::qmlInfo, QtQml::qmlWarning
+*/
+
+/*!
     \fn QQmlInfo QtQml::qmlInfo(const QObject *object)
     \relates QQmlEngine
 
-    Prints warning messages that include the file and line number for the
+    Prints informational messages that include the file and line number for the
     specified QML \a object.
 
-    When QML types display warning messages, it improves traceability
+    When QML types produce logging messages, it improves traceability
     if they include the QML file and line number on which the
     particular instance was instantiated.
 
@@ -76,14 +108,58 @@ QT_BEGIN_NAMESPACE
     \code
     QML MyCustomType (unknown location): component property is a write-once property
     \endcode
+
+    \note In versions prior to Qt 5.9, qmlInfo reported messages using a warning
+    QtMsgType. For Qt 5.9 and above, qmlInfo uses an info QtMsgType. To send
+    warnings, use qmlWarning.
+
+    \sa QtQml::qmlDebug, QtQml::qmlWarning
+*/
+
+
+/*!
+    \fn QQmlInfo QtQml::qmlWarning(const QObject *object)
+    \relates QQmlEngine
+    \since 5.9
+
+    Prints warning messages that include the file and line number for the
+    specified QML \a object.
+
+    When QML types produce logging messages, it improves traceability
+    if they include the QML file and line number on which the
+    particular instance was instantiated.
+
+    To include the file and line number, an object must be passed.  If
+    the file and line number is not available for that instance
+    (either it was not instantiated by the QML engine or location
+    information is disabled), "unknown location" will be used instead.
+
+    For example,
+
+    \code
+    qmlInfo(object) << tr("property cannot be set to 0");
+    \endcode
+
+    prints
+
+    \code
+    QML MyCustomType (unknown location): property cannot be set to 0
+    \endcode
+
+    \sa QtQml::qmlDebug, QtQml::qmlInfo
 */
 
 class QQmlInfoPrivate
 {
 public:
-    QQmlInfoPrivate() : ref (1), object(0) {}
+    QQmlInfoPrivate(QtMsgType type)
+        : ref (1)
+        , msgType(type)
+        , object(nullptr)
+    {}
 
     int ref;
+    QtMsgType msgType;
     const QObject *object;
     QString buffer;
     QList<QQmlError> errors;
@@ -110,6 +186,7 @@ QQmlInfo::~QQmlInfo()
 
         if (!d->buffer.isEmpty()) {
             QQmlError error;
+            error.setMessageType(d->msgType);
 
             QObject *object = const_cast<QObject *>(d->object);
 
@@ -139,28 +216,32 @@ QQmlInfo::~QQmlInfo()
 
 namespace QtQml {
 
-QQmlInfo qmlInfo(const QObject *me)
-{
-    QQmlInfoPrivate *d = new QQmlInfoPrivate;
-    d->object = me;
-    return QQmlInfo(d);
-}
+#define MESSAGE_FUNCS(FuncName, MessageLevel) \
+    QQmlInfo FuncName(const QObject *me) \
+    { \
+        QQmlInfoPrivate *d = new QQmlInfoPrivate(MessageLevel); \
+        d->object = me; \
+        return QQmlInfo(d); \
+    } \
+    QQmlInfo FuncName(const QObject *me, const QQmlError &error) \
+    { \
+        QQmlInfoPrivate *d = new QQmlInfoPrivate(MessageLevel); \
+        d->object = me; \
+        d->errors << error; \
+        return QQmlInfo(d); \
+    } \
+    QQmlInfo FuncName(const QObject *me, const QList<QQmlError> &errors) \
+    { \
+        QQmlInfoPrivate *d = new QQmlInfoPrivate(MessageLevel); \
+        d->object = me; \
+        d->errors = errors; \
+        return QQmlInfo(d); \
+    }
 
-QQmlInfo qmlInfo(const QObject *me, const QQmlError &error)
-{
-    QQmlInfoPrivate *d = new QQmlInfoPrivate;
-    d->object = me;
-    d->errors << error;
-    return QQmlInfo(d);
-}
+MESSAGE_FUNCS(qmlDebug, QtMsgType::QtDebugMsg)
+MESSAGE_FUNCS(qmlInfo, QtMsgType::QtInfoMsg)
+MESSAGE_FUNCS(qmlWarning, QtMsgType::QtWarningMsg)
 
-QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors)
-{
-    QQmlInfoPrivate *d = new QQmlInfoPrivate;
-    d->object = me;
-    d->errors = errors;
-    return QQmlInfo(d);
-}
 
 } // namespace QtQml
 

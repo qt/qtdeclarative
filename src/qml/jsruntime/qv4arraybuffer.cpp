@@ -81,16 +81,19 @@ void ArrayBufferCtor::call(const Managed *that, Scope &scope, CallData *callData
     construct(that, scope, callData);
 }
 
-ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
+void ArrayBufferCtor::method_isView(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<TypedArray> a(scope, ctx->argument(0));
-    if (!!a)
-        return Encode(true);
-    QV4::Scoped<DataView> v(scope, ctx->argument(0));
-    if (!!v)
-        return Encode(true);
-    return Encode(false);
+    QV4::Scoped<TypedArray> a(scope, callData->argument(0));
+    if (!!a) {
+        scope.result = Encode(true);
+        return;
+    }
+    QV4::Scoped<DataView> v(scope, callData->argument(0));
+    if (!!v) {
+        scope.result = Encode(true);
+        return;
+    }
+    scope.result = Encode(false);
 }
 
 
@@ -160,54 +163,48 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
 }
 
-ReturnedValue ArrayBufferPrototype::method_get_byteLength(CallContext *ctx)
+void ArrayBufferPrototype::method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<ArrayBuffer> v(scope, ctx->thisObject());
+    Scoped<ArrayBuffer> v(scope, callData->thisObject);
     if (!v)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    return Encode(v->d()->data->size);
+    scope.result = Encode(v->d()->data->size);
 }
 
-ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
+void ArrayBufferPrototype::method_slice(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<ArrayBuffer> a(scope, ctx->thisObject());
+    Scoped<ArrayBuffer> a(scope, callData->thisObject);
     if (!a)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    double start = ctx->argc() > 0 ? ctx->args()[0].toInteger() : 0;
-    double end = (ctx->argc() < 2 || ctx->args()[1].isUndefined()) ?
-                a->d()->data->size : ctx->args()[1].toInteger();
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    double start = callData->argc > 0 ? callData->args[0].toInteger() : 0;
+    double end = (callData->argc < 2 || callData->args[1].isUndefined()) ?
+                a->d()->data->size : callData->args[1].toInteger();
+    CHECK_EXCEPTION();
 
     double first = (start < 0) ? qMax(a->d()->data->size + start, 0.) : qMin(start, (double)a->d()->data->size);
     double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
 
     ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor()));
     if (!constructor)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    ScopedCallData callData(scope, 1);
+    ScopedCallData cData(scope, 1);
     double newLen = qMax(final - first, 0.);
-    callData->args[0] = QV4::Encode(newLen);
-    constructor->construct(scope, callData);
-    QV4::Scoped<ArrayBuffer> newBuffer(scope, scope.result.asReturnedValue());
+    cData->args[0] = QV4::Encode(newLen);
+    constructor->construct(scope, cData);
+    QV4::Scoped<ArrayBuffer> newBuffer(scope, scope.result);
     if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
-        return scope.engine->throwTypeError();
+        THROW_TYPE_ERROR();
 
     memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
-
-    return newBuffer.asReturnedValue();
 }
 
-ReturnedValue ArrayBufferPrototype::method_toString(CallContext *ctx)
+void ArrayBufferPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<ArrayBuffer> a(scope, ctx->thisObject());
+    Scoped<ArrayBuffer> a(scope, callData->thisObject);
     if (!a)
-        return Encode::undefined();
-    return Encode(ctx->engine()->newString(QString::fromUtf8(a->asByteArray())));
+        RETURN_UNDEFINED();
+    scope.result = scope.engine->newString(QString::fromUtf8(a->asByteArray()));
 }

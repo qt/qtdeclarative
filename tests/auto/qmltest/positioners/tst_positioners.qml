@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,10 +38,38 @@
 **
 ****************************************************************************/
 
-pragma Singleton
-import QtQml 2.0
+import QtQuick 2.9
+import QtTest 1.1
 
-// Instantiating a BBSettings class that can be easily tweaked for future
-// BB devices (we may have more selectors added)
-BBSettings {
+Item {
+    Column {
+        id: column
+        Repeater {
+            id: repeater
+            model: 2
+            Rectangle {
+                width: 100
+                height: 30
+                border.width: 1
+            }
+        }
+    }
+
+    SignalSpy {
+        id: spy
+        target: column
+        signalName: "positioningComplete"
+    }
+
+    TestCase {
+        function test_forceLayout() {
+            compare(column.height, 60)
+            repeater.model = 4
+            column.forceLayout()
+            compare(column.height, 120)
+
+            // initial positioning and our forced layout
+            compare(spy.count, 2)
+        }
+    }
 }

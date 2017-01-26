@@ -32,19 +32,8 @@
 #include "windows.h"
 #include <wtf/Assertions.h>
 
-#if _MSC_VER >= 1900
 // Try to use JIT by default and fallback to non-JIT on first error
 static bool qt_winrt_use_jit = true;
-#else // _MSC_VER < 1900
-#  define PAGE_EXECUTE           0x10
-#  define PAGE_EXECUTE_READ      0x20
-#  define PAGE_EXECUTE_READWRITE 0x40
-#  define MEM_RELEASE 0x8000
-inline void* VirtualAllocFromApp(void*, size_t, int, int) { return 0; }
-inline bool VirtualProtectFromApp(void *, size_t, int, DWORD*) { return false; }
-inline bool VirtualFree(void *, size_t, DWORD) { return false; }
-static bool qt_winrt_use_jit = false;
-#endif // _MSC_VER < 1900
 
 namespace WTF {
 

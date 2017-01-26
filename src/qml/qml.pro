@@ -14,6 +14,8 @@ solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 # Ensure this gcc optimization is switched off for mips platforms to avoid trouble with JIT.
 gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
 
+DEFINES += QT_NO_FOREACH
+
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov

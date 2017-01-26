@@ -69,11 +69,7 @@ void main()
         fTex = vPosTex.zw;
 #endif
         highp float currentSize = mix(vData.z, vData.w, t * t);
-#if defined (Q_OS_BLACKBERRY)
-        highp float fade = 1.;
-#else
         lowp float fade = 1.;
-#endif
         highp float fadeIn = min(t * 10., 1.);
         highp float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);
 

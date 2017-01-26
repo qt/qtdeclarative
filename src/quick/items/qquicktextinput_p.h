@@ -319,6 +319,7 @@ Q_SIGNALS:
     void accepted();
     void acceptableInputChanged();
     Q_REVISION(2) void editingFinished();
+    Q_REVISION(9) void textEdited();
     void colorChanged();
     void selectionColorChanged();
     void selectedTextColorChanged();

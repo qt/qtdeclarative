@@ -347,6 +347,10 @@ Param traceParam(const Param &param)
         goto catchException; \
     VALUE(param) = tmp; \
     }
+// qv4scopedvalue_p.h also defines a CHECK_EXCEPTION macro
+#ifdef CHECK_EXCEPTION
+#undef CHECK_EXCEPTION
+#endif
 #define CHECK_EXCEPTION \
     if (engine->hasException) \
         goto catchException

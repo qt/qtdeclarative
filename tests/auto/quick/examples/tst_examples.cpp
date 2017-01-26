@@ -88,12 +88,6 @@ tst_examples::tst_examples()
     excludedDirs << "snippets/qml/qtbinding";
     excludedDirs << "snippets/qml/imports";
 
-#ifdef QT_NO_WEBKIT
-    excludedDirs << "qtquick/modelviews/webview";
-    excludedDirs << "demos/webbrowser";
-    excludedDirs << "doc/src/snippets/qml/webview";
-#endif
-
 #ifdef QT_NO_XMLPATTERNS
     excludedDirs << "demos/twitter";
     excludedDirs << "demos/flickr";

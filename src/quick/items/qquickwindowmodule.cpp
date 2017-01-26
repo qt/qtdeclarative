@@ -102,6 +102,9 @@ void QQuickWindowQmlImpl::classBegin()
 {
     Q_D(QQuickWindowQmlImpl);
     QQmlEngine* e = qmlEngine(this);
+
+    QQmlEngine::setContextForObject(contentItem(), e->rootContext());
+
     //Give QQuickView behavior when created from QML with QQmlApplicationEngine
     if (QCoreApplication::instance()->property("__qml_using_qqmlapplicationengine") == QVariant(true)) {
         if (e && !e->incubationController())

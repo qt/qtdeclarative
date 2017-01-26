@@ -135,6 +135,7 @@ private slots:
 
     void signal_accepted();
     void signal_editingfinished();
+    void signal_textEdited();
 
     void passwordCharacter();
     void cursorDelegate_data();
@@ -2439,6 +2440,57 @@ void tst_qquicktextinput::signal_editingfinished()
     QTRY_VERIFY(input1->hasActiveFocus());
     QTRY_VERIFY(!input2->hasActiveFocus());
     QTRY_COMPARE(editingFinished2Spy.count(), 1);
+}
+
+void tst_qquicktextinput::signal_textEdited()
+{
+    QQuickWindow window;
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QQuickTextInput *input = new QQuickTextInput(window.contentItem());
+    QVERIFY(input);
+
+    QSignalSpy textChangedSpy(input, SIGNAL(textChanged()));
+    QVERIFY(textChangedSpy.isValid());
+
+    QSignalSpy textEditedSpy(input, SIGNAL(textEdited()));
+    QVERIFY(textEditedSpy.isValid());
+
+    input->forceActiveFocus();
+    QTRY_VERIFY(input->hasActiveFocus());
+
+    int textChanges = 0;
+    int textEdits = 0;
+
+    QTest::keyClick(&window, Qt::Key_A);
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), ++textEdits);
+
+    QTest::keyClick(&window, Qt::Key_B);
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), ++textEdits);
+
+    QTest::keyClick(&window, Qt::Key_C);
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), ++textEdits);
+
+    QTest::keyClick(&window, Qt::Key_Space);
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), ++textEdits);
+
+    QTest::keyClick(&window, Qt::Key_Backspace);
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), ++textEdits);
+
+    input->clear();
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), textEdits);
+
+    input->setText("TextInput");
+    QCOMPARE(textChangedSpy.count(), ++textChanges);
+    QCOMPARE(textEditedSpy.count(), textEdits);
 }
 
 /*

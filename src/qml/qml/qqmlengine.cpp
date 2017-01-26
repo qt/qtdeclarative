@@ -436,7 +436,6 @@ The following functions are also on the Qt object.
 
     \list
         \li \c "android" - Android
-        \li \c "blackberry" - BlackBerry OS
         \li \c "ios" - iOS
         \li \c "tvos" - tvOS
         \li \c "linux" - Linux
@@ -444,7 +443,6 @@ The following functions are also on the Qt object.
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "winrt" - WinRT / UWP
-        \li \c "winphone" - Windows Phone
     \endlist
     \endtable
 */
@@ -1914,9 +1912,29 @@ void QQmlEnginePrivate::sendExit(int retCode)
 
 static void dumpwarning(const QQmlError &error)
 {
-    QMessageLogger(error.url().toString().toLatin1().constData(),
-                   error.line(), 0).warning().nospace()
-            << qPrintable(error.toString());
+    switch (error.messageType()) {
+    case QtDebugMsg:
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).debug().nospace()
+                << qPrintable(error.toString());
+        break;
+    case QtInfoMsg:
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).info().nospace()
+                << qPrintable(error.toString());
+        break;
+    case QtWarningMsg:
+    case QtFatalMsg: // fatal does not support streaming, and furthermore, is actually fatal. Probably not desirable for QML.
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).warning().nospace()
+                << qPrintable(error.toString());
+        break;
+    case QtCriticalMsg:
+        QMessageLogger(error.url().toString().toLatin1().constData(),
+                       error.line(), 0).critical().nospace()
+                << qPrintable(error.toString());
+        break;
+    }
 }
 
 static void dumpwarning(const QList<QQmlError> &errors)
@@ -2129,8 +2147,7 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
   Returns the directory where SQL and other offline
   storage is placed.
 
-  QQuickWebView and the SQL databases created with openDatabase()
-  are stored here.
+  The SQL databases created with openDatabase() are stored here.
 
   The default is QML/OfflineStorage in the platform-standard
   user application data directory.

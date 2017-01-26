@@ -383,6 +383,8 @@ private slots:
 
     void pointerEventTypeAndPointCount();
 
+    void grabContentItemToImage();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -2602,6 +2604,23 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
     QCOMPARE(pte.touchPointById(2)->id(), 2);
     QVERIFY(!pte.touchPointById(1));
     QVERIFY(!pte.touchPointById(0));
+}
+
+void tst_qquickwindow::grabContentItemToImage()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("grabContentItemToImage.qml"));
+
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(created);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QMetaObject::invokeMethod(window, "grabContentItemToImage");
+    QTRY_COMPARE(created->property("success").toInt(), 1);
 }
 
 QTEST_MAIN(tst_qquickwindow)

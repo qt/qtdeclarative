@@ -78,8 +78,8 @@ struct BooleanPrototype: BooleanObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_valueOf(CallContext *ctx);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 

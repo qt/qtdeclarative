@@ -197,8 +197,8 @@ protected:
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
-    static ReturnedValue method_connect(CallContext *ctx);
-    static ReturnedValue method_disconnect(CallContext *ctx);
+    static void method_connect(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_disconnect(const BuiltinFunction *, Scope &scope, CallData *callData);
 
 private:
     Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);

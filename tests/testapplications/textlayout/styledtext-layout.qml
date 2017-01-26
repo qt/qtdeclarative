@@ -88,7 +88,7 @@ Rectangle {
                 drag.target: rect
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse.button == Qt.RightButton ? myText.font.pixelSize -= 1 : myText.font.pixelSize += 1
-                onPositionChanged: myText.doLayout()
+                onPositionChanged: myText.forceLayout()
             }
         }
     }

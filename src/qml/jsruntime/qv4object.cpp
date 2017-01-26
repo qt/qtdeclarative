@@ -61,9 +61,8 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
-    if ((ic->size > d()->inlineMemberSize && !d()->memberData) ||
-        (d()->memberData && d()->memberData->size < ic->size - d()->inlineMemberSize))
-        d()->memberData = MemberData::allocate(ic->engine, ic->size - d()->inlineMemberSize, d()->memberData);
+    if ((!d()->memberData && ic->size) || (d()->memberData->size < ic->size))
+        d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -167,7 +166,28 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     defineDefaultProperty(s, function);
 }
 
+void Object::defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    ExecutionContext *global = e->rootContext();
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
+    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(s, function);
+}
+
 void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ExecutionContext *global = e->rootContext();
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
+    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(name, function);
+}
+
+void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -196,6 +216,27 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallCo
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
+void Object::defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
+                                    void (*setter)(const BuiltinFunction *, Scope &, CallData *))
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    defineAccessorProperty(s, getter, setter);
+}
+
+void Object::defineAccessorProperty(String *name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
+                                    void (*setter)(const BuiltinFunction *, Scope &, CallData *))
+{
+    ExecutionEngine *v4 = engine();
+    QV4::Scope scope(v4);
+    ScopedProperty p(scope);
+    ExecutionContext *global = v4->rootContext();
+    p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
+    p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
+    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+}
+
 void Object::defineReadonlyProperty(const QString &name, const Value &value)
 {
     QV4::ExecutionEngine *e = engine();
@@ -212,12 +253,6 @@ void Object::defineReadonlyProperty(String *name, const Value &value)
 void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     Heap::Object *o = static_cast<Heap::Object *>(that);
-
-    if (o->inlineMemberSize) {
-        Value *v = o->propertyData(0);
-        for (uint i = 0; i < o->inlineMemberSize; ++i)
-            v[i].mark(e);
-    }
 
     if (o->memberData)
         o->memberData->mark(e);
