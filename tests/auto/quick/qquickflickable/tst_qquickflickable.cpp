@@ -80,6 +80,7 @@ private slots:
     void disabled();
     void flickVelocity();
     void margins();
+    void cancelOnHide();
     void cancelOnMouseGrab();
     void clickAndDragWhenTransformed();
     void flickTwiceUsingTouches();
@@ -1420,6 +1421,25 @@ void tst_qquickflickable::margins()
     QCOMPARE(obj->contentHeight(), 600.);
 
     delete root;
+}
+
+void tst_qquickflickable::cancelOnHide()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("hide.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(window->rootObject());
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+
+    QTest::mouseDClick(window.data(), Qt::LeftButton);
+    QVERIFY(!flickable->isVisible());
+    QVERIFY(!QQuickFlickablePrivate::get(flickable)->pressed);
 }
 
 void tst_qquickflickable::cancelOnMouseGrab()
