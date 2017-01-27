@@ -94,7 +94,7 @@ public:
           value(0),
           position(0),
           stepSize(0),
-          live(false),
+          live(true),
           pressed(false),
           touchId(-1),
           orientation(Qt::Horizontal),
@@ -304,12 +304,7 @@ void QQuickSlider::setTo(qreal to)
 
     This property holds the value in the range \c from - \c to. The default value is \c 0.0.
 
-    Unlike the \l position property, the \c value is not updated by default
-    while the handle is dragged, but only after the value has been chosen and
-    the slider has been released. The \l live property can be used to make the
-    slider provide live updates for the \c value property.
-
-    \sa position, live, valueAt()
+    \sa position
 */
 qreal QQuickSlider::value() const
 {
@@ -338,8 +333,7 @@ void QQuickSlider::setValue(qreal value)
     This property holds the logical position of the handle.
 
     The position is expressed as a fraction of the control's size, in the range
-    \c {0.0 - 1.0}. The \c position is continuously updated while the
-    handle is dragged. For visualizing a slider, the right-to-left aware
+    \c {0.0 - 1.0}. For visualizing a slider, the right-to-left aware
     \l visualPosition should be used instead.
 
     \sa value, visualPosition, valueAt()
@@ -441,9 +435,9 @@ void QQuickSlider::setSnapMode(SnapMode mode)
     This property holds whether the slider provides live updates for the \l value
     property while the handle is dragged.
 
-    The default value is \c false.
+    The default value is \c true.
 
-    \sa value
+    \sa value, valueAt()
 */
 bool QQuickSlider::live() const
 {
@@ -539,11 +533,6 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     \qmlmethod real QtQuick.Controls::Slider::valueAt(real position)
 
     Returns the value for the given \a position.
-
-    The \l value property is not updated while the handle is dragged, but this
-    method can be used to get continuous value updates:
-
-    \snippet qtquickcontrols2-tooltip-slider.qml 1
 
     \sa value, position
 */

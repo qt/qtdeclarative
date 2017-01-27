@@ -377,7 +377,7 @@ TestCase {
     }
 
     function test_multiTouch() {
-        var control1 = createTemporaryObject(slider, testCase)
+        var control1 = createTemporaryObject(slider, testCase, {live: false})
         verify(control1)
 
         var pressedCount1 = 0
@@ -407,7 +407,7 @@ TestCase {
         compare(control1.pressed, true)
         compare(control1.position, 1.0)
 
-        var control2 = createTemporaryObject(slider, testCase, {y: control1.height})
+        var control2 = createTemporaryObject(slider, testCase, {y: control1.height, live: false})
         verify(control2)
         waitForRendering(control2)
 
@@ -565,7 +565,7 @@ TestCase {
         // test with "unbalanced" paddings (left padding != right padding) to ensure
         // that the slider position calculation is done taking padding into account
         // ==> the position is _not_ 0.5 in the middle of the control
-        var control = createTemporaryObject(slider, testCase, {leftPadding: 10, rightPadding: 20})
+        var control = createTemporaryObject(slider, testCase, {leftPadding: 10, rightPadding: 20, live: false})
         verify(control)
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
@@ -651,7 +651,7 @@ TestCase {
     }
 
     function test_snapMode_mouse(data) {
-        var control = createTemporaryObject(slider, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        var control = createTemporaryObject(slider, testCase, {live: false, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
         function sliderCompare(left, right) {
@@ -677,7 +677,7 @@ TestCase {
     }
 
     function test_snapMode_touch(data) {
-        var control = createTemporaryObject(slider, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        var control = createTemporaryObject(slider, testCase, {live: false, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
         function sliderCompare(left, right) {
