@@ -86,7 +86,8 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     activationRequired = compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject));
 
     canUseSimpleCall = !needsActivation() && !(compiledFunction->flags & CompiledData::Function::HasCatchOrWith) &&
-                       !(compiledFunction->nFormals > QV4::Global::ReservedArgumentCount) && !isNamedExpression();
+                       compiledFunction->nFormals <= QV4::Global::ReservedArgumentCount &&
+                       compiledFunction->nLocals == 0 && !isNamedExpression();
 }
 
 Function::~Function()

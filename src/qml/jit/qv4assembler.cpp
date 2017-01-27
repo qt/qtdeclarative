@@ -286,8 +286,7 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
     } break;
     case IR::ArgLocal::Local:
     case IR::ArgLocal::ScopedLocal: {
-        loadPtr(Address(baseReg, qOffsetOf(CallContext::Data, locals)), baseReg);
-        offset = al->index * sizeof(Value);
+        offset = qOffsetOf(CallContext::Data, locals) + al->index * sizeof(Value);
     } break;
     default:
         Q_UNREACHABLE();

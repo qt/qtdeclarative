@@ -148,7 +148,7 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
     inline unsigned int formalParameterCount() const;
 
     QV4::Function *v4Function;
-    Value *locals;
+    Value locals[1];
 };
 V4_ASSERT_IS_TRIVIAL(CallContext)
 

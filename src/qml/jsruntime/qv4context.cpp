@@ -61,7 +61,7 @@ DEFINE_MANAGED_VTABLE(GlobalContext);
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
-    ((sizeof(CallContext::Data) + 7) & ~7) + \
+    sizeof(CallContext::Data) - sizeof(Value) + \
     sizeof(Value) * (f->compiledFunction->nLocals + qMax((uint)argc, f->nFormals)) + sizeof(CallData)
 
 Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData *callData)
@@ -80,7 +80,6 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     c->compilationUnit = function->compilationUnit;
     c->lookups = c->compilationUnit->runtimeLookups;
     c->constantTable = c->compilationUnit->constants;
-    c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     int nLocals = compiledFunction->nLocals;
@@ -314,7 +313,6 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
     ctx->lookups = function->compilationUnit->runtimeLookups;
     ctx->constantTable = function->compilationUnit->constants;
     ctx->outer = this->d();
-    ctx->locals = scope.alloc(function->compiledFunction->nLocals);
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
