@@ -170,7 +170,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
         if (forceMoth) {
             factory = new Moth::ISelFactory;
         } else {
-            factory = new JIT::ISelFactory;
+            factory = new JIT::ISelFactory<>;
             jitDisabled = false;
         }
 #else // !V4_ENABLE_JIT

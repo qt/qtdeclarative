@@ -1825,11 +1825,19 @@ void InstructionSelection<JITAssembler>::visitCJumpEqual(IR::Binop *binop, IR::B
                                 _block, trueBlock, falseBlock);
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
+template <typename JITAssembler>
+QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory<JITAssembler>::createUnitForLoading()
 {
     QQmlRefPointer<CompiledData::CompilationUnit> result;
     result.adopt(new JIT::CompilationUnit);
     return result;
 }
+
+QT_BEGIN_NAMESPACE
+namespace QV4 { namespace JIT {
+template class Q_QML_EXPORT InstructionSelection<>;
+template class Q_QML_EXPORT ISelFactory<>;
+} }
+QT_END_NAMESPACE
 
 #endif // ENABLE(ASSEMBLER)

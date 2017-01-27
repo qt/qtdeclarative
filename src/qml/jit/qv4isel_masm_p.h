@@ -292,13 +292,14 @@ private:
     RegisterInformation fpRegistersToSave;
 };
 
+template <typename JITAssembler = Assembler<DefaultAssemblerTargetConfiguration>>
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     ISelFactory() : EvalISelFactory(QStringLiteral("jit")) {}
     virtual ~ISelFactory() {}
     EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) Q_DECL_OVERRIDE Q_DECL_FINAL
-    { return new InstructionSelection<>(qmlEngine, execAllocator, module, jsGenerator, this); }
+    { return new InstructionSelection<JITAssembler>(qmlEngine, execAllocator, module, jsGenerator, this); }
     bool jitCompileRegexps() const Q_DECL_OVERRIDE Q_DECL_FINAL
     { return true; }
     QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE Q_DECL_FINAL;
