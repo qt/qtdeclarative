@@ -237,6 +237,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwipeView, 2>(uri, 2, 2, "SwipeView");
     qmlRegisterType<QQuickTabBar, 2>(uri, 2, 2, "TabBar");
     qmlRegisterType<QQuickTumbler, 2>(uri, 2, 2, "Tumbler");
+
+    // NOTE: register the latest revisions of all template/control base classes to
+    // make revisioned properties available to their subclasses (synced with Qt 5.9)
+    qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
 }
 
 QT_END_NAMESPACE
