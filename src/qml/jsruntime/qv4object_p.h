@@ -78,8 +78,8 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
-    const Value *propertyData(uint index) const { return memberData->data + index; }
-    Value *propertyData(uint index) { return memberData->data + index; }
+    const Value *propertyData(uint index) const { return memberData->values.v + index; }
+    Value *propertyData(uint index) { return memberData->values.v + index; }
 };
 
 }
@@ -524,7 +524,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
 {
     // ### Clean up
     arrayCreate();
-    if (attributes.isAccessor() || (index > 0x1000 && index > 2*d()->arrayData->alloc)) {
+    if (attributes.isAccessor() || (index > 0x1000 && index > 2*d()->arrayData->values.alloc)) {
         initSparseArray();
     } else {
         arrayData()->vtable()->reallocate(this, index + 1, false);
@@ -539,7 +539,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
 inline void Object::arraySet(uint index, const Value &value)
 {
     arrayCreate();
-    if (index > 0x1000 && index > 2*d()->arrayData->alloc) {
+    if (index > 0x1000 && index > 2*d()->arrayData->values.alloc) {
         initSparseArray();
     }
     ArrayData::insert(this, index, &value);

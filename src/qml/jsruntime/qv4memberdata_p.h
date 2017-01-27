@@ -60,8 +60,7 @@ namespace QV4 {
 namespace Heap {
 
 #define MemberDataMembers(class, Member) \
-    Member(class, uint, size) \
-    Member(class, ValueArray, data)
+    Member(class, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(MemberData, Base) {
     DECLARE_MARK_TABLE(MemberData);
@@ -74,10 +73,10 @@ struct MemberData : Managed
 {
     V4_MANAGED(MemberData, Managed)
 
-    Value &operator[] (uint idx) { return d()->data[idx]; }
-    const Value *data() const { return d()->data; }
-    Value *data() { return d()->data; }
-    inline uint size() const { return d()->size; }
+    Value &operator[] (uint idx) { return d()->values[idx]; }
+    const Value *data() const { return d()->values.v; }
+    Value *data() { return d()->values.v; }
+    inline uint size() const { return d()->values.size; }
 
     static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
 };

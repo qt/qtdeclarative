@@ -733,7 +733,8 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
         memset(m, 0, memberSize);
         o->memberData = static_cast<Heap::MemberData *>(m);
         o->memberData->setVtable(MemberData::staticVTable());
-        o->memberData->size = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
+        o->memberData->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
+        o->memberData->values.size = o->memberData->values.alloc;
         o->memberData->init();
 //        qDebug() << "    got" << o->memberData << o->memberData->size;
     }
@@ -769,17 +770,9 @@ void MemoryManager::drainMarkStack(Value *markBase)
                 case Mark_ValueArray: {
                     Q_ASSERT(m == Mark_ValueArray);
 //                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
-                    uint size;
-                    Value *v = reinterpret_cast<Value *>(mem);
-                    if (h->vtable() == QV4::MemberData::staticVTable()) {
-                        size = static_cast<Heap::MemberData *>(h)->size;
-                    } else if (h->vtable()->isArrayData) {
-                        size = static_cast<Heap::ArrayData *>(h)->alloc;
-                    } else {
-                        size = 0;
-                        Q_ASSERT(false);
-                    }
-                    const Value *end = v + size;
+                    ValueArray *a = reinterpret_cast<ValueArray *>(mem);
+                    Value *v = a->v;
+                    const Value *end = v + a->alloc;
                     while (v < end) {
                         v->mark(engine);
                         ++v;

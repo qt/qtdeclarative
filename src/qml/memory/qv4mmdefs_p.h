@@ -277,8 +277,6 @@ template<>
 struct MarkFlagsForType<Value> {
     static const quint64 markFlags = Mark_Value;
 };
-
-typedef Value ValueArray[1];
 template<>
 struct MarkFlagsForType<ValueArray> {
     static const quint64 markFlags = Mark_ValueArray;

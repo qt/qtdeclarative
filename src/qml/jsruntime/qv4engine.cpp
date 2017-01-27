@@ -600,11 +600,11 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
         size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
         Heap::SimpleArrayData *d = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
         d->init();
-        d->alloc = length;
         d->type = Heap::ArrayData::Simple;
         d->offset = 0;
-        d->len = length;
-        memcpy(&d->arrayData, values, length*sizeof(Value));
+        d->values.alloc = length;
+        d->values.size = length;
+        memcpy(&d->values.v, values, length*sizeof(Value));
         a->d()->arrayData = d;
         a->setArrayLengthUnchecked(length);
     }

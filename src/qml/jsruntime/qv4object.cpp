@@ -62,7 +62,7 @@ void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
     bool hasMD = d()->memberData != nullptr;
-    if ((!hasMD && ic->size) || (hasMD && d()->memberData->size < ic->size))
+    if ((!hasMD && ic->size) || (hasMD && d()->memberData->values.size < ic->size))
         d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
 }
 
@@ -582,7 +582,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
                 Heap::SparseArrayData *sa = o->d()->arrayData.cast<Heap::SparseArrayData>();
-                Property *p = reinterpret_cast<Property *>(sa->arrayData + pidx);
+                Property *p = reinterpret_cast<Property *>(sa->values.v + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
                 PropertyAttributes a = sa->attrs ? sa->attrs[pidx] : Attr_Data;
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
@@ -597,7 +597,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
             it->arrayIndex = UINT_MAX;
         }
         // dense arrays
-        while (it->arrayIndex < o->d()->arrayData->len) {
+        while (it->arrayIndex < o->d()->arrayData->values.size) {
             Heap::SimpleArrayData *sa = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             Value &val = sa->data(it->arrayIndex);
             PropertyAttributes a = o->arrayData()->attributes(it->arrayIndex);
@@ -1132,7 +1132,7 @@ void Object::copyArrayData(Object *other)
         ;
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
-        ArrayData::realloc(this, other->d()->arrayData->type, other->d()->arrayData->alloc, false);
+        ArrayData::realloc(this, other->d()->arrayData->type, other->d()->arrayData->values.alloc, false);
         if (other->arrayType() == Heap::ArrayData::Sparse) {
             Heap::ArrayData *od = other->d()->arrayData;
             Heap::ArrayData *dd = d()->arrayData;
@@ -1140,10 +1140,10 @@ void Object::copyArrayData(Object *other)
             dd->freeList = od->freeList;
         } else {
             Heap::ArrayData *dd = d()->arrayData;
-            dd->len = other->d()->arrayData->len;
+            dd->values.size = other->d()->arrayData->values.size;
             dd->offset = other->d()->arrayData->offset;
         }
-        memcpy(d()->arrayData->arrayData, other->d()->arrayData->arrayData, other->d()->arrayData->alloc*sizeof(Value));
+        memcpy(d()->arrayData->values.v, other->d()->arrayData->values.v, other->d()->arrayData->values.alloc*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }

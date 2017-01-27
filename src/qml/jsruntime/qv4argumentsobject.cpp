@@ -91,7 +91,7 @@ void ArgumentsObject::fullyCreate()
     if (numAccessors) {
         d()->mappedArguments = md->allocate(engine(), numAccessors);
         for (uint i = 0; i < numAccessors; ++i) {
-            d()->mappedArguments->data[i] = context()->callData->args[i];
+            d()->mappedArguments->values[i] = context()->callData->args[i];
             arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
         }
     }
@@ -122,7 +122,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         map->copy(pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData()->getProperty(index);
-        pd->value = d()->mappedArguments->data[index];
+        pd->value = d()->mappedArguments->values[index];
     }
 
     bool strict = engine->current->strictMode;

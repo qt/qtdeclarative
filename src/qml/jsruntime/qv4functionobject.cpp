@@ -302,7 +302,7 @@ void FunctionPrototype::method_apply(const BuiltinFunction *, Scope &scope, Call
                 cData->args[i] = Primitive::undefinedValue();
         } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
             auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
-            uint alen = sad ? sad->len : 0;
+            uint alen = sad ? sad->values.size : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
@@ -345,7 +345,7 @@ void FunctionPrototype::method_bind(const BuiltinFunction *, Scope &scope, CallD
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
     if (callData->argc > 1) {
         boundArgs = MemberData::allocate(scope.engine, callData->argc - 1);
-        boundArgs->d()->size = callData->argc - 1;
+        boundArgs->d()->values.size = callData->argc - 1;
         memcpy(boundArgs->data(), callData->args + 1, (callData->argc - 1)*sizeof(Value));
     }
 

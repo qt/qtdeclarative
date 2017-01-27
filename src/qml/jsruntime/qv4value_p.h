@@ -708,6 +708,20 @@ inline unsigned int Value::toUInt32() const
     return (unsigned int)toInt32();
 }
 
+struct ValueArray {
+    uint size;
+    uint alloc;
+    Value v[1];
+
+    inline Value &operator[] (uint index) {
+        Q_ASSERT(index < alloc);
+        return v[index];
+    }
+    inline const Value &operator[] (uint index) const {
+        Q_ASSERT(index < alloc);
+        return v[index];
+    }
+};
 
 }
 

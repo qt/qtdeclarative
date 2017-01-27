@@ -329,7 +329,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
             if (size) {
                 QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, size);
                 propertyAndMethodStorage.set(v4, data);
-                std::fill(data->data, data->data + data->size, QV4::Encode::undefined());
+                std::fill(data->values.v, data->values.v + data->values.size, QV4::Encode::undefined());
             }
 
             // Need JS wrapper to ensure properties/methods are marked.

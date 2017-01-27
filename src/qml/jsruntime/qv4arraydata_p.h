@@ -98,21 +98,15 @@ struct ArrayDataData {
         Custom = 3
     };
 
-    uint alloc;
     Type type;
+    uint offset;
     PropertyAttributes *attrs;
-    union {
-        uint len;
-        ReturnedValue freeList;
-    };
-    union {
-        uint offset;
-        SparseArray *sparse;
-    };
-    Value arrayData[1];
+    ReturnedValue freeList;
+    SparseArray *sparse;
+    ValueArray values;
 };
 static Q_CONSTEXPR quint64 ArrayData_markTable = \
-        (MarkFlagsForType<decltype(ArrayDataData::arrayData)>::markFlags << (offsetof(ArrayDataData, arrayData) >> 2)) \
+        (MarkFlagsForType<decltype(ArrayDataData::values)>::markFlags << (offsetof(ArrayDataData, values) >> 2)) \
         << (sizeof(Base) >> 2) | QV4::Heap::Base::markTable;
 
 struct ArrayData : public Base, ArrayDataData {
@@ -135,7 +129,7 @@ struct ArrayData : public Base, ArrayDataData {
         return get(i) == Primitive::emptyValue().asReturnedValue();
     }
 
-    inline ReturnedValue length() const {
+    inline uint length() const {
         return vtable()->length(this);
     }
 
@@ -143,17 +137,17 @@ struct ArrayData : public Base, ArrayDataData {
 V4_ASSERT_IS_TRIVIAL(ArrayData)
 
 struct SimpleArrayData : public ArrayData {
-    uint mappedIndex(uint index) const { return (index + offset) % alloc; }
-    Value data(uint index) const { return arrayData[mappedIndex(index)]; }
-    Value &data(uint index) { return arrayData[mappedIndex(index)]; }
+    uint mappedIndex(uint index) const { return (index + offset) % values.alloc; }
+    Value data(uint index) const { return values[mappedIndex(index)]; }
+    Value &data(uint index) { return values[mappedIndex(index)]; }
 
     Property *getProperty(uint index) {
-        if (index >= len)
+        if (index >= values.size)
             return 0;
         index = mappedIndex(index);
-        if (arrayData[index].isEmpty())
+        if (values[index].isEmpty())
             return 0;
-        return reinterpret_cast<Property *>(arrayData + index);
+        return reinterpret_cast<Property *>(values.v + index);
     }
 
     PropertyAttributes attributes(uint i) const {
@@ -179,7 +173,7 @@ struct SparseArrayData : public ArrayData {
         SparseArrayNode *n = sparse->findNode(index);
         if (!n)
             return 0;
-        return reinterpret_cast<Property *>(arrayData + n->value);
+        return reinterpret_cast<Property *>(values.v + n->value);
     }
 
     PropertyAttributes attributes(uint i) const {
@@ -200,15 +194,15 @@ struct Q_QML_EXPORT ArrayData : public Managed
         IsArrayData = true
     };
 
-    uint alloc() const { return d()->alloc; }
-    uint &alloc() { return d()->alloc; }
-    void setAlloc(uint a) { d()->alloc = a; }
+    uint alloc() const { return d()->values.alloc; }
+    uint &alloc() { return d()->values.alloc; }
+    void setAlloc(uint a) { d()->values.alloc = a; }
     Type type() const { return d()->type; }
     void setType(Type t) { d()->type = t; }
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
-    const Value *arrayData() const { return &d()->arrayData[0]; }
-    Value *arrayData() { return &d()->arrayData[0]; }
+    const Value *arrayData() const { return d()->values.v; }
+    Value *arrayData() { return d()->values.v; }
 
     const ArrayVTable *vtable() const { return d()->vtable(); }
     bool isSparse() const { return type() == Heap::ArrayData::Sparse; }
@@ -251,8 +245,8 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     Value data(uint index) const { return d()->data(index); }
     Value &data(uint index) { return d()->data(index); }
 
-    uint &len() { return d()->len; }
-    uint len() const { return d()->len; }
+    uint &len() { return d()->values.size; }
+    uint len() const { return d()->values.size; }
 
     static Heap::ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 

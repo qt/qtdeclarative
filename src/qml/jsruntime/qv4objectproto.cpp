@@ -295,7 +295,7 @@ void ObjectPrototype::method_seal(const BuiltinFunction *, Scope &scope, CallDat
 
     if (o->arrayData()) {
         ArrayData::ensureAttributes(o);
-        for (uint i = 0; i < o->d()->arrayData->alloc; ++i) {
+        for (uint i = 0; i < o->d()->arrayData->values.alloc; ++i) {
             if (!o->arrayData()->isEmpty(i))
                 o->d()->arrayData->attrs[i].setConfigurable(false);
         }
@@ -320,7 +320,7 @@ void ObjectPrototype::method_freeze(const BuiltinFunction *, Scope &scope, CallD
 
     if (o->arrayData()) {
         ArrayData::ensureAttributes(o);
-        for (uint i = 0; i < o->arrayData()->alloc; ++i) {
+        for (uint i = 0; i < o->arrayData()->values.alloc; ++i) {
             if (!o->arrayData()->isEmpty(i))
                 o->arrayData()->attrs[i].setConfigurable(false);
             if (o->arrayData()->attrs[i].isData())
@@ -371,7 +371,7 @@ void ObjectPrototype::method_isSealed(const BuiltinFunction *, Scope &scope, Cal
         return;
     }
 
-    for (uint i = 0; i < o->arrayData()->alloc; ++i) {
+    for (uint i = 0; i < o->arrayData()->values.alloc; ++i) {
         if (!o->arrayData()->isEmpty(i))
             if (o->arrayData()->attributes(i).isConfigurable()) {
                 scope.result = Encode(false);
@@ -411,7 +411,7 @@ void ObjectPrototype::method_isFrozen(const BuiltinFunction *, Scope &scope, Cal
         return;
     }
 
-    for (uint i = 0; i < o->arrayData()->alloc; ++i) {
+    for (uint i = 0; i < o->arrayData()->values.alloc; ++i) {
         if (!o->arrayData()->isEmpty(i))
             if (o->arrayData()->attributes(i).isConfigurable() || o->arrayData()->attributes(i).isWritable()) {
                 scope.result = Encode(false);

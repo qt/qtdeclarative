@@ -199,6 +199,7 @@ struct ScriptFunction;
 struct InternalClass;
 struct Property;
 struct Value;
+struct ValueArray;
 struct Lookup;
 struct ArrayData;
 struct VTable;

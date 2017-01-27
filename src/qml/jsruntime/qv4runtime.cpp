@@ -643,7 +643,7 @@ void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, co
     if (idx < UINT_MAX) {
         if (o->arrayType() == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->arrayData());
-            if (s && idx < s->len && !s->data(idx).isEmpty()) {
+            if (s && idx < s->values.size && !s->data(idx).isEmpty()) {
                 s->data(idx) = value;
                 return;
             }
