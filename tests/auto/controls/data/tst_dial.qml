@@ -474,7 +474,7 @@ TestCase {
     }
 
     function test_snapMode_mouse(data) {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        var dial = createTemporaryObject(dialComponent, testCase, {live: false});
         verify(dial);
 
         dial.snapMode = data.snapMode;
@@ -502,7 +502,7 @@ TestCase {
     }
 
     function test_snapMode_touch(data) {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        var dial = createTemporaryObject(dialComponent, testCase, {live: false});
         verify(dial);
 
         dial.snapMode = data.snapMode;

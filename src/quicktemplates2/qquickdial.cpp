@@ -106,7 +106,7 @@ public:
           pressed(false),
           snapMode(QQuickDial::NoSnap),
           wrap(false),
-          live(false),
+          live(true),
           handle(nullptr)
     {
     }
@@ -323,11 +323,6 @@ void QQuickDial::setTo(qreal to)
     This property holds the value in the range \c from - \c to. The default
     value is \c 0.0.
 
-    Unlike the \l position property, the \c value is not updated by default
-    while the handle is dragged. The value is updated after the value has
-    been chosen and the dial has been released. The \l live property can be
-    used to make the dial provide live updates for the \c value property.
-
     \sa position, live
 */
 qreal QQuickDial::value() const
@@ -358,8 +353,6 @@ void QQuickDial::setValue(qreal value)
 
     The position is expressed as a fraction of the control's angle range (the
     range within which the handle can be moved) in the range \c {0.0 - 1.0}.
-    Unlike the \l value property, the \c position is continuously updated while
-    the handle is dragged.
 
     \sa value, angle
 */
@@ -374,9 +367,6 @@ qreal QQuickDial::position() const
     \readonly
 
     This property holds the angle of the handle.
-
-    Like the \l position property, angle is continuously updated while the
-    handle is dragged.
 
     The range is from \c -140 degrees to \c 140 degrees.
 
@@ -529,9 +519,9 @@ void QQuickDial::setPressed(bool pressed)
     This property holds whether the dial provides live updates for the \l value
     property while the handle is dragged.
 
-    The default value is \c false.
+    The default value is \c true.
 
-    \sa value
+    \sa value, valueAt()
 */
 bool QQuickDial::live() const
 {
