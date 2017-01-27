@@ -690,7 +690,7 @@ TestCase {
         // test with "unbalanced" paddings (left padding != right padding) to ensure
         // that the slider position calculation is done taking padding into account
         // ==> the position is _not_ 0.5 in the middle of the control
-        var control = createTemporaryObject(sliderComponent, testCase, { leftPadding: 10, rightPadding: 20 })
+        var control = createTemporaryObject(sliderComponent, testCase, { leftPadding: 10, rightPadding: 20, live: false })
         verify(control)
 
         var firstPressedSpy = signalSpy.createObject(control, {target: control.first, signalName: "pressedChanged"})
@@ -776,7 +776,7 @@ TestCase {
     }
 
     function test_snapMode_mouse(data) {
-        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2, live: false})
         verify(control)
 
         control.first.value = 0
@@ -807,7 +807,7 @@ TestCase {
     }
 
     function test_snapMode_touch(data) {
-        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2, live: false})
         verify(control)
 
         control.first.value = 0

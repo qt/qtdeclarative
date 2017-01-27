@@ -315,7 +315,7 @@ class QQuickRangeSliderPrivate : public QQuickControlPrivate
 
 public:
     QQuickRangeSliderPrivate()
-        : live(false),
+        : live(true),
           from(defaultFrom),
           to(defaultTo),
           stepSize(0),
@@ -602,11 +602,6 @@ void QQuickRangeSlider::setTo(qreal to)
             If \l to is greater than \l from, the value of the first handle
             must be greater than the second, and vice versa.
 
-            Unlike \l {first.position}{position}, value is not updated by default
-            while the handle is dragged, but rather when it has been released. The
-            \l live property can be used to make the slider provide live updates
-            for value.
-
             The default value is \c 0.0.
     \row
         \li handle
@@ -624,9 +619,7 @@ void QQuickRangeSlider::setTo(qreal to)
         \li This property holds the logical position of the first handle.
 
             The position is expressed as a fraction of the control's size, in the range
-            \c {0.0 - 1.0}. Unlike \l {first.value}{value}, position is
-            continuously updated while the handle is dragged. For visualizing a
-            slider, the right-to-left aware
+            \c {0.0 - 1.0}. For visualizing a slider, the right-to-left aware
             \l {first.visualPosition}{visualPosition} should be used instead.
     \row
         \li pressed
@@ -666,11 +659,6 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
             If \l to is greater than \l from, the value of the first handle
             must be greater than the second, and vice versa.
 
-            Unlike \l {second.position}{position}, value is not updated by default
-            while the handle is dragged, but rather when it has been released. The
-            \l live property can be used to make the slider provide live updates
-            for value.
-
             The default value is \c 0.0.
     \row
         \li handle
@@ -688,9 +676,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li This property holds the logical position of the second handle.
 
             The position is expressed as a fraction of the control's size, in the range
-            \c {0.0 - 1.0}. Unlike \l {second.value}{value}, position is
-            continuously updated while the handle is dragged. For visualizing a
-            slider, the right-to-left aware
+            \c {0.0 - 1.0}. For visualizing a slider, the right-to-left aware
             \l {second.visualPosition}{visualPosition} should be used instead.
     \row
         \li pressed
@@ -795,7 +781,7 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
     This property holds whether the slider provides live updates for the \l first.value
     and \l second.value properties while the respective handles are dragged.
 
-    The default value is \c false.
+    The default value is \c true.
 
     \sa first.value, second.value
 */
