@@ -412,6 +412,9 @@ QQuickScrollIndicatorAttached::~QQuickScrollIndicatorAttached()
             QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, horizontalChangeTypes);
         if (d->vertical)
             QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d,verticalChangeTypes);
+        // NOTE: Use removeItemChangeListener(Geometry) instead of updateOrRemoveGeometryChangeListener(Size).
+        // The latter doesn't remove the listener but only resets its types. Thus, it leaves behind a dangling
+        // pointer on destruction.
         QQuickItemPrivate::get(d->flickable)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
     }
 }

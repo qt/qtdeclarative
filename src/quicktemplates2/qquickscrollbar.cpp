@@ -630,7 +630,10 @@ QQuickScrollBarAttachedPrivate::QQuickScrollBarAttachedPrivate()
 void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
 {
     if (flickable) {
-        QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickItemPrivate::Size);
+        // NOTE: Use removeItemChangeListener(Geometry) instead of updateOrRemoveGeometryChangeListener(Size).
+        // The latter doesn't remove the listener but only resets its types. Thus, it leaves behind a dangling
+        // pointer on destruction.
+        QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         if (horizontal)
             cleanupHorizontal();
         if (vertical)
