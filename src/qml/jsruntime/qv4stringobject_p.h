@@ -121,6 +121,7 @@ struct StringPrototype: StringObject
     static void method_lastIndexOf(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_localeCompare(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_match(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_repeat(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_replace(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_search(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_slice(const BuiltinFunction *, Scope &scope, CallData *callData);

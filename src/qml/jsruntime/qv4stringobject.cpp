@@ -200,6 +200,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare, 1);
     defineDefaultProperty(QStringLiteral("match"), method_match, 1);
+    defineDefaultProperty(QStringLiteral("repeat"), method_repeat, 1);
     defineDefaultProperty(QStringLiteral("replace"), method_replace, 2);
     defineDefaultProperty(QStringLiteral("search"), method_search, 1);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
@@ -456,6 +457,21 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
         scope.result = Encode::null();
     else
         scope.result = a;
+}
+
+void StringPrototype::method_repeat(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    QString value = getThisString(scope, callData);
+    CHECK_EXCEPTION();
+
+    double repeats = callData->args[0].toInteger();
+
+    if (repeats < 0 || qIsInf(repeats)) {
+        scope.result = scope.engine->throwRangeError(QLatin1String("Invalid count value"));
+        return;
+    }
+
+    scope.result = scope.engine->newString(value.repeated(int(repeats)));
 }
 
 static void appendReplacementString(QString *result, const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)

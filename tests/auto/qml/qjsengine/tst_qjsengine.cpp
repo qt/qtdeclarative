@@ -1169,6 +1169,7 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("String.prototype.lastIndexOf") << QString("String.prototype.lastIndexOf") << QString("lastIndexOf");
     QTest::newRow("String.prototype.localeCompare") << QString("String.prototype.localeCompare") << QString("localeCompare");
     QTest::newRow("String.prototype.match") << QString("String.prototype.match") << QString("match");
+    QTest::newRow("String.prototype.repeat") << QString("String.prototype.repeat") << QString("repeat");
     QTest::newRow("String.prototype.replace") << QString("String.prototype.replace") << QString("replace");
     QTest::newRow("String.prototype.search") << QString("String.prototype.search") << QString("search");
     QTest::newRow("String.prototype.slice") << QString("String.prototype.slice") << QString("slice");
