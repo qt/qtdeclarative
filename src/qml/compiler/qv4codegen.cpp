@@ -216,6 +216,10 @@ bool Codegen::ScanFunctions::visit(VariableDeclaration *ast)
     checkName(ast->name, ast->identifierToken);
     if (ast->name == QLatin1String("arguments"))
         _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
+    if (ast->readOnly && !ast->expression) {
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
+        return false;
+    }
     _env->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration);
     return true;
 }
