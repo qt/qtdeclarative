@@ -220,7 +220,15 @@ bool Codegen::ScanFunctions::visit(VariableDeclaration *ast)
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
         return false;
     }
-    _env->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration);
+    QString name = ast->name.toString();
+    const Environment::Member *m = 0;
+    if (_env->memberInfo(name, &m)) {
+        if (m->isConstant || ast->readOnly) {
+            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
+            return false;
+        }
+    }
+    _env->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration, ast->readOnly);
     return true;
 }
 
@@ -391,7 +399,7 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
         _env->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
         if (expr)
-            _env->enter(name, Environment::FunctionDefinition, expr);
+            _env->enter(name, Environment::FunctionDefinition, false /* readonly */, expr);
         if (name == QLatin1String("arguments"))
             _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
         wasStrict = _env->isStrict;
@@ -2044,7 +2052,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->column = loc.startColumn;
 
     if (function->usesArgumentsObject)
-        _env->enter(QStringLiteral("arguments"), Environment::VariableDeclaration);
+        _env->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, false /* readonly */);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_env->compilationMode == FunctionCode || _env->compilationMode == QmlBinding) {
@@ -2062,7 +2070,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 function->LOCAL(inheritedLocal);
                 unsigned tempIndex = entryBlock->newTemp();
                 Environment::Member member = { Environment::UndefinedMember,
-                                               static_cast<int>(tempIndex), 0 };
+                                               static_cast<int>(tempIndex), 0, false /* readonly */ };
                 _env->members.insert(inheritedLocal, member);
             }
         }

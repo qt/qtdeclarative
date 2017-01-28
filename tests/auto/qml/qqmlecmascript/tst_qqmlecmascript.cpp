@@ -8208,6 +8208,12 @@ void tst_qqmlecmascript::constkw_data()
            "v + i\n"
         << false
         << QVariant(25);
+    QTest::newRow("const-multiple-scopes-same-var")
+        << "const v = 3\n"
+           "function f() { const v = 1; return v; }\n"
+           "v + f()\n"
+        << false
+        << QVariant(4);
 
     // error cases
     QTest::newRow("const-no-initializer")
@@ -8218,6 +8224,25 @@ void tst_qqmlecmascript::constkw_data()
         << "const v = 1, i\n"
         << true
         << QVariant("SyntaxError: Missing initializer in const declaration");
+    QTest::newRow("const-no-duplicate")
+        << "const v = 1, v = 2\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("const-no-duplicate-2")
+        << "const v = 1\n"
+           "const v = 2\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("const-no-duplicate-var")
+        << "const v = 1\n"
+           "var v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("var-no-duplicate-const")
+        << "var v = 1\n"
+           "const v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
 }
 
 void tst_qqmlecmascript::constkw()
