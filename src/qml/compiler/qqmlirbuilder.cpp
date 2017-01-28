@@ -1605,7 +1605,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     scan.leaveEnvironment();
     scan.leaveEnvironment();
 
-    _env = 0;
+    _variableEnvironment = 0;
     _function = _module->functions.at(defineFunction(QStringLiteral("context scope"), qmlRoot, 0, 0));
 
     for (int i = 0; i < functions.count(); ++i) {

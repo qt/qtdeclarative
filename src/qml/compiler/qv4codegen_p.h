@@ -463,7 +463,7 @@ protected:
     QV4::IR::BasicBlock *_block;
     QV4::IR::BasicBlock *_exitBlock;
     unsigned _returnAddress;
-    Environment *_env;
+    Environment *_variableEnvironment;
     Loop *_loop;
     AST::LabelledStatement *_labelledStatement;
     ScopeAndFinally *_scopeAndFinally;
@@ -541,7 +541,7 @@ protected:
     // fields:
         Codegen *_cg;
         const QString _sourceCode;
-        Environment *_env;
+        Environment *_variableEnvironment;
         QStack<Environment *> _envStack;
 
         bool _allowFuncDecls;
