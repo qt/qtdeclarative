@@ -141,11 +141,14 @@ protected:
             VariableDeclaration,
             FunctionDefinition
         };
+
         struct Member {
             MemberType type;
             int index;
             AST::FunctionExpression *function;
-            bool isConstant : 1;
+            AST::VariableDeclaration::VariableScope scope;
+
+            bool isLexicallyScoped() const { return this->scope != AST::VariableDeclaration::FunctionScope; }
         };
         typedef QMap<QString, Member> MemberMap;
 
@@ -219,7 +222,7 @@ protected:
             return false;
         }
 
-        void enter(const QString &name, MemberType type, bool isConstant, AST::FunctionExpression *function = 0)
+        void enter(const QString &name, MemberType type, AST::VariableDeclaration::VariableScope scope, AST::FunctionExpression *function = 0)
         {
             if (! name.isEmpty()) {
                 if (type != FunctionDefinition) {
@@ -233,10 +236,10 @@ protected:
                     m.index = -1;
                     m.type = type;
                     m.function = function;
-                    m.isConstant = isConstant;
+                    m.scope = scope;
                     members.insert(name, m);
                 } else {
-                    Q_ASSERT(isConstant == (*it).isConstant);
+                    Q_ASSERT(scope == (*it).scope);
                     if ((*it).type <= type) {
                         (*it).type = type;
                         (*it).function = function;

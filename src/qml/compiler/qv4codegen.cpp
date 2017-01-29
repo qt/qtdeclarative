@@ -216,19 +216,19 @@ bool Codegen::ScanFunctions::visit(VariableDeclaration *ast)
     checkName(ast->name, ast->identifierToken);
     if (ast->name == QLatin1String("arguments"))
         _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-    if (ast->readOnly && !ast->expression) {
+    if (ast->scope == AST::VariableDeclaration::VariableScope::ReadOnlyBlockScope && !ast->expression) {
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
         return false;
     }
     QString name = ast->name.toString();
     const Environment::Member *m = 0;
     if (_variableEnvironment->memberInfo(name, &m)) {
-        if (m->isConstant || ast->readOnly) {
+        if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
             return false;
         }
     }
-    _variableEnvironment->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration, ast->readOnly);
+    _variableEnvironment->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration, ast->scope);
     return true;
 }
 
@@ -399,7 +399,7 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
         _variableEnvironment->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
         if (expr)
-            _variableEnvironment->enter(name, Environment::FunctionDefinition, false /* readonly */, expr);
+            _variableEnvironment->enter(name, Environment::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr);
         if (name == QLatin1String("arguments"))
             _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
         wasStrict = _variableEnvironment->isStrict;
@@ -2052,7 +2052,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->column = loc.startColumn;
 
     if (function->usesArgumentsObject)
-        _variableEnvironment->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, false /* readonly */);
+        _variableEnvironment->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_variableEnvironment->compilationMode == FunctionCode || _variableEnvironment->compilationMode == QmlBinding) {
@@ -2070,7 +2070,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 function->LOCAL(inheritedLocal);
                 unsigned tempIndex = entryBlock->newTemp();
                 Environment::Member member = { Environment::UndefinedMember,
-                                               static_cast<int>(tempIndex), 0, false /* readonly */ };
+                                               static_cast<int>(tempIndex), 0,
+                                               AST::VariableDeclaration::VariableScope::FunctionScope };
                 _variableEnvironment->members.insert(inheritedLocal, member);
             }
         }

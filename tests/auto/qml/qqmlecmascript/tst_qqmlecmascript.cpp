@@ -8243,6 +8243,16 @@ void tst_qqmlecmascript::constkw_data()
            "const v = 1\n"
         << true
         << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("const-no-duplicate-let")
+        << "const v = 1\n"
+           "let v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("let-no-duplicate-const")
+        << "let v = 1\n"
+           "const v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
 }
 
 void tst_qqmlecmascript::constkw()
