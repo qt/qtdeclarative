@@ -98,6 +98,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
 
+    Q_PROPERTY(QJSValue fontInfo READ fontInfo NOTIFY fontInfoChanged REVISION 9)
+
 public:
     QQuickText(QQuickItem *parent=0);
     ~QQuickText();
@@ -248,6 +250,8 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    QJSValue fontInfo() const;
+
 Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
@@ -280,6 +284,7 @@ Q_SIGNALS:
     Q_REVISION(6) void leftPaddingChanged();
     Q_REVISION(6) void rightPaddingChanged();
     Q_REVISION(6) void bottomPaddingChanged();
+    Q_REVISION(9) void fontInfoChanged();
 
 protected:
     QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = 0);
