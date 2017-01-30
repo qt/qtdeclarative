@@ -238,9 +238,9 @@ void QSGDefaultPainterNode::updateGeometry()
 void QSGDefaultPainterNode::updateRenderTarget()
 {
     if (!m_extensionsChecked) {
-        const QSet<QByteArray> extensions = m_context->openglContext()->extensions();
-        m_multisamplingSupported = extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_multisample"))
-            && extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_blit"));
+        QOpenGLExtensions *e = static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions());
+        m_multisamplingSupported = e->hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)
+            && e->hasOpenGLExtension(QOpenGLExtensions::FramebufferBlit);
         m_extensionsChecked = true;
     }
 
