@@ -1185,8 +1185,11 @@ void InstructionSelection::callBuiltinPushWithScope(IR::Expr *arg)
 
 void InstructionSelection::callBuiltinPopScope()
 {
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_GCC("-Wuninitialized")
     Instruction::CallBuiltinPopScope call;
     addInstruction(call);
+    QT_WARNING_POP
 }
 
 void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)
@@ -1335,8 +1338,11 @@ void InstructionSelection::callBuiltinSetupArgumentObject(IR::Expr *result)
 
 void QV4::Moth::InstructionSelection::callBuiltinConvertThisToObject()
 {
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_GCC("-Wuninitialized")
     Instruction::CallBuiltinConvertThisToObject call;
     addInstruction(call);
+    QT_WARNING_POP
 }
 
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)

@@ -133,7 +133,7 @@ struct Location
         QJsonPrivate::qle_bitfield<20, 12> column;
     };
 
-    Location() { line = 0; column = 0; }
+    Location() { line.val = 0; column.val = 0; }
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
@@ -153,7 +153,7 @@ struct RegExp
         QJsonPrivate::qle_bitfield<4, 28> stringIndex;
     };
 
-    RegExp() { flags = 0; stringIndex = 0; }
+    RegExp() { flags.val = 0; stringIndex.val = 0; }
 };
 
 struct Lookup
@@ -171,7 +171,7 @@ struct Lookup
         QJsonPrivate::qle_bitfield<4, 28> nameIndex;
     };
 
-    Lookup() { type_and_flags = 0; nameIndex = 0; }
+    Lookup() { type_and_flags.val = 0; nameIndex.val = 0; }
 };
 
 struct JSClassMember
