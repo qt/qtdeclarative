@@ -962,15 +962,7 @@ void InstructionSelection<JITAssembler>::convertTypeToDouble(IR::Expr *source, I
 
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        _as->rshift32(TrustedImm32(Value::IsDoubleTag_Shift), JITTargetPlatform::ScratchRegister);
-        Jump isDbl = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
-                                              TrustedImm32(0));
-#else
-        _as->and32(TrustedImm32(Value::NotDouble_Mask), JITTargetPlatform::ScratchRegister);
-        Jump isDbl = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
-                                              TrustedImm32(Value::NotDouble_Mask));
-#endif
+        Jump isDbl = _as->generateIsDoubleCheck(JITTargetPlatform::ScratchRegister);
 
         generateRuntimeCall(_as, target, toDouble, PointerToValue(source));
         Jump noDoubleDone = _as->jump();
@@ -980,13 +972,7 @@ void InstructionSelection<JITAssembler>::convertTypeToDouble(IR::Expr *source, I
         Pointer addr2 = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-#if Q_PROCESSOR_WORDSIZE == 8
-            _as->load64(addr2, JITTargetPlatform::ScratchRegister);
-            _as->store64(JITTargetPlatform::ScratchRegister, _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target));
-#else
-            _as->loadDouble(addr2, JITTargetPlatform::FPGpr0);
-            _as->storeDouble(JITTargetPlatform::FPGpr0, _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target));
-#endif
+            _as->memcopyValue(target, addr2, JITTargetPlatform::FPGpr0, JITTargetPlatform::ReturnValueRegister);
         } else {
             _as->loadDouble(addr2, (FPRegisterID) targetTemp->index);
         }

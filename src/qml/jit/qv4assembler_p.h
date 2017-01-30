@@ -345,6 +345,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         destAddr.offset += 4;
         as->store32(TrustedImm32(QV4::Value::Managed_Type_Internal_32), destAddr);
     }
+
+    static Jump generateIsDoubleCheck(JITAssembler *as, RegisterID tagOrValueRegister)
+    {
+        as->and32(TrustedImm32(Value::NotDouble_Mask), tagOrValueRegister);
+        return as->branch32(RelationalCondition::NotEqual, tagOrValueRegister,
+                            TrustedImm32(Value::NotDouble_Mask));
+    }
 };
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
@@ -610,6 +617,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr)
     {
         as->store64(registerWithPtr, destAddr);
+    }
+
+    static Jump generateIsDoubleCheck(JITAssembler *as, RegisterID tagOrValueRegister)
+    {
+        as->rshift32(TrustedImm32(Value::IsDoubleTag_Shift), tagOrValueRegister);
+        return as->branch32(RelationalCondition::NotEqual, tagOrValueRegister,
+                            TrustedImm32(0));
     }
 };
 
@@ -912,6 +926,11 @@ public:
                                                            _nextBlock, currentBlock, trueBlock, falseBlock);
     }
 
+    Jump generateIsDoubleCheck(RegisterID tagOrValueRegister)
+    {
+        return RegisterSizeDependentOps::generateIsDoubleCheck(this, tagOrValueRegister);
+    }
+
     Jump genTryDoubleConversion(IR::Expr *src, FPRegisterID dest);
     Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
     Jump branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
@@ -1174,6 +1193,13 @@ public:
         Q_ASSERT(target.base != scratchRegister);
         TargetConfiguration::MacroAssembler::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
         TargetConfiguration::MacroAssembler::storeDouble(FPGpr0, target);
+    }
+
+    // The scratch register is used to calculate the temp address for the source.
+    void memcopyValue(IR::Expr *target, Pointer source, FPRegisterID fpScratchRegister, RegisterID scratchRegister)
+    {
+        TargetConfiguration::MacroAssembler::loadDouble(source, fpScratchRegister);
+        TargetConfiguration::MacroAssembler::storeDouble(fpScratchRegister, loadAddress(scratchRegister, target));
     }
 
     void storeValue(QV4::Primitive value, RegisterID destination)
