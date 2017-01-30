@@ -287,6 +287,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
         intDone.link(as);
     }
+
+    static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr)
+    {
+        as->store32(registerWithPtr, destAddr);
+        destAddr.offset += 4;
+        as->store32(TrustedImm32(QV4::Value::Managed_Type_Internal_32), destAddr);
+    }
 };
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
@@ -485,6 +492,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         } else {
             as->storeInt32(TargetPlatform::ReturnValueRegister, target);
         }
+    }
+
+    static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr)
+    {
+        as->store64(registerWithPtr, destAddr);
     }
 };
 

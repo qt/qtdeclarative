@@ -535,13 +535,7 @@ void InstructionSelection<JITAssembler>::loadString(const QString &str, IR::Expr
     Pointer srcAddr = _as->loadStringAddress(JITTargetPlatform::ReturnValueRegister, str);
     _as->loadPtr(srcAddr, JITTargetPlatform::ReturnValueRegister);
     Pointer destAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, target);
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    _as->store64(JITTargetPlatform::ReturnValueRegister, destAddr);
-#else
-    _as->store32(JITTargetPlatform::ReturnValueRegister, destAddr);
-    destAddr.offset += 4;
-    _as->store32(TrustedImm32(QV4::Value::Managed_Type_Internal), destAddr);
-#endif
+    JITAssembler::RegisterSizeDependentOps::loadManagedPointer(_as, JITTargetPlatform::ReturnValueRegister, destAddr);
 }
 
 template <typename JITAssembler>
