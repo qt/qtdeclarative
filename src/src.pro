@@ -21,5 +21,3 @@ SUBDIRS += \
     qmldevtools
 
 qtConfig(localserver):!contains(QT_CONFIG, no-qml-debug): SUBDIRS += qmldebug
-
-qmldevtools.CONFIG = host_build

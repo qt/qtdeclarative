@@ -73,7 +73,7 @@ qtHaveModule(widgets) {
 SUBDIRS += $$PUBLICTESTS \
     qqmlextensionplugin
 SUBDIRS += $$METATYPETESTS
-!uikit:!winrt { # no QProcess on uikit/winrt
+!qtConfig(process) {
     !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
     SUBDIRS += qmllint qmlplugindump
 }
