@@ -116,20 +116,20 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
     return Primitive::emptyValue().asReturnedValue();
 }
 
-ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, const Value &object, const Value &index)
+ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx;
     if (object.isObject() && index.asArrayIndex(idx)) {
         l->indexedGetter = indexedGetterObjectInt;
-        return indexedGetterObjectInt(l, object, index);
+        return indexedGetterObjectInt(l, engine, object, index);
     }
-    return indexedGetterFallback(l, object, index);
+    return indexedGetterFallback(l, engine, object, index);
 }
 
-ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, const Value &index)
+ReturnedValue Lookup::indexedGetterFallback(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index)
 {
     Q_UNUSED(l);
-    Scope scope(l->engine);
+    Scope scope(engine);
     uint idx = 0;
     bool isInt = index.asArrayIndex(idx);
 
@@ -147,7 +147,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 
         if (object.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index.toQStringNoThrow()).arg(object.toQStringNoThrow());
-            return l->engine->throwTypeError(message);
+            return engine->throwTypeError(message);
         }
 
         o = RuntimeHelpers::convertToObject(scope.engine, object);
@@ -173,7 +173,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 }
 
 
-ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, const Value &index)
+ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -190,25 +190,25 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
         }
     }
 
-    return indexedGetterFallback(l, object, index);
+    return indexedGetterFallback(l, engine, object, index);
 }
 
-void Lookup::indexedSetterGeneric(Lookup *l, const Value &object, const Value &index, const Value &v)
+void Lookup::indexedSetterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v)
 {
     if (Object *o = object.objectValue()) {
         uint idx;
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex(idx)) {
             l->indexedSetter = indexedSetterObjectInt;
-            indexedSetterObjectInt(l, object, index, v);
+            indexedSetterObjectInt(l, engine, object, index, v);
             return;
         }
     }
-    indexedSetterFallback(l, object, index, v);
+    indexedSetterFallback(l, engine, object, index, v);
 }
 
-void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &index, const Value &value)
+void Lookup::indexedSetterFallback(Lookup *, ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
-    Scope scope(l->engine);
+    Scope scope(engine);
     ScopedObject o(scope, object.toObject(scope.engine));
     if (scope.engine->hasException)
         return;
@@ -230,7 +230,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
     o->put(name, value);
 }
 
-void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value &index, const Value &v)
+void Lookup::indexedSetterObjectInt(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -247,7 +247,7 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value 
             }
         }
     }
-    indexedSetterFallback(l, object, index, v);
+    indexedSetterFallback(l, engine, object, index, v);
 }
 
 ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object)

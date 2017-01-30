@@ -621,6 +621,7 @@ void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *in
     if (useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
         generateLookupCall(target, lookup, qOffsetOf(QV4::Lookup, indexedGetter),
+                           JITTargetPlatform::EngineRegister,
                            PointerToValue(base),
                            PointerToValue(index));
         return;
@@ -636,6 +637,7 @@ void InstructionSelection<JITAssembler>::setElement(IR::Expr *source, IR::Expr *
     if (useFastLookups) {
         uint lookup = registerIndexedSetterLookup();
         generateLookupCall(JITAssembler::Void, lookup, qOffsetOf(QV4::Lookup, indexedSetter),
+                           JITTargetPlatform::EngineRegister,
                            PointerToValue(targetBase), PointerToValue(targetIndex),
                            PointerToValue(source));
         return;

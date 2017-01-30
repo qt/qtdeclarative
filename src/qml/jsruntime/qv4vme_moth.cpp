@@ -484,7 +484,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(LoadElementLookup)
         QV4::Lookup *l = context->d()->lookups + instr.lookup;
-        STOREVALUE(instr.result, l->indexedGetter(l, VALUE(instr.base), VALUE(instr.index)));
+        STOREVALUE(instr.result, l->indexedGetter(l, engine, VALUE(instr.base), VALUE(instr.index)));
     MOTH_END_INSTR(LoadElementLookup)
 
     MOTH_BEGIN_INSTR(StoreElement)
@@ -494,7 +494,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(StoreElementLookup)
         QV4::Lookup *l = context->d()->lookups + instr.lookup;
-        l->indexedSetter(l, VALUE(instr.base), VALUE(instr.index), VALUE(instr.source));
+        l->indexedSetter(l, engine, VALUE(instr.base), VALUE(instr.index), VALUE(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElementLookup)
 

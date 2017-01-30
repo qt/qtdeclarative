@@ -260,8 +260,8 @@ private:
 
     void calculateRegistersToSave(const RegisterInformation &used);
 
-    template <typename Retval, typename Arg1, typename Arg2, typename Arg3>
-    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    template <typename Retval, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         // Note: using the return value register is intentional: for ABIs where the first parameter
         // goes into the same register as the return value (currently only ARM), the prepareCall
@@ -271,13 +271,19 @@ private:
 
          _as->generateFunctionCallImp(true, retval, "lookup getter/setter",
                                       typename JITAssembler::LookupCall(lookupAddr, getterSetterOffset), lookupAddr,
-                                      arg1, arg2, arg3);
+                                      arg1, arg2, arg3, arg4);
     }
 
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
         generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, typename JITAssembler::VoidType());
+    }
+
+    template <typename Retval, typename Arg1, typename Arg2, typename Arg3>
+    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    {
+        generateLookupCall(retval, index, getterSetterOffset, arg1, arg2, arg3, typename JITAssembler::VoidType());
     }
 
     IR::BasicBlock *_block;

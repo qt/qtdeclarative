@@ -174,8 +174,6 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             l->level = -1;
             l->index = UINT_MAX;
             l->nameIndex = compiledLookups[i].nameIndex;
-            if (type == CompiledData::Lookup::Type_IndexedGetter || type == CompiledData::Lookup::Type_IndexedSetter)
-                l->engine = engine;
         }
     }
 
