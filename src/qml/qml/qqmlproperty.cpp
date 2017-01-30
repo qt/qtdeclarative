@@ -790,11 +790,11 @@ void QQmlPropertyPrivate::removeBinding(const QQmlProperty &that)
 QQmlAbstractBinding *
 QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
 {
+    findAliasTarget(object, index, &object, &index);
+
     QQmlData *data = QQmlData::get(object);
     if (!data)
         return 0;
-
-    findAliasTarget(object, index, &object, &index);
 
     const int coreIndex = index.coreIndex();
     const int valueTypeIndex = index.valueTypeIndex();

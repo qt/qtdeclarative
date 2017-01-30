@@ -135,6 +135,7 @@ private slots:
 
     // Bugs
     void crashOnValueProperty();
+    void aliasPropertyBindings_data();
     void aliasPropertyBindings();
     void noContext();
     void assignEmptyVariantMap();
@@ -1833,23 +1834,40 @@ void tst_qqmlproperty::crashOnValueProperty()
     QCOMPARE(p.read(), QVariant(20));
 }
 
-// QTBUG-13719
+void tst_qqmlproperty::aliasPropertyBindings_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("subObject");
+
+    QTest::newRow("same object") << "aliasPropertyBindings.qml" << "";
+    QTest::newRow("different objects") << "aliasPropertyBindings2.qml" << "innerObject";
+}
+
+// QTBUG-13719, QTBUG-58271
 void tst_qqmlproperty::aliasPropertyBindings()
 {
-    QQmlComponent component(&engine, testFileUrl("aliasPropertyBindings.qml"));
+    QFETCH(QString, file);
+    QFETCH(QString, subObject);
+
+    QQmlComponent component(&engine, testFileUrl(file));
 
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(object->property("realProperty").toReal(), 90.);
+    // the object where realProperty lives
+    QObject *realPropertyObject = object;
+    if (!subObject.isEmpty())
+       realPropertyObject = object->property(subObject.toLatin1()).value<QObject*>();
+
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 90.);
     QCOMPARE(object->property("aliasProperty").toReal(), 90.);
 
     object->setProperty("test", 10);
 
-    QCOMPARE(object->property("realProperty").toReal(), 110.);
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 110.);
     QCOMPARE(object->property("aliasProperty").toReal(), 110.);
 
-    QQmlProperty realProperty(object, QLatin1String("realProperty"));
+    QQmlProperty realProperty(realPropertyObject, QLatin1String("realProperty"));
     QQmlProperty aliasProperty(object, QLatin1String("aliasProperty"));
 
     // Check there is a binding on these two properties
@@ -1868,18 +1886,18 @@ void tst_qqmlproperty::aliasPropertyBindings()
     QCOMPARE(QQmlPropertyPrivate::binding(realProperty),
              QQmlPropertyPrivate::binding(aliasProperty));
 
-    QCOMPARE(object->property("realProperty").toReal(), 96.);
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 96.);
     QCOMPARE(object->property("aliasProperty").toReal(), 96.);
 
     // Check the old binding really has not effect any more
     object->setProperty("test", 4);
 
-    QCOMPARE(object->property("realProperty").toReal(), 96.);
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 96.);
     QCOMPARE(object->property("aliasProperty").toReal(), 96.);
 
     object->setProperty("test2", 9);
 
-    QCOMPARE(object->property("realProperty").toReal(), 288.);
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 288.);
     QCOMPARE(object->property("aliasProperty").toReal(), 288.);
 
     // Revert
@@ -1890,12 +1908,12 @@ void tst_qqmlproperty::aliasPropertyBindings()
     QCOMPARE(QQmlPropertyPrivate::binding(realProperty),
              QQmlPropertyPrivate::binding(aliasProperty));
 
-    QCOMPARE(object->property("realProperty").toReal(), 20.);
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 20.);
     QCOMPARE(object->property("aliasProperty").toReal(), 20.);
 
     object->setProperty("test2", 3);
 
-    QCOMPARE(object->property("realProperty").toReal(), 20.);
+    QCOMPARE(realPropertyObject->property("realProperty").toReal(), 20.);
     QCOMPARE(object->property("aliasProperty").toReal(), 20.);
 
     delete object;
@@ -1996,7 +2014,7 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     // V8 error message for invalid binding to anchor
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":14:33: Unable to assign QQuickItem_QML_6 to QQuickAnchorLine");
+    expectedWarning = testUrl.toString() + QString::fromLatin1(":14:33: Unable to assign QQuickItem_QML_8 to QQuickAnchorLine");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     QQmlComponent component(&engine, testUrl);
