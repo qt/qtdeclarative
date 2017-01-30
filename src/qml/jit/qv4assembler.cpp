@@ -516,6 +516,38 @@ void Assembler<TargetConfiguration>::setStackLayout(int maxArgCountForBuiltins, 
     _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave, fpRegistersToSave));
 }
 
+template <typename TargetConfiguration>
+void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInformation regularRegistersToSave, RegisterInformation fpRegistersToSave)
+{
+    if (!s) {
+        // this only happens if the method doesn't have a return statement and can
+        // only exit through an exception
+    } else if (IR::Temp *t = s->expr->asTemp()) {
+        RegisterSizeDependentOps::setFunctionReturnValueFromTemp(this, t);
+    } else if (IR::Const *c = s->expr->asConst()) {
+        QV4::Primitive retVal = convertToValue(c);
+        RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
+    } else {
+        Q_UNREACHABLE();
+        Q_UNUSED(s);
+    }
+
+    Label leaveStackFrame = label();
+
+    const int locals = stackLayout().calculateJSStackFrameSize();
+    subPtr(TrustedImm32(sizeof(QV4::Value)*locals), JITTargetPlatform::LocalsRegister);
+    loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
+    loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, engine)), JITTargetPlatform::ScratchRegister);
+    storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+
+    leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
+    ret();
+
+    exceptionReturnLabel = label();
+    QV4::Primitive retVal = Primitive::undefinedValue();
+    RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
+    jump(leaveStackFrame);
+}
 
 namespace {
 class QIODevicePrintStream: public FilePrintStream

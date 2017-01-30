@@ -199,6 +199,52 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->store32(TargetPlatform::HighReturnValueRegister, destination);
     }
 
+    static void setFunctionReturnValueFromTemp(JITAssembler *as, IR::Temp *t)
+    {
+        const auto lowReg = TargetPlatform::LowReturnValueRegister;
+        const auto highReg = TargetPlatform::HighReturnValueRegister;
+
+        if (t->kind == IR::Temp::PhysicalRegister) {
+            switch (t->type) {
+            case IR::DoubleType:
+                as->moveDoubleToInts((FPRegisterID) t->index, lowReg, highReg);
+                break;
+            case IR::UInt32Type: {
+                RegisterID srcReg = (RegisterID) t->index;
+                Jump intRange = as->branch32(JITAssembler::GreaterThanOrEqual, srcReg, TrustedImm32(0));
+                as->convertUInt32ToDouble(srcReg, TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
+                as->moveDoubleToInts(TargetPlatform::FPGpr0, lowReg, highReg);
+                Jump done = as->jump();
+                intRange.link(as);
+                as->move(srcReg, lowReg);
+                as->move(TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
+                done.link(as);
+            } break;
+            case IR::SInt32Type:
+                as->move((RegisterID) t->index, lowReg);
+                as->move(TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
+                break;
+            case IR::BoolType:
+                as->move((RegisterID) t->index, lowReg);
+                as->move(TrustedImm32(QV4::Value::Boolean_Type_Internal), highReg);
+                break;
+            default:
+                Q_UNREACHABLE();
+            }
+        } else {
+            Pointer addr = as->loadAddress(TargetPlatform::ScratchRegister, t);
+            as->load32(addr, lowReg);
+            addr.offset += 4;
+            as->load32(addr, highReg);
+        }
+    }
+
+    static void setFunctionReturnValueFromConst(JITAssembler *as, QV4::Primitive retVal)
+    {
+        as->move(TrustedImm32(retVal.int_32()), TargetPlatform::LowReturnValueRegister);
+        as->move(TrustedImm32(retVal.tag()), TargetPlatform::HighReturnValueRegister);
+    }
+
     static void loadArgumentInRegister(JITAssembler *as, IR::Temp* temp, RegisterID dest, int argumentNumber)
     {
         Q_UNUSED(as);
@@ -344,6 +390,56 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     static void storeReturnValue(JITAssembler *as, const Pointer &dest)
     {
         as->store64(TargetPlatform::ReturnValueRegister, dest);
+    }
+
+    static void setFunctionReturnValueFromTemp(JITAssembler *as, IR::Temp *t)
+    {
+        if (t->kind == IR::Temp::PhysicalRegister) {
+            if (t->type == IR::DoubleType) {
+                as->moveDoubleTo64((FPRegisterID) t->index,
+                                    TargetPlatform::ReturnValueRegister);
+                as->move(TrustedImm64(QV4::Value::NaNEncodeMask),
+                         TargetPlatform::ScratchRegister);
+                as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+            } else if (t->type == IR::UInt32Type) {
+                RegisterID srcReg = (RegisterID) t->index;
+                Jump intRange = as->branch32(RelationalCondition::GreaterThanOrEqual, srcReg, TrustedImm32(0));
+                as->convertUInt32ToDouble(srcReg, TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
+                as->moveDoubleTo64(TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
+                as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
+                as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+                Jump done = as->jump();
+                intRange.link(as);
+                as->zeroExtend32ToPtr(srcReg, TargetPlatform::ReturnValueRegister);
+                quint64 tag = QV4::Value::Integer_Type_Internal;
+                as->or64(TrustedImm64(tag << 32),
+                         TargetPlatform::ReturnValueRegister);
+                done.link(as);
+            } else {
+                as->zeroExtend32ToPtr((RegisterID) t->index, TargetPlatform::ReturnValueRegister);
+                quint64 tag;
+                switch (t->type) {
+                case IR::SInt32Type:
+                    tag = QV4::Value::Integer_Type_Internal;
+                    break;
+                case IR::BoolType:
+                    tag = QV4::Value::Boolean_Type_Internal;
+                    break;
+                default:
+                    tag = 31337; // bogus value
+                    Q_UNREACHABLE();
+                }
+                as->or64(TrustedImm64(tag << 32),
+                         TargetPlatform::ReturnValueRegister);
+            }
+        } else {
+            as->copyValue(TargetPlatform::ReturnValueRegister, t);
+        }
+    }
+
+    static void setFunctionReturnValueFromConst(JITAssembler *as, QV4::Primitive retVal)
+    {
+        as->move(TrustedImm64(retVal.rawValue()), TargetPlatform::ReturnValueRegister);
     }
 
     static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
@@ -542,6 +638,7 @@ public:
     using MacroAssembler::convertInt32ToDouble;
     using MacroAssembler::rshift32;
     using MacroAssembler::storePtr;
+    using MacroAssembler::ret;
 
     using JITTargetPlatform = typename TargetConfiguration::Platform;
     using JITTargetPlatform::RegisterArgumentCount;
@@ -1434,6 +1531,8 @@ public:
         done.link(this);
         return scratchReg;
     }
+
+    void returnFromFunction(IR::Ret *s, RegisterInformation regularRegistersToSave, RegisterInformation fpRegistersToSave);
 
     JSC::MacroAssemblerCodeRef link(int *codeSize);
 
