@@ -164,19 +164,20 @@ struct Q_QML_EXPORT Base {
 };
 V4_ASSERT_IS_TRIVIAL(Base)
 
-template <typename T>
+template <typename T, size_t>
 struct Pointer {
-    T *operator->() const { return ptr; }
-    operator T *() const { return ptr; }
+    T operator->() const { return ptr; }
+    operator T () const { return ptr; }
 
-    Pointer &operator =(T *t) { ptr = t; return *this; }
+    Pointer &operator =(T t) { ptr = t; return *this; }
 
     template <typename Type>
     Type *cast() { return static_cast<Type *>(ptr); }
 
-    T *ptr;
+    T ptr;
 };
-V4_ASSERT_IS_TRIVIAL(Pointer<void>)
+typedef Pointer<char *, 0> V4PointerCheck;
+V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
 
 }
 

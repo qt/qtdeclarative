@@ -66,8 +66,8 @@ struct BuiltinFunction;
 namespace Heap {
 
 #define FunctionObjectMembers(class, Member) \
-    Member(class, Pointer<ExecutionContext>, scope) \
-    Member(class, Function *, function)
+    Member(class, Pointer, ExecutionContext *, scope) \
+    Member(class, NoMark, Function *, function)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARK_TABLE(FunctionObject);
@@ -122,9 +122,9 @@ struct ScriptFunction : FunctionObject {
 };
 
 #define BoundFunctionMembers(class, Member) \
-    Member(class, Pointer<FunctionObject>, target) \
-    Member(class, Value, boundThis) \
-    Member(class, Pointer<MemberData>, boundArgs)
+    Member(class, Pointer, FunctionObject *, target) \
+    Member(class, Value, Value, boundThis) \
+    Member(class, Pointer, MemberData *, boundArgs)
 
 DECLARE_HEAP_OBJECT(BoundFunction, FunctionObject) {
     DECLARE_MARK_TABLE(BoundFunction);

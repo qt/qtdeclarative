@@ -184,7 +184,7 @@ namespace Heap {
     struct DataView;
     struct TypedArray;
 
-    template <typename T> struct Pointer;
+    template <typename T, size_t> struct Pointer;
 }
 
 class MemoryManager;
@@ -199,10 +199,11 @@ struct ScriptFunction;
 struct InternalClass;
 struct Property;
 struct Value;
-struct ValueArray;
+template<size_t> struct ValueArray;
 struct Lookup;
 struct ArrayData;
 struct VTable;
+struct Function;
 
 struct BooleanObject;
 struct NumberObject;

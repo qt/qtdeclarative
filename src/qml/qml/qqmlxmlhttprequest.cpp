@@ -1598,7 +1598,7 @@ struct QQmlXMLHttpRequestWrapper : Object {
 };
 
 #define QQmlXMLHttpRequestCtorMembers(class, Member) \
-    Member(class, Pointer<Object>, proto)
+    Member(class, Pointer, Object *, proto)
 
 DECLARE_HEAP_OBJECT(QQmlXMLHttpRequestCtor, FunctionObject) {
     DECLARE_MARK_TABLE(QQmlXMLHttpRequestCtor);

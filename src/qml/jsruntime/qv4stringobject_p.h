@@ -61,7 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 #define StringObjectMembers(class, Member) \
-    Member(class, Pointer<String>, string)
+    Member(class, Pointer, String *, string)
 
 DECLARE_HEAP_OBJECT(StringObject, Object) {
     DECLARE_MARK_TABLE(StringObject);

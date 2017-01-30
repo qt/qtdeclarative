@@ -64,9 +64,9 @@ struct DataViewCtor : FunctionObject {
 };
 
 #define DataViewMembers(class, Member) \
-    Member(class, Pointer<ArrayBuffer>, buffer) \
-    Member(class, uint, byteLength) \
-    Member(class, uint, byteOffset)
+    Member(class, Pointer, ArrayBuffer *, buffer) \
+    Member(class, NoMark, uint, byteLength) \
+    Member(class, NoMark, uint, byteOffset)
 
 DECLARE_HEAP_OBJECT(DataView, Object) {
     DECLARE_MARK_TABLE(DataView);

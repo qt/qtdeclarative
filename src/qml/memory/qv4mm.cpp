@@ -762,15 +762,15 @@ void MemoryManager::drainMarkStack(Value *markBase)
                     break;
                 case Mark_Pointer: {
 //                    qDebug() << "marking pointer at " << mem;
-                    Heap::Pointer<Heap::Base> *p = reinterpret_cast<Heap::Pointer<Heap::Base> *>(mem);
-                    if (*p)
-                        (*p)->mark(engine);
+                    Heap::Base *p = reinterpret_cast<Heap::Base *>(mem);
+                    if (p)
+                        p->mark(engine);
                     break;
                 }
                 case Mark_ValueArray: {
                     Q_ASSERT(m == Mark_ValueArray);
 //                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
-                    ValueArray *a = reinterpret_cast<ValueArray *>(mem);
+                    ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
                     Value *v = a->v;
                     const Value *end = v + a->alloc;
                     while (v < end) {

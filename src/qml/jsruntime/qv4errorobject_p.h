@@ -64,7 +64,7 @@ namespace Heap {
 
 
 #define ErrorObjectMembers(class, Member) \
-    Member(class, Pointer<String>, stack)
+    Member(class, Pointer, String *, stack)
 
 DECLARE_HEAP_OBJECT(ErrorObject, Object) {
     DECLARE_MARK_TABLE(ErrorObject);

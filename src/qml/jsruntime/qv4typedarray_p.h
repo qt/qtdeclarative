@@ -73,11 +73,11 @@ struct TypedArrayOperations {
 namespace Heap {
 
 #define TypedArrayMembers(class, Member) \
-    Member(class, Pointer<ArrayBuffer>, buffer) \
-    Member(class, const TypedArrayOperations *, type) \
-    Member(class, uint, byteLength) \
-    Member(class, uint, byteOffset) \
-    Member(class, uint, arrayType)
+    Member(class, Pointer, ArrayBuffer *, buffer) \
+    Member(class, NoMark, const TypedArrayOperations *, type) \
+    Member(class, NoMark, uint, byteLength) \
+    Member(class, NoMark, uint, byteOffset) \
+    Member(class, NoMark, uint, arrayType)
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
     DECLARE_MARK_TABLE(TypedArray);

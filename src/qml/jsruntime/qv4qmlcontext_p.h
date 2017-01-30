@@ -78,7 +78,7 @@ struct QmlContextWrapper : Object {
 };
 
 #define QmlContextMembers(class, Member) \
-    Member(class, Pointer<QmlContextWrapper>, qml)
+    Member(class, Pointer, QmlContextWrapper *, qml)
 
 DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
     DECLARE_MARK_TABLE(QmlContext);

@@ -74,8 +74,8 @@ namespace QV4 {
 namespace Heap {
 
 #define RegExpObjectMembers(class, Member) \
-    Member(class, Pointer<RegExp>, value) \
-    Member(class, bool, global)
+    Member(class, Pointer, RegExp *, value) \
+    Member(class, NoMark, bool, global)
 
 DECLARE_HEAP_OBJECT(RegExpObject, Object) {
     DECLARE_MARK_TABLE(RegExpObject);
@@ -86,10 +86,10 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
 };
 
 #define RegExpCtorMembers(class, Member) \
-    Member(class, Value, lastMatch) \
-    Member(class, Pointer<String>, lastInput) \
-    Member(class, int, lastMatchStart) \
-    Member(class, int, lastMatchEnd)
+    Member(class, Value, Value, lastMatch) \
+    Member(class, Pointer, String *, lastInput) \
+    Member(class, NoMark, int, lastMatchStart) \
+    Member(class, NoMark, int, lastMatchEnd)
 
 DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
     DECLARE_MARK_TABLE(RegExpCtor);

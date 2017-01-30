@@ -96,10 +96,10 @@ private:
 };
 
 #define QObjectMethodMembers(class, Member) \
-    Member(class, Pointer<QQmlValueTypeWrapper>, valueTypeWrapper) \
-    Member(class, QQmlQPointer<QObject>, qObj) \
-    Member(class, QQmlPropertyCache *, _propertyCache) \
-    Member(class, int, index)
+    Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper) \
+    Member(class, NoMark, QQmlQPointer<QObject>, qObj) \
+    Member(class, NoMark, QQmlPropertyCache *, _propertyCache) \
+    Member(class, NoMark, int, index)
 
 DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     DECLARE_MARK_TABLE(QObjectMethod);

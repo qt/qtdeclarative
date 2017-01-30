@@ -1047,11 +1047,11 @@ namespace QV4 {
 namespace Heap {
 
 #define QmlIncubatorObjectMembers(class, Member) \
-    Member(class, Value, valuemap) \
-    Member(class, Value, statusChanged) \
-    Member(class, Pointer<QmlContext>, qmlContext) \
-    Member(class, QQmlComponentIncubator *, incubator) \
-    Member(class, QQmlQPointer<QObject>, parent)
+    Member(class, Value, Value, valuemap) \
+    Member(class, Value, Value, statusChanged) \
+    Member(class, Pointer, QmlContext *, qmlContext) \
+    Member(class, NoMark, QQmlComponentIncubator *, incubator) \
+    Member(class, NoMark, QQmlQPointer<QObject>, parent)
 
 DECLARE_HEAP_OBJECT(QmlIncubatorObject, Object) {
     DECLARE_MARK_TABLE(QmlIncubatorObject);

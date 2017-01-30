@@ -265,27 +265,16 @@ enum MarkFlags {
     Mark_ValueArray = 3
 };
 
-template<typename T>
-struct MarkFlagsForType {
-    static const quint64 markFlags = Mark_NoMark;
-};
-template<typename T>
-struct MarkFlagsForType<Heap::Pointer<T>> {
-    static const quint64 markFlags = Mark_Pointer;
-};
-template<>
-struct MarkFlagsForType<Value> {
-    static const quint64 markFlags = Mark_Value;
-};
-template<>
-struct MarkFlagsForType<ValueArray> {
-    static const quint64 markFlags = Mark_ValueArray;
-};
+#define HEAP_OBJECT_MEMBER_EXPANSION(c, gcType, type, name) \
+    HEAP_OBJECT_MEMBER_EXPANSION_##gcType(c, type, name)
 
-#define HEAP_OBJECT_MEMBER_EXPANSION(c, type, name) type name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_Pointer(c, type, name) Pointer<type, 0> name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_NoMark(c, type, name) type name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_Value(c, type, name) type name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_ValueArray(c, type, name) ValueArray<0> name;
 
-#define HEAP_OBJECT_MARK_EXPANSION(class, type, name) \
-    (MarkFlagsForType<decltype(class::name)>::markFlags << (offsetof(class, name) >> 2)) |
+#define HEAP_OBJECT_MARK_EXPANSION(class, gcType, type, name) \
+    (Mark_##gcType << (offsetof(class, name) >> 2)) |
 
 #define DECLARE_HEAP_OBJECT(name, base) \
 struct name##Data { \
@@ -298,8 +287,6 @@ static Q_CONSTEXPR quint64 name##_markTable = \
 struct name : base, name##Data
 
 #define DECLARE_MARK_TABLE(class) static Q_CONSTEXPR quint64 markTable = class##_markTable
-
-
 
 }
 

@@ -1132,7 +1132,8 @@ void Object::copyArrayData(Object *other)
         ;
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
-        ArrayData::realloc(this, other->d()->arrayData->type, other->d()->arrayData->values.alloc, false);
+        ArrayData::realloc(this, static_cast<ArrayData::Type>(other->d()->arrayData->type),
+                           other->d()->arrayData->values.alloc, false);
         if (other->arrayType() == Heap::ArrayData::Sparse) {
             Heap::ArrayData *od = other->d()->arrayData;
             Heap::ArrayData *dd = d()->arrayData;

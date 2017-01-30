@@ -90,27 +90,18 @@ struct ArrayVTable
 
 namespace Heap {
 
-struct ArrayDataData {
-    enum Type {
-        Simple = 0,
-        Complex = 1,
-        Sparse = 2,
-        Custom = 3
-    };
+#define ArrayDataMembers(class, Member) \
+    Member(class, NoMark, uint, type) \
+    Member(class, NoMark, uint, offset) \
+    Member(class, NoMark, PropertyAttributes *, attrs) \
+    Member(class, NoMark, ReturnedValue, freeList) \
+    Member(class, NoMark, SparseArray *, sparse) \
+    Member(class, ValueArray, ValueArray, values)
 
-    Type type;
-    uint offset;
-    PropertyAttributes *attrs;
-    ReturnedValue freeList;
-    SparseArray *sparse;
-    ValueArray values;
-};
-static Q_CONSTEXPR quint64 ArrayData_markTable = \
-        (MarkFlagsForType<decltype(ArrayDataData::values)>::markFlags << (offsetof(ArrayDataData, values) >> 2)) \
-        << (sizeof(Base) >> 2) | QV4::Heap::Base::markTable;
-
-struct ArrayData : public Base, ArrayDataData {
+DECLARE_HEAP_OBJECT(ArrayData, Base) {
     DECLARE_MARK_TABLE(ArrayData);
+
+    enum Type { Simple = 0, Complex = 1, Sparse = 2, Custom = 3 };
 
     bool isSparse() const { return type == Sparse; }
 
@@ -197,7 +188,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     uint alloc() const { return d()->values.alloc; }
     uint &alloc() { return d()->values.alloc; }
     void setAlloc(uint a) { d()->values.alloc = a; }
-    Type type() const { return d()->type; }
+    Type type() const { return static_cast<Type>(d()->type); }
     void setType(Type t) { d()->type = t; }
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }

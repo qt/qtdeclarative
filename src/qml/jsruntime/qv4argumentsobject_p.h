@@ -60,7 +60,7 @@ namespace QV4 {
 namespace Heap {
 
 #define ArgumentsGetterFunctionMembers(class, Member) \
-    Member(class, uint, index)
+    Member(class, NoMark, uint, index)
 
 DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
     DECLARE_MARK_TABLE(ArgumentsGetterFunction);
@@ -68,7 +68,7 @@ DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
 };
 
 #define ArgumentsSetterFunctionMembers(class, Member) \
-    Member(class, uint, index)
+    Member(class, NoMark, uint, index)
 
 DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
     DECLARE_MARK_TABLE(ArgumentsSetterFunction);
@@ -76,9 +76,9 @@ DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
 };
 
 #define ArgumentsObjectMembers(class, Member) \
-    Member(class, Pointer<CallContext>, context) \
-    Member(class, Pointer<MemberData>, mappedArguments) \
-    Member(class, bool, fullyCreated)
+    Member(class, Pointer, CallContext *, context) \
+    Member(class, Pointer, MemberData *, mappedArguments) \
+    Member(class, NoMark, bool, fullyCreated)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
     DECLARE_MARK_TABLE(ArgumentsObject);

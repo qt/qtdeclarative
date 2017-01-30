@@ -68,10 +68,10 @@ struct BuiltinFunction;
 namespace Heap {
 
 #define ObjectMembers(class, Member) \
-    Member(class, InternalClass *, internalClass) \
-    Member(class, Pointer<Object>, prototype) \
-    Member(class, Pointer<MemberData>, memberData) \
-    Member(class, Pointer<ArrayData>, arrayData)
+    Member(class, NoMark, InternalClass *, internalClass) \
+    Member(class, Pointer, Object *, prototype) \
+    Member(class, Pointer, MemberData *, memberData) \
+    Member(class, Pointer, ArrayData *, arrayData)
 
 DECLARE_HEAP_OBJECT(Object, Base) {
     DECLARE_MARK_TABLE(Object);
@@ -299,7 +299,7 @@ public:
     void push_back(const Value &v);
 
     ArrayData::Type arrayType() const {
-        return arrayData() ? d()->arrayData->type : Heap::ArrayData::Simple;
+        return arrayData() ? static_cast<ArrayData::Type>(d()->arrayData->type) : Heap::ArrayData::Simple;
     }
     // ### remove me
     void setArrayType(ArrayData::Type t) {

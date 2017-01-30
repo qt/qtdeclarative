@@ -97,7 +97,7 @@ namespace Heap {
 struct QmlContext;
 
 #define ExecutionContextMembers(class, Member) \
-    Member(class, Pointer<ExecutionContext>, outer)
+    Member(class, Pointer, ExecutionContext *, outer)
 
 DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     DECLARE_MARK_TABLE(ExecutionContext);
@@ -133,8 +133,8 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
 #define SimpleCallContextMembers(class, Member) \
-    Member(class, Pointer<Object>, activation) \
-    Member(class, QV4::Function *, v4Function)
+    Member(class, Pointer, Object *, activation) \
+    Member(class, NoMark, QV4::Function *, v4Function)
 
 DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
     DECLARE_MARK_TABLE(SimpleCallContext);
@@ -150,8 +150,8 @@ DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
 V4_ASSERT_IS_TRIVIAL(SimpleCallContext)
 
 #define CallContextMembers(class, Member) \
-    Member(class, Pointer<FunctionObject>, function) \
-    Member(class, ValueArray, locals) \
+    Member(class, Pointer, FunctionObject *, function) \
+    Member(class, ValueArray, ValueArray, locals) \
 
 DECLARE_HEAP_OBJECT(CallContext, SimpleCallContext) {
     DECLARE_MARK_TABLE(CallContext);
@@ -160,7 +160,7 @@ DECLARE_HEAP_OBJECT(CallContext, SimpleCallContext) {
 };
 
 #define GlobalContextMembers(class, Member) \
-    Member(class, Pointer<Object>, global)
+    Member(class, Pointer, Object *, global)
 
 DECLARE_HEAP_OBJECT(GlobalContext, ExecutionContext) {
     DECLARE_MARK_TABLE(GlobalContext);
@@ -170,8 +170,8 @@ DECLARE_HEAP_OBJECT(GlobalContext, ExecutionContext) {
 V4_ASSERT_IS_TRIVIAL(GlobalContext)
 
 #define CatchContextMembers(class, Member) \
-    Member(class, Pointer<String>, exceptionVarName) \
-    Member(class, Value, exceptionValue)
+    Member(class, Pointer, String *, exceptionVarName) \
+    Member(class, Value, Value, exceptionValue)
 
 DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
     DECLARE_MARK_TABLE(CatchContext);
@@ -181,7 +181,7 @@ DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
 V4_ASSERT_IS_TRIVIAL(CatchContext)
 
 #define WithContextMembers(class, Member) \
-    Member(class, Pointer<Object>, withObject)
+    Member(class, Pointer, Object *, withObject)
 
 DECLARE_HEAP_OBJECT(WithContext, ExecutionContext) {
     DECLARE_MARK_TABLE(WithContext);

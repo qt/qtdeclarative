@@ -708,6 +708,7 @@ inline unsigned int Value::toUInt32() const
     return (unsigned int)toInt32();
 }
 
+template <size_t offset>
 struct ValueArray {
     uint size;
     uint alloc;
