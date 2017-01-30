@@ -68,6 +68,7 @@ struct Function;
 struct Function;
 struct Identifier;
 struct CallContext;
+struct SimpleCallContext;
 struct CatchContext;
 struct WithContext;
 struct QmlContext;
@@ -131,14 +132,12 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
 };
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
-#define CallContextMembers(class, Member) \
-    Member(class, Pointer<FunctionObject>, function) \
-    Member(class, Pointer<Object>, activation)
+#define SimpleCallContextMembers(class, Member) \
+    Member(class, Pointer<Object>, activation) \
+    Member(class, QV4::Function *, v4Function)
 
-DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(CallContext);
-    static CallContext *createSimpleContext(ExecutionEngine *v4);
-    void freeSimpleCallContext();
+DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
+    DECLARE_MARK_TABLE(SimpleCallContext);
 
     void init(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
     {
@@ -147,10 +146,18 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
 
     inline unsigned int formalParameterCount() const;
 
-    QV4::Function *v4Function;
-    Value locals[1];
 };
-V4_ASSERT_IS_TRIVIAL(CallContext)
+V4_ASSERT_IS_TRIVIAL(SimpleCallContext)
+
+#define CallContextMembers(class, Member) \
+    Member(class, Pointer<FunctionObject>, function) \
+    Member(class, ValueArray, locals) \
+
+DECLARE_HEAP_OBJECT(CallContext, SimpleCallContext) {
+    DECLARE_MARK_TABLE(CallContext);
+
+    using SimpleCallContext::formalParameterCount;
+};
 
 #define GlobalContextMembers(class, Member) \
     Member(class, Pointer<Object>, global)
@@ -217,8 +224,8 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue getPropertyAndBase(String *name, Value *base);
     bool deleteProperty(String *name);
 
-    inline CallContext *asCallContext();
-    inline const CallContext *asCallContext() const;
+    inline SimpleCallContext *asSimpleCallContext();
+    inline const SimpleCallContext *asSimpleCallContext() const;
     inline const CatchContext *asCatchContext() const;
     inline const WithContext *asWithContext() const;
 
@@ -241,9 +248,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     void simpleCall(Scope &scope, CallData *callData, QV4::Function *function);
 };
 
-struct Q_QML_EXPORT CallContext : public ExecutionContext
+struct Q_QML_EXPORT SimpleCallContext : public ExecutionContext
 {
-    V4_MANAGED(CallContext, ExecutionContext)
+    V4_MANAGED(SimpleCallContext, ExecutionContext)
 
     // formals are in reverse order
     Identifier * const *formals() const;
@@ -252,14 +259,16 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
     unsigned int variableCount() const;
 
     inline ReturnedValue argument(int i) const;
-    bool needsOwnArguments() const;
-
-    static void markObjects(Heap::Base *m, ExecutionEngine *e);
 };
 
-inline ReturnedValue CallContext::argument(int i) const {
+inline ReturnedValue SimpleCallContext::argument(int i) const {
     return i < argc() ? args()[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
+
+struct Q_QML_EXPORT CallContext : public SimpleCallContext
+{
+    V4_MANAGED(CallContext, SimpleCallContext)
+};
 
 struct GlobalContext : public ExecutionContext
 {
@@ -277,14 +286,14 @@ struct WithContext : public ExecutionContext
     V4_MANAGED(WithContext, ExecutionContext)
 };
 
-inline CallContext *ExecutionContext::asCallContext()
+inline SimpleCallContext *ExecutionContext::asSimpleCallContext()
 {
-    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
+    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<SimpleCallContext *>(this) : 0;
 }
 
-inline const CallContext *ExecutionContext::asCallContext() const
+inline const SimpleCallContext *ExecutionContext::asSimpleCallContext() const
 {
-    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
+    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const SimpleCallContext *>(this) : 0;
 }
 
 inline const CatchContext *ExecutionContext::asCatchContext() const

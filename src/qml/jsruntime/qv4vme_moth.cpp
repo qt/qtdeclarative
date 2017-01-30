@@ -410,10 +410,14 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         QV4::Heap::ExecutionContext *scope = context->d();
         int i = 0;
         while (scope) {
-            if (scope->type >= QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
+            if (scope->type == QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
+                QV4::Heap::SimpleCallContext *cc = static_cast<QV4::Heap::SimpleCallContext *>(scope);
+                scopes[2*i + 2] = cc->callData->args;
+                scopes[2*i + 3] = 0;
+            } else if (scope->type == QV4::Heap::ExecutionContext::Type_CallContext) {
                 QV4::Heap::CallContext *cc = static_cast<QV4::Heap::CallContext *>(scope);
                 scopes[2*i + 2] = cc->callData->args;
-                scopes[2*i + 3] = cc->locals;
+                scopes[2*i + 3] = cc->locals.v;
             } else {
                 scopes[2*i + 2] = 0;
                 scopes[2*i + 3] = 0;

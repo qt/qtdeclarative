@@ -472,7 +472,7 @@ void OldBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callD
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
+    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);
@@ -519,7 +519,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
+    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);
