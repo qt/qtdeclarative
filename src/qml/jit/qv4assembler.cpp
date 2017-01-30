@@ -212,17 +212,6 @@ void Assembler<TargetConfiguration>::generateCJumpOnNonZero(RegisterID reg, IR::
 template <typename TargetConfiguration>
 void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
                                        RegisterID left,
-                                       TrustedImm64 right,
-                                       IR::BasicBlock *currentBlock,
-                                       IR::BasicBlock *trueBlock,
-                                       IR::BasicBlock *falseBlock)
-{
-    RegisterSizeDependentOps::generateCJumpOnCompare(this, cond, left, right, _nextBlock, currentBlock, trueBlock, falseBlock);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
-                                       RegisterID left,
                                        TrustedImm32 right,
                                        IR::BasicBlock *currentBlock,
                                        IR::BasicBlock *trueBlock,

@@ -1537,21 +1537,7 @@ bool InstructionSelection<JITAssembler>::visitCJumpStrictUndefined(IR::Binop *bi
     RelationalCondition cond = binop->op == IR::OpStrictEqual ? RelationalCondition::Equal
                                                                          : RelationalCondition::NotEqual;
     const RegisterID tagReg = JITTargetPlatform::ReturnValueRegister;
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, varSrc);
-    _as->load64(addr, tagReg);
-    const TrustedImm64 tag(0);
-#else // !QV4_USE_64_BIT_VALUE_ENCODING
-    Pointer tagAddr = _as->loadAddress(JITTargetPlatform::ScratchRegister, varSrc);
-    _as->load32(tagAddr, tagReg);
-    Jump j = _as->branch32(JITAssembler::invert(cond), tagReg, TrustedImm32(0));
-    _as->addPatch(falseBlock, j);
-
-    tagAddr.offset += 4;
-    _as->load32(tagAddr, tagReg);
-    const TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
-#endif
-    _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
+    _as->generateCJumpOnUndefined(cond, varSrc, JITTargetPlatform::ScratchRegister, tagReg, _block, trueBlock, falseBlock);
     return true;
 }
 

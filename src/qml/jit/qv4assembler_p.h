@@ -287,18 +287,23 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->poke(TrustedImm32(0), slot);
     }
 
-    static void generateCJumpOnCompare(JITAssembler *as,
-                                       RelationalCondition cond,
-                                       RegisterID,
-                                       TrustedImm64,
-                                       IR::BasicBlock *,
-                                       IR::BasicBlock *,
-                                       IR::BasicBlock *,
-                                       IR::BasicBlock *)
+    static void generateCJumpOnUndefined(JITAssembler *as,
+                                  RelationalCondition cond, IR::Expr *right,
+                                  RegisterID scratchRegister, RegisterID tagRegister,
+                                  IR::BasicBlock *nextBlock, IR::BasicBlock *currentBlock,
+                                  IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
     {
-        Q_UNUSED(as);
-        Q_UNUSED(cond);
-        Q_ASSERT(!"unimplemented generateCJumpOnCompare with TrustedImm64 for 32-bit");
+        Pointer tagAddr = as->loadAddress(scratchRegister, right);
+        as->load32(tagAddr, tagRegister);
+        Jump j = as->branch32(JITAssembler::invert(cond), tagRegister, TrustedImm32(0));
+        as->addPatch(falseBlock, j);
+
+        tagAddr.offset += 4;
+        as->load32(tagAddr, tagRegister);
+        const TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
+        Q_ASSERT(nextBlock == as->nextBlock());
+        Q_UNUSED(nextBlock);
+        as->generateCJumpOnCompare(cond, tagRegister, tag, currentBlock, trueBlock, falseBlock);
     }
 
     static void convertVarToSInt32(JITAssembler *as, IR::Expr *source, IR::Expr *target)
@@ -544,6 +549,18 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             as->addPatch(trueBlock, target);
             as->jumpToBlock(currentBlock, falseBlock);
         }
+    }
+
+    static void generateCJumpOnUndefined(JITAssembler *as,
+                                  RelationalCondition cond, IR::Expr *right,
+                                  RegisterID scratchRegister, RegisterID tagRegister,
+                                  IR::BasicBlock *nextBlock,  IR::BasicBlock *currentBlock,
+                                  IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
+    {
+        Pointer addr = as->loadAddress(scratchRegister, right);
+        as->load64(addr, tagRegister);
+        const TrustedImm64 tag(0);
+        generateCJumpOnCompare(as, cond, tagRegister, tag, nextBlock, currentBlock, trueBlock, falseBlock);
     }
 
     static void convertVarToSInt32(JITAssembler *as, IR::Expr *source, IR::Expr *target)
@@ -880,17 +897,21 @@ public:
     void addPatch(DataLabelPtr patch, IR::BasicBlock *target);
     void generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
                              IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock);
-
-    void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm64 right,
-                                IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
-                                IR::BasicBlock *falseBlock);
-
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm32 right,
                                 IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
                                 IR::BasicBlock *falseBlock);
     void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
                                 IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
                                 IR::BasicBlock *falseBlock);
+    void generateCJumpOnUndefined(RelationalCondition cond, IR::Expr *right,
+                                  RegisterID scratchRegister, RegisterID tagRegister,
+                                  IR::BasicBlock *currentBlock, IR::BasicBlock *trueBlock,
+                                  IR::BasicBlock *falseBlock)
+    {
+        RegisterSizeDependentOps::generateCJumpOnUndefined(this, cond, right, scratchRegister, tagRegister,
+                                                           _nextBlock, currentBlock, trueBlock, falseBlock);
+    }
+
     Jump genTryDoubleConversion(IR::Expr *src, FPRegisterID dest);
     Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
     Jump branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
