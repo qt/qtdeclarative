@@ -127,7 +127,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
         // Look up types from the imports of this document
         // ### it would be nice if QQmlImports allowed us to resolve a namespace
         // first, and then types on it.
-        QString qualifiedTypeName = i->m_qualifier + "." + name.toString();
+        QString qualifiedTypeName = i->m_qualifier + QLatin1Char('.') + name.toString();
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
         QQmlType *t = 0;
@@ -188,7 +188,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, cons
         // Look up types from the imports of this document
         // ### it would be nice if QQmlImports allowed us to resolve a namespace
         // first, and then types on it.
-        QString qualifiedTypeName = i->m_qualifier + "." + name->toQStringNoThrow();
+        QString qualifiedTypeName = i->m_qualifier + QLatin1Char('.') + name->toQStringNoThrow();
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
         QQmlType *t = 0;
