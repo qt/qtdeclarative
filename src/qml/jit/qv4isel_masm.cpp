@@ -1666,6 +1666,11 @@ QT_BEGIN_NAMESPACE
 namespace QV4 { namespace JIT {
 template class Q_QML_EXPORT InstructionSelection<>;
 template class Q_QML_EXPORT ISelFactory<>;
+#if defined(V4_BOOTSTRAP) && CPU(X86_64)
+using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
+template class Q_QML_EXPORT InstructionSelection<ARMv7CrossAssembler>;
+template class Q_QML_EXPORT ISelFactory<ARMv7CrossAssembler>;
+#endif
 } }
 QT_END_NAMESPACE
 
