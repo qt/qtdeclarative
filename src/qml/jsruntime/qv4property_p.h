@@ -78,12 +78,6 @@ struct Property {
         attrs->resolve();
     }
 
-    static Property genericDescriptor() {
-        Property pd;
-        pd.value = Primitive::emptyValue();
-        return pd;
-    }
-
     inline bool isSubset(const PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const;
     inline void merge(PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs);
 
@@ -99,19 +93,12 @@ struct Property {
     }
 
     explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(0); }
-    explicit Property(Value v) : value(v) { set = Value::fromHeapObject(0); }
-    Property(FunctionObject *getter, FunctionObject *setter) {
-        value = reinterpret_cast<Managed *>(getter);
-        set = reinterpret_cast<Managed *>(setter);
-    }
     Property(Heap::FunctionObject *getter, Heap::FunctionObject *setter) {
         value.setM(reinterpret_cast<Heap::Base *>(getter));
         set.setM(reinterpret_cast<Heap::Base *>(setter));
     }
-    Property &operator=(Value v) { value = v; return *this; }
 private:
-    Property(const Property &);
-    Property &operator=(const Property &);
+    Q_DISABLE_COPY(Property)
 };
 
 inline bool Property::isSubset(const PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const
