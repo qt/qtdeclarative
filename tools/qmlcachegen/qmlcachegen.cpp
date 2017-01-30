@@ -39,6 +39,11 @@
 
 QT_BEGIN_NAMESPACE
 extern Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed;
+
+namespace QV4 { namespace JIT {
+Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture);
+} }
+
 QT_END_NAMESPACE
 
 struct Error
@@ -261,6 +266,9 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption targetArchitectureOption(QStringLiteral("target-architecture"), QCoreApplication::translate("main", "Target architecture"), QCoreApplication::translate("main", "architecture"));
+    parser.addOption(targetArchitectureOption);
+
     parser.addPositionalArgument(QStringLiteral("[qml file]"),
             QStringLiteral("QML source file to generate cache for."));
 
@@ -273,17 +281,23 @@ int main(int argc, char **argv)
     }
     const QString inputFile = sources.first();
 
-    QV4::Moth::ISelFactory interpreterISelFactory;
+    QScopedPointer<QV4::EvalISelFactory> isel;
+    const QString targetArchitecture = parser.value(targetArchitectureOption);
+
+    isel.reset(QV4::JIT::createISelForArchitecture(targetArchitecture));
+
+    if (!isel)
+        isel.reset(new QV4::Moth::ISelFactory);
 
     Error error;
 
     if (inputFile.endsWith(QLatin1String(".qml"))) {
-        if (!compileQmlFile(inputFile, &interpreterISelFactory, &error)) {
+        if (!compileQmlFile(inputFile, isel.data(), &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
-        if (!compileJSFile(inputFile, &interpreterISelFactory, &error)) {
+        if (!compileJSFile(inputFile, isel.data(), &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }

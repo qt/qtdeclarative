@@ -1667,9 +1667,32 @@ namespace QV4 { namespace JIT {
 template class Q_QML_EXPORT InstructionSelection<>;
 template class Q_QML_EXPORT ISelFactory<>;
 #if defined(V4_BOOTSTRAP) && CPU(X86_64)
-using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
-template class Q_QML_EXPORT InstructionSelection<ARMv7CrossAssembler>;
-template class Q_QML_EXPORT ISelFactory<ARMv7CrossAssembler>;
+
+Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture)
+{
+    using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
+
+    if (architecture == QLatin1String("armv7"))
+        return new ISelFactory<ARMv7CrossAssembler>;
+
+    QString hostArch;
+#if CPU(ARM_THUMB2)
+    hostArch = QStringLiteral("armv7");
+#elif CPU(ARM64)
+    hostArch = QStringLiteral("armv8");
+#elif CPU(MIPS)
+    hostArch = QStringLiteral("mips");
+#elif CPU(X86)
+    hostArch = QStringLiteral("x86");
+#elif CPU(X86_64)
+    hostArch = QStringLiteral("x86_64");
+#endif
+    if (!hostArch.isEmpty() && architecture == hostArch)
+        return new ISelFactory<>;
+
+    return nullptr;
+}
+
 #endif
 } }
 QT_END_NAMESPACE

@@ -35,7 +35,6 @@ SOURCES += \
     $$PWD/qv4regexp.cpp \
     $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
-    $$PWD/qv4executableallocator.cpp \
     $$PWD/qv4sequenceobject.cpp \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
@@ -113,7 +112,8 @@ HEADERS += \
 SOURCES += \
     $$PWD/qv4runtime.cpp \
     $$PWD/qv4string.cpp \
-    $$PWD/qv4value.cpp
+    $$PWD/qv4value.cpp \
+    $$PWD/qv4executableallocator.cpp
 
 valgrind {
     DEFINES += V4_USE_VALGRIND

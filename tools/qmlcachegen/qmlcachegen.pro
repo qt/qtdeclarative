@@ -13,7 +13,7 @@ BUILD_INTEGRATION = qmlcache.prf
     qmake_integration.commands = $$QMAKE_COPY ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
     qmake_integration.name = COPY ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
     qmake_integration.CONFIG = no_clean no_link
-    !contains(TEMPLATE, vc.*): qmake_integration.variable_out = PRE_TARGETDEPS
+    !contains(TEMPLATE, vc.*): qmake_integration.variable_out = GENERATED_FILES
     QMAKE_EXTRA_COMPILERS += qmake_integration
 }
 
