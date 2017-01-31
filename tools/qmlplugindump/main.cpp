@@ -865,7 +865,7 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     QByteArray depencenciesData = importScanner.readAllStandardOutput();
     if (!readDependenciesData(QLatin1String("<outputOfQmlimportscanner>"), depencenciesData,
                              dependencies, QStringList(pluginImportUri), forceQtQuickDependency)) {
-        std::cerr << "failed to proecess output of qmlimportscanner" << std::endl;
+        std::cerr << "failed to process output of qmlimportscanner" << std::endl;
         return false;
     }
 
