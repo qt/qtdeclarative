@@ -709,6 +709,11 @@ inline unsigned int Value::toUInt32() const
 }
 
 template <size_t offset>
+struct HeapValue : Value {
+    HeapValue &operator = (const Value &other) { setRawValue(other.rawValue()); return *this; }
+};
+
+template <size_t offset>
 struct ValueArray {
     uint size;
     uint alloc;

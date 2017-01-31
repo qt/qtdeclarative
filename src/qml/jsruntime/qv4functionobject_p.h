@@ -123,7 +123,7 @@ struct ScriptFunction : FunctionObject {
 
 #define BoundFunctionMembers(class, Member) \
     Member(class, Pointer, FunctionObject *, target) \
-    Member(class, Value, Value, boundThis) \
+    Member(class, HeapValue, HeapValue, boundThis) \
     Member(class, Pointer, MemberData *, boundArgs)
 
 DECLARE_HEAP_OBJECT(BoundFunction, FunctionObject) {

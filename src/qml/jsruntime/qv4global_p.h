@@ -199,6 +199,7 @@ struct ScriptFunction;
 struct InternalClass;
 struct Property;
 struct Value;
+template<size_t> struct HeapValue;
 template<size_t> struct ValueArray;
 struct Lookup;
 struct ArrayData;

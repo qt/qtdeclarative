@@ -762,7 +762,7 @@ void MemoryManager::drainMarkStack(Value *markBase)
                     break;
                 case Mark_Pointer: {
 //                    qDebug() << "marking pointer at " << mem;
-                    Heap::Base *p = reinterpret_cast<Heap::Base *>(mem);
+                    Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
                     if (p)
                         p->mark(engine);
                     break;

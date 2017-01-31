@@ -164,8 +164,10 @@ struct Q_QML_EXPORT Base {
 };
 V4_ASSERT_IS_TRIVIAL(Base)
 
-template <typename T, size_t>
+template <typename T, size_t o>
 struct Pointer {
+    static Q_CONSTEXPR size_t offset = o;
+    static Q_CONSTEXPR quint64 markBits = Mark_Pointer << (o >> 2);
     T operator->() const { return ptr; }
     operator T () const { return ptr; }
 

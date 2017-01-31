@@ -1047,8 +1047,8 @@ namespace QV4 {
 namespace Heap {
 
 #define QmlIncubatorObjectMembers(class, Member) \
-    Member(class, Value, Value, valuemap) \
-    Member(class, Value, Value, statusChanged) \
+    Member(class, HeapValue, HeapValue, valuemap) \
+    Member(class, HeapValue, HeapValue, statusChanged) \
     Member(class, Pointer, QmlContext *, qmlContext) \
     Member(class, NoMark, QQmlComponentIncubator *, incubator) \
     Member(class, NoMark, QQmlQPointer<QObject>, parent)

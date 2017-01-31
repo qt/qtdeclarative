@@ -171,7 +171,7 @@ V4_ASSERT_IS_TRIVIAL(GlobalContext)
 
 #define CatchContextMembers(class, Member) \
     Member(class, Pointer, String *, exceptionVarName) \
-    Member(class, Value, Value, exceptionValue)
+    Member(class, HeapValue, HeapValue, exceptionValue)
 
 DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
     DECLARE_MARK_TABLE(CatchContext);

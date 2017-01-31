@@ -86,7 +86,7 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
 };
 
 #define RegExpCtorMembers(class, Member) \
-    Member(class, Value, Value, lastMatch) \
+    Member(class, HeapValue, HeapValue, lastMatch) \
     Member(class, Pointer, String *, lastInput) \
     Member(class, NoMark, int, lastMatchStart) \
     Member(class, NoMark, int, lastMatchEnd)

@@ -82,6 +82,8 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     Value *propertyData(uint index) { return memberData->values.v + index; }
 };
 
+Q_STATIC_ASSERT(Object::markTable == ((2 << 4) | (2 << 6) | (2 << 8)));
+
 }
 
 #define V4_OBJECT(superClass) \
