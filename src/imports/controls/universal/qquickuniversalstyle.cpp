@@ -531,8 +531,10 @@ static Enum toEnumValue(const QByteArray &value, bool *ok)
 static QByteArray resolveSetting(const QByteArray &env, const QSharedPointer<QSettings> &settings, const QString &name)
 {
     QByteArray value = qgetenv(env);
+#if QT_CONFIG(settings)
     if (value.isNull() && !settings.isNull())
         value = settings->value(name).toByteArray();
+#endif
     return value;
 }
 

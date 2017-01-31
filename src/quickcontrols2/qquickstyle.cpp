@@ -174,6 +174,7 @@ struct QQuickStyleSpec
             style = QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_STYLE"));
         if (fallbackStyle.isEmpty())
             setFallbackStyle(QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
+#if QT_CONFIG(settings)
         if (style.isEmpty() || fallbackStyle.isEmpty()) {
             QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
             if (settings) {
@@ -183,6 +184,7 @@ struct QQuickStyleSpec
                     setFallbackStyle(settings->value(QStringLiteral("FallbackStyle")).toString(), ":/qtquickcontrols2.conf");
             }
         }
+#endif
 
         // resolve a path relative to the config
         QString configPath = QFileInfo(resolveConfigFilePath()).path();
