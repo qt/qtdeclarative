@@ -75,7 +75,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 {
     Object::init();
     function = nullptr;
-    this->scope = scope->d();
+    this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     f->init(name, createProto);
@@ -86,7 +86,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
     Object::init();
     this->function = function;
     function->compilationUnit->addref();
-    this->scope = scope->d();
+    this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedString name(s, function->name());
     ScopedFunctionObject f(s, this);
@@ -104,7 +104,7 @@ void Heap::FunctionObject::init()
 {
     Object::init();
     function = nullptr;
-    this->scope = internalClass->engine->rootContext()->d();
+    this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
     Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()) == Index_Prototype);
     *propertyData(Index_Prototype) = Encode::undefined();
 }
@@ -413,7 +413,7 @@ void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
 {
     FunctionObject::init();
-    this->scope = scope->d();
+    this->scope.set(scope->engine(), scope->d());
 
     this->function = function;
     function->compilationUnit->addref();
@@ -536,12 +536,12 @@ DEFINE_OBJECT_VTABLE(BoundFunction);
 void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject *target,
                                const Value &boundThis, QV4::MemberData *boundArgs)
 {
+    Scope s(scope);
     Heap::FunctionObject::init(scope, QStringLiteral("__bound function__"));
-    this->target = target->d();
-    this->boundArgs = boundArgs ? boundArgs->d() : 0;
+    this->target.set(s.engine, target->d());
+    this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : 0);
     this->boundThis = boundThis;
 
-    Scope s(scope);
     ScopedObject f(s, this);
 
     ScopedValue l(s, target->get(s.engine->id_length()));

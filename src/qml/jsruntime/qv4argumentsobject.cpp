@@ -48,12 +48,13 @@ DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 void Heap::ArgumentsObject::init(QV4::CallContext *context)
 {
+    ExecutionEngine *v4 = context->d()->engine;
+
     Object::init();
     fullyCreated = false;
-    this->context = context->d();
+    this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
-    ExecutionEngine *v4 = context->d()->engine;
     Scope scope(v4);
     Scoped<QV4::ArgumentsObject> args(scope, this);
 
@@ -89,7 +90,7 @@ void ArgumentsObject::fullyCreate()
     Scope scope(engine());
     Scoped<MemberData> md(scope, d()->mappedArguments);
     if (numAccessors) {
-        d()->mappedArguments = md->allocate(engine(), numAccessors);
+        d()->mappedArguments.set(scope.engine, md->allocate(engine(), numAccessors));
         for (uint i = 0; i < numAccessors; ++i) {
             d()->mappedArguments->values[i] = context()->callData->args[i];
             arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);

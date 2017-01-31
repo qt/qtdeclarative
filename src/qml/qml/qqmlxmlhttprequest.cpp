@@ -1683,7 +1683,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
     ScopedObject p(scope, v4->newObject());
-    d()->proto = p->d();
+    d()->proto.set(scope.engine, p->d());
 
     // Methods
     p->defineDefaultProperty(QStringLiteral("open"), method_open);

@@ -731,7 +731,7 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
         else
             m = *blockAllocator.allocate(memberSize, true);
         memset(m, 0, memberSize);
-        o->memberData = static_cast<Heap::MemberData *>(m);
+        o->memberData.set(engine, static_cast<Heap::MemberData *>(m));
         o->memberData->setVtable(MemberData::staticVTable());
         o->memberData->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
         o->memberData->values.size = o->memberData->values.alloc;

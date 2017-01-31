@@ -245,7 +245,7 @@ public:
         o->setVtable(ObjectType::staticVTable());
         Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
-        o->prototype = prototype->d();
+        o->prototype.set(engine, prototype->d());
         return static_cast<typename ObjectType::Data *>(o);
     }
 
@@ -272,7 +272,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init();
         return t->d();
     }
@@ -282,7 +282,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1);
         return t->d();
     }
@@ -292,7 +292,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
@@ -302,7 +302,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
@@ -312,7 +312,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }

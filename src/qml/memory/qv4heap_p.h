@@ -167,15 +167,18 @@ V4_ASSERT_IS_TRIVIAL(Base)
 template <typename T, size_t o>
 struct Pointer {
     static Q_CONSTEXPR size_t offset = o;
-    static Q_CONSTEXPR quint64 markBits = Mark_Pointer << (o >> 2);
     T operator->() const { return ptr; }
     operator T () const { return ptr; }
 
-    Pointer &operator =(T t) { ptr = t; return *this; }
+    void set(ExecutionEngine *e, T newVal) {
+        Q_UNUSED(e);
+        ptr = newVal;
+    }
 
     template <typename Type>
     Type *cast() { return static_cast<Type *>(ptr); }
 
+private:
     T ptr;
 };
 typedef Pointer<char *, 0> V4PointerCheck;

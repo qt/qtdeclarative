@@ -198,7 +198,7 @@ struct Q_QML_EXPORT Object: Managed {
     Value *propertyData(uint index) { return d()->propertyData(index); }
 
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
-    void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
+    void setArrayData(ArrayData *a) { d()->arrayData.set(engine(), a->d()); }
 
     void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
     void setProperty(uint index, const Property *p);

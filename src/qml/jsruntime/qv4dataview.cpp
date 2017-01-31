@@ -73,7 +73,7 @@ void DataViewCtor::construct(const Managed *, Scope &scope, CallData *callData)
     }
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->allocObject<DataView>());
-    a->d()->buffer = buffer->d();
+    a->d()->buffer.set(scope.engine, buffer->d());
     a->d()->byteLength = byteLength;
     a->d()->byteOffset = byteOffset;
     scope.result = a.asReturnedValue();

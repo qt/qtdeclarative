@@ -1377,7 +1377,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     if (!valuemap->isUndefined())
         r->d()->valuemap = valuemap;
-    r->d()->qmlContext = v4->qmlContext();
+    r->d()->qmlContext.set(scope.engine, v4->qmlContext());
     r->d()->parent = parent;
 
     QQmlIncubator *incubator = r->d()->incubator;
@@ -1476,7 +1476,7 @@ void QV4::Heap::QmlIncubatorObject::init(QQmlIncubator::IncubationMode m)
     valuemap = QV4::Primitive::undefinedValue();
     statusChanged = QV4::Primitive::undefinedValue();
     parent.init();
-    qmlContext = nullptr;
+    qmlContext.set(internalClass->engine, nullptr);
     incubator = new QQmlComponentIncubator(this, m);
 }
 

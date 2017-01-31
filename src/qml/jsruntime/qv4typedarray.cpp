@@ -229,8 +229,8 @@ void TypedArrayCtor::construct(const Managed *m, Scope &scope, CallData *callDat
             return;
         }
 
-        Scoped<TypedArray > array(scope, TypedArray::create(scope.engine, that->d()->type));
-        array->d()->buffer = buffer->d();
+        Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
+        array->d()->buffer.set(scope.engine, buffer->d());
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = 0;
 
@@ -252,8 +252,8 @@ void TypedArrayCtor::construct(const Managed *m, Scope &scope, CallData *callDat
             return;
         }
 
-        Scoped<TypedArray > array(scope, TypedArray::create(scope.engine, that->d()->type));
-        array->d()->buffer = newBuffer->d();
+        Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
+        array->d()->buffer.set(scope.engine, newBuffer->d());
         array->d()->byteLength = destByteLength;
         array->d()->byteOffset = 0;
 
@@ -311,8 +311,8 @@ void TypedArrayCtor::construct(const Managed *m, Scope &scope, CallData *callDat
             byteLength = (uint)l;
         }
 
-        Scoped<TypedArray > array(scope, TypedArray::create(scope.engine, that->d()->type));
-        array->d()->buffer = buffer->d();
+        Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
+        array->d()->buffer.set(scope.engine, buffer->d());
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = byteOffset;
         scope.result = array.asReturnedValue();
@@ -335,8 +335,8 @@ void TypedArrayCtor::construct(const Managed *m, Scope &scope, CallData *callDat
         return;
     }
 
-    Scoped<TypedArray > array(scope, TypedArray::create(scope.engine, that->d()->type));
-    array->d()->buffer = newBuffer->d();
+    Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
+    array->d()->buffer.set(scope.engine, newBuffer->d());
     array->d()->byteLength = l * elementSize;
     array->d()->byteOffset = 0;
 

@@ -77,14 +77,14 @@ void Heap::StringObject::init()
 {
     Object::init();
     Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
-    string = internalClass->engine->id_empty()->d();
+    string.set(internalClass->engine, internalClass->engine->id_empty()->d());
     *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0);
 }
 
 void Heap::StringObject::init(const QV4::String *str)
 {
     Object::init();
-    string = str->d();
+    string.set(internalClass->engine, str->d());
     *propertyData(LengthPropertyIndex) = Primitive::fromInt32(length());
 }
 

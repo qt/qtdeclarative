@@ -189,13 +189,13 @@ DECLARE_HEAP_OBJECT(WithContext, ExecutionContext) {
     void init(ExecutionContext *outerContext, Object *with)
     {
         Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_WithContext);
-        outer = outerContext;
+        outer.set(engine, outerContext);
         callData = outer->callData;
         lookups = outer->lookups;
         constantTable = outer->constantTable;
         compilationUnit = outer->compilationUnit;
 
-        withObject = with;
+        withObject.set(engine, with);
     }
 };
 V4_ASSERT_IS_TRIVIAL(WithContext)

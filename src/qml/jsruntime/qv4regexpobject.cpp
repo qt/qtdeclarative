@@ -74,7 +74,7 @@ void Heap::RegExpObject::init()
     Object::init();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->d()->value = QV4::RegExp::create(scope.engine, QString(), false, false);
+    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, QString(), false, false));
     o->d()->global = false;
     o->initProperties();
 }
@@ -82,9 +82,9 @@ void Heap::RegExpObject::init()
 void Heap::RegExpObject::init(QV4::RegExp *value, bool global)
 {
     Object::init();
-    this->global = global;
-    this->value = value->d();
     Scope scope(internalClass->engine);
+    this->global = global;
+    this->value.set(scope.engine, value->d());
     Scoped<QV4::RegExpObject> o(scope, this);
     o->initProperties();
 }
@@ -137,7 +137,8 @@ void Heap::RegExpObject::init(const QRegExp &re)
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
 
-    o->d()->value = QV4::RegExp::create(scope.engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
+    o->d()->value.set(scope.engine,
+                        QV4::RegExp::create(scope.engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false));
 
     o->initProperties();
 }
@@ -220,7 +221,7 @@ void Heap::RegExpCtor::init(QV4::ExecutionContext *scope)
 void Heap::RegExpCtor::clearLastMatch()
 {
     lastMatch = Primitive::nullValue();
-    lastInput = internalClass->engine->id_empty()->d();
+    lastInput.set(internalClass->engine, internalClass->engine->id_empty()->d());
     lastMatchStart = 0;
     lastMatchEnd = 0;
 }
@@ -377,7 +378,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
 
     RegExpCtor::Data *dd = regExpCtor->d();
     dd->lastMatch = array;
-    dd->lastInput = str->d();
+    dd->lastInput.set(scope.engine, str->d());
     dd->lastMatchStart = matchOffsets[0];
     dd->lastMatchEnd = matchOffsets[1];
 
@@ -414,7 +415,7 @@ void RegExpPrototype::method_compile(const BuiltinFunction *, Scope &scope, Call
     scope.engine->regExpCtor()->as<FunctionObject>()->construct(scope, cData);
     Scoped<RegExpObject> re(scope, scope.result.asReturnedValue());
 
-    r->d()->value = re->value();
+    r->d()->value.set(scope.engine, re->value());
     r->d()->global = re->global();
     RETURN_UNDEFINED();
 }

@@ -72,7 +72,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     c->v4Function = function;
 
     c->strictMode = function->isStrict();
-    c->outer = this->d();
+    c->outer.set(d()->engine, this->d());
 
     c->compilationUnit = function->compilationUnit;
     c->lookups = c->compilationUnit->runtimeLookups;
@@ -119,7 +119,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
             Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
             if (!activation) {
                 if (!c->activation)
-                    c->activation = scope.engine->newObject();
+                    c->activation.set(scope.engine, scope.engine->newObject());
                 activation = c->activation;
             }
             break;
@@ -153,21 +153,21 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 void Heap::GlobalContext::init(ExecutionEngine *eng)
 {
     Heap::ExecutionContext::init(eng, Heap::ExecutionContext::Type_GlobalContext);
-    global = eng->globalObject->d();
+    global.set(eng, eng->globalObject->d());
 }
 
 void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionVarName,
                               const Value &exceptionValue)
 {
     Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_CatchContext);
-    outer = outerContext;
+    outer.set(engine, outerContext);
     strictMode = outer->strictMode;
     callData = outer->callData;
     lookups = outer->lookups;
     constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
-    this->exceptionVarName = exceptionVarName;
+    this->exceptionVarName.set(engine, exceptionVarName);
     this->exceptionValue = exceptionValue;
 }
 
@@ -252,7 +252,7 @@ void ExecutionContext::call(Scope &scope, CallData *callData, Function *function
 
     Scoped<CallContext> ctx(scope, newCallContext(function, callData));
     if (f)
-        ctx->d()->function = f->d();
+        ctx->d()->function.set(scope.engine, f->d());
     scope.engine->pushContext(ctx);
 
     scope.result = Q_V4_PROFILE(scope.engine, function);
@@ -276,7 +276,7 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
     ctx->compilationUnit = function->compilationUnit;
     ctx->lookups = function->compilationUnit->runtimeLookups;
     ctx->constantTable = function->compilationUnit->constants;
-    ctx->outer = this->d();
+    ctx->outer.set(scope.engine, this->d());
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 

@@ -398,7 +398,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    rootContext()->d()->global = globalObject->d();
+    rootContext()->d()->global.set(scope.engine, globalObject->d());
     rootContext()->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->d()->vtable());
 
@@ -605,7 +605,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
         d->values.alloc = length;
         d->values.size = length;
         memcpy(&d->values.v, values, length*sizeof(Value));
-        a->d()->arrayData = d;
+        a->d()->arrayData.set(this, d);
         a->setArrayLengthUnchecked(length);
     }
     return a->d();

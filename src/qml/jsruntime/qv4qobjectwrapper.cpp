@@ -1704,7 +1704,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueType
     Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->setPropertyCache(valueType->d()->propertyCache());
     method->d()->index = index;
-    method->d()->valueTypeWrapper = valueType->d();
+    method->d()->valueTypeWrapper.set(valueScope.engine, valueType->d());
     return method.asReturnedValue();
 }
 

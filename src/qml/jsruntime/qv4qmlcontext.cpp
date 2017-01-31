@@ -298,14 +298,14 @@ bool QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
 {
     Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
-    outer = outerContext->d();
+    outer.set(engine, outerContext->d());
     strictMode = false;
     callData = outer->callData;
     lookups = outer->lookups;
     constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
-    this->qml = qml->d();
+    this->qml.set(engine, qml->d());
 }
 
 Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, const QUrl &source, Value *sendFunction)

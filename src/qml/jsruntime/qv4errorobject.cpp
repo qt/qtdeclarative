@@ -168,7 +168,7 @@ void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallDa
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);
         }
-        This->d()->stack = scope.engine->newString(trace);
+        This->d()->stack.set(scope.engine, scope.engine->newString(trace));
     }
     scope.result = This->d()->stack;
 }

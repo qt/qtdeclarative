@@ -63,7 +63,7 @@ void Object::setInternalClass(InternalClass *ic)
     d()->internalClass = ic;
     bool hasMD = d()->memberData != nullptr;
     if ((!hasMD && ic->size) || (hasMD && d()->memberData->values.size < ic->size))
-        d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
+        d()->memberData.set(engine(), MemberData::allocate(ic->engine, ic->size, d()->memberData));
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -89,7 +89,7 @@ bool Object::setPrototype(Object *proto)
             return false;
         pp = pp->prototype;
     }
-    d()->prototype = proto ? proto->d() : 0;
+    d()->prototype.set(engine(), proto ? proto->d() : 0);
     return true;
 }
 
