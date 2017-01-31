@@ -1273,6 +1273,7 @@ void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
     event->accept();
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickControl::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickControl);
@@ -1281,6 +1282,7 @@ void QQuickControl::wheelEvent(QWheelEvent *event)
 
     event->setAccepted(d->wheelEnabled);
 }
+#endif
 
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {

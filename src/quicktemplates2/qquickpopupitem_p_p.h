@@ -79,7 +79,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
+#if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
+#endif
 
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void fontChange(const QFont &newFont, const QFont &oldFont) override;

@@ -185,7 +185,9 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
+#if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
+#endif
 
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;

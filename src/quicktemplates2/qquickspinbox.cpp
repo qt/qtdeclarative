@@ -870,6 +870,7 @@ void QQuickSpinBox::touchUngrabEvent()
     d->handleUngrab();
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickSpinBox::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickSpinBox);
@@ -884,6 +885,7 @@ void QQuickSpinBox::wheelEvent(QWheelEvent *event)
         event->setAccepted(d->value != oldValue);
     }
 }
+#endif
 
 void QQuickSpinBox::componentComplete()
 {

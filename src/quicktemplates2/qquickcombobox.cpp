@@ -1485,6 +1485,7 @@ void QQuickComboBox::mouseUngrabEvent()
     setPressed(false);
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickComboBox::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickComboBox);
@@ -1498,6 +1499,7 @@ void QQuickComboBox::wheelEvent(QWheelEvent *event)
         event->setAccepted(d->currentIndex != oldIndex);
     }
 }
+#endif
 
 void QQuickComboBox::componentComplete()
 {

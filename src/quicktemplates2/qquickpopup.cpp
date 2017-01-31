@@ -1827,10 +1827,12 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
     }
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickPopup::wheelEvent(QWheelEvent *event)
 {
     event->accept();
 }
+#endif
 
 void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {

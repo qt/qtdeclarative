@@ -351,7 +351,9 @@ protected:
     virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent();
     virtual bool overlayEvent(QQuickItem *item, QEvent *event);
+#if QT_CONFIG(wheelevent)
     virtual void wheelEvent(QWheelEvent *event);
+#endif
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void fontChange(const QFont &newFont, const QFont &oldFont);

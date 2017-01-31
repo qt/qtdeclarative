@@ -738,6 +738,7 @@ void QQuickDial::touchUngrabEvent()
     d->handleUngrab();
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickDial::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickDial);
@@ -751,6 +752,7 @@ void QQuickDial::wheelEvent(QWheelEvent *event)
         event->setAccepted(!qFuzzyCompare(d->value, oldValue));
     }
 }
+#endif
 
 void QQuickDial::mirrorChange()
 {

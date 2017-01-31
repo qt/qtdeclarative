@@ -138,7 +138,9 @@ protected:
     void mouseUngrabEvent() override;
     void touchEvent(QTouchEvent *event) override;
     void touchUngrabEvent() override;
+#if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
+#endif
 
     void mirrorChange() override;
     void componentComplete() override;

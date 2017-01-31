@@ -222,11 +222,13 @@ void QQuickPopupItem::mouseUngrabEvent()
     d->popup->mouseUngrabEvent();
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickPopupItem::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickPopupItem);
     d->popup->wheelEvent(event);
 }
+#endif
 
 void QQuickPopupItem::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {

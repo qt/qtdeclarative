@@ -182,7 +182,9 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+#if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
+#endif
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 

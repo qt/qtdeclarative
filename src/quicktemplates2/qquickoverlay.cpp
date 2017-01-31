@@ -377,6 +377,7 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickOverlay::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickOverlay);
@@ -392,6 +393,7 @@ void QQuickOverlay::wheelEvent(QWheelEvent *event)
     }
     event->ignore();
 }
+#endif
 
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {

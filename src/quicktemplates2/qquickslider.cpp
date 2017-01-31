@@ -702,6 +702,7 @@ void QQuickSlider::touchUngrabEvent()
     d->handleUngrab();
 }
 
+#if QT_CONFIG(wheelevent)
 void QQuickSlider::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickSlider);
@@ -718,6 +719,7 @@ void QQuickSlider::wheelEvent(QWheelEvent *event)
         event->setAccepted(wasMoved);
     }
 }
+#endif
 
 void QQuickSlider::mirrorChange()
 {
