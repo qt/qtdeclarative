@@ -540,7 +540,7 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     Heap::FunctionObject::init(scope, QStringLiteral("__bound function__"));
     this->target.set(s.engine, target->d());
     this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : 0);
-    this->boundThis = boundThis;
+    this->boundThis.set(scope->engine(), boundThis);
 
     ScopedObject f(s, this);
 

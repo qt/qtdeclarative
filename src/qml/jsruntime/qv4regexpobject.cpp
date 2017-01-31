@@ -220,7 +220,7 @@ void Heap::RegExpCtor::init(QV4::ExecutionContext *scope)
 
 void Heap::RegExpCtor::clearLastMatch()
 {
-    lastMatch = Primitive::nullValue();
+    lastMatch.set(internalClass->engine, Primitive::nullValue());
     lastInput.set(internalClass->engine, internalClass->engine->id_empty()->d());
     lastMatchStart = 0;
     lastMatchEnd = 0;
@@ -377,7 +377,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
     *array->propertyData(Index_ArrayInput) = str;
 
     RegExpCtor::Data *dd = regExpCtor->d();
-    dd->lastMatch = array;
+    dd->lastMatch.set(scope.engine, array);
     dd->lastInput.set(scope.engine, str->d());
     dd->lastMatchStart = matchOffsets[0];
     dd->lastMatchEnd = matchOffsets[1];

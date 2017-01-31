@@ -1376,7 +1376,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     r->setPrototype(p);
 
     if (!valuemap->isUndefined())
-        r->d()->valuemap = valuemap;
+        r->d()->valuemap.set(scope.engine, valuemap);
     r->d()->qmlContext.set(scope.engine, v4->qmlContext());
     r->d()->parent = parent;
 
@@ -1461,7 +1461,7 @@ void QV4::QmlIncubatorObject::method_set_statusChanged(const BuiltinFunction *, 
     if (!o || callData->argc < 1)
         THROW_TYPE_ERROR();
 
-    o->d()->statusChanged = callData->args[0];
+    o->d()->statusChanged.set(scope.engine, callData->args[0]);
 
     RETURN_UNDEFINED();
 }
@@ -1473,8 +1473,8 @@ QQmlComponentExtension::~QQmlComponentExtension()
 void QV4::Heap::QmlIncubatorObject::init(QQmlIncubator::IncubationMode m)
 {
     Object::init();
-    valuemap = QV4::Primitive::undefinedValue();
-    statusChanged = QV4::Primitive::undefinedValue();
+    valuemap.set(internalClass->engine, QV4::Primitive::undefinedValue());
+    statusChanged.set(internalClass->engine, QV4::Primitive::undefinedValue());
     parent.init();
     qmlContext.set(internalClass->engine, nullptr);
     incubator = new QQmlComponentIncubator(this, m);

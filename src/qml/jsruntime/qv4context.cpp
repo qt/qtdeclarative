@@ -168,7 +168,7 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
     compilationUnit = outer->compilationUnit;
 
     this->exceptionVarName.set(engine, exceptionVarName);
-    this->exceptionValue = exceptionValue;
+    this->exceptionValue.set(engine, exceptionValue);
 }
 
 
@@ -302,7 +302,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         case Heap::ExecutionContext::Type_CatchContext: {
             Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx->d());
             if (c->exceptionVarName->isEqualTo(name->d())) {
-                    c->exceptionValue = value;
+                    c->exceptionValue.set(scope.engine, value);
                     return;
             }
             break;
