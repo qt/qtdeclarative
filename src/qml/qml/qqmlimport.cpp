@@ -1011,10 +1011,12 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
 }
 #endif
 
+#if defined(QT_SHARED) || !QT_CONFIG(library)
 static inline QString msgCannotLoadPlugin(const QString &uri, const QString &why)
 {
     return QQmlImportDatabase::tr("plugin cannot be loaded for module \"%1\": %2").arg(uri, why);
 }
+#endif
 
 /*!
 Import an extension defined by a qmldir file.
