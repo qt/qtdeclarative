@@ -9,8 +9,7 @@ HEADERS += \
     $$PWD/qquickstyleplugin_p.h \
     $$PWD/qquickstyleselector_p.h \
     $$PWD/qquickstyleselector_p_p.h \
-    $$PWD/qquickpaddedrectangle_p.h \
-    $$PWD/qquicktumblerview_p.h
+    $$PWD/qquickpaddedrectangle_p.h
 
 SOURCES += \
     $$PWD/qquickanimatednode.cpp \
@@ -21,5 +20,11 @@ SOURCES += \
     $$PWD/qquickstyleattached.cpp \
     $$PWD/qquickstyleplugin.cpp \
     $$PWD/qquickstyleselector.cpp \
-    $$PWD/qquickpaddedrectangle.cpp \
-    $$PWD/qquicktumblerview.cpp
+    $$PWD/qquickpaddedrectangle.cpp
+
+qtConfig(quick-listview):qtConfig(quick-pathview) {
+    HEADERS += \
+        $$PWD/qquicktumblerview_p.h
+    SOURCES += \
+        $$PWD/qquicktumblerview.cpp
+}

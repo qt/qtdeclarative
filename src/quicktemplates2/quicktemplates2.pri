@@ -78,8 +78,6 @@ HEADERS += \
     $$PWD/qquicktoolbutton_p.h \
     $$PWD/qquicktoolseparator_p.h \
     $$PWD/qquicktooltip_p.h \
-    $$PWD/qquicktumbler_p.h \
-    $$PWD/qquicktumbler_p_p.h \
     $$PWD/qquickvelocitycalculator_p_p.h
 
 SOURCES += \
@@ -141,5 +139,12 @@ SOURCES += \
     $$PWD/qquicktoolbutton.cpp \
     $$PWD/qquicktoolseparator.cpp \
     $$PWD/qquicktooltip.cpp \
-    $$PWD/qquicktumbler.cpp \
     $$PWD/qquickvelocitycalculator.cpp
+
+qtConfig(quick-listview):qtConfig(quick-pathview) {
+    HEADERS += \
+        $$PWD/qquicktumbler_p.h \
+        $$PWD/qquicktumbler_p_p.h
+    SOURCES += \
+        $$PWD/qquicktumbler.cpp
+}
