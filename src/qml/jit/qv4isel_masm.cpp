@@ -114,11 +114,10 @@ void InstructionSelection<JITAssembler>::run(int functionIndex)
                         fpRegistersToSave.size());
     _as->enterStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
 
-#ifdef ARGUMENTS_IN_REGISTERS
-    _as->move(_as->registerForArgument(0), JITTargetPlatform::EngineRegister);
-#else
-    _as->loadPtr(addressForArgument(0), JITTargetPlatform::EngineRegister);
-#endif
+    if (JITTargetPlatform::RegisterArgumentCount > 0)
+        _as->move(_as->registerForArgument(0), JITTargetPlatform::EngineRegister);
+    else
+        _as->loadPtr(addressForArgument(0), JITTargetPlatform::EngineRegister);
 
     _as->initializeLocalVariables();
 

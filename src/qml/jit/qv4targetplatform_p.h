@@ -132,7 +132,6 @@ public:
 #  define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
     static const int RegisterSize = 4;
 
-#  undef ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 0;
     static RegisterID registerForArgument(int) { Q_UNREACHABLE(); }
 
@@ -218,7 +217,6 @@ public:
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
     static const int RegisterSize = 8;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 6;
     static RegisterID registerForArgument(int index)
     {
@@ -289,7 +287,6 @@ public:
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
     static const int RegisterSize = 8;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
     static RegisterID registerForArgument(int index)
     {
@@ -395,7 +392,6 @@ public:
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
     static const int RegisterSize = 4;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
     static RegisterID registerForArgument(int index)
     {
@@ -518,7 +514,6 @@ public:
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
     static const int RegisterSize = 8;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 8;
     static RegisterID registerForArgument(int index)
     {
@@ -608,7 +603,6 @@ public:
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
     static const int RegisterSize = 4;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
     static RegisterID registerForArgument(int index)
     {
