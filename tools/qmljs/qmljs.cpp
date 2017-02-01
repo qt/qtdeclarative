@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 #endif
 #ifdef V4_ENABLE_JIT
         } else {
-            iSelFactory = new QV4::JIT::ISelFactory;
+            iSelFactory = new QV4::JIT::ISelFactory<>;
 #endif // V4_ENABLE_JIT
         }
 

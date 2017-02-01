@@ -108,7 +108,9 @@ public:
     bool isAccepted() { return event.isAccepted(); }
     void setAccepted(bool accepted) { event.setAccepted(accepted); }
 
+#if QT_CONFIG(shortcut)
     Q_REVISION(2) Q_INVOKABLE bool matches(QKeySequence::StandardKey key) const { return event.matches(key); }
+#endif
 
 private:
     QKeyEvent event;

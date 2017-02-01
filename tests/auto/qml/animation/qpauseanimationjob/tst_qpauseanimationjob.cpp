@@ -392,8 +392,10 @@ void tst_QPauseAnimationJob::multipleSequentialGroups()
 #ifdef Q_OS_WIN
     if (group.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
-#endif
+    QCOMPARE(group.state(), QAbstractAnimationJob::Stopped);
+#else
     QTRY_COMPARE(group.state(), QAbstractAnimationJob::Stopped);
+#endif
 
 #ifdef Q_OS_WIN
     if (subgroup1.state() != QAbstractAnimationJob::Stopped)

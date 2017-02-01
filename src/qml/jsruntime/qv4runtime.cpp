@@ -343,35 +343,15 @@ ReturnedValue Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
     return Encode(engine->currentContext->deleteProperty(name));
 }
 
-QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
+QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &lval, const Value &rval)
 {
-    const FunctionObject *function = right.as<FunctionObject>();
-    if (!function)
-        return engine->throwTypeError();
+    // 11.8.6, 5: rval must be an Object
+    const Object *rhs = rval.as<Object>();
+    if (!rhs)
+       return engine->throwTypeError();
 
-    Heap::FunctionObject *f = function->d();
-    if (function->isBoundFunction())
-        f = function->cast<BoundFunction>()->target();
-
-    const Object *o = left.as<Object>();
-    if (!o)
-        return Encode(false);
-    Heap::Object *v = o->d();
-
-    o = f->protoProperty();
-    if (!o)
-        return engine->throwTypeError();
-
-    while (v) {
-        v = v->prototype;
-
-        if (!v)
-            break;
-        else if (o->d() == v)
-            return Encode(true);
-    }
-
-    return Encode(false);
+    // 11.8.6, 7: call "HasInstance", which we term instanceOf, and return the result.
+    return rhs->instanceOf(lval);
 }
 
 QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left, const Value &right)

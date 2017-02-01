@@ -404,28 +404,28 @@ public:
 
     struct CompareFunctor
     {
-        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
-            : m_ctx(ctx), m_compareFn(&compareFn)
+        CompareFunctor(QV4::ExecutionEngine *v4, const QV4::Value &compareFn)
+            : m_v4(v4), m_compareFn(&compareFn)
         {}
 
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
-            QV4::Scope scope(m_ctx);
+            QV4::Scope scope(m_v4);
             ScopedObject compare(scope, m_compareFn);
             ScopedCallData callData(scope, 2);
-            callData->args[0] = convertElementToValue(this->m_ctx->d()->engine, lhs);
-            callData->args[1] = convertElementToValue(this->m_ctx->d()->engine, rhs);
-            callData->thisObject = this->m_ctx->d()->engine->globalObject;
+            callData->args[0] = convertElementToValue(m_v4, lhs);
+            callData->args[1] = convertElementToValue(m_v4, rhs);
+            callData->thisObject = m_v4->globalObject;
             compare->call(scope, callData);
             return scope.result.toNumber() < 0;
         }
 
     private:
-        QV4::ExecutionContext *m_ctx;
+        QV4::ExecutionEngine *m_v4;
         const QV4::Value *m_compareFn;
     };
 
-    void sort(QV4::CallContext *ctx)
+    void sort(const BuiltinFunction *, Scope &scope, CallData *callData)
     {
         if (d()->isReference) {
             if (!d()->object)
@@ -433,9 +433,8 @@ public:
             loadReference();
         }
 
-        QV4::Scope scope(ctx);
-        if (ctx->argc() == 1 && ctx->args()[0].as<FunctionObject>()) {
-            CompareFunctor cf(ctx, ctx->args()[0]);
+        if (callData->argc == 1 && callData->args[0].as<FunctionObject>()) {
+            CompareFunctor cf(scope.engine, callData->args[0]);
             std::sort(d()->container->begin(), d()->container->end(), cf);
         } else {
             DefaultCompareFunctor cf;
@@ -446,45 +445,43 @@ public:
             storeReference();
     }
 
-    static QV4::ReturnedValue method_get_length(QV4::CallContext *ctx)
+    static void method_get_length(const BuiltinFunction *, Scope &scope, CallData *callData)
     {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->thisObject().as<QQmlSequence<Container> >());
+        QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
-            return ctx->engine()->throwTypeError();
+            THROW_TYPE_ERROR();
 
         if (This->d()->isReference) {
             if (!This->d()->object)
-                return QV4::Encode(0);
+                RETURN_RESULT(Encode(0));
             This->loadReference();
         }
-        return QV4::Encode(This->d()->container->count());
+        RETURN_RESULT(Encode(This->d()->container->count()));
     }
 
-    static QV4::ReturnedValue method_set_length(QV4::CallContext* ctx)
+    static void method_set_length(const BuiltinFunction *, Scope &scope, CallData *callData)
     {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->thisObject().as<QQmlSequence<Container> >());
+        QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
-            return ctx->engine()->throwTypeError();
+            THROW_TYPE_ERROR();
 
-        quint32 newLength = ctx->args()[0].toUInt32();
+        quint32 newLength = callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
-            return QV4::Encode::undefined();
+            RETURN_UNDEFINED();
         }
         /* Read the sequence from the QObject property if we're a reference */
         if (This->d()->isReference) {
             if (!This->d()->object)
-                return QV4::Encode::undefined();
+                RETURN_UNDEFINED();
             This->loadReference();
         }
         /* Determine whether we need to modify the sequence */
         qint32 newCount = static_cast<qint32>(newLength);
         qint32 count = This->d()->container->count();
         if (newCount == count) {
-            return QV4::Encode::undefined();
+            RETURN_UNDEFINED();
         } else if (newCount > count) {
             /* according to ECMA262r3 we need to insert */
             /* undefined values increasing length to newLength. */
@@ -506,7 +503,7 @@ public:
             /* write back.  already checked that object is non-null, so skip that check here. */
             This->storeReference();
         }
-        return QV4::Encode::undefined();
+        RETURN_UNDEFINED();
     }
 
     QVariant toVariant() const
@@ -625,26 +622,25 @@ void SequencePrototype::init()
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
-QV4::ReturnedValue SequencePrototype::method_sort(QV4::CallContext *ctx)
+void SequencePrototype::method_sort(const BuiltinFunction *b, Scope &scope, CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::ScopedObject o(scope, ctx->thisObject());
+    QV4::ScopedObject o(scope, callData->thisObject);
     if (!o || !o->isListType())
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    if (ctx->argc() >= 2)
-        return o.asReturnedValue();
+    if (callData->argc >= 2)
+        RETURN_RESULT(o);
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
-            s->sort(ctx); \
+            s->sort(b, scope, callData); \
         } else
 
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
         {}
-    return o.asReturnedValue();
+    RETURN_RESULT(o);
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \

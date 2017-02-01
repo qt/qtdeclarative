@@ -43,6 +43,7 @@
 #include "qsgopenvghelpers.h"
 #include "qsgopenvgfontglyphcache.h"
 #include "qopenvgoffscreensurface.h"
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -143,7 +144,7 @@ void QSGOpenVGGlyphNode::render()
         vgLoadMatrix(transform().constData());
     } else {
         vgLoadIdentity();
-        offscreenSurface = new QOpenVGOffscreenSurface(QSize(ceil(m_bounding_rect.width()), ceil(m_bounding_rect.height())));
+        offscreenSurface = new QOpenVGOffscreenSurface(QSize(std::ceil(m_bounding_rect.width()), std::ceil(m_bounding_rect.height())));
         offscreenSurface->makeCurrent();
     }
 

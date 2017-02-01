@@ -312,18 +312,18 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     return true;
 }
 
-ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
+void QQmlValueTypeWrapper::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Object *o = ctx->thisObject().as<Object>();
+    Object *o = callData->thisObject.as<Object>();
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
     QQmlValueTypeWrapper *w = o->as<QQmlValueTypeWrapper>();
     if (!w)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
     if (QQmlValueTypeReference *ref = w->as<QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
-            return Encode::undefined();
+            RETURN_UNDEFINED();
 
     QString result;
     // Prepare a buffer to pass to QMetaType::convert()
@@ -346,7 +346,7 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
         }
         result += QLatin1Char(')');
     }
-    return Encode(ctx->engine()->newString(result));
+    scope.result = scope.engine->newString(result);
 }
 
 ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)

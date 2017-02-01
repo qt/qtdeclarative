@@ -54,7 +54,9 @@
 #include "qquicktextmetrics_p.h"
 #include "qquicktransition_p.h"
 #include "qquickanimator_p.h"
+#if QT_CONFIG(shortcut)
 #include "qquickshortcut_p.h"
+#endif
 #include "qquickvalidator_p.h"
 #include <qqmlinfo.h>
 #include <private/qqmltypenotavailable_p.h>
@@ -63,7 +65,9 @@
 #include <QtGui/QInputMethod>
 #include <QtGui/QKeySequence>
 
+#if QT_CONFIG(shortcut)
 Q_DECLARE_METATYPE(QKeySequence::StandardKey)
+#endif
 
 void QQuickUtilModule::defineModule()
 {
@@ -114,15 +118,18 @@ void QQuickUtilModule::defineModule()
 
     qmlRegisterCustomType<QQuickPropertyChanges>("QtQuick",2,0,"PropertyChanges", new QQuickPropertyChangesParser);
 
+#if QT_CONFIG(shortcut)
     qRegisterMetaType<QKeySequence::StandardKey>();
     qmlRegisterUncreatableType<QKeySequence, 2>("QtQuick", 2, 2, "StandardKey", QStringLiteral("Cannot create an instance of StandardKey."));
+#endif
 
     qmlRegisterType<QQuickFontMetrics>("QtQuick", 2, 4, "FontMetrics");
     qmlRegisterType<QQuickTextMetrics>("QtQuick", 2, 4, "TextMetrics");
 
+#if QT_CONFIG(shortcut)
     qmlRegisterType<QQuickShortcut>("QtQuick", 2, 5, "Shortcut");
-
     qmlRegisterType<QQuickShortcut,1>("QtQuick", 2, 6, "Shortcut");
 
     qmlRegisterType<QQuickShortcut,9>("QtQuick", 2, 9, "Shortcut");
+#endif
 }

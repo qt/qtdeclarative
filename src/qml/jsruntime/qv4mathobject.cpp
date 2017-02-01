@@ -92,160 +92,160 @@ static Q_ALWAYS_INLINE double copySign(double x, double y)
     return ::copysign(x, y);
 }
 
-ReturnedValue MathObject::method_abs(CallContext *context)
+void MathObject::method_abs(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    if (!context->argc())
-        return Encode(qt_qnan());
+    if (!callData->argc)
+        RETURN_RESULT(Encode(qt_qnan()));
 
-    if (context->args()[0].isInteger()) {
-        int i = context->args()[0].integerValue();
-        return Encode(i < 0 ? - i : i);
+    if (callData->args[0].isInteger()) {
+        int i = callData->args[0].integerValue();
+        RETURN_RESULT(Encode(i < 0 ? - i : i));
     }
 
-    double v = context->args()[0].toNumber();
+    double v = callData->args[0].toNumber();
     if (v == 0) // 0 | -0
-        return Encode(0);
+        RETURN_RESULT(Encode(0));
 
-    return Encode(v < 0 ? -v : v);
+    RETURN_RESULT(Encode(v < 0 ? -v : v));
 }
 
-ReturnedValue MathObject::method_acos(CallContext *context)
+void MathObject::method_acos(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : 2;
+    double v = callData->argc ? callData->args[0].toNumber() : 2;
     if (v > 1)
-        return Encode(qt_qnan());
+        RETURN_RESULT(Encode(qt_qnan()));
 
-    return Encode(std::acos(v));
+    RETURN_RESULT(Encode(std::acos(v)));
 }
 
-ReturnedValue MathObject::method_asin(CallContext *context)
+void MathObject::method_asin(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : 2;
+    double v = callData->argc ? callData->args[0].toNumber() : 2;
     if (v > 1)
-        return Encode(qt_qnan());
+        RETURN_RESULT(Encode(qt_qnan()));
     else
-        return Encode(std::asin(v));
+        RETURN_RESULT(Encode(std::asin(v)));
 }
 
-ReturnedValue MathObject::method_atan(CallContext *context)
+void MathObject::method_atan(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v == 0.0)
-        return Encode(v);
+        RETURN_RESULT(Encode(v));
     else
-        return Encode(std::atan(v));
+        RETURN_RESULT(Encode(std::atan(v)));
 }
 
-ReturnedValue MathObject::method_atan2(CallContext *context)
+void MathObject::method_atan2(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v1 = context->argc() ? context->args()[0].toNumber() : qt_qnan();
-    double v2 = context->argc() > 1 ? context->args()[1].toNumber() : qt_qnan();
+    double v1 = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double v2 = callData->argc > 1 ? callData->args[1].toNumber() : qt_qnan();
 
     if ((v1 < 0) && qt_is_finite(v1) && qt_is_inf(v2) && (copySign(1.0, v2) == 1.0))
-        return Encode(copySign(0, -1.0));
+        RETURN_RESULT(Encode(copySign(0, -1.0)));
 
     if ((v1 == 0.0) && (v2 == 0.0)) {
         if ((copySign(1.0, v1) == 1.0) && (copySign(1.0, v2) == -1.0)) {
-            return Encode(M_PI);
+            RETURN_RESULT(Encode(M_PI));
         } else if ((copySign(1.0, v1) == -1.0) && (copySign(1.0, v2) == -1.0)) {
-            return Encode(-M_PI);
+            RETURN_RESULT(Encode(-M_PI));
         }
     }
-    return Encode(std::atan2(v1, v2));
+    RETURN_RESULT(Encode(std::atan2(v1, v2)));
 }
 
-ReturnedValue MathObject::method_ceil(CallContext *context)
+void MathObject::method_ceil(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v < 0.0 && v > -1.0)
-        return Encode(copySign(0, -1.0));
+        RETURN_RESULT(Encode(copySign(0, -1.0)));
     else
-        return Encode(std::ceil(v));
+        RETURN_RESULT(Encode(std::ceil(v)));
 }
 
-ReturnedValue MathObject::method_cos(CallContext *context)
+void MathObject::method_cos(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
-    return Encode(std::cos(v));
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    RETURN_RESULT(Encode(std::cos(v)));
 }
 
-ReturnedValue MathObject::method_exp(CallContext *context)
+void MathObject::method_exp(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (qt_is_inf(v)) {
         if (copySign(1.0, v) == -1.0)
-            return Encode(0);
+            RETURN_RESULT(Encode(0));
         else
-            return Encode(qt_inf());
+            RETURN_RESULT(Encode(qt_inf()));
     } else {
-        return Encode(std::exp(v));
+        RETURN_RESULT(Encode(std::exp(v)));
     }
 }
 
-ReturnedValue MathObject::method_floor(CallContext *context)
+void MathObject::method_floor(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
-    return Encode(std::floor(v));
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    RETURN_RESULT(Encode(std::floor(v)));
 }
 
-ReturnedValue MathObject::method_log(CallContext *context)
+void MathObject::method_log(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v < 0)
-        return Encode(qt_qnan());
+        RETURN_RESULT(Encode(qt_qnan()));
     else
-        return Encode(std::log(v));
+        RETURN_RESULT(Encode(std::log(v)));
 }
 
-ReturnedValue MathObject::method_max(CallContext *context)
+void MathObject::method_max(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
     double mx = -qt_inf();
-    for (int i = 0; i < context->argc(); ++i) {
-        double x = context->args()[i].toNumber();
+    for (int i = 0; i < callData->argc; ++i) {
+        double x = callData->args[i].toNumber();
         if (x > mx || std::isnan(x))
             mx = x;
     }
-    return Encode(mx);
+    RETURN_RESULT(Encode(mx));
 }
 
-ReturnedValue MathObject::method_min(CallContext *context)
+void MathObject::method_min(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
     double mx = qt_inf();
-    for (int i = 0; i < context->argc(); ++i) {
-        double x = context->args()[i].toNumber();
+    for (int i = 0; i < callData->argc; ++i) {
+        double x = callData->args[i].toNumber();
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
                 || (x < mx) || std::isnan(x)) {
             mx = x;
         }
     }
-    return Encode(mx);
+    RETURN_RESULT(Encode(mx));
 }
 
-ReturnedValue MathObject::method_pow(CallContext *context)
+void MathObject::method_pow(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double x = context->argc() > 0 ? context->args()[0].toNumber() : qt_qnan();
-    double y = context->argc() > 1 ? context->args()[1].toNumber() : qt_qnan();
+    double x = callData->argc > 0 ? callData->args[0].toNumber() : qt_qnan();
+    double y = callData->argc > 1 ? callData->args[1].toNumber() : qt_qnan();
 
     if (std::isnan(y))
-        return Encode(qt_qnan());
+        RETURN_RESULT(Encode(qt_qnan()));
 
     if (y == 0) {
-        return Encode(1);
+        RETURN_RESULT(Encode(1));
     } else if (((x == 1) || (x == -1)) && std::isinf(y)) {
-        return Encode(qt_qnan());
+        RETURN_RESULT(Encode(qt_qnan()));
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
-        return Encode(qInf());
+        RETURN_RESULT(Encode(qInf()));
     } else if ((x == 0) && copySign(1.0, x) == -1.0) {
         if (y < 0) {
             if (std::fmod(-y, 2.0) == 1.0)
-                return Encode(-qt_inf());
+                RETURN_RESULT(Encode(-qt_inf()));
             else
-                return Encode(qt_inf());
+                RETURN_RESULT(Encode(qt_inf()));
         } else if (y > 0) {
             if (std::fmod(y, 2.0) == 1.0)
-                return Encode(copySign(0, -1.0));
+                RETURN_RESULT(Encode(copySign(0, -1.0)));
             else
-                return Encode(0);
+                RETURN_RESULT(Encode(0));
         }
     }
 
@@ -253,78 +253,78 @@ ReturnedValue MathObject::method_pow(CallContext *context)
     else if (qt_is_inf(x) && copySign(1.0, x) == -1.0) {
         if (y > 0) {
             if (std::fmod(y, 2.0) == 1.0)
-                return Encode(-qt_inf());
+                RETURN_RESULT(Encode(-qt_inf()));
             else
-                return Encode(qt_inf());
+                RETURN_RESULT(Encode(qt_inf()));
         } else if (y < 0) {
             if (std::fmod(-y, 2.0) == 1.0)
-                return Encode(copySign(0, -1.0));
+                RETURN_RESULT(Encode(copySign(0, -1.0)));
             else
-                return Encode(0);
+                RETURN_RESULT(Encode(0));
         }
     }
 #endif
     else {
-        return Encode(std::pow(x, y));
+        RETURN_RESULT(Encode(std::pow(x, y)));
     }
     // ###
-    return Encode(qt_qnan());
+    RETURN_RESULT(Encode(qt_qnan()));
 }
 
 Q_GLOBAL_STATIC(QThreadStorage<bool *>, seedCreatedStorage);
 
-ReturnedValue MathObject::method_random(CallContext *context)
+void MathObject::method_random(const BuiltinFunction *, Scope &scope, CallData *)
 {
     if (!seedCreatedStorage()->hasLocalData()) {
         int msecs = QTime(0,0,0).msecsTo(QTime::currentTime());
         Q_ASSERT(msecs >= 0);
-        qsrand(uint(uint(msecs) ^ reinterpret_cast<quintptr>(context)));
+        qsrand(uint(uint(msecs) ^ reinterpret_cast<quintptr>(scope.engine)));
         seedCreatedStorage()->setLocalData(new bool(true));
     }
     // rand()/qrand() return a value where the upperbound is RAND_MAX inclusive. So, instead of
     // dividing by RAND_MAX (which would return 0..RAND_MAX inclusive), we divide by RAND_MAX + 1.
     qint64 upperLimit = qint64(RAND_MAX) + 1;
-    return Encode(qrand() / double(upperLimit));
+    RETURN_RESULT(Encode(qrand() / double(upperLimit)));
 }
 
-ReturnedValue MathObject::method_round(CallContext *context)
+void MathObject::method_round(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     v = copySign(std::floor(v + 0.5), v);
-    return Encode(v);
+    RETURN_RESULT(Encode(v));
 }
 
-ReturnedValue MathObject::method_sign(CallContext *context)
+void MathObject::method_sign(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
 
     if (std::isnan(v))
-        return Encode(qt_qnan());
+        RETURN_RESULT(Encode(qt_qnan()));
 
     if (qIsNull(v))
-        return v;
+        RETURN_RESULT(Encode(v));
 
-    return Encode(std::signbit(v) ? -1 : 1);
+    RETURN_RESULT(Encode(std::signbit(v) ? -1 : 1));
 }
 
-ReturnedValue MathObject::method_sin(CallContext *context)
+void MathObject::method_sin(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
-    return Encode(std::sin(v));
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    RETURN_RESULT(Encode(std::sin(v)));
 }
 
-ReturnedValue MathObject::method_sqrt(CallContext *context)
+void MathObject::method_sqrt(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
-    return Encode(std::sqrt(v));
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    RETURN_RESULT(Encode(std::sqrt(v)));
 }
 
-ReturnedValue MathObject::method_tan(CallContext *context)
+void MathObject::method_tan(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    double v = context->argc() ? context->args()[0].toNumber() : qt_qnan();
+    double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v == 0.0)
-        return Encode(v);
+        RETURN_RESULT(Encode(v));
     else
-        return Encode(std::tan(v));
+        RETURN_RESULT(Encode(std::tan(v)));
 }
 

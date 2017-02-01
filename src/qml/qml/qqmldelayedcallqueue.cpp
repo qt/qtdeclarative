@@ -105,17 +105,15 @@ void QQmlDelayedCallQueue::init(QV4::ExecutionEngine* engine)
     m_tickedMethod = metaObject.method(methodIndex);
 }
 
-QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::CallContext *ctx)
+void QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    const QV4::CallData *callData = ctx->d()->callData;
-
     if (callData->argc == 0)
-        V4THROW_ERROR("Qt.callLater: no arguments given");
+        THROW_GENERIC_ERROR("Qt.callLater: no arguments given");
 
     const QV4::FunctionObject *func = callData->args[0].as<QV4::FunctionObject>();
 
     if (!func)
-        V4THROW_ERROR("Qt.callLater: first argument not a function or signal");
+        THROW_GENERIC_ERROR("Qt.callLater: first argument not a function or signal");
 
     QPair<QObject *, int> functionData = QV4::QObjectMethod::extractQtMethod(func);
 
@@ -171,7 +169,7 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::CallCon
         m_tickedMethod.invoke(this, Qt::QueuedConnection);
         m_callbackOutstanding = true;
     }
-    return QV4::Encode::undefined();
+    scope.result = QV4::Encode::undefined();
 }
 
 void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, const QV4::CallData *callData, int offset, QV4::ExecutionEngine *engine)

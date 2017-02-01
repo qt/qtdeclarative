@@ -153,12 +153,11 @@ const char *ErrorObject::className(Heap::ErrorObject::ErrorType t)
     Q_UNREACHABLE();
 }
 
-ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
+void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-    Scoped<ErrorObject> This(scope, ctx->thisObject());
+    Scoped<ErrorObject> This(scope, callData->thisObject);
     if (!This)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
     if (!This->d()->stack) {
         QString trace;
         for (int i = 0; i < This->d()->stackTrace->count(); ++i) {
@@ -169,9 +168,9 @@ ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);
         }
-        This->d()->stack = ctx->d()->engine->newString(trace);
+        This->d()->stack = scope.engine->newString(trace);
     }
-    return This->d()->stack->asReturnedValue();
+    scope.result = This->d()->stack;
 }
 
 void ErrorObject::markObjects(Heap::Base *that, ExecutionEngine *e)
@@ -335,22 +334,20 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
         obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
 }
 
-ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
+void ErrorPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    Scope scope(ctx);
-
-    Object *o = ctx->thisObject().as<Object>();
+    Object *o = callData->thisObject.as<Object>();
     if (!o)
-        return ctx->engine()->throwTypeError();
+        THROW_TYPE_ERROR();
 
-    ScopedValue name(scope, o->get(ctx->d()->engine->id_name()));
+    ScopedValue name(scope, o->get(scope.engine->id_name()));
     QString qname;
     if (name->isUndefined())
         qname = QStringLiteral("Error");
     else
         qname = name->toQString();
 
-    ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("message")));
+    ScopedString s(scope, scope.engine->newString(QStringLiteral("message")));
     ScopedValue message(scope, o->get(s));
     QString qmessage;
     if (!message->isUndefined())
@@ -365,5 +362,5 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    return ctx->d()->engine->newString(str)->asReturnedValue();
+    scope.result = scope.engine->newString(str)->asReturnedValue();
 }

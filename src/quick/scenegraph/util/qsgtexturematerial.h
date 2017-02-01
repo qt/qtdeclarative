@@ -69,6 +69,9 @@ public:
     void setVerticalWrapMode(QSGTexture::WrapMode mode) { m_vertical_wrap = mode; }
     QSGTexture::WrapMode verticalWrapMode() const { return QSGTexture::WrapMode(m_vertical_wrap); }
 
+    void setAnisotropyLevel(QSGTexture::AnisotropyLevel level) { m_anisotropy_level = level; }
+    QSGTexture::AnisotropyLevel anisotropyLevel() const { return QSGTexture::AnisotropyLevel(m_anisotropy_level); }
+
 protected:
     QSGTexture *m_texture;
 
@@ -76,8 +79,8 @@ protected:
     uint m_mipmap_filtering: 2;
     uint m_horizontal_wrap : 1;
     uint m_vertical_wrap: 1;
-
-    uint m_reserved : 26;
+    uint m_anisotropy_level : 3;
+    uint m_reserved : 23;
 };
 
 

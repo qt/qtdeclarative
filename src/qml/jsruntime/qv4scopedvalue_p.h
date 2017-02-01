@@ -68,6 +68,38 @@ namespace QV4 {
 
 struct ScopedValue;
 
+#define CHECK_EXCEPTION() \
+    do { \
+        if (scope.hasException()) { \
+            scope.result = QV4::Encode::undefined(); \
+            return; \
+        } \
+    } while (false)
+
+#define RETURN_UNDEFINED() \
+    do { \
+        scope.result = QV4::Encode::undefined(); \
+        return; \
+    } while (false)
+
+#define RETURN_RESULT(r) \
+    do { \
+        scope.result = r; \
+        return; \
+    } while (false)
+
+#define THROW_TYPE_ERROR() \
+    do { \
+        scope.result = scope.engine->throwTypeError(); \
+        return; \
+    } while (false)
+
+#define THROW_GENERIC_ERROR(str) \
+    do { \
+        scope.result = scope.engine->throwError(QString::fromUtf8(str)); \
+        return; \
+    } while (false)
+
 struct Scope {
     inline Scope(ExecutionContext *ctx)
         : engine(ctx->d()->engine)

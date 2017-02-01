@@ -85,6 +85,10 @@ public:
     void setOwnsTexture(bool owns) override;
     bool ownsTexture() const override;
 
+    // QSGImageNode now being a public class does not allow any additional virtual methods. Placing these here, non-virtual.
+    void setAnisotropyLevel(QSGTexture::AnisotropyLevel level);
+    QSGTexture::AnisotropyLevel anisotropyLevel() const;
+
 private:
     QSGGeometry m_geometry;
     QSGOpaqueTextureMaterial m_opaque_material;

@@ -101,5 +101,12 @@ Item {
         Shared.Label { text: "primary orientation" }
         Shared.Label { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
         //! [screen]
+
+        Shared.Label { text: "10mm rectangle" }
+        Rectangle {
+            color: "red"
+            width: Screen.pixelDensity * 10
+            height: width
+        }
     }
 }

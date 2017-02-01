@@ -76,7 +76,8 @@ public:
     int argumentsValid:1;
 
     QList<QByteArray> *names;
-    int arguments[0];
+
+    int arguments[1];
 };
 
 // Flags that do *NOT* depend on the property's QMetaProperty::userType() and thus are quick
@@ -919,7 +920,7 @@ static int EnumType(const QMetaObject *metaobj, const QByteArray &str, int type)
 QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int argc, const QList<QByteArray> &names)
 {
     typedef QQmlPropertyCacheMethodArguments A;
-    A *args = static_cast<A *>(malloc(sizeof(A) + (argc + 1) * sizeof(int)));
+    A *args = static_cast<A *>(malloc(sizeof(A) + (argc) * sizeof(int)));
     args->arguments[0] = argc;
     args->argumentsValid = false;
     args->signalParameterStringForJS = 0;

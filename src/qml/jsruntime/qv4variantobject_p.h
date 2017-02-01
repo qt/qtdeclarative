@@ -107,10 +107,10 @@ struct VariantPrototype : VariantObject
 public:
     void init();
 
-    static ReturnedValue method_preserve(CallContext *ctx);
-    static ReturnedValue method_destroy(CallContext *ctx);
-    static ReturnedValue method_toString(CallContext *ctx);
-    static ReturnedValue method_valueOf(CallContext *ctx);
+    static void method_preserve(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_destroy(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 }

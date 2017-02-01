@@ -92,21 +92,21 @@ struct DataViewPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_get_buffer(CallContext *ctx);
-    static ReturnedValue method_get_byteLength(CallContext *ctx);
-    static ReturnedValue method_get_byteOffset(CallContext *ctx);
+    static void method_get_buffer(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_get_byteOffset(const BuiltinFunction *, Scope &scope, CallData *callData);
     template <typename T>
-    static ReturnedValue method_getChar(CallContext *ctx);
+    static void method_getChar(const BuiltinFunction *, Scope &scope, CallData *callData);
     template <typename T>
-    static ReturnedValue method_get(CallContext *ctx);
+    static void method_get(const BuiltinFunction *, Scope &scope, CallData *callData);
     template <typename T>
-    static ReturnedValue method_getFloat(CallContext *ctx);
+    static void method_getFloat(const BuiltinFunction *, Scope &scope, CallData *callData);
     template <typename T>
-    static ReturnedValue method_setChar(CallContext *ctx);
+    static void method_setChar(const BuiltinFunction *, Scope &scope, CallData *callData);
     template <typename T>
-    static ReturnedValue method_set(CallContext *ctx);
+    static void method_set(const BuiltinFunction *, Scope &scope, CallData *callData);
     template <typename T>
-    static ReturnedValue method_setFloat(CallContext *ctx);
+    static void method_setFloat(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 

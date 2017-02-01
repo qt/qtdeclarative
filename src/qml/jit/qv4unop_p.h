@@ -60,13 +60,17 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-class Assembler;
-
+template <typename JITAssembler>
 struct Unop {
-    Unop(Assembler *assembler, IR::AluOp operation)
+    Unop(JITAssembler *assembler, IR::AluOp operation)
         : _as(assembler)
         , op(operation)
     {}
+
+    using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using PointerToValue = typename JITAssembler::PointerToValue;
+    using RuntimeCall = typename JITAssembler::RuntimeCall;
+    using TrustedImm32 = typename JITAssembler::TrustedImm32;
 
     void generate(IR::Expr *source, IR::Expr *target);
 
@@ -74,7 +78,7 @@ struct Unop {
     void generateNot(IR::Expr *source, IR::Expr *target);
     void generateCompl(IR::Expr *source, IR::Expr *target);
 
-    Assembler *_as;
+    JITAssembler *_as;
     IR::AluOp op;
 };
 

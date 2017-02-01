@@ -172,7 +172,7 @@ struct ErrorObject: Object {
 
     static const char *className(Heap::ErrorObject::ErrorType t);
 
-    static ReturnedValue method_get_stack(CallContext *ctx);
+    static void method_get_stack(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
@@ -282,7 +282,7 @@ struct ErrorPrototype : ErrorObject
     void init(ExecutionEngine *engine, Object *ctor) { init(engine, ctor, this, Heap::ErrorObject::Error); }
 
     static void init(ExecutionEngine *engine, Object *ctor, Object *obj, Heap::ErrorObject::ErrorType t);
-    static ReturnedValue method_toString(CallContext *ctx);
+    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 struct EvalErrorPrototype : ErrorObject

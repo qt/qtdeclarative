@@ -95,6 +95,17 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     return c;
 }
 
+Heap::CallContext *Heap::CallContext::createSimpleContext(ExecutionEngine *v4)
+{
+    Heap::CallContext *ctxt = v4->memoryManager->allocSimpleCallContext(v4);
+    return ctxt;
+}
+
+void Heap::CallContext::freeSimpleCallContext()
+{
+    engine->memoryManager->freeSimpleCallContext();
+}
+
 Heap::WithContext *ExecutionContext::newWithContext(Heap::Object *with)
 {
     return d()->engine->memoryManager->alloc<WithContext>(d(), with);
@@ -325,26 +336,27 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data ctx = CallContext::Data::createOnStack(scope.engine);
+    CallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext(scope.engine);
 
-    ctx.strictMode = function->isStrict();
-    ctx.callData = callData;
-    ctx.v4Function = function;
-    ctx.compilationUnit = function->compilationUnit;
-    ctx.lookups = function->compilationUnit->runtimeLookups;
-    ctx.constantTable = function->compilationUnit->constants;
-    ctx.outer = this->d();
-    ctx.locals = scope.alloc(function->compiledFunction->nLocals);
+    ctx->strictMode = function->isStrict();
+    ctx->callData = callData;
+    ctx->v4Function = function;
+    ctx->compilationUnit = function->compilationUnit;
+    ctx->lookups = function->compilationUnit->runtimeLookups;
+    ctx->constantTable = function->compilationUnit->constants;
+    ctx->outer = this->d();
+    ctx->locals = scope.alloc(function->compiledFunction->nLocals);
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
-    scope.engine->pushContext(&ctx);
-    Q_ASSERT(scope.engine->current == &ctx);
+    scope.engine->pushContext(ctx);
+    Q_ASSERT(scope.engine->current == ctx);
 
     scope.result = Q_V4_PROFILE(scope.engine, function);
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
+    scope.engine->memoryManager->freeSimpleCallContext();
 }
 
 void ExecutionContext::setProperty(String *name, const Value &value)

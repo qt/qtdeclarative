@@ -88,10 +88,12 @@ void ArgumentsObject::fullyCreate()
 
     Scope scope(engine());
     Scoped<MemberData> md(scope, d()->mappedArguments);
-    d()->mappedArguments = md->allocate(engine(), numAccessors);
-    for (uint i = 0; i < numAccessors; ++i) {
-        d()->mappedArguments->data[i] = context()->callData->args[i];
-        arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
+    if (numAccessors) {
+        d()->mappedArguments = md->allocate(engine(), numAccessors);
+        for (uint i = 0; i < numAccessors; ++i) {
+            d()->mappedArguments->data[i] = context()->callData->args[i];
+            arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
+        }
     }
     arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)

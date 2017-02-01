@@ -234,7 +234,7 @@ struct InternalClassTransition
     { return id == other.id && flags == other.flags; }
 
     bool operator<(const InternalClassTransition &other) const
-    { return id < other.id; }
+    { return id < other.id || (id == other.id && flags < other.flags); }
 };
 
 struct InternalClass : public QQmlJS::Managed {

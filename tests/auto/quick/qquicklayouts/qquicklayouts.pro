@@ -9,5 +9,6 @@ TESTDATA = data/*
 
 OTHER_FILES += \
     data/tst_rowlayout.qml \
-    data/tst_gridlayout.qml
+    data/tst_gridlayout.qml \
+    data/tst_stacklayout.qml
 

@@ -52,10 +52,11 @@
 //
 #include <private/qv4global_p.h>
 #include <private/qv4value_p.h>
-#include <private/qv4function_p.h>
 #include <private/qv4runtime_p.h>
 
+#if !defined(V4_BOOTSTRAP)
 QT_REQUIRE_CONFIG(qml_interpreter);
+#endif
 
 QT_BEGIN_NAMESPACE
 

@@ -208,6 +208,7 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
+struct BuiltinFunction;
 struct ErrorObject;
 struct ArgumentsObject;
 struct Managed;

@@ -1,0 +1,12 @@
+qtPrepareTool(QML_CACHEGEN, qmlcachegen)
+
+!isEmpty(QT_TARGET_ARCH):QML_CACHEGEN_ARCH=$$QT_TARGET_ARCH
+else:QML_CACHEGEN_ARCH=$$QT_ARCH
+
+qmlcachegen.input = QML_FILES
+qmlcachegen.output = ${QMAKE_FILE_IN}c
+qmlcachegen.commands = $$QML_CACHEGEN --target-architecture=$$QML_CACHEGEN_ARCH ${QMAKE_FILE_IN}
+qmlcachegen.name = Generate QML Cache ${QMAKE_FILE_IN}
+qmlcachegen.variable_out = AUX_QML_FILES
+
+QMAKE_EXTRA_COMPILERS += qmlcachegen

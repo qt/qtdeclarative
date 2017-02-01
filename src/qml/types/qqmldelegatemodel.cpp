@@ -1795,24 +1795,26 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
     return groupFlags;
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::CallContext *ctx)
+void QQmlDelegateModelItem::get_model(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
-    if (!o)
-        return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
+    if (!o) {
+        scope.result = scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return;
+    }
     if (!o->d()->item->metaType->model)
-        return QV4::Encode::undefined();
+        RETURN_UNDEFINED();
 
-    return o->d()->item->get();
+    scope.result = o->d()->item->get();
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::CallContext *ctx)
+void QQmlDelegateModelItem::get_groups(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
-    if (!o)
-        return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
+    if (!o) {
+        scope.result = scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return;
+    }
 
     QStringList groups;
     for (int i = 1; i < o->d()->item->metaType->groupCount; ++i) {
@@ -1820,27 +1822,29 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::CallContext *ctx)
             groups.append(o->d()->item->metaType->groupNames.at(i - 1));
     }
 
-    return scope.engine->fromVariant(groups);
+    scope.result = scope.engine->fromVariant(groups);
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::CallContext *ctx)
+void QQmlDelegateModelItem::set_groups(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
-    if (!o)
-        return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-    if (!ctx->argc())
-        return ctx->engine()->throwTypeError();
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
+    if (!o) {
+        scope.result = scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return;
+    }
+
+    if (!callData->argc)
+        THROW_TYPE_ERROR();
 
     if (!o->d()->item->metaType->model)
-        return QV4::Encode::undefined();
+        RETURN_UNDEFINED();
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(o->d()->item->metaType->model);
 
-    const int groupFlags = model->m_cacheMetaType->parseGroups(ctx->args()[0]);
+    const int groupFlags = model->m_cacheMetaType->parseGroups(callData->args[0]);
     const int cacheIndex = model->m_cache.indexOf(o->d()->item);
     Compositor::iterator it = model->m_compositor.find(Compositor::Cache, cacheIndex);
     model->setGroups(it, 1, Compositor::Cache, groupFlags);
-    return QV4::Encode::undefined();
+    scope.result = QV4::Encode::undefined();
 }
 
 QV4::ReturnedValue QQmlDelegateModelItem::get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
@@ -3234,28 +3238,25 @@ struct QQmlDelegateModelGroupChange : QV4::Object
         return e->memoryManager->allocObject<QQmlDelegateModelGroupChange>();
     }
 
-    static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->thisObject().as<QQmlDelegateModelGroupChange>());
+    static void method_get_index(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) {
+        QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
-            return ctx->engine()->throwTypeError();
-        return QV4::Encode(that->d()->change.index);
+            THROW_TYPE_ERROR();
+        scope.result = QV4::Encode(that->d()->change.index);
     }
-    static QV4::ReturnedValue method_get_count(QV4::CallContext *ctx) {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->thisObject().as<QQmlDelegateModelGroupChange>());
+    static void method_get_count(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) {
+        QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
-            return ctx->engine()->throwTypeError();
-        return QV4::Encode(that->d()->change.count);
+            THROW_TYPE_ERROR();
+        scope.result = QV4::Encode(that->d()->change.count);
     }
-    static QV4::ReturnedValue method_get_moveId(QV4::CallContext *ctx) {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->thisObject().as<QQmlDelegateModelGroupChange>());
+    static void method_get_moveId(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) {
+        QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
-            return ctx->engine()->throwTypeError();
+            THROW_TYPE_ERROR();
         if (that->d()->change.moveId < 0)
-            return QV4::Encode::undefined();
-        return QV4::Encode(that->d()->change.moveId);
+            RETURN_UNDEFINED();
+        scope.result = QV4::Encode(that->d()->change.moveId);
     }
 };
 

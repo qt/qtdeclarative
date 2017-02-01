@@ -5123,7 +5123,7 @@ void LifeTimeInterval::setFrom(int from) {
     Q_ASSERT(from > 0);
 
     if (_ranges.isEmpty()) { // this is the case where there is no use, only a define
-        _ranges.prepend(Range(from, from));
+        _ranges.prepend(LifeTimeIntervalRange(from, from));
         if (_end == InvalidPosition)
             _end = from;
     } else {
@@ -5137,17 +5137,17 @@ void LifeTimeInterval::addRange(int from, int to) {
     Q_ASSERT(to >= from);
 
     if (_ranges.isEmpty()) {
-        _ranges.prepend(Range(from, to));
+        _ranges.prepend(LifeTimeIntervalRange(from, to));
         _end = to;
         return;
     }
 
-    Range *p = &_ranges.first();
+    LifeTimeIntervalRange *p = &_ranges.first();
     if (to + 1 >= p->start && p->end + 1 >= from) {
         p->start = qMin(p->start, from);
         p->end = qMax(p->end, to);
         while (_ranges.count() > 1) {
-            Range *p1 = p + 1;
+            LifeTimeIntervalRange *p1 = p + 1;
             if (p->end + 1 < p1->start || p1->end + 1 < p->start)
                 break;
             p1->start = qMin(p->start, p1->start);
@@ -5157,10 +5157,10 @@ void LifeTimeInterval::addRange(int from, int to) {
         }
     } else {
         if (to < p->start) {
-            _ranges.prepend(Range(from, to));
+            _ranges.prepend(LifeTimeIntervalRange(from, to));
         } else {
             Q_ASSERT(from > _ranges.last().end);
-            _ranges.push_back(Range(from, to));
+            _ranges.push_back(LifeTimeIntervalRange(from, to));
         }
     }
 
@@ -5206,7 +5206,7 @@ LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
     } else {
         // find the first range where the temp will get active again:
         while (!newInterval._ranges.isEmpty()) {
-            const Range &range = newInterval._ranges.first();
+            const LifeTimeIntervalRange &range = newInterval._ranges.first();
             if (range.start > newStart) {
                 // The split position is before the start of the range. Either we managed to skip
                 // over the correct range, or we got an invalid split request. Either way, this

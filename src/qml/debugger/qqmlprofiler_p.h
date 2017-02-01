@@ -73,7 +73,7 @@ struct QQmlProfiler {};
 
 struct QQmlBindingProfiler
 {
-    QQmlBindingProfiler(quintptr, QQmlBinding *, QV4::FunctionObject *) {}
+    QQmlBindingProfiler(quintptr, QV4::Function *) {}
 };
 
 struct QQmlHandlingSignalProfiler

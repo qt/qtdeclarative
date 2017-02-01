@@ -29,6 +29,7 @@
 #if ENABLE(ASSEMBLER) && (CPU(X86) || CPU(X86_64))
 
 #include "AssemblerBuffer.h"
+#include "AbstractMacroAssembler.h"
 #include "JITCompilationEffort.h"
 #include <stdint.h>
 #include <wtf/Assertions.h>
@@ -251,6 +252,45 @@ public:
         , m_indexOfTailOfLastWatchpoint(INT_MIN)
     {
     }
+
+    template <typename LabelType>
+    class Jump {
+        template<class TemplateAssemblerType>
+        friend class AbstractMacroAssembler;
+        friend class Call;
+        template <typename, template <typename> class> friend class LinkBufferBase;
+    public:
+        Jump()
+        {
+        }
+
+        Jump(AssemblerLabel jmp)
+            : m_label(jmp)
+        {
+        }
+
+        LabelType label() const
+        {
+            LabelType result;
+            result.m_label = m_label;
+            return result;
+        }
+
+        void link(AbstractMacroAssembler<X86Assembler>* masm) const
+        {
+            masm->m_assembler.linkJump(m_label, masm->m_assembler.label());
+        }
+
+        void linkTo(LabelType label, AbstractMacroAssembler<X86Assembler>* masm) const
+        {
+            masm->m_assembler.linkJump(m_label, label.label());
+        }
+
+        bool isSet() const { return m_label.isSet(); }
+
+    private:
+        AssemblerLabel m_label;
+    };
 
     // Stack operations:
 
