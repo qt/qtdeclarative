@@ -65,7 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL REVISION 2)
-    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 2)
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive RESET resetInteractive NOTIFY interactiveChanged FINAL REVISION 2)
     Q_PROPERTY(Policy policy READ policy WRITE setPolicy NOTIFY policyChanged FINAL REVISION 2)
 
 public:
@@ -100,6 +100,7 @@ public:
 
     bool isInteractive() const;
     void setInteractive(bool interactive);
+    void resetInteractive();
 
     enum Policy {
         AsNeeded = Qt::ScrollBarAsNeeded,

@@ -45,6 +45,7 @@ QML_CONTROLS = \
     RoundButton.qml \
     ScrollBar.qml \
     ScrollIndicator.qml \
+    ScrollView.qml \
     Slider.qml \
     SpinBox.qml \
     StackView.qml \

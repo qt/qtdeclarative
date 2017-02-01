@@ -78,6 +78,12 @@
     you to position its contents, for instance by using a \l RowLayout or
     a \l ColumnLayout.
 
+    \section1 ScrollView Control
+
+    \image qtquickcontrols2-scrollview-wireframe.png
+
+    \l ScrollView provides scrolling for user-defined content.
+
     \section1 StackView Control
 
     \image qtquickcontrols2-stackview-wireframe.png

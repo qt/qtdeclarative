@@ -36,6 +36,7 @@
 
 #include "qquickscrollbar_p.h"
 #include "qquickscrollbar_p_p.h"
+#include "qquickscrollview_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
@@ -163,6 +164,7 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       pressed(false),
       moving(false),
       interactive(true),
+      explicitInteractive(false),
       orientation(Qt::Vertical),
       snapMode(QQuickScrollBar::NoSnap),
       policy(QQuickScrollBar::AsNeeded)
@@ -185,6 +187,19 @@ qreal QQuickScrollBarPrivate::positionAt(const QPointF &point) const
         return (point.x() - q->leftPadding()) / q->availableWidth();
     else
         return (point.y() - q->topPadding()) / q->availableHeight();
+}
+
+void QQuickScrollBarPrivate::setInteractive(bool enabled)
+{
+    Q_Q(QQuickScrollBar);
+    if (interactive == enabled)
+        return;
+
+    interactive = enabled;
+    q->setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
+    if (!interactive)
+        q->ungrabMouse();
+    emit q->interactiveChanged();
 }
 
 void QQuickScrollBarPrivate::updateActive()
@@ -480,14 +495,15 @@ bool QQuickScrollBar::isInteractive() const
 void QQuickScrollBar::setInteractive(bool interactive)
 {
     Q_D(QQuickScrollBar);
-    if (d->interactive == interactive)
-        return;
+    d->explicitInteractive = true;
+    d->setInteractive(interactive);
+}
 
-    d->interactive = interactive;
-    setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
-    if (!interactive)
-        ungrabMouse();
-    emit interactiveChanged();
+void QQuickScrollBar::resetInteractive()
+{
+    Q_D(QQuickScrollBar);
+    d->explicitInteractive = false;
+    d->setInteractive(true);
 }
 
 /*!
@@ -615,7 +631,10 @@ QQuickScrollBarAttachedPrivate::QQuickScrollBarAttachedPrivate()
 void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
 {
     if (flickable) {
-        QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickItemPrivate::Size);
+        // NOTE: Use removeItemChangeListener(Geometry) instead of updateOrRemoveGeometryChangeListener(Size).
+        // The latter doesn't remove the listener but only resets its types. Thus, it leaves behind a dangling
+        // pointer on destruction.
+        QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         if (horizontal)
             cleanupHorizontal();
         if (vertical)
@@ -644,6 +663,11 @@ void QQuickScrollBarAttachedPrivate::initHorizontal()
     QObject::connect(area, SIGNAL(widthRatioChanged(qreal)), horizontal, SLOT(setSize(qreal)));
     QObject::connect(area, SIGNAL(xPositionChanged(qreal)), horizontal, SLOT(setPosition(qreal)));
 
+    // ensure that the ScrollBar is stacked above the Flickable in a ScrollView
+    QQuickItem *parent = horizontal->parentItem();
+    if (parent && parent == flickable->parentItem())
+        horizontal->stackAfter(flickable);
+
     layoutHorizontal();
     horizontal->setSize(area->property("widthRatio").toReal());
     horizontal->setPosition(area->property("xPosition").toReal());
@@ -659,6 +683,11 @@ void QQuickScrollBarAttachedPrivate::initVertical()
     QObject *area = flickable->property("visibleArea").value<QObject *>();
     QObject::connect(area, SIGNAL(heightRatioChanged(qreal)), vertical, SLOT(setSize(qreal)));
     QObject::connect(area, SIGNAL(yPositionChanged(qreal)), vertical, SLOT(setPosition(qreal)));
+
+    // ensure that the ScrollBar is stacked above the Flickable in a ScrollView
+    QQuickItem *parent = vertical->parentItem();
+    if (parent && parent == flickable->parentItem())
+        vertical->stackAfter(flickable);
 
     layoutVertical();
     vertical->setSize(area->property("heightRatio").toReal());
@@ -806,8 +835,8 @@ QQuickScrollBarAttached::QQuickScrollBarAttached(QObject *parent)
     Q_D(QQuickScrollBarAttached);
     d->setFlickable(qobject_cast<QQuickFlickable *>(parent));
 
-    if (parent && !d->flickable)
-        qmlWarning(parent) << "ScrollBar must be attached to a Flickable";
+    if (parent && !d->flickable && !qobject_cast<QQuickScrollView *>(parent))
+        qmlWarning(parent) << "ScrollBar must be attached to a Flickable or ScrollView";
 }
 
 QQuickScrollBarAttached::~QQuickScrollBarAttached()

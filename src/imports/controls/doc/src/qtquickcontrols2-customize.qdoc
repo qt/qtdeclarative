@@ -636,6 +636,16 @@
         \snippet qtquickcontrols2-scrollindicator-custom.qml file
 
 
+    \section2 Customizing ScrollView
+
+        ScrollView consists of a \l {Control::background}{background} item,
+        and horizontal and vertical scroll bars.
+
+        \image qtquickcontrols2-scrollview-custom.png
+
+        \snippet qtquickcontrols2-scrollview-custom.qml file
+
+
     \section2 Customizing Slider
 
         Slider consists of two visual items: \l {Control::background}{background},

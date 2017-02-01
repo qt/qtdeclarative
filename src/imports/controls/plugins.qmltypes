@@ -376,6 +376,14 @@ Module {
         defaultProperty: "data"
     }
     Component {
+        prototype: "QQuickScrollView"
+        name: "QtQuick.Controls/ScrollView 2.2"
+        exports: ["QtQuick.Controls/ScrollView 2.2"]
+        exportMetaObjectRevisions: [2]
+        isComposite: true
+        defaultProperty: "contentData"
+    }
+    Component {
         prototype: "QQuickSlider"
         name: "QtQuick.Controls/Slider 2.0"
         exports: ["QtQuick.Controls/Slider 2.0"]
@@ -1256,6 +1264,17 @@ Module {
         prototype: "QObject"
         Property { name: "horizontal"; type: "QQuickScrollIndicator"; isPointer: true }
         Property { name: "vertical"; type: "QQuickScrollIndicator"; isPointer: true }
+    }
+    Component {
+        name: "QQuickScrollView"
+        defaultProperty: "contentData"
+        prototype: "QQuickControl"
+        exports: ["QtQuick.Templates/ScrollView 2.2"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "contentWidth"; type: "double" }
+        Property { name: "contentHeight"; type: "double" }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
     }
     Component {
         name: "QQuickSlider"
