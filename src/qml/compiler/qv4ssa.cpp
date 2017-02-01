@@ -3580,16 +3580,43 @@ public:
         , _replacement(0)
     {}
 
-    void operator()(Temp *toReplace, Expr *replacement, StatementWorklist &W, QVector<Stmt *> *newUses = 0)
+    bool operator()(Temp *toReplace, Expr *replacement, StatementWorklist &W, QVector<Stmt *> *newUses = 0)
     {
         Q_ASSERT(replacement->asTemp() || replacement->asConst() || replacement->asName());
-
-//        qout << "Replacing ";toReplace->dump(qout);qout<<" by ";replacement->dump(qout);qout<<endl;
 
         qSwap(_toReplace, toReplace);
         qSwap(_replacement, replacement);
 
         const QVector<Stmt *> &uses = _defUses.uses(*_toReplace);
+
+        // Prevent the following:
+        //   L3:
+        //     %1 = phi L1: %2, L2: %3
+        //     %4 = phi L1: %5, L2: %6
+        //     %6 = %1
+        // From turning into:
+        //   L3:
+        //     %1 = phi L1: %2, L2: %3
+        //     %4 = phi L1: %5, L2: %1
+        //
+        // Because both phi nodes are "executed in parallel", we cannot replace %6 by %1 in the
+        // second phi node. So, if the defining statement for a temp is a phi node, and one of the
+        // uses of the to-be-replaced statement is a phi node in the same block as the defining
+        // statement, bail out.
+        if (Temp *r = _replacement->asTemp()) {
+            if (_defUses.defStmt(*r)->asPhi()) {
+                BasicBlock *replacementDefBlock = _defUses.defStmtBlock(*r);
+                foreach (Stmt *use, uses) {
+                    if (Phi *usePhi = use->asPhi()) {
+                        if (_defUses.defStmtBlock(*usePhi->targetTemp) == replacementDefBlock)
+                            return false;
+                    }
+                }
+            }
+        }
+
+//        qout << "Replacing ";toReplace->dump(qout);qout<<" by ";replacement->dump(qout);qout<<endl;
+
         if (newUses)
             newUses->reserve(uses.size());
 
@@ -3605,6 +3632,7 @@ public:
 
         qSwap(_replacement, replacement);
         qSwap(_toReplace, toReplace);
+        return true;
     }
 
 private:
@@ -4081,11 +4109,12 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                 // copy propagation:
                 if (Temp *sourceTemp = m->source->asTemp()) {
                     QVector<Stmt *> newT2Uses;
-                    replaceUses(targetTemp, sourceTemp, W, &newT2Uses);
-                    defUses.removeUse(s, *sourceTemp);
-                    defUses.addUses(*sourceTemp, newT2Uses);
-                    defUses.removeDef(*targetTemp);
-                    W.remove(s);
+                    if (replaceUses(targetTemp, sourceTemp, W, &newT2Uses)) {
+                        defUses.removeUse(s, *sourceTemp);
+                        defUses.addUses(*sourceTemp, newT2Uses);
+                        defUses.removeDef(*targetTemp);
+                        W.remove(s);
+                    }
                     continue;
                 }
 
