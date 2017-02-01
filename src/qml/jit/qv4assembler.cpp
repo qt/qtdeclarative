@@ -709,7 +709,7 @@ JSC::MacroAssemblerCodeRef Assembler<TargetConfiguration>::link(int *codeSize)
 }
 
 template class QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>;
-#if defined(V4_BOOTSTRAP) && CPU(X86_64)
+#if defined(V4_BOOTSTRAP)
 template class QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
 #endif
 

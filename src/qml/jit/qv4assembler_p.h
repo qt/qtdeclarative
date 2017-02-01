@@ -1372,9 +1372,8 @@ public:
         if (prepareCall(function))
             loadArgumentOnStackOrRegister<0>(arg1);
 
-#ifdef RESTORE_EBX_ON_CALL
-        load32(this->ebxAddressOnStack(), JSC::X86Registers::ebx); // restore the GOT ptr
-#endif
+        if (JITTargetPlatform::gotRegister != -1)
+            load32(Address(JITTargetPlatform::FramePointerRegister, JITTargetPlatform::savedGOTRegisterSlotOnStack()), static_cast<RegisterID>(JITTargetPlatform::gotRegister)); // restore the GOT ptr
 
         callAbsolute(functionName, function);
 

@@ -1344,12 +1344,10 @@ void InstructionSelection<JITAssembler>::calculateRegistersToSave(const Register
     fpRegistersToSave.clear();
 
     for (const RegisterInfo &ri : JITTargetPlatform::getRegisterInfo()) {
-#if defined(RESTORE_EBX_ON_CALL)
-        if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
+        if (JITTargetPlatform::gotRegister != -1 && ri.isRegularRegister() && ri.reg<RegisterID>() == JITTargetPlatform::gotRegister) {
             regularRegistersToSave.append(ri);
             continue;
         }
-#endif // RESTORE_EBX_ON_CALL
         if (ri.isCallerSaved())
             continue;
         if (ri.isRegularRegister()) {
@@ -1636,7 +1634,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 { namespace JIT {
 template class Q_QML_EXPORT InstructionSelection<>;
 template class Q_QML_EXPORT ISelFactory<>;
-#if defined(V4_BOOTSTRAP) && CPU(X86_64)
+#if defined(V4_BOOTSTRAP)
 
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture)
 {

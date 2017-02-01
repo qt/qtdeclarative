@@ -145,10 +145,8 @@ public:
 #if OS(WINDOWS) || OS(QNX) || \
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
 
-#define RESTORE_EBX_ON_CALL
-    using Address = PlatformAssembler::Address;
-    static Address ebxAddressOnStack()
-    {
+    static const int gotRegister = JSC::X86Registers::ebx;
+    static int savedGOTRegisterSlotOnStack() {
         static int ebxIdx = -1;
         if (ebxIdx == -1) {
             int calleeSaves = 0;
@@ -164,8 +162,11 @@ public:
             Q_ASSERT(ebxIdx >= 0);
             ebxIdx += 1;
         }
-        return Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
+        return ebxIdx * -int(sizeof(void*));
     }
+#else
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 #endif
 };
 #endif // x86
@@ -238,6 +239,9 @@ public:
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
     static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 };
 #endif // Linux/MacOS on x86_64
 
@@ -304,6 +308,9 @@ public:
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
     static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 };
 #endif // Windows on x86_64
 
@@ -418,6 +425,9 @@ public:
         as->pop(FramePointerRegister);
         as->pop(JSC::ARMRegisters::lr);
     }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 };
 #endif // ARM (32 bit)
 
@@ -540,6 +550,9 @@ public:
     {
         as->popPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 };
 #endif // ARM64
 
@@ -625,6 +638,10 @@ public:
         as->pop(FramePointerRegister);
         as->pop(JSC::MIPSRegisters::ra);
     }
+
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 };
 #endif // Linux on MIPS (32 bit)
 
