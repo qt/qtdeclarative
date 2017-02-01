@@ -1954,10 +1954,10 @@ void RegisterAllocator::dump(IR::Function *function) const
 
 // References:
 //  [Wimmer1] C. Wimmer and M. Franz. Linear Scan Register Allocation on SSA Form. In Proceedings of
-//            CGO’10, ACM Press, 2010
+//            CGO'10, ACM Press, 2010
 //  [Wimmer2] C. Wimmer and H. Mossenbock. Optimized Interval Splitting in a Linear Scan Register
 //            Allocator. In Proceedings of the ACM/USENIX International Conference on Virtual
-//            Execution Environments, pages 132–141. ACM Press, 2005.
+//            Execution Environments, pages 132-141. ACM Press, 2005.
 //  [Traub]   Omri Traub, Glenn Holloway, and Michael D. Smith. Quality and Speed in Linear-scan
 //            Register Allocation. In Proceedings of the ACM SIGPLAN 1998 Conference on Programming
-//            Language Design and Implementation, pages 142–151, June 1998.
+//            Language Design and Implementation, pages 142-151, June 1998.

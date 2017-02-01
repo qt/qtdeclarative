@@ -5727,10 +5727,10 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
 
 // References:
 //  [Wimmer1] C. Wimmer and M. Franz. Linear Scan Register Allocation on SSA Form. In Proceedings of
-//            CGO’10, ACM Press, 2010
+//            CGO'10, ACM Press, 2010
 //  [Wimmer2] C. Wimmer and H. Mossenbock. Optimized Interval Splitting in a Linear Scan Register
 //            Allocator. In Proceedings of the ACM/USENIX International Conference on Virtual
-//            Execution Environments, pages 132–141. ACM Press, 2005.
+//            Execution Environments, pages 132-141. ACM Press, 2005.
 //  [Briggs]  P. Briggs, K.D. Cooper, T.J. Harvey, and L.T. Simpson. Practical Improvements to the
 //            Construction and Destruction of Static Single Assignment Form.
 //  [Appel]   A.W. Appel. Modern Compiler Implementation in Java. Second edition, Cambridge
