@@ -46,6 +46,7 @@
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 # include <private/qquickopenglshadereffectnode_p.h>
 # include <private/qquickopenglshadereffect_p.h>
+# include <private/qquickshadereffect_p.h>
 #endif
 #include <private/qanimationgroupjob_p.h>
 
@@ -558,7 +559,8 @@ QQuickUniformAnimatorJob::QQuickUniformAnimatorJob()
 
 void QQuickUniformAnimatorJob::setTarget(QQuickItem *target)
 {
-    if (qobject_cast<QQuickOpenGLShaderEffect *>(target) != 0)
+    QQuickShaderEffect* effect = qobject_cast<QQuickShaderEffect*>(target);
+    if (effect && effect->isOpenGLShaderEffect())
         m_target = target;
 }
 
