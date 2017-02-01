@@ -628,8 +628,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
 
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
     Q_ASSERT(pointerEvent->asPointerTouchEvent());
-    QTouchEvent *event = pointerEvent->asPointerTouchEvent()->touchEventForItem(item);
-    if (!event)
+    QScopedPointer<QTouchEvent> event(pointerEvent->asPointerTouchEvent()->touchEventForItem(item));
+    if (event.isNull())
         return false;
 
     // For each point, check if it is accepted, if not, try the next point.
@@ -646,7 +646,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 break;
 
             qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << item;
-            QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
+            QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event.data(), item, false));
 
             // Send a single press and see if that's accepted
             QCoreApplication::sendEvent(item, mousePress.data());
@@ -660,7 +660,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 pointerEventPoint->setGrabber(item);
 
                 if (checkIfDoubleClicked(event->timestamp())) {
-                    QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item, false));
+                    QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event.data(), item, false));
                     QCoreApplication::sendEvent(item, mouseDoubleClick.data());
                     event->setAccepted(mouseDoubleClick->isAccepted());
                     if (!mouseDoubleClick->isAccepted()) {
@@ -677,7 +677,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
         } else if (touchMouseDevice == device && p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
-                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, mouseGrabberItem, false));
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event.data(), mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
@@ -688,7 +688,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     // no grabber, check if we care about mouse hover
                     // FIXME: this should only happen once, not recursively... I'll ignore it just ignore hover now.
                     // hover for touch???
-                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, item, false));
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event.data(), item, false));
                     if (lastMousePosition.isNull())
                         lastMousePosition = me->windowPos();
                     QPointF last = lastMousePosition;
@@ -706,7 +706,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
             } else if (p.state() & Qt::TouchPointReleased) {
                 // currently handled point was released
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
-                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem, false));
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event.data(), mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
 
                     if (item->acceptHoverEvents() && p.screenPos() != QGuiApplicationPrivate::lastCursorPosition) {
