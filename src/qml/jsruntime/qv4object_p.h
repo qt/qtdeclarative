@@ -253,6 +253,10 @@ struct Q_QML_EXPORT Object: Managed {
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);
 
+    /* Fixed: Writable: false, Enumerable: false, Configurable: true */
+    void defineReadonlyConfigurableProperty(const QString &name, const Value &value);
+    void defineReadonlyConfigurableProperty(String *name, const Value &value);
+
     void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
         ScopedProperty p(scope);
