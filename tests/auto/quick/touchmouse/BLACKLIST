@@ -1,0 +1,3 @@
+# QTBUG-40856 hover regression on pointerhandler branch: TODO fix before merging to dev
+[hoverEnabled]
+*
