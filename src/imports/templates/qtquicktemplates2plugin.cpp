@@ -321,6 +321,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.4 (new types and revisions in Qt 5.11)
     qmlRegisterType<QQuickAbstractButton, 4>(uri, 2, 4, "AbstractButton");
+    qmlRegisterType<QQuickCheckBox, 4>(uri, 2, 4, "CheckBox");
     qmlRegisterType<QQuickSpinBox, 4>(uri, 2, 4, "SpinBox");
 }
 

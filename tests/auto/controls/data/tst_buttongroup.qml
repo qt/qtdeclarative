@@ -99,6 +99,7 @@ TestCase {
         compare(group.buttons.length, 0)
         compare(group.checkedButton, null)
         compare(group.exclusive, true)
+        compare(group.checkState, Qt.Unchecked)
     }
 
     function test_current() {
@@ -371,36 +372,63 @@ TestCase {
         var group = createTemporaryObject(nonExclusiveGroup, testCase)
         verify(group)
 
+        compare(group.checkState, Qt.Unchecked)
+
         var button1 = createTemporaryObject(button, testCase, {checked: true})
         group.addButton(button1)
         compare(button1.checked, true)
         compare(group.checkedButton, null)
+        compare(group.checkState, Qt.Checked)
 
         var button2 = createTemporaryObject(button, testCase, {checked: true})
         group.addButton(button2)
         compare(button1.checked, true)
         compare(button2.checked, true)
         compare(group.checkedButton, null)
+        compare(group.checkState, Qt.Checked)
+
+        var button3 = createTemporaryObject(button, testCase, {checked: false})
+        group.addButton(button3)
+        compare(button1.checked, true)
+        compare(button2.checked, true)
+        compare(button3.checked, false)
+        compare(group.checkedButton, null)
+        compare(group.checkState, Qt.PartiallyChecked)
 
         button1.checked = false
         compare(button1.checked, false)
         compare(button2.checked, true)
+        compare(button3.checked, false)
         compare(group.checkedButton, null)
+        compare(group.checkState, Qt.PartiallyChecked)
 
         button2.checked = false
         compare(button1.checked, false)
         compare(button2.checked, false)
+        compare(button3.checked, false)
         compare(group.checkedButton, null)
+        compare(group.checkState, Qt.Unchecked)
 
         button1.checked = true
         compare(button1.checked, true)
         compare(button2.checked, false)
+        compare(button3.checked, false)
         compare(group.checkedButton, null)
+        compare(group.checkState, Qt.PartiallyChecked)
 
         button2.checked = true
         compare(button1.checked, true)
         compare(button2.checked, true)
+        compare(button3.checked, false)
         compare(group.checkedButton, null)
+        compare(group.checkState, Qt.PartiallyChecked)
+
+        button3.checked = true
+        compare(button1.checked, true)
+        compare(button2.checked, true)
+        compare(button3.checked, true)
+        compare(group.checkedButton, null)
+        compare(group.checkState, Qt.Checked)
     }
 
     Component {

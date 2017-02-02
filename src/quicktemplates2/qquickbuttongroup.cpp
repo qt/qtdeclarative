@@ -154,18 +154,29 @@ class QQuickButtonGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
 
 public:
-    QQuickButtonGroupPrivate() : exclusive(true) { }
+    QQuickButtonGroupPrivate()
+        : complete(true),
+          exclusive(true),
+          settingCheckState(false),
+          checkState(Qt::Unchecked)
+    {
+    }
 
     void clear();
     void buttonClicked();
     void _q_updateCurrent();
+    void updateCheckState();
+    void setCheckState(Qt::CheckState state);
 
     static void buttons_append(QQmlListProperty<QQuickAbstractButton> *prop, QQuickAbstractButton *obj);
     static int buttons_count(QQmlListProperty<QQuickAbstractButton> *prop);
     static QQuickAbstractButton *buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, int index);
     static void buttons_clear(QQmlListProperty<QQuickAbstractButton> *prop);
 
+    bool complete;
     bool exclusive;
+    bool settingCheckState;
+    Qt::CheckState checkState;
     QPointer<QQuickAbstractButton> checkedButton;
     QVector<QQuickAbstractButton*> buttons;
 };
@@ -191,13 +202,39 @@ void QQuickButtonGroupPrivate::buttonClicked()
 void QQuickButtonGroupPrivate::_q_updateCurrent()
 {
     Q_Q(QQuickButtonGroup);
-    if (!exclusive)
+    if (exclusive) {
+        QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton*>(q->sender());
+        if (button && button->isChecked())
+            q->setCheckedButton(button);
+        else if (!buttons.contains(checkedButton))
+            q->setCheckedButton(nullptr);
+    }
+    updateCheckState();
+}
+
+void QQuickButtonGroupPrivate::updateCheckState()
+{
+    if (!complete || settingCheckState)
         return;
-    QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton*>(q->sender());
-    if (button && button->isChecked())
-        q->setCheckedButton(button);
-    else if (!buttons.contains(checkedButton))
-        q->setCheckedButton(nullptr);
+
+    bool anyChecked = false;
+    bool allChecked = !buttons.isEmpty();
+    for (QQuickAbstractButton *button : qAsConst(buttons)) {
+        const bool isChecked = button->isChecked();
+        anyChecked |= isChecked;
+        allChecked &= isChecked;
+    }
+    setCheckState(Qt::CheckState(anyChecked + allChecked));
+}
+
+void QQuickButtonGroupPrivate::setCheckState(Qt::CheckState state)
+{
+    Q_Q(QQuickButtonGroup);
+    if (checkState == state)
+        return;
+
+    checkState = state;
+    emit q->checkStateChanged();
 }
 
 void QQuickButtonGroupPrivate::buttons_append(QQmlListProperty<QQuickAbstractButton> *prop, QQuickAbstractButton *obj)
@@ -346,6 +383,49 @@ void QQuickButtonGroup::setExclusive(bool exclusive)
 }
 
 /*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty enumeration QtQuick.Controls::ButtonGroup::checkState
+
+    This property holds the combined check state of the button group.
+
+    Available states:
+    \value Qt.Unchecked None of the buttons are checked.
+    \value Qt.PartiallyChecked Some of the buttons are checked.
+    \value Qt.Checked All of the buttons are checked.
+
+    Setting the check state of a non-exclusive button group to \c Qt.Unchecked
+    or \c Qt.Checked unchecks or checks all buttons in the group, respectively.
+    \c Qt.PartiallyChecked is ignored.
+
+    Setting the check state of an exclusive button group to \c Qt.Unchecked
+    unchecks the \l checkedButton. \c Qt.Checked and \c Qt.PartiallyChecked
+    are ignored.
+*/
+Qt::CheckState QQuickButtonGroup::checkState() const
+{
+    Q_D(const QQuickButtonGroup);
+    return d->checkState;
+}
+
+void QQuickButtonGroup::setCheckState(Qt::CheckState state)
+{
+    Q_D(QQuickButtonGroup);
+    if (d->checkState == state || state == Qt::PartiallyChecked)
+        return;
+
+    d->settingCheckState = true;
+    if (d->exclusive) {
+        if (d->checkedButton && state == Qt::Unchecked)
+            setCheckedButton(nullptr);
+    } else {
+        for (QQuickAbstractButton *button : qAsConst(d->buttons))
+            button->setChecked(state == Qt::Checked);
+    }
+    d->settingCheckState = false;
+    d->setCheckState(state);
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::ButtonGroup::addButton(AbstractButton button)
 
     Adds a \a button to the button group.
@@ -370,6 +450,7 @@ void QQuickButtonGroup::addButton(QQuickAbstractButton *button)
         setCheckedButton(button);
 
     d->buttons.append(button);
+    d->updateCheckState();
     emit buttonsChanged();
 }
 
@@ -398,7 +479,22 @@ void QQuickButtonGroup::removeButton(QQuickAbstractButton *button)
         setCheckedButton(nullptr);
 
     d->buttons.removeOne(button);
+    d->updateCheckState();
     emit buttonsChanged();
+}
+
+void QQuickButtonGroup::classBegin()
+{
+    Q_D(QQuickButtonGroup);
+    d->complete = false;
+}
+
+void QQuickButtonGroup::componentComplete()
+{
+    Q_D(QQuickButtonGroup);
+    d->complete = true;
+    if (!d->buttons.isEmpty())
+        d->updateCheckState();
 }
 
 class QQuickButtonGroupAttachedPrivate : public QObjectPrivate

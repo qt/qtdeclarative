@@ -51,6 +51,7 @@
 #include <QtCore/qobject.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,12 +60,14 @@ class QQuickButtonGroupPrivate;
 class QQuickButtonGroupAttached;
 class QQuickButtonGroupAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroup : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QQuickAbstractButton *checkedButton READ checkedButton WRITE setCheckedButton NOTIFY checkedButtonChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickAbstractButton> buttons READ buttons NOTIFY buttonsChanged FINAL)
     Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL REVISION 3)
+    Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL REVISION 4)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
     explicit QQuickButtonGroup(QObject *parent = nullptr);
@@ -80,6 +83,9 @@ public:
     bool isExclusive() const;
     void setExclusive(bool exclusive);
 
+    Qt::CheckState checkState() const;
+    void setCheckState(Qt::CheckState state);
+
 public Q_SLOTS:
     void addButton(QQuickAbstractButton *button);
     void removeButton(QQuickAbstractButton *button);
@@ -88,7 +94,12 @@ Q_SIGNALS:
     void checkedButtonChanged();
     void buttonsChanged();
     Q_REVISION(3) void exclusiveChanged();
+    Q_REVISION(4) void checkStateChanged();
     Q_REVISION(1) void clicked(QQuickAbstractButton *button);
+
+protected:
+    void classBegin() override;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickButtonGroup)
