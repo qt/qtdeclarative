@@ -440,9 +440,7 @@ struct Batch
     mutable uint uploadedThisFrame : 1; // solely for debugging purposes
 
     Buffer vbo;
-#ifdef QSG_SEPARATE_INDEX_BUFFER
     Buffer ibo;
-#endif
 
     QDataBuffer<DrawSet> drawSets;
 };
@@ -744,9 +742,7 @@ private:
     ClipType m_currentClipType;
 
     QDataBuffer<char> m_vertexUploadPool;
-#ifdef QSG_SEPARATE_INDEX_BUFFER
     QDataBuffer<char> m_indexUploadPool;
-#endif
     // For minimal OpenGL core profile support
     QOpenGLVertexArrayObject *m_vao;
 
@@ -766,10 +762,7 @@ Batch *Renderer::newBatch()
         m_batchPool.resize(size - 1);
     } else {
         b = new Batch();
-        memset(&b->vbo, 0, sizeof(Buffer));
-#ifdef QSG_SEPARATE_INDEX_BUFFER
-        memset(&b->ibo, 0, sizeof(Buffer));
-#endif
+        memset(&b->vbo, 0, sizeof(Buffer) * 2); // Clear VBO & IBO
     }
     b->init();
     return b;

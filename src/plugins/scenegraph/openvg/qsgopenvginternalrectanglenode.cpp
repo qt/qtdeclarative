@@ -39,7 +39,7 @@
 
 #include "qsgopenvginternalrectanglenode.h"
 #include "qsgopenvghelpers.h"
-
+#include <cmath>
 #include <VG/vgu.h>
 
 QSGOpenVGInternalRectangleNode::QSGOpenVGInternalRectangleNode()
@@ -207,9 +207,9 @@ void QSGOpenVGInternalRectangleNode::render()
         vgLoadIdentity();
         if (m_radius > 0) {
             // Fallback to rendering to an image for rounded rects with perspective transforms
-            if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != QSize(ceil(m_rect.width()), ceil(m_rect.height()))) {
+            if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != QSize(std::ceil(m_rect.width()), std::ceil(m_rect.height()))) {
                 delete m_offscreenSurface;
-                m_offscreenSurface = new QOpenVGOffscreenSurface(QSize(ceil(m_rect.width()), ceil(m_rect.height())));
+                m_offscreenSurface = new QOpenVGOffscreenSurface(QSize(std::ceil(m_rect.width()), std::ceil(m_rect.height())));
             }
 
             m_offscreenSurface->makeCurrent();

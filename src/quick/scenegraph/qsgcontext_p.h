@@ -88,6 +88,7 @@ class QSGRectangleNode;
 class QSGImageNode;
 class QSGNinePatchNode;
 class QSGSpriteNode;
+class QSGRenderContext;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -97,6 +98,54 @@ Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERER)
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_INFO)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_RENDERLOOP)
+
+class Q_QUICK_PRIVATE_EXPORT QSGContext : public QObject
+{
+    Q_OBJECT
+
+public:
+    enum AntialiasingMethod {
+        UndecidedAntialiasing,
+        VertexAntialiasing,
+        MsaaAntialiasing
+    };
+
+    explicit QSGContext(QObject *parent = 0);
+    virtual ~QSGContext();
+
+    virtual void renderContextInitialized(QSGRenderContext *renderContext);
+    virtual void renderContextInvalidated(QSGRenderContext *renderContext);
+    virtual QSGRenderContext *createRenderContext() = 0;
+
+    QSGInternalRectangleNode *createInternalRectangleNode(const QRectF &rect, const QColor &c);
+    virtual QSGInternalRectangleNode *createInternalRectangleNode() = 0;
+    virtual QSGInternalImageNode *createInternalImageNode() = 0;
+    virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
+    virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
+    virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
+    virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
+                                                        QSGGuiThreadShaderEffectManager *mgr);
+#if QT_CONFIG(quick_sprite)
+    virtual QSGSpriteNode *createSpriteNode() = 0;
+#endif
+    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
+
+    virtual QSize minimumFBOSize() const;
+    virtual QSurfaceFormat defaultSurfaceFormat() const = 0;
+
+    virtual QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext);
+
+    virtual QSGRectangleNode *createRectangleNode() = 0;
+    virtual QSGImageNode *createImageNode() = 0;
+    virtual QSGNinePatchNode *createNinePatchNode() = 0;
+
+    static QSGContext *createDefaultContext();
+    static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
+    static QSGRenderLoop *createWindowManager();
+
+    static void setBackend(const QString &backend);
+};
 
 class Q_QUICK_PRIVATE_EXPORT QSGRenderContext : public QObject
 {
@@ -148,55 +197,6 @@ protected:
     QSGDistanceFieldGlyphCacheManager *m_distanceFieldCacheManager;
 
     QSet<QFontEngine *> m_fontEnginesToClean;
-};
-
-
-class Q_QUICK_PRIVATE_EXPORT QSGContext : public QObject
-{
-    Q_OBJECT
-
-public:
-    enum AntialiasingMethod {
-        UndecidedAntialiasing,
-        VertexAntialiasing,
-        MsaaAntialiasing
-    };
-
-    explicit QSGContext(QObject *parent = 0);
-    virtual ~QSGContext();
-
-    virtual void renderContextInitialized(QSGRenderContext *renderContext);
-    virtual void renderContextInvalidated(QSGRenderContext *renderContext);
-    virtual QSGRenderContext *createRenderContext() = 0;
-
-    QSGInternalRectangleNode *createInternalRectangleNode(const QRectF &rect, const QColor &c);
-    virtual QSGInternalRectangleNode *createInternalRectangleNode() = 0;
-    virtual QSGInternalImageNode *createInternalImageNode() = 0;
-    virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
-    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
-    virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
-    virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
-    virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
-                                                        QSGGuiThreadShaderEffectManager *mgr);
-#if QT_CONFIG(quick_sprite)
-    virtual QSGSpriteNode *createSpriteNode() = 0;
-#endif
-    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
-
-    virtual QSize minimumFBOSize() const;
-    virtual QSurfaceFormat defaultSurfaceFormat() const = 0;
-
-    virtual QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext);
-
-    virtual QSGRectangleNode *createRectangleNode() = 0;
-    virtual QSGImageNode *createImageNode() = 0;
-    virtual QSGNinePatchNode *createNinePatchNode() = 0;
-
-    static QSGContext *createDefaultContext();
-    static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
-    static QSGRenderLoop *createWindowManager();
-
-    static void setBackend(const QString &backend);
 };
 
 QT_END_NAMESPACE

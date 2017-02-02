@@ -61,21 +61,22 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
+template <typename JITAssembler>
 struct Binop {
-    Binop(Assembler *assembler, IR::AluOp operation)
+    Binop(JITAssembler *assembler, IR::AluOp operation)
         : as(assembler)
         , op(operation)
     {}
 
-    using Jump = Assembler::Jump;
-    using Address = Assembler::Address;
-    using RegisterID = Assembler::RegisterID;
-    using FPRegisterID = Assembler::FPRegisterID;
-    using TrustedImm32 = Assembler::TrustedImm32;
-    using ResultCondition = Assembler::ResultCondition;
-    using RelationalCondition = Assembler::RelationalCondition;
-    using Pointer = Assembler::Pointer;
-    using PointerToValue = Assembler::PointerToValue;
+    using Jump = typename JITAssembler::Jump;
+    using Address = typename JITAssembler::Address;
+    using RegisterID = typename JITAssembler::RegisterID;
+    using FPRegisterID = typename JITAssembler::FPRegisterID;
+    using TrustedImm32 = typename JITAssembler::TrustedImm32;
+    using ResultCondition = typename JITAssembler::ResultCondition;
+    using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using Pointer = typename JITAssembler::Pointer;
+    using PointerToValue = typename JITAssembler::PointerToValue;
 
     void generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target);
     void doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target);
@@ -103,8 +104,8 @@ struct Binop {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         return as->branchAdd32(ResultCondition::Overflow, addr, reg);
 #else
-        as->load32(addr, Assembler::ScratchRegister);
-        return as->branchAdd32(ResultCondition::Overflow, Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        return as->branchAdd32(ResultCondition::Overflow, JITAssembler::ScratchRegister, reg);
 #endif
     }
 
@@ -118,8 +119,8 @@ struct Binop {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         return as->branchSub32(ResultCondition::Overflow, addr, reg);
 #else
-        as->load32(addr, Assembler::ScratchRegister);
-        return as->branchSub32(ResultCondition::Overflow, Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        return as->branchSub32(ResultCondition::Overflow, JITAssembler::ScratchRegister, reg);
 #endif
     }
 
@@ -131,10 +132,10 @@ struct Binop {
     Jump inline_mul32(Address addr, RegisterID reg)
     {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
-        return as->branchMul32(Assembler::Overflow, addr, reg);
+        return as->branchMul32(JITAssembler::Overflow, addr, reg);
 #else
-        as->load32(addr, Assembler::ScratchRegister);
-        return as->branchMul32(ResultCondition::Overflow, Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        return as->branchMul32(ResultCondition::Overflow, JITAssembler::ScratchRegister, reg);
 #endif
     }
 
@@ -145,9 +146,9 @@ struct Binop {
 
     Jump inline_shl32(Address addr, RegisterID reg)
     {
-        as->load32(addr, Assembler::ScratchRegister);
-        as->and32(TrustedImm32(0x1f), Assembler::ScratchRegister);
-        as->lshift32(Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        as->and32(TrustedImm32(0x1f), JITAssembler::ScratchRegister);
+        as->lshift32(JITAssembler::ScratchRegister, reg);
         return Jump();
     }
 
@@ -160,9 +161,9 @@ struct Binop {
 
     Jump inline_shr32(Address addr, RegisterID reg)
     {
-        as->load32(addr, Assembler::ScratchRegister);
-        as->and32(TrustedImm32(0x1f), Assembler::ScratchRegister);
-        as->rshift32(Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        as->and32(TrustedImm32(0x1f), JITAssembler::ScratchRegister);
+        as->rshift32(JITAssembler::ScratchRegister, reg);
         return Jump();
     }
 
@@ -175,9 +176,9 @@ struct Binop {
 
     Jump inline_ushr32(Address addr, RegisterID reg)
     {
-        as->load32(addr, Assembler::ScratchRegister);
-        as->and32(TrustedImm32(0x1f), Assembler::ScratchRegister);
-        as->urshift32(Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        as->and32(TrustedImm32(0x1f), JITAssembler::ScratchRegister);
+        as->urshift32(JITAssembler::ScratchRegister, reg);
         return as->branchTest32(ResultCondition::Signed, reg, reg);
     }
 
@@ -193,8 +194,8 @@ struct Binop {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         as->and32(addr, reg);
 #else
-        as->load32(addr, Assembler::ScratchRegister);
-        as->and32(Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        as->and32(JITAssembler::ScratchRegister, reg);
 #endif
         return Jump();
     }
@@ -210,8 +211,8 @@ struct Binop {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         as->or32(addr, reg);
 #else
-        as->load32(addr, Assembler::ScratchRegister);
-        as->or32(Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        as->or32(JITAssembler::ScratchRegister, reg);
 #endif
         return Jump();
     }
@@ -227,8 +228,8 @@ struct Binop {
 #if HAVE(ALU_OPS_WITH_MEM_OPERAND)
         as->xor32(addr, reg);
 #else
-        as->load32(addr, Assembler::ScratchRegister);
-        as->xor32(Assembler::ScratchRegister, reg);
+        as->load32(addr, JITAssembler::ScratchRegister);
+        as->xor32(JITAssembler::ScratchRegister, reg);
 #endif
         return Jump();
     }
@@ -241,7 +242,7 @@ struct Binop {
 
 
 
-    Assembler *as;
+    JITAssembler *as;
     IR::AluOp op;
 };
 

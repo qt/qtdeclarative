@@ -254,34 +254,47 @@ public:
         Q_ASSERT(isDouble()); return Double_Type;
     }
 
-#ifndef QV4_USE_64_BIT_VALUE_ENCODING
-    enum Masks {
-        SilentNaNBit           =                  0x00040000,
-        NaN_Mask               =                  0x7ff80000,
-        NotDouble_Mask         =                  0x7ffa0000,
-        Immediate_Mask         = NotDouble_Mask | 0x00020000u | SilentNaNBit,
+    // Shared between 32-bit and 64-bit encoding
+    enum {
         Tag_Shift = 32
     };
 
-    enum {
-        Managed_Type_Internal  = NotDouble_Mask
-    };
-#else
+    // Used only by 64-bit encoding
     static const quint64 NaNEncodeMask  = 0xfffc000000000000ll;
-    static const quint64 Immediate_Mask = 0x00020000u; // bit 49
-
-    enum Masks {
-        NaN_Mask = 0x7ff80000,
-    };
     enum {
         IsDouble_Shift = 64-14,
         IsManagedOrUndefined_Shift = 64-15,
         IsIntegerConvertible_Shift = 64-16,
-        Tag_Shift = 32,
         IsDoubleTag_Shift = IsDouble_Shift - Tag_Shift,
-        Managed_Type_Internal = 0
+        Managed_Type_Internal_64 = 0
     };
+    static const quint64 Immediate_Mask_64 = 0x00020000u; // bit 49
+
+    // Used only by 32-bit encoding
+    enum Masks {
+        SilentNaNBit           =                  0x00040000,
+        NotDouble_Mask         =                  0x7ffa0000,
+    };
+    static const quint64 Immediate_Mask_32 = NotDouble_Mask | 0x00020000u | SilentNaNBit;
+
+    enum {
+        Managed_Type_Internal_32  = NotDouble_Mask
+    };
+
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+    enum {
+        Managed_Type_Internal  = Managed_Type_Internal_64
+    };
+    static const quint64 Immediate_Mask = Immediate_Mask_64;
+#else
+    enum {
+        Managed_Type_Internal  = Managed_Type_Internal_32
+    };
+    static const quint64 Immediate_Mask = Immediate_Mask_32;
 #endif
+    enum {
+        NaN_Mask = 0x7ff80000,
+    };
     enum ValueTypeInternal {
         Empty_Type_Internal   = Immediate_Mask   | 0,
         ConvertibleToInt      = Immediate_Mask   | 0x10000u, // bit 48

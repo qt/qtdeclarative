@@ -154,6 +154,8 @@ private slots:
     void hAlignWidthDependsOnImplicitWidth_data();
     void hAlignWidthDependsOnImplicitWidth();
 
+    void fontInfo();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4251,6 +4253,23 @@ void tst_qquicktext::hAlignWidthDependsOnImplicitWidth()
     QVERIFY(rect->setProperty("text", "this is mis-aligned"));
     image = window->grabWindow();
     QCOMPARE(numberOfNonWhitePixels(0, rectX - 1, image), 0);
+}
+
+void tst_qquicktext::fontInfo()
+{
+    QQmlComponent component(&engine, testFile("fontInfo.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QObject *root = object.data();
+
+    QQuickText *main = root->findChild<QQuickText *>("main");
+    QVERIFY(main);
+    QCOMPARE(main->font().pixelSize(), 1000);
+
+    QQuickText *copy = root->findChild<QQuickText *>("copy");
+    QVERIFY(copy);
+    QCOMPARE(copy->font().family(), QFontInfo(QFont()).family());
+    QVERIFY(copy->font().pixelSize() < 1000);
 }
 
 QTEST_MAIN(tst_qquicktext)

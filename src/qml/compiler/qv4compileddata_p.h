@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x08
+#define QV4_DATA_STRUCTURE_VERSION 0x09
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -133,7 +133,7 @@ struct Location
         QJsonPrivate::qle_bitfield<20, 12> column;
     };
 
-    Location() { line = 0; column = 0; }
+    Location() { line.val = 0; column.val = 0; }
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
@@ -153,7 +153,7 @@ struct RegExp
         QJsonPrivate::qle_bitfield<4, 28> stringIndex;
     };
 
-    RegExp() { flags = 0; stringIndex = 0; }
+    RegExp() { flags.val = 0; stringIndex.val = 0; }
 };
 
 struct Lookup
@@ -171,7 +171,7 @@ struct Lookup
         QJsonPrivate::qle_bitfield<4, 28> nameIndex;
     };
 
-    Lookup() { type_and_flags = 0; nameIndex = 0; }
+    Lookup() { type_and_flags.val = 0; nameIndex.val = 0; }
 };
 
 struct JSClassMember
@@ -625,7 +625,8 @@ struct Unit
         StaticData = 0x4, // Unit data persistent in memory?
         IsSingleton = 0x8,
         IsSharedLibrary = 0x10, // .pragma shared?
-        ContainsMachineCode = 0x20 // used to determine if we need to mmap with execute permissions
+        ContainsMachineCode = 0x20, // used to determine if we need to mmap with execute permissions
+        PendingTypeCompilation = 0x40 // the QML data structures present are incomplete and require type compilation
     };
     LEUInt32 flags;
     LEUInt32 stringTableSize;
@@ -777,31 +778,7 @@ struct TypeReferenceMap : QHash<int, TypeReference>
 };
 
 #ifndef V4_BOOTSTRAP
-struct ResolvedTypeReference
-{
-    ResolvedTypeReference()
-        : type(0)
-        , majorVersion(0)
-        , minorVersion(0)
-        , isFullyDynamicType(false)
-    {}
-
-    QQmlType *type;
-    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-
-    int majorVersion;
-    int minorVersion;
-    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-    // therefore cannot have a property cache installed when instantiated.
-    bool isFullyDynamicType;
-
-    QQmlPropertyCache *propertyCache() const;
-    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
-    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
-
-    void doDynamicTypeCheck();
-};
+struct ResolvedTypeReference;
 // map from name index
 // While this could be a hash, a map is chosen here to provide a stable
 // order, which is used to calculating a check-sum on dependent meta-objects.
@@ -841,10 +818,14 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
 #ifndef V4_BOOTSTRAP
     ExecutionEngine *engine;
+#endif
+
+    QV4::Heap::String **runtimeStrings; // Array
+
+#ifndef V4_BOOTSTRAP
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
 
-    QV4::Heap::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
@@ -918,16 +899,52 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
     void destroy() Q_DECL_OVERRIDE;
 
-    bool saveToDisk(const QUrl &unitUrl, QString *errorString);
     bool loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
-    virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
-    virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
     virtual bool memoryMapCode(QString *errorString);
 #endif // V4_BOOTSTRAP
+
+public:
+#if defined(V4_BOOTSTRAP)
+    bool saveToDisk(const QString &unitUrl, QString *errorString);
+#else
+    bool saveToDisk(const QUrl &unitUrl, QString *errorString);
+#endif
+
+protected:
+    virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
+    virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
 };
+
+#ifndef V4_BOOTSTRAP
+struct ResolvedTypeReference
+{
+    ResolvedTypeReference()
+        : type(0)
+        , majorVersion(0)
+        , minorVersion(0)
+        , isFullyDynamicType(false)
+    {}
+
+    QQmlType *type;
+    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+
+    int majorVersion;
+    int minorVersion;
+    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+    // therefore cannot have a property cache installed when instantiated.
+    bool isFullyDynamicType;
+
+    QQmlPropertyCache *propertyCache() const;
+    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
+
+    void doDynamicTypeCheck();
+};
+#endif
 
 }
 

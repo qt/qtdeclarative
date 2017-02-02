@@ -257,6 +257,9 @@ private slots:
     void defaultListProperty();
     void namespacedPropertyTypes();
 
+    void qmlTypeCanBeResolvedByName_data();
+    void qmlTypeCanBeResolvedByName();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4246,6 +4249,32 @@ void tst_qqmllanguage::namespacedPropertyTypes()
 {
     QQmlComponent component(&engine, testFileUrl("namespacedPropertyTypes.qml"));
     VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::qmlTypeCanBeResolvedByName_data()
+{
+    QTest::addColumn<QUrl>("componentUrl");
+
+    // Built-in C++ types
+    QTest::newRow("C++ - Anonymous") << testFileUrl("quickTypeByName_anon.qml");
+    QTest::newRow("C++ - Named") << testFileUrl("quickTypeByName_named.qml");
+
+    // Composite types with a qmldir
+    QTest::newRow("QML - Anonymous - qmldir") << testFileUrl("compositeTypeByName_anon_qmldir.qml");
+    QTest::newRow("QML - Named - qmldir") << testFileUrl("compositeTypeByName_named_qmldir.qml");
+}
+
+void tst_qqmllanguage::qmlTypeCanBeResolvedByName()
+{
+    QFETCH(QUrl, componentUrl);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, componentUrl);
+    VERIFY_ERRORS(0);
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "[object Object]"); // a bit crude, but it will do
+
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
 }

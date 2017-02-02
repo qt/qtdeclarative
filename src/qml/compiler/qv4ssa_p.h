@@ -63,20 +63,28 @@ class QQmlEnginePrivate;
 namespace QV4 {
 namespace IR {
 
+struct LifeTimeIntervalRange {
+    int start;
+    int end;
+
+    LifeTimeIntervalRange(int start = -1, int end = -1)
+        : start(start)
+        , end(end)
+    {}
+
+    bool covers(int position) const { return start <= position && position <= end; }
+};
+} // IR namespace
+} // QV4 namespace
+
+Q_DECLARE_TYPEINFO(QV4::IR::LifeTimeIntervalRange, Q_PRIMITIVE_TYPE);
+
+namespace QV4 {
+namespace IR {
+
 class Q_AUTOTEST_EXPORT LifeTimeInterval {
 public:
-    struct Range {
-        int start;
-        int end;
-
-        Range(int start = InvalidPosition, int end = InvalidPosition)
-            : start(start)
-            , end(end)
-        {}
-
-        bool covers(int position) const { return start <= position && position <= end; }
-    };
-    typedef QVarLengthArray<Range, 4> Ranges;
+    typedef QVarLengthArray<LifeTimeIntervalRange, 4> Ranges;
 
 private:
     Temp _temp;
@@ -137,7 +145,7 @@ public:
         // Validate the new range
         if (_end != InvalidPosition) {
             Q_ASSERT(!_ranges.isEmpty());
-            for (const Range &range : qAsConst(_ranges)) {
+            for (const LifeTimeIntervalRange &range : qAsConst(_ranges)) {
                 Q_ASSERT(range.start >= 0);
                 Q_ASSERT(range.end >= 0);
                 Q_ASSERT(range.start <= range.end);
@@ -457,7 +465,6 @@ protected:
 
 
 Q_DECLARE_TYPEINFO(QV4::IR::LifeTimeInterval, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(QV4::IR::LifeTimeInterval::Range, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

@@ -75,7 +75,7 @@ public:
 
     void ensureImageInCache() const {
         if (url.isEmpty() && !image.isNull()) {
-            url.setScheme(QStringLiteral("ItemGrabber"));
+            url.setScheme(QQuickPixmap::itemGrabberScheme);
             url.setPath(QVariant::fromValue(item.data()).toString());
             static uint counter = 0;
             url.setFragment(QString::number(++counter));

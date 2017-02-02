@@ -315,20 +315,20 @@ struct Q_AUTOTEST_EXPORT Expr {
     Expr(ExprKind exprKind): type(UnknownType), exprKind(exprKind) {}
     bool isLValue() const;
 
-    Const *asConst() { return as<Const>(); }
-    String *asString() { return as<String>(); }
-    RegExp *asRegExp() { return as<RegExp>(); }
-    Name *asName() { return as<Name>(); }
-    Temp *asTemp() { return as<Temp>(); }
-    ArgLocal *asArgLocal() { return as<ArgLocal>(); }
-    Closure *asClosure() { return as<Closure>(); }
-    Convert *asConvert() { return as<Convert>(); }
-    Unop *asUnop() { return as<Unop>(); }
-    Binop *asBinop() { return as<Binop>(); }
-    Call *asCall() { return as<Call>(); }
-    New *asNew() { return as<New>(); }
-    Subscript *asSubscript() { return as<Subscript>(); }
-    Member *asMember() { return as<Member>(); }
+    Const *asConst();
+    String *asString();
+    RegExp *asRegExp();
+    Name *asName();
+    Temp *asTemp();
+    ArgLocal *asArgLocal();
+    Closure *asClosure();
+    Convert *asConvert();
+    Unop *asUnop();
+    Binop *asBinop();
+    Call *asCall();
+    New *asNew();
+    Subscript *asSubscript();
+    Member *asMember();
 };
 
 #define EXPR_VISIT_ALL_KINDS(e) \
@@ -773,12 +773,12 @@ struct Stmt {
 
     Stmt *asTerminator();
 
-    Exp *asExp() { return as<Exp>(); }
-    Move *asMove() { return as<Move>(); }
-    Jump *asJump() { return as<Jump>(); }
-    CJump *asCJump() { return as<CJump>(); }
-    Ret *asRet() { return as<Ret>(); }
-    Phi *asPhi() { return as<Phi>(); }
+    Exp *asExp();
+    Move *asMove();
+    Jump *asJump();
+    CJump *asCJump();
+    Ret *asRet();
+    Phi *asPhi();
 
     int id() const { return _id; }
 
@@ -1719,6 +1719,28 @@ inline Stmt *BasicBlock::RET(Expr *expr)
     appendStatement(s);
     return s;
 }
+
+inline Const *Expr::asConst() { return as<Const>(); }
+inline String *Expr::asString() { return as<String>(); }
+inline RegExp *Expr::asRegExp() { return as<RegExp>(); }
+inline Name *Expr::asName() { return as<Name>(); }
+inline Temp *Expr::asTemp() { return as<Temp>(); }
+inline ArgLocal *Expr::asArgLocal() { return as<ArgLocal>(); }
+inline Closure *Expr::asClosure() { return as<Closure>(); }
+inline Convert *Expr::asConvert() { return as<Convert>(); }
+inline Unop *Expr::asUnop() { return as<Unop>(); }
+inline Binop *Expr::asBinop() { return as<Binop>(); }
+inline Call *Expr::asCall() { return as<Call>(); }
+inline New *Expr::asNew() { return as<New>(); }
+inline Subscript *Expr::asSubscript() { return as<Subscript>(); }
+inline Member *Expr::asMember() { return as<Member>(); }
+
+inline Exp *Stmt::asExp() { return as<Exp>(); }
+inline Move *Stmt::asMove() { return as<Move>(); }
+inline Jump *Stmt::asJump() { return as<Jump>(); }
+inline CJump *Stmt::asCJump() { return as<CJump>(); }
+inline Ret *Stmt::asRet() { return as<Ret>(); }
+inline Phi *Stmt::asPhi() { return as<Phi>(); }
 
 } // end of namespace IR
 

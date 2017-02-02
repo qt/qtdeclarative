@@ -278,7 +278,7 @@ static inline int classify5(const QChar *s, bool qmlMode) {
       if (s[2].unicode() == 'n') {
         if (s[3].unicode() == 's') {
           if (s[4].unicode() == 't') {
-            return qmlMode ? int(Lexer::T_CONST) : int(Lexer::T_RESERVED_WORD);
+            return int(Lexer::T_CONST);
           }
         }
       }

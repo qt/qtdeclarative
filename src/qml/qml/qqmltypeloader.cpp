@@ -1362,7 +1362,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(QQmlQmldirData *data, const QV4::Compile
     if (!importQualifier.isEmpty()) {
         // Does this library contain any qualified scripts?
         QUrl libraryUrl(qmldirUrl);
-        const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirIdentifier);
+        const QQmlTypeLoaderQmldirContent *qmldir = typeLoader()->qmldirContent(qmldirIdentifier);
         const auto qmldirScripts = qmldir->scripts();
         for (const QQmlDirParser::Script &script : qmldirScripts) {
             QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
@@ -1410,7 +1410,7 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
             if (!importQualifier.isEmpty()) {
                 // Does this library contain any qualified scripts?
                 QUrl libraryUrl(qmldirUrl);
-                const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirFilePath);
+                const QQmlTypeLoaderQmldirContent *qmldir = typeLoader()->qmldirContent(qmldirFilePath);
                 const auto qmldirScripts = qmldir->scripts();
                 for (const QQmlDirParser::Script &script : qmldirScripts) {
                     QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
@@ -1539,57 +1539,57 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
 }
 
 
-QQmlTypeLoader::QmldirContent::QmldirContent()
+QQmlTypeLoaderQmldirContent::QQmlTypeLoaderQmldirContent()
 {
 }
 
-bool QQmlTypeLoader::QmldirContent::hasError() const
+bool QQmlTypeLoaderQmldirContent::hasError() const
 {
     return m_parser.hasError();
 }
 
-QList<QQmlError> QQmlTypeLoader::QmldirContent::errors(const QString &uri) const
+QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
 {
     return m_parser.errors(uri);
 }
 
-QString QQmlTypeLoader::QmldirContent::typeNamespace() const
+QString QQmlTypeLoaderQmldirContent::typeNamespace() const
 {
     return m_parser.typeNamespace();
 }
 
-void QQmlTypeLoader::QmldirContent::setContent(const QString &location, const QString &content)
+void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QString &content)
 {
     m_location = location;
     m_parser.parse(content);
 }
 
-void QQmlTypeLoader::QmldirContent::setError(const QQmlError &error)
+void QQmlTypeLoaderQmldirContent::setError(const QQmlError &error)
 {
     m_parser.setError(error);
 }
 
-QQmlDirComponents QQmlTypeLoader::QmldirContent::components() const
+QQmlDirComponents QQmlTypeLoaderQmldirContent::components() const
 {
     return m_parser.components();
 }
 
-QQmlDirScripts QQmlTypeLoader::QmldirContent::scripts() const
+QQmlDirScripts QQmlTypeLoaderQmldirContent::scripts() const
 {
     return m_parser.scripts();
 }
 
-QQmlDirPlugins QQmlTypeLoader::QmldirContent::plugins() const
+QQmlDirPlugins QQmlTypeLoaderQmldirContent::plugins() const
 {
     return m_parser.plugins();
 }
 
-QString QQmlTypeLoader::QmldirContent::pluginLocation() const
+QString QQmlTypeLoaderQmldirContent::pluginLocation() const
 {
     return m_location;
 }
 
-bool QQmlTypeLoader::QmldirContent::designerSupported() const
+bool QQmlTypeLoaderQmldirContent::designerSupported() const
 {
     return m_parser.designerSupported();
 }
@@ -1861,13 +1861,13 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 
 
 /*!
-Return a QmldirContent for absoluteFilePath.  The QmldirContent may be cached.
+Return a QQmlTypeLoaderQmldirContent for absoluteFilePath.  The QQmlTypeLoaderQmldirContent may be cached.
 
 \a filePath is a local file path.
 
 It can also be a remote path for a remote directory import, but it will have been cached by now in this case.
 */
-const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn)
+const QQmlTypeLoaderQmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn)
 {
     QUrl url(filePathIn); //May already contain http scheme
     if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https"))
@@ -1883,10 +1883,10 @@ const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString
     else
         filePath = url.path();
 
-    QmldirContent *qmldir;
-    QmldirContent **val = m_importQmlDirCache.value(filePath);
+    QQmlTypeLoaderQmldirContent *qmldir;
+    QQmlTypeLoaderQmldirContent **val = m_importQmlDirCache.value(filePath);
     if (!val) {
-        qmldir = new QmldirContent;
+        qmldir = new QQmlTypeLoaderQmldirContent;
 
 #define ERROR(description) { QQmlError e; e.setDescription(description); qmldir->setError(e); }
 #define NOT_READABLE_ERROR QString(QLatin1String("module \"$$URI$$\" definition \"%1\" not readable"))
@@ -1916,12 +1916,12 @@ const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString
 
 void QQmlTypeLoader::setQmldirContent(const QString &url, const QString &content)
 {
-    QmldirContent *qmldir;
-    QmldirContent **val = m_importQmlDirCache.value(url);
+    QQmlTypeLoaderQmldirContent *qmldir;
+    QQmlTypeLoaderQmldirContent **val = m_importQmlDirCache.value(url);
     if (val) {
         qmldir = *val;
     } else {
-        qmldir = new QmldirContent;
+        qmldir = new QQmlTypeLoaderQmldirContent;
         m_importQmlDirCache.insert(url, qmldir);
     }
 
@@ -2073,6 +2073,11 @@ bool QQmlTypeData::tryLoadFromDiskCache()
             qCDebug(DBG_DISK_CACHE) << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
+    }
+
+    if (unit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
+        restoreIR(unit);
+        return true;
     }
 
     m_compiledData = unit;
@@ -2397,6 +2402,15 @@ bool QQmlTypeData::loadFromSource()
     return true;
 }
 
+void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit)
+{
+    m_document.reset(new QmlIR::Document(isDebugging()));
+    QmlIR::IRLoader loader(unit->data, m_document.data());
+    loader.load();
+    m_document->javaScriptCompilationUnit = unit;
+    continueLoadFromIR();
+}
+
 void QQmlTypeData::continueLoadFromIR()
 {
     m_typeReferences.collectFromObjects(m_document->objects.constBegin(), m_document->objects.constEnd());
@@ -2602,7 +2616,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
         QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
         ) const
 {
-    typeNameCache->adopt(new QQmlTypeNameCache);
+    typeNameCache->adopt(new QQmlTypeNameCache(m_importCache));
 
     for (const QString &ns: m_namespaces)
         (*typeNameCache)->add(ns);
@@ -2946,7 +2960,7 @@ void QQmlScriptBlob::done()
         }
     }
 
-    m_scriptData->typeNameCache = new QQmlTypeNameCache();
+    m_scriptData->typeNameCache = new QQmlTypeNameCache(m_importCache);
 
     QSet<QString> ns;
 

@@ -122,6 +122,7 @@ public:
     QString text;
     QFont font;
     QFont sourceFont;
+    QFontInfo fontInfo;
 
     QTextLayout layout;
     QTextLayout *elideLayout;

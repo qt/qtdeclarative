@@ -140,6 +140,7 @@ struct ObjectVTable
     void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
 };
 
 #define DEFINE_OBJECT_VTABLE_BASE(classname) \
@@ -159,7 +160,8 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     getLookup,                                  \
     setLookup,                                  \
     getLength,                                  \
-    advanceIterator                            \
+    advanceIterator,                            \
+    instanceOf                                  \
 }
 
 #define DEFINE_OBJECT_VTABLE(classname) \
@@ -351,6 +353,8 @@ public:
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
+    ReturnedValue instanceOf(const Value &var) const
+    { return vtable()->instanceOf(this, var); }
 
     inline void construct(Scope &scope, CallData *d) const
     { return vtable()->construct(this, scope, d); }
@@ -372,6 +376,7 @@ protected:
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
+    static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;

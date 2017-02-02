@@ -91,7 +91,9 @@
 
 #if USE(PTHREADS)
 #  include <pthread.h>
+#if !defined(Q_OS_INTEGRITY)
 #  include <sys/resource.h>
+#endif
 #if HAVE(PTHREAD_NP_H)
 #  include <pthread_np.h>
 #endif
@@ -168,7 +170,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
         if (forceMoth) {
             factory = new Moth::ISelFactory;
         } else {
-            factory = new JIT::ISelFactory;
+            factory = new JIT::ISelFactory<>;
             jitDisabled = false;
         }
 #else // !V4_ENABLE_JIT
@@ -1109,7 +1111,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (typeHint == qMetaTypeId<QJSValue>())
         return QVariant::fromValue(QJSValue(e, value.asReturnedValue()));
 
-    if (value.as<Object>()) {
+    if (value.as<QV4::Object>()) {
         QV4::ScopedObject object(scope, value);
         if (typeHint == QMetaType::QJsonObject
                    && !value.as<ArrayObject>() && !value.as<FunctionObject>()) {
@@ -1755,7 +1757,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
     return false;
 }
 
-static bool convertToNativeQObject(QV4::ExecutionEngine *e, const Value &value, const QByteArray &targetType, void **result)
+static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::Value &value, const QByteArray &targetType, void **result)
 {
     if (!targetType.endsWith('*'))
         return false;
@@ -1770,7 +1772,7 @@ static bool convertToNativeQObject(QV4::ExecutionEngine *e, const Value &value, 
     return false;
 }
 
-static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const Value &value)
+static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &value)
 {
     if (!value.isObject())
         return 0;

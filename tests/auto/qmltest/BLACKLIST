@@ -9,5 +9,3 @@ linux
 linux
 [ListView::test_listInteractiveCurrentIndexEnforce]
 linux
-[mouserelease::test_mouseDrag]
-rhel-7.2

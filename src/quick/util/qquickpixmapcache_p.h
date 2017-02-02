@@ -177,6 +177,8 @@ public:
     static void purgeCache();
     static bool isCached(const QUrl &url, const QSize &requestSize);
 
+    static const QLatin1String itemGrabberScheme;
+
 private:
     Q_DISABLE_COPY(QQuickPixmap)
     QQuickPixmapData *d;
