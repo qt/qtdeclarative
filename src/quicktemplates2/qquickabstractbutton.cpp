@@ -548,7 +548,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    d->deleteDelegate(d->indicator);
+    QQuickControlPrivate::destroyDelegate(d->indicator, this);
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())

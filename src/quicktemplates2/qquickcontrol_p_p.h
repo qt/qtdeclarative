@@ -117,15 +117,11 @@ public:
     static bool calcHoverEnabled(const QQuickItem *item);
 #endif
 
-    void deleteDelegate(QObject *object);
+    static void destroyDelegate(QObject *object, QObject *parent);
 
     struct ExtraData {
         ExtraData();
         QFont font;
-        // This list contains the default delegates which were
-        // replaced with custom ones via declarative assignments
-        // before Component.completed() was emitted. See QTBUG-50992.
-        QVector<QObject*> pendingDeletions;
     };
     QLazilyAllocated<ExtraData> extra;
 

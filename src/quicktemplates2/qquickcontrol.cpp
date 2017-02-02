@@ -51,6 +51,7 @@
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
+#include <QtQml/private/qqmlincubator_p.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -865,15 +866,13 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
 }
 
 /*
-   Deletes "delegate" if Component.completed() has been emitted,
-   otherwise stores it in pendingDeletions.
+    Cancels incubation to avoid "Object destroyed during incubation" (QTBUG-50992)
 */
-void QQuickControlPrivate::deleteDelegate(QObject *delegate)
+void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
 {
-    if (componentComplete)
-        delete delegate;
-    else if (delegate)
-        extra.value().pendingDeletions.append(delegate);
+    if (delegate && parent)
+        QQmlIncubatorPrivate::cancel(delegate, qmlContext(parent));
+    delete delegate;
 }
 
 void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
@@ -1145,7 +1144,7 @@ void QQuickControl::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    d->deleteDelegate(d->background);
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -1198,7 +1197,7 @@ void QQuickControl::setContentItem(QQuickItem *item)
         return;
 
     contentItemChange(item, d->contentItem);
-    d->deleteDelegate(d->contentItem);
+    QQuickControlPrivate::destroyDelegate(d->contentItem, this);
     d->contentItem = item;
     if (item) {
         if (!item->parentItem())
@@ -1231,11 +1230,6 @@ void QQuickControl::componentComplete()
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
 #endif
-
-    if (d->extra.isAllocated()) {
-        qDeleteAll(d->extra.value().pendingDeletions);
-        d->extra.value().pendingDeletions.clear();
-    }
 }
 
 QFont QQuickControl::defaultFont() const

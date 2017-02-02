@@ -992,12 +992,7 @@ void QQuickSpinButton::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    QQuickControl *control = qobject_cast<QQuickControl*>(d->parent);
-    if (control)
-        QQuickControlPrivate::get(control)->deleteDelegate(d->indicator);
-    else
-        delete d->indicator;
-
+    QQuickControlPrivate::destroyDelegate(d->indicator, d->parent);
     d->indicator = indicator;
 
     if (indicator) {

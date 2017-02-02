@@ -263,18 +263,6 @@ QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 }
 #endif
 
-/*
-   Deletes "delegate" if Component.completed() has been emitted,
-   otherwise stores it in pendingDeletions.
-*/
-void QQuickTextFieldPrivate::deleteDelegate(QObject *delegate)
-{
-    if (componentComplete)
-        delete delegate;
-    else if (delegate)
-        pendingDeletions.append(delegate);
-}
-
 QQuickTextField::QQuickTextField(QQuickItem *parent)
     : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
@@ -326,7 +314,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    d->deleteDelegate(d->background);
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -480,9 +468,6 @@ void QQuickTextField::componentComplete()
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
-
-    qDeleteAll(d->pendingDeletions);
-    d->pendingDeletions.clear();
 }
 
 void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)

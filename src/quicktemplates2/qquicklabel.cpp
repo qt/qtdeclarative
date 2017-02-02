@@ -155,18 +155,6 @@ QAccessible::Role QQuickLabelPrivate::accessibleRole() const
 }
 #endif
 
-/*
-   Deletes "delegate" if Component.completed() has been emitted,
-   otherwise stores it in pendingDeletions.
-*/
-void QQuickLabelPrivate::deleteDelegate(QObject *delegate)
-{
-    if (componentComplete)
-        delete delegate;
-    else if (delegate)
-        pendingDeletions.append(delegate);
-}
-
 QQuickLabel::QQuickLabel(QQuickItem *parent)
     : QQuickText(*(new QQuickLabelPrivate), parent)
 {
@@ -212,7 +200,7 @@ void QQuickLabel::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    d->deleteDelegate(d->background);
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -237,9 +225,6 @@ void QQuickLabel::componentComplete()
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
-
-    qDeleteAll(d->pendingDeletions);
-    d->pendingDeletions.clear();
 }
 
 void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
