@@ -64,6 +64,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroup : public QObject
     Q_OBJECT
     Q_PROPERTY(QQuickAbstractButton *checkedButton READ checkedButton WRITE setCheckedButton NOTIFY checkedButtonChanged)
     Q_PROPERTY(QQmlListProperty<QQuickAbstractButton> buttons READ buttons NOTIFY buttonsChanged FINAL)
+    Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL REVISION 3)
 
 public:
     explicit QQuickButtonGroup(QObject *parent = nullptr);
@@ -76,6 +77,9 @@ public:
 
     QQmlListProperty<QQuickAbstractButton> buttons();
 
+    bool isExclusive() const;
+    void setExclusive(bool exclusive);
+
 public Q_SLOTS:
     void addButton(QQuickAbstractButton *button);
     void removeButton(QQuickAbstractButton *button);
@@ -83,6 +87,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void checkedButtonChanged();
     void buttonsChanged();
+    Q_REVISION(3) void exclusiveChanged();
     Q_REVISION(1) void clicked(QQuickAbstractButton *button);
 
 private:

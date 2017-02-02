@@ -158,6 +158,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     // QtQuick.Controls 2.3 (new types in Qt 5.10)
     qmlRegisterType<QQuickAction>(uri, 2, 3, "Action");
     qmlRegisterType<QQuickActionGroup>(uri, 2, 3, "ActionGroup");
+    qmlRegisterType<QQuickButtonGroup, 3>(uri, 2, 3, "ButtonGroup");
     qmlRegisterType<QQuickIcon>();
 }
 

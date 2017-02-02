@@ -154,7 +154,11 @@ class QQuickButtonGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
 
 public:
-    QQuickButtonGroupPrivate() : checkedButton(nullptr) { }
+    QQuickButtonGroupPrivate()
+        : exclusive(true),
+          checkedButton(nullptr)
+    {
+    }
 
     void clear();
     void buttonClicked();
@@ -165,6 +169,7 @@ public:
     static QQuickAbstractButton *buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, int index);
     static void buttons_clear(QQmlListProperty<QQuickAbstractButton> *prop);
 
+    bool exclusive;
     QQuickAbstractButton *checkedButton;
     QVector<QQuickAbstractButton*> buttons;
 };
@@ -190,6 +195,8 @@ void QQuickButtonGroupPrivate::buttonClicked()
 void QQuickButtonGroupPrivate::_q_updateCurrent()
 {
     Q_Q(QQuickButtonGroup);
+    if (!exclusive)
+        return;
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton*>(q->sender());
     if (button && button->isChecked())
         q->setCheckedButton(button);
@@ -246,9 +253,12 @@ QQuickButtonGroupAttached *QQuickButtonGroup::qmlAttachedProperties(QObject *obj
 /*!
     \qmlproperty AbstractButton QtQuick.Controls::ButtonGroup::checkedButton
 
-    This property holds the currently selected button, or \c null if there is none.
+    This property holds the currently selected button in an exclusive group,
+    or \c null if there is none or the group is non-exclusive.
 
-    By default, it is the first checked button added to the button group.
+    By default, it is the first checked button added to an exclusive button group.
+
+    \sa exclusive
 */
 QQuickAbstractButton *QQuickButtonGroup::checkedButton() const
 {
@@ -308,6 +318,38 @@ QQmlListProperty<QQuickAbstractButton> QQuickButtonGroup::buttons()
 }
 
 /*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::ButtonGroup::exclusive
+
+    This property holds whether the button group is exclusive. The default value is \c true.
+
+    If this property is \c true, then only one button in the group can be checked at any given time.
+    The user can click on any button to check it, and that button will replace the existing one as
+    the checked button in the group.
+
+    In an exclusive group, the user cannot uncheck the currently checked button by clicking on it;
+    instead, another button in the group must be clicked to set the new checked button for that group.
+
+    In a non-exclusive group, checking and unchecking buttons does not affect the other buttons in
+    the group. Furthermore, the value of the \l checkedButton property is \c null.
+*/
+bool QQuickButtonGroup::isExclusive() const
+{
+    Q_D(const QQuickButtonGroup);
+    return d->exclusive;
+}
+
+void QQuickButtonGroup::setExclusive(bool exclusive)
+{
+    Q_D(QQuickButtonGroup);
+    if (d->exclusive == exclusive)
+        return;
+
+    d->exclusive = exclusive;
+    emit exclusiveChanged();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::ButtonGroup::addButton(AbstractButton button)
 
     Adds a \a button to the button group.
@@ -328,7 +370,7 @@ void QQuickButtonGroup::addButton(QQuickAbstractButton *button)
     QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, d, &QQuickButtonGroupPrivate::buttonClicked);
     QObjectPrivate::connect(button, &QQuickAbstractButton::checkedChanged, d, &QQuickButtonGroupPrivate::_q_updateCurrent);
 
-    if (button->isChecked())
+    if (d->exclusive && button->isChecked())
         setCheckedButton(button);
 
     d->buttons.append(button);

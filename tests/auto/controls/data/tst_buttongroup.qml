@@ -50,7 +50,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.3
 
 TestCase {
     id: testCase
@@ -63,6 +63,11 @@ TestCase {
     Component {
         id: buttonGroup
         ButtonGroup { }
+    }
+
+    Component {
+        id: nonExclusiveGroup
+        ButtonGroup { exclusive: false }
     }
 
     Component {
@@ -86,6 +91,14 @@ TestCase {
     Component {
         id: nonCheckable
         QtObject { }
+    }
+
+    function test_defaults() {
+        var group = createTemporaryObject(buttonGroup, testCase)
+        verify(group)
+        compare(group.buttons.length, 0)
+        compare(group.checkedButton, null)
+        compare(group.exclusive, true)
     }
 
     function test_current() {
@@ -200,8 +213,15 @@ TestCase {
         compare(buttonsSpy.count, 5)
     }
 
-    function test_clicked() {
-        var group = createTemporaryObject(buttonGroup, testCase)
+    function test_clicked_data() {
+        return [
+            {tag: "exclusive", exclusive: true},
+            {tag: "non-exclusive", exclusive: false}
+        ]
+    }
+
+    function test_clicked(data) {
+        var group = createTemporaryObject(buttonGroup, testCase, {exclusive: data.exclusive})
         verify(group)
 
         var clickedSpy = createTemporaryObject(signalSpy, testCase, {target: group, signalName: "clicked"})
@@ -345,5 +365,41 @@ TestCase {
 
         verify(container.group.checkedButton)
         compare(container.group.checkedButton.objectName, "0")
+    }
+
+    function test_nonExclusive() {
+        var group = createTemporaryObject(nonExclusiveGroup, testCase)
+        verify(group)
+
+        var button1 = createTemporaryObject(button, testCase, {checked: true})
+        group.addButton(button1)
+        compare(button1.checked, true)
+        compare(group.checkedButton, null)
+
+        var button2 = createTemporaryObject(button, testCase, {checked: true})
+        group.addButton(button2)
+        compare(button1.checked, true)
+        compare(button2.checked, true)
+        compare(group.checkedButton, null)
+
+        button1.checked = false
+        compare(button1.checked, false)
+        compare(button2.checked, true)
+        compare(group.checkedButton, null)
+
+        button2.checked = false
+        compare(button1.checked, false)
+        compare(button2.checked, false)
+        compare(group.checkedButton, null)
+
+        button1.checked = true
+        compare(button1.checked, true)
+        compare(button2.checked, false)
+        compare(group.checkedButton, null)
+
+        button2.checked = true
+        compare(button1.checked, true)
+        compare(button2.checked, true)
+        compare(group.checkedButton, null)
     }
 }
