@@ -1541,9 +1541,9 @@ void QQuickPixmap::clear(QObject *obj)
     }
 }
 
-bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize)
+bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize, const QQuickImageProviderOptions &options)
 {
-    QQuickPixmapKey key = { &url, &requestSize, QQuickImageProviderOptions() };
+    QQuickPixmapKey key = { &url, &requestSize, options };
     QQuickPixmapStore *store = pixmapStore();
 
     return store->m_cache.contains(key);
