@@ -265,8 +265,11 @@ void ObjectPrototype::method_seal(const BuiltinFunction *, Scope &scope, CallDat
 void ObjectPrototype::method_freeze(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
     ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    if (!o) {
+        // 19.1.2.5, 1
+        scope.result = callData->argument(0);
+        return;
+    }
 
     if (ArgumentsObject::isNonStrictArgumentsObject(o))
         static_cast<ArgumentsObject *>(o.getPointer())->fullyCreate();
