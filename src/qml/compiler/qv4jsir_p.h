@@ -507,6 +507,16 @@ struct Q_AUTOTEST_EXPORT Temp: Expr {
         , memberResolver(0)
     {}
 
+    Temp(Type type, Kind kind, unsigned index)
+        : Expr(TempExpr)
+        , index(index)
+        , isReadOnly(0)
+        , kind(kind)
+        , memberResolver(0)
+    {
+        this->type = type;
+    }
+
     void init(unsigned kind, unsigned index)
     {
         this->index = index;

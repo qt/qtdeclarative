@@ -1134,6 +1134,8 @@ private:
             mapping.add(moveFrom, moveTo);
         }
 
+        if (DebugRegAlloc)
+            mapping.dump();
         mapping.order();
         if (DebugRegAlloc)
             mapping.dump();
