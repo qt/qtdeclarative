@@ -333,6 +333,7 @@ private slots:
     void stringify_qtbug_50592();
     void instanceof_data();
     void instanceof();
+    void freeze_empty_object();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8182,6 +8183,19 @@ void tst_qqmlecmascript::instanceof()
         QCOMPARE(ret.toString(), expectedValue.toString());
     }
 }
+
+void tst_qqmlecmascript::freeze_empty_object()
+{
+    // this shouldn't crash
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "var obj = {};\n"
+            "Object.freeze(obj);\n"
+    ));
+    QVERIFY(!v.isError());
+    QCOMPARE(v.toBool(), true);
+}
+
 
 QTEST_MAIN(tst_qqmlecmascript)
 
