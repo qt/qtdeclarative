@@ -278,10 +278,6 @@ struct MarkFlagEvaluator<ValueArray<o>> {
     static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_ValueArray) << (2*o / sizeof(quintptr));
 };
 template <size_t o>
-struct MarkFlagEvaluator<HeapValueArray<o>> {
-    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_ValueArray) << (o >> 2);
-};
-template <size_t o>
 struct MarkFlagEvaluator<HeapValue<o>> {
     static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_Value) << (2 *o / sizeof(quintptr));
 };

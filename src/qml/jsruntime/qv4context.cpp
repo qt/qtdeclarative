@@ -82,10 +82,15 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     uint nLocals = compiledFunction->nLocals;
     c->locals.size = nLocals;
     c->locals.alloc = localsAndFormals;
+#if QT_POINTER_SIZE == 8
+    // memory allocated from the JS heap is 0 initialized, so skip the std::fill() below
+    Q_ASSERT(Primitive::undefinedValue().asReturnedValue() == 0);
+#else
     if (nLocals)
-        std::fill(c->locals.v, c->locals.v + nLocals, Primitive::undefinedValue());
+        std::fill(c->locals.values, c->locals.values + nLocals, Primitive::undefinedValue());
+#endif
 
-    c->callData = reinterpret_cast<CallData *>(c->locals.v + nLocals);
+    c->callData = reinterpret_cast<CallData *>(c->locals.values + nLocals);
     ::memcpy(c->callData, callData, sizeof(CallData) - sizeof(Value) + static_cast<uint>(callData->argc) * sizeof(Value));
     if (callData->argc < static_cast<int>(compiledFunction->nFormals))
         std::fill(c->callData->args + c->callData->argc, c->callData->args + compiledFunction->nFormals, Primitive::undefinedValue());
@@ -330,7 +335,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
                     } else {
                         Q_ASSERT(c->type = Heap::ExecutionContext::Type_CallContext);
                         index -= c->v4Function->nFormals;
-                        static_cast<Heap::CallContext *>(c)->locals[index] = value;
+                        static_cast<Heap::CallContext *>(c)->locals.set(scope.engine, index, value);
                     }
                     return;
                 }

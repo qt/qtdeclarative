@@ -771,7 +771,7 @@ void MemoryManager::drainMarkStack(Value *markBase)
                     Q_ASSERT(m == Mark_ValueArray);
 //                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
                     ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
-                    Value *v = a->v;
+                    Value *v = a->values;
                     const Value *end = v + a->alloc;
                     while (v < end) {
                         v->mark(engine);

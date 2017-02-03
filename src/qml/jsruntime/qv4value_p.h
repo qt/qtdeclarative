@@ -717,7 +717,7 @@ struct HeapValue : Value {
 };
 
 template <size_t offset>
-struct HeapValueArray {
+struct ValueArray {
     uint size;
     uint alloc;
     Value values[1];
@@ -751,27 +751,6 @@ struct HeapValueArray {
         for (uint i = index; i < size - n; ++i) {
             values[i] = values[i + n];
         }
-    }
-};
-
-template <size_t offset>
-struct ValueArray {
-    uint size;
-    uint alloc;
-    Value v[1];
-
-    void set(ExecutionEngine *e, uint index, Value newVal) {
-        Q_UNUSED(e);
-        v[index] = newVal;
-    }
-
-    inline Value &operator[] (uint index) {
-        Q_ASSERT(index < alloc);
-        return v[index];
-    }
-    inline const Value &operator[] (uint index) const {
-        Q_ASSERT(index < alloc);
-        return v[index];
     }
 };
 

@@ -96,7 +96,7 @@ namespace Heap {
     Member(class, NoMark, PropertyAttributes *, attrs) \
     Member(class, NoMark, ReturnedValue, freeList) \
     Member(class, NoMark, SparseArray *, sparse) \
-    Member(class, ValueArray, HeapValueArray, values)
+    Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(ArrayData, Base) {
     DECLARE_MARK_TABLE(ArrayData);
