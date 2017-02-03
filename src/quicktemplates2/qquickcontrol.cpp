@@ -1136,15 +1136,6 @@ void QQuickControl::setBackground(QQuickItem *background)
 
     This property holds the visual content item.
 
-    \note The content item is automatically resized to fit within the
-    \l padding of the control.
-
-    \note Most controls use the implicit size of the content item to calculate
-    the implicit size of the control itself. If you replace the content item
-    with a custom one, you should also consider providing a sensible implicit
-    size for it (unless it is an item like \l Text which has its own implicit
-    size).
-
     \code
     Button {
         id: control
@@ -1156,6 +1147,15 @@ void QQuickControl::setBackground(QQuickItem *background)
         }
     }
     \endcode
+
+    \note The content item is automatically resized to fit within the
+    \l padding of the control.
+
+    \note Most controls use the implicit size of the content item to calculate
+    the implicit size of the control itself. If you replace the content item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Text which has its own implicit
+    size).
 
     \sa {Control Layout}, padding
 */
