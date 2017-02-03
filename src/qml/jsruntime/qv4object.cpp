@@ -296,12 +296,9 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
 
 void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 {
-    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
-    if (pd) {
-        *attrs = arrayData()->attributes(index);
-        if (p)
-            p->copy(pd, *attrs);
-        return;
+    if (arrayData()) {
+        if (arrayData()->getProperty(index, p, attrs))
+            return;
     }
     if (isStringObject()) {
         *attrs = Attr_NotConfigurable|Attr_NotWritable;
@@ -667,15 +664,14 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
 
 ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 {
-    Property *pd = 0;
     PropertyAttributes attrs;
     Scope scope(engine());
     ScopedObject o(scope, this);
+    ScopedProperty pd(scope);
+    bool exists = false;
     while (o) {
-        Property *p = o->arrayData() ? o->arrayData()->getProperty(index) : 0;
-        if (p) {
-            pd = p;
-            attrs = o->arrayData()->attributes(index);
+        if (o->arrayData() && o->arrayData()->getProperty(index, pd, &attrs)) {
+            exists = true;
             break;
         }
         if (o->isStringObject()) {
@@ -690,7 +686,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
         o = o->prototype();
     }
 
-    if (pd) {
+    if (exists) {
         if (hasProperty)
             *hasProperty = true;
         return getValue(pd->value, attrs);
@@ -989,8 +985,8 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
 
     // Clause 1
     if (arrayData()) {
-        hasProperty = arrayData()->getProperty(index);
-        if (!hasProperty  && isStringObject())
+        hasProperty = arrayData()->mappedIndex(index) != UINT_MAX;
+        if (!hasProperty && isStringObject())
             hasProperty = (index < static_cast<StringObject *>(this)->length());
     }
 
@@ -1102,7 +1098,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
         setProperty(index, current);
     } else {
         setArrayAttributes(index, cattrs);
-        arrayData()->setProperty(index, current);
+        arrayData()->setProperty(scope.engine, index, current);
     }
     return true;
   reject:

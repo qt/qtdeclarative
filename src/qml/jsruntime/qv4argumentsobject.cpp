@@ -108,22 +108,22 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     fullyCreate();
 
     Scope scope(engine);
-    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
     ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
+    uint numAccessors = qMin(context()->formalParameterCount(), static_cast<uint>(context()->callData->argc));
     bool isMapped = false;
-    uint numAccessors = qMin((int)context()->formalParameterCount(), context()->callData->argc);
-    if (pd && index < (uint)numAccessors)
-        isMapped = arrayData()->attributes(index).isAccessor() &&
-                pd->getter() == context()->engine->argumentsAccessors[index].getter();
+    if (arrayData() && index < numAccessors &&
+        arrayData()->attributes(index).isAccessor() &&
+        arrayData()->get(index) == context()->engine->argumentsAccessors[index].getter()->asReturnedValue())
+        isMapped = true;
 
     if (isMapped) {
         Q_ASSERT(arrayData());
         mapAttrs = arrayData()->attributes(index);
-        map->copy(pd, mapAttrs);
+        arrayData()->getProperty(index, map, &mapAttrs);
         setArrayAttributes(index, Attr_Data);
-        pd = arrayData()->getProperty(index);
-        pd->value = d()->mappedArguments->values[index];
+        ArrayData::Index arrayIndex{ arrayData(), arrayData()->mappedIndex(index) };
+        arrayIndex.set(scope.engine, d()->mappedArguments->values[index]);
     }
 
     bool strict = engine->current->strictMode;
@@ -141,8 +141,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
 
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);
-            pd = arrayData()->getProperty(index);
-            pd->copy(map, mapAttrs);
+            arrayData()->setProperty(engine, index, map);
         }
     }
 
