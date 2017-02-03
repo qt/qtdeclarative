@@ -1,4 +1,3 @@
-[submodule "tests/manual/v4/test262"]
-	path = tests/manual/v4/test262
+[submodule "tests/auto/qml/ecmascripttests/test262"]
+	path = tests/auto/qml/ecmascripttests/test262
 	url = ../qtdeclarative-testsuites.git
-	update = none
