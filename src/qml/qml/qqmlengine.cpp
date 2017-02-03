@@ -65,6 +65,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qthread.h>
