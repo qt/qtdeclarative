@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickImageTextureProvider;
 
-class QQuickImagePrivate : public QQuickImageBasePrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickImagePrivate : public QQuickImageBasePrivate
 {
     Q_DECLARE_PUBLIC(QQuickImage)
 
