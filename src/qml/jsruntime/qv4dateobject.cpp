@@ -340,7 +340,9 @@ static inline double TimeClip(double t)
 {
     if (! qt_is_finite(t) || fabs(t) > 8.64e15)
         return qt_qnan();
-    return Primitive::toInteger(t);
+
+    // +0 looks weird, but is correct. See ES6 20.3.1.15. We must not return -0.
+    return Primitive::toInteger(t) + 0;
 }
 
 static inline double ParseString(const QString &s)
@@ -724,7 +726,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(7));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(7));
     LocalTZA = getLocalTZA();
 
     ctor->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
@@ -774,8 +776,21 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setYear"), method_setYear, 1);
     defineDefaultProperty(QStringLiteral("setFullYear"), method_setFullYear, 3);
     defineDefaultProperty(QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
-    defineDefaultProperty(QStringLiteral("toUTCString"), method_toUTCString, 0);
-    defineDefaultProperty(QStringLiteral("toGMTString"), method_toUTCString, 0);
+
+    // ES6: B.2.4.3 & 20.3.4.43:
+    // We have to use the *same object* for toUTCString and toGMTString
+    {
+        QString toUtcString(QStringLiteral("toUTCString"));
+        QString toGmtString(QStringLiteral("toGMTString"));
+        ScopedString us(scope, engine->newIdentifier(toUtcString));
+        ScopedString gs(scope, engine->newIdentifier(toGmtString));
+        ExecutionContext *global = engine->rootContext();
+        ScopedFunctionObject toUtcGmtStringFn(scope, BuiltinFunction::create(global, us, method_toUTCString));
+        toUtcGmtStringFn->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+        defineDefaultProperty(us, toUtcGmtStringFn);
+        defineDefaultProperty(gs, toUtcGmtStringFn);
+    }
+
     defineDefaultProperty(QStringLiteral("toISOString"), method_toISOString, 0);
     defineDefaultProperty(QStringLiteral("toJSON"), method_toJSON, 1);
 }

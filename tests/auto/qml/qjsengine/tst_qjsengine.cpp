@@ -1099,7 +1099,7 @@ void tst_QJSEngine::builtinFunctionNames_data()
     QTest::newRow("Date.prototype.setFullYear") << QString("Date.prototype.setFullYear") << QString("setFullYear");
     QTest::newRow("Date.prototype.setUTCFullYear") << QString("Date.prototype.setUTCFullYear") << QString("setUTCFullYear");
     QTest::newRow("Date.prototype.toUTCString") << QString("Date.prototype.toUTCString") << QString("toUTCString");
-    QTest::newRow("Date.prototype.toGMTString") << QString("Date.prototype.toGMTString") << QString("toGMTString");
+    QTest::newRow("Date.prototype.toGMTString") << QString("Date.prototype.toGMTString") << QString("toUTCString"); // yes, this is per spec
 
     QTest::newRow("Error") << QString("Error") << QString("Error");
 //    QTest::newRow("Error.prototype.backtrace") << QString("Error.prototype.backtrace") << QString("backtrace");
