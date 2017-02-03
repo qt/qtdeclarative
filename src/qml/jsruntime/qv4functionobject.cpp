@@ -106,7 +106,7 @@ void Heap::FunctionObject::init()
     function = nullptr;
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
     Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()) == Index_Prototype);
-    *propertyData(Index_Prototype) = Encode::undefined();
+    setProperty(internalClass->engine, Index_Prototype, Primitive::undefinedValue());
 }
 
 
@@ -126,10 +126,10 @@ void FunctionObject::init(String *n, bool createProto)
     if (createProto) {
         ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype()));
         Q_ASSERT(s.engine->protoClass->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
-        *proto->propertyData(Heap::FunctionObject::Index_ProtoConstructor) = this->asReturnedValue();
-        *propertyData(Heap::FunctionObject::Index_Prototype) = proto.asReturnedValue();
+        proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
+        setProperty(Heap::FunctionObject::Index_Prototype, proto);
     } else {
-        *propertyData(Heap::FunctionObject::Index_Prototype) = Encode::undefined();
+        setProperty(Heap::FunctionObject::Index_Prototype, Primitive::undefinedValue());
     }
 
     if (n)
@@ -346,7 +346,8 @@ void FunctionPrototype::method_bind(const BuiltinFunction *, Scope &scope, CallD
     if (callData->argc > 1) {
         boundArgs = MemberData::allocate(scope.engine, callData->argc - 1);
         boundArgs->d()->values.size = callData->argc - 1;
-        memcpy(boundArgs->data(), callData->args + 1, (callData->argc - 1)*sizeof(Value));
+        for (uint i = 0; i < static_cast<uint>(callData->argc - 1); ++i)
+            boundArgs->set(scope.engine, i, callData->args[i + 1]);
     }
 
     ExecutionContext *global = scope.engine->rootContext();
@@ -426,7 +427,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, function->name());
     f->init(name, true);
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
-    *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
+    setProperty(s.engine, Index_Length, Primitive::fromInt32(f->formalParameterCount()));
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);

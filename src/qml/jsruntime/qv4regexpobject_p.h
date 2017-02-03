@@ -128,7 +128,15 @@ struct RegExpObject: Object {
 
     void initProperties();
 
-    Value *lastIndexProperty();
+    int lastIndex() const {
+        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()));
+        return propertyData(Index_LastIndex)->toInt32();
+    }
+    void setLastIndex(int index) {
+        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()));
+        return setProperty(Index_LastIndex, Primitive::fromInt32(index));
+    }
+
     QRegExp toQRegExp() const;
     QString toString() const;
     QString source() const;

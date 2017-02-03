@@ -61,20 +61,20 @@ void Heap::ArgumentsObject::init(QV4::CallContext *context)
     if (context->d()->strictMode) {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
         Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller()));
-        *args->propertyData(CalleePropertyIndex + QV4::Object::GetterOffset) = v4->thrower();
-        *args->propertyData(CalleePropertyIndex + QV4::Object::SetterOffset) = v4->thrower();
-        *args->propertyData(CallerPropertyIndex + QV4::Object::GetterOffset) = v4->thrower();
-        *args->propertyData(CallerPropertyIndex + QV4::Object::SetterOffset) = v4->thrower();
+        args->setProperty(CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
+        args->setProperty(CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
+        args->setProperty(CallerPropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
+        args->setProperty(CallerPropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
 
         args->arrayReserve(context->argc());
         args->arrayPut(0, context->args(), context->argc());
         args->d()->fullyCreated = true;
     } else {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
-        *args->propertyData(CalleePropertyIndex) = context->d()->function->asReturnedValue();
+        args->setProperty(CalleePropertyIndex, context->d()->function);
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length()));
-    *args->propertyData(LengthPropertyIndex) = Primitive::fromInt32(context->d()->callData->argc);
+    args->setProperty(LengthPropertyIndex, Primitive::fromInt32(context->d()->callData->argc));
 }
 
 void ArgumentsObject::fullyCreate()
@@ -92,7 +92,7 @@ void ArgumentsObject::fullyCreate()
     if (numAccessors) {
         d()->mappedArguments.set(scope.engine, md->allocate(engine(), numAccessors));
         for (uint i = 0; i < numAccessors; ++i) {
-            d()->mappedArguments->values[i] = context()->callData->args[i];
+            d()->mappedArguments->values.set(scope.engine, i, context()->callData->args[i]);
             arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
         }
     }

@@ -201,6 +201,7 @@ struct Property;
 struct Value;
 template<size_t> struct HeapValue;
 template<size_t> struct ValueArray;
+template<size_t> struct HeapValueArray;
 struct Lookup;
 struct ArrayData;
 struct VTable;

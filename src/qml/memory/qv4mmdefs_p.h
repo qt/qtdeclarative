@@ -278,6 +278,10 @@ struct MarkFlagEvaluator<ValueArray<o>> {
     static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_ValueArray) << (2*o / sizeof(quintptr));
 };
 template <size_t o>
+struct MarkFlagEvaluator<HeapValueArray<o>> {
+    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_ValueArray) << (o >> 2);
+};
+template <size_t o>
 struct MarkFlagEvaluator<HeapValue<o>> {
     static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_Value) << (2 *o / sizeof(quintptr));
 };
@@ -288,7 +292,7 @@ struct MarkFlagEvaluator<HeapValue<o>> {
 #define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_Pointer(c, type, name) Pointer<type, 0> name;
 #define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_NoMark(c, type, name) type name;
 #define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_HeapValue(c, type, name) HeapValue<0> name;
-#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_ValueArray(c, type, name) ValueArray<0> name;
+#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_ValueArray(c, type, name) type<0> name;
 
 #define HEAP_OBJECT_MEMBER_EXPANSION(c, gcType, type, name) \
     HEAP_OBJECT_MEMBER_EXPANSION_##gcType(c, type, name)
@@ -300,7 +304,7 @@ struct MarkFlagEvaluator<HeapValue<o>> {
 #define HEAP_OBJECT_MEMBER_EXPANSION_HeapValue(c, type, name) \
     HeapValue<offsetof(c##OffsetStruct, name) + baseOffset> name;
 #define HEAP_OBJECT_MEMBER_EXPANSION_ValueArray(c, type, name) \
-    ValueArray<offsetof(c##OffsetStruct, name) + baseOffset> name;
+    type<offsetof(c##OffsetStruct, name) + baseOffset> name;
 
 #define HEAP_OBJECT_MARK_EXPANSION(class, gcType, type, name) \
     MarkFlagEvaluator<decltype(class::name)>::value |

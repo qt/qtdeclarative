@@ -59,7 +59,7 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : Object::getValue(thisObject, *v, *attrs);
         }
 
@@ -72,7 +72,7 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : Object::getValue(thisObject, *v, *attrs);
         }
 
@@ -94,7 +94,7 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : thisObject->getValue(*v, *attrs);
         }
 
@@ -107,7 +107,7 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : thisObject->getValue(*v, *attrs);
         }
 
@@ -772,7 +772,7 @@ void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Va
 {
     Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
-        *o->propertyData(l->index) = value;
+        o->setProperty(l->index, value);
         return;
     }
 
@@ -785,7 +785,7 @@ void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, co
     if (o && o->internalClass() == l->classList[0]) {
         if (!o->prototype()) {
             o->setInternalClass(l->classList[3]);
-            *o->propertyData(l->index) = value;
+            o->setProperty(l->index, value);
             return;
         }
     }
@@ -801,7 +801,7 @@ void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, co
         Heap::Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
             o->setInternalClass(l->classList[3]);
-            *o->propertyData(l->index) = value;
+            o->setProperty(l->index, value);
             return;
         }
     }
@@ -819,7 +819,7 @@ void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, co
             p = p->prototype;
             if (p && p->internalClass == l->classList[2]) {
                 o->setInternalClass(l->classList[3]);
-                *o->propertyData(l->index) = value;
+                o->setProperty(l->index, value);
                 return;
             }
         }
@@ -834,11 +834,11 @@ void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, c
     Object *o = object.as<Object>();
     if (o) {
         if (o->internalClass() == l->classList[0]) {
-            *o->propertyData(l->index) = value;
+            o->setProperty(l->index, value);
             return;
         }
         if (o->internalClass() == l->classList[1]) {
-            *o->propertyData(l->index2) = value;
+            o->setProperty(l->index2, value);
             return;
         }
     }

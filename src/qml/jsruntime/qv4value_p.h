@@ -717,6 +717,44 @@ struct HeapValue : Value {
 };
 
 template <size_t offset>
+struct HeapValueArray {
+    uint size;
+    uint alloc;
+    Value values[1];
+
+    void set(ExecutionEngine *e, uint index, Value v) {
+        Q_UNUSED(e);
+        Q_ASSERT(index < alloc);
+        values[index] = v;
+    }
+    void set(ExecutionEngine *e, uint index, Heap::Base *b) {
+        Q_UNUSED(e);
+        Q_ASSERT(index < alloc);
+        values[index] = b;
+    }
+    inline const Value &operator[] (uint index) const {
+        Q_ASSERT(index < alloc);
+        return values[index];
+    }
+    inline const Value *data() const {
+        return values;
+    }
+
+    void insertData(ExecutionEngine *e, uint index, Value v) {
+        for (uint i = size - 1; i > index; --i) {
+            values[i] = values[i - 1];
+        }
+        set(e, index, v);
+    }
+    void removeData(ExecutionEngine *e, uint index, int n = 1) {
+        Q_UNUSED(e);
+        for (uint i = index; i < size - n; ++i) {
+            values[i] = values[i + n];
+        }
+    }
+};
+
+template <size_t offset>
 struct ValueArray {
     uint size;
     uint alloc;

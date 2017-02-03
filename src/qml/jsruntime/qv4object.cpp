@@ -76,9 +76,9 @@ void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) con
 
 void Object::setProperty(uint index, const Property *p)
 {
-    *propertyData(index) = p->value;
+    setProperty(index, p->value);
     if (internalClass()->propertyData.at(index).isAccessor())
-        *propertyData(index + SetterOffset) = p->set;
+        setProperty(index + SetterOffset, p->set);
 }
 
 bool Object::setPrototype(Object *proto)
@@ -117,7 +117,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
     PropertyAttributes attrs = ic->propertyData[memberIndex];
 
     if (attrs.isAccessor()) {
-        FunctionObject *set = propertyData(memberIndex + SetterOffset)->as<FunctionObject>();
+        const FunctionObject *set = propertyData(memberIndex + SetterOffset)->as<FunctionObject>();
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
@@ -133,7 +133,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
     if (!attrs.isWritable())
         goto reject;
 
-    *propertyData(memberIndex) = value;
+    setProperty(memberIndex, value);
     return true;
 
   reject:
@@ -264,10 +264,10 @@ void Object::insertMember(String *s, const Property *p, PropertyAttributes attri
     InternalClass::addMember(this, s, attributes, &idx);
 
     if (attributes.isAccessor()) {
-        *propertyData(idx + GetterOffset) = p->value;
-        *propertyData(idx + SetterOffset) = p->set;
+        setProperty(idx + GetterOffset, p->value);
+        setProperty(idx + SetterOffset, p->set);
     } else {
-        *propertyData(idx) = p->value;
+        setProperty(idx, p->value);
     }
 }
 
@@ -526,7 +526,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
             l->classList[0] = o->internalClass();
             l->index = idx;
             l->setter = Lookup::setter0;
-            *o->propertyData(idx) = value;
+            o->setProperty(idx, value);
             return;
         }
 

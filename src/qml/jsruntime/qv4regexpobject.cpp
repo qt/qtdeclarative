@@ -145,7 +145,7 @@ void Heap::RegExpObject::init(const QRegExp &re)
 
 void RegExpObject::initProperties()
 {
-    *propertyData(Index_LastIndex) = Primitive::fromInt32(0);
+    setProperty(Index_LastIndex, Primitive::fromInt32(0));
 
     Q_ASSERT(value());
 
@@ -157,16 +157,10 @@ void RegExpObject::initProperties()
         p.replace('/', QLatin1String("\\/"));
     }
 
-    *propertyData(Index_Source) = engine()->newString(p);
-    *propertyData(Index_Global) = Primitive::fromBoolean(global());
-    *propertyData(Index_IgnoreCase) = Primitive::fromBoolean(value()->ignoreCase);
-    *propertyData(Index_Multiline) = Primitive::fromBoolean(value()->multiLine);
-}
-
-Value *RegExpObject::lastIndexProperty()
-{
-    Q_ASSERT(0 == internalClass()->find(engine()->id_lastIndex()));
-    return propertyData(0);
+    setProperty(Index_Source, engine()->newString(p));
+    setProperty(Index_Global, Primitive::fromBoolean(global()));
+    setProperty(Index_IgnoreCase, Primitive::fromBoolean(value()->ignoreCase));
+    setProperty(Index_Multiline, Primitive::fromBoolean(value()->multiLine));
 }
 
 // Converts a JS RegExp to a QRegExp.
@@ -344,9 +338,9 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
         RETURN_UNDEFINED();
     QString s = str->toQString();
 
-    int offset = r->global() ? r->lastIndexProperty()->toInt32() : 0;
+    int offset = r->global() ? r->lastIndex() : 0;
     if (offset < 0 || offset > s.length()) {
-        *r->lastIndexProperty() = Primitive::fromInt32(0);
+        r->setLastIndex(0);
         RETURN_RESULT(Encode::null());
     }
 
@@ -357,7 +351,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
     regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {
-        *r->lastIndexProperty() = Primitive::fromInt32(0);
+        r->setLastIndex(0);
         RETURN_RESULT(Encode::null());
     }
 
@@ -373,8 +367,8 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);
-    *array->propertyData(Index_ArrayIndex) = Primitive::fromInt32(result);
-    *array->propertyData(Index_ArrayInput) = str;
+    array->setProperty(Index_ArrayIndex, Primitive::fromInt32(result));
+    array->setProperty(Index_ArrayInput, str);
 
     RegExpCtor::Data *dd = regExpCtor->d();
     dd->lastMatch.set(scope.engine, array);
@@ -383,7 +377,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
     dd->lastMatchEnd = matchOffsets[1];
 
     if (r->global())
-        *r->lastIndexProperty() = Primitive::fromInt32(matchOffsets[1]);
+        r->setLastIndex(matchOffsets[1]);
 
     scope.result = array;
 }

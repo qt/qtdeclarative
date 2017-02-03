@@ -78,14 +78,14 @@ void Heap::StringObject::init()
     Object::init();
     Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
     string.set(internalClass->engine, internalClass->engine->id_empty()->d());
-    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0);
+    setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0));
 }
 
 void Heap::StringObject::init(const QV4::String *str)
 {
     Object::init();
     string.set(internalClass->engine, str->d());
-    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(length());
+    setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(length()));
 }
 
 Heap::String *Heap::StringObject::getIndex(uint index) const
@@ -556,7 +556,7 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global())
-            *regExp->lastIndexProperty() = Primitive::fromUInt32(0);
+            regExp->setLastIndex(0);
         numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
         numCaptures = regExp->value()->captureCount();
     } else {

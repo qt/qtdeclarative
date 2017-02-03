@@ -96,8 +96,8 @@ struct VariantObject : Object
     V4_PROTOTYPE(variantPrototype)
     V4_NEEDS_DESTROY
 
-    void addVmePropertyReference();
-    void removeVmePropertyReference();
+    void addVmePropertyReference() const;
+    void removeVmePropertyReference() const;
 
     static bool isEqualTo(Managed *m, Managed *other);
 };

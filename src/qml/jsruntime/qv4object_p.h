@@ -78,8 +78,9 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
-    const Value *propertyData(uint index) const { return memberData->values.v + index; }
-    Value *propertyData(uint index) { return memberData->values.v + index; }
+    const Value *propertyData(uint index) const { return memberData->values.data() + index; }
+    void setProperty(ExecutionEngine *e, uint index, Value v) const { memberData->values.set(e, index, v); }
+    void setProperty(ExecutionEngine *e, uint index, Heap::Base *b) const { memberData->values.set(e, index, b); }
 };
 
 Q_STATIC_ASSERT(Object::markTable == ((2 << 4) | (2 << 6) | (2 << 8)));
@@ -195,13 +196,14 @@ struct Q_QML_EXPORT Object: Managed {
     void setInternalClass(InternalClass *ic);
 
     const Value *propertyData(uint index) const { return d()->propertyData(index); }
-    Value *propertyData(uint index) { return d()->propertyData(index); }
 
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData.set(engine(), a->d()); }
 
     void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
     void setProperty(uint index, const Property *p);
+    void setProperty(uint index, Value v) const { d()->setProperty(engine(), index, v); }
+    void setProperty(uint index, Heap::Base *b) const { d()->setProperty(engine(), index, b); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
     Heap::Object *prototype() const { return d()->prototype; }
@@ -469,7 +471,7 @@ struct ArrayObject : Object {
 
 private:
     void commonInit()
-    { *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0); }
+    { setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0)); }
 };
 
 }
@@ -509,7 +511,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        *propertyData(Heap::ArrayObject::LengthPropertyIndex) = Primitive::fromUInt32(l);
+        setProperty(Heap::ArrayObject::LengthPropertyIndex, Primitive::fromUInt32(l));
 }
 
 inline void Object::push_back(const Value &v)
