@@ -581,7 +581,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
                 Heap::SparseArrayData *sa = o->d()->arrayData.cast<Heap::SparseArrayData>();
-                Property *p = reinterpret_cast<Property *>(sa->values.v + pidx);
+                const Property *p = reinterpret_cast<const Property *>(sa->values.data() + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
                 PropertyAttributes a = sa->attrs ? sa->attrs[pidx] : Attr_Data;
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
@@ -598,7 +598,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
         // dense arrays
         while (it->arrayIndex < o->d()->arrayData->values.size) {
             Heap::SimpleArrayData *sa = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-            Value &val = sa->data(it->arrayIndex);
+            const Value &val = sa->data(it->arrayIndex);
             PropertyAttributes a = o->arrayData()->attributes(it->arrayIndex);
             ++it->arrayIndex;
             if (!val.isEmpty()
@@ -1146,7 +1146,8 @@ void Object::copyArrayData(Object *other)
             dd->values.size = other->d()->arrayData->values.size;
             dd->offset = other->d()->arrayData->offset;
         }
-        memcpy(d()->arrayData->values.v, other->d()->arrayData->values.v, other->d()->arrayData->values.alloc*sizeof(Value));
+        // ### need a write barrier
+        memcpy(d()->arrayData->values.values, other->d()->arrayData->values.values, other->d()->arrayData->values.alloc*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }

@@ -644,7 +644,7 @@ void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, co
         if (o->arrayType() == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->arrayData());
             if (s && idx < s->values.size && !s->data(idx).isEmpty()) {
-                s->data(idx) = value;
+                s->setData(engine, idx, value);
                 return;
             }
         }

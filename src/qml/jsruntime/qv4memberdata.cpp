@@ -53,6 +53,7 @@ Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberD
     size_t alloc = MemoryManager::align(sizeof(Heap::MemberData) + (n - 1)*sizeof(Value));
     Heap::MemberData *m = e->memoryManager->allocManaged<MemberData>(alloc);
     if (old)
+        // no write barrier required here
         memcpy(m, old, sizeof(Heap::MemberData) + (old->values.size - 1) * sizeof(Value));
     else
         m->init();

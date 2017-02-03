@@ -96,7 +96,7 @@ namespace Heap {
     Member(class, NoMark, PropertyAttributes *, attrs) \
     Member(class, NoMark, ReturnedValue, freeList) \
     Member(class, NoMark, SparseArray *, sparse) \
-    Member(class, ValueArray, ValueArray, values)
+    Member(class, ValueArray, HeapValueArray, values)
 
 DECLARE_HEAP_OBJECT(ArrayData, Base) {
     DECLARE_MARK_TABLE(ArrayData);
@@ -135,14 +135,20 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
         return vtable()->length(this);
     }
 
+    void setArrayData(ExecutionEngine *e, uint index, Value newVal) {
+        values.set(e, index, newVal);
+    }
+
     uint mappedIndex(uint index) const;
 };
 V4_ASSERT_IS_TRIVIAL(ArrayData)
 
 struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { return (index + offset) % values.alloc; }
-    Value data(uint index) const { return values[mappedIndex(index)]; }
-    Value &data(uint index) { return values[mappedIndex(index)]; }
+    const Value &data(uint index) const { return values[mappedIndex(index)]; }
+    void setData(ExecutionEngine *e, uint index, Value newVal) {
+        values.set(e, mappedIndex(index), newVal);
+    }
 
     PropertyAttributes attributes(uint i) const {
         return attrs ? attrs[i] : Attr_Data;
@@ -190,8 +196,10 @@ struct Q_QML_EXPORT ArrayData : public Managed
     void setType(Type t) { d()->type = t; }
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
-    const Value *arrayData() const { return d()->values.v; }
-    Value *arrayData() { return d()->values.v; }
+    const Value *arrayData() const { return d()->values.data(); }
+    void setArrayData(ExecutionEngine *e, uint index, Value newVal) {
+        d()->setArrayData(e, index, newVal);
+    }
 
     const ArrayVTable *vtable() const { return d()->vtable(); }
     bool isSparse() const { return type() == Heap::ArrayData::Sparse; }
@@ -229,7 +237,6 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
     Value data(uint index) const { return d()->data(index); }
-    Value &data(uint index) { return d()->data(index); }
 
     uint &len() { return d()->values.size; }
     uint len() const { return d()->values.size; }

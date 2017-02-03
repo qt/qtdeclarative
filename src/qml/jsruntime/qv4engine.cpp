@@ -604,7 +604,9 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
         d->offset = 0;
         d->values.alloc = length;
         d->values.size = length;
-        memcpy(&d->values.v, values, length*sizeof(Value));
+        // this doesn't require a write barrier, things will be ok, when the new array data gets inserted into
+        // the parent object
+        memcpy(&d->values.values, values, length*sizeof(Value));
         a->d()->arrayData.set(this, d);
         a->setArrayLengthUnchecked(length);
     }

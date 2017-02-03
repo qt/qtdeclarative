@@ -218,7 +218,7 @@ void Lookup::indexedSetterFallback(Lookup *, ExecutionEngine *engine, const Valu
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             if (idx < s->values.size) {
-                s->data(idx) = value;
+                s->setData(engine, idx, value);
                 return;
             }
         }
@@ -240,7 +240,7 @@ void Lookup::indexedSetterObjectInt(Lookup *l, ExecutionEngine *engine, const Va
                 if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
                     if (idx < s->values.size) {
-                        s->data(idx) = v;
+                        s->setData(engine, idx, v);
                         return;
                     }
                 }
