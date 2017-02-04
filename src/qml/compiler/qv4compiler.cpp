@@ -220,7 +220,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             registerString(*f->locals.at(i));
     }
 
-    CompiledData::LEUInt32 *functionOffsets = reinterpret_cast<CompiledData::LEUInt32*>(alloca(irModule->functions.size() * sizeof(CompiledData::LEUInt32)));
+    Q_ALLOCA_VAR(CompiledData::LEUInt32, functionOffsets, irModule->functions.size() * sizeof(CompiledData::LEUInt32));
     uint jsClassDataOffset = 0;
 
     char *dataPtr;

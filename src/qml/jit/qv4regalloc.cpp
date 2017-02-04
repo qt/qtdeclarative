@@ -1575,7 +1575,7 @@ static void longestAvailableReg(int *nextUses, int nextUseCount, int &reg, int &
 
 #define CALLOC_ON_STACK(ty, ptr, sz, val) \
     Q_ASSERT(sz > 0); \
-    ty *ptr = reinterpret_cast<ty *>(alloca(sizeof(ty) * (sz))); \
+    Q_ALLOCA_VAR(ty, ptr, sizeof(ty) * (sz)); \
     for (ty *it = ptr, *eit = ptr + (sz); it != eit; ++it) \
         *it = val;
 
