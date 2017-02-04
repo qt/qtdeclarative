@@ -566,10 +566,6 @@ void tst_QJSEngine::newDate()
         QCOMPARE(date.isDate(), true);
         QCOMPARE(date.isObject(), true);
         QVERIFY(!date.isCallable());
-        // prototype should be Date.prototype
-        QVERIFY(!date.prototype().isUndefined());
-        QCOMPARE(date.prototype().isDate(), true);
-        QCOMPARE(date.prototype().strictlyEquals(eng.evaluate("Date.prototype")), true);
     }
 
     {
@@ -578,10 +574,6 @@ void tst_QJSEngine::newDate()
         QVERIFY(!date.isUndefined());
         QCOMPARE(date.isDate(), true);
         QCOMPARE(date.isObject(), true);
-        // prototype should be Date.prototype
-        QVERIFY(!date.prototype().isUndefined());
-        QCOMPARE(date.prototype().isDate(), true);
-        QCOMPARE(date.prototype().strictlyEquals(eng.evaluate("Date.prototype")), true);
 
         QCOMPARE(date.toDateTime(), dt);
     }
