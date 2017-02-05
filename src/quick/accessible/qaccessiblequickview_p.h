@@ -65,6 +65,7 @@ public:
 
     QAccessibleInterface *parent() const;
     QAccessibleInterface *child(int index) const;
+    QAccessibleInterface *focusChild() const override;
 
     QAccessible::Role role() const;
     QAccessible::State state() const;
