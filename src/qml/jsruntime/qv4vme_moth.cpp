@@ -249,10 +249,8 @@ int qt_v4DebuggerHook(const char *json)
     return -NoSuchCommand; // Failure.
 }
 
-static void qt_v4CheckForBreak(QV4::ExecutionContext *context, QV4::Value **scopes, int scopeDepth)
+static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
 {
-    Q_UNUSED(scopes);
-    Q_UNUSED(scopeDepth);
     const int lineNumber = context->d()->lineNumber;
     QV4::Function *function = qt_v4ExtractFunction(context);
     QString engineName = function->sourceFile();
@@ -335,12 +333,13 @@ Param traceParam(const Param &param)
     return param;
 }
 # define VALUE(param) (*VALUEPTR(param))
-# define VALUEPTR(param) (scopes[traceParam(param).scope] + param.index)
+# define VALUEPTR(param) (scopes[traceParam(param).scope].values + param.index)
 #else
 # define VALUE(param) (*VALUEPTR(param))
-# define VALUEPTR(param) (scopes[param.scope] + param.index)
+# define VALUEPTR(param) (scopes[param.scope].values + param.index)
 #endif
 
+// ### add write barrier here
 #define STOREVALUE(param, value) { \
     QV4::ReturnedValue tmp = (value); \
     if (engine->hasException) \
@@ -402,25 +401,29 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         }
     }
 
-    Q_ALLOCA_VAR(QV4::Value*, scopes, sizeof(QV4::Value *)*(2 + 2*scopeDepth));
+    struct Scopes {
+        QV4::Value *values;
+        QV4::Heap::Base *base; // non 0 if a write barrier is required
+    };
+    Q_ALLOCA_VAR(Scopes, scopes, sizeof(Scopes)*(2 + 2*scopeDepth));
     {
-        scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->constants);
+        scopes[0] = { const_cast<QV4::Value *>(context->d()->compilationUnit->constants), 0 };
         // stack gets setup in push instruction
-        scopes[1] = 0;
+        scopes[1] = { 0, 0 };
         QV4::Heap::ExecutionContext *scope = context->d();
         int i = 0;
         while (scope) {
             if (scope->type == QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
                 QV4::Heap::SimpleCallContext *cc = static_cast<QV4::Heap::SimpleCallContext *>(scope);
-                scopes[2*i + 2] = cc->callData->args;
-                scopes[2*i + 3] = 0;
+                scopes[2*i + 2] = { cc->callData->args, 0 };
+                scopes[2*i + 3] = { 0, 0 };
             } else if (scope->type == QV4::Heap::ExecutionContext::Type_CallContext) {
                 QV4::Heap::CallContext *cc = static_cast<QV4::Heap::CallContext *>(scope);
-                scopes[2*i + 2] = cc->callData->args;
-                scopes[2*i + 3] = cc->locals.values;
+                scopes[2*i + 2] = { cc->callData->args, cc };
+                scopes[2*i + 3] = { cc->locals.values, cc };
             } else {
-                scopes[2*i + 2] = 0;
-                scopes[2*i + 3] = 0;
+                scopes[2*i + 2] = { 0, 0 };
+                scopes[2*i + 3] = { 0, 0 };
             }
             ++i;
             scope = scope->outer;
@@ -561,7 +564,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = scope.alloc(stackSize);
-        scopes[1] = stack;
+        scopes[1].values = stack;
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
@@ -919,13 +922,13 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
         if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(context, scopes, scopeDepth);
+            qt_v4CheckForBreak(context);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
         engine->current->lineNumber = instr.lineNumber;
         if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(context, scopes, scopeDepth);
+            qt_v4CheckForBreak(context);
     MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
 
