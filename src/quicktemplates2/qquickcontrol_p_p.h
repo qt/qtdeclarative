@@ -111,9 +111,11 @@ public:
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(const QQuickItem *item);
 
+#if QT_CONFIG(quicktemplates2_hover)
     void updateHoverEnabled(bool enabled, bool xplicit);
     static void updateHoverEnabledRecur(QQuickItem *item, bool enabled);
     static bool calcHoverEnabled(const QQuickItem *item);
+#endif
 
     void deleteDelegate(QObject *object);
 
@@ -133,9 +135,11 @@ public:
     bool hasRightPadding;
     bool hasBottomPadding;
     bool hasLocale;
-    bool hovered;
     bool wheelEnabled;
+#if QT_CONFIG(quicktemplates2_hover)
+    bool hovered;
     bool explicitHoverEnabled;
+#endif
     qreal padding;
     qreal topPadding;
     qreal leftPadding;

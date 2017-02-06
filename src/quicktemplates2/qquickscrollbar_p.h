@@ -135,7 +135,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
 
+#if QT_CONFIG(quicktemplates2_hover)
     void hoverChange() override;
+#endif
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) override;

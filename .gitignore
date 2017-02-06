@@ -6,6 +6,10 @@
 /mkspecs
 /doc
 
+/src/quicktemplates2/qtquicktemplates2-config.h
+/src/quicktemplates2/qtquicktemplates2-config.pri
+/src/quicktemplates2/qtquicktemplates2-config_p.h
+
 /examples/quickcontrols2/chattutorial/chapter1-settingup/chapter1-settingup
 /examples/quickcontrols2/chattutorial/chapter2-lists/chapter2-lists
 /examples/quickcontrols2/chattutorial/chapter3-navigation/chapter3-navigation

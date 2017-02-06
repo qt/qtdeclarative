@@ -131,8 +131,11 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : hovered(false),
+    : QQuickTextEditPrivate(),
+#if QT_CONFIG(quicktemplates2_hover)
+      hovered(false),
       explicitHoverEnabled(false),
+#endif
       background(nullptr),
       focusReason(Qt::OtherFocusReason),
       accessibleAttached(nullptr),
@@ -201,6 +204,7 @@ void QQuickTextAreaPrivate::inheritFont(const QFont &f)
         emit q->fontChanged();
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 {
     Q_Q(QQuickTextArea);
@@ -215,6 +219,7 @@ void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
         emit q->hoverEnabledChanged();
     }
 }
+#endif
 
 void QQuickTextAreaPrivate::attachFlickable(QQuickFlickable *item)
 {
@@ -518,18 +523,26 @@ void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
 */
 bool QQuickTextArea::isHovered() const
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(const QQuickTextArea);
     return d->hovered;
+#else
+    return false;
+#endif
 }
 
 void QQuickTextArea::setHovered(bool hovered)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickTextArea);
     if (hovered == d->hovered)
         return;
 
     d->hovered = hovered;
     emit hoveredChanged();
+#else
+    Q_UNUSED(hovered);
+#endif
 }
 
 /*!
@@ -542,27 +555,37 @@ void QQuickTextArea::setHovered(bool hovered)
 */
 bool QQuickTextArea::isHoverEnabled() const
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(const QQuickTextArea);
     return d->hoverEnabled;
+#else
+    return false;
+#endif
 }
 
 void QQuickTextArea::setHoverEnabled(bool enabled)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickTextArea);
     if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
     d->updateHoverEnabled(enabled, true); // explicit=true
+#else
+    Q_UNUSED(enabled);
+#endif
 }
 
 void QQuickTextArea::resetHoverEnabled()
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickTextArea);
     if (!d->explicitHoverEnabled)
         return;
 
     d->explicitHoverEnabled = false;
     d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+#endif
 }
 
 bool QQuickTextArea::contains(const QPointF &point) const
@@ -584,8 +607,10 @@ void QQuickTextArea::componentComplete()
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::componentComplete();
+#if QT_CONFIG(quicktemplates2_hover)
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
+#endif
 #ifndef QT_NO_ACCESSIBILITY
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
@@ -601,9 +626,10 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
     QQuickTextEdit::itemChange(change, value);
     if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+#if QT_CONFIG(quicktemplates2_hover)
         if (!d->explicitHoverEnabled)
             d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
-
+#endif
         QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
         if (flickable) {
             QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
@@ -660,6 +686,7 @@ void QQuickTextArea::focusOutEvent(QFocusEvent *event)
     setFocusReason(event->reason());
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickTextArea::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickTextArea);
@@ -675,6 +702,7 @@ void QQuickTextArea::hoverLeaveEvent(QHoverEvent *event)
     setHovered(false);
     event->setAccepted(d->hoverEnabled);
 }
+#endif
 
 void QQuickTextArea::mousePressEvent(QMouseEvent *event)
 {

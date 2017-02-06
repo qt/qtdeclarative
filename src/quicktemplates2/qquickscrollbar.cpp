@@ -205,7 +205,12 @@ void QQuickScrollBarPrivate::setInteractive(bool enabled)
 void QQuickScrollBarPrivate::updateActive()
 {
     Q_Q(QQuickScrollBar);
-    q->setActive(moving || (interactive && (pressed || hovered)));
+#if QT_CONFIG(quicktemplates2_hover)
+    bool hover = hovered;
+#else
+    bool hover = false;
+#endif
+    q->setActive(moving || (interactive && (pressed || hover)));
 }
 
 void QQuickScrollBarPrivate::resizeContent()
@@ -599,11 +604,13 @@ void QQuickScrollBar::mouseUngrabEvent()
     d->handleUngrab();
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickScrollBar::hoverChange()
 {
     Q_D(QQuickScrollBar);
     d->updateActive();
 }
+#endif
 
 #ifndef QT_NO_ACCESSIBILITY
 void QQuickScrollBar::accessibilityActiveChanged(bool active)

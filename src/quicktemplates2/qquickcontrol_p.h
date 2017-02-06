@@ -176,9 +176,11 @@ protected:
 
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+#if QT_CONFIG(quicktemplates2_hover)
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverMoveEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
+#endif
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
@@ -189,7 +191,9 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     virtual void fontChange(const QFont &newFont, const QFont &oldFont);
+#if QT_CONFIG(quicktemplates2_hover)
     virtual void hoverChange();
+#endif
     virtual void mirrorChange();
     virtual void spacingChange(qreal newSpacing, qreal oldSpacing);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);

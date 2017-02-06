@@ -106,10 +106,12 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
 
+#if QT_CONFIG(quicktemplates2_hover)
     // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
     setHoverEnabled(true);
     // setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
     // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
+#endif
 }
 
 void QQuickPopupItem::grabShortcut()

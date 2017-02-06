@@ -114,8 +114,10 @@ protected:
 
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+#if QT_CONFIG(quicktemplates2_hover)
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
+#endif
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
