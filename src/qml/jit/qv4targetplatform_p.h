@@ -130,7 +130,6 @@ public:
     }
 
 #  define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-#  undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
 #  undef ARGUMENTS_IN_REGISTERS
@@ -216,7 +215,6 @@ public:
     }
 
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-#define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
 #define ARGUMENTS_IN_REGISTERS
@@ -285,7 +283,6 @@ public:
     }
 
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-#define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
 #define ARGUMENTS_IN_REGISTERS
@@ -389,7 +386,6 @@ public:
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-#undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
 #define ARGUMENTS_IN_REGISTERS
@@ -510,7 +506,6 @@ public:
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-#define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
 #define ARGUMENTS_IN_REGISTERS
@@ -598,7 +593,6 @@ public:
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-#undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
 #define ARGUMENTS_IN_REGISTERS
