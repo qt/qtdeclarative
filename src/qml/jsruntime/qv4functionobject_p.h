@@ -84,7 +84,6 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
 
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
-    bool needsActivation() const { return function ? function->needsActivation() : false; }
 
     const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->cast<QV4::Object>(); }
 };
@@ -160,7 +159,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
 
-    bool needsActivation() const { return d()->needsActivation(); }
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
     bool isBoundFunction() const;
