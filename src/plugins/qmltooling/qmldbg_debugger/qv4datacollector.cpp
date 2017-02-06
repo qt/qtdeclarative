@@ -366,8 +366,8 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
 {
     class ExceptionStateSaver
     {
-        quint32 *hasExceptionLoc;
-        quint32 hadException;
+        quint8 *hasExceptionLoc;
+        quint8 hadException;
 
     public:
         ExceptionStateSaver(QV4::ExecutionEngine *engine)

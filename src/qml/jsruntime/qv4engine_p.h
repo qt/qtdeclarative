@@ -100,7 +100,9 @@ public:
     Heap::ExecutionContext *current;
 
     Value *jsStackTop;
-    quint32 hasException;
+    quint8 hasException;
+    quint8 writeBarrierActive = false;
+    quint16 unused = 0;
     qint32 callDepth;
 
     MemoryManager *memoryManager;

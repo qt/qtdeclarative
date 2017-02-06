@@ -53,6 +53,7 @@
 #include "qv4global_p.h"
 #include "qv4value_p.h"
 #include <private/qv4heap_p.h>
+#include <private/qv4writebarrier_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -164,26 +164,6 @@ struct Q_QML_EXPORT Base {
 };
 V4_ASSERT_IS_TRIVIAL(Base)
 
-template <typename T, size_t o>
-struct Pointer {
-    static Q_CONSTEXPR size_t offset = o;
-    T operator->() const { return ptr; }
-    operator T () const { return ptr; }
-
-    void set(ExecutionEngine *e, T newVal) {
-        Q_UNUSED(e);
-        ptr = newVal;
-    }
-
-    template <typename Type>
-    Type *cast() { return static_cast<Type *>(ptr); }
-
-private:
-    T ptr;
-};
-typedef Pointer<char *, 0> V4PointerCheck;
-V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
-
 }
 
 #ifdef QT_NO_QOBJECT

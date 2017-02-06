@@ -344,8 +344,13 @@ Param traceParam(const Param &param)
     QV4::ReturnedValue tmp = (value); \
     if (engine->hasException) \
         goto catchException; \
-    VALUE(param) = tmp; \
-    }
+    if (Q_LIKELY(!engine->writeBarrierActive || !scopes[param.scope].base)) { \
+        VALUE(param) = tmp; \
+    } else { \
+        QV4::WriteBarrier::write(engine, scopes[param.scope].base, VALUEPTR(param), QV4::Value::fromReturnedValue(tmp)); \
+    } \
+}
+
 // qv4scopedvalue_p.h also defines a CHECK_EXCEPTION macro
 #ifdef CHECK_EXCEPTION
 #undef CHECK_EXCEPTION
