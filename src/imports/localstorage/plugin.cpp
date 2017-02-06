@@ -714,8 +714,11 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     FunctionObject *dbcreationCallback = (v = (*args)[4])->as<FunctionObject>();
     QString basename = args->v4engine()->qmlEngine()->offlineStorageDatabaseFilePath(dbname);
     QFileInfo dbFile(basename);
-    if (!QDir().mkpath(dbFile.dir().absolutePath()))
-        V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("LocalStorage: can't create path ") + dbFile.dir().absolutePath());
+    if (!QDir().mkpath(dbFile.dir().absolutePath())) {
+        const QString message = QQmlEngine::tr("LocalStorage: can't create path %1").
+                                arg(QDir::toNativeSeparators(dbFile.dir().absolutePath()));
+        V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, message);
+    }
     QString dbid = dbFile.fileName();
     bool created = false;
     QString version = dbversion;
