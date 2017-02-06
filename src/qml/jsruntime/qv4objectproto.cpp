@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2017 Crimson AS <info@crimson.no>
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -93,6 +94,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
+    ctor->defineDefaultProperty(QStringLiteral("assign"), method_assign, 2);
     ctor->defineDefaultProperty(QStringLiteral("create"), method_create, 2);
     ctor->defineDefaultProperty(QStringLiteral("defineProperty"), method_defineProperty, 3);
     ctor->defineDefaultProperty(QStringLiteral("defineProperties"), method_defineProperties, 2);
@@ -154,6 +156,50 @@ void ObjectPrototype::method_getOwnPropertyNames(const BuiltinFunction *, Scope 
     CHECK_EXCEPTION();
 
     scope.result = getOwnPropertyNames(scope.engine, callData->args[0]);
+}
+
+// 19.1.2.1
+void ObjectPrototype::method_assign(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    ScopedObject to(scope, callData->args[0].toObject(scope.engine));
+    CHECK_EXCEPTION();
+
+    if (callData->argc == 1) {
+        scope.result = to;
+        return;
+    }
+
+    for (int i = 1; i < callData->argc; ++i) {
+        if (callData->args[i].isUndefined() || callData->args[i].isNull())
+            continue;
+
+        ScopedObject from(scope, callData->args[i].toObject(scope.engine));
+        CHECK_EXCEPTION();
+        QV4::ScopedArrayObject keys(scope, QV4::ObjectPrototype::getOwnPropertyNames(scope.engine, from));
+        quint32 length = keys->getLength();
+
+        ScopedString nextKey(scope);
+        ScopedValue propValue(scope);
+        for (quint32 i = 0; i < length; ++i) {
+            nextKey = Value::fromReturnedValue(keys->getIndexed(i)).toString(scope.engine);
+
+            PropertyAttributes attrs;
+            ScopedProperty prop(scope);
+            from->getOwnProperty(nextKey, &attrs, prop);
+
+            if (attrs == PropertyFlag::Attr_Invalid)
+                continue;
+
+            if (!attrs.isEnumerable())
+                continue;
+
+            propValue = from->get(nextKey);
+            to->put(nextKey, propValue);
+            CHECK_EXCEPTION();
+        }
+    }
+
+    scope.result = to;
 }
 
 void ObjectPrototype::method_create(const BuiltinFunction *builtin, Scope &scope, CallData *callData)
@@ -676,7 +722,7 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
     return o.asReturnedValue();
 }
 
-
+// es6: GetOwnPropertyKeys
 Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
 {
     Scope scope(v4);
