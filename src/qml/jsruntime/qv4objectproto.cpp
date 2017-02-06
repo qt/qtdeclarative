@@ -89,7 +89,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ScopedObject o(scope, this);
 
     ctor->defineReadonlyProperty(v4->id_prototype(), o);
-    ctor->defineReadonlyProperty(v4->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(v4->id_length(), Primitive::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
@@ -123,9 +123,8 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
 
 void ObjectPrototype::method_getPrototypeOf(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    ScopedObject o(scope, callData->args[0].toObject(scope.engine));
+    CHECK_EXCEPTION();
 
     ScopedObject p(scope, o->prototype());
     scope.result = !!p ? p->asReturnedValue() : Encode::null();
@@ -133,11 +132,8 @@ void ObjectPrototype::method_getPrototypeOf(const BuiltinFunction *, Scope &scop
 
 void ObjectPrototype::method_getOwnPropertyDescriptor(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject O(scope, callData->argument(0));
-    if (!O) {
-        scope.result = scope.engine->throwTypeError();
-        return;
-    }
+    ScopedObject O(scope, callData->args[0].toObject(scope.engine));
+    CHECK_EXCEPTION();
 
     if (ArgumentsObject::isNonStrictArgumentsObject(O))
         static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
@@ -154,11 +150,8 @@ void ObjectPrototype::method_getOwnPropertyDescriptor(const BuiltinFunction *, S
 
 void ObjectPrototype::method_getOwnPropertyNames(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject O(scope, callData->argument(0));
-    if (!O) {
-        scope.result = scope.engine->throwTypeError();
-        return;
-    }
+    ScopedObject O(scope, callData->args[0].toObject(scope.engine));
+    CHECK_EXCEPTION();
 
     scope.result = getOwnPropertyNames(scope.engine, callData->args[0]);
 }
@@ -246,8 +239,11 @@ void ObjectPrototype::method_defineProperties(const BuiltinFunction *, Scope &sc
 void ObjectPrototype::method_seal(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
     ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    if (!o) {
+        // 19.1.2.17, 1
+        scope.result = callData->argument(0);
+        return;
+    }
 
     o->setInternalClass(o->internalClass()->sealed());
 
@@ -290,9 +286,11 @@ void ObjectPrototype::method_freeze(const BuiltinFunction *, Scope &scope, CallD
 
 void ObjectPrototype::method_preventExtensions(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    ScopedObject o(scope, callData->args[0].toObject(scope.engine));
+    if (!o) {
+        scope.result = callData->argument(0);
+        return;
+    }
 
     o->setInternalClass(o->internalClass()->nonExtensible());
     scope.result = o;
@@ -300,9 +298,11 @@ void ObjectPrototype::method_preventExtensions(const BuiltinFunction *, Scope &s
 
 void ObjectPrototype::method_isSealed(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    ScopedObject o(scope, callData->args[0].toObject(scope.engine));
+    if (!o) {
+        scope.result = Encode(true);
+        return;
+    }
 
     if (o->isExtensible()) {
         scope.result = Encode(false);
@@ -338,9 +338,11 @@ void ObjectPrototype::method_isSealed(const BuiltinFunction *, Scope &scope, Cal
 
 void ObjectPrototype::method_isFrozen(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    ScopedObject o(scope, callData->args[0].toObject(scope.engine));
+    if (!o) {
+        scope.result = Encode(true);
+        return;
+    }
 
     if (o->isExtensible()) {
         scope.result = Encode(false);
@@ -376,18 +378,19 @@ void ObjectPrototype::method_isFrozen(const BuiltinFunction *, Scope &scope, Cal
 
 void ObjectPrototype::method_isExtensible(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    ScopedObject o(scope, callData->args[0].toObject(scope.engine));
+    if (!o) {
+        scope.result = Encode(false);
+        return;
+    }
 
     scope.result = Encode((bool)o->isExtensible());
 }
 
 void ObjectPrototype::method_keys(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
-    ScopedObject o(scope, callData->argument(0));
-    if (!o)
-        THROW_TYPE_ERROR();
+    ScopedObject o(scope, callData->args[0].toObject(scope.engine));
+    CHECK_EXCEPTION();
 
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
 
@@ -678,7 +681,7 @@ Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, con
 {
     Scope scope(v4);
     ScopedArrayObject array(scope, v4->newArrayObject());
-    ScopedObject O(scope, o);
+    ScopedObject O(scope, o.toObject(v4));
     if (O) {
         ObjectIterator it(scope, O, ObjectIterator::NoFlags);
         ScopedValue name(scope);
