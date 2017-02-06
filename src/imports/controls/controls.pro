@@ -17,7 +17,7 @@ RESOURCES += \
     $$PWD/qtquickcontrols2plugin.qrc
 
 include(controls.pri)
-!static: include(designer/designer.pri)
+!static: qtConfig(quick-designer): include(designer/designer.pri)
 include(doc/doc.pri)
 
 qtquickcompiler {
