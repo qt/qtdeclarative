@@ -28,3 +28,5 @@ qtquickcompiler {
 
 CONFIG += no_cxx_module
 load(qml_plugin)
+
+requires(qtConfig(quickcontrols2-default))

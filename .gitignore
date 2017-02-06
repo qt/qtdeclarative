@@ -6,6 +6,9 @@
 /mkspecs
 /doc
 
+/src/quickcontrols2/qtquickcontrols2-config.h
+/src/quickcontrols2/qtquickcontrols2-config.pri
+/src/quickcontrols2/qtquickcontrols2-config_p.h
 /src/quicktemplates2/qtquicktemplates2-config.h
 /src/quicktemplates2/qtquicktemplates2-config.pri
 /src/quicktemplates2/qtquicktemplates2-config_p.h
