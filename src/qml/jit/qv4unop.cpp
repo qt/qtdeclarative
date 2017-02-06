@@ -147,6 +147,7 @@ void Unop<JITAssembler>::generateCompl(IR::Expr *source, IR::Expr *target)
 template struct QV4::JIT::Unop<QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>>;
 #if defined(V4_BOOTSTRAP)
 template struct QV4::JIT::Unop<QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>>;
+template struct QV4::JIT::Unop<QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>>;
 #endif
 
 #endif

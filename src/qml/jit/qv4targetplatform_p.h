@@ -427,7 +427,7 @@ public:
 };
 #endif // ARM (32 bit)
 
-#if CPU(ARM64)
+#if CPU(ARM64) || defined(V4_BOOTSTRAP)
 template <>
 class TargetPlatform<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>
 {

@@ -1638,15 +1638,16 @@ template class Q_QML_EXPORT ISelFactory<>;
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture)
 {
     using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
+    using ARM64CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;
 
     if (architecture == QLatin1String("armv7"))
         return new ISelFactory<ARMv7CrossAssembler>;
+    else if (architecture == QLatin1String("armv8"))
+        return new ISelFactory<ARM64CrossAssembler>;
 
     QString hostArch;
 #if CPU(ARM_THUMB2)
     hostArch = QStringLiteral("armv7");
-#elif CPU(ARM64)
-    hostArch = QStringLiteral("armv8");
 #elif CPU(MIPS)
     hostArch = QStringLiteral("mips");
 #elif CPU(X86)

@@ -650,6 +650,7 @@ typename JITAssembler::Jump Binop<JITAssembler>::genInlineBinop(IR::Expr *leftSo
 template struct QV4::JIT::Binop<QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>>;
 #if defined(V4_BOOTSTRAP)
 template struct QV4::JIT::Binop<QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>>;
+template struct QV4::JIT::Binop<QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>>;
 #endif
 
 } // end of namespace JIT
