@@ -1358,6 +1358,16 @@ struct Function {
                !hasTry && !hasWith && !isNamedExpression && !usesArgumentsObject && !hasDirectEval;
     }
 
+    bool argLocalRequiresWriteBarrier(ArgLocal *al) const {
+        uint scope = al->scope;
+        const IR::Function *f = this;
+        while (scope) {
+            f = f->outer;
+            --scope;
+        }
+        return !f->canUseSimpleCall();
+    }
+
 private:
     BasicBlock *getOrCreateBasicBlock(int index);
     void setStatementCount(int cnt);
