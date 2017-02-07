@@ -39,6 +39,7 @@
 #include <QtQuickControls2/private/qquickcolor_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
 #include <QtQuickControls2/private/qquickplaceholdertext_p.h>
+#include <QtQuickControls2/private/qquickdisplaylayout_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
@@ -193,6 +194,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
 
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
+    qmlRegisterType<QQuickDisplayLayout>(import, 2, 3, "DisplayLayout");
 }
 
 QT_END_NAMESPACE
