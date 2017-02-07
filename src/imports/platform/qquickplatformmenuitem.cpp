@@ -170,12 +170,14 @@ void QQuickPlatformMenuItem::sync()
     if (m_subMenu && m_subMenu->handle())
         m_handle->setMenu(m_subMenu->handle());
 
+#if QT_CONFIG(shortcut)
     QKeySequence sequence;
     if (m_shortcut.type() == QVariant::Int)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
     m_handle->setShortcut(sequence.toString());
+#endif
 
     if (m_menu && m_menu->handle())
         m_menu->handle()->syncMenuItem(m_handle);

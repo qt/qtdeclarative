@@ -116,19 +116,19 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
 
 void QQuickPopupItem::grabShortcut()
 {
-#ifndef QT_NO_SHORTCUT
+#if QT_CONFIG(shortcut)
     Q_D(QQuickPopupItem);
     QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
     if (!d->backId)
         d->backId = pApp->shortcutMap.addShortcut(this, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
     if (!d->escapeId)
         d->escapeId = pApp->shortcutMap.addShortcut(this, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
-#endif // QT_NO_SHORTCUT
+#endif
 }
 
 void QQuickPopupItem::ungrabShortcut()
 {
-#ifndef QT_NO_SHORTCUT
+#if QT_CONFIG(shortcut)
     Q_D(QQuickPopupItem);
     QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
     if (d->backId) {
@@ -139,7 +139,7 @@ void QQuickPopupItem::ungrabShortcut()
         pApp->shortcutMap.removeShortcut(d->escapeId, this);
         d->escapeId = 0;
     }
-#endif // QT_NO_SHORTCUT
+#endif
 }
 
 void QQuickPopupItem::updatePolish()
@@ -150,6 +150,7 @@ void QQuickPopupItem::updatePolish()
 
 bool QQuickPopupItem::event(QEvent *event)
 {
+#if QT_CONFIG(shortcut)
     Q_D(QQuickPopupItem);
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
@@ -161,6 +162,7 @@ bool QQuickPopupItem::event(QEvent *event)
             }
         }
     }
+#endif
     return QQuickItem::event(event);
 }
 
