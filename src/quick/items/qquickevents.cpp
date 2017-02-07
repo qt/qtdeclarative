@@ -896,6 +896,10 @@ bool QQuickPointerMouseEvent::allPointsAccepted() const {
     return m_mousePoint->isAccepted();
 }
 
+bool QQuickPointerMouseEvent::allUpdatedPointsAccepted() const {
+    return m_mousePoint->state() == QQuickEventPoint::Pressed || m_mousePoint->isAccepted();
+}
+
 bool QQuickPointerMouseEvent::allPointsGrabbed() const
 {
     return m_mousePoint->grabber() != nullptr;
@@ -936,6 +940,15 @@ bool QQuickPointerMouseEvent::isPressEvent() const
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
     for (int i = 0; i < m_pointCount; ++i) {
         if (!m_touchPoints.at(i)->isAccepted())
+            return false;
+    }
+    return true;
+}
+
+bool QQuickPointerTouchEvent::allUpdatedPointsAccepted() const {
+    for (int i = 0; i < m_pointCount; ++i) {
+        auto point = m_touchPoints.at(i);
+        if (point->state() != QQuickEventPoint::Pressed && !point->isAccepted())
             return false;
     }
     return true;

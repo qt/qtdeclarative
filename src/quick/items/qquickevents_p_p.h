@@ -400,6 +400,7 @@ public: // helpers for C++ only (during event delivery)
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
     bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
+    virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
     bool isAccepted() { return m_event->isAccepted(); }
     void setAccepted(bool accepted) { m_event->setAccepted(accepted); }
@@ -439,6 +440,7 @@ public:
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(quint64 pointId) const override;
     bool allPointsAccepted() const override;
+    bool allUpdatedPointsAccepted() const override;
     bool allPointsGrabbed() const override;
     QVector<QObject *> grabbers() const override;
     void clearGrabbers() const override;
@@ -472,6 +474,7 @@ public:
     QQuickEventPoint *pointById(quint64 pointId) const override;
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
     bool allPointsAccepted() const override;
+    bool allUpdatedPointsAccepted() const override;
     bool allPointsGrabbed() const override;
     QVector<QObject *> grabbers() const override;
     void clearGrabbers() const override;
