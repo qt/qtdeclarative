@@ -57,6 +57,7 @@
 #include "private/qv4value_p.h"
 #include "private/qv4context_p.h"
 #include "private/qv4engine_p.h"
+#include "private/qv4writebarrier_p.h"
 #include "qv4targetplatform_p.h"
 
 #include <config.h>
@@ -158,29 +159,33 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->MacroAssembler::loadDouble(addr, dest);
     }
 
-    static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
+    static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->MacroAssembler::storeDouble(source, addr);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
     {
-        Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
-        as->storeDouble(source, ptr);
+        WriteBarrier::Type barrier;
+        Pointer ptr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
+        as->storeDouble(source, ptr, barrier);
     }
 
-    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
+    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->store32(TrustedImm32(value.int_32()), destination);
         destination.offset += 4;
         as->store32(TrustedImm32(value.tag()), destination);
     }
 
     template <typename Source, typename Destination>
-    static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination)
+    static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->loadDouble(source, TargetPlatform::FPGpr0);
-        as->storeDouble(TargetPlatform::FPGpr0, destination);
+        as->storeDouble(TargetPlatform::FPGpr0, destination, barrier);
     }
 
     static void loadDoubleConstant(JITAssembler *as, IR::Const *c, FPRegisterID target)
@@ -193,8 +198,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->moveIntsToDouble(TargetPlatform::LowReturnValueRegister, TargetPlatform::HighReturnValueRegister, dest, TargetPlatform::FPGpr0);
     }
 
-    static void storeReturnValue(JITAssembler *as, const Pointer &dest)
+    static void storeReturnValue(JITAssembler *as, const Pointer &dest, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         Address destination = dest;
         as->store32(TargetPlatform::LowReturnValueRegister, destination);
         destination.offset += 4;
@@ -234,7 +240,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                 Q_UNREACHABLE();
             }
         } else {
-            Pointer addr = as->loadAddress(TargetPlatform::ScratchRegister, t);
+            Pointer addr = as->loadAddressForReading(TargetPlatform::ScratchRegister, t);
             as->load32(addr, lowReg);
             addr.offset += 4;
             as->load32(addr, highReg);
@@ -295,7 +301,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                                   IR::BasicBlock *nextBlock, IR::BasicBlock *currentBlock,
                                   IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
     {
-        Pointer tagAddr = as->loadAddress(scratchRegister, right);
+        Pointer tagAddr = as->loadAddressForReading(scratchRegister, right);
         as->load32(tagAddr, tagRegister);
         Jump j = as->branch32(JITAssembler::invert(cond), tagRegister, TrustedImm32(0));
         as->addPatch(falseBlock, j);
@@ -312,7 +318,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     {
         Q_ASSERT(source->type == IR::VarType);
         // load the tag:
-        Pointer addr = as->loadAddress(TargetPlatform::ScratchRegister, source);
+        Pointer addr = as->loadAddressForReading(TargetPlatform::ScratchRegister, source);
         Pointer tagAddr = addr;
         tagAddr.offset += 4;
         as->load32(tagAddr, TargetPlatform::ReturnValueRegister);
@@ -323,7 +329,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
             as->load32(addr, TargetPlatform::ReturnValueRegister);
-            Pointer targetAddr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+            WriteBarrier::Type barrier;
+            Pointer targetAddr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
+            Q_UNUSED(barrier);
             as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
             as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
@@ -335,14 +343,15 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         // not an int:
         fallback.link(as);
         generateRuntimeCall(as, TargetPlatform::ReturnValueRegister, toInt,
-                            as->loadAddress(TargetPlatform::ScratchRegister, source));
+                            as->loadAddressForReading(TargetPlatform::ScratchRegister, source));
         as->storeInt32(TargetPlatform::ReturnValueRegister, target);
 
         intDone.link(as);
     }
 
-    static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr)
+    static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->store32(registerWithPtr, destAddr);
         destAddr.offset += 4;
         as->store32(TrustedImm32(QV4::Value::Managed_Type_Internal_32), destAddr);
@@ -391,8 +400,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
-    static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
+    static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
         as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
@@ -402,7 +412,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     {
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
         as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
-        Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+        WriteBarrier::Type barrier;
+        Pointer ptr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
+        Q_UNUSED(barrier);
         as->store64(TargetPlatform::ReturnValueRegister, ptr);
     }
 
@@ -412,8 +424,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
-    static void storeReturnValue(JITAssembler *as, const Pointer &dest)
+    static void storeReturnValue(JITAssembler *as, const Pointer &dest, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->store64(TargetPlatform::ReturnValueRegister, dest);
     }
 
@@ -455,7 +468,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                          TargetPlatform::ReturnValueRegister);
             }
         } else {
-            as->copyValue(TargetPlatform::ReturnValueRegister, t);
+            as->copyValue(TargetPlatform::ReturnValueRegister, t, WriteBarrier::NoBarrier);
         }
     }
 
@@ -464,18 +477,19 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->move(TrustedImm64(retVal.rawValue()), TargetPlatform::ReturnValueRegister);
     }
 
-    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
+    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->store64(TrustedImm64(value.rawValue()), destination);
     }
 
     template <typename Source, typename Destination>
-    static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination)
+    static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination, WriteBarrier::Type barrier)
     {
         // Use ReturnValueRegister as "scratch" register because loadArgument
         // and storeArgument are functions that may need a scratch register themselves.
         loadArgumentInRegister(as, source, TargetPlatform::ReturnValueRegister, 0);
-        as->storeReturnValue(destination);
+        as->storeReturnValue(destination, barrier);
     }
 
     static void loadDoubleConstant(JITAssembler *as, IR::Const *c, FPRegisterID target)
@@ -511,7 +525,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Q_UNUSED(argumentNumber);
 
         if (al) {
-            Pointer addr = as->loadArgLocalAddress(dest, al);
+            Pointer addr = as->loadArgLocalAddressForReading(dest, al);
             as->load64(addr, dest);
         } else {
             QV4::Value undefined = QV4::Primitive::undefinedValue();
@@ -580,7 +594,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                                   IR::BasicBlock *nextBlock,  IR::BasicBlock *currentBlock,
                                   IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
     {
-        Pointer addr = as->loadAddress(scratchRegister, right);
+        Pointer addr = as->loadAddressForReading(scratchRegister, right);
         as->load64(addr, tagRegister);
         const TrustedImm64 tag(0);
         generateCJumpOnCompare(as, cond, tagRegister, tag, nextBlock, currentBlock, trueBlock, falseBlock);
@@ -589,7 +603,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     static void convertVarToSInt32(JITAssembler *as, IR::Expr *source, IR::Expr *target)
     {
         Q_ASSERT(source->type == IR::VarType);
-        Pointer addr = as->loadAddress(TargetPlatform::ScratchRegister, source);
+        Pointer addr = as->loadAddressForReading(TargetPlatform::ScratchRegister, source);
         as->load64(addr, TargetPlatform::ScratchRegister);
         as->move(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
 
@@ -613,14 +627,16 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         // not an int:
         fallback.link(as);
         generateRuntimeCall(as, TargetPlatform::ReturnValueRegister, toInt,
-                            as->loadAddress(TargetPlatform::ScratchRegister, source));
+                            as->loadAddressForReading(TargetPlatform::ScratchRegister, source));
 
 
         isIntConvertible.link(as);
         success.link(as);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-            Pointer targetAddr = as->loadAddress(TargetPlatform::ScratchRegister, target);
+            WriteBarrier::Type barrier;
+            Pointer targetAddr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
+            Q_UNUSED(barrier);
             as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
             as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
@@ -629,8 +645,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         }
     }
 
-    static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr)
+    static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         as->store64(registerWithPtr, destAddr);
     }
 
@@ -962,9 +979,16 @@ public:
     Jump branchDouble(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
     Jump branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right);
 
-    Pointer loadAddress(RegisterID tmp, IR::Expr *t);
+    Pointer loadAddressForWriting(RegisterID tmp, IR::Expr *t, WriteBarrier::Type *barrier);
+    Pointer loadAddressForReading(RegisterID tmp, IR::Expr *t) {
+        return loadAddressForWriting(tmp, t, 0);
+    }
+
     Pointer loadTempAddress(IR::Temp *t);
-    Pointer loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al);
+    Pointer loadArgLocalAddressForWriting(RegisterID baseReg, IR::ArgLocal *al, WriteBarrier::Type *barrier);
+    Pointer loadArgLocalAddressForReading(RegisterID baseReg, IR::ArgLocal *al) {
+        return loadArgLocalAddressForWriting(baseReg, al, 0);
+    }
     Pointer loadStringAddress(RegisterID reg, const QString &string);
     Address loadConstant(IR::Const *c, RegisterID baseReg);
     Address loadConstant(const Primitive &v, RegisterID baseReg);
@@ -986,16 +1010,16 @@ public:
                 Pointer addr(_stackLayout->savedRegPointer(argumentNumber));
                 switch (t->type) {
                 case IR::BoolType:
-                    storeBool((RegisterID) t->index, addr);
+                    storeBool((RegisterID) t->index, addr, WriteBarrier::NoBarrier);
                     break;
                 case IR::SInt32Type:
-                    storeInt32((RegisterID) t->index, addr);
+                    storeInt32((RegisterID) t->index, addr, WriteBarrier::NoBarrier);
                     break;
                 case IR::UInt32Type:
-                    storeUInt32((RegisterID) t->index, addr);
+                    storeUInt32((RegisterID) t->index, addr, WriteBarrier::NoBarrier);
                     break;
                 case IR::DoubleType:
-                    storeDouble((FPRegisterID) t->index, addr);
+                    storeDouble((FPRegisterID) t->index, addr, WriteBarrier::NoBarrier);
                     break;
                 default:
                     Q_UNIMPLEMENTED();
@@ -1026,7 +1050,7 @@ public:
         if (!temp.value) {
             RegisterSizeDependentOps::zeroRegister(this, dest);
         } else {
-            Pointer addr = toAddress(dest, temp.value, argumentNumber);
+            Pointer addr = toAddress(dest, temp.value, argumentNumber, 0);
             loadArgumentInRegister(addr, dest, argumentNumber);
         }
     }
@@ -1039,7 +1063,7 @@ public:
     void loadArgumentInRegister(Reference temp, RegisterID dest, int argumentNumber)
     {
         Q_ASSERT(temp.value);
-        Pointer addr = loadAddress(dest, temp.value);
+        Pointer addr = loadAddressForReading(dest, temp.value);
         loadArgumentInRegister(addr, dest, argumentNumber);
     }
 
@@ -1072,8 +1096,10 @@ public:
             move(imm32, dest);
     }
 
-    void storeReturnValue(RegisterID dest)
+    void storeReturnValue(RegisterID dest, WriteBarrier::Type barrier = WriteBarrier::NoBarrier)
     {
+        Q_UNUSED(barrier);
+        Q_ASSERT(barrier == WriteBarrier::NoBarrier);
         move(ReturnValueRegister, dest);
     }
 
@@ -1081,7 +1107,7 @@ public:
     {
         subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
         Pointer tmp(StackPointerRegister, 0);
-        storeReturnValue(tmp);
+        storeReturnValue(tmp, WriteBarrier::NoBarrier);
         toUInt32Register(tmp, dest);
         addPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
     }
@@ -1091,9 +1117,9 @@ public:
         RegisterSizeDependentOps::storeReturnValue(this, dest);
     }
 
-    void storeReturnValue(const Pointer &dest)
+    void storeReturnValue(const Pointer &dest, WriteBarrier::Type barrier)
     {
-        RegisterSizeDependentOps::storeReturnValue(this, dest);
+        RegisterSizeDependentOps::storeReturnValue(this, dest, barrier);
     }
 
     void storeReturnValue(IR::Expr *target)
@@ -1101,22 +1127,19 @@ public:
         if (!target)
             return;
 
-        if (IR::Temp *temp = target->asTemp()) {
-            if (temp->kind == IR::Temp::PhysicalRegister) {
-                if (temp->type == IR::DoubleType)
-                    storeReturnValue((FPRegisterID) temp->index);
-                else if (temp->type == IR::UInt32Type)
-                    storeUInt32ReturnValue((RegisterID) temp->index);
-                else
-                    storeReturnValue((RegisterID) temp->index);
-                return;
-            } else {
-                Pointer addr = loadTempAddress(temp);
-                storeReturnValue(addr);
-            }
-        } else if (IR::ArgLocal *al = target->asArgLocal()) {
-            Pointer addr = loadArgLocalAddress(ScratchRegister, al);
-            storeReturnValue(addr);
+        IR::Temp *temp = target->asTemp();
+        if (temp && temp->kind == IR::Temp::PhysicalRegister) {
+            if (temp->type == IR::DoubleType)
+                storeReturnValue((FPRegisterID) temp->index);
+            else if (temp->type == IR::UInt32Type)
+                storeUInt32ReturnValue((RegisterID) temp->index);
+            else
+                storeReturnValue((RegisterID) temp->index);
+            return;
+        } else {
+            WriteBarrier::Type barrier;
+            Pointer addr = loadAddressForWriting(ScratchRegister, target, &barrier);
+            storeReturnValue(addr, barrier);
         }
     }
 
@@ -1153,7 +1176,7 @@ public:
     void loadArgumentOnStack(PointerToValue temp, int argumentNumber)
     {
         if (temp.value) {
-            Pointer ptr = toAddress(ScratchRegister, temp.value, argumentNumber);
+            Pointer ptr = toAddress(ScratchRegister, temp.value, argumentNumber, 0);
             loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
         } else {
             RegisterSizeDependentOps::zeroStackSlot(this, StackSlot);
@@ -1173,7 +1196,7 @@ public:
     {
         Q_ASSERT (temp.value);
 
-        Pointer ptr = loadAddress(ScratchRegister, temp.value);
+        Pointer ptr = loadAddressForReading(ScratchRegister, temp.value);
         loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
     }
 
@@ -1184,7 +1207,7 @@ public:
             moveDouble((FPRegisterID) sourceTemp->index, dest);
             return;
         }
-        Pointer ptr = loadAddress(ScratchRegister, source);
+        Pointer ptr = loadAddressForReading(ScratchRegister, source);
         loadDouble(ptr, dest);
     }
 
@@ -1203,30 +1226,43 @@ public:
         RegisterSizeDependentOps::loadDouble(this, addr, dest);
     }
 
-    void storeDouble(FPRegisterID source, Address addr)
+    void storeDouble(FPRegisterID source, Address addr, WriteBarrier::Type barrier)
     {
-        RegisterSizeDependentOps::storeDouble(this, source, addr);
+        RegisterSizeDependentOps::storeDouble(this, source, addr, barrier);
     }
 
     template <typename Result, typename Source>
-    void copyValue(Result result, Source source);
+    void copyValue(Result result, Source source, WriteBarrier::Type barrier);
     template <typename Result>
-    void copyValue(Result result, IR::Expr* source);
+    void copyValue(Result result, IR::Expr* source, WriteBarrier::Type barrier);
 
     // The scratch register is used to calculate the temp address for the source.
-    void memcopyValue(Pointer target, IR::Expr *source, RegisterID scratchRegister)
+    void memcopyValue(Pointer target, IR::Expr *source, RegisterID scratchRegister, WriteBarrier::Type barrier)
     {
         Q_ASSERT(!source->asTemp() || source->asTemp()->kind != IR::Temp::PhysicalRegister);
         Q_ASSERT(target.base != scratchRegister);
-        TargetConfiguration::MacroAssembler::loadDouble(loadAddress(scratchRegister, source), FPGpr0);
-        TargetConfiguration::MacroAssembler::storeDouble(FPGpr0, target);
+        loadRawValue(loadAddressForReading(scratchRegister, source), FPGpr0);
+        storeRawValue(FPGpr0, target, barrier);
     }
 
     // The scratch register is used to calculate the temp address for the source.
     void memcopyValue(IR::Expr *target, Pointer source, FPRegisterID fpScratchRegister, RegisterID scratchRegister)
     {
-        TargetConfiguration::MacroAssembler::loadDouble(source, fpScratchRegister);
-        TargetConfiguration::MacroAssembler::storeDouble(fpScratchRegister, loadAddress(scratchRegister, target));
+        loadRawValue(source, fpScratchRegister);
+        WriteBarrier::Type barrier;
+        Pointer dest = loadAddressForWriting(scratchRegister, target, &barrier);
+        storeRawValue(fpScratchRegister, dest, barrier);
+    }
+
+    void loadRawValue(Pointer source, FPRegisterID dest)
+    {
+        TargetConfiguration::MacroAssembler::loadDouble(source, dest);
+    }
+
+    void storeRawValue(FPRegisterID source, Pointer dest, WriteBarrier::Type barrier)
+    {
+        Q_UNUSED(barrier);
+        TargetConfiguration::MacroAssembler::storeDouble(source, dest);
     }
 
     void storeValue(QV4::Primitive value, RegisterID destination)
@@ -1236,9 +1272,9 @@ public:
         Q_UNREACHABLE();
     }
 
-    void storeValue(QV4::Primitive value, Address destination)
+    void storeValue(QV4::Primitive value, Address destination, WriteBarrier::Type barrier)
     {
-        RegisterSizeDependentOps::storeValue(this, value, destination);
+        RegisterSizeDependentOps::storeValue(this, value, destination, barrier);
     }
 
     void storeValue(QV4::Primitive value, IR::Expr* temp);
@@ -1411,8 +1447,10 @@ public:
         generateFunctionCallImp(needsExceptionCheck, r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType(), VoidType());
     }
 
-    Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset)
+    Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset, WriteBarrier::Type *barrier)
     {
+        if (barrier)
+            *barrier = WriteBarrier::NoBarrier;
         if (IR::Const *c = e->asConst()) {
             Address addr = _stackLayout->savedRegPointer(offset);
             Address tagAddr = addr;
@@ -1428,11 +1466,12 @@ public:
             if (t->kind == IR::Temp::PhysicalRegister)
                 return Pointer(_stackLayout->savedRegPointer(offset));
 
-        return loadAddress(tmpReg, e);
+        return loadAddressForWriting(tmpReg, e, barrier);
     }
 
-    void storeBool(RegisterID reg, Pointer addr)
+    void storeBool(RegisterID reg, Pointer addr, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         store32(reg, addr);
         addr.offset += 4;
         store32(TrustedImm32(QV4::Primitive::fromBoolean(0).tag()), addr);
@@ -1452,8 +1491,9 @@ public:
             }
         }
 
-        Pointer addr = loadAddress(ScratchRegister, target);
-        storeBool(reg, addr);
+        WriteBarrier::Type barrier;
+        Pointer addr = loadAddressForWriting(ScratchRegister, target, &barrier);
+        storeBool(reg, addr, barrier);
     }
 
     void storeBool(bool value, IR::Expr *target) {
@@ -1475,8 +1515,9 @@ public:
         move(src, dest);
     }
 
-    void storeInt32(RegisterID reg, Pointer addr)
+    void storeInt32(RegisterID reg, Pointer addr, WriteBarrier::Type barrier)
     {
+        Q_UNUSED(barrier);
         store32(reg, addr);
         addr.offset += 4;
         store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag()), addr);
@@ -1484,16 +1525,13 @@ public:
 
     void storeInt32(RegisterID reg, IR::Expr *target)
     {
-        if (IR::Temp *targetTemp = target->asTemp()) {
-            if (targetTemp->kind == IR::Temp::PhysicalRegister) {
-                move(reg, (RegisterID) targetTemp->index);
-            } else {
-                Pointer addr = loadTempAddress(targetTemp);
-                storeInt32(reg, addr);
-            }
-        } else if (IR::ArgLocal *al = target->asArgLocal()) {
-            Pointer addr = loadArgLocalAddress(ScratchRegister, al);
-            storeInt32(reg, addr);
+        IR::Temp *targetTemp = target->asTemp();
+        if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
+            move(reg, (RegisterID) targetTemp->index);
+        } else {
+            WriteBarrier::Type barrier;
+            Pointer addr = loadAddressForWriting(ScratchRegister, target, &barrier);
+            storeInt32(reg, addr, barrier);
         }
     }
 
@@ -1502,15 +1540,15 @@ public:
         move(src, dest);
     }
 
-    void storeUInt32(RegisterID reg, Pointer addr)
+    void storeUInt32(RegisterID reg, Pointer addr, WriteBarrier::Type barrier)
     {
         // The UInt32 representation in QV4::Value is really convoluted. See also toUInt32Register.
         Jump intRange = branch32(RelationalCondition::GreaterThanOrEqual, reg, TrustedImm32(0));
         convertUInt32ToDouble(reg, FPGpr0, ReturnValueRegister);
-        storeDouble(FPGpr0, addr);
+        storeDouble(FPGpr0, addr, barrier);
         Jump done = jump();
         intRange.link(this);
-        storeInt32(reg, addr);
+        storeInt32(reg, addr, barrier);
         done.link(this);
     }
 
@@ -1520,8 +1558,9 @@ public:
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister) {
             move(reg, (RegisterID) targetTemp->index);
         } else {
-            Pointer addr = loadAddress(ScratchRegister, target);
-            storeUInt32(reg, addr);
+            WriteBarrier::Type barrier;
+            Pointer addr = loadAddressForWriting(ScratchRegister, target, &barrier);
+            storeUInt32(reg, addr, barrier);
         }
     }
 
@@ -1556,7 +1595,7 @@ public:
             if (t->kind == IR::Temp::PhysicalRegister)
                 return (RegisterID) t->index;
 
-        return toInt32Register(loadAddress(scratchReg, e), scratchReg);
+        return toInt32Register(loadAddressForReading(scratchReg, e), scratchReg);
     }
 
     RegisterID toInt32Register(Pointer addr, RegisterID scratchReg)
@@ -1576,7 +1615,7 @@ public:
             if (t->kind == IR::Temp::PhysicalRegister)
                 return (RegisterID) t->index;
 
-        return toUInt32Register(loadAddress(scratchReg, e), scratchReg);
+        return toUInt32Register(loadAddressForReading(scratchReg, e), scratchReg);
     }
 
     RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
@@ -1648,31 +1687,31 @@ private:
 
 template <typename TargetConfiguration>
 template <typename Result, typename Source>
-void Assembler<TargetConfiguration>::copyValue(Result result, Source source)
+void Assembler<TargetConfiguration>::copyValue(Result result, Source source, WriteBarrier::Type barrier)
 {
-    RegisterSizeDependentOps::copyValueViaRegisters(this, source, result);
+    RegisterSizeDependentOps::copyValueViaRegisters(this, source, result, barrier);
 }
 
 template <typename TargetConfiguration>
 template <typename Result>
-void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source)
+void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source, WriteBarrier::Type barrier)
 {
     if (source->type == IR::BoolType) {
         RegisterID reg = toInt32Register(source, ScratchRegister);
-        storeBool(reg, result);
+        storeBool(reg, result, barrier);
     } else if (source->type == IR::SInt32Type) {
         RegisterID reg = toInt32Register(source, ScratchRegister);
-        storeInt32(reg, result);
+        storeInt32(reg, result, barrier);
     } else if (source->type == IR::UInt32Type) {
         RegisterID reg = toUInt32Register(source, ScratchRegister);
-        storeUInt32(reg, result);
+        storeUInt32(reg, result, barrier);
     } else if (source->type == IR::DoubleType) {
-        storeDouble(toDoubleRegister(source), result);
+        storeDouble(toDoubleRegister(source), result, barrier);
     } else if (source->asTemp() || source->asArgLocal()) {
-        RegisterSizeDependentOps::copyValueViaRegisters(this, source, result);
+        RegisterSizeDependentOps::copyValueViaRegisters(this, source, result, barrier);
     } else if (IR::Const *c = source->asConst()) {
         QV4::Primitive v = convertToValue(c);
-        storeValue(v, result);
+        storeValue(v, result, barrier);
     } else {
         Q_UNREACHABLE();
     }

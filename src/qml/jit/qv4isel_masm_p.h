@@ -209,7 +209,7 @@ private:
                         _as->convertInt32ToDouble((RegisterID) sourceTemp->index,
                                                   (FPRegisterID) targetTemp->index);
                     } else {
-                        _as->convertInt32ToDouble(_as->loadAddress(JITTargetPlatform::ReturnValueRegister, sourceTemp),
+                        _as->convertInt32ToDouble(_as->loadAddressForReading(JITTargetPlatform::ReturnValueRegister, sourceTemp),
                                                   (FPRegisterID) targetTemp->index);
                     }
                 } else {
@@ -223,7 +223,7 @@ private:
 
         _as->convertInt32ToDouble(_as->toInt32Register(source, JITTargetPlatform::ScratchRegister),
                                   JITTargetPlatform::FPGpr0);
-        _as->storeDouble(JITTargetPlatform::FPGpr0, _as->loadAddress(JITTargetPlatform::ReturnValueRegister, target));
+        _as->storeDouble(JITTargetPlatform::FPGpr0, target);
     }
 
     void convertUIntToDouble(IR::Expr *source, IR::Expr *target)
@@ -240,7 +240,7 @@ private:
 
         _as->convertUInt32ToDouble(_as->toUInt32Register(source, tmpReg),
                                    JITTargetPlatform::FPGpr0, tmpReg);
-        _as->storeDouble(JITTargetPlatform::FPGpr0, _as->loadAddress(tmpReg, target));
+        _as->storeDouble(JITTargetPlatform::FPGpr0, target);
     }
 
     void convertIntToBool(IR::Expr *source, IR::Expr *target)

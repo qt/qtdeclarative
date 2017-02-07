@@ -246,13 +246,16 @@ void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition 
 }
 
 template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadAddress(RegisterID tmp, IR::Expr *e)
+typename Assembler<TargetConfiguration>::Pointer
+Assembler<TargetConfiguration>::loadAddressForWriting(RegisterID tmp, IR::Expr *e, WriteBarrier::Type *barrier)
 {
+    if (barrier)
+        *barrier = WriteBarrier::NoBarrier;
     IR::Temp *t = e->asTemp();
     if (t)
         return loadTempAddress(t);
     else
-        return loadArgLocalAddress(tmp, e->asArgLocal());
+        return loadArgLocalAddressForWriting(tmp, e->asArgLocal(), barrier);
 }
 
 template <typename TargetConfiguration>
@@ -265,7 +268,8 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
 }
 
 template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al)
+typename Assembler<TargetConfiguration>::Pointer
+Assembler<TargetConfiguration>::loadArgLocalAddressForWriting(RegisterID baseReg, IR::ArgLocal *al, WriteBarrier::Type *barrier)
 {
     int32_t offset = 0;
     int scope = al->scope;
@@ -291,6 +295,8 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
     default:
         Q_UNREACHABLE();
     }
+    if (barrier)
+        *barrier = _function->argLocalRequiresWriteBarrier(al) ? WriteBarrier::Barrier : WriteBarrier::NoBarrier;
     return Pointer(baseReg, offset);
 }
 
@@ -329,8 +335,9 @@ void Assembler<TargetConfiguration>::loadStringRef(RegisterID reg, const QString
 template <typename TargetConfiguration>
 void Assembler<TargetConfiguration>::storeValue(QV4::Primitive value, IR::Expr *destination)
 {
-    Address addr = loadAddress(ScratchRegister, destination);
-    storeValue(value, addr);
+    WriteBarrier::Type barrier;
+    Address addr = loadAddressForWriting(ScratchRegister, destination, &barrier);
+    storeValue(value, addr, barrier);
 }
 
 template <typename TargetConfiguration>
@@ -419,7 +426,7 @@ typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::ge
     // It's not a number type, so it cannot be in a register.
     Q_ASSERT(src->asArgLocal() || src->asTemp()->kind != IR::Temp::PhysicalRegister || src->type == IR::BoolType);
 
-    Assembler::Pointer tagAddr = loadAddress(Assembler::ScratchRegister, src);
+    Assembler::Pointer tagAddr = loadAddressForReading(Assembler::ScratchRegister, src);
     tagAddr.offset += 4;
     load32(tagAddr, Assembler::ScratchRegister);
 

@@ -492,7 +492,7 @@ bool Binop<JITAssembler>::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource
             return false;
         }
     } else if (inplaceOpWithAddress) { // All cases of X = X op [address-of-Y]
-        Pointer rhsAddr = as->loadAddress(JITAssembler::ScratchRegister, rightSource);
+        Pointer rhsAddr = as->loadAddressForReading(JITAssembler::ScratchRegister, rightSource);
         switch (op) {
         case IR::OpBitAnd: as->and32(rhsAddr, targetReg); break;
         case IR::OpBitOr:  as->or32 (rhsAddr, targetReg); break;

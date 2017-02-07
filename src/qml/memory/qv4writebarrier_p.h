@@ -59,6 +59,11 @@ namespace QV4 {
 
 namespace WriteBarrier {
 
+enum Type {
+    NoBarrier,
+    Barrier
+};
+
 inline void write(QV4::ExecutionEngine *engine, QV4::Heap::Base *base, QV4::Value *slot, QV4::Value value)
 {
     Q_UNUSED(engine);
