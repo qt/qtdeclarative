@@ -4,7 +4,7 @@
     "features": {
         "quicktemplates2-hover": {
             "label": "Hover support",
-            "purpose": "Support hover effects",
+            "purpose": "Provides support for hover effects in Qt Quick Templates 2",
             "output": [ "privateFeature" ]
         }
     },
