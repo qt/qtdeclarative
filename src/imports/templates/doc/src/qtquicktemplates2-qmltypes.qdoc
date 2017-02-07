@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Templates 2.2
+    \qmlmodule QtQuick.Templates 2.3
     \title Qt Quick Templates 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for templates (Qt Quick Templates).
@@ -38,7 +38,7 @@
     \c .qml file:
 
     \badcode
-    import QtQuick.Templates 2.2 as T
+    import QtQuick.Templates 2.3 as T
     \endcode
 
     For the sake of clarity, there is a one-to-one mapping between the types
