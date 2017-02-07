@@ -97,6 +97,7 @@ public:
     using PlatformAssembler = JSC::MacroAssemblerX86;
     using RegisterID = PlatformAssembler::RegisterID;
     using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
     enum { RegAllocIsSupported = 1 };
 
@@ -139,7 +140,12 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
+    {
+        if (frameSize > 0)
+            as->add32(TrustedImm32(frameSize), StackPointerRegister);
+        as->pop(FramePointerRegister);
+    }
 
 #if OS(WINDOWS) || OS(QNX) || \
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
@@ -178,6 +184,7 @@ public:
     using PlatformAssembler = JSC::MacroAssemblerX86_64;
     using RegisterID = PlatformAssembler::RegisterID;
     using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
     enum { RegAllocIsSupported = 1 };
 
@@ -236,7 +243,12 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
+    {
+        if (frameSize > 0)
+            as->add64(TrustedImm32(frameSize), StackPointerRegister);
+        as->pop(FramePointerRegister);
+    }
 
     static const int gotRegister = -1;
     static int savedGOTRegisterSlotOnStack() { return -1; }
@@ -251,6 +263,7 @@ public:
     using PlatformAssembler = JSC::MacroAssemblerX86_64;
     using RegisterID = PlatformAssembler::RegisterID;
     using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
     // Register allocation is not (yet) supported on win64, because the ABI related stack handling
     // is not completely implemented. Specifically, the saving of xmm registers, and the saving of
@@ -304,7 +317,12 @@ public:
     static const int StackShadowSpace = 32;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(PlatformAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
+    {
+        if (frameSize > 0)
+            as->add64(TrustedImm32(frameSize), StackPointerRegister);
+        as->pop(FramePointerRegister);
+    }
 
     static const int gotRegister = -1;
     static int savedGOTRegisterSlotOnStack() { return -1; }
@@ -319,6 +337,7 @@ public:
     using PlatformAssembler = JSC::MacroAssemblerARMv7;
     using RegisterID = PlatformAssembler::RegisterID;
     using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
     enum { RegAllocIsSupported = 1 };
 
@@ -416,8 +435,14 @@ public:
         as->push(FramePointerRegister);
     }
 
-    static void platformLeaveStandardStackFrame(PlatformAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
+        if (frameSize > 0) {
+            // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
+            // work well for large immediates.
+            as->move(TrustedImm32(frameSize), JSC::ARMRegisters::r3);
+            as->add32(JSC::ARMRegisters::r3, StackPointerRegister);
+        }
         as->pop(FramePointerRegister);
         as->pop(JSC::ARMRegisters::lr);
     }
@@ -435,6 +460,7 @@ public:
     using PlatformAssembler = JSC::MacroAssemblerARM64;
     using RegisterID = PlatformAssembler::RegisterID;
     using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
     enum { RegAllocIsSupported = 1 };
 
@@ -541,8 +567,10 @@ public:
         as->pushPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
 
-    static void platformLeaveStandardStackFrame(PlatformAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
+        if (frameSize > 0)
+            as->add64(TrustedImm32(frameSize), StackPointerRegister);
         as->popPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
 
@@ -559,6 +587,7 @@ public:
     using PlatformAssembler = JSC::MacroAssemblerMIPS;
     using RegisterID = PlatformAssembler::RegisterID;
     using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
     enum { RegAllocIsSupported = 1 };
 
     static const RegisterID FramePointerRegister = JSC::MIPSRegisters::fp;
@@ -627,8 +656,10 @@ public:
         as->push(FramePointerRegister);
     }
 
-    static void platformLeaveStandardStackFrame(PlatformAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
+        if (frameSize > 0)
+            as->add32(TrustedImm32(frameSize), StackPointerRegister);
         as->pop(FramePointerRegister);
         as->pop(JSC::MIPSRegisters::ra);
     }
