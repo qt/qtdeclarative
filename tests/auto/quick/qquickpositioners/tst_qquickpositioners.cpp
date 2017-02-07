@@ -98,6 +98,8 @@ private slots:
     void test_attachedproperties();
     void test_attachedproperties_data();
     void test_attachedproperties_dynamic();
+    void test_useImplicitSize_oneItem_data();
+    void test_useImplicitSize_oneItem();
 
     void populateTransitions_row();
     void populateTransitions_row_data();
@@ -304,6 +306,8 @@ void tst_qquickpositioners::moveTransitions_flow_data()
 
 tst_qquickpositioners::tst_qquickpositioners()
 {
+    qmlRegisterType<QQuickImplicitRow>("PositionerTest", 1, 0, "ImplicitRow");
+    qmlRegisterType<QQuickImplicitGrid>("PositionerTest", 1, 0, "ImplicitGrid");
 }
 
 void tst_qquickpositioners::test_horizontal()
@@ -4002,6 +4006,46 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QTRY_VERIFY(!rect1->property("firstItem").toBool());
     QTRY_VERIFY(rect1->property("lastItem").toBool());
 
+}
+
+void tst_qquickpositioners::test_useImplicitSize_oneItem_data()
+{
+    QTest::addColumn<QString>("positionerType");
+
+    QTest::newRow("Grid") << "Grid";
+    QTest::newRow("Row") << "Row";
+}
+
+void tst_qquickpositioners::test_useImplicitSize_oneItem()
+{
+    QFETCH(QString, positionerType);
+
+    QQuickView view;
+    view.setSource(testFileUrl(QString::fromLatin1("implicit%1OneItem.qml").arg(positionerType)));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *positioner = view.rootObject();
+    QVERIFY(positioner);
+    const qreal oldPositionerImplicitWidth = positioner->implicitWidth();
+
+    QQuickText *text = qobject_cast<QQuickText*>(positioner->childItems().first());
+    QVERIFY(text);
+    const qreal oldTextImplicitWidth = text->implicitWidth();
+    QCOMPARE(positioner->implicitWidth(), text->implicitWidth());
+
+    // Ensure that the implicit size of the positioner changes when the implicit size
+    // of one of its children changes.
+    text->setText(QLatin1String("Even More Text"));
+    const qreal textImplicitWidthIncrease = text->implicitWidth() - oldTextImplicitWidth;
+    QVERIFY(textImplicitWidthIncrease > 0);
+    QTRY_COMPARE(positioner->implicitWidth(), oldPositionerImplicitWidth + textImplicitWidthIncrease);
+
+    // Ensure that the implicit size of the positioner does not change when the
+    // explicit size of one of its children changes.
+    text->setWidth(10);
+    QTRY_COMPARE(positioner->implicitWidth(), oldPositionerImplicitWidth + textImplicitWidthIncrease);
 }
 
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
