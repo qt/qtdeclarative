@@ -35,9 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import QtQuick.Templates 2.2 as T
-import QtQuick.Controls.Material 2.2
-import QtQuick.Controls.Material.impl 2.2
+import QtQuick.Templates 2.3 as T
+import QtQuick.Controls.Material 2.3
+import QtQuick.Controls.Material.impl 2.3
 
 T.RadioDelegate {
     id: control
