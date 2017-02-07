@@ -83,12 +83,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
-    canUseSimpleCall = compiledFunction->nInnerFunctions == 0 &&
-            !(compiledFunction->flags & CompiledData::Function::HasDirectEval) &&
-            !(compiledFunction->flags & CompiledData::Function::UsesArgumentsObject) &&
-            !(compiledFunction->flags & CompiledData::Function::HasCatchOrWith) &&
-            nFormals <= QV4::Global::ReservedArgumentCount &&
-            compiledFunction->nLocals == 0 && !isNamedExpression();
+    canUseSimpleCall = compiledFunction->flags & CompiledData::Function::CanUseSimpleCall;
 }
 
 Function::~Function()

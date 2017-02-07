@@ -1352,6 +1352,12 @@ struct Function {
     int getNewStatementId() { return _statementCount++; }
     int statementCount() const { return _statementCount; }
 
+    bool canUseSimpleCall() const {
+        return nestedFunctions.isEmpty() &&
+               locals.isEmpty() && formals.size() <= QV4::Global::ReservedArgumentCount &&
+               !hasTry && !hasWith && !isNamedExpression && !usesArgumentsObject && !hasDirectEval;
+    }
+
 private:
     BasicBlock *getOrCreateBasicBlock(int index);
     void setStatementCount(int cnt);
