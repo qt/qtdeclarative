@@ -27,7 +27,68 @@
 /*!
 \page qtqml-cppintegration-topic.html
 \title Integrating QML and C++
-\brief Description of how to integrate QML and C++ code
+\brief Provides instruction to integrate QML and C++
+
+QML applications often need to handle more advanced and performance-intensive
+tasks in C++. The most common and quickest way to do this is to expose the C++
+class to the QML runtime, provided the C++ implementation is derived from
+QObject. Assuming that you have Qt 5.7 or later installed, the following
+step-by-step instructions guide you through the process of using the C++ class,
+BackEnd, in a QML application:
+
+\list 1
+
+\li Create a new project using the "Qt Quick Application" template in Qt Creator
+
+\note Uncheck the \uicontrol {With ui.qml file} option in the
+\uicontrol {Define Project Details} section of \uicontrol {New Project Wizard}.
+
+\li Add a new C++ class called \c BackEnd to the project and replace its header
+file contents with:
+
+\quotefile code/backend/backend.h
+
+The \c Q_PROPERTY macro declares a property that could be accessed from QML.
+
+\li Replace its C++ file contents with:
+
+\quotefile code/backend/backend.cpp
+
+The \c setUserName function emits the \c userNameChanged signal every time
+\c m_userName value changes. The signal can be handled from QML using the
+\c onUserNameChanged handler.
+
+\li Include \c "backend.h" in \c main.cpp and register the class as a QML type
+under a import URL as shown below:
+
+\quotefile code/backend/main.cpp
+
+The BackEnd class is registered as a type, which is accessible from QML by
+importing the URL, "\c{io.qt.examples.backend 1.0}".
+
+\li Replace the contents of \c main.qml with the following code:
+
+\quotefile code/backend/main.qml
+
+The \c BackEnd instance lets you access the \c userName property, which
+is updated when the TextField's \c text property changes.
+
+\endlist
+
+Now the application can be run.
+
+\borderedimage cppintegration-ex.png
+\caption Application running on Ubuntu
+
+Qt offers several methods to integrate C++ with QML, and the method discussed
+in this tutorial is just one of them. For more details about these methods,
+refer to \l{Overview - QML and C++ Integration}.
+*/
+
+/*!
+\page qtqml-cppintegration-overview.html
+\title Overview - QML and C++ Integration
+\brief Highlights important points about integrating C++ with QML.
 
 QML is designed to be easily extensible through C++ code. The classes in the \l {Qt QML} module
 enable QML objects to be loaded and manipulated from C++, and the nature of QML engine's
