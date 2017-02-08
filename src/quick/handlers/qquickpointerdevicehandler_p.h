@@ -82,7 +82,6 @@ Q_SIGNALS:
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void setPressed(bool pressed);
 
 protected:
     QQuickPointerDevice::DeviceTypes m_acceptedDevices;
