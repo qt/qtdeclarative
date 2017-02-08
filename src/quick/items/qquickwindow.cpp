@@ -2279,7 +2279,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
 }
 
 // Deliver touch points to existing grabbers
-bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event)
+void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event)
 {
     const auto grabbers = event->grabbers();
     for (auto grabber : grabbers) {
@@ -2290,11 +2290,11 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
             QQuickPointerHandler *handler = static_cast<QQuickPointerHandler *>(grabber);
             receiver = static_cast<QQuickPointerHandler *>(grabber)->parentItem();
             if (sendFilteredPointerEvent(event, receiver))
-                return true;
+                return;
             event->localize(receiver);
             handler->handlePointerEvent(event);
             if (event->allPointsAccepted())
-                return true;
+                return;
         }
         // If the grabber is an item or the grabbing handler didn't handle it,
         // then deliver the event to the item (which may have multiple handlers).
@@ -2343,8 +2343,6 @@ bool QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
             }
         }
     }
-
-    return false;
 }
 
 // Deliver newly pressed touch points
@@ -2376,7 +2374,7 @@ bool QQuickWindowPrivate::deliverPressEvent(QQuickPointerEvent *event)
     return event->allPointsAccepted();
 }
 
-bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent)
+void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent)
 {
     Q_Q(QQuickWindow);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -2385,14 +2383,14 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     // Let the Item's handlers (if any) have the event first.
     itemPrivate->handlePointerEvent(pointerEvent);
     if (pointerEvent->allPointsAccepted())
-        return true;
+        return;
 
     // TODO: unite this mouse point delivery with the synthetic mouse event below
-    if (auto event = pointerEvent->asPointerMouseEvent()) {
-        if (item->acceptedMouseButtons() & event->button()) {
+    auto event = pointerEvent->asPointerMouseEvent();
+    if (event && item->acceptedMouseButtons() & event->button()) {
             auto point = event->point(0);
             if (point->isAccepted())
-                return false;
+                return;
             // The only reason to already have a mouse grabber here is
             // synthetic events - flickable sends one when setPressDelay is used.
             auto oldMouseGrabber = q->mouseGrabberItem();
@@ -2410,18 +2408,16 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
                 }
                 point->setAccepted(true);
             }
-            return me->isAccepted();
-        }
-        return false;
+        return;
     }
 
     QQuickPointerTouchEvent *ptEvent = pointerEvent->asPointerTouchEvent();
     if (!ptEvent)
-        return false;
+        return;
 
     QScopedPointer<QTouchEvent> touchEvent(ptEvent->touchEventForItem(item));
     if (!touchEvent)
-        return false;
+        return;
 
     qCDebug(DBG_TOUCH) << "considering delivering " << touchEvent.data() << " to " << item;
     bool eventAccepted = false;
@@ -2430,7 +2426,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     // updateFilteringParentItems was called when the press occurred,
     // and we assume that the filtering relationships don't change between press and release.
     if (sendFilteredPointerEvent(pointerEvent, item))
-        return true;
+        return;
 
     // Deliver the touch event to the given item
     qCDebug(DBG_TOUCH) << " - actually delivering " << touchEvent.data() << " to " << item;
@@ -2465,8 +2461,6 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             }
         }
     }
-
-    return eventAccepted;
 }
 
 #if QT_CONFIG(draganddrop)
