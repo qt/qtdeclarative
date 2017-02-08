@@ -223,8 +223,6 @@ struct Q_QML_EXPORT Object: Managed {
     //
     // helpers
     //
-    void put(ExecutionEngine *engine, const QString &name, const Value &value);
-
     static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs);
     ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
         Scope scope(this->engine());

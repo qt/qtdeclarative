@@ -92,13 +92,6 @@ bool Object::setPrototype(Object *proto)
     return true;
 }
 
-void Object::put(ExecutionEngine *engine, const QString &name, const Value &value)
-{
-    Scope scope(engine);
-    ScopedString n(scope, engine->newString(name));
-    put(n, value);
-}
-
 ReturnedValue Object::getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())

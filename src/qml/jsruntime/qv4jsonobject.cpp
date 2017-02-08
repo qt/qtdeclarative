@@ -705,7 +705,7 @@ QString Stringify::Str(const QString &key, const Value &v)
 
     if (replacerFunction) {
         ScopedObject holder(scope, v4->newObject());
-        holder->put(scope.engine, QString(), scope.result);
+        holder->put(scope.engine->id_empty(), scope.result);
         ScopedCallData callData(scope, 2);
         callData->args[0] = v4->newString(key);
         callData->args[1] = scope.result;
