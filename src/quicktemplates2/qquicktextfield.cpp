@@ -239,11 +239,13 @@ void QQuickTextFieldPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 
 void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
 {
+    Q_UNUSED(isReadOnly);
 #ifndef QT_NO_ACCESSIBILITY
     if (accessibleAttached)
         accessibleAttached->set_readOnly(isReadOnly);
-#else
-    Q_UNUSED(isReadOnly)
+#endif
+#ifndef QT_NO_CURSOR
+    q_func()->setCursor(isReadOnly ? Qt::ArrowCursor : Qt::IBeamCursor);
 #endif
 }
 
