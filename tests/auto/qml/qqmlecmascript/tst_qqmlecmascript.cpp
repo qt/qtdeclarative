@@ -336,6 +336,7 @@ private slots:
     void instanceof();
     void constkw_data();
     void constkw();
+    void redefineGlobalProp();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8273,6 +8274,20 @@ void tst_qqmlecmascript::constkw()
     }
 }
 
+// Redefine a property found on the global object. It shouldn't throw.
+void tst_qqmlecmascript::redefineGlobalProp()
+{
+    {
+        QJSEngine engine;
+        QJSValue ret = engine.evaluate("\"use strict\"\n var toString = 1;");
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+    }
+    {
+        QJSEngine engine;
+        QJSValue ret = engine.evaluate("var toString = 1;");
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+    }
+}
 
 
 QTEST_MAIN(tst_qqmlecmascript)
