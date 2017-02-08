@@ -80,27 +80,28 @@ struct StackAllocator {
     StackAllocator(ChunkAllocator *chunkAlloc);
 
     T *allocate() {
-        T *m = nextFree->as<T>();
+        HeapItem *m = nextFree;
         if (Q_UNLIKELY(nextFree == lastInChunk)) {
             nextChunk();
         } else {
             nextFree += requiredSlots;
         }
-#if MM_DEBUG
+#if !defined(QT_NO_DEBUG) || defined(MM_DEBUG)
         Chunk *c = m->chunk();
         Chunk::setBit(c->objectBitmap, m - c->realBase());
 #endif
-        return m;
+        return m->as<T>();
     }
     void free() {
-#if MM_DEBUG
-        Chunk::clearBit(item->chunk()->objectBitmap, item - item->chunk()->realBase());
-#endif
         if (Q_UNLIKELY(nextFree == firstInChunk)) {
             prevChunk();
         } else {
             nextFree -= requiredSlots;
         }
+#if !defined(QT_NO_DEBUG) || defined(MM_DEBUG)
+        Chunk *c = nextFree->chunk();
+        Chunk::clearBit(c->objectBitmap, nextFree - c->realBase());
+#endif
     }
 
     void nextChunk();

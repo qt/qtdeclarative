@@ -271,22 +271,28 @@ template <typename TargetConfiguration>
 typename Assembler<TargetConfiguration>::Pointer
 Assembler<TargetConfiguration>::loadArgLocalAddressForWriting(RegisterID baseReg, IR::ArgLocal *al, WriteBarrier::Type *barrier)
 {
+    if (barrier)
+        *barrier = _function->argLocalRequiresWriteBarrier(al) ? WriteBarrier::Barrier : WriteBarrier::NoBarrier;
+
     int32_t offset = 0;
     int scope = al->scope;
     loadPtr(Address(EngineRegister, qOffsetOf(ExecutionEngine, current)), baseReg);
-    if (scope) {
+    while (scope) {
         loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
         --scope;
-        while (scope) {
-            loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
-            --scope;
-        }
     }
     switch (al->kind) {
     case IR::ArgLocal::Formal:
     case IR::ArgLocal::ScopedFormal: {
-        loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, callData)), baseReg);
-        offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
+        if (barrier && *barrier == WriteBarrier::Barrier) {
+            // if we need a barrier, the baseReg has to point to the ExecutionContext
+            // callData comes directly after locals, calculate the offset using that
+            offset = qOffsetOf(CallContext::Data, locals.values) + _function->localsCountForScope(al) * sizeof(Value);
+            offset += sizeof(CallData) + (al->index - 1) * sizeof(Value);
+        } else {
+            loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, callData)), baseReg);
+            offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
+        }
     } break;
     case IR::ArgLocal::Local:
     case IR::ArgLocal::ScopedLocal: {
@@ -295,8 +301,6 @@ Assembler<TargetConfiguration>::loadArgLocalAddressForWriting(RegisterID baseReg
     default:
         Q_UNREACHABLE();
     }
-    if (barrier)
-        *barrier = _function->argLocalRequiresWriteBarrier(al) ? WriteBarrier::Barrier : WriteBarrier::NoBarrier;
     return Pointer(baseReg, offset);
 }
 

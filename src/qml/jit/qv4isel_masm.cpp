@@ -791,6 +791,7 @@ void InstructionSelection<JITAssembler>::swapValues(IR::Expr *source, IR::Expr *
                 Q_UNREACHABLE();
             }
             _as->store32(TrustedImm32(tag), addr);
+            _as->emitWriteBarrier(addr, barrier);
         }
         _as->move(JITTargetPlatform::ScratchRegister, (RegisterID) regTemp->index);
     }

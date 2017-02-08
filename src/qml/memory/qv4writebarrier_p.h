@@ -55,6 +55,11 @@
 
 QT_BEGIN_NAMESPACE
 
+#define WRITEBARRIER_steele -1
+#define WRITEBARRIER_none 1
+
+#define WRITEBARRIER(x) (1/WRITEBARRIER_##x == 1)
+
 namespace QV4 {
 
 namespace WriteBarrier {
@@ -64,19 +69,78 @@ enum Type {
     Barrier
 };
 
-inline void write(QV4::ExecutionEngine *engine, QV4::Heap::Base *base, QV4::Value *slot, QV4::Value value)
+enum NewValueType {
+    Primitive,
+    Object,
+    Unknown
+};
+
+// ### this needs to be filled with a real memory fence once marking is concurrent
+Q_ALWAYS_INLINE void fence() {}
+
+#if WRITEBARRIER(steele)
+
+template <NewValueType type>
+static Q_CONSTEXPR inline bool isRequired() {
+    return type != Primitive;
+}
+
+inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Value value)
+{
+    *slot = value;
+    if (engine->writeBarrierActive && isRequired<Unknown>()) {
+        fence();
+        base->setGrayBit();
+    }
+}
+
+inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Heap::Base *value)
+{
+    *slot = value;
+    if (engine->writeBarrierActive && isRequired<Object>()) {
+        fence();
+        base->setGrayBit();
+    }
+}
+
+inline void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap::Base *value)
+{
+    *slot = value;
+    if (engine->writeBarrierActive) {
+        fence();
+        base->setGrayBit();
+    }
+}
+
+#elif WRITEBARRIER(none)
+
+template <NewValueType type>
+static Q_CONSTEXPR inline bool isRequired() {
+    return false;
+}
+
+inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Value value)
 {
     Q_UNUSED(engine);
     Q_UNUSED(base);
     *slot = value;
 }
 
-inline void write(QV4::ExecutionEngine *engine, QV4::Heap::Base *base, QV4::Heap::Base **slot, QV4::Heap::Base *value)
+inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Heap::Base *value)
 {
     Q_UNUSED(engine);
     Q_UNUSED(base);
     *slot = value;
 }
+
+inline void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap::Base *value)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(base);
+    *slot = value;
+}
+
+#endif
 
 }
 
@@ -88,9 +152,14 @@ struct Pointer {
     T operator->() const { return ptr; }
     operator T () const { return ptr; }
 
+    Heap::Base *base() {
+        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+        Q_ASSERT(base->inUse());
+        return base;
+    }
+
     void set(ExecutionEngine *e, T newVal) {
-        Q_UNUSED(e);
-        ptr = newVal;
+        WriteBarrier::write(e, base(), reinterpret_cast<Heap::Base **>(&ptr), reinterpret_cast<Heap::Base *>(newVal));
     }
 
     template <typename Type>
@@ -106,9 +175,14 @@ V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
 
 template <size_t offset>
 struct HeapValue : Value {
+    Heap::Base *base() {
+        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+        Q_ASSERT(base->inUse());
+        return base;
+    }
+
     void set(ExecutionEngine *e, const Value &newVal) {
-        Q_UNUSED(e);
-        setRawValue(newVal.rawValue());
+        WriteBarrier::write(e, base(), this, newVal);
     }
 };
 
@@ -118,15 +192,17 @@ struct ValueArray {
     uint alloc;
     Value values[1];
 
+    Heap::Base *base() {
+        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+        Q_ASSERT(base->inUse());
+        return base;
+    }
+
     void set(ExecutionEngine *e, uint index, Value v) {
-        Q_UNUSED(e);
-        Q_ASSERT(index < alloc);
-        values[index] = v;
+        WriteBarrier::write(e, base(), values + index, v);
     }
     void set(ExecutionEngine *e, uint index, Heap::Base *b) {
-        Q_UNUSED(e);
-        Q_ASSERT(index < alloc);
-        values[index] = b;
+        WriteBarrier::write(e, base(), values + index, b);
     }
     inline const Value &operator[] (uint index) const {
         Q_ASSERT(index < alloc);

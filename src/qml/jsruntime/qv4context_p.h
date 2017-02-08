@@ -186,17 +186,7 @@ V4_ASSERT_IS_TRIVIAL(CatchContext)
 DECLARE_HEAP_OBJECT(WithContext, ExecutionContext) {
     DECLARE_MARK_TABLE(WithContext);
 
-    void init(ExecutionContext *outerContext, Object *with)
-    {
-        Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_WithContext);
-        outer.set(engine, outerContext);
-        callData = outer->callData;
-        lookups = outer->lookups;
-        constantTable = outer->constantTable;
-        compilationUnit = outer->compilationUnit;
-
-        withObject.set(engine, with);
-    }
+    void init(ExecutionContext *outerContext, Object *with);
 };
 V4_ASSERT_IS_TRIVIAL(WithContext)
 

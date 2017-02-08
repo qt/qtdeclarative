@@ -176,6 +176,17 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
     this->exceptionValue.set(engine, exceptionValue);
 }
 
+void Heap::WithContext::init(ExecutionContext *outerContext, Object *with)
+{
+    Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_WithContext);
+    outer.set(engine, outerContext);
+    callData = outer->callData;
+    lookups = outer->lookups;
+    constantTable = outer->constantTable;
+    compilationUnit = outer->compilationUnit;
+
+    withObject.set(engine, with);
+}
 
 Identifier * const *SimpleCallContext::formals() const
 {

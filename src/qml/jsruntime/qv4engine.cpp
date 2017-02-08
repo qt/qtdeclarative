@@ -130,9 +130,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 qint32 ExecutionEngine::maxCallDepth = -1;
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
-    : current(0)
-    , hasException(false)
-    , callDepth(0)
+    : callDepth(0)
     , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
@@ -151,6 +149,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_profiler(0)
 #endif
 {
+    writeBarrierActive = true;
+
     if (maxCallDepth == -1) {
         bool ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);

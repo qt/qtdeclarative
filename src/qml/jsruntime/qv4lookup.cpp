@@ -772,7 +772,7 @@ void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Va
 {
     Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
-        o->setProperty(l->index, value);
+        o->setProperty(engine, l->index, value);
         return;
     }
 

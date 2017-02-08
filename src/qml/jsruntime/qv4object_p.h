@@ -204,6 +204,8 @@ struct Q_QML_EXPORT Object: Managed {
     void setProperty(uint index, const Property *p);
     void setProperty(uint index, Value v) const { d()->setProperty(engine(), index, v); }
     void setProperty(uint index, Heap::Base *b) const { d()->setProperty(engine(), index, b); }
+    void setProperty(ExecutionEngine *engine, uint index, Value v) const { d()->setProperty(engine, index, v); }
+    void setProperty(ExecutionEngine *engine, uint index, Heap::Base *b) const { d()->setProperty(engine, index, b); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
     Heap::Object *prototype() const { return d()->prototype; }

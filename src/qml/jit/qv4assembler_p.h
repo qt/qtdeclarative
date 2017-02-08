@@ -154,6 +154,56 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Jump = typename JITAssembler::Jump;
     using Label = typename JITAssembler::Label;
 
+    static void emitSetGrayBit(JITAssembler *as, RegisterID base)
+    {
+        bool returnValueUsed = (base == TargetPlatform::ReturnValueRegister);
+
+        as->push(TargetPlatform::EngineRegister); // free up one register for work
+
+        RegisterID grayBitmap = returnValueUsed ? TargetPlatform::ScratchRegister : TargetPlatform::ReturnValueRegister;
+        as->move(base, grayBitmap);
+        Q_ASSERT(base != grayBitmap);
+        as->urshift32(TrustedImm32(Chunk::ChunkShift), grayBitmap);
+        as->lshift32(TrustedImm32(Chunk::ChunkShift), grayBitmap);
+        Q_STATIC_ASSERT(offsetof(Chunk, grayBitmap) == 0);
+
+        RegisterID index = base;
+        as->move(base, index);
+        as->sub32(grayBitmap, index);
+        as->urshift32(TrustedImm32(Chunk::SlotSizeShift), index);
+        RegisterID grayIndex = TargetPlatform::EngineRegister;
+        as->move(index, grayIndex);
+        as->urshift32(TrustedImm32(Chunk::BitShift), grayIndex);
+        as->lshift32(TrustedImm32(2), grayIndex); // 4 bytes per quintptr
+        as->add32(grayIndex, grayBitmap);
+        as->and32(TrustedImm32(Chunk::Bits - 1), index);
+
+        RegisterID bit = TargetPlatform::EngineRegister;
+        as->move(TrustedImm32(1), bit);
+        as->lshift32(index, bit);
+
+        as->load32(Pointer(grayBitmap, 0), index);
+        as->or32(bit, index);
+        as->store32(index, Pointer(grayBitmap, 0));
+
+        as->pop(TargetPlatform::EngineRegister);
+    }
+
+#if WRITEBARRIER(steele)
+    static void emitWriteBarrier(JITAssembler *as, Address addr)
+    {
+//        RegisterID test = addr.base == TargetPlatform::ReturnValueRegister ? TargetPlatform::ScratchRegister : TargetPlatform::ReturnValueRegister;
+        // if (engine->writeBarrier)
+//        as->load8(Address(TargetPlatform::EngineRegister, offsetof(EngineBase, writeBarrierActive)), test);
+//        typename JITAssembler::Jump jump = as->branch32(JITAssembler::Equal, test, TrustedImm32(0));
+        // ### emit fence
+        emitSetGrayBit(as, addr.base);
+//        jump.link(as);
+    }
+#elif WRITEBARRIER(none)
+    static Q_ALWAYS_INLINE void emitWriteBarrier(JITAssembler *, Address) {}
+#endif
+
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->MacroAssembler::loadDouble(addr, dest);
@@ -161,8 +211,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->MacroAssembler::storeDouble(source, addr);
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, addr);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
@@ -174,18 +225,23 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->store32(TrustedImm32(value.int_32()), destination);
         destination.offset += 4;
         as->store32(TrustedImm32(value.tag()), destination);
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, destination);
     }
 
     template <typename Source, typename Destination>
     static void copyValueViaRegisters(JITAssembler *as, Source source, Destination destination, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->loadDouble(source, TargetPlatform::FPGpr0);
-        as->storeDouble(TargetPlatform::FPGpr0, destination, barrier);
+        // We need to pass NoBarrier to storeDouble and call emitWriteBarrier ourselves, as the
+        // code in storeDouble assumes the type we're storing is actually a double, something
+        // that isn't always the case here.
+        as->storeDouble(TargetPlatform::FPGpr0, destination, WriteBarrier::NoBarrier);
+        if (WriteBarrier::isRequired<WriteBarrier::Unknown>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, destination);
     }
 
     static void loadDoubleConstant(JITAssembler *as, IR::Const *c, FPRegisterID target)
@@ -200,11 +256,12 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void storeReturnValue(JITAssembler *as, const Pointer &dest, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         Address destination = dest;
         as->store32(TargetPlatform::LowReturnValueRegister, destination);
         destination.offset += 4;
         as->store32(TargetPlatform::HighReturnValueRegister, destination);
+        if (WriteBarrier::isRequired<WriteBarrier::Unknown>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, dest);
     }
 
     static void setFunctionReturnValueFromTemp(JITAssembler *as, IR::Temp *t)
@@ -331,10 +388,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             as->load32(addr, TargetPlatform::ReturnValueRegister);
             WriteBarrier::Type barrier;
             Pointer targetAddr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
-            Q_UNUSED(barrier);
             as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
             as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+            if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+                emitWriteBarrier(as, targetAddr);
         } else {
             as->load32(addr, (RegisterID) targetTemp->index);
         }
@@ -351,10 +409,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->store32(registerWithPtr, destAddr);
         destAddr.offset += 4;
         as->store32(TrustedImm32(QV4::Value::Managed_Type_Internal_32), destAddr);
+        if (WriteBarrier::isRequired<WriteBarrier::Object>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, destAddr);
     }
 
     static Jump generateIsDoubleCheck(JITAssembler *as, RegisterID tagOrValueRegister)
@@ -393,6 +452,56 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Jump = typename JITAssembler::Jump;
     using Label = typename JITAssembler::Label;
 
+    static void emitSetGrayBit(JITAssembler *as, RegisterID base)
+    {
+        bool returnValueUsed = (base == TargetPlatform::ReturnValueRegister);
+
+        as->push(TargetPlatform::EngineRegister); // free up one register for work
+
+        RegisterID grayBitmap = returnValueUsed ? TargetPlatform::ScratchRegister : TargetPlatform::ReturnValueRegister;
+        as->move(base, grayBitmap);
+        Q_ASSERT(base != grayBitmap);
+        as->urshift64(TrustedImm32(Chunk::ChunkShift), grayBitmap);
+        as->lshift64(TrustedImm32(Chunk::ChunkShift), grayBitmap);
+        Q_STATIC_ASSERT(offsetof(Chunk, grayBitmap) == 0);
+
+        RegisterID index = base;
+        as->move(base, index);
+        as->sub64(grayBitmap, index);
+        as->urshift64(TrustedImm32(Chunk::SlotSizeShift), index);
+        RegisterID grayIndex = TargetPlatform::EngineRegister;
+        as->move(index, grayIndex);
+        as->urshift64(TrustedImm32(Chunk::BitShift), grayIndex);
+        as->lshift64(TrustedImm32(3), grayIndex); // 8 bytes per quintptr
+        as->add64(grayIndex, grayBitmap);
+        as->and64(TrustedImm32(Chunk::Bits - 1), index);
+
+        RegisterID bit = TargetPlatform::EngineRegister;
+        as->move(TrustedImm32(1), bit);
+        as->lshift64(index, bit);
+
+        as->load64(Pointer(grayBitmap, 0), index);
+        as->or64(bit, index);
+        as->store64(index, Pointer(grayBitmap, 0));
+
+        as->pop(TargetPlatform::EngineRegister);
+    }
+
+#if WRITEBARRIER(steele)
+    static void emitWriteBarrier(JITAssembler *as, Address addr)
+    {
+//        RegisterID test = addr.base == TargetPlatform::ReturnValueRegister ? TargetPlatform::ScratchRegister : TargetPlatform::ReturnValueRegister;
+        // if (engine->writeBarrier)
+//        as->load8(Address(TargetPlatform::EngineRegister, offsetof(EngineBase, writeBarrierActive)), test);
+//        typename JITAssembler::Jump jump = as->branch32(JITAssembler::Equal, test, TrustedImm32(0));
+        // ### emit fence
+        emitSetGrayBit(as, addr.base);
+//        jump.link(as);
+    }
+#elif WRITEBARRIER(none)
+    static Q_ALWAYS_INLINE void emitWriteBarrier(JITAssembler *, Address) {}
+#endif
+
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->load64(addr, TargetPlatform::ReturnValueRegister);
@@ -402,10 +511,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
         as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, addr);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
@@ -414,8 +524,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         WriteBarrier::Type barrier;
         Pointer ptr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
-        Q_UNUSED(barrier);
         as->store64(TargetPlatform::ReturnValueRegister, ptr);
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, ptr);
     }
 
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
@@ -426,8 +537,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void storeReturnValue(JITAssembler *as, const Pointer &dest, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->store64(TargetPlatform::ReturnValueRegister, dest);
+        if (WriteBarrier::isRequired<WriteBarrier::Unknown>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, dest);
     }
 
     static void setFunctionReturnValueFromTemp(JITAssembler *as, IR::Temp *t)
@@ -479,8 +591,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->store64(TrustedImm64(value.rawValue()), destination);
+        if (WriteBarrier::isRequired<WriteBarrier::Unknown>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, destination);
     }
 
     template <typename Source, typename Destination>
@@ -636,10 +749,11 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
             WriteBarrier::Type barrier;
             Pointer targetAddr = as->loadAddressForWriting(TargetPlatform::ScratchRegister, target, &barrier);
-            Q_UNUSED(barrier);
             as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
             as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+            if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+                emitWriteBarrier(as, targetAddr);
         } else {
             as->storeInt32(TargetPlatform::ReturnValueRegister, target);
         }
@@ -647,8 +761,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void loadManagedPointer(JITAssembler *as, RegisterID registerWithPtr, Pointer destAddr, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         as->store64(registerWithPtr, destAddr);
+        if (WriteBarrier::isRequired<WriteBarrier::Object>() && barrier == WriteBarrier::Barrier)
+            emitWriteBarrier(as, destAddr);
     }
 
     static Jump generateIsDoubleCheck(JITAssembler *as, RegisterID tagOrValueRegister)
@@ -1261,8 +1376,9 @@ public:
 
     void storeRawValue(FPRegisterID source, Pointer dest, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         TargetConfiguration::MacroAssembler::storeDouble(source, dest);
+        if (WriteBarrier::isRequired<WriteBarrier::Unknown>() && barrier == WriteBarrier::Barrier)
+            RegisterSizeDependentOps::emitWriteBarrier(this, dest);
     }
 
     void storeValue(QV4::Primitive value, RegisterID destination)
@@ -1278,6 +1394,11 @@ public:
     }
 
     void storeValue(QV4::Primitive value, IR::Expr* temp);
+
+    void emitWriteBarrier(Address addr, WriteBarrier::Type barrier) {
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            RegisterSizeDependentOps::emitWriteBarrier(this, addr);
+    }
 
     void enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
                                  const RegisterInformation &fpRegistersToSave);
@@ -1471,10 +1592,11 @@ public:
 
     void storeBool(RegisterID reg, Pointer addr, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         store32(reg, addr);
         addr.offset += 4;
         store32(TrustedImm32(QV4::Primitive::fromBoolean(0).tag()), addr);
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            RegisterSizeDependentOps::emitWriteBarrier(this, addr);
     }
 
     void storeBool(RegisterID src, RegisterID dest)
@@ -1517,10 +1639,11 @@ public:
 
     void storeInt32(RegisterID reg, Pointer addr, WriteBarrier::Type barrier)
     {
-        Q_UNUSED(barrier);
         store32(reg, addr);
         addr.offset += 4;
         store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag()), addr);
+        if (WriteBarrier::isRequired<WriteBarrier::Primitive>() && barrier == WriteBarrier::Barrier)
+            RegisterSizeDependentOps::emitWriteBarrier(this, addr);
     }
 
     void storeInt32(RegisterID reg, IR::Expr *target)

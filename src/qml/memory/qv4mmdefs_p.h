@@ -255,6 +255,17 @@ Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
+// Base class for the execution engine
+
+struct EngineBase {
+    Heap::ExecutionContext *current = 0;
+
+    Value *jsStackTop = 0;
+    quint8 hasException = false;
+    quint8 writeBarrierActive = false;
+    quint16 unused = 0;
+};
+
 // Some helper classes and macros to automate the generation of our
 // tables used for marking objects
 

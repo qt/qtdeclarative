@@ -1367,6 +1367,15 @@ struct Function {
         }
         return !f->canUseSimpleCall();
     }
+    int localsCountForScope(ArgLocal *al) const {
+        uint scope = al->scope;
+        const IR::Function *f = this;
+        while (scope) {
+            f = f->outer;
+            --scope;
+        }
+        return f->locals.size();
+    }
 
 private:
     BasicBlock *getOrCreateBasicBlock(int index);
@@ -1436,6 +1445,7 @@ public:
         ArgLocal *newArgLocal = f->New<ArgLocal>();
         newArgLocal->init(argLocal->kind, argLocal->index, argLocal->scope);
         newArgLocal->type = argLocal->type;
+        newArgLocal->isArgumentsOrEval = argLocal->isArgumentsOrEval;
         return newArgLocal;
     }
 
