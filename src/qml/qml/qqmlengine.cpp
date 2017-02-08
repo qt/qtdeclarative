@@ -565,7 +565,7 @@ The following functions are also on the Qt object.
     \l{Screen} attached object. In practice the array corresponds to the screen
     list returned by QGuiApplication::screens(). In addition to examining
     properties like name, width, height, etc., the array elements can also be
-    assigned to the targetScreen property of Window items, thus serving as an
+    assigned to the screen property of Window items, thus serving as an
     alternative to the C++ side's QWindow::setScreen(). This property has been
     added in Qt 5.9.
 
@@ -586,7 +586,7 @@ The following functions are also on the Qt object.
     \li application.font
     \endlist
 
-    \sa Screen, Window, Window.targetScreen
+    \sa Screen, Window, Window.screen
 */
 
 /*!
