@@ -790,6 +790,7 @@ bool Object::internalPut(String *name, const Value &value)
     return true;
 
   reject:
+    // ### this should be removed once everything is ported to use Object::set()
     if (engine()->current->strictMode) {
         QString message = QLatin1String("Cannot assign to read-only property \"") +
                 name->toQString() + QLatin1Char('\"');
@@ -861,6 +862,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
     return true;
 
   reject:
+    // ### this should be removed once everything is ported to use Object::setIndexed()
     if (engine()->current->strictMode)
         engine()->throwTypeError();
     return false;

@@ -336,10 +336,47 @@ public:
     { return vtable()->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
+
+    // use the set variants instead, to customize throw behavior
     inline bool put(String *name, const Value &v)
     { return vtable()->put(this, name, v); }
     inline bool putIndexed(uint idx, const Value &v)
     { return vtable()->putIndexed(this, idx, v); }
+
+    enum ThrowOnFailure {
+        DoThrowOnRejection,
+        DoNotThrow
+    };
+
+    // ES6: 7.3.3 Set (O, P, V, Throw)
+    inline bool set(String *name, const Value &v, ThrowOnFailure shouldThrow)
+    {
+        bool ret = vtable()->put(this, name, v);
+        // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
+        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
+            ExecutionEngine *e = engine();
+            if (!e->hasException) { // allow a custom set impl to throw itself
+                QString message = QLatin1String("Cannot assign to read-only property \"") +
+                        name->toQString() + QLatin1Char('\"');
+                e->throwTypeError(message);
+            }
+        }
+        return ret;
+    }
+
+    inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
+    {
+        bool ret = vtable()->putIndexed(this, idx, v);
+        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
+            ExecutionEngine *e = engine();
+            if (!e->hasException) { // allow a custom set impl to throw itself
+                e->throwTypeError();
+            }
+        }
+        return ret;
+    }
+
+
     PropertyAttributes query(String *name) const
     { return vtable()->query(this, name); }
     PropertyAttributes queryIndexed(uint index) const

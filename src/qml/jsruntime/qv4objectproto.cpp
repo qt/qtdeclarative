@@ -194,7 +194,7 @@ void ObjectPrototype::method_assign(const BuiltinFunction *, Scope &scope, CallD
                 continue;
 
             propValue = from->get(nextKey);
-            to->put(nextKey, propValue);
+            to->set(nextKey, propValue, Object::DoThrowOnRejection);
             CHECK_EXCEPTION();
         }
     }
