@@ -407,13 +407,13 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
 #undef VALUE_TYPE_ACCESSOR
 }
 
-void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
+bool QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
     ExecutionEngine *v4 = static_cast<QQmlValueTypeWrapper *>(m)->engine();
     Scope scope(v4);
     if (scope.hasException())
-        return;
+        return false;
 
     Scoped<QQmlValueTypeWrapper> r(scope, static_cast<QQmlValueTypeWrapper *>(m));
     Scoped<QQmlValueTypeReference> reference(scope, m->d());
@@ -424,7 +424,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
         QMetaProperty writebackProperty = reference->d()->object->metaObject()->property(reference->d()->property);
 
         if (!writebackProperty.isWritable() || !reference->readReferenceValue())
-            return;
+            return false;
 
         writeBackPropertyType = writebackProperty.userType();
     }
@@ -432,7 +432,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
     const QMetaObject *metaObject = r->d()->propertyCache()->metaObject();
     const QQmlPropertyData *pd = r->d()->propertyCache()->property(name, 0, 0);
     if (!pd)
-        return;
+        return false;
 
     if (reference) {
         QV4::ScopedFunctionObject f(scope, value);
@@ -442,7 +442,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
                 QString error = QStringLiteral("Cannot assign JavaScript function to value-type property");
                 ScopedString e(scope, v4->newString(error));
                 v4->throwError(e);
-                return;
+                return false;
             }
 
             QQmlContextData *context = v4->callingQmlContext();
@@ -459,7 +459,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             newBinding->setSourceLocation(bindingFunction->currentLocation());
             newBinding->setTarget(reference->d()->object, cacheData, pd);
             QQmlPropertyPrivate::setBinding(newBinding);
-            return;
+            return true;
         } else {
             QQmlPropertyPrivate::removeBinding(reference->d()->object, QQmlPropertyIndex(reference->d()->property, pd->coreIndex()));
         }
@@ -493,6 +493,8 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             QMetaObject::metacall(reference->d()->object, QMetaObject::WriteProperty, reference->d()->property, a);
         }
     }
+
+    return true;
 }
 
 QT_END_NAMESPACE

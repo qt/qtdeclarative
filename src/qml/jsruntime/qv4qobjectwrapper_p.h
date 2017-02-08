@@ -192,7 +192,7 @@ protected:
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    static bool put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);

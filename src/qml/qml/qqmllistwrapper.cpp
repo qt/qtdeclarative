@@ -140,12 +140,13 @@ ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *has
     return Primitive::undefinedValue().asReturnedValue();
 }
 
-void QmlListWrapper::put(Managed *m, String *name, const Value &value)
+bool QmlListWrapper::put(Managed *m, String *name, const Value &value)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);
     Q_UNUSED(name);
     Q_UNUSED(value);
+    return false;
 }
 
 void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)

@@ -275,13 +275,13 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
 }
 
 
-void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
+bool QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
     Q_ASSERT(m->as<QmlTypeWrapper>());
     QmlTypeWrapper *w = static_cast<QmlTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
     if (v4->hasException)
-        return;
+        return false;
 
     QV4::Scope scope(v4);
     QQmlContextData *context = v4->callingQmlContext();
@@ -292,7 +292,8 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
         QQmlEngine *e = scope.engine->qmlEngine();
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(QQmlEnginePrivate::get(e)), object);
         if (ao)
-            QV4::QObjectWrapper::setQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            return QV4::QObjectWrapper::setQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
+        return false;
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = scope.engine->qmlEngine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
@@ -300,18 +301,20 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
-            QV4::QObjectWrapper::setQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            return QV4::QObjectWrapper::setQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
             QV4::ScopedObject apiprivate(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
                 v4->throwError(error);
-                return;
+                return false;
             } else {
-                apiprivate->put(name, value);
+                return apiprivate->put(name, value);
             }
         }
     }
+
+    return false;
 }
 
 PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)

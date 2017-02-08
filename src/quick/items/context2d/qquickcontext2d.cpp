@@ -901,7 +901,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     V4_NEEDS_DESTROY
 
     static QV4::ReturnedValue getIndexed(const QV4::Managed *m, uint index, bool *hasProperty);
-    static void putIndexed(QV4::Managed *m, uint index, const QV4::Value &value);
+    static bool putIndexed(QV4::Managed *m, uint index, const QV4::Value &value);
 
     static void proto_get_length(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 };
@@ -3077,13 +3077,13 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(const QV4::Managed *m,
     return QV4::Encode::undefined();
 }
 
-void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const QV4::Value &value)
+bool QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const QV4::Value &value)
 {
     Q_ASSERT(m->as<QQuickJSContext2DPixelData>());
     QV4::ExecutionEngine *v4 = static_cast<QQuickJSContext2DPixelData *>(m)->engine();
     QV4::Scope scope(v4);
     if (scope.hasException())
-        return;
+        return false;
 
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, static_cast<QQuickJSContext2DPixelData *>(m));
 
@@ -3109,7 +3109,10 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
             *pixel = qRgba(qRed(*pixel), qGreen(*pixel), qBlue(*pixel), v);
             break;
         }
+        return true;
     }
+
+    return false;
 }
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(real sw, real sh)

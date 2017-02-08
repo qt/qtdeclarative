@@ -130,8 +130,8 @@ struct ObjectVTable
     void (*construct)(const Managed *, Scope &scope, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
-    void (*put)(Managed *, String *name, const Value &value);
-    void (*putIndexed)(Managed *, uint index, const Value &value);
+    bool (*put)(Managed *, String *name, const Value &value);
+    bool (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
@@ -230,7 +230,7 @@ struct Q_QML_EXPORT Object: Managed {
         return getValue(t, v, attrs);
     }
 
-    void putValue(uint memberIndex, const Value &value);
+    bool putValue(uint memberIndex, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, const Value &value) {
@@ -336,10 +336,10 @@ public:
     { return vtable()->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
-    inline void put(String *name, const Value &v)
-    { vtable()->put(this, name, v); }
-    inline void putIndexed(uint idx, const Value &v)
-    { vtable()->putIndexed(this, idx, v); }
+    inline bool put(String *name, const Value &v)
+    { return vtable()->put(this, name, v); }
+    inline bool putIndexed(uint idx, const Value &v)
+    { return vtable()->putIndexed(this, idx, v); }
     PropertyAttributes query(String *name) const
     { return vtable()->query(this, name); }
     PropertyAttributes queryIndexed(uint index) const
@@ -368,8 +368,8 @@ protected:
     static void call(const Managed *m, Scope &scope, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
-    static void putIndexed(Managed *m, uint index, const Value &value);
+    static bool put(Managed *m, String *name, const Value &value);
+    static bool putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
@@ -383,8 +383,8 @@ protected:
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
-    void internalPut(String *name, const Value &value);
-    void internalPutIndexed(uint index, const Value &value);
+    bool internalPut(String *name, const Value &value);
+    bool internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
     bool internalDeleteIndexedProperty(uint index);
 

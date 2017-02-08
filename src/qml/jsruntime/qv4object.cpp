@@ -107,11 +107,11 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
     return scope.result.asReturnedValue();
 }
 
-void Object::putValue(uint memberIndex, const Value &value)
+bool Object::putValue(uint memberIndex, const Value &value)
 {
     QV4::InternalClass *ic = internalClass();
     if (ic->engine->hasException)
-        return;
+        return false;
 
     PropertyAttributes attrs = ic->propertyData[memberIndex];
 
@@ -124,7 +124,7 @@ void Object::putValue(uint memberIndex, const Value &value)
             callData->args[0] = value;
             callData->thisObject = this;
             setter->call(scope, callData);
-            return;
+            return !ic->engine->hasException;
         }
         goto reject;
     }
@@ -133,11 +133,12 @@ void Object::putValue(uint memberIndex, const Value &value)
         goto reject;
 
     *propertyData(memberIndex) = value;
-    return;
+    return true;
 
   reject:
     if (engine()->current->strictMode)
         engine()->throwTypeError();
+    return false;
 }
 
 void Object::defineDefaultProperty(const QString &name, const Value &value)
@@ -446,14 +447,14 @@ ReturnedValue Object::getIndexed(const Managed *m, uint index, bool *hasProperty
     return static_cast<const Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-void Object::put(Managed *m, String *name, const Value &value)
+bool Object::put(Managed *m, String *name, const Value &value)
 {
-    static_cast<Object *>(m)->internalPut(name, value);
+    return static_cast<Object *>(m)->internalPut(name, value);
 }
 
-void Object::putIndexed(Managed *m, uint index, const Value &value)
+bool Object::putIndexed(Managed *m, uint index, const Value &value)
 {
-    static_cast<Object *>(m)->internalPutIndexed(index, value);
+    return static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
 PropertyAttributes Object::query(const Managed *m, String *name)
@@ -711,10 +712,10 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 
 
 // Section 8.12.5
-void Object::internalPut(String *name, const Value &value)
+bool Object::internalPut(String *name, const Value &value)
 {
     if (internalClass()->engine->hasException)
-        return;
+        return false;
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -743,7 +744,7 @@ void Object::internalPut(String *name, const Value &value)
             uint l = value.asArrayLength(&ok);
             if (!ok) {
                 engine()->throwRangeError(value);
-                return;
+                return false;
             }
             ok = setArrayLength(l);
             if (!ok)
@@ -751,7 +752,7 @@ void Object::internalPut(String *name, const Value &value)
         } else {
             *v = value;
         }
-        return;
+        return true;
     } else if (!prototype()) {
         if (!isExtensible())
             goto reject;
@@ -782,11 +783,11 @@ void Object::internalPut(String *name, const Value &value)
         callData->args[0] = value;
         callData->thisObject = this;
         setter->call(scope, callData);
-        return;
+        return !internalClass()->engine->hasException;
     }
 
     insertMember(name, value);
-    return;
+    return true;
 
   reject:
     if (engine()->current->strictMode) {
@@ -794,12 +795,13 @@ void Object::internalPut(String *name, const Value &value)
                 name->toQString() + QLatin1Char('\"');
         engine()->throwTypeError(message);
     }
+    return false;
 }
 
-void Object::internalPutIndexed(uint index, const Value &value)
+bool Object::internalPutIndexed(uint index, const Value &value)
 {
     if (internalClass()->engine->hasException)
-        return;
+        return false;
 
     PropertyAttributes attrs;
 
@@ -821,7 +823,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
             goto reject;
         else
             *v = value;
-        return;
+        return true;
     } else if (!prototype()) {
         if (!isExtensible())
             goto reject;
@@ -852,15 +854,16 @@ void Object::internalPutIndexed(uint index, const Value &value)
         callData->args[0] = value;
         callData->thisObject = this;
         setter->call(scope, callData);
-        return;
+        return !internalClass()->engine->hasException;
     }
 
     arraySet(index, value);
-    return;
+    return true;
 
   reject:
     if (engine()->current->strictMode)
         engine()->throwTypeError();
+    return false;
 }
 
 // Section 8.12.7

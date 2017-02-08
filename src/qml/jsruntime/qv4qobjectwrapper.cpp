@@ -625,13 +625,13 @@ QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *has
     return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-void QObjectWrapper::put(Managed *m, String *name, const Value &value)
+bool QObjectWrapper::put(Managed *m, String *name, const Value &value)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = that->engine();
 
     if (v4->hasException || QQmlData::wasDeleted(that->d()->object()))
-        return;
+        return false;
 
     QQmlContextData *qmlContext = v4->callingQmlContext();
     if (!setQmlProperty(v4, qmlContext, that->d()->object(), name, QV4::QObjectWrapper::IgnoreRevision, value)) {
@@ -642,10 +642,13 @@ void QObjectWrapper::put(Managed *m, String *name, const Value &value)
             QString error = QLatin1String("Cannot assign to non-existent property \"") +
                             name->toQString() + QLatin1Char('\"');
             v4->throwError(error);
+            return false;
         } else {
-            QV4::Object::put(m, name, value);
+            return QV4::Object::put(m, name, value);
         }
     }
+
+    return true;
 }
 
 PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)

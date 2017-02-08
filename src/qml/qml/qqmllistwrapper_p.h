@@ -94,7 +94,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    static bool put(Managed *m, String *name, const Value &value);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 

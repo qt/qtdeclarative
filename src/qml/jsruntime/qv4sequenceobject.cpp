@@ -274,20 +274,20 @@ public:
         return Encode::undefined();
     }
 
-    void containerPutIndexed(uint index, const QV4::Value &value)
+    bool containerPutIndexed(uint index, const QV4::Value &value)
     {
         if (internalClass()->engine->hasException)
-            return;
+            return false;
 
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
             generateWarning(engine(), QLatin1String("Index out of range during indexed set"));
-            return;
+            return false;
         }
 
         if (d()->isReference) {
             if (!d()->object)
-                return;
+                return false;
             loadReference();
         }
 
@@ -313,6 +313,7 @@ public:
 
         if (d()->isReference)
             storeReference();
+        return true;
     }
 
     QV4::PropertyAttributes containerQueryIndexed(uint index) const
@@ -540,8 +541,8 @@ public:
 
     static QV4::ReturnedValue getIndexed(const QV4::Managed *that, uint index, bool *hasProperty)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
-    static void putIndexed(Managed *that, uint index, const QV4::Value &value)
-    { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
+    static bool putIndexed(Managed *that, uint index, const QV4::Value &value)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
     static bool deleteIndexedProperty(QV4::Managed *that, uint index)
