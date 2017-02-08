@@ -48,6 +48,7 @@ Window {
     visible: true
     Examples.LauncherList {
         id: ll
+        objectName: "LauncherList"
         anchors.fill: parent
         Component.onCompleted: {
             addExample("single point handler", "QQuickPointerSingleHandler: test properties copied from events", Qt.resolvedUrl("singlePointHandlerProperties.qml"))

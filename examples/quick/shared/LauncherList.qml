@@ -52,6 +52,10 @@ Rectangle {
     {
         ei.visible = false;
     }
+    function showExample(url)
+    {
+        ei.exampleUrl = url;
+    }
 
     ListView {
         clip: true
