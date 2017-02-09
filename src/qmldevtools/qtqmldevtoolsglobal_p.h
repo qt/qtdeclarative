@@ -58,5 +58,12 @@ QT_BEGIN_NAMESPACE
 #define Q_QML_EXPORT
 #define Q_QML_PRIVATE_EXPORT
 
+/* Some classes built into QtQmlDevTools are marked Q_AUTOTEST_EXPORT but we
+   have nothing to export in this static library */
+#if defined(Q_AUTOTEST_EXPORT)
+#undef Q_AUTOTEST_EXPORT
+#endif
+#define Q_AUTOTEST_EXPORT
+
 QT_END_NAMESPACE
 #endif // QTQMLGLOBAL_P_H
