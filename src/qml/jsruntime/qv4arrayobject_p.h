@@ -82,6 +82,7 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_concat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_find(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_findIndex(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_join(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -94,6 +95,7 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_splice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_unshift(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_every(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_some(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -102,6 +104,7 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_filter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reduce(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reduceRight(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

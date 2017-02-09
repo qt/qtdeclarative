@@ -42,6 +42,7 @@
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include <qv4objectiterator_p.h>
+#include <qv4arrayiterator_p.h>
 #include <qv4arrayobject_p.h>
 #include <qv4booleanobject_p.h>
 #include <qv4globalobject_p.h>
@@ -64,6 +65,7 @@
 #include "qv4debugging_p.h"
 #include "qv4profiling_p.h"
 #include "qv4executableallocator_p.h"
+#include "qv4iterator_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -402,6 +404,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[SyntaxError_Ctor] = memoryManager->allocate<SyntaxErrorCtor>(global);
     jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(global);
     jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
+    jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
+    jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype()));
 
     static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
     static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
@@ -420,6 +424,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype())->init(this, syntaxErrorCtor());
     static_cast<TypeErrorPrototype *>(typeErrorPrototype())->init(this, typeErrorCtor());
     static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor());
+
+    static_cast<IteratorPrototype *>(iteratorPrototype())->init(this);
+    static_cast<ArrayIteratorPrototype *>(arrayIteratorPrototype())->init(this);
     static_cast<VariantPrototype *>(variantPrototype())->init();
 
 #if QT_CONFIG(qml_sequence_object)
@@ -777,6 +784,11 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
     Scope scope(this);
     ScopedObject obj(scope, memoryManager->allocate<ForEachIteratorObject>(o));
     return obj->d();
+}
+
+Heap::Object *ExecutionEngine::newArrayIteratorObject(Object *o)
+{
+    return memoryManager->allocate<ArrayIteratorObject>(o->d(), this);
 }
 
 Heap::QmlContext *ExecutionEngine::qmlContext() const

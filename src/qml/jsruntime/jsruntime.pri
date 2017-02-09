@@ -14,6 +14,7 @@ SOURCES += \
     $$PWD/qv4sparsearray.cpp \
     $$PWD/qv4arraydata.cpp \
     $$PWD/qv4arrayobject.cpp \
+    $$PWD/qv4arrayiterator.cpp \
     $$PWD/qv4argumentsobject.cpp \
     $$PWD/qv4booleanobject.cpp \
     $$PWD/qv4dateobject.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
     $$PWD/qv4function.cpp \
     $$PWD/qv4functionobject.cpp \
     $$PWD/qv4globalobject.cpp \
+    $$PWD/qv4iterator.cpp \
     $$PWD/qv4jsonobject.cpp \
     $$PWD/qv4mathobject.cpp \
     $$PWD/qv4memberdata.cpp \
@@ -64,6 +66,7 @@ HEADERS += \
     $$PWD/qv4sparsearray_p.h \
     $$PWD/qv4arraydata_p.h \
     $$PWD/qv4arrayobject_p.h \
+    $$PWD/qv4arrayiterator_p.h \
     $$PWD/qv4argumentsobject_p.h \
     $$PWD/qv4booleanobject_p.h \
     $$PWD/qv4dateobject_p.h \
@@ -71,6 +74,7 @@ HEADERS += \
     $$PWD/qv4function_p.h \
     $$PWD/qv4functionobject_p.h \
     $$PWD/qv4globalobject_p.h \
+    $$PWD/qv4iterator_p.h \
     $$PWD/qv4jsonobject_p.h \
     $$PWD/qv4mathobject_p.h \
     $$PWD/qv4memberdata_p.h \

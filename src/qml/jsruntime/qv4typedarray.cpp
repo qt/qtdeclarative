@@ -36,10 +36,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "qv4typedarray_p.h"
+#include "qv4arrayiterator_p.h"
 #include "qv4arraybuffer_p.h"
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
+#include "qv4symbol_p.h"
 
 #include <cmath>
 
@@ -405,8 +408,12 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
     defineAccessorProperty(QStringLiteral("length"), method_get_length, nullptr);
     defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
 
+    defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
+    defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
+    defineDefaultProperty(QStringLiteral("values"), method_values, 0);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
+    defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
 }
 
 ReturnedValue TypedArrayPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -447,6 +454,42 @@ ReturnedValue TypedArrayPrototype::method_get_length(const FunctionObject *b, co
         return v4->throwTypeError();
 
     return Encode(v->d()->byteLength/v->d()->type->bytesPerElement);
+}
+
+ReturnedValue TypedArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<TypedArray> O(scope, thisObject);
+    if (!O)
+        THROW_TYPE_ERROR();
+
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    ao->d()->iterationKind = ArrayIteratorKind::KeyValueIteratorKind;
+    return ao->asReturnedValue();
+}
+
+ReturnedValue TypedArrayPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<TypedArray> O(scope, thisObject);
+    if (!O)
+        THROW_TYPE_ERROR();
+
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    ao->d()->iterationKind = ArrayIteratorKind::KeyIteratorKind;
+    return ao->asReturnedValue();
+}
+
+ReturnedValue TypedArrayPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<TypedArray> O(scope, thisObject);
+    if (!O)
+        THROW_TYPE_ERROR();
+
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    ao->d()->iterationKind = ArrayIteratorKind::ValueIteratorKind;
+    return ao->asReturnedValue();
 }
 
 ReturnedValue TypedArrayPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

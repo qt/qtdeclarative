@@ -198,6 +198,7 @@ public:
 
         Type_ExecutionContext,
         Type_InternalClass,
+        Type_ArrayIteratorObject,
         Type_ForeachIteratorObject,
         Type_RegExp,
 

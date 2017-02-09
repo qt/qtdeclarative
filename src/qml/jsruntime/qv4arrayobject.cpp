@@ -38,12 +38,14 @@
 ****************************************************************************/
 
 #include "qv4arrayobject_p.h"
+#include "qv4arrayiterator_p.h"
 #include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4jscall_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4runtime_p.h"
 #include "qv4string_p.h"
+#include "qv4symbol_p.h"
 #include <QtCore/qscopedvaluerollback.h>
 
 using namespace QV4;
@@ -96,6 +98,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
     defineDefaultProperty(QStringLiteral("find"), method_find, 1);
     defineDefaultProperty(QStringLiteral("findIndex"), method_findIndex, 1);
     defineDefaultProperty(QStringLiteral("join"), method_join, 1);
@@ -108,6 +111,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("splice"), method_splice, 2);
     defineDefaultProperty(QStringLiteral("unshift"), method_unshift, 1);
     defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("every"), method_every, 1);
     defineDefaultProperty(QStringLiteral("some"), method_some, 1);
@@ -116,6 +120,8 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("filter"), method_filter, 1);
     defineDefaultProperty(QStringLiteral("reduce"), method_reduce, 1);
     defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
+    defineDefaultProperty(QStringLiteral("values"), method_values, 0);
+    defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
 }
 
 ReturnedValue ArrayPrototype::method_isArray(const FunctionObject *, const Value *, const Value *argv, int argc)
@@ -181,6 +187,18 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
     }
 
     return result.asReturnedValue();
+}
+
+ReturnedValue ArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    ScopedObject O(scope, thisObject->toObject(scope.engine));
+    if (!O)
+        RETURN_UNDEFINED();
+
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    ao->d()->iterationKind = ArrayIteratorKind::KeyValueIteratorKind;
+    return ao->asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_find(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -743,6 +761,18 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
     return Encode(-1);
 }
 
+ReturnedValue ArrayPrototype::method_keys(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    ScopedObject O(scope, thisObject->toObject(scope.engine));
+    if (!O)
+        RETURN_UNDEFINED();
+
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    ao->d()->iterationKind = ArrayIteratorKind::KeyIteratorKind;
+    return ao->asReturnedValue();
+}
+
 ReturnedValue ArrayPrototype::method_lastIndexOf(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
@@ -1056,5 +1086,17 @@ ReturnedValue ArrayPrototype::method_reduceRight(const FunctionObject *b, const 
         --k;
     }
     return acc->asReturnedValue();
+}
+
+ReturnedValue ArrayPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    ScopedObject O(scope, thisObject->toObject(scope.engine));
+    if (!O)
+        RETURN_UNDEFINED();
+
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    ao->d()->iterationKind = ArrayIteratorKind::ValueIteratorKind;
+    return ao->asReturnedValue();
 }
 
