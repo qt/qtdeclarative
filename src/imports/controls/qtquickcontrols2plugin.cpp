@@ -43,6 +43,7 @@
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultprogressbar_p.h"
@@ -144,6 +145,9 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     // QtQuick.Controls 2.2 (new types in Qt 5.9)
     qmlRegisterType(selector.select(QStringLiteral("DelayButton.qml")), uri, 2, 2, "DelayButton");
     qmlRegisterType(selector.select(QStringLiteral("ScrollView.qml")), uri, 2, 2, "ScrollView");
+
+    // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
+    qmlRegisterType<QQuickIcon>();
 }
 
 static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)

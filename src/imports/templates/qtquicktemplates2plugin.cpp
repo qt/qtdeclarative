@@ -53,6 +53,7 @@
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickframe_p.h>
 #include <QtQuickTemplates2/private/qquickgroupbox_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
@@ -243,6 +244,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // NOTE: register the latest revisions of all template/control base classes to
     // make revisioned properties available to their subclasses (synced with Qt 5.9)
     qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
+
+    // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
+    qmlRegisterType<QQuickIcon>();
 }
 
 QT_END_NAMESPACE
