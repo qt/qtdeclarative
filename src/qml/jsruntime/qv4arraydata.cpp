@@ -697,7 +697,7 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
         callData->thisObject = Primitive::undefinedValue();
         callData->args[0] = v1;
         callData->args[1] = v2;
-        result = scope.engine->runtime.callValue(scope.engine, m_comparefn, callData);
+        result = QV4::Runtime::method_callValue(scope.engine, m_comparefn, callData);
 
         return result->toNumber() < 0;
     }

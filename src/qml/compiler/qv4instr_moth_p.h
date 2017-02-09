@@ -690,7 +690,7 @@ union Instr
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        uint alu; // offset inside the runtime methods
+        int alu; // QV4::Runtime::RuntimeMethods enum value
         Param lhs;
         Param rhs;
         Param result;

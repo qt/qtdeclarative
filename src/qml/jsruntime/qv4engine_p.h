@@ -97,6 +97,10 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
+    // This must be the first member, so that its offset is a multiple of QT_POINTER_SIZE
+    // as the base class's size is.
+    Runtime runtime;
+
     qint32 callDepth;
 
     MemoryManager *memoryManager;
@@ -107,8 +111,6 @@ public:
     ExecutionContext *currentContext;
 
     Value *jsStackLimit;
-
-    Runtime runtime;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 

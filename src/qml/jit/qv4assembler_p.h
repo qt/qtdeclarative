@@ -131,7 +131,7 @@ typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingS
 #define isel_stringIfy(s) isel_stringIfyx(s)
 
 #define generateRuntimeCall(as, t, function, ...) \
-    as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
+    as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), typename JITAssembler::RuntimeCall(QV4::Runtime::function), __VA_ARGS__)
 
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform, int RegisterSize>
@@ -734,7 +734,7 @@ public:
     struct RuntimeCall {
         Address addr;
 
-        inline RuntimeCall(uint offset = uint(INT_MIN));
+        inline RuntimeCall(Runtime::RuntimeMethods method = Runtime::InvalidRuntimeMethod);
         bool isValid() const { return addr.offset >= 0; }
     };
 
@@ -1685,8 +1685,9 @@ void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source)
 }
 
 template <typename TargetConfiguration>
-inline Assembler<TargetConfiguration>::RuntimeCall::RuntimeCall(uint offset)
-    : addr(Assembler::EngineRegister, offset + qOffsetOf(QV4::ExecutionEngine, runtime))
+inline Assembler<TargetConfiguration>::RuntimeCall::RuntimeCall(Runtime::RuntimeMethods method)
+    : addr(Assembler::EngineRegister,
+           method == Runtime::InvalidRuntimeMethod ? -1 : (Assembler<TargetConfiguration>::targetStructureOffset(qOffsetOf(QV4::ExecutionEngine, runtime) + Runtime::runtimeMethodOffset(method))))
 {
 }
 

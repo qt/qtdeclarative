@@ -791,12 +791,12 @@ void InstructionSelection<JITAssembler>::swapValues(IR::Expr *source, IR::Expr *
 
 #define setOp(op, opName, operation) \
     do { \
-        op = typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        op = typename JITAssembler::RuntimeCall(QV4::Runtime::operation); opName = "Runtime::" isel_stringIfy(operation); \
         needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 #define setOpContext(op, opName, operation) \
     do { \
-        opContext = typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        opContext = typename JITAssembler::RuntimeCall(QV4::Runtime::operation); opName = "Runtime::" isel_stringIfy(operation); \
         needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 
