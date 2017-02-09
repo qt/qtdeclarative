@@ -74,7 +74,6 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQmlApplicationEngine)
     Q_DECLARE_PRIVATE(QQmlApplicationEngine)
-    Q_PRIVATE_SLOT(d_func(), void _q_finishLoad(QObject*))
 };
 
 QT_END_NAMESPACE

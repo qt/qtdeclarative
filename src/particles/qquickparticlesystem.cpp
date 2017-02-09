@@ -575,9 +575,6 @@ QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     m_paused(false),
     m_empty(true)
 {
-    connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
-            this, SLOT(loadPainter(QObject*)));
-
     m_debugMode = qmlParticlesDebug();
 }
 
@@ -615,8 +612,8 @@ void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
         qDebug() << "Registering Painter" << p << "to" << this;
     //TODO: a way to Unregister emitters, painters and affectors
     m_painters << QPointer<QQuickParticlePainter>(p);//###Set or uniqueness checking?
-    connect(p, SIGNAL(groupsChanged(QStringList)),
-            &m_painterMapper, SLOT(map()));
+
+    connect(p, &QQuickParticlePainter::groupsChanged, this, [this, p] { this->loadPainter(p); }, Qt::QueuedConnection);
     loadPainter(p);
 }
 
@@ -802,13 +799,11 @@ void QQuickParticleSystem::reset()
 }
 
 
-void QQuickParticleSystem::loadPainter(QObject *p)
+void QQuickParticleSystem::loadPainter(QQuickParticlePainter *painter)
 {
-    if (!m_componentComplete || !p)
+    if (!m_componentComplete || !painter)
         return;
 
-    QQuickParticlePainter* painter = qobject_cast<QQuickParticlePainter*>(p);
-    Q_ASSERT(painter);//XXX
     for (QQuickParticleGroupData* sg : groupData) {
         sg->painters.removeOne(painter);
     }
