@@ -62,6 +62,8 @@ QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
   , m_enabled(true)
   , m_active(false)
   , m_targetExplicitlySet(false)
+  , m_hadKeepMouseGrab(false)
+  , m_hadKeepTouchGrab(false)
 {
 }
 
@@ -92,12 +94,20 @@ void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
 {
     QQuickPointerHandler *oldGrabber = point->grabberPointerHandler();
     if (grab && oldGrabber != this) {
+        if (target()) {
+            m_hadKeepMouseGrab = target()->keepMouseGrab();
+            m_hadKeepTouchGrab = target()->keepTouchGrab();
+        }
         if (oldGrabber)
             oldGrabber->handleGrabCancel(point);
         point->setGrabberPointerHandler(this, true);
         onGrabChanged(point);
 //        emit grabChanged(point); // TODO maybe
     } else if (!grab && oldGrabber == this) {
+        if (auto tgt = target()) {
+            tgt->setKeepMouseGrab(m_hadKeepMouseGrab);
+            tgt->setKeepTouchGrab(m_hadKeepTouchGrab);
+        }
         point->setGrabberPointerHandler(nullptr, true);
         onGrabChanged(point);
 //        emit grabChanged(point); // TODO maybe

@@ -98,6 +98,14 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         } else if ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point))) {
             setExclusiveGrab(point);
+            if (target()) {
+                if (point->pointerEvent()->asPointerTouchEvent())
+                    target()->setKeepTouchGrab(true);
+                // tablet and mouse are treated the same by Item's legacy event handling, and
+                // touch becomes synth-mouse for Flickable, so we need to prevent stealing
+                // mouse grab too, whenever dragging occurs in an enabled direction
+                target()->setKeepMouseGrab(true);
+            }
         }
     } break;
     default:

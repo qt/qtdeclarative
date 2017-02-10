@@ -113,6 +113,8 @@ private:
     bool m_enabled : 1;
     bool m_active : 1;
     bool m_targetExplicitlySet : 1;
+    bool m_hadKeepMouseGrab : 1;    // some handlers override target()->setKeepMouseGrab(); this remembers previous state
+    bool m_hadKeepTouchGrab : 1;    // some handlers override target()->setKeepTouchGrab(); this remembers previous state
 
     friend class QQuickEventPoint;
 };
