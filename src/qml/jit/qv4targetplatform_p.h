@@ -207,6 +207,7 @@ public:
                 << RI(JSC::X86Registers::edx,  QStringLiteral("rdx"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                   // r11 is used as scratch register by the macro assembler
                 << RI(JSC::X86Registers::r12,  QStringLiteral("r12"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r14,  QStringLiteral("r14"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
@@ -265,10 +266,7 @@ public:
     using FPRegisterID = PlatformAssembler::FPRegisterID;
     using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
-    // Register allocation is not (yet) supported on win64, because the ABI related stack handling
-    // is not completely implemented. Specifically, the saving of xmm registers, and the saving of
-    // incoming function parameters to the shadow space is missing.
-    enum { RegAllocIsSupported = 0 };
+    enum { RegAllocIsSupported = 1 };
 
     static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
@@ -283,16 +281,23 @@ public:
     {
         typedef RegisterInfo RI;
         static RegisterInformation info = RegisterInformation()
-                << RI(JSC::X86Registers::ebx,  QStringLiteral("rbx"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::edi,  QStringLiteral("rdi"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::esi,  QStringLiteral("rsi"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::edx,  QStringLiteral("rdx"),  RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
+                << RI(JSC::X86Registers::ebx,  QStringLiteral("rbx"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::edi,  QStringLiteral("rdi"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::esi,  QStringLiteral("rsi"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::edx,  QStringLiteral("rdx"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                   // r11 is used as scratch register by the macro assembler
                 << RI(JSC::X86Registers::r12,  QStringLiteral("r12"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r14,  QStringLiteral("r14"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r15,  QStringLiteral("r15"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::X86Registers::r15,  QStringLiteral("r15"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm2, QStringLiteral("xmm2"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm3, QStringLiteral("xmm3"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm4, QStringLiteral("xmm4"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm5, QStringLiteral("xmm5"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm6, QStringLiteral("xmm6"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm7, QStringLiteral("xmm7"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                    ;
         return info;
     }
@@ -311,7 +316,7 @@ public:
         };
         Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
-    };
+    }
 
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 32;
