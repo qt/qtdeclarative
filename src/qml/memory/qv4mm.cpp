@@ -475,7 +475,7 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
                 goto done;
 
             HeapItem *remainder = m + slotsRequired;
-            if (remainingSlots >= 2*NumBins) {
+            if (remainingSlots > nFree) {
                 if (nFree) {
                     size_t bin = binForSlots(nFree);
                     nextFree->freeData.next = freeBins[bin];
@@ -493,6 +493,24 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
             goto done;
         }
         last = &m->freeData.next;
+    }
+
+    if (slotsRequired < NumBins - 1) {
+        // check if we can split up another slot
+        for (size_t i = slotsRequired + 1; i < NumBins - 1; ++i) {
+            m = freeBins[i];
+            if (m) {
+                freeBins[i] = m->freeData.next; // take it out of the list
+//                qDebug() << "got item" << slotsRequired << "from slot" << i;
+                size_t remainingSlots = i - slotsRequired;
+                Q_ASSERT(remainingSlots < NumBins - 1);
+                HeapItem *remainder = m + slotsRequired;
+                remainder->freeData.availableSlots = remainingSlots;
+                remainder->freeData.next = freeBins[remainingSlots];
+                freeBins[remainingSlots] = remainder;
+                goto done;
+            }
+        }
     }
 
     if (!m) {
