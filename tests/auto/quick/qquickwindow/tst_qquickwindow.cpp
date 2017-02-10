@@ -1348,12 +1348,6 @@ void tst_qquickwindow::headless()
         if (isGL)
             QVERIFY(!window->isSceneGraphInitialized());
     }
-#if QT_CONFIG(opengl)
-    if (QGuiApplication::platformName() == QLatin1String("windows")
-        && QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
-        QSKIP("Crashes on Windows/ANGLE, QTBUG-42967");
-    }
-#endif
     // Destroy the native windowing system buffers
     window->destroy();
     QVERIFY(!window->handle());
