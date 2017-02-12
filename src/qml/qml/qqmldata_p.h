@@ -201,7 +201,9 @@ public:
 
     static QQmlData *get(const QObject *object, bool create = false) {
         QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
-        if (priv->wasDeleted) {
+        // If QObjectData::isDeletingChildren is set then access to QObjectPrivate::declarativeData has
+        // to be avoided because QObjectPrivate::currentChildBeingDeleted is in use.
+        if (priv->isDeletingChildren || priv->wasDeleted) {
             Q_ASSERT(!create);
             return 0;
         } else if (priv->declarativeData) {
@@ -269,8 +271,8 @@ bool QQmlData::wasDeleted(QObject *object)
     if (!priv || priv->wasDeleted)
         return true;
 
-    return priv->declarativeData &&
-           static_cast<QQmlData *>(priv->declarativeData)->isQueuedForDeletion;
+    QQmlData *ddata = QQmlData::get(object);
+    return ddata && ddata->isQueuedForDeletion;
 }
 
 QQmlNotifierEndpoint *QQmlData::notify(int index)

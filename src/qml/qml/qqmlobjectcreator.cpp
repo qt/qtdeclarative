@@ -1075,7 +1075,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             {
                 QQmlData *ddata = new (ddataMemory) QQmlData;
                 ddata->ownMemory = false;
-                QObjectPrivate::get(instance)->declarativeData = ddata;
+                QObjectPrivate* p = QObjectPrivate::get(instance);
+                Q_ASSERT(!p->isDeletingChildren);
+                p->declarativeData = ddata;
             }
 
             const int parserStatusCast = type->parserStatusCast();

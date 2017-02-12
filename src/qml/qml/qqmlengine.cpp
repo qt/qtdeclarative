@@ -692,9 +692,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
-    QObjectPrivate *p = QObjectPrivate::get(o);
-    if (p->declarativeData) {
-        QQmlData *d = static_cast<QQmlData*>(p->declarativeData);
+    if (QQmlData *d = QQmlData::get(o)) {
         if (d->ownContext && d->context) {
             d->context->destroy();
             d->context = 0;
@@ -864,13 +862,10 @@ void QQmlData::markAsDeleted(QObject *o)
 void QQmlData::setQueuedForDeletion(QObject *object)
 {
     if (object) {
-        if (QObjectPrivate *priv = QObjectPrivate::get(object)) {
-            if (!priv->wasDeleted && priv->declarativeData) {
-                QQmlData *ddata = QQmlData::get(object, false);
-                if (ddata->ownContext && ddata->context)
-                    ddata->context->emitDestruction();
-                ddata->isQueuedForDeletion = true;
-            }
+        if (QQmlData *ddata = QQmlData::get(object)) {
+            if (ddata->ownContext && ddata->context)
+                ddata->context->emitDestruction();
+            ddata->isQueuedForDeletion = true;
         }
     }
 }
@@ -1319,17 +1314,11 @@ QQmlContext *QQmlEngine::contextForObject(const QObject *object)
     if(!object)
         return 0;
 
-    QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
-
-    QQmlData *data =
-        static_cast<QQmlData *>(priv->declarativeData);
-
-    if (!data)
-        return 0;
-    else if (data->outerContext)
+    QQmlData *data = QQmlData::get(object);
+    if (data && data->outerContext)
         return data->outerContext->asQQmlContext();
-    else
-        return 0;
+
+    return 0;
 }
 
 /*!
@@ -1864,6 +1853,7 @@ void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
 QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
 {
     Q_ASSERT(priv);
+    Q_ASSERT(!priv->isDeletingChildren);
     priv->declarativeData = new QQmlData;
     return static_cast<QQmlData *>(priv->declarativeData);
 }
