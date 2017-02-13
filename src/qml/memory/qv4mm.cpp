@@ -60,7 +60,11 @@
 #include "qv4alloca_p.h"
 #include "qv4profiling_p.h"
 
-#define MM_DEBUG 0
+//#define MM_STATS
+
+#if !defined(MM_STATS) && !defined(QT_NO_DEBUG)
+#define MM_STATS
+#endif
 
 #if MM_DEBUG
 #define DEBUG qDebug() << "MM:"
@@ -333,7 +337,7 @@ void Chunk::resetBlackBits()
     memset(blackBitmap, 0, sizeof(blackBitmap));
 }
 
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
 static uint nGrayItems = 0;
 #endif
 
@@ -359,7 +363,7 @@ void Chunk::collectGrayItems(ExecutionEngine *engine)
             Heap::Base *b = *itemToFree;
             Q_ASSERT(b->inUse());
             engine->pushForGC(b);
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
             ++nGrayItems;
 //            qDebug() << "adding gray item" << b << "to mark stack";
 #endif
@@ -380,7 +384,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
 #else
     const int start = 1;
 #endif
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
     uint freeSlots = 0;
     uint allocatedSlots = 0;
 #endif
@@ -390,7 +394,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
         if (!i)
             usedSlots |= (static_cast<quintptr>(1) << (HeaderSize/SlotSize)) - 1;
 #endif
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
         allocatedSlots += qPopulationCount(usedSlots);
 //        qDebug() << hex << "   i=" << i << "used=" << usedSlots;
 #endif
@@ -407,7 +411,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
                     break;
                 }
                 usedSlots = (objectBitmap[i]|extendsBitmap[i]);
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
                 allocatedSlots += qPopulationCount(usedSlots);
 //                qDebug() << hex << "   i=" << i << "used=" << usedSlots;
 #endif
@@ -418,7 +422,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
             usedSlots |= (quintptr(1) << index) - 1;
             uint freeEnd = i*Bits + index;
             uint nSlots = freeEnd - freeStart;
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
 //            qDebug() << hex << "   got free slots from" << freeStart << "to" << freeEnd << "n=" << nSlots << "usedSlots=" << usedSlots;
             freeSlots += nSlots;
 #endif
@@ -429,7 +433,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
             bins[bin] = freeItem;
         }
     }
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
     Q_ASSERT(freeSlots + allocatedSlots == (EntriesInBitmap - start) * 8 * sizeof(quintptr));
 #endif
 }
@@ -717,15 +721,17 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
 #endif
 }
 
-#ifndef QT_NO_DEBUG
-static size_t lastAllocRequestedSlots = 0;
+#ifdef MM_STATS
+static int allocationCount = 0;
+static int lastAllocRequestedSlots = 0;
 #endif
 
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 {
     const size_t stringSize = align(sizeof(Heap::String));
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
     lastAllocRequestedSlots = stringSize >> Chunk::SlotSizeShift;
+    ++allocationCount;
 #endif
 
     bool didGCRun = false;
@@ -762,8 +768,9 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 
 Heap::Base *MemoryManager::allocData(std::size_t size)
 {
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
     lastAllocRequestedSlots = size >> Chunk::SlotSizeShift;
+    ++allocationCount;
 #endif
 
     bool didRunGC = false;
@@ -804,6 +811,9 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
 
     // ### Could optimize this and allocate both in one go through the block allocator
     if (nMembers) {
+#ifdef MM_STATS
+        ++allocationCount;
+#endif
         std::size_t memberSize = align(sizeof(Heap::MemberData) + (nMembers - 1)*sizeof(Value));
 //        qDebug() << "allocating member data for" << o << nMembers << memberSize;
         Heap::Base *m;
@@ -823,10 +833,13 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
     return o;
 }
 
+static uint markStackSize = 0;
+
 void MemoryManager::drainMarkStack(Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
+        ++markStackSize;
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
         if (h->vtable()->markObjects)
             h->vtable()->markObjects(h, engine);
@@ -874,17 +887,27 @@ void MemoryManager::mark()
 {
     Value *markBase = engine->jsStackTop;
 
+    markStackSize = 0;
+
     if (nextGCIsIncremental) {
         // need to collect all gray items and push them onto the mark stack
         blockAllocator.collectGrayItems(engine);
         hugeItemAllocator.collectGrayItems(engine);
     }
 
+//    qDebug() << ">>>> Mark phase:";
+//    qDebug() << "   mark stack after gray items" << (engine->jsStackTop - markBase);
+
     engine->markObjects(nextGCIsIncremental);
+
+//    qDebug() << "   mark stack after engine->mark" << (engine->jsStackTop - markBase);
 
     collectFromJSStack();
 
+//    qDebug() << "   mark stack after js stack collect" << (engine->jsStackTop - markBase);
     m_persistentValues->mark(engine);
+
+//    qDebug() << "   mark stack after persistants" << (engine->jsStackTop - markBase);
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
@@ -988,23 +1011,23 @@ bool MemoryManager::shouldRunGC() const
 
 size_t dumpBins(BlockAllocator *b, bool printOutput = true)
 {
-    size_t totalFragmentedSlots = 0;
+    size_t totalSlotMem = 0;
     if (printOutput)
-        qDebug() << "Fragmentation map:";
+        qDebug() << "Slot map:";
     for (uint i = 0; i < BlockAllocator::NumBins; ++i) {
         uint nEntries = 0;
         HeapItem *h = b->freeBins[i];
         while (h) {
             ++nEntries;
-            totalFragmentedSlots += h->freeData.availableSlots;
+            totalSlotMem += h->freeData.availableSlots;
             h = h->freeData.next;
         }
         if (printOutput)
             qDebug() << "    number of entries in slot" << i << ":" << nEntries;
     }
     if (printOutput)
-        qDebug() << "  total mem in bins" << totalFragmentedSlots*Chunk::SlotSize;
-    return totalFragmentedSlots*Chunk::SlotSize;
+        qDebug() << "  total mem in bins" << totalSlotMem*Chunk::SlotSize;
+    return totalSlotMem*Chunk::SlotSize;
 }
 
 void MemoryManager::runGC(bool forceFullCollection)
@@ -1037,15 +1060,16 @@ void MemoryManager::runGC(bool forceFullCollection)
         const size_t largeItemsBefore = getLargeItemsMem();
 
         qDebug() << "========== GC ==========";
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
         qDebug() << "    Triggered by alloc request of" << lastAllocRequestedSlots << "slots.";
+        qDebug() << "    Allocations since last GC" << allocationCount;
 #endif
         qDebug() << "Incremental:" << nextGCIsIncremental;
         qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
         qDebug() << "Fragmented memory before GC" << (totalMem - usedBefore);
         dumpBins(&blockAllocator);
 
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
         nGrayItems = 0;
 #endif
 
@@ -1065,15 +1089,16 @@ void MemoryManager::runGC(bool forceFullCollection)
             qDebug() << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
         }
         size_t memInBins = dumpBins(&blockAllocator);
-#ifndef QT_NO_DEBUG
+#ifdef MM_STATS
         if (nextGCIsIncremental)
             qDebug() << "  number of gray items:" << nGrayItems;
 #endif
         qDebug() << "Marked object in" << markTime << "ms.";
+        qDebug() << "   " << markStackSize << "objects marked";
         qDebug() << "Sweeped object in" << sweepTime << "ms.";
         qDebug() << "Used memory before GC:" << usedBefore;
-        qDebug() << "Used memory after GC:" << usedAfter;
-        qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
+        qDebug() << "Used memory after GC :" << usedAfter;
+        qDebug() << "Freed up bytes       :" << (usedBefore - usedAfter);
         size_t lost = blockAllocator.allocatedMem() - memInBins - usedAfter;
         if (lost)
             qDebug() << "!!!!!!!!!!!!!!!!!!!!! LOST MEM:" << lost << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";

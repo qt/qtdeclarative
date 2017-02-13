@@ -86,7 +86,7 @@ struct StackAllocator {
         } else {
             nextFree += requiredSlots;
         }
-#if !defined(QT_NO_DEBUG) || defined(MM_DEBUG)
+#if MM_DEBUG || !defined(QT_NO_DEBUG)
         Chunk *c = m->chunk();
         Chunk::setBit(c->objectBitmap, m - c->realBase());
 #endif
@@ -98,7 +98,7 @@ struct StackAllocator {
         } else {
             nextFree -= requiredSlots;
         }
-#if !defined(QT_NO_DEBUG) || defined(MM_DEBUG)
+#if MM_DEBUG || !defined(QT_NO_DEBUG)
         Chunk *c = nextFree->chunk();
         Chunk::clearBit(c->objectBitmap, nextFree - c->realBase());
 #endif
