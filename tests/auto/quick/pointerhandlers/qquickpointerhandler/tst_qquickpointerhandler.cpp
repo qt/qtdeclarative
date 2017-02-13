@@ -164,7 +164,7 @@ class EventHandler : public QQuickPointerHandler
                 point->setAccepted(item->acceptPointer); // does NOT imply a grab
             if (item->grabPointer)
                 setExclusiveGrab(point, true);
-            qCDebug(lcPointerTests) << "        " << i << ":" << point << "accepted?" << item->acceptPointer << "grabbed?" << (point->grabber() == this);
+            qCDebug(lcPointerTests) << "        " << i << ":" << point << "accepted?" << item->acceptPointer << "grabbed?" << (point->exclusiveGrabber() == this);
             item->eventList.append(Event(QEvent::Pointer, eventPos(point), point->scenePos()));
         }
     }
@@ -262,7 +262,7 @@ void tst_PointerHandlers::touchEventDelivery()
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::Pointer);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::TouchBegin);
     auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
-    QCOMPARE(pointerEvent->point(0)->grabber(), eventItem1);
+    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), eventItem1);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);
@@ -329,7 +329,7 @@ void tst_PointerHandlers::touchEventDelivery()
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::Pointer);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::TouchBegin);
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::MouseButtonPress);
-    QCOMPARE(pointerEvent->point(0)->grabber(), nullptr);
+    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), nullptr);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);

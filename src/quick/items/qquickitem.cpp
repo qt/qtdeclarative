@@ -5091,7 +5091,14 @@ void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
     }
 }
 
-bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoidGrabber)
+/*!
+    \internal
+    Deliver the \a event to all PointerHandlers which are in the pre-determined
+    eventDeliveryTargets() vector.  If \a avoidExclusiveGrabber is true, it skips
+    delivery to any handler which is the exclusive grabber of any point within this event
+    (because delivery to exclusive grabbers is handled separately).
+*/
+bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoidExclusiveGrabber)
 {
     Q_Q(QQuickItem);
     bool delivered = false;
@@ -5099,7 +5106,7 @@ bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoid
     if (extra.isAllocated()) {
         for (QQuickPointerHandler *handler : extra->pointerHandlers) {
             qCDebug(lcPointerHandlerDispatch) << "   delivering" << event << "to" << handler << "on" << q;
-            if ((!avoidGrabber || !event->hasGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
+            if ((!avoidExclusiveGrabber || !event->hasExclusiveGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
                 handler->handlePointerEvent(event);
                 delivered = true;
                 eventDeliveryTargets.append(handler);

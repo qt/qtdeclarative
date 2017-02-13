@@ -83,7 +83,7 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
         int c = event->pointCount();
         for (int i = 0; i < c && !m_pointId; ++i) {
             QQuickEventPoint *p = event->point(i);
-            if (!p->grabber() && wantsEventPoint(p)) {
+            if (!p->exclusiveGrabber() && wantsEventPoint(p)) {
                 m_pointId = p->pointId();
                 p->setAccepted();
             }
@@ -149,7 +149,7 @@ void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)
 
 void QQuickPointerSingleHandler::onGrabChanged(QQuickEventPoint *point)
 {
-    bool grabbing = (point->grabber() == this);
+    bool grabbing = (point->exclusiveGrabber() == this);
     setActive(grabbing);
     if (grabbing)
         m_sceneGrabPos = point->sceneGrabPos();

@@ -263,7 +263,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(qreal timeHeld READ timeHeld)
     Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-    Q_PROPERTY(QObject *grabber READ grabber WRITE setGrabber)
+    Q_PROPERTY(QObject *exclusiveGrabber READ exclusiveGrabber WRITE setExclusiveGrabber)
 
 public:
     enum State {
@@ -295,14 +295,14 @@ public:
     bool isAccepted() const { return m_accept; }
     void setAccepted(bool accepted = true);
     bool isDraggedOverThreshold() const;
-    QObject *grabber() const;
-    void setGrabber(QObject *grabber);
+    QObject *exclusiveGrabber() const;
+    void setExclusiveGrabber(QObject *exclusiveGrabber);
 
     QQuickItem *grabberItem() const;
-    void setGrabberItem(QQuickItem *grabber);
+    void setGrabberItem(QQuickItem *exclusiveGrabber);
 
     QQuickPointerHandler *grabberPointerHandler() const;
-    void setGrabberPointerHandler(QQuickPointerHandler *grabber, bool exclusive = false);
+    void setGrabberPointerHandler(QQuickPointerHandler *exclusiveGrabber, bool exclusive = false);
 
     Q_INVOKABLE void cancelExclusiveGrab();
     Q_INVOKABLE void cancelPassiveGrab(QQuickPointerHandler *handler);
@@ -409,9 +409,9 @@ public: // helpers for C++ only (during event delivery)
     virtual int pointCount() const = 0;
     virtual QQuickEventPoint *point(int i) const = 0;
     virtual QQuickEventPoint *pointById(quint64 pointId) const = 0;
-    virtual QVector<QObject *> grabbers() const = 0;
+    virtual QVector<QObject *> exclusiveGrabbers() const = 0;
     virtual void clearGrabbers() const = 0;
-    virtual bool hasGrabber(const QQuickPointerHandler *handler) const = 0;
+    virtual bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const = 0;
 
     ulong timestamp() const { return m_event->timestamp(); }
 
@@ -442,9 +442,9 @@ public:
     bool allPointsAccepted() const override;
     bool allUpdatedPointsAccepted() const override;
     bool allPointsGrabbed() const override;
-    QVector<QObject *> grabbers() const override;
+    QVector<QObject *> exclusiveGrabbers() const override;
     void clearGrabbers() const override;
-    bool hasGrabber(const QQuickPointerHandler *handler) const override;
+    bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const override;
 
     QMouseEvent *asMouseEvent(const QPointF& localPos) const;
 
@@ -476,9 +476,9 @@ public:
     bool allPointsAccepted() const override;
     bool allUpdatedPointsAccepted() const override;
     bool allPointsGrabbed() const override;
-    QVector<QObject *> grabbers() const override;
+    QVector<QObject *> exclusiveGrabbers() const override;
     void clearGrabbers() const override;
-    bool hasGrabber(const QQuickPointerHandler *handler) const override;
+    bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const override;
 
     QMouseEvent *syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const;
     QTouchEvent *touchEventForItem(QQuickItem *item, bool isFiltering = false) const;

@@ -566,12 +566,26 @@ void QQuickEventPoint::invalidate()
     m_pointId = 0;
 }
 
-QObject *QQuickEventPoint::grabber() const
+/*!
+    If this point has an exclusive grabber, returns a pointer to it; else
+    returns null, if there is no grabber.  The grabber could be either
+    an Item or a PointerHandler.
+*/
+QObject *QQuickEventPoint::exclusiveGrabber() const
 {
     return m_exclusiveGrabber.data();
 }
 
-void QQuickEventPoint::setGrabber(QObject *grabber)
+/*!
+    Set the given Item or PointerHandler as the exclusive grabber of this point.
+    If there was already an exclusive grab, it will be canceled.  If there
+    were passive grabbers, they will continue to lurk, but the exclusive grab
+    is a behavioral override of the passive grab as long as it remains.
+    If you already know whether the grabber is to be an Item or a PointerHandler,
+    you should instead call setGrabberItem() or setGrabberPointerHandler(),
+    because it is slightly more efficient.
+*/
+void QQuickEventPoint::setExclusiveGrabber(QObject *grabber)
 {
     if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber))
         setGrabberPointerHandler(phGrabber, true);
@@ -579,11 +593,22 @@ void QQuickEventPoint::setGrabber(QObject *grabber)
         setGrabberItem(static_cast<QQuickItem *>(grabber));
 }
 
+/*!
+    If the exclusive grabber of this point is an Item, returns a
+    pointer to that Item; else returns null, if there is no grabber or if
+    the grabber is a PointerHandler.
+*/
 QQuickItem *QQuickEventPoint::grabberItem() const
 {
     return (m_grabberIsHandler ? nullptr : static_cast<QQuickItem *>(m_exclusiveGrabber.data()));
 }
 
+/*!
+    Set the given Item \a grabber as the exclusive grabber of this point.
+    If there was already an exclusive grab, it will be canceled.  If there
+    were passive grabbers, they will continue to lurk, but the exclusive grab
+    is a behavioral override of the passive grab as long as it remains.
+*/
 void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
 {
     if (grabber != m_exclusiveGrabber.data()) {
@@ -597,11 +622,21 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
     }
 }
 
+/*!
+    If the exclusive grabber of this point is a PointerHandler, returns a
+    pointer to that handler; else returns null, if there is no grabber or if
+    the grabber is an Item.
+*/
 QQuickPointerHandler *QQuickEventPoint::grabberPointerHandler() const
 {
     return (m_grabberIsHandler ? static_cast<QQuickPointerHandler *>(m_exclusiveGrabber.data()) : nullptr);
 }
 
+/*!
+    Set the given PointerHandler \a grabber as grabber of this point. If \a
+    exclusive is true, it will override any other grabs; if false, \a grabber
+    will be added to the list of passive grabbers of this point.
+*/
 void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, bool exclusive)
 {
     if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
@@ -633,6 +668,11 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
     }
 }
 
+/*!
+    If this point has an existing exclusive grabber (Item or PointerHandler),
+    inform the grabber that its grab is canceled, and remove it as grabber.
+    This normally happens when the grab is stolen by another Item.
+*/
 void QQuickEventPoint::cancelExclusiveGrab()
 {
     if (m_exclusiveGrabber.isNull()) {
@@ -648,6 +688,11 @@ void QQuickEventPoint::cancelExclusiveGrab()
     m_exclusiveGrabber.clear();
 }
 
+/*!
+    If this point has the given \a handler as a passive grabber,
+    inform the grabber that its grab is canceled, and remove it as grabber.
+    This normally happens when another Item or PointerHandler does an exclusive grab.
+*/
 void QQuickEventPoint::cancelPassiveGrab(QQuickPointerHandler *handler)
 {
     if (m_passiveGrabbers.removeOne(QPointer<QQuickPointerHandler>(handler))) {
@@ -659,6 +704,17 @@ void QQuickEventPoint::cancelPassiveGrab(QQuickPointerHandler *handler)
     }
 }
 
+/*!
+    If the given \a handler is grabbing this point passively, exclusively
+    or both, cancel the grab and remove it as grabber.
+    This normally happens when the handler decides that the behavior of this
+    point can no longer satisfy the handler's behavioral constraints within
+    the remainder of the gesture which the user is performing: for example
+    the handler tries to detect a tap but a drag is occurring instead, or
+    it tries to detect a drag in one direction but the drag is going in
+    another direction.  In such cases the handler no longer needs or wants
+    to be informed of any further movements of this point.
+*/
 void QQuickEventPoint::cancelAllGrabs(QQuickPointerHandler *handler)
 {
     if (m_exclusiveGrabber == handler) {
@@ -668,6 +724,12 @@ void QQuickEventPoint::cancelAllGrabs(QQuickPointerHandler *handler)
     cancelPassiveGrab(handler);
 }
 
+/*!
+    Set this point as \a accepted (true) or rejected (false).
+    Accepting a point is intended to stop event propagation.
+    It does not imply any kind of grab, passive or exclusive.
+    TODO explain further under what conditions propagation really does stop...
+*/
 void QQuickEventPoint::setAccepted(bool accepted)
 {
     if (m_accept != accepted) {
@@ -707,11 +769,10 @@ Q_GLOBAL_STATIC(PointDataForPointIdMap, g_previousPointData)
 static const int PointVelocityAgeLimit = 500; // milliseconds
 
 /*!
- * \interal
- * \brief Estimates the velocity based on a weighted average of all previous velocities.
- *        The older the velocity is, the less significant it becomes for the estimate.
- * \return
- */
+    \internal
+    Estimates the velocity based on a weighted average of all previous velocities.
+    The older the velocity is, the less significant it becomes for the estimate.
+*/
 QVector2D QQuickEventPoint::estimatedVelocity() const
 {
     PointVelocityData *prevPoint = g_previousPointData->value(m_pointId);
@@ -838,7 +899,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
         QObject *grabber = nullptr;
         QVector <QPointer <QQuickPointerHandler> > passiveGrabbers;
         if (auto point = pointById(tps.at(i).id())) {
-            grabber = point->grabber();
+            grabber = point->exclusiveGrabber();
             passiveGrabbers = point->passiveGrabbers();
         }
         grabbers.append(grabber);
@@ -854,7 +915,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
             point->setGrabberItem(nullptr);
             point->clearPassiveGrabbers();
         } else {
-            point->setGrabber(grabbers.at(i));
+            point->setExclusiveGrabber(grabbers.at(i));
             point->setPassiveGrabbers(passiveGrabberses.at(i));
         }
     }
@@ -902,7 +963,7 @@ bool QQuickPointerMouseEvent::allUpdatedPointsAccepted() const {
 
 bool QQuickPointerMouseEvent::allPointsGrabbed() const
 {
-    return m_mousePoint->grabber() != nullptr;
+    return m_mousePoint->exclusiveGrabber() != nullptr;
 }
 
 QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) const
@@ -912,22 +973,31 @@ QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) cons
     return event;
 }
 
-QVector<QObject *> QQuickPointerMouseEvent::grabbers() const
+/*!
+    Returns the exclusive grabber of this event, if any, in a vector.
+*/
+QVector<QObject *> QQuickPointerMouseEvent::exclusiveGrabbers() const
 {
     QVector<QObject *> result;
-    if (QObject *grabber = m_mousePoint->grabber())
+    if (QObject *grabber = m_mousePoint->exclusiveGrabber())
         result << grabber;
     return result;
 }
 
+/*!
+    Remove all passive and exclusive grabbers of this event, without notifying.
+*/
 void QQuickPointerMouseEvent::clearGrabbers() const {
     m_mousePoint->setGrabberItem(nullptr);
     m_mousePoint->clearPassiveGrabbers();
 }
 
-bool QQuickPointerMouseEvent::hasGrabber(const QQuickPointerHandler *handler) const
+/*!
+    Returns whether the given \a handler is the exclusive grabber of this event.
+*/
+bool QQuickPointerMouseEvent::hasExclusiveGrabber(const QQuickPointerHandler *handler) const
 {
-    return m_mousePoint->grabber() == handler;
+    return m_mousePoint->exclusiveGrabber() == handler;
 }
 
 bool QQuickPointerMouseEvent::isPressEvent() const
@@ -957,18 +1027,20 @@ bool QQuickPointerTouchEvent::allUpdatedPointsAccepted() const {
 bool QQuickPointerTouchEvent::allPointsGrabbed() const
 {
     for (int i = 0; i < m_pointCount; ++i) {
-        if (!m_touchPoints.at(i)->grabber())
+        if (!m_touchPoints.at(i)->exclusiveGrabber())
             return false;
     }
     return true;
 }
 
-QVector<QObject *> QQuickPointerTouchEvent::grabbers() const
+/*!
+    Returns the exclusive grabbers of all points in this event, if any, in a vector.
+*/
+QVector<QObject *> QQuickPointerTouchEvent::exclusiveGrabbers() const
 {
     QVector<QObject *> result;
     for (int i = 0; i < m_pointCount; ++i) {
-        auto point = m_touchPoints.at(i);
-        if (QObject *grabber = point->grabber()) {
+        if (QObject *grabber = m_touchPoints.at(i)->exclusiveGrabber()) {
             if (!result.contains(grabber))
                 result << grabber;
         }
@@ -976,17 +1048,25 @@ QVector<QObject *> QQuickPointerTouchEvent::grabbers() const
     return result;
 }
 
+/*!
+    Remove all passive and exclusive grabbers of all touchpoints in this event,
+    without notifying.
+*/
 void QQuickPointerTouchEvent::clearGrabbers() const {
     for (auto point: m_touchPoints) {
-        point->setGrabber(nullptr);
+        point->setGrabberItem(nullptr);
         point->clearPassiveGrabbers();
     }
 }
 
-bool QQuickPointerTouchEvent::hasGrabber(const QQuickPointerHandler *handler) const
+/*!
+    Returns whether the given \a handler is the exclusive grabber of any
+    touchpoint within this event.
+*/
+bool QQuickPointerTouchEvent::hasExclusiveGrabber(const QQuickPointerHandler *handler) const
 {
     for (auto point: m_touchPoints)
-        if (point->grabber() == handler)
+        if (point->exclusiveGrabber() == handler)
             return true;
     return false;
 }
@@ -1111,7 +1191,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         auto p = m_touchPoints.at(i);
         if (p->isAccepted())
             continue;
-        bool isGrabber = p->grabber() == item;
+        bool isGrabber = p->exclusiveGrabber() == item;
         bool isPressInside = p->state() == QQuickEventPoint::Pressed && item->contains(item->mapFromScene(p->scenePos()));
         if (!(isGrabber || isPressInside || isFiltering))
             continue;
