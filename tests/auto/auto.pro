@@ -9,6 +9,7 @@ SUBDIRS += \
     platform \
     popup \
     pressandhold \
+    qquickiconimage \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
     qquickstyle \
