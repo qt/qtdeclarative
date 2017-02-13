@@ -48,6 +48,6 @@ qtConfig(qml-interpreter) {
         $$PWD/qv4isel_moth.cpp
 }
 
+qtConfig(private_tests):unix: QMAKE_USE_PRIVATE += libdl
 
-qtConfig(private_tests): LIBS_PRIVATE += $$QMAKE_LIBS_DYNLOAD
 }
