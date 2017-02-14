@@ -105,6 +105,9 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     setVisible(false);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+#ifndef QT_NO_CURSOR
+    setCursor(Qt::ArrowCursor);
+#endif
 
 #if QT_CONFIG(quicktemplates2_hover)
     // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8

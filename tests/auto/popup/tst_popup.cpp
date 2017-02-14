@@ -72,6 +72,7 @@ private slots:
     void parentDestroyed();
     void nested();
     void grabber();
+    void cursorShape();
 };
 
 void tst_popup::visible_data()
@@ -719,6 +720,38 @@ void tst_popup::grabber()
     QCOMPARE(menu->isVisible(), false);
     QCOMPARE(popup->isVisible(), false);
     QCOMPARE(combo->isVisible(), false);
+}
+
+void tst_popup::cursorShape()
+{
+    // Ensure that the mouse cursor has the correct shape when over a popup
+    // which is itself over an item with a different shape.
+    QQuickApplicationHelper helper(this, QStringLiteral("cursor.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *popup = helper.appWindow->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+
+    QQuickItem *textField = helper.appWindow->property("textField").value<QQuickItem*>();
+    QVERIFY(textField);
+
+    // Move the mouse over the text field.
+    const QPoint textFieldPos(popup->x() - 10, popup->y() + popup->height() / 2);
+    QTest::mouseMove(window, textFieldPos);
+    QCOMPARE(window->cursor().shape(), textField->cursor().shape());
+
+    // Move the mouse over the popup where it overlaps with the text field.
+    const QPoint textFieldOverlapPos(popup->x() + 10, popup->y() + popup->height() / 2);
+    QTest::mouseMove(window, textFieldOverlapPos);
+    QCOMPARE(window->cursor().shape(), popup->popupItem()->cursor().shape());
+
+    popup->close();
+    QTRY_VERIFY(!popup->isVisible());
 }
 
 QTEST_MAIN(tst_popup)
