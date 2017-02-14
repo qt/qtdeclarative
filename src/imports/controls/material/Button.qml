@@ -92,12 +92,6 @@ T.Button {
             color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
         }
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 400
-            }
-        }
-
         // The layer is disabled when the button color is transparent so you can do
         // Material.background: "transparent" and get a proper flat button without needing
         // to set Material.elevation as well

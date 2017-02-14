@@ -96,12 +96,6 @@ T.RoundButton {
             color: control.Material.rippleColor
         }
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 400
-            }
-        }
-
         // The layer is disabled when the button color is transparent so that you can do
         // Material.background: "transparent" and get a proper flat button without needing
         // to set Material.elevation as well

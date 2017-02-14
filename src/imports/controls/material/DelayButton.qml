@@ -102,12 +102,6 @@ T.DelayButton {
             }
         }
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 400
-            }
-        }
-
         layer.enabled: control.enabled && control.Material.buttonColor.a > 0
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
