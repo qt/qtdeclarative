@@ -41,8 +41,128 @@
 
 #if ENABLE(ASSEMBLER)
 
-using namespace QV4;
-using namespace JIT;
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+namespace JIT {
+
+template <typename JITAssembler>
+struct ArchitectureSpecificBinaryOperation
+{
+    using FPRegisterID = typename JITAssembler::FPRegisterID;
+
+    static bool doubleAdd(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(lhs);
+        Q_UNUSED(rhs);
+        Q_UNUSED(targetReg);
+        return false;
+    }
+    static bool doubleMul(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(lhs);
+        Q_UNUSED(rhs);
+        Q_UNUSED(targetReg);
+        return false;
+    }
+    static bool doubleSub(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(lhs);
+        Q_UNUSED(rhs);
+        Q_UNUSED(targetReg);
+        return false;
+    }
+    static bool doubleDiv(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        Q_UNUSED(as);
+        Q_UNUSED(lhs);
+        Q_UNUSED(rhs);
+        Q_UNUSED(targetReg);
+        return false;
+    }
+};
+
+#if CPU(X86)
+template <>
+struct ArchitectureSpecificBinaryOperation<Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerX86, NoOperatingSystemSpecialization>>>
+{
+    using JITAssembler = Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerX86, NoOperatingSystemSpecialization>>;
+    using FPRegisterID = JITAssembler::FPRegisterID;
+    using Address = JITAssembler::Address;
+
+    static bool doubleAdd(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        if (IR::Const *c = rhs->asConst()) { // Y = X + constant -> Y = X; Y += [constant-address]
+            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
+            as->addDouble(addr, targetReg);
+            return true;
+        }
+        if (IR::Temp *t = rhs->asTemp()) { // Y = X + [temp-memory-address] -> Y = X; Y += [temp-memory-address]
+            if (t->kind != IR::Temp::PhysicalRegister) {
+                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+                as->addDouble(as->loadTempAddress(t), targetReg);
+                return true;
+            }
+        }
+        return false;
+    }
+    static bool doubleMul(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        if (IR::Const *c = rhs->asConst()) { // Y = X * constant -> Y = X; Y *= [constant-address]
+            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
+            as->mulDouble(addr, targetReg);
+            return true;
+        }
+        if (IR::Temp *t = rhs->asTemp()) { // Y = X * [temp-memory-address] -> Y = X; Y *= [temp-memory-address]
+            if (t->kind != IR::Temp::PhysicalRegister) {
+                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+                as->mulDouble(as->loadTempAddress(t), targetReg);
+                return true;
+            }
+        }
+        return false;
+    }
+    static bool doubleSub(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        if (IR::Const *c = rhs->asConst()) { // Y = X - constant -> Y = X; Y -= [constant-address]
+            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
+            as->subDouble(addr, targetReg);
+            return true;
+        }
+        if (IR::Temp *t = rhs->asTemp()) { // Y = X - [temp-memory-address] -> Y = X; Y -= [temp-memory-address]
+            if (t->kind != IR::Temp::PhysicalRegister) {
+                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+                as->subDouble(as->loadTempAddress(t), targetReg);
+                return true;
+            }
+        }
+        return false;
+    }
+    static bool doubleDiv(JITAssembler *as, IR::Expr *lhs, IR::Expr *rhs, FPRegisterID targetReg)
+    {
+        if (IR::Const *c = rhs->asConst()) { // Y = X / constant -> Y = X; Y /= [constant-address]
+            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
+            as->divDouble(addr, targetReg);
+            return true;
+        }
+        if (IR::Temp *t = rhs->asTemp()) { // Y = X / [temp-memory-address] -> Y = X; Y /= [temp-memory-address]
+            if (t->kind != IR::Temp::PhysicalRegister) {
+                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
+                as->divDouble(as->loadTempAddress(t), targetReg);
+                return true;
+            }
+        }
+        return false;
+    }
+};
+#endif
 
 #define OP(op) \
     { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
@@ -162,21 +282,9 @@ void Binop<JITAssembler>::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *ta
         if (lhs->asConst())
             std::swap(lhs, rhs); // Y = constant + X -> Y = X + constant
 
-#if CPU(X86)
-        if (IR::Const *c = rhs->asConst()) { // Y = X + constant -> Y = X; Y += [constant-address]
-            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
-            as->addDouble(addr, targetReg);
+        if (ArchitectureSpecificBinaryOperation<JITAssembler>::doubleAdd(as, lhs, rhs, targetReg))
             break;
-        }
-        if (IR::Temp *t = rhs->asTemp()) { // Y = X + [temp-memory-address] -> Y = X; Y += [temp-memory-address]
-            if (t->kind != IR::Temp::PhysicalRegister) {
-                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-                as->addDouble(as->loadTempAddress(t), targetReg);
-                break;
-            }
-        }
-#endif
+
         as->addDouble(as->toDoubleRegister(lhs, JITAssembler::FPGpr0), as->toDoubleRegister(rhs, JITAssembler::FPGpr1), targetReg);
         break;
 
@@ -184,40 +292,16 @@ void Binop<JITAssembler>::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *ta
         if (lhs->asConst())
             std::swap(lhs, rhs); // Y = constant * X -> Y = X * constant
 
-#if CPU(X86)
-        if (IR::Const *c = rhs->asConst()) { // Y = X * constant -> Y = X; Y *= [constant-address]
-            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
-            as->mulDouble(addr, targetReg);
+        if (ArchitectureSpecificBinaryOperation<JITAssembler>::doubleMul(as, lhs, rhs, targetReg))
             break;
-        }
-        if (IR::Temp *t = rhs->asTemp()) { // Y = X * [temp-memory-address] -> Y = X; Y *= [temp-memory-address]
-            if (t->kind != IR::Temp::PhysicalRegister) {
-                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-                as->mulDouble(as->loadTempAddress(t), targetReg);
-                break;
-            }
-        }
-#endif
+
         as->mulDouble(as->toDoubleRegister(lhs, JITAssembler::FPGpr0), as->toDoubleRegister(rhs, JITAssembler::FPGpr1), targetReg);
         break;
 
     case IR::OpSub:
-#if CPU(X86)
-        if (IR::Const *c = rhs->asConst()) { // Y = X - constant -> Y = X; Y -= [constant-address]
-            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
-            as->subDouble(addr, targetReg);
+        if (ArchitectureSpecificBinaryOperation<JITAssembler>::doubleSub(as, lhs, rhs, targetReg))
             break;
-        }
-        if (IR::Temp *t = rhs->asTemp()) { // Y = X - [temp-memory-address] -> Y = X; Y -= [temp-memory-address]
-            if (t->kind != IR::Temp::PhysicalRegister) {
-                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-                as->subDouble(as->loadTempAddress(t), targetReg);
-                break;
-            }
-        }
-#endif
+
         if (rhs->asTemp() && rhs->asTemp()->kind == IR::Temp::PhysicalRegister
                 && targetTemp
                 && targetTemp->kind == IR::Temp::PhysicalRegister
@@ -231,21 +315,8 @@ void Binop<JITAssembler>::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *ta
         break;
 
     case IR::OpDiv:
-#if CPU(X86)
-        if (IR::Const *c = rhs->asConst()) { // Y = X / constant -> Y = X; Y /= [constant-address]
-            as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-            Address addr = as->loadConstant(c, JITAssembler::ScratchRegister);
-            as->divDouble(addr, targetReg);
+        if (ArchitectureSpecificBinaryOperation<JITAssembler>::doubleDiv(as, lhs, rhs, targetReg))
             break;
-        }
-        if (IR::Temp *t = rhs->asTemp()) { // Y = X / [temp-memory-address] -> Y = X; Y /= [temp-memory-address]
-            if (t->kind != IR::Temp::PhysicalRegister) {
-                as->moveDouble(as->toDoubleRegister(lhs, targetReg), targetReg);
-                as->divDouble(as->loadTempAddress(t), targetReg);
-                break;
-            }
-        }
-#endif
 
         if (rhs->asTemp() && rhs->asTemp()->kind == IR::Temp::PhysicalRegister
                 && targetTemp
@@ -577,8 +648,19 @@ typename JITAssembler::Jump Binop<JITAssembler>::genInlineBinop(IR::Expr *leftSo
 }
 
 template struct QV4::JIT::Binop<QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>>;
-#if defined(V4_BOOTSTRAP) && CPU(X86_64)
+#if defined(V4_BOOTSTRAP)
+#if !CPU(ARM_THUMB2)
 template struct QV4::JIT::Binop<QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>>;
 #endif
+#if !CPU(ARM64)
+template struct QV4::JIT::Binop<QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>>;
+#endif
+#endif
+
+} // end of namespace JIT
+} // end of namespace QV4
+
+QT_END_NAMESPACE
+
 
 #endif

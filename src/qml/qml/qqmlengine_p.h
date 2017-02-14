@@ -205,6 +205,7 @@ public:
     inline void deleteInEngineThread(T *);
     template<typename T>
     inline static void deleteInEngineThread(QQmlEngine *, T *);
+    QString offlineStorageDatabaseDirectory() const;
 
     // These methods may be called from the loader thread
     inline QQmlPropertyCache *cache(QQmlType *, int);

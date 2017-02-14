@@ -379,16 +379,7 @@ void Assembler<TargetConfiguration>::leaveStandardStackFrame(const RegisterInfor
     Q_ASSERT(slotAddr.offset == 0);
 
     const int frameSize = _stackLayout->calculateStackFrameSize();
-    // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
-    // work well for large immediates.
-#if CPU(ARM_THUMB2)
-    move(TrustedImm32(frameSize), JSC::ARMRegisters::r3);
-    add32(JSC::ARMRegisters::r3, StackPointerRegister);
-#else
-    addPtr(TrustedImm32(frameSize), StackPointerRegister);
-#endif
-
-    platformLeaveStandardStackFrame(this);
+    platformLeaveStandardStackFrame(this, frameSize);
 }
 
 
@@ -709,8 +700,13 @@ JSC::MacroAssemblerCodeRef Assembler<TargetConfiguration>::link(int *codeSize)
 }
 
 template class QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>;
-#if defined(V4_BOOTSTRAP) && CPU(X86_64)
+#if defined(V4_BOOTSTRAP)
+#if !CPU(ARM_THUMB2)
 template class QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
+#endif
+#if !CPU(ARM64)
+template class QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;
+#endif
 #endif
 
 #endif

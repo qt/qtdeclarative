@@ -155,7 +155,6 @@ protected:
 
     using JITTargetPlatform = typename JITAssembler::JITTargetPlatform;
 
-#if !defined(ARGUMENTS_IN_REGISTERS)
     Address addressForArgument(int index) const
     {
         // FramePointerRegister points to its old value on the stack, and above
@@ -163,7 +162,6 @@ protected:
         // values before reaching the first argument.
         return Address(JITTargetPlatform::FramePointerRegister, (index + 2) * sizeof(void*));
     }
-#endif
 
     Pointer baseAddressForCallArguments()
     {

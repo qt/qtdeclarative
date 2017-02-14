@@ -31,7 +31,17 @@ HEADERS += $$PWD/stubs/WTFStubs.h
 
 SOURCES += $$PWD/stubs/Options.cpp
 
-HEADERS += $$PWD/stubs/wtf/*.h
+HEADERS += $$PWD/stubs/wtf/FastAllocBase.h \
+           $$PWD/stubs/wtf/FastMalloc.h \
+           $$PWD/stubs/wtf/Noncopyable.h \
+           $$PWD/stubs/wtf/OwnPtr.h \
+           $$PWD/stubs/wtf/PassOwnPtr.h \
+           $$PWD/stubs/wtf/PassRefPtr.h \
+           $$PWD/stubs/wtf/RefCounted.h \
+           $$PWD/stubs/wtf/RefPtr.h \
+           $$PWD/stubs/wtf/TypeTraits.h \
+           $$PWD/stubs/wtf/UnusedParam.h \
+           $$PWD/stubs/wtf/Vector.h
 
 SOURCES += $$PWD/disassembler/Disassembler.cpp
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
@@ -67,8 +77,21 @@ SOURCES += $$PWD/disassembler/ARM64Disassembler.cpp
 SOURCES += $$PWD/disassembler/ARM64/A64DOpcode.cpp
 HEADERS += $$PWD/disassembler/ARM64/A64DOpcode.h
 
-SOURCES += $$PWD/yarr/*.cpp
-HEADERS += $$PWD/yarr/*.h
+!qmldevtools_build {
+SOURCES += $$PWD/yarr/YarrCanonicalizeUCS2.cpp \
+           $$PWD/yarr/YarrInterpreter.cpp \
+           $$PWD/yarr/YarrJIT.cpp \
+           $$PWD/yarr/YarrPattern.cpp \
+           $$PWD/yarr/YarrSyntaxChecker.cpp
+
+HEADERS += $$PWD/yarr/Yarr.h \
+           $$PWD/yarr/YarrCanonicalizeUCS2.h \
+           $$PWD/yarr/YarrInterpreter.h \
+           $$PWD/yarr/YarrJIT.h \
+           $$PWD/yarr/YarrParser.h \
+           $$PWD/yarr/YarrPattern.h \
+           $$PWD/yarr/YarrSyntaxChecker.h
+}
 
 #
 # Generate RegExpJitTables.h

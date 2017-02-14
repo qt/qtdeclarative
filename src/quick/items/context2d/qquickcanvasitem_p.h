@@ -182,6 +182,7 @@ private Q_SLOTS:
     void sceneGraphInitialized();
     void checkAnimationCallbacks();
     void invalidateSceneGraph();
+    void schedulePolish();
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
@@ -190,6 +191,7 @@ protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void releaseResources() Q_DECL_OVERRIDE;
+    bool event(QEvent *event) Q_DECL_OVERRIDE;
 private:
     Q_DECLARE_PRIVATE(QQuickCanvasItem)
     Q_INVOKABLE void delayedCreate();

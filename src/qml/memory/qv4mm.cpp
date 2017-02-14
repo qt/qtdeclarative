@@ -328,11 +328,16 @@ void Chunk::freeAll()
 
 void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
 {
+//    qDebug() << "sortIntoBins:";
     HeapItem *base = realBase();
 #if QT_POINTER_SIZE == 8
     const int start = 0;
 #else
     const int start = 1;
+#endif
+#ifndef QT_NO_DEBUG
+    uint freeSlots = 0;
+    uint allocatedSlots = 0;
 #endif
     for (int i = start; i < EntriesInBitmap; ++i) {
         quintptr usedSlots = (objectBitmap[i]|extendsBitmap[i]);
@@ -340,28 +345,48 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
         if (!i)
             usedSlots |= (static_cast<quintptr>(1) << (HeaderSize/SlotSize)) - 1;
 #endif
-        uint index = qCountTrailingZeroBits(usedSlots + 1);
-        if (index == Bits)
-            continue;
-        uint freeStart = i*Bits + index;
-        usedSlots &= ~((static_cast<quintptr>(1) << index) - 1);
-        while (i < EntriesInBitmap && !usedSlots) {
-            ++i;
-            usedSlots = (objectBitmap[i]|extendsBitmap[i]);
-        }
-        if (i == EntriesInBitmap)
-            usedSlots = 1;
-        HeapItem *freeItem = base + freeStart;
+#ifndef QT_NO_DEBUG
+        allocatedSlots += qPopulationCount(usedSlots);
+//        qDebug() << hex << "   i=" << i << "used=" << usedSlots;
+#endif
+        while (1) {
+            uint index = qCountTrailingZeroBits(usedSlots + 1);
+            if (index == Bits)
+                break;
+            uint freeStart = i*Bits + index;
+            usedSlots &= ~((static_cast<quintptr>(1) << index) - 1);
+            while (!usedSlots) {
+                ++i;
+                if (i == EntriesInBitmap) {
+                    usedSlots = (quintptr)-1;
+                    break;
+                }
+                usedSlots = (objectBitmap[i]|extendsBitmap[i]);
+#ifndef QT_NO_DEBUG
+                allocatedSlots += qPopulationCount(usedSlots);
+//                qDebug() << hex << "   i=" << i << "used=" << usedSlots;
+#endif
+            }
+            HeapItem *freeItem = base + freeStart;
 
-        uint freeEnd = i*Bits + qCountTrailingZeroBits(usedSlots);
-        uint nSlots = freeEnd - freeStart;
-        Q_ASSERT(freeEnd > freeStart && freeEnd <= NumSlots);
-        freeItem->freeData.availableSlots = nSlots;
-        uint bin = qMin(nBins - 1, nSlots);
-        freeItem->freeData.next = bins[bin];
-        bins[bin] = freeItem;
-    //            DEBUG << "binnig item" << freeItem << nSlots << bin << freeItem->freeData.availableSlots;
+            index = qCountTrailingZeroBits(usedSlots);
+            usedSlots |= (quintptr(1) << index) - 1;
+            uint freeEnd = i*Bits + index;
+            uint nSlots = freeEnd - freeStart;
+#ifndef QT_NO_DEBUG
+//            qDebug() << hex << "   got free slots from" << freeStart << "to" << freeEnd << "n=" << nSlots << "usedSlots=" << usedSlots;
+            freeSlots += nSlots;
+#endif
+            Q_ASSERT(freeEnd > freeStart && freeEnd <= NumSlots);
+            freeItem->freeData.availableSlots = nSlots;
+            uint bin = qMin(nBins - 1, nSlots);
+            freeItem->freeData.next = bins[bin];
+            bins[bin] = freeItem;
+        }
     }
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(freeSlots + allocatedSlots == EntriesInBitmap*8*sizeof(quintptr));
+#endif
 }
 
 
@@ -427,28 +452,7 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
             goto done;
         }
     }
-#if 0
-    for (uint b = bin + 1; b < NumBins - 1; ++b) {
-        if ((m = freeBins[b])) {
-            Q_ASSERT(binForSlots(m->freeData.availableSlots) == b);
-            freeBins[b] = m->freeData.next;
-            //                DEBUG << "looking for empty bin" << bin << "size" << size << "found" << b;
-            uint remainingSlots = m->freeData.availableSlots - slotsRequired;
-            //                DEBUG << "found free slots of size" << m->freeData.availableSlots << m << "remaining" << remainingSlots;
-            if (remainingSlots < 2) {
-                // avoid too much fragmentation and rather mark the memory as used
-                size += remainingSlots*Chunk::SlotSize;
-                goto done;
-            }
-            HeapItem *remainder = m + slotsRequired;
-            remainder->freeData.availableSlots = remainingSlots;
-            uint binForRemainder = binForSlots(remainingSlots);
-            remainder->freeData.next = freeBins[binForRemainder];
-            freeBins[binForRemainder] = remainder;
-            goto done;
-        }
-    }
-#endif
+
     if (nFree >= slotsRequired) {
         // use bump allocation
         Q_ASSERT(nextFree);
@@ -467,13 +471,11 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
 
             size_t remainingSlots = m->freeData.availableSlots - slotsRequired;
             //                DEBUG << "found large free slots of size" << m->freeData.availableSlots << m << "remaining" << remainingSlots;
-            if (remainingSlots < 2) {
-                // avoid too much fragmentation and rather mark the memory as used
-                size += remainingSlots*Chunk::SlotSize;
+            if (remainingSlots == 0)
                 goto done;
-            }
+
             HeapItem *remainder = m + slotsRequired;
-            if (remainingSlots >= 2*NumBins) {
+            if (remainingSlots > nFree) {
                 if (nFree) {
                     size_t bin = binForSlots(nFree);
                     nextFree->freeData.next = freeBins[bin];
@@ -491,6 +493,24 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
             goto done;
         }
         last = &m->freeData.next;
+    }
+
+    if (slotsRequired < NumBins - 1) {
+        // check if we can split up another slot
+        for (size_t i = slotsRequired + 1; i < NumBins - 1; ++i) {
+            m = freeBins[i];
+            if (m) {
+                freeBins[i] = m->freeData.next; // take it out of the list
+//                qDebug() << "got item" << slotsRequired << "from slot" << i;
+                size_t remainingSlots = i - slotsRequired;
+                Q_ASSERT(remainingSlots < NumBins - 1);
+                HeapItem *remainder = m + slotsRequired;
+                remainder->freeData.availableSlots = remainingSlots;
+                remainder->freeData.next = freeBins[remainingSlots];
+                freeBins[remainingSlots] = remainder;
+                goto done;
+            }
+        }
     }
 
     if (!m) {
@@ -622,14 +642,24 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
 #endif
 }
 
+#ifndef QT_NO_DEBUG
+static int lastAllocRequestedSlots = 0;
+#endif
+
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 {
-    if (aggressiveGC)
-        runGC();
-
     const size_t stringSize = align(sizeof(Heap::String));
-    unmanagedHeapSize += unmanagedSize;
+#ifndef QT_NO_DEBUG
+    lastAllocRequestedSlots = stringSize >> Chunk::SlotSizeShift;
+#endif
+
     bool didGCRun = false;
+    if (aggressiveGC) {
+        runGC();
+        didGCRun = true;
+    }
+
+    unmanagedHeapSize += unmanagedSize;
     if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
         runGC();
 
@@ -655,8 +685,15 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 
 Heap::Base *MemoryManager::allocData(std::size_t size)
 {
-    if (aggressiveGC)
+#ifndef QT_NO_DEBUG
+    lastAllocRequestedSlots = size >> Chunk::SlotSizeShift;
+#endif
+
+    bool didRunGC = false;
+    if (aggressiveGC) {
         runGC();
+        didRunGC = true;
+    }
 #ifdef DETAILED_MM_STATS
     willAllocate(size);
 #endif // DETAILED_MM_STATS
@@ -671,7 +708,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
     HeapItem *m = blockAllocator.allocate(size);
     if (!m) {
-        if (shouldRunGC())
+        if (!didRunGC && shouldRunGC())
             runGC();
         m = blockAllocator.allocate(size, true);
     }
@@ -817,6 +854,26 @@ bool MemoryManager::shouldRunGC() const
     return false;
 }
 
+size_t dumpBins(BlockAllocator *b, bool printOutput = true)
+{
+    size_t totalFragmentedSlots = 0;
+    if (printOutput)
+        qDebug() << "Fragmentation map:";
+    for (uint i = 0; i < BlockAllocator::NumBins; ++i) {
+        uint nEntries = 0;
+        HeapItem *h = b->freeBins[i];
+        while (h) {
+            ++nEntries;
+            totalFragmentedSlots += h->freeData.availableSlots;
+            h = h->freeData.next;
+        }
+        if (printOutput)
+            qDebug() << "    number of entries in slot" << i << ":" << nEntries;
+    }
+    if (printOutput)
+        qDebug() << "  total mem in bins" << totalFragmentedSlots*Chunk::SlotSize;
+    return totalFragmentedSlots*Chunk::SlotSize;
+}
 
 void MemoryManager::runGC()
 {
@@ -833,30 +890,55 @@ void MemoryManager::runGC()
         sweep();
 //        DEBUG << "RUN GC: allocated:" << allocator.allocatedMem() << "used before" << oldUsed << "used now" << allocator.usedMem();
     } else {
+        bool triggeredByUnmanagedHeap = (unmanagedHeapSize > unmanagedHeapSizeGCLimit);
+        size_t oldUnmanagedSize = unmanagedHeapSize;
         const size_t totalMem = getAllocatedMem();
+        const size_t usedBefore = getUsedMem();
+        const size_t largeItemsBefore = getLargeItemsMem();
+
+        qDebug() << "========== GC ==========";
+#ifndef QT_NO_DEBUG
+        qDebug() << "    Triggered by alloc request of" << lastAllocRequestedSlots << "slots.";
+#endif
+        qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
+        qDebug() << "Fragmented memory before GC" << (totalMem - usedBefore);
+        dumpBins(&blockAllocator);
 
         QElapsedTimer t;
         t.start();
         mark();
         qint64 markTime = t.restart();
-        const size_t usedBefore = getUsedMem();
-        const size_t largeItemsBefore = getLargeItemsMem();
         sweep();
         const size_t usedAfter = getUsedMem();
         const size_t largeItemsAfter = getLargeItemsMem();
         qint64 sweepTime = t.elapsed();
 
-        qDebug() << "========== GC ==========";
+        if (triggeredByUnmanagedHeap) {
+            qDebug() << "triggered by unmanaged heap:";
+            qDebug() << "   old unmanaged heap size:" << oldUnmanagedSize;
+            qDebug() << "   new unmanaged heap:" << unmanagedHeapSize;
+            qDebug() << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
+        }
+        size_t memInBins = dumpBins(&blockAllocator);
         qDebug() << "Marked object in" << markTime << "ms.";
         qDebug() << "Sweeped object in" << sweepTime << "ms.";
-        qDebug() << "Allocated" << totalMem << "bytes";
         qDebug() << "Used memory before GC:" << usedBefore;
         qDebug() << "Used memory after GC:" << usedAfter;
         qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
-        qDebug() << "Large item memory before GC:" << largeItemsBefore;
-        qDebug() << "Large item memory after GC:" << largeItemsAfter;
-        qDebug() << "Large item memory freed up:" << (largeItemsBefore - largeItemsAfter);
+        size_t lost = blockAllocator.allocatedMem() - memInBins - usedAfter;
+        if (lost)
+            qDebug() << "!!!!!!!!!!!!!!!!!!!!! LOST MEM:" << lost << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+        if (largeItemsBefore || largeItemsAfter) {
+            qDebug() << "Large item memory before GC:" << largeItemsBefore;
+            qDebug() << "Large item memory after GC:" << largeItemsAfter;
+            qDebug() << "Large item memory freed up:" << (largeItemsBefore - largeItemsAfter);
+        }
         qDebug() << "======== End GC ========";
+    }
+
+    if (aggressiveGC) {
+        // ensure we don't 'loose' any memory
+        Q_ASSERT(blockAllocator.allocatedMem() == getUsedMem() + dumpBins(&blockAllocator, false));
     }
 }
 

@@ -127,7 +127,7 @@ QSGRendererInterface::~QSGRendererInterface()
  */
 
 /*!
-    Queries a graphics \a resource. Returns null when the resource in question is
+    Queries a graphics \a resource in \a window. Returns null when the resource in question is
     not supported or not available.
 
     When successful, the returned pointer is either a direct pointer to an

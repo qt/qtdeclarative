@@ -65,6 +65,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qthread.h>
@@ -564,7 +565,7 @@ The following functions are also on the Qt object.
     \l{Screen} attached object. In practice the array corresponds to the screen
     list returned by QGuiApplication::screens(). In addition to examining
     properties like name, width, height, etc., the array elements can also be
-    assigned to the targetScreen property of Window items, thus serving as an
+    assigned to the screen property of Window items, thus serving as an
     alternative to the C++ side's QWindow::setScreen(). This property has been
     added in Qt 5.9.
 
@@ -585,7 +586,7 @@ The following functions are also on the Qt object.
     \li application.font
     \endlist
 
-    \sa Screen, Window, Window.targetScreen
+    \sa Screen, Window, Window.screen
 */
 
 /*!
@@ -2176,6 +2177,27 @@ QString QQmlEngine::offlineStoragePath() const
     }
 
     return d->offlineStoragePath;
+}
+
+/*!
+  Returns the file path where a \l{QtQuick.LocalStorage}{Local Storage}
+  database with the identifier \a databaseName is (or would be) located.
+
+  \sa LocalStorage.openDatabaseSync()
+  \since 5.9
+*/
+QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) const
+{
+    Q_D(const QQmlEngine);
+    QCryptographicHash md5(QCryptographicHash::Md5);
+    md5.addData(databaseName.toUtf8());
+    return d->offlineStorageDatabaseDirectory() + QLatin1String(md5.result().toHex());
+}
+
+QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
+{
+    Q_Q(const QQmlEngine);
+    return q->offlineStoragePath() + QDir::separator() + QLatin1String("Databases") + QDir::separator();
 }
 
 QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersion)

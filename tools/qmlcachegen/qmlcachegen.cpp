@@ -141,7 +141,8 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
 
         // ### translation binding simplification
 
-        QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, /*executable allocator*/nullptr, &irDocument.jsModule, &irDocument.jsGenerator));
+        QV4::ExecutableAllocator allocator;
+        QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, &allocator, &irDocument.jsModule, &irDocument.jsGenerator));
         // Disable lookups in non-standalone (aka QML) mode
         isel->setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = isel->compile(/*generate unit*/false);

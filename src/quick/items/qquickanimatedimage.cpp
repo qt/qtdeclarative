@@ -67,7 +67,7 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
                                 .arg(current));
         }
         if (!requestedUrl.isEmpty()) {
-            if (QQuickPixmap::isCached(requestedUrl, QSize()))
+            if (QQuickPixmap::isCached(requestedUrl, QSize(), QQuickImageProviderOptions()))
                 pixmap = new QQuickPixmap(engine, requestedUrl);
             else
                 pixmap = new QQuickPixmap(requestedUrl, _movie->currentImage());

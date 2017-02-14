@@ -26,7 +26,7 @@
 #ifndef MacroAssemblerARM64_h
 #define MacroAssemblerARM64_h
 
-#if ENABLE(ASSEMBLER)
+#if ENABLE(ASSEMBLER) && (CPU(ARM64) || defined(V4_BOOTSTRAP))
 
 #include "ARM64Assembler.h"
 #include "AbstractMacroAssembler.h"
@@ -42,7 +42,7 @@ class MacroAssemblerARM64 : public AbstractMacroAssembler<ARM64Assembler> {
         friend class DataLabelPtr;
         friend class DataLabel32;
         friend class DataLabelCompact;
-        friend class Jump;
+//        template <typename> friend class Jump;
         friend class Label;
 
     public:
@@ -119,9 +119,9 @@ public:
 private:
     static const ARM64Registers::FPRegisterID fpTempRegister = ARM64Registers::q31;
     static const ARM64Assembler::SetFlags S = ARM64Assembler::S;
-    static const intptr_t maskHalfWord0 = 0xffffl;
-    static const intptr_t maskHalfWord1 = 0xffff0000l;
-    static const intptr_t maskUpperWord = 0xffffffff00000000l;
+    static const int64_t maskHalfWord0 = 0xffffl;
+    static const int64_t maskHalfWord1 = 0xffff0000l;
+    static const int64_t maskUpperWord = 0xffffffff00000000l;
 
     // 4 instructions - 3 to load the function pointer, + blr.
     static const ptrdiff_t REPATCH_OFFSET_CALL_TO_POINTER = -16;
@@ -208,6 +208,33 @@ public:
     // FIXME: Get reasonable implementations for these
     static bool shouldBlindForSpecificArch(uint32_t value) { return value >= 0x00ffffff; }
     static bool shouldBlindForSpecificArch(uint64_t value) { return value >= 0x00ffffff; }
+
+#if defined(V4_BOOTSTRAP)
+    void loadPtr(ImplicitAddress address, RegisterID dest)
+    {
+        load32(address, dest);
+    }
+
+    void subPtr(TrustedImm32 imm, RegisterID dest)
+    {
+        sub32(imm, dest);
+    }
+
+    void addPtr(TrustedImm32 imm, RegisterID dest)
+    {
+        add32(imm, dest);
+    }
+
+    void addPtr(TrustedImm32 imm, RegisterID src, RegisterID dest)
+    {
+        add32(imm, src, dest);
+    }
+
+    void storePtr(RegisterID src, ImplicitAddress address)
+    {
+        store32(src, address);
+    }
+#endif
 
     // Integer operations:
 
@@ -2757,6 +2784,7 @@ public:
         return branch32(cond, left, dataTempRegister);
     }
 
+#if !defined(V4_BOOTSTRAP)
     PatchableJump patchableBranchPtr(RelationalCondition cond, Address left, TrustedImmPtr right)
     {
         m_makeJumpPatchable = true;
@@ -2764,6 +2792,7 @@ public:
         m_makeJumpPatchable = false;
         return PatchableJump(result);
     }
+#endif
 
     PatchableJump patchableBranchTest32(ResultCondition cond, RegisterID reg, TrustedImm32 mask = TrustedImm32(-1))
     {
@@ -3000,7 +3029,7 @@ private:
         return m_cachedMemoryTempRegister.registerIDInvalidate();
     }
 
-    ALWAYS_INLINE bool isInIntRange(intptr_t value)
+    ALWAYS_INLINE bool isInIntRange(int64_t value)
     {
         return value == ((value << 32) >> 32);
     }
@@ -3354,6 +3383,8 @@ private:
     }
 
     template <typename, template <typename> class> friend class LinkBufferBase;
+    template <typename> friend class BranchCompactingLinkBuffer;
+    template <typename> friend struct BranchCompactingExecutableOffsetCalculator;
     void recordLinkOffsets(int32_t regionStart, int32_t regionEnd, int32_t offset) {return m_assembler.recordLinkOffsets(regionStart, regionEnd, offset); }
     int executableOffsetFor(int location) { return m_assembler.executableOffsetFor(location); }
 

@@ -1264,12 +1264,16 @@ ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
  */
 void Runtime::method_pushWithScope(const Value &o, NoThrowEngine *engine)
 {
-    engine->pushContext(engine->currentContext->newWithContext(o.toObject(engine)));
+    QV4::Value *v = engine->jsAlloca(1);
+    Heap::Object *withObject = o.toObject(engine);
+    *v = withObject;
+    engine->pushContext(engine->currentContext->newWithContext(withObject));
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
 }
 
 void Runtime::method_pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
+    engine->jsAlloca(1); // keep this symmetric with pushWithScope
     ExecutionContext *c = engine->currentContext;
     engine->pushContext(c->newCatchContext(c->d()->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
@@ -1279,7 +1283,7 @@ void Runtime::method_popScope(NoThrowEngine *engine)
 {
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
     engine->popContext();
-    engine->jsStackTop -= 2;
+    engine->jsStackTop -= 3;
 }
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)

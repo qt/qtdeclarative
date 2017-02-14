@@ -107,7 +107,7 @@ struct ExecutableAllocator {
         size = size + (iaddr - roundAddr);
         addr = reinterpret_cast<void*>(roundAddr);
 
-#if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+#if ENABLE(ASSEMBLER_WX_EXCLUSIVE) && !defined(V4_BOOTSTRAP)
 #  if OS(WINDOWS)
         DWORD oldProtect;
 #    if !OS(WINRT)
@@ -140,6 +140,7 @@ struct ExecutableAllocator {
         size = size + (iaddr - roundAddr);
         addr = reinterpret_cast<void*>(roundAddr);
 
+#if !defined(V4_BOOTSTRAP)
 #if ENABLE(ASSEMBLER_WX_EXCLUSIVE)
 #  if OS(WINDOWS)
         DWORD oldProtect;
@@ -160,6 +161,10 @@ struct ExecutableAllocator {
 #  endif
 #else
 #  error "Only W^X is supported"
+#endif
+#else
+        (void)addr; // suppress unused parameter warning
+        (void)size; // suppress unused parameter warning
 #endif
     }
 
