@@ -132,9 +132,9 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
         }
         break;
     }
-    // If this is the grabber, returning false from this function will
-    // cancel the grab, so handleGrabCancel() and setPressed(false) will be called.
-    // But when m_gesturePolicy is DragThreshold, we don't grab, but
+    // If this is the grabber, returning false from this function will cancel the grab,
+    // so onGrabChanged(this, CancelGrabExclusive, point) and setPressed(false) will be called.
+    // But when m_gesturePolicy is DragThreshold, we don't get an exclusive grab, but
     // we still don't want to be pressed anymore.
     if (!ret)
         setPressed(false, true, point);
@@ -254,7 +254,10 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             m_longPressTimer.stop();
             m_holdTimer.invalidate();
         }
-        setPassiveGrab(point, press);
+        if (m_gesturePolicy == DragThreshold)
+            setPassiveGrab(point, press);
+        else
+            setExclusiveGrab(point, press);
         if (!cancel && !press && point->timeHeld() < longPressThreshold()) {
             // Assuming here that pointerEvent()->timestamp() is in ms.
             qreal ts = point->pointerEvent()->timestamp() / 1000.0;
@@ -274,10 +277,11 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
     }
 }
 
-void QQuickTapHandler::handleGrabCancel(QQuickEventPoint *point)
+void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    QQuickPointerSingleHandler::handleGrabCancel(point);
-    setPressed(false, true, point);
+    QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
+    if (grabber == this && stateChange == QQuickEventPoint::CancelGrabExclusive)
+        setPressed(false, true, point);
 }
 
 void QQuickTapHandler::connectPreRenderSignal(bool conn)

@@ -102,7 +102,7 @@ Q_SIGNALS:
     void longPressed();
 
 protected:
-    void handleGrabCancel(QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
     void timerEvent(QTimerEvent *event) override;
 
 private:

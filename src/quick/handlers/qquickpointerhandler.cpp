@@ -76,48 +76,75 @@ QQuickPointerHandler::~QQuickPointerHandler()
     }
 }
 
+/*!
+    Notification that the grab has changed in some way which is relevant to this handler.
+    The \a grabber (subject) will be the PointerHandler whose state is changing,
+    or null if the state change regards an Item. (TODO do we have any such cases?)
+    The \a stateChange (verb) tells what happened.
+    The \a point (object) is the point that was grabbed or ungrabbed.
+    EventPoint has the sole responsibility to call this function.
+    The PointerHandler must react in whatever way is appropriate, and must
+    emit the relevant signals (for the benefit of QML code).
+    A subclass is allowed to override this virtual function, but must always
+    call its parent class's implementation in addition to (usually after)
+    whatever custom behavior it implements.
+*/
+void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
+{
+    qCDebug(lcPointerHandlerDispatch) << point << stateChange << grabber;
+    Q_ASSERT(point);
+    if (grabber == this) {
+        bool wasCanceled = false;
+        emit grabChanged(point);
+        switch (stateChange) {
+        case QQuickEventPoint::GrabPassive:
+        case QQuickEventPoint::GrabExclusive:
+            break;
+        case QQuickEventPoint::CancelGrabPassive:
+        case QQuickEventPoint::CancelGrabExclusive:
+            wasCanceled = true; // the grab was stolen by something else
+            Q_FALLTHROUGH();
+        case QQuickEventPoint::UngrabPassive:
+        case QQuickEventPoint::UngrabExclusive:
+            setActive(false);
+            point->setAccepted(false);
+            if (auto par = parentItem()) {
+                par->setKeepMouseGrab(m_hadKeepMouseGrab);
+                par->setKeepTouchGrab(m_hadKeepTouchGrab);
+            }
+        case QQuickEventPoint::OverrideGrabPassive:
+            // Passive grab is still there, but we won't receive point updates right now.
+            // No need to notify about this.
+            return;
+        }
+        if (wasCanceled)
+            emit canceled(point);
+        else
+            emit grabChanged(point);
+    }
+}
+
 void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
 {
+    qCDebug(lcPointerHandlerDispatch) << point << grab;
     if (grab) {
         point->setGrabberPointerHandler(this, false);
-        emit grabChanged(point);
-    } else if (point->grabberPointerHandler() == this) {
-        // TODO should giving up passive grab imply giving up exclusive grab too?
-        // we're being inconsistent here: check whether the exclusive grabber is this,
-        // then say that the passive grab was canceled.
-        point->cancelPassiveGrab(this);
-        emit grabChanged(point);
+    } else {
+        point->removePassiveGrabber(this);
     }
 }
 
 void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
 {
-    QQuickPointerHandler *oldGrabber = point->grabberPointerHandler();
-    if (grab && oldGrabber != this) {
-        if (target()) {
-            m_hadKeepMouseGrab = target()->keepMouseGrab();
-            m_hadKeepTouchGrab = target()->keepTouchGrab();
-        }
-        if (oldGrabber)
-            oldGrabber->handleGrabCancel(point);
-        point->setGrabberPointerHandler(this, true);
-        onGrabChanged(point);
-//        emit grabChanged(point); // TODO maybe
-    } else if (!grab && oldGrabber == this) {
-        if (auto tgt = target()) {
-            tgt->setKeepMouseGrab(m_hadKeepMouseGrab);
-            tgt->setKeepTouchGrab(m_hadKeepTouchGrab);
-        }
-        point->setGrabberPointerHandler(nullptr, true);
-        onGrabChanged(point);
-//        emit grabChanged(point); // TODO maybe
-    }
+    // TODO m_hadKeepMouseGrab m_hadKeepTouchGrab
+    qCDebug(lcPointerHandlerDispatch) << point << grab;
+    point->setGrabberPointerHandler(grab ? this : nullptr, true);
 }
 
 void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
 {
+    qCDebug(lcPointerHandlerDispatch) << point;
     point->cancelAllGrabs(this);
-    emit grabChanged(point);
 }
 
 QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
@@ -175,22 +202,6 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
         handlePointerEventImpl(event);
     else
         setActive(false);
-}
-
-void QQuickPointerHandler::handleGrabCancel(QQuickEventPoint *point)
-{
-    qCDebug(lcPointerHandlerDispatch) << point;
-    Q_ASSERT(point);
-    setActive(false);
-    point->setAccepted(false);
-    emit canceled(point);
-}
-
-void QQuickPointerHandler::handleGrab(QQuickEventPoint *point, QQuickPointerHandler *grabber, bool grab)
-{
-    Q_UNUSED(point);
-    Q_UNUSED(grabber);
-    Q_UNUSED(grab);
 }
 
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)

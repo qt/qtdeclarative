@@ -141,18 +141,28 @@ bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
     return parentContains(point);
 }
 
-void QQuickPointerSingleHandler::handleGrabCancel(QQuickEventPoint *point)
+void QQuickPointerSingleHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    QQuickPointerHandler::handleGrabCancel(point);
-    reset();
-}
-
-void QQuickPointerSingleHandler::onGrabChanged(QQuickEventPoint *point)
-{
-    bool grabbing = (point->exclusiveGrabber() == this);
-    setActive(grabbing);
-    if (grabbing)
+    QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
+    if (grabber != this)
+        return;
+    switch (stateChange) {
+    case QQuickEventPoint::GrabExclusive:
+        setActive(true);
+        Q_FALLTHROUGH();
+    case QQuickEventPoint::GrabPassive:
         m_sceneGrabPos = point->sceneGrabPos();
+        break;
+    case QQuickEventPoint::OverrideGrabPassive:
+        return; // don't emit
+    case QQuickEventPoint::UngrabPassive:
+    case QQuickEventPoint::UngrabExclusive:
+    case QQuickEventPoint::CancelGrabPassive:
+    case QQuickEventPoint::CancelGrabExclusive:
+        // the grab is lost or relinquished, so the point is no longer relevant
+        reset();
+        break;
+    }
     emit singlePointGrabChanged();
 }
 

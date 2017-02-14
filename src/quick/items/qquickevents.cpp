@@ -651,11 +651,18 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
     }
     if (exclusive) {
         if (grabber != m_exclusiveGrabber.data()) {
+            if (grabber) {
+                grabber->onGrabChanged(grabber, GrabExclusive, this);
+                for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers) {
+                    if (passiveGrabber != grabber)
+                        passiveGrabber->onGrabChanged(grabber, OverrideGrabPassive, this);
+                }
+            } else if (QQuickPointerHandler *oldGrabberPointerHandler = qmlobject_cast<QQuickPointerHandler *>(m_exclusiveGrabber.data())) {
+                oldGrabberPointerHandler->onGrabChanged(oldGrabberPointerHandler, UngrabExclusive, this);
+            }
             m_exclusiveGrabber = QPointer<QObject>(grabber);
             m_grabberIsHandler = true;
             m_sceneGrabPos = m_scenePos;
-            for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
-                passiveGrabber->handleGrab(this, grabber, true);
         }
     } else {
         if (!grabber) {
@@ -663,8 +670,10 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
             return;
         }
         auto ptr = QPointer<QQuickPointerHandler>(grabber);
-        if (!m_passiveGrabbers.contains(ptr))
+        if (!m_passiveGrabbers.contains(ptr)) {
             m_passiveGrabbers.append(ptr);
+            grabber->onGrabChanged(grabber, GrabPassive, this);
+        }
     }
 }
 
@@ -684,7 +693,7 @@ void QQuickEventPoint::cancelExclusiveGrab()
                                << ": grab (exclusive)" << m_exclusiveGrabber << "-> nullptr";
     }
     if (auto handler = grabberPointerHandler())
-        handler->handleGrabCancel(this);
+        handler->onGrabChanged(handler, CancelGrabExclusive, this);
     m_exclusiveGrabber.clear();
 }
 
@@ -695,13 +704,22 @@ void QQuickEventPoint::cancelExclusiveGrab()
 */
 void QQuickEventPoint::cancelPassiveGrab(QQuickPointerHandler *handler)
 {
-    if (m_passiveGrabbers.removeOne(QPointer<QQuickPointerHandler>(handler))) {
+    if (removePassiveGrabber(handler)) {
         if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
             qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
                                    << ": grab (passive)" << handler << "removed";
         }
-        handler->handleGrabCancel(this);
+        handler->onGrabChanged(handler, CancelGrabPassive, this);
     }
+}
+
+/*!
+    If this point has the given \a handler as a passive grabber, remove it as grabber.
+    Returns true if it was removed, false if it wasn't a grabber.
+*/
+bool QQuickEventPoint::removePassiveGrabber(QQuickPointerHandler *handler)
+{
+    return m_passiveGrabbers.removeOne(handler);
 }
 
 /*!
@@ -718,7 +736,7 @@ void QQuickEventPoint::cancelPassiveGrab(QQuickPointerHandler *handler)
 void QQuickEventPoint::cancelAllGrabs(QQuickPointerHandler *handler)
 {
     if (m_exclusiveGrabber == handler) {
-        handler->handleGrabCancel(this);
+        handler->onGrabChanged(handler, CancelGrabExclusive, this);
         m_exclusiveGrabber.clear();
     }
     cancelPassiveGrab(handler);

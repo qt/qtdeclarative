@@ -98,12 +98,10 @@ protected:
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setActive(bool active);
     virtual void onActiveChanged() { }
-    virtual void onGrabChanged(QQuickEventPoint *) { }
+    virtual void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point);
     void setPassiveGrab(QQuickEventPoint *point, bool grab = true);
     void setExclusiveGrab(QQuickEventPoint *point, bool grab = true);
     void cancelAllGrabs(QQuickEventPoint *point);
-    virtual void handleGrabCancel(QQuickEventPoint *point);
-    virtual void handleGrab(QQuickEventPoint *point, QQuickPointerHandler *grabber, bool grab);
     QPointF eventPos(const QQuickEventPoint *point) const;
     bool parentContains(const QQuickEventPoint *point) const;
 

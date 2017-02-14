@@ -275,6 +275,17 @@ public:
     };
     Q_ENUM(State)
 
+    enum GrabState {
+        GrabPassive = 0,
+        GrabExclusive,
+        UngrabPassive,
+        UngrabExclusive,
+        CancelGrabPassive,
+        CancelGrabExclusive,
+        OverrideGrabPassive
+    };
+    Q_ENUM(GrabState)
+
     QQuickEventPoint(QQuickPointerEvent *parent);
 
     void reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
@@ -306,6 +317,7 @@ public:
 
     Q_INVOKABLE void cancelExclusiveGrab();
     Q_INVOKABLE void cancelPassiveGrab(QQuickPointerHandler *handler);
+    bool removePassiveGrabber(QQuickPointerHandler *handler);
     void cancelAllGrabs(QQuickPointerHandler *handler);
 
     QVector<QPointer <QQuickPointerHandler> > passiveGrabbers() const { return m_passiveGrabbers; }
