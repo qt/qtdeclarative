@@ -153,7 +153,7 @@ struct BlockAllocator {
         return used;
     }
 
-    void sweep();
+    void sweep(ClassDestroyStatsCallback classCountPtr);
     void freeAll();
     void resetBlackBits();
     void collectGrayItems(MarkStack *markStack);
@@ -176,7 +176,7 @@ struct HugeItemAllocator {
     {}
 
     HeapItem *allocate(size_t size);
-    void sweep();
+    void sweep(ClassDestroyStatsCallback classCountPtr);
     void freeAll();
     void resetBlackBits();
     void collectGrayItems(MarkStack *markStack);
@@ -446,7 +446,7 @@ protected:
 private:
     void collectFromJSStack(MarkStack *markStack) const;
     void mark();
-    void sweep(bool lastSweep = false);
+    void sweep(bool lastSweep = false, ClassDestroyStatsCallback classCountPtr = nullptr);
     bool shouldRunGC() const;
     void collectRoots(MarkStack *markStack);
 

@@ -318,8 +318,18 @@ void Heap::Base::markChildren(MarkStack *markStack)
     }
 }
 
+// Stores a classname -> freed count mapping.
+typedef QHash<const char*, int> MMStatsHash;
+Q_GLOBAL_STATIC(MMStatsHash, freedObjectStatsGlobal)
 
-void Chunk::sweep()
+// This indirection avoids sticking QHash code in each of the call sites, which
+// shaves off some instructions in the case that it's unused.
+static void increaseFreedCountForClass(const char *className)
+{
+    (*freedObjectStatsGlobal())[className]++;
+}
+
+void Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
 {
     //    DEBUG << "sweeping chunk" << this << (*freeList);
     HeapItem *o = realBase();
@@ -349,8 +359,11 @@ void Chunk::sweep()
 
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
-            if (b->vtable()->destroy) {
-                b->vtable()->destroy(b);
+            const VTable *v = b->vtable();
+            if (Q_UNLIKELY(classCountPtr))
+                classCountPtr(v->className);
+            if (v->destroy) {
+                v->destroy(b);
                 b->_checkIsDestroyed();
             }
         }
@@ -649,7 +662,7 @@ done:
     return m;
 }
 
-void BlockAllocator::sweep()
+void BlockAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
 {
     nextFree = 0;
     nFree = 0;
@@ -658,7 +671,7 @@ void BlockAllocator::sweep()
 //    qDebug() << "BlockAlloc: sweep";
     usedSlotsAfterLastSweep = 0;
     for (auto c : chunks) {
-        c->sweep();
+        c->sweep(classCountPtr);
         c->sortIntoBins(freeBins, NumBins);
 //        qDebug() << "used slots in chunk" << c << ":" << c->nUsedSlots();
         usedSlotsAfterLastSweep += c->nUsedSlots();
@@ -724,22 +737,27 @@ HeapItem *HugeItemAllocator::allocate(size_t size) {
     return c->first();
 }
 
-static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocator::HugeChunk &c)
+static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocator::HugeChunk &c, ClassDestroyStatsCallback classCountPtr)
 {
     HeapItem *itemToFree = c.chunk->first();
     Heap::Base *b = *itemToFree;
-    if (b->vtable()->destroy) {
-        b->vtable()->destroy(b);
+    const VTable *v = b->vtable();
+    if (Q_UNLIKELY(classCountPtr))
+        classCountPtr(v->className);
+
+    if (v->destroy) {
+        v->destroy(b);
         b->_checkIsDestroyed();
     }
     chunkAllocator->free(c.chunk, c.size);
 }
 
-void HugeItemAllocator::sweep() {
-    auto isBlack = [this] (const HugeChunk &c) {
+void HugeItemAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
+{
+    auto isBlack = [this, classCountPtr] (const HugeChunk &c) {
         bool b = c.chunk->first()->isBlack();
         if (!b)
-            freeHugeChunk(chunkAllocator, c);
+            freeHugeChunk(chunkAllocator, c, classCountPtr);
         return !b;
     };
 
@@ -768,7 +786,7 @@ void HugeItemAllocator::collectGrayItems(MarkStack *markStack)
 void HugeItemAllocator::freeAll()
 {
     for (auto &c : chunks) {
-        freeHugeChunk(chunkAllocator, c);
+        freeHugeChunk(chunkAllocator, c, nullptr);
     }
 }
 
@@ -984,7 +1002,7 @@ void MemoryManager::mark()
     markStack.drain();
 }
 
-void MemoryManager::sweep(bool lastSweep)
+void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPtr)
 {
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         Managed *m = (*it).managed();
@@ -1031,8 +1049,8 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    blockAllocator.sweep();
-    hugeItemAllocator.sweep();
+    blockAllocator.sweep(classCountPtr);
+    hugeItemAllocator.sweep(classCountPtr);
 }
 
 bool MemoryManager::shouldRunGC() const
@@ -1105,7 +1123,7 @@ void MemoryManager::runGC()
         mark();
         qint64 markTime = t.nsecsElapsed()/1000;
         t.restart();
-        sweep();
+        sweep(false, increaseFreedCountForClass);
         const size_t usedAfter = getUsedMem();
         const size_t largeItemsAfter = getLargeItemsMem();
         qint64 sweepTime = t.nsecsElapsed()/1000;
@@ -1120,6 +1138,20 @@ void MemoryManager::runGC()
         qDebug() << "Marked object in" << markTime << "us.";
         qDebug() << "   " << markStackSize << "objects marked";
         qDebug() << "Sweeped object in" << sweepTime << "us.";
+
+        // sort our object types by number of freed instances
+        MMStatsHash freedObjectStats;
+        std::swap(freedObjectStats, *freedObjectStatsGlobal());
+        typedef std::pair<const char*, int> ObjectStatInfo;
+        std::vector<ObjectStatInfo> freedObjectsSorted;
+        freedObjectsSorted.reserve(freedObjectStats.count());
+        for (auto it = freedObjectStats.constBegin(); it != freedObjectStats.constEnd(); ++it) {
+            freedObjectsSorted.push_back(std::make_pair(it.key(), it.value()));
+        }
+        std::sort(freedObjectsSorted.begin(), freedObjectsSorted.end(), [](const ObjectStatInfo &a, const ObjectStatInfo &b) {
+            return a.second > b.second && strcmp(a.first, b.first) < 0;
+        });
+
         qDebug() << "Used memory before GC:" << usedBefore;
         qDebug() << "Used memory after GC :" << usedAfter;
         qDebug() << "Freed up bytes       :" << (usedBefore - usedAfter);
@@ -1131,6 +1163,11 @@ void MemoryManager::runGC()
             qDebug() << "Large item memory after GC:" << largeItemsAfter;
             qDebug() << "Large item memory freed up:" << (largeItemsBefore - largeItemsAfter);
         }
+
+        for (auto it = freedObjectsSorted.cbegin(); it != freedObjectsSorted.cend(); ++it) {
+            qDebug().noquote() << QString::fromLatin1("Freed JS type: %1 (%2 instances)").arg(QString::fromLatin1(it->first), QString::number(it->second));
+        }
+
         qDebug() << "======== End GC ========";
     }
 
