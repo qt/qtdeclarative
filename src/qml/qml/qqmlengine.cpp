@@ -774,7 +774,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
     // by the qqmlecmascript::threadSignal() autotest.
     if (ddata->notifyList &&
-        QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId) {
+        QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId.load()) {
 
         if (!QObjectPrivate::get(object)->threadData->thread)
             return;
