@@ -515,6 +515,8 @@ void registerTypes()
     qmlRegisterType<QObjectContainer>("Qt.test", 1, 0, "QObjectContainer");
     qmlRegisterType<QObjectContainerWithGCOnAppend>("Qt.test", 1, 0, "QObjectContainerWithGCOnAppend");
     qmlRegisterType<FloatingQObject>("Qt.test", 1, 0, "FloatingQObject");
+
+    qmlRegisterType<ClashingNames>("Qt.test", 1, 0, "ClashingNames");
 }
 
 #include "testtypes.moc"
