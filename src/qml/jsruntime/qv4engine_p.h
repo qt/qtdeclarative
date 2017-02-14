@@ -550,13 +550,19 @@ inline
 void Heap::Base::mark(QV4::ExecutionEngine *engine)
 {
     Q_ASSERT(inUse());
-    if (isMarked())
-        return;
+    const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+    Chunk *c = h->chunk();
+    size_t index = h - c->realBase();
+    Q_ASSERT(!Chunk::testBit(c->extendsBitmap, index));
+    quintptr *bitmap = c->blackBitmap + Chunk::bitmapIndex(index);
+    quintptr bit = Chunk::bitForIndex(index);
+    if (!(*bitmap & bit)) {
 #ifndef QT_NO_DEBUG
-    engine->assertObjectBelongsToEngine(*this);
+        engine->assertObjectBelongsToEngine(*this);
 #endif
-    setMarkBit();
-    engine->pushForGC(this);
+        *bitmap |= bit;
+        engine->pushForGC(this);
+    }
 }
 
 inline void Value::mark(ExecutionEngine *e)

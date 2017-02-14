@@ -111,22 +111,29 @@ struct Chunk {
     HeapItem *realBase();
     HeapItem *first();
 
+    static Q_ALWAYS_INLINE size_t bitmapIndex(size_t index) {
+        return index >> BitShift;
+    }
+    static Q_ALWAYS_INLINE quintptr bitForIndex(size_t index) {
+        return static_cast<quintptr>(1) << (index & (Bits - 1));
+    }
+
     static void setBit(quintptr *bitmap, size_t index) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index < ChunkSize/SlotSize);
-        bitmap += index >> BitShift;
-        quintptr bit = static_cast<quintptr>(1) << (index & (Bits - 1));
+        bitmap += bitmapIndex(index);
+        quintptr bit = bitForIndex(index);
         *bitmap |= bit;
     }
     static void clearBit(quintptr *bitmap, size_t index) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index < ChunkSize/SlotSize);
-        bitmap += index >> BitShift;
-        quintptr bit = static_cast<quintptr>(1) << (index & (Bits - 1));
+        bitmap += bitmapIndex(index);
+        quintptr bit = bitForIndex(index);
         *bitmap &= ~bit;
     }
     static bool testBit(quintptr *bitmap, size_t index) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index < ChunkSize/SlotSize);
-        bitmap += index >> BitShift;
-        quintptr bit = static_cast<quintptr>(1) << (index & (Bits - 1));
+        bitmap += bitmapIndex(index);
+        quintptr bit = bitForIndex(index);
         return (*bitmap & bit);
     }
     static void setBits(quintptr *bitmap, size_t index, size_t nBits) {
