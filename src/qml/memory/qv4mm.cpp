@@ -807,26 +807,33 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
 Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nMembers)
 {
-    Heap::Object *o = static_cast<Heap::Object *>(allocData(size));
-
-    // ### Could optimize this and allocate both in one go through the block allocator
-    if (nMembers) {
-#ifdef MM_STATS
-        ++allocationCount;
-#endif
+    Heap::Object *o;
+    if (!nMembers) {
+        o = static_cast<Heap::Object *>(allocData(size));
+    } else {
+        // Allocate both in one go through the block allocator
         std::size_t memberSize = align(sizeof(Heap::MemberData) + (nMembers - 1)*sizeof(Value));
-//        qDebug() << "allocating member data for" << o << nMembers << memberSize;
-        Heap::Base *m;
-        if (memberSize > Chunk::DataSize)
-            m = *hugeItemAllocator.allocate(memberSize);
-        else
-            m = *blockAllocator.allocate(memberSize, true);
-        memset(m, 0, memberSize);
-        o->memberData.set(engine, static_cast<Heap::MemberData *>(m));
-        o->memberData->setVtable(MemberData::staticVTable());
-        o->memberData->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
-        o->memberData->values.size = o->memberData->values.alloc;
-        o->memberData->init();
+        size_t totalSize = size + memberSize;
+        Heap::MemberData *m;
+        if (totalSize > Chunk::DataSize) {
+            o = static_cast<Heap::Object *>(allocData(size));
+            m = hugeItemAllocator.allocate(memberSize)->as<Heap::MemberData>();
+        } else {
+            HeapItem *mh = reinterpret_cast<HeapItem *>(allocData(totalSize));
+            Heap::Base *b = *mh;
+            o = static_cast<Heap::Object *>(b);
+            mh += (size >> Chunk::SlotSizeShift);
+            m = mh->as<Heap::MemberData>();
+            Chunk *c = mh->chunk();
+            size_t index = mh - c->realBase();
+            Chunk::setBit(c->objectBitmap, index);
+            Chunk::clearBit(c->extendsBitmap, index);
+        }
+        o->memberData.set(engine, m);
+        m->setVtable(MemberData::staticVTable());
+        m->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
+        m->values.size = o->memberData->values.alloc;
+        m->init();
 //        qDebug() << "    got" << o->memberData << o->memberData->size;
     }
 //    qDebug() << "allocating object with memberData" << o << o->memberData.operator->();
@@ -1063,6 +1070,7 @@ void MemoryManager::runGC(bool forceFullCollection)
 #ifdef MM_STATS
         qDebug() << "    Triggered by alloc request of" << lastAllocRequestedSlots << "slots.";
         qDebug() << "    Allocations since last GC" << allocationCount;
+        allocationCount = 0;
 #endif
         qDebug() << "Incremental:" << nextGCIsIncremental;
         qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
