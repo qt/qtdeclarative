@@ -337,6 +337,7 @@ private slots:
     void constkw_data();
     void constkw();
     void redefineGlobalProp();
+    void freeze_empty_object();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8287,6 +8288,18 @@ void tst_qqmlecmascript::redefineGlobalProp()
         QJSValue ret = engine.evaluate("var toString = 1;");
         QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
     }
+}
+
+void tst_qqmlecmascript::freeze_empty_object()
+{
+    // this shouldn't crash
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "var obj = {};\n"
+            "Object.freeze(obj);\n"
+    ));
+    QVERIFY(!v.isError());
+    QCOMPARE(v.toBool(), true);
 }
 
 

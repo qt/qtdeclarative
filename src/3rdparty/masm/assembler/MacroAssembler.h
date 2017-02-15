@@ -31,12 +31,12 @@
 #if ENABLE(ASSEMBLER)
 
 #include "MacroAssemblerARMv7.h"
+#include "MacroAssemblerARM64.h"
 
 #if CPU(ARM_THUMB2)
 namespace JSC { typedef MacroAssemblerARMv7 MacroAssemblerBase; };
 
 #elif CPU(ARM64)
-#include "MacroAssemblerARM64.h"
 namespace JSC { typedef MacroAssemblerARM64 MacroAssemblerBase; };
 
 #elif CPU(ARM_TRADITIONAL)

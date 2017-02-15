@@ -136,6 +136,7 @@ public:
 
     void setOfflineStoragePath(const QString& dir);
     QString offlineStoragePath() const;
+    QString offlineStorageDatabaseFilePath(const QString &databaseName) const;
 
     QUrl baseUrl() const;
     void setBaseUrl(const QUrl &);

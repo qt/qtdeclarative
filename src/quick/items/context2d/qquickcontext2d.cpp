@@ -1879,7 +1879,7 @@ void QQuickJSContext2D::method_get_lineWidth(const QV4::BuiltinFunction *, QV4::
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    RETURN_RESULT(r->d()->context->state.lineWidth);
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.lineWidth));
 }
 
 void QQuickJSContext2D::method_set_lineWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
@@ -1906,7 +1906,7 @@ void QQuickJSContext2D::method_get_miterLimit(const QV4::BuiltinFunction *, QV4:
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    RETURN_RESULT(r->d()->context->state.miterLimit);
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.miterLimit));
 }
 
 void QQuickJSContext2D::method_set_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
@@ -1933,7 +1933,7 @@ void QQuickJSContext2D::method_get_shadowBlur(const QV4::BuiltinFunction *, QV4:
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    RETURN_RESULT(r->d()->context->state.shadowBlur);
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.shadowBlur));
 }
 
 void QQuickJSContext2D::method_set_shadowBlur(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
@@ -1990,7 +1990,7 @@ void QQuickJSContext2D::method_get_shadowOffsetX(const QV4::BuiltinFunction *, Q
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    RETURN_RESULT(r->d()->context->state.shadowOffsetX);
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.shadowOffsetX));
 }
 
 void QQuickJSContext2D::method_set_shadowOffsetX(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
@@ -2016,7 +2016,7 @@ void QQuickJSContext2D::method_get_shadowOffsetY(const QV4::BuiltinFunction *, Q
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    RETURN_RESULT(r->d()->context->state.shadowOffsetY);
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.shadowOffsetY));
 }
 
 void QQuickJSContext2D::method_set_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
@@ -3043,7 +3043,7 @@ void QQuickJSContext2DPixelData::proto_get_length(const QV4::BuiltinFunction *, 
     if (!r || r->d()->image->isNull())
         RETURN_UNDEFINED();
 
-    RETURN_RESULT(r->d()->image->width() * r->d()->image->height() * 4);
+    RETURN_RESULT(QV4::Encode(r->d()->image->width() * r->d()->image->height() * 4));
 }
 
 QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(const QV4::Managed *m, uint index, bool *hasProperty)

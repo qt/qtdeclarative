@@ -2867,6 +2867,9 @@ private:
     int m_indexOfTailOfLastWatchpoint;
 };
 
+#undef JUMP_ENUM_WITH_SIZE
+#undef JUMP_ENUM_SIZE
+
 } // namespace JSC
 
 #endif // ENABLE(ASSEMBLER) && CPU(ARM_THUMB2)

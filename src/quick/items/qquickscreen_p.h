@@ -84,7 +84,7 @@ class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
     Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 1)
 
 public:
-    QQuickScreenInfo(QObject *parent = nullptr);
+    QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
 
     QString name() const;
     int width() const;

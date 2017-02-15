@@ -114,37 +114,12 @@ void InstructionSelection<JITAssembler>::run(int functionIndex)
                         fpRegistersToSave.size());
     _as->enterStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
 
-#ifdef ARGUMENTS_IN_REGISTERS
-    _as->move(_as->registerForArgument(0), JITTargetPlatform::EngineRegister);
-#else
-    _as->loadPtr(addressForArgument(0), JITTargetPlatform::EngineRegister);
-#endif
+    if (JITTargetPlatform::RegisterArgumentCount > 0)
+        _as->move(_as->registerForArgument(0), JITTargetPlatform::EngineRegister);
+    else
+        _as->loadPtr(addressForArgument(0), JITTargetPlatform::EngineRegister);
 
-    const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    if (locals > 0) {
-        _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), JITTargetPlatform::LocalsRegister);
-#ifdef VALUE_FITS_IN_REGISTER
-        _as->move(TrustedImm64(0), JITTargetPlatform::ReturnValueRegister);
-        _as->move(TrustedImm32(locals), JITTargetPlatform::ScratchRegister);
-        Label loop = _as->label();
-        _as->store64(JITTargetPlatform::ReturnValueRegister, Address(JITTargetPlatform::LocalsRegister));
-        _as->add64(TrustedImm32(8), JITTargetPlatform::LocalsRegister);
-        Jump jump = _as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), JITTargetPlatform::ScratchRegister);
-        jump.linkTo(loop, _as);
-#else
-        _as->move(TrustedImm32(0), JITTargetPlatform::ReturnValueRegister);
-        _as->move(TrustedImm32(locals), JITTargetPlatform::ScratchRegister);
-        Label loop = _as->label();
-        _as->store32(JITTargetPlatform::ReturnValueRegister, Address(JITTargetPlatform::LocalsRegister));
-        _as->add32(TrustedImm32(4), JITTargetPlatform::LocalsRegister);
-        _as->store32(JITTargetPlatform::ReturnValueRegister, Address(JITTargetPlatform::LocalsRegister));
-        _as->add32(TrustedImm32(4), JITTargetPlatform::LocalsRegister);
-        Jump jump = _as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), JITTargetPlatform::ScratchRegister);
-        jump.linkTo(loop, _as);
-#endif
-        _as->storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
-    }
-
+    _as->initializeLocalVariables();
 
     int lastLine = 0;
     for (int i = 0, ei = _function->basicBlockCount(); i != ei; ++i) {
@@ -474,13 +449,7 @@ void InstructionSelection<JITAssembler>::loadThisObject(IR::Expr *temp)
 {
     _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
     _as->loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, callData)), JITTargetPlatform::ScratchRegister);
-#if defined(VALUE_FITS_IN_REGISTER)
-    _as->load64(Pointer(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)),
-                JITTargetPlatform::ReturnValueRegister);
-    _as->storeReturnValue(temp);
-#else
-    _as->copyValue(temp, Pointer(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)));
-#endif
+    _as->copyValue(temp, Address(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)));
 }
 
 template <typename JITAssembler>
@@ -1374,12 +1343,10 @@ void InstructionSelection<JITAssembler>::calculateRegistersToSave(const Register
     fpRegistersToSave.clear();
 
     for (const RegisterInfo &ri : JITTargetPlatform::getRegisterInfo()) {
-#if defined(RESTORE_EBX_ON_CALL)
-        if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
+        if (JITTargetPlatform::gotRegister != -1 && ri.isRegularRegister() && ri.reg<RegisterID>() == JITTargetPlatform::gotRegister) {
             regularRegistersToSave.append(ri);
             continue;
         }
-#endif // RESTORE_EBX_ON_CALL
         if (ri.isCallerSaved())
             continue;
         if (ri.isRegularRegister()) {
@@ -1666,20 +1633,21 @@ QT_BEGIN_NAMESPACE
 namespace QV4 { namespace JIT {
 template class Q_QML_EXPORT InstructionSelection<>;
 template class Q_QML_EXPORT ISelFactory<>;
-#if defined(V4_BOOTSTRAP) && CPU(X86_64)
+#if defined(V4_BOOTSTRAP)
 
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture)
 {
     using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
+    using ARM64CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;
 
     if (architecture == QLatin1String("armv7"))
         return new ISelFactory<ARMv7CrossAssembler>;
+    else if (architecture == QLatin1String("armv8"))
+        return new ISelFactory<ARM64CrossAssembler>;
 
     QString hostArch;
 #if CPU(ARM_THUMB2)
     hostArch = QStringLiteral("armv7");
-#elif CPU(ARM64)
-    hostArch = QStringLiteral("armv8");
 #elif CPU(MIPS)
     hostArch = QStringLiteral("mips");
 #elif CPU(X86)
