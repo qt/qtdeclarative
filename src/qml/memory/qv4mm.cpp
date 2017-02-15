@@ -385,7 +385,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
         }
     }
 #ifndef QT_NO_DEBUG
-    Q_ASSERT(freeSlots + allocatedSlots == EntriesInBitmap*8*sizeof(quintptr));
+    Q_ASSERT(freeSlots + allocatedSlots == (EntriesInBitmap - start) * 8 * sizeof(quintptr));
 #endif
 }
 
