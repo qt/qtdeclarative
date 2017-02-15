@@ -55,8 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
-#define WRITEBARRIER_steele -1
-#define WRITEBARRIER_none 1
+#define WRITEBARRIER_steele 1
+#define WRITEBARRIER_none -1
 
 #define WRITEBARRIER(x) (1/WRITEBARRIER_##x == 1)
 
@@ -87,8 +87,9 @@ static Q_CONSTEXPR inline bool isRequired() {
 
 inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Value value)
 {
+    Q_UNUSED(engine);
     *slot = value;
-    if (engine->writeBarrierActive && isRequired<Unknown>()) {
+    if (isRequired<Unknown>()) {
         fence();
         base->setGrayBit();
     }
@@ -96,8 +97,9 @@ inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Value value
 
 inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Heap::Base *value)
 {
+    Q_UNUSED(engine);
     *slot = value;
-    if (engine->writeBarrierActive && isRequired<Object>()) {
+    if (isRequired<Object>()) {
         fence();
         base->setGrayBit();
     }
@@ -105,11 +107,10 @@ inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Heap::Base 
 
 inline void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap::Base *value)
 {
+    Q_UNUSED(engine);
     *slot = value;
-    if (engine->writeBarrierActive) {
-        fence();
-        base->setGrayBit();
-    }
+    fence();
+    base->setGrayBit();
 }
 
 #elif WRITEBARRIER(none)

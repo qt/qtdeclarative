@@ -931,23 +931,25 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     }
 }
 
-void ExecutionEngine::markObjects()
+void ExecutionEngine::markObjects(bool incremental)
 {
-    identifierTable->mark(this);
+    if (!incremental) {
+        identifierTable->mark(this);
 
-    for (int i = 0; i < nArgumentsAccessors; ++i) {
-        const Property &pd = argumentsAccessors[i];
-        if (Heap::FunctionObject *getter = pd.getter())
-            getter->mark(this);
-        if (Heap::FunctionObject *setter = pd.setter())
-            setter->mark(this);
+        for (int i = 0; i < nArgumentsAccessors; ++i) {
+            const Property &pd = argumentsAccessors[i];
+            if (Heap::FunctionObject *getter = pd.getter())
+                getter->mark(this);
+            if (Heap::FunctionObject *setter = pd.setter())
+                setter->mark(this);
+        }
+
+        classPool->markObjects(this);
+
+        for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
+             it != end; ++it)
+            (*it)->markObjects(this);
     }
-
-    classPool->markObjects(this);
-
-    for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
-         it != end; ++it)
-        (*it)->markObjects(this);
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)

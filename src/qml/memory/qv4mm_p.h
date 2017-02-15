@@ -155,6 +155,8 @@ struct BlockAllocator {
 
     void sweep();
     void freeAll();
+    void resetBlackBits();
+    void collectGrayItems(ExecutionEngine *engine);
 
     // bump allocations
     HeapItem *nextFree = 0;
@@ -176,6 +178,8 @@ struct HugeItemAllocator {
     HeapItem *allocate(size_t size);
     void sweep();
     void freeAll();
+    void resetBlackBits();
+    void collectGrayItems(ExecutionEngine *engine);
 
     size_t usedMem() const {
         size_t used = 0;
@@ -418,7 +422,7 @@ public:
         return t->d();
     }
 
-    void runGC();
+    void runGC(bool forceFullCollection = false);
 
     void dumpStats() const;
 
@@ -463,6 +467,7 @@ public:
     bool gcBlocked = false;
     bool aggressiveGC = false;
     bool gcStats = false;
+    bool nextGCIsIncremental = false;
 };
 
 }

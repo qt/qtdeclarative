@@ -450,7 +450,7 @@ public:
 
     void requireArgumentsAccessors(int n);
 
-    void markObjects();
+    void markObjects(bool incremental);
 
     void initRootContext();
 

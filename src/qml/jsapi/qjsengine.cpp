@@ -333,7 +333,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    d->m_v4Engine->memoryManager->runGC();
+    d->m_v4Engine->memoryManager->runGC(/* forceFullCollection = */ true);
 }
 
 #if QT_DEPRECATED_SINCE(5, 6)

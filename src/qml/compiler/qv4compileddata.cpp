@@ -132,8 +132,10 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeStrings = (QV4::Heap::String **)malloc(data->stringTableSize * sizeof(QV4::Heap::String*));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::Heap::String*));
-    for (uint i = 0; i < data->stringTableSize; ++i)
+    for (uint i = 0; i < data->stringTableSize; ++i) {
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
+        runtimeStrings[i]->setMarkBit();
+    }
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below
@@ -147,7 +149,14 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= IR::RegExp::RegExp_Multiline;
-        runtimeRegularExpressions[i] = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        QV4::Heap::RegExpObject *ro = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        runtimeRegularExpressions[i] = ro;
+#if WRITEBARRIER(steele)
+        if (engine->memoryManager->nextGCIsIncremental) {
+            ro->setMarkBit();
+            ro->setGrayBit();
+        }
+#endif
     }
 
     if (data->lookupTableSize) {

@@ -282,7 +282,7 @@ void Chunk::sweep()
             }
         }
         objectBitmap[i] = blackBitmap[i];
-        blackBitmap[i] = 0;
+        grayBitmap[i] = 0;
         extendsBitmap[i] = e;
         o += Chunk::Bits;
     }
@@ -321,11 +321,54 @@ void Chunk::freeAll()
             }
         }
         objectBitmap[i] = 0;
-        blackBitmap[i] = 0;
+        grayBitmap[i] = 0;
         extendsBitmap[i] = e;
         o += Chunk::Bits;
     }
     //    DEBUG << "swept chunk" << this << "freed" << slotsFreed << "slots.";
+}
+
+void Chunk::resetBlackBits()
+{
+    memset(blackBitmap, 0, sizeof(blackBitmap));
+}
+
+#ifndef QT_NO_DEBUG
+static uint nGrayItems = 0;
+#endif
+
+void Chunk::collectGrayItems(ExecutionEngine *engine)
+{
+    //    DEBUG << "sweeping chunk" << this << (*freeList);
+    HeapItem *o = realBase();
+    for (uint i = 0; i < Chunk::EntriesInBitmap; ++i) {
+#if WRITEBARRIER(none)
+        Q_ASSERT((grayBitmap[i] | blackBitmap[i]) == blackBitmap[i]); // check that we don't have gray only objects
+#endif
+        quintptr toMark = blackBitmap[i] & grayBitmap[i]; // correct for a Steele type barrier
+        Q_ASSERT((toMark & objectBitmap[i]) == toMark); // check all black objects are marked as being used
+        //        DEBUG << hex << "   index=" << i << toFree;
+        while (toMark) {
+            uint index = qCountTrailingZeroBits(toMark);
+            quintptr bit = (static_cast<quintptr>(1) << index);
+
+            toMark ^= bit; // mask out marked slot
+            //            DEBUG << "       index" << hex << index << toFree;
+
+            HeapItem *itemToFree = o + index;
+            Heap::Base *b = *itemToFree;
+            Q_ASSERT(b->inUse());
+            engine->pushForGC(b);
+#ifndef QT_NO_DEBUG
+            ++nGrayItems;
+//            qDebug() << "adding gray item" << b << "to mark stack";
+#endif
+        }
+        grayBitmap[i] = 0;
+        o += Chunk::Bits;
+    }
+    //    DEBUG << "swept chunk" << this << "freed" << slotsFreed << "slots.";
+
 }
 
 void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
@@ -557,6 +600,19 @@ void BlockAllocator::freeAll()
     }
 }
 
+void BlockAllocator::resetBlackBits()
+{
+    for (auto c : chunks)
+        c->resetBlackBits();
+}
+
+void BlockAllocator::collectGrayItems(ExecutionEngine *engine)
+{
+    for (auto c : chunks)
+        c->collectGrayItems(engine);
+
+}
+
 #if MM_DEBUG
 void BlockAllocator::stats() {
     DEBUG << "MM stats:";
@@ -609,7 +665,6 @@ static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocato
 void HugeItemAllocator::sweep() {
     auto isBlack = [this] (const HugeChunk &c) {
         bool b = c.chunk->first()->isBlack();
-        Chunk::clearBit(c.chunk->blackBitmap, c.chunk->first() - c.chunk->realBase());
         if (!b)
             freeHugeChunk(chunkAllocator, c);
         return !b;
@@ -617,6 +672,24 @@ void HugeItemAllocator::sweep() {
 
     auto newEnd = std::remove_if(chunks.begin(), chunks.end(), isBlack);
     chunks.erase(newEnd, chunks.end());
+}
+
+void HugeItemAllocator::resetBlackBits()
+{
+    for (auto c : chunks)
+        Chunk::clearBit(c.chunk->blackBitmap, c.chunk->first() - c.chunk->realBase());
+}
+
+void HugeItemAllocator::collectGrayItems(ExecutionEngine *engine)
+{
+    for (auto c : chunks)
+        // Correct for a Steele type barrier
+        if (Chunk::testBit(c.chunk->blackBitmap, c.chunk->first() - c.chunk->realBase()) &&
+            Chunk::testBit(c.chunk->grayBitmap, c.chunk->first() - c.chunk->realBase())) {
+            HeapItem *i = c.chunk->first();
+            Heap::Base *b = *i;
+            b->mark(engine);
+        }
 }
 
 void HugeItemAllocator::freeAll()
@@ -663,7 +736,8 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 
     unmanagedHeapSize += unmanagedSize;
     if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
-        runGC();
+        if (!didGCRun)
+            runGC();
 
         if (3*unmanagedHeapSizeGCLimit <= 4*unmanagedHeapSize)
             // more than 75% full, raise limit
@@ -681,6 +755,7 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
         m = blockAllocator.allocate(stringSize, true);
     }
 
+//    qDebug() << "allocated string" << m;
     memset(m, 0, stringSize);
     return *m;
 }
@@ -705,8 +780,11 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
 //    qDebug() << "unmanagedHeapSize:" << unmanagedHeapSize << "limit:" << unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
 
-    if (size > Chunk::DataSize)
-        return *hugeItemAllocator.allocate(size);
+    if (size > Chunk::DataSize) {
+        HeapItem *h = hugeItemAllocator.allocate(size);
+//        qDebug() << "allocating huge item" << h;
+        return *h;
+    }
 
     HeapItem *m = blockAllocator.allocate(size);
     if (!m) {
@@ -716,6 +794,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     }
 
     memset(m, 0, size);
+//    qDebug() << "allocating data" << m;
     return *m;
 }
 
@@ -740,6 +819,7 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
         o->memberData->init();
 //        qDebug() << "    got" << o->memberData << o->memberData->size;
     }
+//    qDebug() << "allocating object with memberData" << o << o->memberData.operator->();
     return o;
 }
 
@@ -794,7 +874,13 @@ void MemoryManager::mark()
 {
     Value *markBase = engine->jsStackTop;
 
-    engine->markObjects();
+    if (nextGCIsIncremental) {
+        // need to collect all gray items and push them onto the mark stack
+        blockAllocator.collectGrayItems(engine);
+        hugeItemAllocator.collectGrayItems(engine);
+    }
+
+    engine->markObjects(nextGCIsIncremental);
 
     collectFromJSStack();
 
@@ -836,6 +922,12 @@ void MemoryManager::mark()
 
 void MemoryManager::sweep(bool lastSweep)
 {
+    if (lastSweep && nextGCIsIncremental) {
+        // ensure we properly clean up on destruction even if the GC is in incremental mode
+        blockAllocator.resetBlackBits();
+        hugeItemAllocator.resetBlackBits();
+    }
+
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         Managed *m = (*it).managed();
         if (!m || m->markBit())
@@ -915,14 +1007,22 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
     return totalFragmentedSlots*Chunk::SlotSize;
 }
 
-void MemoryManager::runGC()
+void MemoryManager::runGC(bool forceFullCollection)
 {
     if (gcBlocked) {
 //        qDebug() << "Not running GC.";
         return;
     }
 
+    if (forceFullCollection) {
+        // do a full GC
+        blockAllocator.resetBlackBits();
+        hugeItemAllocator.resetBlackBits();
+        nextGCIsIncremental = false;
+    }
+
     QScopedValueRollback<bool> gcBlocker(gcBlocked, true);
+//    qDebug() << "runGC";
 
     if (!gcStats) {
 //        uint oldUsed = allocator.usedMem();
@@ -940,9 +1040,14 @@ void MemoryManager::runGC()
 #ifndef QT_NO_DEBUG
         qDebug() << "    Triggered by alloc request of" << lastAllocRequestedSlots << "slots.";
 #endif
+        qDebug() << "Incremental:" << nextGCIsIncremental;
         qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
         qDebug() << "Fragmented memory before GC" << (totalMem - usedBefore);
         dumpBins(&blockAllocator);
+
+#ifndef QT_NO_DEBUG
+        nGrayItems = 0;
+#endif
 
         QElapsedTimer t;
         t.start();
@@ -960,6 +1065,10 @@ void MemoryManager::runGC()
             qDebug() << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
         }
         size_t memInBins = dumpBins(&blockAllocator);
+#ifndef QT_NO_DEBUG
+        if (nextGCIsIncremental)
+            qDebug() << "  number of gray items:" << nGrayItems;
+#endif
         qDebug() << "Marked object in" << markTime << "ms.";
         qDebug() << "Sweeped object in" << sweepTime << "ms.";
         qDebug() << "Used memory before GC:" << usedBefore;
@@ -979,6 +1088,34 @@ void MemoryManager::runGC()
     if (aggressiveGC) {
         // ensure we don't 'loose' any memory
         Q_ASSERT(blockAllocator.allocatedMem() == getUsedMem() + dumpBins(&blockAllocator, false));
+    }
+
+#if WRITEBARRIER(steele)
+    static int count = 0;
+    ++count;
+    if (aggressiveGC) {
+        nextGCIsIncremental = (count % 256);
+    } else {
+        size_t total = blockAllocator.totalSlots();
+        size_t usedSlots = blockAllocator.usedSlotsAfterLastSweep;
+        if (!nextGCIsIncremental) {
+            // always try an incremental GC after a full one, unless there is anyway lots of memory pressure
+            nextGCIsIncremental = usedSlots * 4 < total * 3;
+            count = 0;
+        } else {
+            if (count > 16)
+                nextGCIsIncremental = false;
+            else
+                nextGCIsIncremental = usedSlots * 4 < total * 3; // less than 75% full
+        }
+    }
+#else
+    nextGCIsIncremental = false;
+#endif
+    if (!nextGCIsIncremental) {
+        // do a full GC
+        blockAllocator.resetBlackBits();
+        hugeItemAllocator.resetBlackBits();
     }
 }
 

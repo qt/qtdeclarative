@@ -176,6 +176,8 @@ struct Chunk {
 
     void sweep();
     void freeAll();
+    void resetBlackBits();
+    void collectGrayItems(ExecutionEngine *engine);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };

@@ -81,6 +81,7 @@ void IdentifierTable::addEntry(Heap::String *str)
     str->identifier = new Identifier;
     str->identifier->string = str->toQString();
     str->identifier->hashValue = hash;
+    str->setMarkBit();
 
     bool grow = (alloc <= size*2);
 
