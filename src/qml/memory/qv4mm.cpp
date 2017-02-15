@@ -643,7 +643,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
 }
 
 #ifndef QT_NO_DEBUG
-static int lastAllocRequestedSlots = 0;
+static size_t lastAllocRequestedSlots = 0;
 #endif
 
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
