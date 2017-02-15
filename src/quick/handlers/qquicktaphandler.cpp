@@ -246,6 +246,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
     if (m_pressed != press) {
         m_pressed = press;
         connectPreRenderSignal(press);
+        updateTimeHeld();
         if (press) {
             m_longPressTimer.start(longPressThresholdMilliseconds(), this);
             m_holdTimer.start();
