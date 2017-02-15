@@ -74,8 +74,8 @@ void Heap::RegExpObject::init()
     Object::init();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, QString(), false, false));
-    o->d()->global = false;
+    value.set(scope.engine, QV4::RegExp::create(scope.engine, QString(), false, false));
+    global = false;
     o->initProperties();
 }
 
