@@ -122,7 +122,7 @@ public:
     }
     Heap::Base *popForGC() {
         --jsStackTop;
-        return jsStackTop->heapObject();
+        return jsStackTop->m();
     }
 
     QML_NEARLY_ALWAYS_INLINE Value *jsAlloca(int nValues) {
