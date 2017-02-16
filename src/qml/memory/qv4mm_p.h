@@ -463,6 +463,7 @@ public:
 
     std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;
+    std::size_t usedSlotsAfterLastFullSweep = 0;
 
     bool gcBlocked = false;
     bool aggressiveGC = false;

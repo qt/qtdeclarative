@@ -1010,8 +1010,7 @@ void MemoryManager::sweep(bool lastSweep)
 bool MemoryManager::shouldRunGC() const
 {
     size_t total = blockAllocator.totalSlots();
-    size_t usedSlots = blockAllocator.usedSlotsAfterLastSweep;
-    if (total > MinSlotsGCLimit && usedSlots * GCOverallocation < total * 100)
+    if (total > MinSlotsGCLimit && usedSlotsAfterLastFullSweep * GCOverallocation < total * 100)
         return true;
     return false;
 }
@@ -1123,6 +1122,9 @@ void MemoryManager::runGC(bool forceFullCollection)
         // ensure we don't 'loose' any memory
         Q_ASSERT(blockAllocator.allocatedMem() == getUsedMem() + dumpBins(&blockAllocator, false));
     }
+
+    if (!nextGCIsIncremental)
+        usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
 
 #if WRITEBARRIER(steele)
     static int count = 0;
