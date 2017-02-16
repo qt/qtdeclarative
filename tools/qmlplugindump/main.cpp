@@ -839,7 +839,8 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     QStringList commandArgs = QStringList()
             << QLatin1String("-qmlFiles")
             << QLatin1String("-");
-    const auto importPathList = engine.importPathList();
+    QStringList importPathList = engine.importPathList();
+    importPathList.removeOne(QStringLiteral("qrc:/qt-project.org/imports"));
     for (const QString &path : importPathList)
         commandArgs << QLatin1String("-importPath") << path;
 
