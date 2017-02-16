@@ -1084,11 +1084,12 @@ void MemoryManager::runGC(bool forceFullCollection)
         QElapsedTimer t;
         t.start();
         mark();
-        qint64 markTime = t.restart();
+        qint64 markTime = t.nsecsElapsed()/1000;
+        t.restart();
         sweep();
         const size_t usedAfter = getUsedMem();
         const size_t largeItemsAfter = getLargeItemsMem();
-        qint64 sweepTime = t.elapsed();
+        qint64 sweepTime = t.nsecsElapsed()/1000;
 
         if (triggeredByUnmanagedHeap) {
             qDebug() << "triggered by unmanaged heap:";
@@ -1101,9 +1102,9 @@ void MemoryManager::runGC(bool forceFullCollection)
         if (nextGCIsIncremental)
             qDebug() << "  number of gray items:" << nGrayItems;
 #endif
-        qDebug() << "Marked object in" << markTime << "ms.";
+        qDebug() << "Marked object in" << markTime << "us.";
         qDebug() << "   " << markStackSize << "objects marked";
-        qDebug() << "Sweeped object in" << sweepTime << "ms.";
+        qDebug() << "Sweeped object in" << sweepTime << "us.";
         qDebug() << "Used memory before GC:" << usedBefore;
         qDebug() << "Used memory after GC :" << usedAfter;
         qDebug() << "Freed up bytes       :" << (usedBefore - usedAfter);
