@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
             if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;
             ++i;
-            if (!QFile::exists(arg)) {
+            if (arg != QLatin1String("-") && !QFile::exists(arg)) {
                 std::cerr << qPrintable(appName) << ": No such file or directory: \""
                     << qPrintable(arg) << "\"\n";
                 return 1;
