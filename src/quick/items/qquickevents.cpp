@@ -681,16 +681,26 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
 */
 void QQuickEventPoint::cancelExclusiveGrab()
 {
-    if (m_exclusiveGrabber.isNull()) {
+    if (m_exclusiveGrabber.isNull())
         qWarning("cancelGrab: no grabber");
+    else
+        cancelExclusiveGrabImpl();
+}
+
+void QQuickEventPoint::cancelExclusiveGrabImpl(QTouchEvent *cancelEvent)
+{
+    if (m_exclusiveGrabber.isNull())
         return;
-    }
     if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
         qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
                                << ": grab (exclusive)" << m_exclusiveGrabber << "-> nullptr";
     }
-    if (auto handler = grabberPointerHandler())
+    if (auto handler = grabberPointerHandler()) {
         handler->onGrabChanged(handler, CancelGrabExclusive, this);
+    } else if (auto item = grabberItem()) {
+        if (cancelEvent)
+            QCoreApplication::sendEvent(item, cancelEvent);
+    }
     m_exclusiveGrabber.clear();
 }
 

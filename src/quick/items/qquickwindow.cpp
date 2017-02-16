@@ -1927,23 +1927,16 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     Q_Q(QQuickWindow);
 
     // A TouchCancel event will typically not contain any points.
-    // Deliver it to all items that have active touches.
+    // Deliver it to all items and handlers that have active touches.
     QQuickPointerEvent *pointerEvent = QQuickPointerDevice::touchDevice(event->device())->pointerEvent();
-    QVector<QObject *> grabbers = pointerEvent->exclusiveGrabbers();
-
-    for (QObject *grabber: qAsConst(grabbers)) {
-        if (QQuickItem *grabberItem = qmlobject_cast<QQuickItem *>(grabber))
-            QCoreApplication::sendEvent(grabberItem, event);
-        else //if (QQuickPointerHandler *grabberHandler = qmlobject_cast<QQuickPointerHandler *>(grabber))
-//            grabberHandler->handlePointerEvent()
-            qWarning("unexpected: can't deliver touch cancel to a PointerHandler (yet?)");
-    }
+    for (int i = 0; i < pointerEvent->pointCount(); ++i)
+        pointerEvent->point(i)->cancelExclusiveGrabImpl(event);
     touchMouseId = -1;
     touchMouseDevice = nullptr;
     if (q->mouseGrabberItem())
         q->mouseGrabberItem()->ungrabMouse();
 
-    // The next touch event can only be a TouchBegin so clean up.
+    // The next touch event can only be a TouchBegin, so clean up.
     pointerEvent->clearGrabbers();
     return true;
 }

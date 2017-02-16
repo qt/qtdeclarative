@@ -320,6 +320,9 @@ public:
     void setPassiveGrabbers(const QVector<QPointer <QQuickPointerHandler> > &grabbers) { m_passiveGrabbers = grabbers; }
     void clearPassiveGrabbers() { m_passiveGrabbers.clear(); }
 
+protected:
+    void cancelExclusiveGrabImpl(QTouchEvent *cancelEvent = nullptr);
+
 private:
     QVector2D estimatedVelocity() const;
 
@@ -338,6 +341,8 @@ private:
     bool m_accept : 1;
     bool m_grabberIsHandler : 1;
     int m_reserved : 29;
+
+    friend class QQuickWindowPrivate;
 
     Q_DISABLE_COPY(QQuickEventPoint)
 };

@@ -115,6 +115,7 @@ private:
     bool m_hadKeepTouchGrab : 1;    // some handlers override target()->setKeepTouchGrab(); this remembers previous state
 
     friend class QQuickEventPoint;
+    friend class QQuickWindowPrivate;
 };
 
 QT_END_NAMESPACE
