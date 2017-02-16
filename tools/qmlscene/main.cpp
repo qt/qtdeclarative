@@ -33,7 +33,7 @@
 #include <QtCore/qpointer.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtextstream.h>
-#include <QtCore/qregexp.h>
+#include <QtCore/qregularexpression.h>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFunctions>
@@ -259,8 +259,8 @@ static bool checkVersion(const QUrl &url)
         return false;
     }
 
-    QRegExp quick1("^\\s*import +QtQuick +1\\.\\w*");
-    QRegExp qt47("^\\s*import +Qt +4\\.7");
+    QRegularExpression quick1("^\\s*import +QtQuick +1\\.\\w*");
+    QRegularExpression qt47("^\\s*import +Qt +4\\.7");
 
     QTextStream stream(&f);
     bool codeFound= false;
@@ -270,10 +270,11 @@ static bool checkVersion(const QUrl &url)
             codeFound = true;
         } else {
             QString import;
-            if (quick1.indexIn(line) >= 0)
-                import = quick1.cap(0).trimmed();
-            else if (qt47.indexIn(line) >= 0)
-                import = qt47.cap(0).trimmed();
+            QRegularExpressionMatch match = quick1.match(line);
+            if (match.hasMatch())
+                import = match.captured(0).trimmed();
+            else if ((match = qt47.match(line)).hasMatch())
+                import = match.captured(0).trimmed();
 
             if (!import.isNull()) {
                 fprintf(stderr, "qmlscene: '%s' is no longer supported.\n"
