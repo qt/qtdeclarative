@@ -108,7 +108,6 @@ Rectangle {
     // instead of scissoring, this is more expensive. It may also trigger a
     // slower code path for PathItems, depending on the path rendering backend
     // in use, and may affect rendering quality as well.
-    // So in short: do not do this.
     Rectangle {
         id: stencilRect
         width: 300
