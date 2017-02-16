@@ -778,9 +778,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 
 void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &ids)
 {
-    QSet<QObject*> ungrab;
     for (int i = 0; i < ids.count(); ++i) {
-        // FIXME: deprecate this function, we need a device
         int id = ids.at(i);
         if (Q_UNLIKELY(id < 0)) {
             qWarning("ignoring grab of touchpoint %d", id);
@@ -792,7 +790,7 @@ void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &
             if (touchMouseGrabber) {
                 point->setExclusiveGrabber(nullptr);
                 touchMouseGrabber->mouseUngrabEvent();
-                ungrab.insert(touchMouseGrabber);
+                touchMouseGrabber->touchUngrabEvent();
                 touchMouseDevice = nullptr;
                 touchMouseId = -1;
             }
@@ -807,18 +805,20 @@ void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &
             QObject *oldGrabber = point->exclusiveGrabber();
             if (oldGrabber == grabber)
                 continue;
-
             point->setExclusiveGrabber(grabber);
-            if (oldGrabber)
-                ungrab.insert(oldGrabber);
         }
     }
-    for (QObject *oldGrabber : qAsConst(ungrab))
-        if (QQuickItem *item = qmlobject_cast<QQuickItem *>(oldGrabber))
-            item->touchUngrabEvent();
-        // TODO else if the old grabber was a PointerHandler, notify it somehow?
 }
 
+/*!
+    Ungrabs all touchpoint grabs and/or the mouse grab from the given item \a grabber.
+    This should not be called when processing a release event - that's redundant.
+    It is called in other cases, when the points may not be released, but the item
+    nevertheless must lose its grab due to becoming disabled, invisible, etc.
+    QQuickEventPoint::setGrabberItem() calls touchUngrabEvent() when all points are released,
+    but if not all points are released, it cannot be sure whether to call touchUngrabEvent()
+    or not; so we have to do it here.
+*/
 void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool touch)
 {
     Q_Q(QQuickWindow);
@@ -827,17 +827,19 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
         setMouseGrabber(nullptr);
     }
     if (Q_LIKELY(touch)) {
+        bool ungrab = false;
         const auto touchDevices = QQuickPointerDevice::touchDevices();
         for (auto device : touchDevices) {
             auto pointerEvent = device->pointerEvent();
             for (int i = 0; i < pointerEvent->pointCount(); ++i) {
                 if (pointerEvent->point(i)->exclusiveGrabber() == grabber) {
                     pointerEvent->point(i)->setGrabberItem(nullptr);
-                    // FIXME send ungrab event only once
-                    grabber->touchUngrabEvent();
+                    ungrab = true;
                 }
             }
         }
+        if (ungrab)
+            grabber->touchUngrabEvent();
     }
 }
 

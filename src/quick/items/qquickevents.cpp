@@ -609,13 +609,20 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
             qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
                                    << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
-        if (auto handler = grabberPointerHandler())
-            handler->onGrabChanged(handler, CancelGrabExclusive, this);
-        for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
-            passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
+        QQuickPointerHandler *oldGrabberHandler = grabberPointerHandler();
+        QQuickItem *oldGrabberItem = grabberItem();
         m_exclusiveGrabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
+        if (oldGrabberHandler)
+            oldGrabberHandler->onGrabChanged(oldGrabberHandler, CancelGrabExclusive, this);
+        else if (oldGrabberItem && oldGrabberItem != grabber) {
+            auto pte = pointerEvent()->asPointerTouchEvent();
+            if (pte && pte->asTouchEvent() && pte->asTouchEvent()->touchPointStates() == Qt::TouchPointReleased)
+                oldGrabberItem->touchUngrabEvent();
+        }
+        for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
+            passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
     }
 }
 
@@ -656,7 +663,14 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
                 }
             } else if (QQuickPointerHandler *oldGrabberPointerHandler = qmlobject_cast<QQuickPointerHandler *>(m_exclusiveGrabber.data())) {
                 oldGrabberPointerHandler->onGrabChanged(oldGrabberPointerHandler, UngrabExclusive, this);
+            } else if (!m_exclusiveGrabber.isNull()) {
+                // If there is a previous grabber and it's not a PointerHandler, it must be an Item.
+                QQuickItem *oldGrabberItem = static_cast<QQuickItem *>(m_exclusiveGrabber.data());
+                // If this point came from a touchscreen, notify that previous grabber Item that it's losing its touch grab.
+                if (pointerEvent()->asPointerTouchEvent())
+                    oldGrabberItem->touchUngrabEvent();
             }
+
             m_exclusiveGrabber = QPointer<QObject>(grabber);
             m_grabberIsHandler = true;
             m_sceneGrabPos = m_scenePos;

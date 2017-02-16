@@ -447,6 +447,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
     Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QV4::ExecutionEngine *))
 
+    friend class QQuickEventPoint;
     friend class QQuickWindow;
     friend class QQuickWindowPrivate;
     friend class QSGRenderer;
