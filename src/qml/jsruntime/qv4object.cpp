@@ -316,7 +316,7 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 }
 
 // Section 8.12.2
-Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
+MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
@@ -325,36 +325,38 @@ Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
         uint idx = o->internalClass->find(name);
         if (idx < UINT_MAX) {
             *attrs = o->internalClass->propertyData[idx];
-            return o->propertyData(attrs->isAccessor() ? idx + SetterOffset : idx);
+            return MemberData::Index{ o->memberData, attrs->isAccessor() ? idx + SetterOffset : idx };
         }
 
         o = o->prototype;
     }
     *attrs = Attr_Invalid;
-    return 0;
+    return { 0, 0 };
 }
 
-Value *Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
+ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
 {
     Heap::Object *o = d();
     while (o) {
-        Property *p = o->arrayData ? o->arrayData->getProperty(index) : 0;
-        if (p) {
-            *attrs = o->arrayData->attributes(index);
-            return attrs->isAccessor() ? &p->set : &p->value;
+        if (o->arrayData) {
+            uint idx = o->arrayData->mappedIndex(index);
+            if (idx != UINT_MAX) {
+                *attrs = o->arrayData->attributes(index);
+                return { o->arrayData , attrs->isAccessor() ? idx + SetterOffset : idx };
+            }
         }
         if (o->vtable()->type == Type_StringObject) {
             if (index < static_cast<const Heap::StringObject *>(o)->length()) {
                 // this is an evil hack, but it works, as the method is only ever called from putIndexed,
                 // where we don't use the returned pointer there for non writable attributes
                 *attrs = (Attr_NotWritable|Attr_NotConfigurable);
-                return reinterpret_cast<Value *>(0x1);
+                return { reinterpret_cast<Heap::ArrayData *>(0x1), 0 };
             }
         }
         o = o->prototype;
     }
     *attrs = Attr_Invalid;
-    return 0;
+    return { 0, 0 };
 }
 
 bool Object::hasProperty(String *name) const
@@ -703,43 +705,44 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 // Section 8.12.5
 bool Object::internalPut(String *name, const Value &value)
 {
-    if (internalClass()->engine->hasException)
+    ExecutionEngine *engine = this->engine();
+    if (engine->hasException)
         return false;
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier(engine);
 
+    MemberData::Index memberIndex{0, 0};
     uint member = internalClass()->find(name);
-    Value *v = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
         attrs = internalClass()->propertyData[member];
-        v = propertyData(attrs.isAccessor() ? member + SetterOffset : member);
+        memberIndex = { d()->memberData, (attrs.isAccessor() ? member + SetterOffset : member) };
     }
 
     // clause 1
-    if (v) {
+    if (!memberIndex.isNull()) {
         if (attrs.isAccessor()) {
-            if (v->as<FunctionObject>())
+            if (memberIndex->as<FunctionObject>())
                 goto cont;
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else if (isArrayObject() && name->equals(engine()->id_length())) {
+        else if (isArrayObject() && name->equals(engine->id_length())) {
             bool ok;
             uint l = value.asArrayLength(&ok);
             if (!ok) {
-                engine()->throwRangeError(value);
+                engine->throwRangeError(value);
                 return false;
             }
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
         } else {
-            *v = value;
+            memberIndex.set(engine, value);
         }
         return true;
     } else if (!prototype()) {
@@ -747,10 +750,11 @@ bool Object::internalPut(String *name, const Value &value)
             goto reject;
     } else {
         // clause 4
-        Scope scope(engine());
-        if ((v = ScopedObject(scope, prototype())->getValueOrSetter(name, &attrs))) {
+        Scope scope(engine);
+        memberIndex = ScopedObject(scope, prototype())->getValueOrSetter(name, &attrs);
+        if (!memberIndex.isNull()) {
             if (attrs.isAccessor()) {
-                if (!v->as<FunctionObject>())
+                if (!memberIndex->as<FunctionObject>())
                     goto reject;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
@@ -763,11 +767,11 @@ bool Object::internalPut(String *name, const Value &value)
     cont:
 
     // Clause 5
-    if (v && attrs.isAccessor()) {
-        Q_ASSERT(v->as<FunctionObject>());
+    if (!memberIndex.isNull() && attrs.isAccessor()) {
+        Q_ASSERT(memberIndex->as<FunctionObject>());
 
-        Scope scope(engine());
-        ScopedFunctionObject setter(scope, *v);
+        Scope scope(engine);
+        ScopedFunctionObject setter(scope, *memberIndex);
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
@@ -780,49 +784,51 @@ bool Object::internalPut(String *name, const Value &value)
 
   reject:
     // ### this should be removed once everything is ported to use Object::set()
-    if (engine()->current->strictMode) {
+    if (engine->current->strictMode) {
         QString message = QLatin1String("Cannot assign to read-only property \"") +
                 name->toQString() + QLatin1Char('\"');
-        engine()->throwTypeError(message);
+        engine->throwTypeError(message);
     }
     return false;
 }
 
 bool Object::internalPutIndexed(uint index, const Value &value)
 {
-    if (internalClass()->engine->hasException)
+    ExecutionEngine *engine = this->engine();
+    if (engine->hasException)
         return false;
 
     PropertyAttributes attrs;
 
-    Value *v = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : 0;
+    ArrayData::Index arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : ArrayData::Index{ 0, 0 };
 
-    if (!v && isStringObject()) {
+    if (arrayIndex.isNull() && isStringObject()) {
         if (index < static_cast<StringObject *>(this)->length())
             // not writable
             goto reject;
     }
 
     // clause 1
-    if (v) {
+    if (!arrayIndex.isNull()) {
         if (attrs.isAccessor()) {
-            if (v->as<FunctionObject>())
+            if (arrayIndex->as<FunctionObject>())
                 goto cont;
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else
-            *v = value;
+
+        arrayIndex.set(engine, value);
         return true;
     } else if (!prototype()) {
         if (!isExtensible())
             goto reject;
     } else {
         // clause 4
-        Scope scope(engine());
-        if ((v = ScopedObject(scope, prototype())->getValueOrSetter(index, &attrs))) {
+        Scope scope(engine);
+        arrayIndex = ScopedObject(scope, prototype())->getValueOrSetter(index, &attrs);
+        if (!arrayIndex.isNull()) {
             if (attrs.isAccessor()) {
-                if (!v->as<FunctionObject>())
+                if (!arrayIndex->as<FunctionObject>())
                     goto reject;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
@@ -835,11 +841,11 @@ bool Object::internalPutIndexed(uint index, const Value &value)
     cont:
 
     // Clause 5
-    if (v && attrs.isAccessor()) {
-        Q_ASSERT(v->as<FunctionObject>());
+    if (!arrayIndex.isNull() && attrs.isAccessor()) {
+        Q_ASSERT(arrayIndex->as<FunctionObject>());
 
-        Scope scope(engine());
-        ScopedFunctionObject setter(scope, *v);
+        Scope scope(engine);
+        ScopedFunctionObject setter(scope, *arrayIndex);
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
@@ -852,8 +858,8 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
   reject:
     // ### this should be removed once everything is ported to use Object::setIndexed()
-    if (engine()->current->strictMode)
-        engine()->throwTypeError();
+    if (engine->current->strictMode)
+        engine->throwTypeError();
     return false;
 }
 

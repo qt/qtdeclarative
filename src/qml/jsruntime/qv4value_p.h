@@ -722,6 +722,11 @@ struct ValueArray {
     uint alloc;
     Value v[1];
 
+    void set(ExecutionEngine *e, uint index, Value newVal) {
+        Q_UNUSED(e);
+        v[index] = newVal;
+    }
+
     inline Value &operator[] (uint index) {
         Q_ASSERT(index < alloc);
         return v[index];

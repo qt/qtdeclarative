@@ -73,6 +73,18 @@ struct MemberData : Managed
 {
     V4_MANAGED(MemberData, Managed)
 
+    struct Index {
+        Heap::MemberData *memberData;
+        uint index;
+
+        void set(ExecutionEngine *e, Value newVal) {
+            memberData->values.set(e, index, newVal);
+        }
+        const Value *operator->() const { return &memberData->values[index]; }
+        const Value &operator*() const { return memberData->values[index]; }
+        bool isNull() const { return !memberData; }
+    };
+
     Value &operator[] (uint idx) { return d()->values[idx]; }
     const Value *data() const { return d()->values.v; }
     Value *data() { return d()->values.v; }
