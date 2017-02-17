@@ -385,6 +385,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickBasePositioner, 9>(uri, 2, 9, "Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
 #endif
+
+#if QT_CONFIG(quick_shadereffect)
+    qmlRegisterType<QQuickShaderEffectSource, 2>(uri, 2, 9, "ShaderEffectSource");
+#endif
 }
 
 static void initResources()

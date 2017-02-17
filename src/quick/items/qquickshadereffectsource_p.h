@@ -88,6 +88,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectSource : public QQuickItem, publi
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
     Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
     Q_PROPERTY(TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged REVISION 1)
+    Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged REVISION 2)
 
 public:
     enum WrapMode {
@@ -150,6 +151,9 @@ public:
 
     Q_INVOKABLE void scheduleUpdate();
 
+    int samples() const;
+    void setSamples(int count);
+
 Q_SIGNALS:
     void wrapModeChanged();
     void sourceItemChanged();
@@ -161,6 +165,7 @@ Q_SIGNALS:
     void mipmapChanged();
     void recursiveChanged();
     void textureMirroringChanged();
+    void samplesChanged();
 
     void scheduledUpdateCompleted();
 
@@ -185,6 +190,7 @@ private:
     QRectF m_sourceRect;
     QSize m_textureSize;
     Format m_format;
+    int m_samples;
     uint m_live : 1;
     uint m_hideSource : 1;
     uint m_mipmap : 1;

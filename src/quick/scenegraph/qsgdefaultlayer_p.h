@@ -113,6 +113,9 @@ public:
 
     QRectF normalizedTextureSubRect() const Q_DECL_OVERRIDE;
 
+    int samples() const { return m_samples; }
+    void setSamples(int samples) Q_DECL_OVERRIDE { m_samples = samples; }
+
 public Q_SLOTS:
     void markDirtyTexture() Q_DECL_OVERRIDE;
     void invalidated() Q_DECL_OVERRIDE;
@@ -138,6 +141,7 @@ private:
 #endif
 
     QSGDefaultRenderContext *m_context;
+    int m_samples;
 
     uint m_mipmap : 1;
     uint m_live : 1;

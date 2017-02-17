@@ -152,6 +152,8 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QQmlComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
     Q_PROPERTY(QQuickShaderEffectSource::TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged)
+    Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged)
+
 public:
     QQuickItemLayer(QQuickItem *item);
     ~QQuickItemLayer();
@@ -189,6 +191,9 @@ public:
     QQuickShaderEffectSource::TextureMirroring textureMirroring() const { return m_textureMirroring; }
     void setTextureMirroring(QQuickShaderEffectSource::TextureMirroring mirroring);
 
+    int samples() const { return m_samples; }
+    void setSamples(int count);
+
     QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
 
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
@@ -213,6 +218,7 @@ Q_SIGNALS:
     void formatChanged(QQuickShaderEffectSource::Format format);
     void sourceRectChanged(const QRectF &sourceRect);
     void textureMirroringChanged(QQuickShaderEffectSource::TextureMirroring mirroring);
+    void samplesChanged(int count);
 
 private:
     friend class QQuickTransformAnimatorJob;
@@ -237,6 +243,7 @@ private:
     QQuickItem *m_effect;
     QQuickShaderEffectSource *m_effectSource;
     QQuickShaderEffectSource::TextureMirroring m_textureMirroring;
+    int m_samples;
 };
 
 #endif
