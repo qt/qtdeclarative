@@ -258,6 +258,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     arrayClass = emptyClass->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
     jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(arrayClass, objectPrototype());
+    jsObjects[PropertyListProto] = memoryManager->allocObject<PropertyListPrototype>();
 
     InternalClass *argsClass = emptyClass->addMember(id_length(), Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
@@ -360,6 +361,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     static_cast<NumberPrototype *>(numberPrototype())->init(this, numberCtor());
     static_cast<BooleanPrototype *>(booleanPrototype())->init(this, booleanCtor());
     static_cast<ArrayPrototype *>(arrayPrototype())->init(this, arrayCtor());
+    static_cast<PropertyListPrototype *>(propertyListPrototype())->init(this);
     static_cast<DatePrototype *>(datePrototype())->init(this, dateCtor());
     static_cast<FunctionPrototype *>(functionPrototype())->init(this, functionCtor());
     static_cast<RegExpPrototype *>(regExpPrototype())->init(this, regExpCtor());
