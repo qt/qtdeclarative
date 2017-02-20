@@ -65,14 +65,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_OBJECT
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "data")
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickApplicationWindow(QWindow *parent = nullptr);
