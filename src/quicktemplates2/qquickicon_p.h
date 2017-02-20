@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon : public QObject
     Q_PROPERTY(QString source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(int width READ width WRITE setWidth NOTIFY widthChanged FINAL)
     Q_PROPERTY(int height READ height WRITE setHeight NOTIFY heightChanged FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged FINAL)
 
 public:
     explicit QQuickIcon(QObject *parent = nullptr);
@@ -78,11 +80,16 @@ public:
     int height() const;
     void setHeight(int height);
 
+    QColor color() const;
+    void setColor(const QColor &color);
+    void resetColor();
+
 Q_SIGNALS:
     void nameChanged();
     void sourceChanged();
     void widthChanged();
     void heightChanged();
+    void colorChanged();
 
 private:
     Q_DISABLE_COPY(QQuickIcon)

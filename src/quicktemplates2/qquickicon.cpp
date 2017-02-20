@@ -46,7 +46,8 @@ class QQuickIconPrivate : public QObjectPrivate
 public:
     QQuickIconPrivate()
         : width(0),
-          height(0)
+          height(0),
+          color(Qt::transparent)
     {
     }
 
@@ -54,6 +55,7 @@ public:
     QString source;
     int width;
     int height;
+    QColor color;
 };
 
 QQuickIcon::QQuickIcon(QObject *parent)
@@ -123,6 +125,27 @@ void QQuickIcon::setHeight(int height)
 
     d->height = height;
     emit heightChanged();
+}
+
+QColor QQuickIcon::color() const
+{
+    Q_D(const QQuickIcon);
+    return d->color;
+}
+
+void QQuickIcon::setColor(const QColor &color)
+{
+    Q_D(QQuickIcon);
+    if (color == d->color)
+        return;
+
+    d->color = color;
+    emit colorChanged();
+}
+
+void QQuickIcon::resetColor()
+{
+    setColor(Qt::transparent);
 }
 
 QT_END_NAMESPACE
