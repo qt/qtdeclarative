@@ -2855,14 +2855,15 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
-#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
+#if QT_CONFIG(cursor)
     // if the added child has a cursor and we do not currently have any children
     // with cursors, bubble the notification up
     if (childPrivate->subtreeCursorEnabled && !subtreeCursorEnabled)
         setHasCursorInChild(true);
 #endif
+
     if (childPrivate->subtreeHoverEnabled && !subtreeHoverEnabled)
         setHasHoverInChild(true);
 
@@ -2883,13 +2884,14 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
-#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
+#if QT_CONFIG(cursor)
     // turn it off, if nothing else is using it
     if (childPrivate->subtreeCursorEnabled && subtreeCursorEnabled)
         setHasCursorInChild(false);
 #endif
+
     if (childPrivate->subtreeHoverEnabled && subtreeHoverEnabled)
         setHasHoverInChild(false);
 
