@@ -609,6 +609,10 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
             qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
                                    << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
+        if (auto handler = grabberPointerHandler())
+            handler->onGrabChanged(handler, CancelGrabExclusive, this);
+        for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
+            passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
         m_exclusiveGrabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
