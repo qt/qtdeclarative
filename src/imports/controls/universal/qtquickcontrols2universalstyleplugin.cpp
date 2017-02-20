@@ -94,6 +94,7 @@ void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, 
     qmlRegisterType<QQuickUniversalProgressStrip>(import, 2, 0, "ProgressStrip");
     qmlRegisterType<QQuickUniversalProgressStripAnimator>(import, 2, 0, "ProgressStripAnimator");
 
+    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
