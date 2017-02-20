@@ -56,10 +56,10 @@ import "jsfile.js" as Logic
 \endcode
 
 Imported JavaScript resources are always qualified using the "as" keyword.  The
-qualifier for JavaScript resources must be unique, so there is always a
-one-to-one mapping between qualifiers and JavaScript files. (This also means
-qualifiers cannot be named the same as built-in JavaScript objects such as
-\c Date and \c Math).
+qualifier for JavaScript resources must start with an uppercase letter, and must
+be unique, so there is always a one-to-one mapping between qualifiers and JavaScript
+files. (This also means qualifiers cannot be named the same as built-in JavaScript
+objects such as \c Date and \c Math).
 
 The functions defined in an imported JavaScript file are available to objects
 defined in the importing QML document, via the
