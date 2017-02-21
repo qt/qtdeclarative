@@ -531,7 +531,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     return nullptr;
 }
 
-void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity)
+void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos, int pointId, ulong timestamp, const QVector2D &velocity)
 {
     m_scenePos = scenePos;
     if (m_pointId != pointId) {
@@ -1146,15 +1146,15 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
     \l {QQuickEventPoint::pointId}{pointId}.
     Returns nullptr if there is no point with that ID.
 
-    \fn QQuickPointerEvent::pointById(quint64 pointId) const
+    \fn QQuickPointerEvent::pointById(int pointId) const
 */
-QQuickEventPoint *QQuickPointerMouseEvent::pointById(quint64 pointId) const {
+QQuickEventPoint *QQuickPointerMouseEvent::pointById(int pointId) const {
     if (m_mousePoint && pointId == m_mousePoint->pointId())
         return m_mousePoint;
     return nullptr;
 }
 
-QQuickEventPoint *QQuickPointerTouchEvent::pointById(quint64 pointId) const {
+QQuickEventPoint *QQuickPointerTouchEvent::pointById(int pointId) const {
     auto it = std::find_if(m_touchPoints.constBegin(), m_touchPoints.constEnd(),
         [pointId](const QQuickEventTouchPoint *tp) { return tp->pointId() == pointId; } );
     if (it != m_touchPoints.constEnd())

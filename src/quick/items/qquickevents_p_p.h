@@ -259,7 +259,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(QPointF sceneGrabPos READ sceneGrabPos)
     Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(State state READ state)
-    Q_PROPERTY(quint64 pointId READ pointId)
+    Q_PROPERTY(int pointId READ pointId)
     Q_PROPERTY(qreal timeHeld READ timeHeld)
     Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
@@ -288,7 +288,7 @@ public:
 
     QQuickEventPoint(QQuickPointerEvent *parent);
 
-    void reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
+    void reset(Qt::TouchPointState state, const QPointF &scenePos, int pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
     void localizePosition(QQuickItem *target);
 
     QQuickPointerEvent *pointerEvent() const;
@@ -298,7 +298,7 @@ public:
     QPointF sceneGrabPos() const { return m_sceneGrabPos; }
     QVector2D velocity() const { return m_velocity; }
     State state() const { return m_state; }
-    quint64 pointId() const { return m_pointId; }
+    int pointId() const { return m_pointId; }
     qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
     bool isAccepted() const { return m_accept; }
     void setAccepted(bool accepted = true);
@@ -329,7 +329,7 @@ private:
     QPointF m_scenePressPos;
     QPointF m_sceneGrabPos;
     QVector2D m_velocity;
-    quint64 m_pointId;
+    int m_pointId;
     QPointer<QObject> m_exclusiveGrabber;
     QVector<QPointer <QQuickPointerHandler> > m_passiveGrabbers;
     ulong m_timestamp;
@@ -415,7 +415,7 @@ public: // helpers for C++ only (during event delivery)
 
     virtual int pointCount() const = 0;
     virtual QQuickEventPoint *point(int i) const = 0;
-    virtual QQuickEventPoint *pointById(quint64 pointId) const = 0;
+    virtual QQuickEventPoint *pointById(int pointId) const = 0;
     virtual QVector<QObject *> exclusiveGrabbers() const = 0;
     virtual void clearGrabbers() const = 0;
     virtual bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const = 0;
@@ -445,7 +445,7 @@ public:
     const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
     int pointCount() const override { return 1; }
     QQuickEventPoint *point(int i) const override;
-    QQuickEventPoint *pointById(quint64 pointId) const override;
+    QQuickEventPoint *pointById(int pointId) const override;
     bool allPointsAccepted() const override;
     bool allUpdatedPointsAccepted() const override;
     bool allPointsGrabbed() const override;
@@ -478,7 +478,7 @@ public:
     const QQuickPointerTouchEvent *asPointerTouchEvent() const override { return this; }
     int pointCount() const override { return m_pointCount; }
     QQuickEventPoint *point(int i) const override;
-    QQuickEventPoint *pointById(quint64 pointId) const override;
+    QQuickEventPoint *pointById(int pointId) const override;
     const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
     bool allPointsAccepted() const override;
     bool allUpdatedPointsAccepted() const override;

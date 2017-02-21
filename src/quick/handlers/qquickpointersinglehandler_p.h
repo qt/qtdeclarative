@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
-    Q_PROPERTY(quint64 pointId READ pointId NOTIFY pointIdChanged)
+    Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged)
     Q_PROPERTY(QPointingDeviceUniqueId uniquePointId READ uniquePointId NOTIFY pointIdChanged)
     Q_PROPERTY(QPointF pos READ pos NOTIFY eventPointHandled)
     Q_PROPERTY(QPointF scenePos READ scenePos NOTIFY eventPointHandled)
@@ -98,7 +98,7 @@ protected:
     virtual bool wantsEventPoint(QQuickEventPoint *point);
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
-    quint64 pointId() const { return m_pointId; }
+    int pointId() const { return m_pointId; }
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointId); }
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
@@ -107,7 +107,7 @@ private:
     void reset();
 
 private:
-    quint64 m_pointId;
+    int m_pointId;
     QPointingDeviceUniqueId m_uniquePointId;
     Qt::MouseButtons m_pressedButtons;
     QPointF m_pos;

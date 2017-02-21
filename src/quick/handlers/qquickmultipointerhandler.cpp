@@ -119,7 +119,7 @@ bool QQuickMultiPointerHandler::sameAsCurrentPoints(QQuickPointerEvent *event)
     // or use std::equal with a predicate
     for (int i = 0; ret && i < c; ++i) {
         bool found = false;
-        quint64 pointId = event->point(i)->pointId();
+        int pointId = event->point(i)->pointId();
         for (QQuickEventPoint *o : qAsConst(m_currentPoints))
             if (o && pointId == o->pointId())
                 found = true;
