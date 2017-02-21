@@ -69,7 +69,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject
     Q_PROPERTY(QQuickItem * parent READ parentItem CONSTANT)
 
 public:
-    QQuickPointerHandler(QObject *parent = 0);
+    explicit QQuickPointerHandler(QObject *parent = 0);
     virtual ~QQuickPointerHandler();
 
 public:

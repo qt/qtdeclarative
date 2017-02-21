@@ -65,7 +65,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointerHandler : public QQuickPointerDeviceHa
     Q_PROPERTY(qreal pointDistanceThreshold READ pointDistanceThreshold WRITE setPointDistanceThreshold NOTIFY pointDistanceThresholdChanged)
 
 public:
-    QQuickMultiPointerHandler(QObject *parent = 0, int requiredPointCount = 2);
+    explicit QQuickMultiPointerHandler(QObject *parent = 0, int requiredPointCount = 2);
     ~QQuickMultiPointerHandler();
 
     int requiredPointCount() const { return m_requiredPointCount; }

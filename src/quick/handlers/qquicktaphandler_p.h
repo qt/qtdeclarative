@@ -75,7 +75,7 @@ public:
     };
     Q_ENUM(GesturePolicy)
 
-    QQuickTapHandler(QObject *parent = 0);
+    explicit QQuickTapHandler(QObject *parent = 0);
     ~QQuickTapHandler();
 
     bool wantsEventPoint(QQuickEventPoint *point) override;

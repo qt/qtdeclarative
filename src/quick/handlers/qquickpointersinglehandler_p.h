@@ -72,7 +72,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDe
     Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY eventPointHandled)
 
 public:
-    QQuickPointerSingleHandler(QObject *parent = 0);
+    explicit QQuickPointerSingleHandler(QObject *parent = 0);
     virtual ~QQuickPointerSingleHandler() { }
 
     Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }

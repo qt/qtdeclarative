@@ -63,7 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
 
 public:
-    QQuickPointerDeviceHandler(QObject *parent = 0);
+    explicit QQuickPointerDeviceHandler(QObject *parent = 0);
     ~QQuickPointerDeviceHandler();
 
     QQuickPointerDevice::DeviceTypes acceptedDevices() const { return m_acceptedDevices; }
