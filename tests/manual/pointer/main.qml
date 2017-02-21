@@ -62,6 +62,7 @@ Window {
             addExample("photo surface", "re-implementation of the existing photo surface demo using Handlers", Qt.resolvedUrl("photosurface.qml"))
             addExample("tap", "TapHandler: device-agnostic tap/click detection for buttons", Qt.resolvedUrl("tapHandler.qml"))
             addExample("multibuttons", "TapHandler: gesturePolicy (99 red balloons)", Qt.resolvedUrl("multibuttons.qml"))
+            addExample("flickable with Handlers", "Flickable with buttons, sliders etc. implemented in various ways", Qt.resolvedUrl("flickableWithHandlers.qml"))
         }
     }
 }

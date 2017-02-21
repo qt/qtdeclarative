@@ -40,6 +40,7 @@
 
 import QtQuick 2.7
 import Qt.labs.handlers 1.0
+import "qrc:/quick/shared/" as Examples
 import "content"
 
 Rectangle {
@@ -52,35 +53,54 @@ Rectangle {
     Flickable {
         anchors.fill: parent
         anchors.margins: 10
+        anchors.topMargin: 40
         contentHeight: 600
         contentWidth: 600
+        pressDelay: pressDelayCB.checked ? 1000 : 0
 
-        Row {
+        Column {
             spacing: 6
-            Slider {
-                label: "DragHandler"
-                width: 100; height: 500
+            Rectangle {
+                radius: 5
+                width: parent.width - 12
+                height: pressDelayCB.implicitHeight + 12
+                x: 6
+                color: "lightgray"
+                Examples.CheckBox {
+                    x: 6; y: 6
+                    id: pressDelayCB
+                    text: "press delay"
+                }
             }
-            MouseAreaSlider {
-                label: "MouseArea"
-                width: 100; height: 500
-            }
-            Column {
+
+
+            Row {
                 spacing: 6
-                MouseAreaButton {
-                    text: "MouseArea"
+                Slider {
+                    label: "DragHandler"
+                    value: 49; width: 100; height: 400
                 }
-                MptaButton {
-                    text: "MultiPointTouchArea"
+                MouseAreaSlider {
+                    label: "MouseArea"
+                    value: 49; width: 100; height: 400
                 }
-                MptaButton {
-                    text: "MultiPointTouchArea"
-                }
-                TapHandlerButton {
-                    text: "TapHandler"
-                }
-                TapHandlerButton {
-                    text: "TapHandler"
+                Column {
+                    spacing: 6
+                    MouseAreaButton {
+                        text: "MouseArea"
+                    }
+                    MptaButton {
+                        text: "MultiPointTouchArea"
+                    }
+                    MptaButton {
+                        text: "MultiPointTouchArea"
+                    }
+                    TapHandlerButton {
+                        text: "TapHandler"
+                    }
+                    TapHandlerButton {
+                        text: "TapHandler"
+                    }
                 }
             }
         }
