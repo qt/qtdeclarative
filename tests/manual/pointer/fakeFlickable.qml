@@ -48,7 +48,9 @@ Rectangle {
     height: 480
 
     FakeFlickable {
+        id: ff
         anchors.fill: parent
+        anchors.rightMargin: rightSB.width
         Row {
             Item {
                 width: 100
@@ -83,6 +85,33 @@ Rectangle {
                     text.text = request.responseText
             }
             request.send()
+        }
+    }
+
+    ScrollBar {
+        id: rightSB
+        objectName: "rightSB"
+        flick: ff
+        height: parent.height - width
+        anchors.right: parent.right
+    }
+
+    ScrollBar {
+        id: bottomSB
+        objectName: "bottomSB"
+        flick: ff
+        width: parent.width - height
+        anchors.bottom: parent.bottom
+    }
+
+    Rectangle {
+        id: cornerCover
+        color: "lightgray"
+        width: rightSB.width
+        height: bottomSB.height
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
         }
     }
 }

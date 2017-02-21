@@ -19,6 +19,7 @@
         <file>content/MouseAreaSlider.qml</file>
         <file>content/MptaButton.qml</file>
         <file>content/MultiButton.qml</file>
+        <file>content/ScrollBar.qml</file>
         <file>content/Slider.qml</file>
         <file>content/TapHandlerButton.qml</file>
         <file>resources/arrowhead.png</file>
