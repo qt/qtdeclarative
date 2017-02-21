@@ -541,7 +541,6 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
         }
         m_pointId = pointId;
     }
-    m_valid = true;
     m_accept = false;
     m_state = static_cast<QQuickEventPoint::State>(state);
     m_timestamp = timestamp;
@@ -552,18 +551,12 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
     m_velocity = (Q_LIKELY(velocity.isNull()) ? estimatedVelocity() : velocity);
 }
 
-void QQuickEventPoint::localize(QQuickItem *target)
+void QQuickEventPoint::localizePosition(QQuickItem *target)
 {
     if (target)
         m_pos = target->mapFromScene(scenePos());
     else
         m_pos = QPointF();
-}
-
-void QQuickEventPoint::invalidate()
-{
-    m_valid = false;
-    m_pointId = 0;
 }
 
 /*!
@@ -756,13 +749,6 @@ void QQuickEventPoint::setAccepted(bool accepted)
     }
 }
 
-bool QQuickEventPoint::isDraggedOverThreshold() const
-{
-    QPointF delta = scenePos() - scenePressPos();
-    return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, this) ||
-            QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, this));
-}
-
 QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
     : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)
 {}
@@ -885,7 +871,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
 
 void QQuickPointerMouseEvent::localize(QQuickItem *target)
 {
-    m_mousePoint->localize(target);
+    m_mousePoint->localizePosition(target);
 }
 
 QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
@@ -944,7 +930,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
 void QQuickPointerTouchEvent::localize(QQuickItem *target)
 {
     for (auto point : qAsConst(m_touchPoints))
-        point->localize(target);
+        point->localizePosition(target);
 }
 
 QQuickEventPoint *QQuickPointerMouseEvent::point(int i) const {
@@ -961,7 +947,7 @@ QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
   : QObject(parent), m_pointId(0), m_exclusiveGrabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
-    m_state(QQuickEventPoint::Released), m_valid(false), m_accept(false), m_grabberIsHandler(false)
+    m_state(QQuickEventPoint::Released), m_accept(false), m_grabberIsHandler(false)
 {
     Q_UNUSED(m_reserved);
 }
@@ -1306,7 +1292,7 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *e
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *event) {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
-    dbg << "QQuickEventPoint(valid:" << event->isValid() << " accepted:" << event->isAccepted()
+    dbg << "QQuickEventPoint(accepted:" << event->isAccepted()
         << " state:";
     QtDebugUtils::formatQEnum(dbg, event->state());
     dbg << " scenePos:" << event->scenePos() << " id:" << hex << event->pointId() << dec

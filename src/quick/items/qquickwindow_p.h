@@ -290,6 +290,14 @@ public:
         return overThreshold;
     }
 
+    static bool dragOverThreshold(const QQuickEventPoint *point)
+    {
+        QPointF delta = point->scenePos() - point->scenePressPos();
+        return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
+                QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
+    }
+
+
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
     static int data_count(QQmlListProperty<QObject> *);

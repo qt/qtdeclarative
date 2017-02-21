@@ -289,9 +289,7 @@ public:
     QQuickEventPoint(QQuickPointerEvent *parent);
 
     void reset(Qt::TouchPointState state, const QPointF &scenePos, quint64 pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
-    void localize(QQuickItem *target);
-
-    void invalidate();
+    void localizePosition(QQuickItem *target);
 
     QQuickPointerEvent *pointerEvent() const;
     QPointF pos() const { return m_pos; }
@@ -301,11 +299,9 @@ public:
     QVector2D velocity() const { return m_velocity; }
     State state() const { return m_state; }
     quint64 pointId() const { return m_pointId; }
-    bool isValid() const { return m_valid; }
     qreal timeHeld() const { return (m_timestamp - m_pressTimestamp) / 1000.0; }
     bool isAccepted() const { return m_accept; }
     void setAccepted(bool accepted = true);
-    bool isDraggedOverThreshold() const;
     QObject *exclusiveGrabber() const;
     void setExclusiveGrabber(QObject *exclusiveGrabber);
 
@@ -315,8 +311,8 @@ public:
     QQuickPointerHandler *grabberPointerHandler() const;
     void setGrabberPointerHandler(QQuickPointerHandler *exclusiveGrabber, bool exclusive = false);
 
-    Q_INVOKABLE void cancelExclusiveGrab();
-    Q_INVOKABLE void cancelPassiveGrab(QQuickPointerHandler *handler);
+    void cancelExclusiveGrab();
+    void cancelPassiveGrab(QQuickPointerHandler *handler);
     bool removePassiveGrabber(QQuickPointerHandler *handler);
     void cancelAllGrabs(QQuickPointerHandler *handler);
 
@@ -339,7 +335,6 @@ private:
     ulong m_timestamp;
     ulong m_pressTimestamp;
     State m_state;
-    bool m_valid : 1;
     bool m_accept : 1;
     bool m_grabberIsHandler : 1;
     int m_reserved : 29;
