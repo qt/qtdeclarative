@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -38,17 +38,34 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../../quick/shared" as Examples
+function showRequestInfo(text) {
+        msg.text = msg.text + "\n" + text
+}
 
-Item {
-    height: 480
-    width: 320
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Get data", "Send get request and show received header and body",  Qt.resolvedUrl("Get.qml"));
+function makeRequest()
+{
+
+    var doc = new XMLHttpRequest();
+    msg.text = "";
+    doc.onreadystatechange = function() {
+        if (doc.readyState == XMLHttpRequest.HEADERS_RECEIVED) {
+            showRequestInfo("Headers -->");
+            showRequestInfo(doc.getAllResponseHeaders ());
+            showRequestInfo("Last modified -->");
+            showRequestInfo(doc.getResponseHeader ("Last-Modified"));
+
+        } else if (doc.readyState == XMLHttpRequest.DONE) {
+            var a = doc.responseXML.documentElement;
+            for (var ii = 0; ii < a.childNodes.length; ++ii) {
+                showRequestInfo(a.childNodes[ii].nodeName);
+            }
+            showRequestInfo("Headers -->");
+            showRequestInfo(doc.getAllResponseHeaders ());
+            showRequestInfo("Last modified -->");
+            showRequestInfo(doc.getResponseHeader ("Last-Modified"));
         }
     }
+
+    doc.open("GET", "data.xml");
+    doc.send();
 }

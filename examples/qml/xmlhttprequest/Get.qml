@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -39,16 +39,16 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "../../quick/shared" as Examples
 
-Item {
-    height: 480
-    width: 320
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Get data", "Send get request and show received header and body",  Qt.resolvedUrl("Get.qml"));
-        }
-    }
+import "methods.js" as Utils
+
+GetForm
+{
+    anchors.fill: parent
+
+    mouseArea.onClicked: Utils.makeRequest()
+
+    button.border.width: button.pressed ? 2 : 1
+    text.text: "Request data.xml"
+
 }
