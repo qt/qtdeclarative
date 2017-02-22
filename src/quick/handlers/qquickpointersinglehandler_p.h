@@ -75,6 +75,7 @@ public:
     explicit QQuickPointerSingleHandler(QObject *parent = 0);
     virtual ~QQuickPointerSingleHandler() { }
 
+    int pointId() const { return m_pointId; }
     Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }
     QPointF pressPos() const { return m_pressPos; }
     QPointF scenePressPos() const { return parentItem()->mapToScene(m_pressPos); }
@@ -98,7 +99,7 @@ protected:
     virtual bool wantsEventPoint(QQuickEventPoint *point);
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
-    int pointId() const { return m_pointId; }
+
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointId); }
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
