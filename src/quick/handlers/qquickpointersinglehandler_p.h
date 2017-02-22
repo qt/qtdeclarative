@@ -70,13 +70,15 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDe
     Q_PROPERTY(qreal rotation READ rotation NOTIFY eventPointHandled)
     Q_PROPERTY(qreal pressure READ pressure NOTIFY eventPointHandled)
     Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY eventPointHandled)
-
+    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
 public:
     explicit QQuickPointerSingleHandler(QObject *parent = 0);
     virtual ~QQuickPointerSingleHandler() { }
 
     int pointId() const { return m_pointId; }
     Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }
+    Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
+    void setAcceptedButtons(Qt::MouseButtons buttons);
     QPointF pressPos() const { return m_pressPos; }
     QPointF scenePressPos() const { return parentItem()->mapToScene(m_pressPos); }
     QPointF sceneGrabPos() const { return m_sceneGrabPos; }
@@ -88,9 +90,10 @@ public:
     QSizeF ellipseDiameters() const { return m_ellipseDiameters; }
     QPointingDeviceUniqueId uniquePointId() const { return m_uniquePointId; }
 
-signals:
+Q_SIGNALS:
     void pointIdChanged();
     void pressedButtonsChanged();
+    void acceptedButtonsChanged();
     void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
     void eventPointHandled();
 
@@ -118,6 +121,7 @@ private:
     qreal m_rotation;
     qreal m_pressure;
     QSizeF m_ellipseDiameters;
+    Qt::MouseButtons m_acceptedButtons;
 };
 
 QT_END_NAMESPACE

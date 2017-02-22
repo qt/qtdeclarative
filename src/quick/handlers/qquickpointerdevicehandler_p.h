@@ -60,7 +60,6 @@ class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
     Q_OBJECT
     Q_PROPERTY(QQuickPointerDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE setAcceptedDevices NOTIFY acceptedDevicesChanged)
     Q_PROPERTY(QQuickPointerDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged)
-    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
 
 public:
     explicit QQuickPointerDeviceHandler(QObject *parent = 0);
@@ -68,17 +67,14 @@ public:
 
     QQuickPointerDevice::DeviceTypes acceptedDevices() const { return m_acceptedDevices; }
     QQuickPointerDevice::PointerTypes acceptedPointerTypes() const { return m_acceptedPointerTypes; }
-    Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
 
 public slots:
     void setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices);
     void setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes);
-    void setAcceptedButtons(Qt::MouseButtons buttons);
 
 Q_SIGNALS:
     void acceptedDevicesChanged();
     void acceptedPointerTypesChanged();
-    void acceptedButtonsChanged();
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
@@ -86,7 +82,6 @@ protected:
 protected:
     QQuickPointerDevice::DeviceTypes m_acceptedDevices;
     QQuickPointerDevice::PointerTypes m_acceptedPointerTypes;
-    Qt::MouseButtons m_acceptedButtons;
 };
 
 QT_END_NAMESPACE

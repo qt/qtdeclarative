@@ -53,7 +53,6 @@ QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QObject *parent)
     : QQuickPointerHandler(parent)
     , m_acceptedDevices(QQuickPointerDevice::AllDevices)
     , m_acceptedPointerTypes(QQuickPointerDevice::AllPointerTypes)
-    , m_acceptedButtons(Qt::AllButtons)
 {
 }
 
@@ -79,29 +78,16 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
     emit acceptedPointerTypesChanged();
 }
 
-void QQuickPointerDeviceHandler::setAcceptedButtons(Qt::MouseButtons buttons)
-{
-    if (m_acceptedButtons == buttons)
-        return;
-
-    m_acceptedButtons = buttons;
-    emit acceptedButtonsChanged();
-}
-
 bool QQuickPointerDeviceHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerHandler::wantsPointerEvent(event))
         return false;
     qCDebug(lcPointerHandlerDispatch) << objectName()
         << "checking device type" << m_acceptedDevices
-        << "pointer type" << m_acceptedPointerTypes
-        << "buttons" << m_acceptedButtons;
+        << "pointer type" << m_acceptedPointerTypes;
     if ((event->device()->type() & m_acceptedDevices) == 0)
         return false;
     if ((event->device()->pointerType() & m_acceptedPointerTypes) == 0)
-        return false;
-    if (event->device()->pointerType() != QQuickPointerDevice::Finger &&
-            (event->buttons() & m_acceptedButtons) == 0 && (event->button() & m_acceptedButtons) == 0)
         return false;
     return true;
 }

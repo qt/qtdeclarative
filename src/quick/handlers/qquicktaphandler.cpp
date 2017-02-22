@@ -148,7 +148,7 @@ void QQuickTapHandler::handleEventPoint(QQuickEventPoint *point)
         setPressed(true, false, point);
         break;
     case QQuickEventPoint::Released:
-        if ((point->pointerEvent()->buttons() & m_acceptedButtons) == Qt::NoButton)
+        if ((point->pointerEvent()->buttons() & acceptedButtons()) == Qt::NoButton)
             setPressed(false, false, point);
         break;
     default:

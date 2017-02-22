@@ -55,6 +55,7 @@ QQuickPointerSingleHandler::QQuickPointerSingleHandler(QObject *parent)
   , m_pointId(0)
   , m_rotation(0)
   , m_pressure(0)
+  , m_acceptedButtons(Qt::AllButtons)
 {
 }
 
@@ -62,6 +63,10 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
+    if (event->device()->pointerType() != QQuickPointerDevice::Finger &&
+            (event->buttons() & m_acceptedButtons) == 0 && (event->button() & m_acceptedButtons) == 0)
+        return false;
+
     if (m_pointId) {
         // We already know which one we want, so check whether it's there.
         // It's expected to be an update or a release.
@@ -172,6 +177,15 @@ void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
         m_pressedButtons = buttons;
         emit pressedButtonsChanged();
     }
+}
+
+void QQuickPointerSingleHandler::setAcceptedButtons(Qt::MouseButtons buttons)
+{
+    if (m_acceptedButtons == buttons)
+        return;
+
+    m_acceptedButtons = buttons;
+    emit acceptedButtonsChanged();
 }
 
 void QQuickPointerSingleHandler::reset()
