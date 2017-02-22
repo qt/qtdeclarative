@@ -105,7 +105,7 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     setVisible(false);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
 
