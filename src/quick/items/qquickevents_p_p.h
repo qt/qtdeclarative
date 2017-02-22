@@ -257,7 +257,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(QPointF scenePos READ scenePos)
     Q_PROPERTY(QPointF scenePressPos READ scenePressPos)
     Q_PROPERTY(QPointF sceneGrabPos READ sceneGrabPos)
-    Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(State state READ state)
     Q_PROPERTY(int pointId READ pointId)
     Q_PROPERTY(qreal timeHeld READ timeHeld)
