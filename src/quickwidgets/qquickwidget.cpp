@@ -353,10 +353,9 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     return renderControl->grab();
 }
 
-QObject *QQuickWidgetPrivate::focusObject()
-{
-    return offscreenWindow ? offscreenWindow->focusObject() : 0;
-}
+// Intentionally not overriding the QQuickWindow's focusObject.
+// Key events should go to our key event handlers, and then to the
+// QQuickWindow, not any in-scene item.
 
 /*!
     \module QtQuickWidgets
