@@ -78,9 +78,6 @@ public:
     explicit QQuickTapHandler(QObject *parent = 0);
     ~QQuickTapHandler();
 
-    bool wantsEventPoint(QQuickEventPoint *point) override;
-    void handleEventPoint(QQuickEventPoint *point) override;
-
     bool isPressed() const { return m_pressed; }
 
     int tapCount() const { return m_tapCount; }
@@ -104,6 +101,8 @@ Q_SIGNALS:
 protected:
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
     void timerEvent(QTimerEvent *event) override;
+    bool wantsEventPoint(QQuickEventPoint *point) override;
+    void handleEventPoint(QQuickEventPoint *point) override;
 
 private:
     void setPressed(bool press, bool cancel, QQuickEventPoint *point);
