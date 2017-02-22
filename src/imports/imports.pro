@@ -1,5 +1,7 @@
 TEMPLATE = subdirs
 
+QT_FOR_CONFIG += quick-private
+
 SUBDIRS += \
     builtins \
     qtqml \
@@ -17,7 +19,7 @@ qtHaveModule(quick) {
         window \
         testlib
 
-    qtConfig(opengl(es1|es2)?): \
+    qtConfig(quick-sprite):qtConfig(opengl(es1|es2)?): \
         SUBDIRS += particles
 }
 
