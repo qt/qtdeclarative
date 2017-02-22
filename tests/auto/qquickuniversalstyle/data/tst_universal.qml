@@ -1,12 +1,22 @@
 /****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -379,11 +389,11 @@ TestCase {
         compare(control.Universal[prop], "#80808080")
 
         // unknown
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal." + prop + " value: 123")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":67:9: QML Button: unknown Universal." + prop + " value: 123")
         control.Universal[prop] = 123
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal." + prop + " value: foo")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":67:9: QML Button: unknown Universal." + prop + " value: foo")
         control.Universal[prop] = "foo"
-        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":57:9: QML Button: unknown Universal." + prop + " value: #1")
+        ignoreWarning(Qt.resolvedUrl("tst_universal.qml") + ":67:9: QML Button: unknown Universal." + prop + " value: #1")
         control.Universal[prop] = "#1"
 
         control.destroy()
