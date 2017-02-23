@@ -1001,6 +1001,8 @@ bool QQuickStackView::childMouseEventFilter(QQuickItem *item, QEvent *event)
     // breaking its state (QTBUG-50305).
     if (event->type() == QEvent::MouseButtonPress)
         return true;
+    if (event->type() == QEvent::UngrabMouse)
+        return false;
     QQuickWindow *window = item->window();
     return window && !window->mouseGrabberItem();
 }

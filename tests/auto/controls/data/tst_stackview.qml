@@ -875,6 +875,26 @@ TestCase {
         compare(testItem.cancels, 0)
     }
 
+    function test_ungrab() {
+        var control = createTemporaryObject(stackView, testCase, {initialItem: mouseArea, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        var testItem = control.currentItem
+        verify(testItem)
+
+        mousePress(testItem)
+        control.push(mouseArea)
+        tryCompare(control, "busy", false)
+        mouseRelease(testItem)
+
+        compare(testItem.presses, 1)
+        compare(testItem.releases, 0)
+        compare(testItem.clicks, 0)
+        compare(testItem.doubleClicks, 0)
+        compare(testItem.pressed, false)
+        compare(testItem.cancels, 1)
+    }
+
     function test_failures() {
         var control = createTemporaryObject(stackView, testCase, {initialItem: component})
         verify(control)
