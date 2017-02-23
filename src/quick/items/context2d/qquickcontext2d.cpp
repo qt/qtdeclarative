@@ -128,8 +128,6 @@ QT_BEGIN_NAMESPACE
 
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 
-#define DEGREES(t) ((t) * 180.0 / M_PI)
-
 #define CHECK_CONTEXT(r)     if (!r || !r->d()->context || !r->d()->context->bufferValid()) \
                                 THROW_GENERIC_ERROR("Not a Context2D object");
 
@@ -1641,7 +1639,7 @@ void QQuickJSContext2DPrototype::method_createConicalGradient(const QV4::Builtin
     if (callData->argc >= 3) {
         qreal x = callData->args[0].toNumber();
         qreal y = callData->args[1].toNumber();
-        qreal angle = DEGREES(callData->args[2].toNumber());
+        qreal angle = qRadiansToDegrees(callData->args[2].toNumber());
         if (!qt_is_finite(x) || !qt_is_finite(y)) {
             THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
         }
@@ -3366,7 +3364,7 @@ void QQuickContext2D::rotate(qreal angle)
         return;
 
     QTransform newTransform =state.matrix;
-    newTransform.rotate(DEGREES(angle));
+    newTransform.rotate(qRadiansToDegrees(angle));
 
     if (!newTransform.isInvertible()) {
         state.invertibleCTM = false;
@@ -3375,7 +3373,7 @@ void QQuickContext2D::rotate(qreal angle)
 
     state.matrix = newTransform;
     buffer()->updateMatrix(state.matrix);
-    m_path = QTransform().rotate(-DEGREES(angle)).map(m_path);
+    m_path = QTransform().rotate(-qRadiansToDegrees(angle)).map(m_path);
 }
 
 void QQuickContext2D::shear(qreal h, qreal v)
@@ -3772,8 +3770,8 @@ void QQuickContext2D::arc(qreal xc, qreal yc, qreal radius, qreal sar, qreal ear
     antiClockWise = !antiClockWise;
     //end hack
 
-    float sa = DEGREES(sar);
-    float ea = DEGREES(ear);
+    float sa = qRadiansToDegrees(sar);
+    float ea = qRadiansToDegrees(ear);
 
     double span = 0;
 

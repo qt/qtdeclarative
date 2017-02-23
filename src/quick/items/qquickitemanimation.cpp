@@ -327,7 +327,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
                     }
 
                     if (scale != 0)
-                        rotation = qAtan2(transform.m12()/scale, transform.m11()/scale) * 180/M_PI;
+                        rotation = qRadiansToDegrees(qAtan2(transform.m12() / scale, transform.m11() / scale));
                     else {
                         qmlWarning(this) << QQuickParentAnimation::tr("Unable to preserve appearance under scale of 0");
                         ok = false;
