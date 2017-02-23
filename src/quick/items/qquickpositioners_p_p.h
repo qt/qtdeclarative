@@ -58,9 +58,6 @@ QT_REQUIRE_CONFIG(quick_positioners);
 #include "qquickpositioners_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 
-#include <QtQuick/private/qquickstate_p.h>
-#include <private/qquicktransitionmanager_p_p.h>
-#include <private/qquickstatechangescript_p.h>
 #include <private/qlazilyallocated_p.h>
 
 #include <QtCore/qobject.h>

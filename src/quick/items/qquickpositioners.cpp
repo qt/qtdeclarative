@@ -44,9 +44,6 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtCore/qcoreapplication.h>
 
-#include <QtQuick/private/qquickstate_p.h>
-#include <QtQuick/private/qquickstategroup_p.h>
-#include <private/qquickstatechangescript_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 
 QT_BEGIN_NAMESPACE

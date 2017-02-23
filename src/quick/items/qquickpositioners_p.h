@@ -58,7 +58,6 @@ QT_REQUIRE_CONFIG(quick_positioners);
 #include "qquickimplicitsizeitem_p.h"
 #include "qquickitemviewtransition_p.h"
 
-#include <QtQuick/private/qquickstate_p.h>
 #include <private/qpodvector_p.h>
 
 #include <QtCore/qobject.h>
