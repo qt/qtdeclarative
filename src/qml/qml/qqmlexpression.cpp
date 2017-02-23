@@ -202,6 +202,7 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
 */
 QQmlExpression::~QQmlExpression()
 {
+    clearError();
 }
 
 /*!
