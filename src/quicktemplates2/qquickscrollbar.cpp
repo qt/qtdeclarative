@@ -612,7 +612,7 @@ void QQuickScrollBar::hoverChange()
 }
 #endif
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickScrollBar::accessibilityActiveChanged(bool active)
 {
     QQuickControl::accessibilityActiveChanged(active);

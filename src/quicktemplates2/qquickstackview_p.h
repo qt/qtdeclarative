@@ -153,7 +153,7 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
 

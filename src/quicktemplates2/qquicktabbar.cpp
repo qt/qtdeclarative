@@ -390,7 +390,7 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
         polish();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickTabBar::accessibleRole() const
 {
     return QAccessible::PageTabList;

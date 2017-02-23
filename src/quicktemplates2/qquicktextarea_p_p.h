@@ -54,7 +54,7 @@
 
 #include "qquicktextarea_p.h"
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -64,7 +64,7 @@ class QQuickFlickable;
 class QQuickAccessibleAttached;
 
 class QQuickTextAreaPrivate : public QQuickTextEditPrivate, public QQuickItemChangeListener
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
 {
@@ -103,7 +103,7 @@ public:
 
     void readOnlyChanged(bool isReadOnly);
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif

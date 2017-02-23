@@ -43,7 +43,7 @@
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -121,14 +121,14 @@ QQuickTextFieldPrivate::QQuickTextFieldPrivate()
       focusReason(Qt::OtherFocusReason),
       accessibleAttached(nullptr)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
 #endif
 }
 
 QQuickTextFieldPrivate::~QQuickTextFieldPrivate()
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
 }
@@ -221,7 +221,7 @@ void QQuickTextFieldPrivate::implicitHeightChanged()
 
 void QQuickTextFieldPrivate::readOnlyChanged(bool isReadOnly)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->set_readOnly(isReadOnly);
 #else
@@ -231,7 +231,7 @@ void QQuickTextFieldPrivate::readOnlyChanged(bool isReadOnly)
 
 void QQuickTextFieldPrivate::echoModeChanged(QQuickTextField::EchoMode echoMode)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->set_passwordEdit((echoMode == QQuickTextField::Password || echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
 #else
@@ -239,7 +239,7 @@ void QQuickTextFieldPrivate::echoModeChanged(QQuickTextField::EchoMode echoMode)
 #endif
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
 {
     if (accessibleAttached || !active)
@@ -345,7 +345,7 @@ void QQuickTextField::setPlaceholderText(const QString &text)
         return;
 
     d->placeholder = text;
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (d->accessibleAttached)
         d->accessibleAttached->setDescription(text);
 #endif
@@ -464,7 +464,7 @@ void QQuickTextField::componentComplete()
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #endif
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif

@@ -1011,7 +1011,7 @@ bool QQuickStackView::childMouseEventFilter(QQuickItem *item, QEvent *event)
     return window && !window->mouseGrabberItem();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickStackView::accessibleRole() const
 {
     return QAccessible::LayeredPane;

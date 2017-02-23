@@ -54,7 +54,7 @@
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <qpa/qplatformtheme.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAccessibleAttached;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
 {
@@ -90,7 +90,7 @@ public:
 
     virtual QQuickItem *getContentItem();
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif

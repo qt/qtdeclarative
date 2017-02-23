@@ -241,7 +241,7 @@ void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     emit contentChildrenChanged();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickPane::accessibleRole() const
 {
     return QAccessible::Pane;

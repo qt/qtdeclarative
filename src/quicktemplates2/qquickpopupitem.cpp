@@ -285,7 +285,7 @@ QFont QQuickPopupItem::defaultFont() const
     return d->popup->defaultFont();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickPopupItem::accessibleRole() const
 {
     Q_D(const QQuickPopupItem);
@@ -298,6 +298,6 @@ void QQuickPopupItem::accessibilityActiveChanged(bool active)
     QQuickControl::accessibilityActiveChanged(active);
     d->popup->accessibilityActiveChanged(active);
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif
 
 QT_END_NAMESPACE

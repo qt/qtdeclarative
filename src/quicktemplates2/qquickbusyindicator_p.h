@@ -69,7 +69,7 @@ Q_SIGNALS:
     void runningChanged();
 
 protected:
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
 

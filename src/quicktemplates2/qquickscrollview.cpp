@@ -562,7 +562,7 @@ void QQuickScrollView::contentItemChange(QQuickItem *newItem, QQuickItem *oldIte
     d->setFlickable(qobject_cast<QQuickFlickable *>(newItem), false);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickScrollView::accessibleRole() const
 {
     return QAccessible::Pane;

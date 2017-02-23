@@ -535,7 +535,7 @@ void QQuickScrollIndicatorAttached::setVertical(QQuickScrollIndicator *vertical)
     emit verticalChanged();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickScrollIndicator::accessibleRole() const
 {
     return QAccessible::Indicator;

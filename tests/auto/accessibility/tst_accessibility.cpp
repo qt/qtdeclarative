@@ -42,7 +42,7 @@
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include "../shared/util.h"
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -113,6 +113,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
 }
 
+#if QT_CONFIG(accessibility)
 static QQuickAccessibleAttached *accessibleAttached(QQuickItem *item)
 {
     QQuickAccessibleAttached *acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
@@ -120,6 +121,7 @@ static QQuickAccessibleAttached *accessibleAttached(QQuickItem *item)
         acc = item->findChild<QQuickAccessibleAttached *>();
     return acc;
 }
+#endif
 
 void tst_accessibility::a11y()
 {
@@ -128,7 +130,7 @@ void tst_accessibility::a11y()
     QFETCH(QString, text);
 
     QString fn = name;
-#ifdef QT_NO_ACCESSIBILITY
+#if !QT_CONFIG(accessibility)
     if (name == QLatin1Literal("dayofweekrow")
             || name == QLatin1Literal("monthgrid")
             || name == QLatin1Literal("weeknumbercolumn"))
@@ -149,7 +151,7 @@ void tst_accessibility::a11y()
     }
     QVERIFY(item);
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QQuickAccessibleAttached *acc = accessibleAttached(item);
     if (name != QLatin1Literal("dayofweekrow")
             && name != QLatin1Literal("monthgrid")

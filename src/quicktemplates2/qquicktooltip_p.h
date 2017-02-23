@@ -90,7 +90,7 @@ protected:
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data) override;
     void timerEvent(QTimerEvent *event) override;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
     void accessibilityActiveChanged(bool active) override;
 #endif

@@ -602,7 +602,7 @@ void QQuickDialogButtonBox::itemRemoved(int index, QQuickItem *item)
         polish();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickDialogButtonBox::accessibleRole() const
 {
     return QAccessible::PageTabList;

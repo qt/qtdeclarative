@@ -1116,7 +1116,7 @@ void QQuickRangeSlider::componentComplete()
     \sa second
 */
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickRangeSlider::accessibleRole() const
 {
     return QAccessible::Slider;

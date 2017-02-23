@@ -735,7 +735,7 @@ void QQuickSlider::componentComplete()
     d->updatePosition();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickSlider::accessibilityActiveChanged(bool active)
 {
     QQuickControl::accessibilityActiveChanged(active);

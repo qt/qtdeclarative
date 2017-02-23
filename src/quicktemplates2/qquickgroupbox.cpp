@@ -153,7 +153,7 @@ QFont QQuickGroupBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::GroupBoxTitleFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickGroupBox::accessibleRole() const
 {
     return QAccessible::Grouping;
@@ -167,6 +167,6 @@ void QQuickGroupBox::accessibilityActiveChanged(bool active)
     if (active)
         setAccessibleName(d->title);
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif
 
 QT_END_NAMESPACE

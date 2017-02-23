@@ -125,7 +125,7 @@ QFont QQuickItemDelegate::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ItemViewFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickItemDelegate::accessibleRole() const
 {
     return QAccessible::ListItem;

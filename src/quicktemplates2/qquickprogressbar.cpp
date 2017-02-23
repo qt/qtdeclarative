@@ -269,7 +269,7 @@ void QQuickProgressBar::componentComplete()
     setValue(d->value);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickProgressBar::accessibleRole() const
 {
     return QAccessible::ProgressBar;

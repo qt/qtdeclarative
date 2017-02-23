@@ -191,7 +191,7 @@ void QQuickCheckBox::nextCheckState()
         QQuickAbstractButton::nextCheckState();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickCheckBox::accessibleRole() const
 {
     return QAccessible::CheckBox;

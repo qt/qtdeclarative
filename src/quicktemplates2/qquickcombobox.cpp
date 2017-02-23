@@ -1553,7 +1553,7 @@ QFont QQuickComboBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickComboBox::accessibleRole() const
 {
     return QAccessible::ComboBox;
@@ -1567,6 +1567,6 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
     if (active)
         setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif //
 
 QT_END_NAMESPACE

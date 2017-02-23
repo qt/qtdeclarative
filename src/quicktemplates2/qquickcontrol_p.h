@@ -200,12 +200,12 @@ protected:
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     virtual void accessibilityActiveChanged(bool active);
     virtual QAccessible::Role accessibleRole() const;
 #endif
 
-    // helper functions which avoid to check QT_NO_ACCESSIBILITY
+    // helper functions which avoid to check QT_CONFIG(accessibility)
     QString accessibleName() const;
     void setAccessibleName(const QString &name);
 

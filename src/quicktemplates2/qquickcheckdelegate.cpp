@@ -188,7 +188,7 @@ void QQuickCheckDelegate::nextCheckState()
         QQuickItemDelegate::nextCheckState();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickCheckDelegate::accessibleRole() const
 {
     return QAccessible::CheckBox;

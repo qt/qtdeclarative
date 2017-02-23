@@ -921,7 +921,7 @@ QFont QQuickSpinBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickSpinBox::accessibleRole() const
 {
     return QAccessible::SpinBox;

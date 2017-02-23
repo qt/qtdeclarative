@@ -103,7 +103,7 @@ QFont QQuickRadioDelegate::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickRadioDelegate::accessibleRole() const
 {
     return QAccessible::RadioButton;

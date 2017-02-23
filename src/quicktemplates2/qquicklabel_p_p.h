@@ -50,7 +50,7 @@
 
 #include <QtQuick/private/qquicktext_p_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAccessibleAttached;
 
 class QQuickLabelPrivate : public QQuickTextPrivate
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
 {
@@ -79,7 +79,7 @@ public:
 
     void textChanged(const QString &text);
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif

@@ -525,12 +525,12 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
         item->forceActiveFocus();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickMenu::accessibleRole() const
 {
     return QAccessible::PopupMenu;
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif
 
 QT_END_NAMESPACE
 

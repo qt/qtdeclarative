@@ -45,7 +45,7 @@
 #include <QtQuick/private/qquickclipnode_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -141,14 +141,14 @@ QQuickTextAreaPrivate::QQuickTextAreaPrivate()
       accessibleAttached(nullptr),
       flickable(nullptr)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
 #endif
 }
 
 QQuickTextAreaPrivate::~QQuickTextAreaPrivate()
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
 }
@@ -358,7 +358,7 @@ void QQuickTextAreaPrivate::implicitHeightChanged()
 
 void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->set_readOnly(isReadOnly);
 #else
@@ -366,7 +366,7 @@ void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 #endif
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
 {
     if (accessibleAttached || !active)
@@ -476,7 +476,7 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
         return;
 
     d->placeholder = text;
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (d->accessibleAttached)
         d->accessibleAttached->setDescription(text);
 #endif
@@ -603,7 +603,7 @@ void QQuickTextArea::componentComplete()
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #endif
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif

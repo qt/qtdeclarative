@@ -1226,7 +1226,7 @@ QFont QQuickSwipeDelegate::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickSwipeDelegate::accessibleRole() const
 {
     return QAccessible::ListItem;

@@ -53,7 +53,7 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/private/qqmlincubator_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -132,14 +132,14 @@ QQuickControlPrivate::QQuickControlPrivate()
       contentItem(nullptr),
       accessibleAttached(nullptr)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
 #endif
 }
 
 QQuickControlPrivate::~QQuickControlPrivate()
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
 }
@@ -237,7 +237,7 @@ QQuickItem *QQuickControlPrivate::getContentItem()
     return contentItem;
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickControlPrivate::accessibilityActiveChanged(bool active)
 {
     Q_Q(QQuickControl);
@@ -439,7 +439,7 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
 
 QString QQuickControl::accessibleName() const
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(const QQuickControl);
     if (d->accessibleAttached)
         return d->accessibleAttached->name();
@@ -449,7 +449,7 @@ QString QQuickControl::accessibleName() const
 
 void QQuickControl::setAccessibleName(const QString &name)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(QQuickControl);
     if (d->accessibleAttached)
         d->accessibleAttached->setName(name);
@@ -460,7 +460,7 @@ void QQuickControl::setAccessibleName(const QString &name)
 
 QVariant QQuickControl::accessibleProperty(const char *propertyName)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(QQuickControl);
     if (d->accessibleAttached)
         return QQuickAccessibleAttached::property(this, propertyName);
@@ -471,7 +471,7 @@ QVariant QQuickControl::accessibleProperty(const char *propertyName)
 
 bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(QQuickControl);
     if (d->accessibleAttached)
         return QQuickAccessibleAttached::setProperty(this, propertyName, value);
@@ -1226,7 +1226,7 @@ void QQuickControl::componentComplete()
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #endif
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
 #endif
