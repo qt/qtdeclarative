@@ -811,6 +811,10 @@ void QQuickWindowPrivate::grabTouchPoints(QQuickItem *grabber, const QVector<int
 void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool touch)
 {
     Q_Q(QQuickWindow);
+    if (Q_LIKELY(mouse) && q->mouseGrabberItem() == grabber) {
+        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << q->mouseGrabberItem() << "-> null";
+        setMouseGrabber(nullptr);
+    }
     if (Q_LIKELY(touch)) {
         const auto touchDevices = QQuickPointerDevice::touchDevices();
         for (auto device : touchDevices) {
@@ -823,10 +827,6 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
                 }
             }
         }
-    }
-    if (Q_LIKELY(mouse) && q->mouseGrabberItem() == grabber) {
-        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << q->mouseGrabberItem() << "-> null";
-        setMouseGrabber(nullptr);
     }
 }
 
