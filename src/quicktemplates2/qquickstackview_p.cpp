@@ -249,14 +249,16 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
         element->setStatus(QQuickStackView::Inactive);
         element->setVisible(false);
         if (element->removal || element->isPendingRemoval())
-            removals += element;
+            removed += element;
     }
 
     if (transitioner->runningJobs.isEmpty()) {
-        qDeleteAll(removals);
-        removals.clear();
+        qDeleteAll(removed);
+        removed.clear();
         setBusy(false);
     }
+
+    removing.remove(element);
 }
 
 void QQuickStackViewPrivate::setBusy(bool b)

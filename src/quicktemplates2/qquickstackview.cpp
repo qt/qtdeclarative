@@ -310,7 +310,8 @@ QQuickStackView::~QQuickStackView()
         d->transitioner->setChangeListener(nullptr);
         delete d->transitioner;
     }
-    qDeleteAll(d->removals);
+    qDeleteAll(d->removing);
+    qDeleteAll(d->removed);
     qDeleteAll(d->elements);
 }
 
@@ -599,6 +600,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     if (d->popElements(enter)) {
         if (exit) {
             exit->removal = true;
+            d->removing.insert(exit);
             previousItem = exit->item;
         }
         emit depthChanged();
@@ -742,8 +744,10 @@ void QQuickStackView::replace(QQmlV4Function *args)
     if (exit != target ? d->replaceElements(target, elements) : d->pushElements(elements)) {
         if (depth != d->elements.count())
             emit depthChanged();
-        if (exit)
+        if (exit) {
             exit->removal = true;
+            d->removing.insert(exit);
+        }
         QQuickStackElement *enter = d->elements.top();
         d->startTransition(QQuickStackTransition::replaceExit(operation, exit, this),
                            QQuickStackTransition::replaceEnter(operation, enter, this),

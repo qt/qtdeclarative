@@ -166,8 +166,6 @@ TestCase {
         compare(item1.StackView.status, StackView.Activating)
         tryCompare(item2.StackView, "status", StackView.Inactive)
         tryCompare(item1.StackView, "status", StackView.Active)
-        // QTBUG-59034
-        tryCompare(control, "busy", false)
     }
 
     function test_index() {
