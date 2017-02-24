@@ -85,7 +85,7 @@ Rectangle {
                 objectName: "DragHandler"
                 target: container
                 acceptedModifiers: Qt.MetaModifier
-                onActiveChanged: if (!active) fling.restart(velocity)
+                onActiveChanged: if (!active) fling.restart(point.velocity)
             }
         }
         MomentumAnimation { id: fling; target: container }

@@ -60,17 +60,13 @@ Item {
             gesturePolicy: (policyDragThresholdCB.checked ? TapHandler.DragThreshold :
                             policyWithinBoundsCB.checked ? TapHandler.WithinBounds :
                             TapHandler.ReleaseWithinBounds)
-            onPressedButtonsChanged: switch (pressedButtons) {
-                case Qt.MiddleButton: borderBlink.blinkColor = "orange"; break;
-                case Qt.RightButton: borderBlink.blinkColor = "magenta"; break;
-                default: borderBlink.blinkColor = "green"; break;
-            }
+
             onCanceled: {
-                console.log("canceled @ " + pos)
+                console.log("canceled @ " + point.position)
                 borderBlink.blinkColor = "red"
                 borderBlink.start()
             }
-            onTapped: {
+            onTapped: { // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
                 console.log("tapped @ " + point.pos + " button(s) " + point.event.button + " tapCount " + tapCount)
                 if (tapCount > 1) {
                     tapCountLabel.text = tapCount
@@ -80,7 +76,7 @@ Item {
                 }
             }
             onLongPressed: longPressFeedback.createObject(rect,
-                {"x": pos.x, "y": pos.y,
+                {"x": point.position.x, "y": point.position.y,
                  "text": Math.round(handler.timeHeld).toFixed(3) + " sec",
                  "color": borderBlink.blinkColor})
         }
@@ -121,8 +117,8 @@ Item {
             color: "transparent"
             width: radius * 2
             height: radius * 2
-            x: handler.pressPos.x - radius
-            y: handler.pressPos.y - radius
+            x: handler.point.pressPosition.x - radius
+            y: handler.point.pressPosition.y - radius
             opacity: 0.25
         }
 
@@ -133,7 +129,13 @@ Item {
 
         SequentialAnimation {
             id: borderBlink
-            property color blinkColor: "blue"
+            property color blinkColor: (function(pbtns) {
+                switch (pbtns) {
+                case Qt.MiddleButton: return "orange";
+                case Qt.RightButton:  return "magenta";
+                default:              return "green";
+                }
+            })(handler.point.pressedButtons)
             loops: 3
             ScriptAction { script: rect.border.color = borderBlink.blinkColor }
             PauseAnimation { duration: 100 }

@@ -110,7 +110,7 @@ Rectangle {
                     id: dragHandler
                     onActiveChanged: {
                         if (!active)
-                            anim.restart(velocity)
+                            anim.restart(point.velocity)
                     }
                 }
 

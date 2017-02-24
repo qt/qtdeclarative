@@ -91,8 +91,8 @@ Rectangle {
         color: "transparent"
         width: radius * 2
         height: radius * 2
-        x: tap.scenePressPos.x - radius
-        y: tap.scenePressPos.y - radius
+        x: tap.point.scenePressPosition.x - radius
+        y: tap.point.scenePressPosition.y - radius
         opacity: 0.25
         Component.onCompleted: parent = root.parent
     }

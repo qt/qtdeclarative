@@ -71,9 +71,9 @@ Rectangle {
         id: tap
         onTapped: {
             if (knob.state === "horizontal")
-                knob.x = pos.x - knob.width / 2
+                knob.x = position.x - knob.width / 2
             else if (knob.state === "vertical")
-                knob.y = pos.y - knob.height / 2
+                knob.y = position.y - knob.height / 2
         }
     }
 

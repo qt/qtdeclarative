@@ -75,7 +75,7 @@ Rectangle {
 
 
         onFlickStarted: console.log("flick started with velocity " + velocity)
-        onFlickEnded: console.log("flick ended")
+        onFlickEnded: console.log("flick ended with velocity " + velocity)
 
         Component.onCompleted: {
             var request = new XMLHttpRequest()

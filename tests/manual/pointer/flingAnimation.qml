@@ -70,7 +70,7 @@ Rectangle {
                 objectName: "dragHandler" + index
                 onActiveChanged: {
                     if (!active)
-                        anim.restart(velocity)
+                        anim.restart(point.velocity)
                 }
             }
             Rectangle {

@@ -55,47 +55,74 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDeviceHandler
-{
-    Q_OBJECT
-    Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged)
-    Q_PROPERTY(QPointingDeviceUniqueId uniquePointId READ uniquePointId NOTIFY pointIdChanged)
-    Q_PROPERTY(QPointF pos READ pos NOTIFY eventPointHandled)
-    Q_PROPERTY(QPointF scenePos READ scenePos NOTIFY eventPointHandled)
-    Q_PROPERTY(QPointF pressPos READ pressPos NOTIFY pressedButtonsChanged)
-    Q_PROPERTY(QPointF scenePressPos READ scenePressPos NOTIFY pressedButtonsChanged)
-    Q_PROPERTY(QPointF sceneGrabPos READ sceneGrabPos NOTIFY singlePointGrabChanged)
-    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
-    Q_PROPERTY(QVector2D velocity READ velocity NOTIFY eventPointHandled)
-    Q_PROPERTY(qreal rotation READ rotation NOTIFY eventPointHandled)
-    Q_PROPERTY(qreal pressure READ pressure NOTIFY eventPointHandled)
-    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY eventPointHandled)
-    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
-public:
-    explicit QQuickPointerSingleHandler(QObject *parent = 0);
-    virtual ~QQuickPointerSingleHandler() { }
+class QQuickPointerSingleHandler;
 
-    int pointId() const { return m_pointId; }
+class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
+    Q_PROPERTY(int id READ id)
+    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId)
+    Q_PROPERTY(QPointF position READ position)
+    Q_PROPERTY(QPointF scenePosition READ scenePosition)
+    Q_PROPERTY(QPointF pressPosition READ pressPosition)
+    Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition)
+    Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition)
+    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons)
+    Q_PROPERTY(QVector2D velocity READ velocity)
+    Q_PROPERTY(qreal rotation READ rotation)
+    Q_PROPERTY(qreal pressure READ pressure)
+    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters)
+    Q_GADGET
+
+public:
+    QQuickHandlerPoint();
+
+    int id() const { return m_id; }
     Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }
-    Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
-    void setAcceptedButtons(Qt::MouseButtons buttons);
-    QPointF pressPos() const { return m_pressPos; }
-    QPointF scenePressPos() const { return m_scenePressPos; }
-    QPointF sceneGrabPos() const { return m_sceneGrabPos; }
-    QPointF pos() const { return m_pos; }
-    QPointF scenePos() const { return parentItem()->mapToScene(m_pos); }
+    QPointF pressPosition() const { return m_pressPosition; }
+    QPointF scenePressPosition() const { return m_scenePressPosition; }
+    QPointF sceneGrabPosition() const { return m_sceneGrabPosition; }
+    QPointF position() const { return m_position; }
+    QPointF scenePosition() const { return m_scenePosition; }
     QVector2D velocity() const { return m_velocity; }
     qreal rotation() const { return m_rotation; }
     qreal pressure() const { return m_pressure; }
     QSizeF ellipseDiameters() const { return m_ellipseDiameters; }
-    QPointingDeviceUniqueId uniquePointId() const { return m_uniquePointId; }
+    QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
+
+private:
+    void reset();
+    int m_id;
+    QPointingDeviceUniqueId m_uniqueId;
+    Qt::MouseButtons m_pressedButtons;
+    QPointF m_position;
+    QPointF m_scenePosition;
+    QPointF m_pressPosition;
+    QPointF m_scenePressPosition;
+    QPointF m_sceneGrabPosition;
+    QVector2D m_velocity;
+    qreal m_rotation;
+    qreal m_pressure;
+    QSizeF m_ellipseDiameters;
+    friend class QQuickPointerSingleHandler;
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDeviceHandler
+{
+    Q_OBJECT
+    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
+    Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
+public:
+    explicit QQuickPointerSingleHandler(QObject *parent = 0);
+    virtual ~QQuickPointerSingleHandler() { }
+
+    Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
+    void setAcceptedButtons(Qt::MouseButtons buttons);
+
+    QQuickHandlerPoint point() const { return m_pointInfo; }
 
 Q_SIGNALS:
-    void pointIdChanged();
-    void pressedButtonsChanged();
-    void acceptedButtonsChanged();
+    void pointChanged();
     void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
-    void eventPointHandled();
+    void acceptedButtonsChanged();
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
@@ -103,7 +130,7 @@ protected:
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
 
-    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointId); }
+    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointInfo.m_id); }
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
     void setIgnoreAdditionalPoints(bool v = true);
@@ -111,27 +138,17 @@ protected:
     void moveTarget(QPointF pos, QQuickEventPoint *point);
 
 private:
-    void setPressedButtons(Qt::MouseButtons buttons);
     void reset();
 
 private:
-    int m_pointId;
-    QPointingDeviceUniqueId m_uniquePointId;
-    Qt::MouseButtons m_pressedButtons;
-    QPointF m_pos;
-    QPointF m_pressPos;
-    QPointF m_scenePressPos;
-    QPointF m_sceneGrabPos;
-    QVector2D m_velocity;
-    qreal m_rotation;
-    qreal m_pressure;
-    QSizeF m_ellipseDiameters;
+    QQuickHandlerPoint m_pointInfo;
     Qt::MouseButtons m_acceptedButtons;
     bool m_ignoreAdditionalPoints : 1;
 };
 
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuickHandlerPoint)
 QML_DECLARE_TYPE(QQuickPointerSingleHandler)
 
 #endif // QQUICKPOINTERSINGLEHANDLER_H

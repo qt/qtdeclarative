@@ -49,11 +49,11 @@ Rectangle {
 
     Item {
         id: crosshairs
-        x: dragHandler.pos.x - width / 2
-        y: dragHandler.pos.y - height / 2
+        x: dragHandler.point.position.x - width / 2
+        y: dragHandler.point.position.y - height / 2
         width: parent.width / 2; height: parent.height / 2
         visible: dragHandler.active
-        rotation: dragHandler.rotation
+        rotation: dragHandler.point.rotation
 
         Rectangle {
             color: "goldenrod"
@@ -69,7 +69,7 @@ Rectangle {
         }
         Rectangle {
             color: "goldenrod"
-            width: Math.max(2, 50 * dragHandler.pressure)
+            width: Math.max(2, 50 * dragHandler.point.pressure)
             height: width
             radius: width / 2
             anchors.centerIn: parent
@@ -82,8 +82,8 @@ Rectangle {
                 implicitHeight: label.implicitHeight
                 Text {
                     id: label
-                    text: 'id: ' + dragHandler.pointId.toString(16) + " uid: " + dragHandler.uniquePointId.numericId +
-                        '\npos: (' + dragHandler.pos.x.toFixed(2) + ', ' + dragHandler.pos.y.toFixed(2) + ')'
+                    text: 'id: ' + dragHandler.point.id.toString(16) + " uid: " + dragHandler.point.uniqueId.numericId +
+                        '\npos: (' + dragHandler.point.position.x.toFixed(2) + ', ' + dragHandler.point.position.y.toFixed(2) + ')'
                 }
             }
         }
@@ -91,8 +91,8 @@ Rectangle {
             color: "transparent"
             border.color: "white"
             antialiasing: true
-            width: dragHandler.ellipseDiameters.width
-            height: dragHandler.ellipseDiameters.height
+            width: dragHandler.point.ellipseDiameters.width
+            height: dragHandler.point.ellipseDiameters.height
             radius: Math.min(width / 2, height / 2)
             anchors.centerIn: parent
         }
@@ -100,11 +100,11 @@ Rectangle {
     Rectangle {
         id: velocityVector
         visible: width > 0
-        width: dragHandler.velocity.length() * 100
+        width: dragHandler.point.velocity.length() * 100
         height: 2
-        x: dragHandler.pos.x
-        y: dragHandler.pos.y
-        rotation: Math.atan2(dragHandler.velocity.y, dragHandler.velocity.x) * 180 / Math.PI
+        x: dragHandler.point.position.x
+        y: dragHandler.point.position.y
+        rotation: Math.atan2(dragHandler.point.velocity.y, dragHandler.point.velocity.x) * 180 / Math.PI
         transformOrigin: Item.BottomLeft
         antialiasing: true
 
@@ -150,13 +150,14 @@ Rectangle {
     DragHandler {
         id: dragHandler
         target: null
-        onGrabChanged: if (active) {
-            console.log("grabbed " + point.pointId + " @ " + sceneGrabPos)
-            grabbingLocationIndicator.createObject(root, {"x": sceneGrabPos.x, "y": sceneGrabPos.y - 16})
+        onGrabChanged: if (active) {    // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
+            console.log("grabbed " + point.pointId + " @ " + point.sceneGrabPos)
+            grabbingLocationIndicator.createObject(root, {"x": point.sceneGrabPos.x, "y": point.sceneGrabPos.y - 16})
         }
-        onPressedButtonsChanged: {
-            if (pressedButtons)
-                mouseButtonIndicator.createObject(root, {"x": pressPos.x - 44, "y": pressPos.y - 64, "buttons": pressedButtons})
+        onPointChanged: {
+            // Here, 'point' is referring to the property of the DragHandler
+            if (point.pressedButtons)
+                mouseButtonIndicator.createObject(root, {"x": point.pressPosition.x - 44, "y": point.pressPosition.y - 64, "buttons": point.pressedButtons})
         }
     }
 }
