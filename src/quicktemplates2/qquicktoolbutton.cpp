@@ -59,7 +59,8 @@ QT_BEGIN_NAMESPACE
 
     ToolButton inherits its API from AbstractButton. For instance, you can set
     \l {AbstractButton::text}{text}, and react to \l {AbstractButton::clicked}{clicks}
-    using the AbstractButton API.
+    using the AbstractButton API. In addition to displaying text, tool buttons
+    can also display an \l [QML]{Button Icons}{icon}.
 
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */

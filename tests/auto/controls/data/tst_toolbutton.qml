@@ -181,4 +181,54 @@ TestCase {
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
+
+    function test_display_data() {
+        return [
+            { "tag": "IconOnly", display: ToolButton.IconOnly },
+            { "tag": "TextOnly", display: ToolButton.TextOnly },
+            { "tag": "TextBesideIcon", display: ToolButton.TextBesideIcon },
+            { "tag": "IconOnly, mirrored", display: ToolButton.IconOnly, mirrored: true },
+            { "tag": "TextOnly, mirrored", display: ToolButton.TextOnly, mirrored: true },
+            { "tag": "TextBesideIcon, mirrored", display: ToolButton.TextBesideIcon, mirrored: true }
+        ]
+    }
+
+    function test_display(data) {
+        var control = createTemporaryObject(toolButton, testCase, {
+            text: "ToolButton",
+            display: data.display,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "LayoutMirroring.enabled": !!data.mirrored
+        })
+        verify(control)
+        verify(control.icon.source.length > 0)
+
+        var iconImage = control.contentItem.icon
+        verify(iconImage)
+        verify(iconImage.hasOwnProperty("name"))
+        var label = control.contentItem.label
+        verify(label)
+        verify(label.hasOwnProperty("text"))
+
+        switch (control.display) {
+        case ToolButton.IconOnly:
+            compare(iconImage.visible, true)
+            compare(label.visible, false)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            break;
+        case ToolButton.TextOnly:
+            compare(iconImage.visible, false)
+            compare(label.visible, true)
+            compare(label.x, (control.availableWidth - label.width) / 2)
+            break;
+        case ToolButton.TextBesideIcon:
+            compare(iconImage.visible, true)
+            compare(label.visible, true)
+            if (control.mirrored)
+                verify(label.x < iconImage.x)
+            else
+                verify(iconImage.x < label.x)
+            break;
+        }
+    }
 }

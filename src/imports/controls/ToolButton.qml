@@ -49,14 +49,32 @@ T.ToolButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
+    spacing: 6
 
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        color: control.enabled ? (control.visualFocus ? Default.focusColor : Default.textDarkColor) : Default.textDisabledLightColor
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    icon.width: 24
+    icon.height: 24
+    icon.color: enabled ? undefined : Default.textDisabledLightColor
+
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: IconImage {
+            name: control.icon.name
+            source: control.icon.source
+            sourceSize.width: control.icon.width
+            sourceSize.height: control.icon.height
+            color: control.icon.color
+        }
+        label: Text {
+            text: control.text
+            font: control.font
+            color: control.enabled ? (control.visualFocus ? Default.focusColor : Default.textDarkColor) : Default.textDisabledLightColor
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     background: Rectangle {

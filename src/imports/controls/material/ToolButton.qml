@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Material 2.3
 import QtQuick.Controls.Material.impl 2.3
 
@@ -49,15 +51,33 @@ T.ToolButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
+    spacing: 6
 
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        color: !control.enabled ? control.Material.hintTextColor :
-                control.checked || control.highlighted ? control.Material.accent : control.Material.foreground
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    icon.width: 24
+    icon.height: 24
+    icon.color: enabled ? undefined : Material.hintTextColor
+
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: IconImage {
+            name: control.icon.name
+            source: control.icon.source
+            sourceSize.width: control.icon.width
+            sourceSize.height: control.icon.height
+            color: control.icon.color
+        }
+        label: Text {
+            text: control.text
+            font: control.font
+            color: !control.enabled ? control.Material.hintTextColor :
+                    control.checked || control.highlighted ? control.Material.accent : control.Material.foreground
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     background: Ripple {
