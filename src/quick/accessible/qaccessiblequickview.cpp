@@ -81,6 +81,14 @@ QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
     return 0;
 }
 
+QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
+{
+    QObject *focusObject = window()->focusObject();
+    if (focusObject)
+        return QAccessible::queryAccessibleInterface(focusObject);
+    return nullptr;
+}
+
 QAccessible::Role QAccessibleQuickWindow::role() const
 {
     return QAccessible::Window; // FIXME

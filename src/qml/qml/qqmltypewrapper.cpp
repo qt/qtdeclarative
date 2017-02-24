@@ -129,15 +129,20 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, Q
     return w.asReturnedValue();
 }
 
-static int enumForSingleton(String *name, QObject *qobjectSingleton)
+static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, QObject *qobjectSingleton,
+                            QQmlType *type)
 {
+    bool ok;
+    int value = type->enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+    if (ok)
+        return value;
+
     // ### Optimize
     QByteArray enumName = name->toQString().toUtf8();
     const QMetaObject *metaObject = qobjectSingleton->metaObject();
     for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
         QMetaEnum e = metaObject->enumerator(ii);
-        bool ok;
-        int value = e.keyToValue(enumName.constData(), &ok);
+        value = e.keyToValue(enumName.constData(), &ok);
         if (ok)
             return value;
     }
@@ -183,7 +188,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
                 // check for enum value
                 const bool includeEnums = w->d()->mode == Heap::QmlTypeWrapper::IncludeEnums;
                 if (includeEnums && name->startsWithUpper()) {
-                    const int value = enumForSingleton(name, qobjectSingleton);
+                    const int value = enumForSingleton(v4, name, qobjectSingleton, type);
                     if (value != -1)
                         return QV4::Primitive::fromInt32(value).asReturnedValue();
                 }
@@ -196,7 +201,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
 
                 // Warn when attempting to access a lowercased enum value, singleton case
                 if (!ok && includeEnums && !name->startsWithUpper()) {
-                    const int value = enumForSingleton(name, qobjectSingleton);
+                    const int value = enumForSingleton(v4, name, qobjectSingleton, type);
                     if (value != -1)
                         return throwLowercaseEnumError(v4, name, type);
                 }

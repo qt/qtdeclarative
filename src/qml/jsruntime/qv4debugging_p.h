@@ -61,8 +61,9 @@ namespace Debugging {
 
 #ifdef QT_NO_QML_DEBUGGER
 
-struct Debugger
+class Debugger
 {
+public:
     bool pauseAtNextOpportunity() const { return false; }
     void maybeBreakAtInstruction() {}
     void enteringFunction() {}

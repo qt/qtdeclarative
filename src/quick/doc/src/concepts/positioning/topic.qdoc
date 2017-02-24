@@ -112,7 +112,7 @@ them, and where possible, pristine Anchor layouts should be preferred.
 
 \section1 Anchors
 
-Anchors allows an item to be placed either adjacent to or inside of another,
+Anchors allow an item to be placed either adjacent to or inside of another,
 by attaching one or more of the item's anchor-points (boundaries) to an
 anchor-point of the other.  These anchors will remain even if the dimensions
 or location of one of the items changes, allowing for highly dynamic

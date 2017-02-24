@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace Profiling {
-struct Profiler {};
+class Profiler {};
 }
 }
 

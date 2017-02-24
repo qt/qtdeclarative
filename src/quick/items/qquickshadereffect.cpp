@@ -873,4 +873,9 @@ void QQuickShaderEffectPrivate::updatePolish()
     q->m_impl->maybeUpdateShaders();
 }
 
+bool QQuickShaderEffect::isOpenGLShaderEffect() const
+{
+    return m_glImpl != Q_NULLPTR;
+}
+
 QT_END_NAMESPACE
