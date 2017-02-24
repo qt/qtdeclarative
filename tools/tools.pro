@@ -9,7 +9,7 @@ SUBDIRS += \
         qml \
         qmllint
 
-    qtConfig(qml-network):!contains(QT_CONFIG, no-qml-debug): SUBDIRS += qmlprofiler
+    qtConfig(qml-profiler): SUBDIRS += qmlprofiler
 
     qtHaveModule(quick) {
         !static: {
