@@ -208,13 +208,13 @@ void QQuickStackViewPrivate::startTransition(const QQuickStackTransition &first,
 
     if (first.element) {
         if (immediate || !first.element->item || !first.element->prepareTransition(transitioner, first.viewBounds))
-            completeTransition(first.element, transitioner->removeTransition, first.status);
+            completeTransition(first.element, first.transition, first.status);
         else
             first.element->startTransition(transitioner, first.status);
     }
     if (second.element) {
         if (immediate || !second.element->item || !second.element->prepareTransition(transitioner, second.viewBounds))
-            completeTransition(second.element, transitioner->removeDisplacedTransition, second.status);
+            completeTransition(second.element, second.transition, second.status);
         else
             second.element->startTransition(transitioner, second.status);
     }
