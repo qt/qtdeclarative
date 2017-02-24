@@ -151,6 +151,8 @@ QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage 
     If you are using QRunnable as base for your QQuickImageResponse
     ensure automatic deletion is disabled.
 
+    See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
+
     \sa QQuickImageProvider
 */
 
@@ -465,6 +467,8 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     \since 5.6
     \inmodule QtQuick
     \brief The QQuickAsyncImageProvider class provides an interface for for asynchronous control of QML image requests.
+
+    See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
 
     \sa QQuickImageProvider
 */

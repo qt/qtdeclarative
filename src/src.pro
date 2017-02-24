@@ -5,7 +5,7 @@ QT_FOR_CONFIG += network quick-private
 SUBDIRS += \
     qml
 
-qtHaveModule(gui) {
+qtHaveModule(gui):qtConfig(animation) {
     SUBDIRS += \
         quick \
         qmltest

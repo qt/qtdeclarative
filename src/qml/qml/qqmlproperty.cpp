@@ -789,11 +789,11 @@ void QQmlPropertyPrivate::removeBinding(const QQmlProperty &that)
 QQmlAbstractBinding *
 QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
 {
+    findAliasTarget(object, index, &object, &index);
+
     QQmlData *data = QQmlData::get(object);
     if (!data)
         return 0;
-
-    findAliasTarget(object, index, &object, &index);
 
     const int coreIndex = index.coreIndex();
     const int valueTypeIndex = index.valueTypeIndex();
@@ -1399,9 +1399,9 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
 }
 
 /*!
-    Sets the property value to \a value and returns true.
-    Returns false if the property can't be set because the
-    \a value is the wrong type, for example.
+    Sets the property value to \a value. Returns \c true on success, or
+    \c false if the property can't be set because the \a value is the
+    wrong type, for example.
  */
 bool QQmlProperty::write(const QVariant &value) const
 {
@@ -1416,6 +1416,8 @@ bool QQmlProperty::write(const QVariant &value) const
     QQmlProperty p(object, name);
     p.write(value);
   \endcode
+
+  Returns \c true on success, \c false otherwise.
 */
 bool QQmlProperty::write(QObject *object, const QString &name, const QVariant &value)
 {
@@ -1432,6 +1434,8 @@ bool QQmlProperty::write(QObject *object, const QString &name, const QVariant &v
     QQmlProperty p(object, name, ctxt);
     p.write(value);
   \endcode
+
+  Returns \c true on success, \c false otherwise.
 */
 bool QQmlProperty::write(QObject *object,
                                  const QString &name,
@@ -1452,6 +1456,8 @@ bool QQmlProperty::write(QObject *object,
     QQmlProperty p(object, name, engine);
     p.write(value);
   \endcode
+
+  Returns \c true on success, \c false otherwise.
 */
 bool QQmlProperty::write(QObject *object, const QString &name, const QVariant &value,
                                  QQmlEngine *engine)

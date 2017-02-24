@@ -67,13 +67,15 @@ class QQuickWindow;
 
 #ifdef QT_NO_QML_DEBUGGER
 
-struct QV4DebugService
+class QV4DebugService
 {
+public:
     void signalEmitted(const QString &) {}
 };
 
-struct QQmlProfilerService
+class QQmlProfilerService
 {
+public:
     void startProfiling(QJSEngine *engine, quint64 features = std::numeric_limits<quint64>::max())
     {
         Q_UNUSED(engine);
@@ -83,21 +85,23 @@ struct QQmlProfilerService
     void stopProfiling(QJSEngine *) {}
 };
 
-struct QQmlEngineDebugService
+class QQmlEngineDebugService
 {
+public:
     void objectCreated(QJSEngine *, QObject *) {}
     virtual void setStatesDelegate(QQmlDebugStatesDelegate *) {}
 };
 
-struct QQmlInspectorService {
+class QQmlInspectorService {
+public:
     void addWindow(QQuickWindow *) {}
     void setParentWindow(QQuickWindow *, QWindow *) {}
     void removeWindow(QQuickWindow *) {}
 };
 
-struct QDebugMessageService {};
-struct QQmlEngineControlService {};
-struct QQmlNativeDebugService {};
+class QDebugMessageService {};
+class QQmlEngineControlService {};
+class QQmlNativeDebugService {};
 
 #else
 

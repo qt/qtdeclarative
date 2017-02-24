@@ -36,10 +36,10 @@
 Models can be defined in C++ and then made available to QML. This is useful
 for exposing existing C++ data models or otherwise complex datasets to QML.
 
-A C++ model class can be defined as a \l QStringList, a QObjectList or a
-\l QAbstractItemModel. The first two are useful for exposing simpler datasets,
-while QAbstractItemModel provides a more flexible solution for more complex
-models.
+A C++ model class can be defined as a \l QStringList, a \l QVariantList, a
+QObjectList or a \l QAbstractItemModel. The first three are useful for exposing
+simpler datasets, while QAbstractItemModel provides a more flexible solution for
+more complex models.
 
 \section2 QStringList-based Model
 
@@ -60,10 +60,20 @@ The complete source code for this example is available in
 \l {models/stringlistmodel}{examples/quick/models/stringlistmodel}
 within the Qt install directory.
 
-\b{Note:} There is no way for the view to know that the contents of a QStringList
-have changed.  If the QStringList changes, it will be necessary to reset
+\note There is no way for the view to know that the contents of a QStringList
+have changed. If the QStringList changes, it will be necessary to reset
 the model by calling QQmlContext::setContextProperty() again.
 
+\section2 QVariantList-based Model
+
+A model may be a single \l QVariantList, which provides the contents of the list
+via the \e modelData role.
+
+The API works just like with \l QStringList, as shown in the previous section.
+
+\note There is no way for the view to know that the contents of a QVariantList
+have changed. If the QVariantList changes, it will be necessary to reset
+the model.
 
 \section2 QObjectList-based model
 

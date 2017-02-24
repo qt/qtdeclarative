@@ -265,15 +265,18 @@ private:
     QHash<BasicBlock *, BasicBlock *> startEndLoops;
 };
 
-class MoveMapping
+class Q_AUTOTEST_EXPORT MoveMapping
 {
+#ifdef V4_AUTOTEST
+public:
+#endif
     struct Move {
         Expr *from;
         Temp *to;
         bool needsSwap;
 
-        Move(Expr *from, Temp *to)
-            : from(from), to(to), needsSwap(false)
+        Move(Expr *from, Temp *to, bool needsSwap = false)
+            : from(from), to(to), needsSwap(needsSwap)
         {}
 
         bool operator==(const Move &other) const
@@ -293,9 +296,7 @@ public:
     void dump() const;
 
 private:
-    enum Action { NormalMove, NeedsSwap };
-    Action schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed, QList<Move> &output,
-                    QList<Move> &swaps) const;
+    int findLeaf() const;
 };
 
 /*

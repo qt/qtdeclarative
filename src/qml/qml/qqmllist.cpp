@@ -394,8 +394,9 @@ can be very useful while prototyping.
 \fn QQmlListProperty::QQmlListProperty(QObject *object, void *data,
                                     CountFunction count, AtFunction at)
 
-Construct a readonly QQmlListProperty from a set of operation functions.  An opaque \a data handle
-may be passed which can be accessed from within the operation functions.  The list property
+Construct a readonly QQmlListProperty from a set of operation functions
+\a count and \a at. An opaque \a data handle may be passed which can be
+accessed from within the operation functions.  The list property
 remains valid while \a object exists.
 */
 
@@ -404,8 +405,9 @@ remains valid while \a object exists.
                                      CountFunction count, AtFunction at,
                                      ClearFunction clear)
 
-Construct a QQmlListProperty from a set of operation functions.  An opaque \a data handle
-may be passed which can be accessed from within the operation functions.  The list property
+Construct a QQmlListProperty from a set of operation functions \a append,
+\a count, \a at, and \a clear.  An opaque \a data handle may be passed which
+can be accessed from within the operation functions.  The list property
 remains valid while \a object exists.
 
 Null pointers can be passed for any function. If any null pointers are passed in, the list
