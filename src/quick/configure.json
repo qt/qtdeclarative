@@ -51,6 +51,7 @@
         "quick-canvas": {
             "label": "Canvas item",
             "purpose": "Provides the Qt Quick Canvas Item",
+            "condition": "features.quick-path",
             "output": [
                 "privateFeature"
             ]
