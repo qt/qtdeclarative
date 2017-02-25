@@ -37,8 +37,12 @@
 **
 ****************************************************************************/
 
+#include <private/qtquickglobal_p.h>
+
 #include "qquickangledirection_p.h"
+#if QT_CONFIG(quick_shadereffect)
 #include "qquickcustomparticle_p.h"
+#endif
 #include "qquickellipseextruder_p.h"
 #include "qquicktrailemitter_p.h"
 #include "qquickfriction_p.h"
@@ -84,7 +88,9 @@ void QQuickParticlesModule::defineModule()
     qmlRegisterType<QQuickParticleGroup>(uri, 2, 0, "ParticleGroup");
 
     qmlRegisterType<QQuickImageParticle>(uri, 2, 0, "ImageParticle");
+#if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickCustomParticle>(uri, 2, 0, "CustomParticle");
+#endif
     qmlRegisterType<QQuickItemParticle>(uri, 2, 0, "ItemParticle");
 
     qmlRegisterType<QQuickParticleEmitter>(uri, 2, 0, "Emitter");

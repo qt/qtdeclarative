@@ -46,6 +46,7 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtGui/QGuiApplication>
+#include <qsgtextureprovider.h>
 
 #include <qqmlinfo.h>
 #include <private/qqmlengine_p.h>
