@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Universal 2.3
 
 T.ItemDelegate {
@@ -54,19 +56,20 @@ T.ItemDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    contentItem: Text {
-        leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
-        rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
+    icon.width: 20
+    icon.height: 20
+    icon.color: enabled ? undefined : Universal.transparentColor(Universal.foreground, 0.2)
 
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon ? Qt.AlignCenter : Qt.AlignLeft
+
+        icon: control.icon
         text: control.text
         font: control.font
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-
-        opacity: enabled ? 1.0 : 0.2
-        color: control.Universal.foreground
+        color: Color.transparent(control.Universal.foreground, enabled ? 1.0 : 0.2)
     }
 
     background: Rectangle {
