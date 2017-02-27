@@ -67,6 +67,8 @@ public:
     virtual void setStyleColor(const QColor &);
 
     virtual void update();
+    virtual void preprocess();
+    void updateGeometry();
 
 protected:
     QGlyphRun m_glyphs;
@@ -79,6 +81,24 @@ protected:
     QSGTextMaskMaterial *m_material;
 
     QSGGeometry m_geometry;
+
+private:
+    enum DefaultGlyphNodeType {
+        RootGlyphNode,
+        SubGlyphNode
+    };
+
+    void setGlyphNodeType(DefaultGlyphNodeType type) { m_glyphNodeType = type; }
+
+    DefaultGlyphNodeType m_glyphNodeType;
+    QLinkedList<QSGNode *> m_nodesToDelete;
+
+    struct GlyphInfo {
+        QVector<quint32> indexes;
+        QVector<QPointF> positions;
+    };
+
+    uint m_dirtyGeometry: 1;
 };
 
 QT_END_NAMESPACE
