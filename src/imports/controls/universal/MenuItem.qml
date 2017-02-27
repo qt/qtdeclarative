@@ -55,17 +55,23 @@ T.MenuItem {
     bottomPadding: padding + 1
     spacing: 12
 
-    contentItem: Text {
-        leftPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.mirrored ? control.indicator.width + control.spacing : 0
+    icon.width: 20
+    icon.height: 20
+    icon.color: enabled ? undefined : Universal.transparentColor(Universal.foreground, 0.2)
 
+    contentItem: IconLabel {
+        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        alignment: Qt.AlignLeft
+
+        icon: control.icon
         text: control.text
         font: control.font
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
     }
 
     indicator: ColorImage {

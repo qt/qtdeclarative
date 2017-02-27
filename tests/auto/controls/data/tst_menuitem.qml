@@ -96,4 +96,63 @@ TestCase {
         control.highlighted = true
         verify(control.highlighted)
     }
+
+    function test_display_data() {
+        return [
+            { "tag": "IconOnly", display: MenuItem.IconOnly },
+            { "tag": "TextOnly", display: MenuItem.TextOnly },
+            { "tag": "TextUnderIcon", display: MenuItem.TextUnderIcon },
+            { "tag": "TextBesideIcon", display: MenuItem.TextBesideIcon },
+            { "tag": "IconOnly, mirrored", display: MenuItem.IconOnly, mirrored: true },
+            { "tag": "TextOnly, mirrored", display: MenuItem.TextOnly, mirrored: true },
+            { "tag": "TextUnderIcon, mirrored", display: MenuItem.TextUnderIcon, mirrored: true },
+            { "tag": "TextBesideIcon, mirrored", display: MenuItem.TextBesideIcon, mirrored: true }
+        ]
+    }
+
+    function test_display(data) {
+        var control = createTemporaryObject(menuItem, testCase, {
+            text: "MenuItem",
+            display: data.display,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "LayoutMirroring.enabled": !!data.mirrored
+        })
+        verify(control)
+        verify(control.icon.source.length > 0)
+
+        var iconImage = findChild(control.contentItem, "image")
+        var textLabel = findChild(control.contentItem, "label")
+
+        switch (control.display) {
+        case MenuItem.IconOnly:
+            verify(iconImage)
+            verify(!textLabel)
+            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width : 0)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            break;
+        case MenuItem.TextOnly:
+            verify(!iconImage)
+            verify(textLabel)
+            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width : 0)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        case MenuItem.TextUnderIcon:
+            verify(iconImage)
+            verify(textLabel)
+            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width - (textLabel.width - iconImage.width) / 2 : (textLabel.width - iconImage.width) / 2)
+            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width : 0)
+            verify(iconImage.y < textLabel.y)
+            break;
+        case MenuItem.TextBesideIcon:
+            verify(iconImage)
+            verify(textLabel)
+            if (control.mirrored)
+                verify(textLabel.x < iconImage.x)
+            else
+                verify(iconImage.x < textLabel.x)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        }
+    }
 }

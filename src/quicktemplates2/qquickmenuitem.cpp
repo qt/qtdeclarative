@@ -55,6 +55,10 @@ QT_BEGIN_NAMESPACE
     providing a familiar way to respond to menu items being \l triggered, for
     example.
 
+    MenuItem inherits its API from AbstractButton. For instance, you can set
+    \l {AbstractButton::text}{text} and \l [QML]{Button Icons}{icon} using the
+    AbstractButton API
+
     \code
     Button {
         id: fileButton
