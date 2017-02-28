@@ -53,6 +53,10 @@
 
 #include <QtCore/qglobal.h>
 
+// All host systems are assumed to have alloca().
+#define Q_ALLOCA_VAR(type, name, size) \
+    type *name = static_cast<type*>(alloca(size))
+
 QT_BEGIN_NAMESPACE
 
 #define Q_QML_EXPORT

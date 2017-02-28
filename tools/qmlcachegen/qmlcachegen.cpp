@@ -276,7 +276,9 @@ int main(int argc, char **argv)
     parser.process(app);
 
     const QStringList sources = parser.positionalArguments();
-    if (sources.count() > 1) {
+    if (sources.isEmpty()){
+        parser.showHelp();
+    } else if (sources.count() > 1) {
         fprintf(stderr, "%s\n", qPrintable(QStringLiteral("Too many input files specified: '") + sources.join(QStringLiteral("' '")) + QLatin1Char('\'')));
         return EXIT_FAILURE;
     }

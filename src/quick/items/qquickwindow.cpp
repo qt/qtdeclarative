@@ -1803,7 +1803,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     QPointF p = item->mapFromScene(event->posF());
 
     if (item->contains(p)) {
-        QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
+        QWheelEvent wheel(p, event->globalPosF(), event->pixelDelta(), event->angleDelta(), event->delta(),
                           event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
         wheel.setTimestamp(event->timestamp());
         wheel.accept();

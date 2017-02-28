@@ -1268,7 +1268,7 @@ void ModelNodeMetaObject::updateValues()
     const int roleCount = m_model->m_listModel->roleCount();
     if (!m_initialized) {
         if (roleCount) {
-            int *changedRoles = reinterpret_cast<int *>(alloca(roleCount * sizeof(int)));
+            Q_ALLOCA_VAR(int, changedRoles, roleCount * sizeof(int));
             for (int i = 0; i < roleCount; ++i)
                 changedRoles[i] = i;
             emitDirectNotifies(changedRoles, roleCount);

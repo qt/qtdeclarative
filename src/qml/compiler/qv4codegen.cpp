@@ -73,6 +73,25 @@ static inline void setLocation(IR::Stmt *s, const SourceLocation &loc)
         s->location = loc;
 }
 
+static bool cjumpCanHandle(IR::AluOp op)
+{
+    switch (op) {
+    case IR::OpIn:
+    case IR::OpInstanceof:
+    case IR::OpEqual:
+    case IR::OpNotEqual:
+    case IR::OpGe:
+    case IR::OpGt:
+    case IR::OpLe:
+    case IR::OpLt:
+    case IR::OpStrictEqual:
+    case IR::OpStrictNotEqual:
+        return true;
+    default:
+        return false;
+    }
+}
+
 Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
     : _cg(cg)
     , _sourceCode(sourceCode)
@@ -727,7 +746,7 @@ IR::Stmt *Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock 
     if (hasError)
         return 0;
 
-    if (! (cond->asTemp() || cond->asBinop())) {
+    if (! (cond->asTemp() || (cond->asBinop() && cjumpCanHandle(cond->asBinop()->op)) )) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), cond);
         cond = _block->TEMP(t);
@@ -1293,14 +1312,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (_expr.accept(cx)) {
             setLocation(cjump(binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken), _expr.iftrue, _expr.iffalse), ast->operatorToken);
         } else {
-            IR::Expr *e = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
-            if (e->asConst() || e->asString())
-                _expr.code = e;
-            else {
-                const unsigned t = _block->newTemp();
-                setLocation(move(_block->TEMP(t), e), ast->operatorToken);
-                _expr.code = _block->TEMP(t);
-            }
+            _expr.code = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
         }
         break;
     }
@@ -1326,14 +1338,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
 
-        IR::Expr *e = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
-        if (e->asConst() || e->asString())
-            _expr.code = e;
-        else {
-            const unsigned t = _block->newTemp();
-            setLocation(move(_block->TEMP(t), e), ast->operatorToken);
-            _expr.code = _block->TEMP(t);
-        }
+        _expr.code = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
         break;
     }
 

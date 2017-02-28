@@ -189,6 +189,9 @@ private slots:
     void subclassedUncreateableRevision_data();
     void subclassedUncreateableRevision();
 
+    void subclassedExtendedUncreateableRevision_data();
+    void subclassedExtendedUncreateableRevision();
+
     void uncreatableTypesAsProperties();
 
     void propertyInit();
@@ -3223,6 +3226,62 @@ void tst_qqmllanguage::subclassedUncreateableRevision()
 
     QVERIFY(obj);
     MyUncreateableBaseClass *base = qobject_cast<MyUncreateableBaseClass*>(obj);
+    QVERIFY(base);
+    QCOMPARE(base->property(prop.toLatin1()).toBool(), true);
+    delete obj;
+}
+
+void tst_qqmllanguage::subclassedExtendedUncreateableRevision_data()
+{
+    QTest::addColumn<QString>("version");
+    QTest::addColumn<QString>("prop");
+    QTest::addColumn<bool>("shouldWork");
+
+    QTest::newRow("prop1 exists in 1.0") << "1.0" << "prop1" << true;
+    QTest::newRow("prop2 does not exist in 1.0") << "1.0" << "prop2" << false;
+    QTest::newRow("prop3 does not exist in 1.0") << "1.0" << "prop3" << false;
+    QTest::newRow("prop4 exists in 1.0") << "1.0" << "prop4" << true;
+    QTest::newRow("prop5 exists in 1.0") << "1.0" << "prop5" << true;
+
+    QTest::newRow("prop1 exists in 1.1") << "1.1" << "prop1" << true;
+    QTest::newRow("prop2 exists in 1.1") << "1.1" << "prop2" << true;
+    QTest::newRow("prop3 exists in 1.1") << "1.1" << "prop3" << true;
+    QTest::newRow("prop4 exists in 1.1") << "1.1" << "prop4" << true;
+    QTest::newRow("prop5 exists in 1.1") << "1.1" << "prop5" << true;
+}
+
+void tst_qqmllanguage::subclassedExtendedUncreateableRevision()
+{
+    QFETCH(QString, version);
+    QFETCH(QString, prop);
+    QFETCH(bool, shouldWork);
+
+    {
+        QQmlEngine engine;
+        QString qml = QString("import QtQuick 2.0\nimport Test %1\nMyExtendedUncreateableBaseClass {}").arg(version);
+        QQmlComponent c(&engine);
+        QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+        c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
+        QObject *obj = c.create();
+        QCOMPARE(obj, static_cast<QObject*>(0));
+        QCOMPARE(c.errors().count(), 1);
+        QCOMPARE(c.errors().first().description(), QString("Cannot create MyExtendedUncreateableBaseClass"));
+    }
+
+    QQmlEngine engine;
+    QString qml = QString("import QtQuick 2.0\nimport Test %1\nMyExtendedCreateableDerivedClass {\n%3: true\n}").arg(version).arg(prop);
+    QQmlComponent c(&engine);
+    if (!shouldWork)
+        QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+    c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
+    QObject *obj = c.create();
+    if (!shouldWork) {
+        QCOMPARE(obj, static_cast<QObject*>(0));
+        return;
+    }
+
+    QVERIFY(obj);
+    MyExtendedUncreateableBaseClass *base = qobject_cast<MyExtendedUncreateableBaseClass*>(obj);
     QVERIFY(base);
     QCOMPARE(base->property(prop.toLatin1()).toBool(), true);
     delete obj;

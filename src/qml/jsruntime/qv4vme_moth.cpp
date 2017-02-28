@@ -402,7 +402,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         }
     }
 
-    QV4::Value **scopes = static_cast<QV4::Value **>(alloca(sizeof(QV4::Value *)*(2 + 2*scopeDepth)));
+    Q_ALLOCA_VAR(QV4::Value*, scopes, sizeof(QV4::Value *)*(2 + 2*scopeDepth));
     {
         scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->constants);
         // stack gets setup in push instruction
@@ -957,8 +957,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
             return QV4::Encode::undefined();
         code = exceptionHandler;
     }
-
-
 }
 
 #ifdef MOTH_THREADED_INTERPRETER

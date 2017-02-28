@@ -166,4 +166,29 @@ void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
     return QV4::Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
+void PropertyListPrototype::init(ExecutionEngine *)
+{
+    defineDefaultProperty(QStringLiteral("push"), method_push, 1);
+}
+
+void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
+    if (!instance)
+        RETURN_UNDEFINED();
+    QmlListWrapper *w = instance->as<QmlListWrapper>();
+    if (!w)
+        RETURN_UNDEFINED();
+    if (!w->d()->property().append)
+        THROW_GENERIC_ERROR("List doesn't define an Append function");
+
+    QV4::ScopedObject so(scope);
+    for (int i = 0; i < callData->argc; ++i)
+    {
+        so = callData->args[i].toObject(scope.engine);
+        if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
+            w->d()->property().append(&w->d()->property(), wrapper->object() );
+    }
+}
+
 QT_END_NAMESPACE

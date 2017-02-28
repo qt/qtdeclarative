@@ -331,7 +331,6 @@ void Binop<JITAssembler>::doubleBinop(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *ta
         break;
 
     default: {
-        Q_ASSERT(target->type == IR::BoolType);
         Jump trueCase = as->branchDouble(false, op, lhs, rhs);
         as->storeBool(false, target);
         Jump done = as->jump();

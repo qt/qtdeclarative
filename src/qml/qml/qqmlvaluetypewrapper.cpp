@@ -290,9 +290,11 @@ int QQmlValueTypeWrapper::typeId() const
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
 {
     bool destructGadgetOnExit = false;
+    Q_ALLOCA_DECLARE(void, gadget);
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>()) {
         if (!d()->gadgetPtr) {
-            d()->gadgetPtr = alloca(d()->valueType->metaType.sizeOf());
+            Q_ALLOCA_ASSIGN(void, gadget, d()->valueType->metaType.sizeOf());
+            d()->gadgetPtr = gadget;
             d()->valueType->metaType.construct(d()->gadgetPtr, 0);
             destructGadgetOnExit = true;
         }

@@ -47,6 +47,7 @@
 #include <private/qv4runtime_p.h>
 #include <private/qv4object_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <private/qv4objectiterator_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -261,6 +262,7 @@ private slots:
     void nonNotifyable();
     void deleteWhileBindingRunning();
     void callQtInvokables();
+    void resolveClashingProperties();
     void invokableObjectArg();
     void invokableObjectRet();
     void invokableEnumRet();
@@ -2989,6 +2991,48 @@ void tst_qqmlecmascript::callQtInvokables()
     QJSValue callback = qvariant_cast<QJSValue>(o->actuals().at(1));
     QVERIFY(!callback.isNull());
     QVERIFY(callback.isCallable());
+}
+
+void tst_qqmlecmascript::resolveClashingProperties()
+{
+    ClashingNames *o = new ClashingNames();
+    QQmlEngine qmlengine;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
+
+    QV4::ExecutionEngine *engine = QV8Engine::getV4(ep->v8engine());
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+    QV4::ObjectIterator it(scope, object->as<QV4::Object>(), QV4::ObjectIterator::EnumerableOnly);
+    QV4::ScopedValue name(scope);
+    QV4::ScopedValue value(scope);
+
+    bool seenProperty = false;
+    bool seenMethod = false;
+    while (true) {
+        QV4::Value v;
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
+            break;
+        QString key = name->toQStringNoThrow();
+        if (key == QLatin1String("clashes")) {
+            value = v;
+            QV4::ScopedValue typeString(scope, QV4::Runtime::method_typeofValue(engine, value));
+            QString type = typeString->toQStringNoThrow();
+            if (type == QLatin1String("boolean")) {
+                QVERIFY(!seenProperty);
+                seenProperty = true;
+            } else if (type == QLatin1String("function")) {
+                QVERIFY(!seenMethod);
+                seenMethod = true;
+            } else {
+                QFAIL(qPrintable(QString::fromLatin1("found 'clashes' property of type %1")
+                                 .arg(type)));
+            }
+        }
+    }
+    QVERIFY(seenProperty);
+    QVERIFY(seenMethod);
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)

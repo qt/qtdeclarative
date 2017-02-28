@@ -650,7 +650,7 @@ void StringPrototype::method_search(const BuiltinFunction *, Scope &scope, CallD
         Q_ASSERT(regExp);
     }
     Scoped<RegExp> re(scope, regExp->value());
-    uint* matchOffsets = (uint*)alloca(regExp->value()->captureCount() * 2 * sizeof(uint));
+    Q_ALLOCA_VAR(uint, matchOffsets, regExp->value()->captureCount() * 2 * sizeof(uint));
     uint result = re->match(string, /*offset*/0, matchOffsets);
     if (result == JSC::Yarr::offsetNoMatch)
         scope.result = Encode(-1);
@@ -721,7 +721,7 @@ void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallDa
     ScopedString s(scope);
     if (re) {
         uint offset = 0;
-        uint* matchOffsets = (uint*)alloca(re->value()->captureCount() * 2 * sizeof(uint));
+        Q_ALLOCA_VAR(uint, matchOffsets, re->value()->captureCount() * 2 * sizeof(uint));
         while (true) {
             Scoped<RegExp> regexp(scope, re->value());
             uint result = regexp->match(text, offset, matchOffsets);

@@ -385,7 +385,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
         }
     }
 #ifndef QT_NO_DEBUG
-    Q_ASSERT(freeSlots + allocatedSlots == EntriesInBitmap*8*sizeof(quintptr));
+    Q_ASSERT(freeSlots + allocatedSlots == (EntriesInBitmap - start) * 8 * sizeof(quintptr));
 #endif
 }
 
@@ -643,7 +643,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
 }
 
 #ifndef QT_NO_DEBUG
-static int lastAllocRequestedSlots = 0;
+static size_t lastAllocRequestedSlots = 0;
 #endif
 
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
