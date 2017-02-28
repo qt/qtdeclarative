@@ -837,10 +837,9 @@ void QQDMIncubationTask::statusChanged(Status status)
     } else if (isDoneIncubating(status)) {
         Q_ASSERT(incubating);
         // The model was deleted from under our feet, cleanup ourselves
-        if (incubating->object) {
-            delete incubating->object;
-
-            incubating->object = 0;
+        delete incubating->object;
+        incubating->object = 0;
+        if (incubating->contextData) {
             incubating->contextData->destroy();
             incubating->contextData = 0;
         }
