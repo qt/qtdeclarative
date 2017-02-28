@@ -98,16 +98,23 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
     return result;
 }
 
-void OSAllocator::commit(void*, size_t, bool, bool)
+void OSAllocator::commit(void *bytes, size_t size, bool writable, bool executable)
 {
-    CRASH(); // Unimplemented
+    if (qt_winrt_use_jit) {
+        void *result = VirtualAllocFromApp(bytes, size, MEM_COMMIT,
+                                     protection(writable, executable));
+        if (!result)
+            CRASH();
+    }
 }
 
-void OSAllocator::decommit(void* address, size_t)
+void OSAllocator::decommit(void* address, size_t bytes)
 {
-    if (qt_winrt_use_jit)
-        Q_UNREACHABLE();
-    else
+    if (qt_winrt_use_jit) {
+        bool result = VirtualFree(address, bytes, MEM_DECOMMIT);
+        if (!result)
+            CRASH();
+    } else
         _aligned_free(address);
 }
 
