@@ -69,7 +69,9 @@ static QStringList allSelectors(const QString &style = QString())
 {
     static const QStringList platformSelectors = QFileSelectorPrivate::platformSelectors();
     QStringList selectors = platformSelectors;
-    selectors += QLocale().name();
+    const QString locale = QLocale().name();
+    if (!locale.isEmpty())
+        selectors += locale;
     if (!style.isEmpty())
         selectors.prepend(style);
     return selectors;
@@ -161,7 +163,7 @@ QString QQuickStyleSelector::select(const QString &fileName) const
     } else if (url.isLocalFile()) {
         url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
     }
-    return url.toString();
+    return url.toString(QUrl::NormalizePathSegments);
 }
 
 QT_END_NAMESPACE
