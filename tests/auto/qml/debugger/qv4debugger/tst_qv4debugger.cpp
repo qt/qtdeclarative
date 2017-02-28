@@ -176,6 +176,7 @@ public:
         , m_captureContextInfo(false)
         , m_thrownValue(-1)
         , collector(engine)
+        , m_resumeSpeed(QV4Debugger::FullThrottle)
         , m_debugger(0)
     {
     }
@@ -214,7 +215,7 @@ public slots:
         if (m_captureContextInfo)
             captureContextInfo(debugger);
 
-        debugger->resume(QV4Debugger::FullThrottle);
+        debugger->resume(m_resumeSpeed);
     }
 
 public:
@@ -280,6 +281,7 @@ public:
         int context;
     };
     QVector<ExpressionRequest> m_expressionRequests;
+    QV4Debugger::Speed m_resumeSpeed;
     QList<QJsonObject> m_expressionResults;
     QList<QJsonArray> m_expressionRefs;
     QV4Debugger *m_debugger;
@@ -324,6 +326,7 @@ private slots:
     void breakInWith();
 
     void evaluateExpression();
+    void stepToEndOfScript();
 
 private:
     QV4Debugger *debugger() const
@@ -756,6 +759,31 @@ void tst_qv4debugger::evaluateExpression()
         QCOMPARE(result1.value("type").toString(), QStringLiteral("number"));
         QCOMPARE(result1.value("value").toInt(), 20);
     }
+}
+
+void tst_qv4debugger::stepToEndOfScript()
+{
+    QString script =
+            "var ret = 0;\n"
+            "ret += 4;\n"
+            "ret += 1;\n"
+            "ret += 5;\n";
+
+    debugger()->addBreakPoint("toEnd", 1);
+    m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
+    evaluateJavaScript(script, "toEnd");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Step);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 5);
+    for (int i = 0; i < 4; ++i) {
+        QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(i);
+        QCOMPARE(state.fileName, QString("toEnd"));
+        QCOMPARE(state.lineNumber, i + 1);
+    }
+
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(4);
+    QCOMPARE(state.fileName, QString("toEnd"));
+    QCOMPARE(state.lineNumber, -4); // A return instruction without proper line number.
 }
 
 QTEST_MAIN(tst_qv4debugger)
