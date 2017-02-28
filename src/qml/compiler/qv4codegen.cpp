@@ -2499,7 +2499,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
     _block = forbody;
     statement(ast->statement);
-    _block->JUMP(forstep);
+    setLocation(_block->JUMP(forstep), ast->lastSourceLocation());
 
     _block = forstep;
     statement(ast->expression);
