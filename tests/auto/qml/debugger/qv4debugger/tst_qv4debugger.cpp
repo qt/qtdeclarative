@@ -327,8 +327,9 @@ private slots:
 
     void evaluateExpression();
     void stepToEndOfScript();
-    void lastLineOfLoop();
 
+    void lastLineOfLoop_data();
+    void lastLineOfLoop();
 private:
     QV4Debugger *debugger() const
     {
@@ -787,16 +788,30 @@ void tst_qv4debugger::stepToEndOfScript()
     QCOMPARE(state.lineNumber, -4); // A return instruction without proper line number.
 }
 
+void tst_qv4debugger::lastLineOfLoop_data()
+{
+    QTest::addColumn<QString>("loopHead");
+    QTest::addColumn<QString>("loopTail");
+
+    QTest::newRow("for")       << "for (var i = 0; i < 10; ++i) {\n"   << "}\n";
+    QTest::newRow("for..in")   << "for (var i in [0, 1, 2, 3, 4]) {\n" << "}\n";
+    QTest::newRow("while")     << "while (ret < 10) {\n"               << "}\n";
+    QTest::newRow("do..while") << "do {\n"                             << "} while (ret < 10);\n";
+}
+
 void tst_qv4debugger::lastLineOfLoop()
 {
+    QFETCH(QString, loopHead);
+    QFETCH(QString, loopTail);
+
     QString script =
             "var ret = 0;\n"
-            "for (var i = 0; i < 10; ++i) {\n"
-            "    if (i == 2)\n"
+            + loopHead +
+            "    if (ret == 2)\n"
             "        ret += 4;\n" // breakpoint, then step over
             "    else \n"
             "        ret += 1;\n"
-            "}\n"; // after step over
+            + loopTail;
 
     debugger()->addBreakPoint("trueBranch", 4);
     m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
