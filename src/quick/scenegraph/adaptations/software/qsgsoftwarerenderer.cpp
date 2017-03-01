@@ -90,7 +90,7 @@ void QSGSoftwareRenderer::renderScene(uint)
     class B : public QSGBindable
     {
     public:
-        void bind() const { }
+        void bind() const override { }
     } bindable;
     QSGRenderer::renderScene(bindable);
 }

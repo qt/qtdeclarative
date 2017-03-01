@@ -630,7 +630,7 @@ a \l {MouseArea::}{clicked} signal that is emitted when the user clicks
 within the mouse area.
 
 An object can be notified through a \l{Signal handler attributes}
-{signal handler} whenever it a particular signal is emitted. A signal handler
+{signal handler} whenever a particular signal is emitted. A signal handler
 is declared with the syntax \e on<Signal> where \e <Signal> is the name of the
 signal, with the first letter capitalized. The signal handler must be declared
 within the definition of the object that emits the signal, and the handler

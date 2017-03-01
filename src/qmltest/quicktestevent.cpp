@@ -129,7 +129,7 @@ namespace QtQuickTest
 
     static void mouseEvent(MouseAction action, QWindow *window,
                            QObject *item, Qt::MouseButton button,
-                           Qt::KeyboardModifiers stateKey, QPointF _pos, int delay=-1)
+                           Qt::KeyboardModifiers stateKey, const QPointF &_pos, int delay=-1)
     {
         QTEST_ASSERT(window);
         QTEST_ASSERT(item);

@@ -58,9 +58,6 @@ QT_REQUIRE_CONFIG(quick_positioners);
 #include "qquickpositioners_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 
-#include <QtQuick/private/qquickstate_p.h>
-#include <private/qquicktransitionmanager_p_p.h>
-#include <private/qquickstatechangescript_p.h>
 #include <private/qlazilyallocated_p.h>
 
 #include <QtCore/qobject.h>
@@ -92,10 +89,14 @@ public:
     QLazilyAllocated<ExtraData> extra;
 
     QQuickBasePositionerPrivate()
-        : spacing(0), type(QQuickBasePositioner::None)
-        , transitioner(0), positioningDirty(false)
-        , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
-
+        : spacing(0)
+        , type(QQuickBasePositioner::None)
+        , transitioner(0)
+        , positioningDirty(false)
+        , doingPositioning(false)
+        , anchorConflict(false)
+        , useImplicitSize(false)
+        , layoutDirection(Qt::LeftToRight)
     {
     }
 
@@ -122,6 +123,7 @@ public:
     bool positioningDirty : 1;
     bool doingPositioning : 1;
     bool anchorConflict : 1;
+    bool useImplicitSize : 1;
 
     Qt::LayoutDirection layoutDirection;
 
@@ -175,6 +177,34 @@ public:
 
     virtual void effectiveLayoutDirectionChange()
     {
+    }
+
+    void itemImplicitWidthChanged(QQuickItem *) override
+    {
+        Q_ASSERT(useImplicitSize);
+        setPositioningDirty();
+    }
+
+    void itemImplicitHeightChanged(QQuickItem *) override
+    {
+        Q_ASSERT(useImplicitSize);
+        setPositioningDirty();
+    }
+
+    qreal itemWidth(QQuickItem *item) const
+    {
+        if (Q_LIKELY(!useImplicitSize))
+            return item->width();
+
+        return item->implicitWidth();
+    }
+
+    qreal itemHeight(QQuickItem *item) const
+    {
+        if (Q_LIKELY(!useImplicitSize))
+            return item->height();
+
+        return item->implicitHeight();
     }
 
     inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }

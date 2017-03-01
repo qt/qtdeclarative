@@ -219,24 +219,6 @@ QQmlSqlDatabaseData::~QQmlSqlDatabaseData()
 {
 }
 
-static QString qmlsqldatabase_databasesPath(QV4::ExecutionEngine *engine)
-{
-    return engine->qmlEngine()->offlineStoragePath() +
-           QDir::separator() + QLatin1String("Databases");
-}
-
-static void qmlsqldatabase_initDatabasesPath(QV4::ExecutionEngine *engine)
-{
-    QString databasesPath = qmlsqldatabase_databasesPath(engine);
-    if (!QDir().mkpath(databasesPath))
-        qWarning() << "LocalStorage: can't create path - " << databasesPath;
-}
-
-static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV4::ExecutionEngine *engine)
-{
-    return qmlsqldatabase_databasesPath(engine) + QDir::separator() + connectionName;
-}
-
 static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
     Scope scope(v4);
@@ -450,7 +432,8 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
     if (ok) {
         *w->d()->version = to_version;
 #if QT_CONFIG(settings)
-        QSettings ini(qmlsqldatabase_databaseFile(db.connectionName(), scope.engine) + QLatin1String(".ini"), QSettings::IniFormat);
+        const QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(scope.engine->qmlEngine());
+        QSettings ini(enginePrivate->offlineStorageDatabaseDirectory() + db.connectionName() + QLatin1String(".ini"), QSettings::IniFormat);
         ini.setValue(QLatin1String("Version"), to_version);
 #endif
     }
@@ -723,24 +706,23 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     if (scope.engine->qmlEngine()->offlineStoragePath().isEmpty())
         V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
 
-    qmlsqldatabase_initDatabasesPath(scope.engine);
-
-    QSqlDatabase database;
-
     QV4::ScopedValue v(scope);
     QString dbname = (v = (*args)[0])->toQStringNoThrow();
     QString dbversion = (v = (*args)[1])->toQStringNoThrow();
     QString dbdescription = (v = (*args)[2])->toQStringNoThrow();
     int dbestimatedsize = (v = (*args)[3])->toInt32();
     FunctionObject *dbcreationCallback = (v = (*args)[4])->as<FunctionObject>();
-
-    QCryptographicHash md5(QCryptographicHash::Md5);
-    md5.addData(dbname.toUtf8());
-    QString dbid(QLatin1String(md5.result().toHex()));
-
-    QString basename = qmlsqldatabase_databaseFile(dbid, scope.engine);
+    QString basename = args->v4engine()->qmlEngine()->offlineStorageDatabaseFilePath(dbname);
+    QFileInfo dbFile(basename);
+    if (!QDir().mkpath(dbFile.dir().absolutePath())) {
+        const QString message = QQmlEngine::tr("LocalStorage: can't create path %1").
+                                arg(QDir::toNativeSeparators(dbFile.dir().absolutePath()));
+        V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, message);
+    }
+    QString dbid = dbFile.fileName();
     bool created = false;
     QString version = dbversion;
+    QSqlDatabase database;
 
     {
         QSettings ini(basename+QLatin1String(".ini"),QSettings::IniFormat);

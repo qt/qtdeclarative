@@ -71,7 +71,7 @@
 %token T_VAR "var"              T_VOID "void"               T_WHILE "while"
 %token T_WITH "with"            T_XOR "^"                   T_XOR_EQ "^="
 %token T_NULL "null"            T_TRUE "true"               T_FALSE "false"
-%token T_CONST "const"
+%token T_CONST "const"          T_LET "let"
 %token T_DEBUGGER "debugger"
 %token T_RESERVED_WORD "reserved word"
 %token T_MULTILINE_STRING_LITERAL "multiline string literal"
@@ -1622,6 +1622,7 @@ ReservedIdentifier: T_VAR ;
 ReservedIdentifier: T_VOID ;
 ReservedIdentifier: T_WHILE ;
 ReservedIdentifier: T_CONST ;
+ReservedIdentifier: T_LET ;
 ReservedIdentifier: T_DEBUGGER ;
 ReservedIdentifier: T_RESERVED_WORD ;
 ReservedIdentifier: T_WITH ;
@@ -2486,11 +2487,23 @@ VariableStatement: VariableDeclarationKind VariableDeclarationList T_AUTOMATIC_S
 VariableStatement: VariableDeclarationKind VariableDeclarationList T_SEMICOLON ;
 /.
 case $rule_number: {
-  AST::VariableStatement *node = new (pool) AST::VariableStatement(
-     sym(2).VariableDeclarationList->finish (/*readOnly=*/sym(1).ival == T_CONST));
+  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
+  if (sym(1).ival == T_LET)
+    s = AST::VariableDeclaration::BlockScope;
+  else if (sym(1).ival == T_CONST)
+    s = AST::VariableDeclaration::ReadOnlyBlockScope;
+
+  AST::VariableStatement *node = new (pool) AST::VariableStatement(sym(2).VariableDeclarationList->finish(s));
   node->declarationKindToken = loc(1);
   node->semicolonToken = loc(3);
   sym(1).Node = node;
+} break;
+./
+
+VariableDeclarationKind: T_LET ;
+/.
+case $rule_number: {
+  sym(1).ival = T_LET;
 } break;
 ./
 
@@ -2542,7 +2555,8 @@ case $rule_number: {
 VariableDeclaration: JsIdentifier InitialiserOpt ;
 /.
 case $rule_number: {
-  AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression);
+  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
+  AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression, s);
   node->identifierToken = loc(1);
   sym(1).Node = node;
 } break;
@@ -2551,7 +2565,8 @@ case $rule_number: {
 VariableDeclarationNotIn: JsIdentifier InitialiserNotInOpt ;
 /.
 case $rule_number: {
-  AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression);
+  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
+  AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression, s);
   node->identifierToken = loc(1);
   sym(1).Node = node;
 } break;
@@ -2677,8 +2692,9 @@ case $rule_number: {
 IterationStatement: T_FOR T_LPAREN T_VAR VariableDeclarationListNotIn T_SEMICOLON ExpressionOpt T_SEMICOLON ExpressionOpt T_RPAREN Statement ;
 /.
 case $rule_number: {
+  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
   AST::LocalForStatement *node = new (pool) AST::LocalForStatement(
-     sym(4).VariableDeclarationList->finish (/*readOnly=*/false), sym(6).Expression,
+     sym(4).VariableDeclarationList->finish(s), sym(6).Expression,
      sym(8).Expression, sym(10).Statement);
   node->forToken = loc(1);
   node->lparenToken = loc(2);

@@ -340,7 +340,9 @@ static inline double TimeClip(double t)
 {
     if (! qt_is_finite(t) || fabs(t) > 8.64e15)
         return qt_qnan();
-    return Primitive::toInteger(t);
+
+    // +0 looks weird, but is correct. See ES6 20.3.1.15. We must not return -0.
+    return Primitive::toInteger(t) + 0;
 }
 
 static inline double ParseString(const QString &s)
@@ -724,7 +726,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(7));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(7));
     LocalTZA = getLocalTZA();
 
     ctor->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
@@ -774,8 +776,21 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setYear"), method_setYear, 1);
     defineDefaultProperty(QStringLiteral("setFullYear"), method_setFullYear, 3);
     defineDefaultProperty(QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
-    defineDefaultProperty(QStringLiteral("toUTCString"), method_toUTCString, 0);
-    defineDefaultProperty(QStringLiteral("toGMTString"), method_toUTCString, 0);
+
+    // ES6: B.2.4.3 & 20.3.4.43:
+    // We have to use the *same object* for toUTCString and toGMTString
+    {
+        QString toUtcString(QStringLiteral("toUTCString"));
+        QString toGmtString(QStringLiteral("toGMTString"));
+        ScopedString us(scope, engine->newIdentifier(toUtcString));
+        ScopedString gs(scope, engine->newIdentifier(toGmtString));
+        ExecutionContext *global = engine->rootContext();
+        ScopedFunctionObject toUtcGmtStringFn(scope, BuiltinFunction::create(global, us, method_toUTCString));
+        toUtcGmtStringFn->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+        defineDefaultProperty(us, toUtcGmtStringFn);
+        defineDefaultProperty(gs, toUtcGmtStringFn);
+    }
+
     defineDefaultProperty(QStringLiteral("toISOString"), method_toISOString, 0);
     defineDefaultProperty(QStringLiteral("toJSON"), method_toJSON, 1);
 }
@@ -1025,6 +1040,7 @@ void DatePrototype::method_setTime(const BuiltinFunction *, Scope &scope, CallDa
         THROW_TYPE_ERROR();
 
     double t = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     self->setDate(TimeClip(t));
     scope.result = Encode(self->date());
 }
@@ -1036,7 +1052,9 @@ void DatePrototype::method_setMilliseconds(const BuiltinFunction *, Scope &scope
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     self->setDate(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
     scope.result = Encode(self->date());
 }
@@ -1048,7 +1066,9 @@ void DatePrototype::method_setUTCMilliseconds(const BuiltinFunction *, Scope &sc
         THROW_TYPE_ERROR();
 
     double t = self->date();
+    CHECK_EXCEPTION();
     double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     self->setDate(TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
     scope.result = Encode(self->date());
 }
@@ -1060,8 +1080,11 @@ void DatePrototype::method_setSeconds(const BuiltinFunction *, Scope &scope, Cal
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     double sec = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     double ms = (callData->argc < 2) ? msFromTime(t) : callData->args[1].toNumber();
+    CHECK_EXCEPTION();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
     self->setDate(t);
     scope.result = Encode(self->date());
@@ -1088,9 +1111,13 @@ void DatePrototype::method_setMinutes(const BuiltinFunction *, Scope &scope, Cal
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     double min = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     double sec = (callData->argc < 2) ? SecFromTime(t) : callData->args[1].toNumber();
+    CHECK_EXCEPTION();
     double ms = (callData->argc < 3) ? msFromTime(t) : callData->args[2].toNumber();
+    CHECK_EXCEPTION();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
     self->setDate(t);
     scope.result = Encode(self->date());
@@ -1118,10 +1145,15 @@ void DatePrototype::method_setHours(const BuiltinFunction *, Scope &scope, CallD
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     double hour = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     double min = (callData->argc < 2) ? MinFromTime(t) : callData->args[1].toNumber();
+    CHECK_EXCEPTION();
     double sec = (callData->argc < 3) ? SecFromTime(t) : callData->args[2].toNumber();
+    CHECK_EXCEPTION();
     double ms = (callData->argc < 4) ? msFromTime(t) : callData->args[3].toNumber();
+    CHECK_EXCEPTION();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
     self->setDate(t);
     scope.result = Encode(self->date());
@@ -1150,7 +1182,9 @@ void DatePrototype::method_setDate(const BuiltinFunction *, Scope &scope, CallDa
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     double date = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
     self->setDate(t);
     scope.result = Encode(self->date());
@@ -1163,7 +1197,9 @@ void DatePrototype::method_setUTCDate(const BuiltinFunction *, Scope &scope, Cal
         THROW_TYPE_ERROR();
 
     double t = self->date();
+    CHECK_EXCEPTION();
     double date = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)));
     self->setDate(t);
     scope.result = Encode(self->date());
@@ -1176,8 +1212,11 @@ void DatePrototype::method_setMonth(const BuiltinFunction *, Scope &scope, CallD
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     double month = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     double date = (callData->argc < 2) ? DateFromTime(t) : callData->args[1].toNumber();
+    CHECK_EXCEPTION();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
     self->setDate(t);
     scope.result = Encode(self->date());
@@ -1245,11 +1284,15 @@ void DatePrototype::method_setFullYear(const BuiltinFunction *, Scope &scope, Ca
         THROW_TYPE_ERROR();
 
     double t = LocalTime(self->date());
+    CHECK_EXCEPTION();
     if (std::isnan(t))
         t = 0;
     double year = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    CHECK_EXCEPTION();
     double month = (callData->argc < 2) ? MonthFromTime(t) : callData->args[1].toNumber();
+    CHECK_EXCEPTION();
     double date = (callData->argc < 3) ? DateFromTime(t) : callData->args[2].toNumber();
+    CHECK_EXCEPTION();
     t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
     self->setDate(t);
     scope.result = Encode(self->date());

@@ -337,13 +337,6 @@ QSGNode::~QSGNode()
     to the scene graph and will cause the preprocess() function to be called
     for every frame the node is rendered.
 
-    The preprocess function is called before the update pass that propagates
-    opacity and transformations through the scene graph. That means that
-    functions like QSGOpacityNode::combinedOpacity() and
-    QSGTransformNode::combinedMatrix() will not contain up-to-date values.
-    If such values are changed during the preprocess, these changes will be
-    propagated through the scene graph before it is rendered.
-
     \warning Beware of deleting nodes while they are being preprocessed. It is
     possible, with a small performance hit, to delete a single node during its
     own preprocess call. Deleting a subtree which has nodes that also use

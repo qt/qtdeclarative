@@ -89,7 +89,7 @@ provided:
 \ingroup qtquickbasictypes
 \brief a date value.
 
-The \c date type refers to a date value.
+The \c date type refers to a date value, including the time of the day.
 
 To create a \c date value, specify it as a "YYYY-MM-DD" string:
 
@@ -100,7 +100,7 @@ MyDatePicker { minDate: "2000-01-01"; maxDate: "2020-12-31" }
 To read a date value returned from a C++ extension class, use
 \l{QtQml::Qt::formatDate()}{Qt.formatDate()} and \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
-When integrating with C++, note that any QDate value
+When integrating with C++, note that any QDate or QDateTime value
 \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
 converted into a \c date value, and vice-versa.
 

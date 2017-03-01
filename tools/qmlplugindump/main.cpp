@@ -839,7 +839,8 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     QStringList commandArgs = QStringList()
             << QLatin1String("-qmlFiles")
             << QLatin1String("-");
-    const auto importPathList = engine.importPathList();
+    QStringList importPathList = engine.importPathList();
+    importPathList.removeOne(QStringLiteral("qrc:/qt-project.org/imports"));
     for (const QString &path : importPathList)
         commandArgs << QLatin1String("-importPath") << path;
 
@@ -866,6 +867,8 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     if (!readDependenciesData(QLatin1String("<outputOfQmlimportscanner>"), depencenciesData,
                              dependencies, QStringList(pluginImportUri), forceQtQuickDependency)) {
         std::cerr << "failed to proecess output of qmlimportscanner" << std::endl;
+        if (importScanner.exitCode() != 0)
+            std::cerr << importScanner.readAllStandardError().toStdString();
         return false;
     }
 

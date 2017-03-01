@@ -189,7 +189,7 @@ void QSGRenderer::renderScene(uint fboId)
         class B : public QSGBindable
         {
         public:
-            void bind() const { QOpenGLFramebufferObject::bindDefault(); }
+            void bind() const override { QOpenGLFramebufferObject::bindDefault(); }
         } bindable;
         renderScene(bindable);
     }

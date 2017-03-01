@@ -50,11 +50,11 @@ class SmoothTextureMaterialShader : public QSGTextureMaterialShader
 public:
     SmoothTextureMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
 
 protected:
-    virtual void initialize();
+    void initialize() override;
 
     int m_pixelSizeLoc;
 };

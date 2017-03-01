@@ -83,12 +83,12 @@ public:
     //
     // Handle the .pragma/.import directives
     //
-    virtual void pragmaLibrary()
+    void pragmaLibrary() override
     {
         _directives += QLatin1String(".pragma library\n");
     }
 
-    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
+    void importFile(const QString &jsfile, const QString &module, int line, int column) override
     {
         _directives += QLatin1String(".import");
         _directives += QLatin1Char('"');
@@ -101,7 +101,7 @@ public:
         Q_UNUSED(column);
     }
 
-    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
+    void importModule(const QString &uri, const QString &version, const QString &module, int line, int column) override
     {
         _directives += QLatin1String(".import ");
         _directives += uri;
@@ -201,7 +201,7 @@ public:
 
 protected:
     void append(const QString &s);
-    bool parse(int startToken);
+    bool parse(int startToken) override;
     void escape(const QChar &ch, QString *out);
 };
 
@@ -409,7 +409,7 @@ public:
     QStringList tokenStream() const;
 
 protected:
-    virtual bool parse(int startToken);
+    bool parse(int startToken) override;
 };
 
 Tokenize::Tokenize()

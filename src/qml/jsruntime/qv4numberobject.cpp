@@ -102,6 +102,8 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
     ctor->defineReadonlyProperty(QStringLiteral("EPSILON"), Primitive::fromDouble(std::numeric_limits<double>::epsilon()));
+    ctor->defineReadonlyProperty(QStringLiteral("MAX_SAFE_INTEGER"), Primitive::fromDouble(9007199254740991));
+    ctor->defineReadonlyProperty(QStringLiteral("MIN_SAFE_INTEGER"), Primitive::fromDouble(-9007199254740991));
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_INTEL(239)
@@ -109,15 +111,17 @@ QT_WARNING_DISABLE_INTEL(239)
 QT_WARNING_POP
 
     ctor->defineDefaultProperty(QStringLiteral("isFinite"), method_isFinite, 1);
+    ctor->defineDefaultProperty(QStringLiteral("isInteger"), method_isInteger, 1);
+    ctor->defineDefaultProperty(QStringLiteral("isSafeInteger"), method_isSafeInteger, 1);
     ctor->defineDefaultProperty(QStringLiteral("isNaN"), method_isNaN, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString(), method_toString);
+    defineDefaultProperty(engine->id_toString(), method_toString, 1);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
     defineDefaultProperty(engine->id_valueOf(), method_valueOf);
     defineDefaultProperty(QStringLiteral("toFixed"), method_toFixed, 1);
-    defineDefaultProperty(QStringLiteral("toExponential"), method_toExponential);
-    defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision);
+    defineDefaultProperty(QStringLiteral("toExponential"), method_toExponential, 1);
+    defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision, 1);
 }
 
 inline ReturnedValue thisNumberValue(Scope &scope, CallData *callData)
@@ -153,6 +157,52 @@ void NumberPrototype::method_isFinite(const BuiltinFunction *, Scope &scope, Cal
 
     double v = callData->args[0].toNumber();
     scope.result = Encode(!std::isnan(v) && !qt_is_inf(v));
+}
+
+void NumberPrototype::method_isInteger(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    if (!callData->argc) {
+        scope.result = Encode(false);
+        return;
+    }
+
+    const Value &v = callData->args[0];
+    if (!v.isNumber()) {
+        scope.result = Encode(false);
+        return;
+    }
+
+    double dv = v.toNumber();
+    if (std::isnan(dv) || qt_is_inf(dv)) {
+        scope.result = Encode(false);
+        return;
+    }
+
+    double iv = v.toInteger();
+    scope.result = Encode(dv == iv);
+}
+
+void NumberPrototype::method_isSafeInteger(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    if (!callData->argc) {
+        scope.result = Encode(false);
+        return;
+    }
+
+    const Value &v = callData->args[0];
+    if (!v.isNumber()) {
+        scope.result = Encode(false);
+        return;
+    }
+
+    double dv = v.toNumber();
+    if (std::isnan(dv) || qt_is_inf(dv)) {
+        scope.result = Encode(false);
+        return;
+    }
+
+    double iv = v.toInteger();
+    scope.result = Encode(dv == iv && std::fabs(iv) <= (2^53)-1);
 }
 
 void NumberPrototype::method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData)

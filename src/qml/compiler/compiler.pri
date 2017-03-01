@@ -39,7 +39,10 @@ SOURCES += \
 unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
 else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
-qtConfig(qml-interpreter) {
+qtConfig(private_tests): LIBS_PRIVATE += $$QMAKE_LIBS_DYNLOAD
+}
+
+qmldevtools_build|qtConfig(qml-interpreter) {
     HEADERS += \
         $$PWD/qv4instr_moth_p.h \
         $$PWD/qv4isel_moth_p.h
@@ -48,6 +51,3 @@ qtConfig(qml-interpreter) {
         $$PWD/qv4isel_moth.cpp
 }
 
-
-qtConfig(private_tests): LIBS_PRIVATE += $$QMAKE_LIBS_DYNLOAD
-}

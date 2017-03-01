@@ -453,8 +453,13 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
             fboId = renderTargetId;
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
-            renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
-            renderer->setDevicePixelRatio(1);
+            if (QQuickRenderControl::renderWindowFor(q)) {
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
+                renderer->setDevicePixelRatio(devicePixelRatio);
+            } else {
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
+                renderer->setDevicePixelRatio(1);
+            }
         } else {
             QRect rect(QPoint(0, 0), devicePixelRatio * size);
             renderer->setDeviceRect(rect);
@@ -1798,7 +1803,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     QPointF p = item->mapFromScene(event->posF());
 
     if (item->contains(p)) {
-        QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
+        QWheelEvent wheel(p, event->globalPosF(), event->pixelDelta(), event->angleDelta(), event->delta(),
                           event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
         wheel.setTimestamp(event->timestamp());
         wheel.accept();
@@ -4167,25 +4172,25 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty variant Window::targetScreen
+    \qmlproperty variant Window::screen
 
-    Specifies the screen the window should be placed on. Equivalent to
-    QWindow::setScreen().
+    The screen with which the window is associated.
 
-    The value must be an element from the Qt.application.screens array.
+    If specified before showing a window, will result in the window being shown
+    on that screen, unless an explicit window position has been set. The value
+    must be an element from the Qt.application.screens array.
 
-    By default the value is null which leads to using the primary screen.
-
-    \note To ensure that the window is associated with the desired screen right
-    upon the underlying native window's initial creation, make sure this
-    property is set as early as possible and that the setting of its value is
-    not deferred. This can be particularly important on embedded platforms
-    without a windowing system, where only one window per screen is allowed at a
-    time.
+    \note To ensure that the window is associated with the desired screen when
+    the underlying native window is created, make sure this property is set as
+    early as possible and that the setting of its value is not deferred. This
+    can be particularly important on embedded platforms without a windowing system,
+    where only one window per screen is allowed at a time. Setting the screen after
+    a window has been created does not move the window if the new screen is part of
+    the same virtual desktop as the old screen.
 
     \since 5.9
 
-    \sa QWindow::setScreen(), QScreen, Qt.application
+    \sa QWindow::setScreen(), QWindow::screen(), QScreen, Qt.application
  */
 
 /*!

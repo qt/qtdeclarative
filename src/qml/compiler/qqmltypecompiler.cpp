@@ -57,12 +57,12 @@
 QT_BEGIN_NAMESPACE
 
 QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
-                                   QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &importCache,
+                                   QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                                    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)
     , typeData(typeData)
-    , importCache(importCache)
+    , typeNameCache(typeNameCache)
     , document(parsedQML)
 {
 }
@@ -138,7 +138,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
             sss.scan();
         }
 
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, importCache, &document->jsGenerator.stringTable);
+        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
@@ -164,7 +164,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 
     QV4::CompiledData::CompilationUnit *compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit = document->javaScriptCompilationUnit;
-    compilationUnit->importCache = importCache;
+    compilationUnit->typeNameCache = typeNameCache;
     compilationUnit->resolvedTypes = resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));

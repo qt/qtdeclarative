@@ -59,7 +59,6 @@ public:
         : complete(false)
         , visible(false)
         , visibility(QQuickWindow::AutomaticVisibility)
-        , targetScreen(nullptr)
     {
     }
 
@@ -67,7 +66,6 @@ public:
     bool visible;
     QQuickWindow::Visibility visibility;
     QV4::PersistentValue rootItemMarker;
-    QObject *targetScreen;
 };
 
 QQuickWindowQmlImpl::QQuickWindowQmlImpl(QWindow *parent)
@@ -75,6 +73,7 @@ QQuickWindowQmlImpl::QQuickWindowQmlImpl(QWindow *parent)
 {
     connect(this, &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::visibleChanged);
     connect(this, &QWindow::visibilityChanged, this, &QQuickWindowQmlImpl::visibilityChanged);
+    connect(this, &QWindow::screenChanged, this, &QQuickWindowQmlImpl::screenChanged);
 }
 
 void QQuickWindowQmlImpl::setVisible(bool visible)
@@ -175,24 +174,15 @@ void QQuickWindowQmlImpl::setWindowVisibility()
     }
 }
 
-QObject *QQuickWindowQmlImpl::targetScreen() const
+QObject *QQuickWindowQmlImpl::screen() const
 {
-    Q_D(const QQuickWindowQmlImpl);
-    return d->targetScreen;
+    return new QQuickScreenInfo(const_cast<QQuickWindowQmlImpl *>(this), QWindow::screen());
 }
 
-void QQuickWindowQmlImpl::setTargetScreen(QObject *screen)
+void QQuickWindowQmlImpl::setScreen(QObject *screen)
 {
-    Q_D(QQuickWindowQmlImpl);
-    if (d->targetScreen != screen) {
-        d->targetScreen = screen;
-        emit targetScreenChanged();
-        QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
-        if (screenWrapper)
-            setScreen(screenWrapper->wrappedScreen());
-        else
-            setScreen(nullptr);
-    }
+    QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
+    QWindow::setScreen(screenWrapper ? screenWrapper->wrappedScreen() : nullptr);
 }
 
 void QQuickWindowModule::defineModule()

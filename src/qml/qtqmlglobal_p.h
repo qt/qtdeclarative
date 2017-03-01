@@ -55,6 +55,46 @@
 #include <QtQml/private/qtqml-config_p.h>
 #include <QtQml/qtqmlglobal.h>
 
+// Define Q_ALLOCA_VAR macro to be used instead of #ifdeffing
+// the occurrences of alloca() in case it's not supported.
+// Q_ALLOCA_DECLARE and Q_ALLOCA_ASSIGN macros separate
+// memory allocation from the declaration and RAII.
+#define Q_ALLOCA_VAR(type, name, size) \
+    Q_ALLOCA_DECLARE(type, name); \
+    Q_ALLOCA_ASSIGN(type, name, size)
+
+#if QT_CONFIG(alloca)
+
+#define Q_ALLOCA_DECLARE(type, name) \
+    type *name = 0
+
+#define Q_ALLOCA_ASSIGN(type, name, size) \
+    name = static_cast<type*>(alloca(size))
+
+#else
+QT_BEGIN_NAMESPACE
+class Qt_AllocaWrapper
+{
+public:
+    Qt_AllocaWrapper() { m_data = 0; }
+    ~Qt_AllocaWrapper() { free(m_data); }
+    void *data() { return m_data; }
+    void allocate(int size) { m_data = malloc(size); }
+private:
+    void *m_data;
+};
+QT_END_NAMESPACE
+
+#define Q_ALLOCA_DECLARE(type, name) \
+    Qt_AllocaWrapper _qt_alloca_##name; \
+    type *name = 0
+
+#define Q_ALLOCA_ASSIGN(type, name, size) \
+    _qt_alloca_##name.allocate(size); \
+    name = static_cast<type*>(_qt_alloca_##name.data())
+
+#endif
+
 #if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
 #    define Q_QML_PRIVATE_EXPORT
 #else

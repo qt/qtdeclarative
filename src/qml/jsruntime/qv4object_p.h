@@ -130,8 +130,8 @@ struct ObjectVTable
     void (*construct)(const Managed *, Scope &scope, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
-    void (*put)(Managed *, String *name, const Value &value);
-    void (*putIndexed)(Managed *, uint index, const Value &value);
+    bool (*put)(Managed *, String *name, const Value &value);
+    bool (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
@@ -140,6 +140,7 @@ struct ObjectVTable
     void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
 };
 
 #define DEFINE_OBJECT_VTABLE_BASE(classname) \
@@ -159,7 +160,8 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     getLookup,                                  \
     setLookup,                                  \
     getLength,                                  \
-    advanceIterator                            \
+    advanceIterator,                            \
+    instanceOf                                  \
 }
 
 #define DEFINE_OBJECT_VTABLE(classname) \
@@ -221,8 +223,6 @@ struct Q_QML_EXPORT Object: Managed {
     //
     // helpers
     //
-    void put(ExecutionEngine *engine, const QString &name, const Value &value);
-
     static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs);
     ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
         Scope scope(this->engine());
@@ -230,7 +230,7 @@ struct Q_QML_EXPORT Object: Managed {
         return getValue(t, v, attrs);
     }
 
-    void putValue(uint memberIndex, const Value &value);
+    bool putValue(uint memberIndex, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, const Value &value) {
@@ -250,6 +250,10 @@ struct Q_QML_EXPORT Object: Managed {
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);
+
+    /* Fixed: Writable: false, Enumerable: false, Configurable: true */
+    void defineReadonlyConfigurableProperty(const QString &name, const Value &value);
+    void defineReadonlyConfigurableProperty(String *name, const Value &value);
 
     void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
@@ -332,10 +336,47 @@ public:
     { return vtable()->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
-    inline void put(String *name, const Value &v)
-    { vtable()->put(this, name, v); }
-    inline void putIndexed(uint idx, const Value &v)
-    { vtable()->putIndexed(this, idx, v); }
+
+    // use the set variants instead, to customize throw behavior
+    inline bool put(String *name, const Value &v)
+    { return vtable()->put(this, name, v); }
+    inline bool putIndexed(uint idx, const Value &v)
+    { return vtable()->putIndexed(this, idx, v); }
+
+    enum ThrowOnFailure {
+        DoThrowOnRejection,
+        DoNotThrow
+    };
+
+    // ES6: 7.3.3 Set (O, P, V, Throw)
+    inline bool set(String *name, const Value &v, ThrowOnFailure shouldThrow)
+    {
+        bool ret = vtable()->put(this, name, v);
+        // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
+        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
+            ExecutionEngine *e = engine();
+            if (!e->hasException) { // allow a custom set impl to throw itself
+                QString message = QLatin1String("Cannot assign to read-only property \"") +
+                        name->toQString() + QLatin1Char('\"');
+                e->throwTypeError(message);
+            }
+        }
+        return ret;
+    }
+
+    inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
+    {
+        bool ret = vtable()->putIndexed(this, idx, v);
+        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
+            ExecutionEngine *e = engine();
+            if (!e->hasException) { // allow a custom set impl to throw itself
+                e->throwTypeError();
+            }
+        }
+        return ret;
+    }
+
+
     PropertyAttributes query(String *name) const
     { return vtable()->query(this, name); }
     PropertyAttributes queryIndexed(uint index) const
@@ -351,6 +392,8 @@ public:
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
+    ReturnedValue instanceOf(const Value &var) const
+    { return vtable()->instanceOf(this, var); }
 
     inline void construct(Scope &scope, CallData *d) const
     { return vtable()->construct(this, scope, d); }
@@ -362,8 +405,8 @@ protected:
     static void call(const Managed *m, Scope &scope, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
-    static void putIndexed(Managed *m, uint index, const Value &value);
+    static bool put(Managed *m, String *name, const Value &value);
+    static bool putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
@@ -372,12 +415,13 @@ protected:
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
+    static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
-    void internalPut(String *name, const Value &value);
-    void internalPutIndexed(uint index, const Value &value);
+    bool internalPut(String *name, const Value &value);
+    bool internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
     bool internalDeleteIndexedProperty(uint index);
 

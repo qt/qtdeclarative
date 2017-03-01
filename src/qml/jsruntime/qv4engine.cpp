@@ -91,7 +91,9 @@
 
 #if USE(PTHREADS)
 #  include <pthread.h>
+#if !defined(Q_OS_INTEGRITY)
 #  include <sys/resource.h>
+#endif
 #if HAVE(PTHREAD_NP_H)
 #  include <pthread_np.h>
 #endif
@@ -168,7 +170,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
         if (forceMoth) {
             factory = new Moth::ISelFactory;
         } else {
-            factory = new JIT::ISelFactory;
+            factory = new JIT::ISelFactory<>;
             jitDisabled = false;
         }
 #else // !V4_ENABLE_JIT
@@ -256,6 +258,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     arrayClass = emptyClass->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
     jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(arrayClass, objectPrototype());
+    jsObjects[PropertyListProto] = memoryManager->allocObject<PropertyListPrototype>();
 
     InternalClass *argsClass = emptyClass->addMember(id_length(), Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
@@ -358,6 +361,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     static_cast<NumberPrototype *>(numberPrototype())->init(this, numberCtor());
     static_cast<BooleanPrototype *>(booleanPrototype())->init(this, booleanCtor());
     static_cast<ArrayPrototype *>(arrayPrototype())->init(this, arrayCtor());
+    static_cast<PropertyListPrototype *>(propertyListPrototype())->init(this);
     static_cast<DatePrototype *>(datePrototype())->init(this, dateCtor());
     static_cast<FunctionPrototype *>(functionPrototype())->init(this, functionCtor());
     static_cast<RegExpPrototype *>(regExpPrototype())->init(this, regExpCtor());
@@ -400,7 +404,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), *objectCtor());
     globalObject->defineDefaultProperty(QStringLiteral("String"), *stringCtor());
-    globalObject->defineDefaultProperty(QStringLiteral("Number"), *numberCtor());
+    FunctionObject *numberObject = numberCtor();
+    globalObject->defineDefaultProperty(QStringLiteral("Number"), *numberObject);
     globalObject->defineDefaultProperty(QStringLiteral("Boolean"), *booleanCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Array"), *arrayCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Function"), *functionCtor());
@@ -430,8 +435,26 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[Eval_Function] = memoryManager->allocObject<EvalFunction>(global);
     globalObject->defineDefaultProperty(QStringLiteral("eval"), *evalFunction());
 
-    globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
-    globalObject->defineDefaultProperty(QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
+    // ES6: 20.1.2.12 &  20.1.2.13:
+    // parseInt and parseFloat must be the same FunctionObject on the global &
+    // Number object.
+    {
+        QString piString(QStringLiteral("parseInt"));
+        QString pfString(QStringLiteral("parseFloat"));
+        Scope scope(this);
+        ScopedString pi(scope, newIdentifier(piString));
+        ScopedString pf(scope, newIdentifier(pfString));
+        ExecutionContext *global = rootContext();
+        ScopedFunctionObject parseIntFn(scope, BuiltinFunction::create(global, pi, GlobalFunctions::method_parseInt));
+        ScopedFunctionObject parseFloatFn(scope, BuiltinFunction::create(global, pf, GlobalFunctions::method_parseFloat));
+        parseIntFn->defineReadonlyConfigurableProperty(id_length(), Primitive::fromInt32(2));
+        parseFloatFn->defineReadonlyConfigurableProperty(id_length(), Primitive::fromInt32(1));
+        globalObject->defineDefaultProperty(piString, parseIntFn);
+        globalObject->defineDefaultProperty(pfString, parseFloatFn);
+        numberObject->defineDefaultProperty(piString, parseIntFn);
+        numberObject->defineDefaultProperty(pfString, parseFloatFn);
+    }
+
     globalObject->defineDefaultProperty(QStringLiteral("isNaN"), GlobalFunctions::method_isNaN, 1);
     globalObject->defineDefaultProperty(QStringLiteral("isFinite"), GlobalFunctions::method_isFinite, 1);
     globalObject->defineDefaultProperty(QStringLiteral("decodeURI"), GlobalFunctions::method_decodeURI, 1);
@@ -1109,7 +1132,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (typeHint == qMetaTypeId<QJSValue>())
         return QVariant::fromValue(QJSValue(e, value.asReturnedValue()));
 
-    if (value.as<Object>()) {
+    if (value.as<QV4::Object>()) {
         QV4::ScopedObject object(scope, value);
         if (typeHint == QMetaType::QJsonObject
                    && !value.as<ArrayObject>() && !value.as<FunctionObject>()) {
@@ -1755,7 +1778,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
     return false;
 }
 
-static bool convertToNativeQObject(QV4::ExecutionEngine *e, const Value &value, const QByteArray &targetType, void **result)
+static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::Value &value, const QByteArray &targetType, void **result)
 {
     if (!targetType.endsWith('*'))
         return false;
@@ -1770,7 +1793,7 @@ static bool convertToNativeQObject(QV4::ExecutionEngine *e, const Value &value, 
     return false;
 }
 
-static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const Value &value)
+static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &value)
 {
     if (!value.isObject())
         return 0;

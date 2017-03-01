@@ -99,6 +99,7 @@ QSGDefaultLayer::QSGDefaultLayer(QSGRenderContext *context)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
+    , m_samples(0)
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)
@@ -313,11 +314,20 @@ void QSGDefaultLayer::grab()
 
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     bool deleteFboLater = false;
-    if (!m_fbo || m_fbo->size() != m_size || m_fbo->format().internalTextureFormat() != m_format
-        || (!m_fbo->format().mipmap() && m_mipmap))
-    {
+
+    int effectiveSamples = m_samples;
+    // By default m_samples is 0. Fall back to the context's setting in this case.
+    if (effectiveSamples == 0)
+        effectiveSamples = m_context->openglContext()->format().samples();
+
+    const bool needsNewFbo = !m_fbo || m_fbo->size() != m_size || m_fbo->format().internalTextureFormat() != m_format;
+    const bool mipmapGotEnabled = m_fbo && !m_fbo->format().mipmap() && m_mipmap;
+    const bool msaaGotEnabled = effectiveSamples > 1 && (!m_secondaryFbo || m_secondaryFbo->format().samples() != effectiveSamples);
+    const bool msaaGotDisabled = effectiveSamples <= 1 && m_secondaryFbo;
+
+    if (needsNewFbo || mipmapGotEnabled || msaaGotEnabled || msaaGotDisabled) {
         if (!m_multisamplingChecked) {
-            if (m_context->openglContext()->format().samples() <= 1) {
+            if (effectiveSamples <= 1) {
                 m_multisampling = false;
             } else {
                 const QSet<QByteArray> extensions = m_context->openglContext()->extensions();
@@ -333,7 +343,7 @@ void QSGDefaultLayer::grab()
             QOpenGLFramebufferObjectFormat format;
 
             format.setInternalTextureFormat(m_format);
-            format.setSamples(m_context->openglContext()->format().samples());
+            format.setSamples(effectiveSamples);
             m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
             m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
         } else {

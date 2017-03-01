@@ -112,7 +112,7 @@ struct DateCtor: FunctionObject
     static void call(const Managed *that, Scope &scope, CallData *);
 };
 
-struct DatePrototype: DateObject
+struct DatePrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 

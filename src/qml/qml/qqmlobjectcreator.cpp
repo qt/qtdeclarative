@@ -170,7 +170,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     context = new QQmlContextData;
     context->isInternal = true;
-    context->imports = compilationUnit->importCache;
+    context->imports = compilationUnit->typeNameCache;
     context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
     context->setParent(parentContext);
 
@@ -1150,7 +1150,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     if (customParser && obj->flags & QV4::CompiledData::Object::HasCustomParserBindings) {
         customParser->engine = QQmlEnginePrivate::get(engine);
-        customParser->imports = compilationUnit->importCache;
+        customParser->imports = compilationUnit->typeNameCache;
 
         QList<const QV4::CompiledData::Binding *> bindings;
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);

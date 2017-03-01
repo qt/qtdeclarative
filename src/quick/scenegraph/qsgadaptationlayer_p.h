@@ -209,6 +209,7 @@ public:
     virtual void setDevicePixelRatio(qreal ratio) = 0;
     virtual void setMirrorHorizontal(bool mirror) = 0;
     virtual void setMirrorVertical(bool mirror) = 0;
+    virtual void setSamples(int samples) = 0;
     Q_SLOT virtual void markDirtyTexture() = 0;
     Q_SLOT virtual void invalidated() = 0;
 

@@ -55,6 +55,7 @@ void MemberData::markObjects(Heap::Base *that, ExecutionEngine *e)
 Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberData *old)
 {
     Q_ASSERT(!old || old->size < n);
+    Q_ASSERT(n);
 
     size_t alloc = MemoryManager::align(sizeof(Heap::MemberData) + (n - 1)*sizeof(Value));
     Heap::MemberData *m = e->memoryManager->allocManaged<MemberData>(alloc);

@@ -385,7 +385,7 @@ void tst_creation::bindings_qml()
         return;
     }
 
-    QQuickItem *obj = dynamic_cast<QQuickItem *>(component.create());
+    QQuickItem *obj = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(obj != nullptr);
 
     int height = 0;
@@ -407,7 +407,7 @@ void tst_creation::bindings_parent_qml()
         return;
     }
 
-    QQuickItem *obj = dynamic_cast<QQuickItem *>(component.create());
+    QQuickItem *obj = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(obj != nullptr);
 
     int height = 0;

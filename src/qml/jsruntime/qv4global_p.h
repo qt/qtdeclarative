@@ -258,6 +258,7 @@ enum PropertyFlag {
     Attr_NotEnumerable = 0x4,
     Attr_NotConfigurable = 0x8,
     Attr_ReadOnly = Attr_NotWritable|Attr_NotEnumerable|Attr_NotConfigurable,
+    Attr_ReadOnly_ButConfigurable = Attr_NotWritable|Attr_NotEnumerable,
     Attr_Invalid = 0xff
 };
 

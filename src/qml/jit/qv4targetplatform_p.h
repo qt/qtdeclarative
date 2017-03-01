@@ -63,6 +63,11 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
+enum TargetOperatingSystemSpecialization {
+    NoOperatingSystemSpecialization,
+    WindowsSpecialization
+};
+
 // The TargetPlatform class describes how the stack and the registers work on a CPU+ABI combination.
 //
 // All combinations have a separate definition, guarded by #ifdefs. The exceptions are:
@@ -79,25 +84,38 @@ namespace JIT {
 // a call, we add a load it right before emitting the call instruction.
 //
 // NOTE: When adding new architecture, do not forget to whitelist it in qv4global_p.h!
+template <typename PlatformAssembler, TargetOperatingSystemSpecialization specialization = NoOperatingSystemSpecialization>
 class TargetPlatform
 {
-public:
+};
+
 #if CPU(X86) && (OS(LINUX) || OS(WINDOWS) || OS(QNX) || OS(FREEBSD) || defined(Q_OS_IOS))
+template <>
+class TargetPlatform<JSC::MacroAssemblerX86, NoOperatingSystemSpecialization>
+{
+public:
+    using PlatformAssembler = JSC::MacroAssemblerX86;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
+
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::edi;
-    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::esi;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::ecx;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister       = JSC::X86Registers::edi;
+    static const RegisterID EngineRegister      = JSC::X86Registers::esi;
+    static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
+    static const RegisterID ScratchRegister      = JSC::X86Registers::ecx;
+    static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID LowReturnValueRegister = JSC::X86Registers::eax;
+    static const RegisterID HighReturnValueRegister = JSC::X86Registers::edx;
 
-    static RegisterInformation getPlatformRegisterInfo()
+    static RegisterInformation getRegisterInfo()
     {
         typedef RegisterInfo RI;
-        return RegisterInformation()
+        static RegisterInformation info = RegisterInformation()
                 << RI(JSC::X86Registers::edx, QStringLiteral("edx"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::ebx, QStringLiteral("ebx"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::edi, QStringLiteral("edi"),   RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
@@ -109,28 +127,31 @@ public:
                 << RI(JSC::X86Registers::xmm6, QStringLiteral("xmm6"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::xmm7, QStringLiteral("xmm7"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                    ;
+        return info;
     }
 
 #  define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-#  undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
-#  undef ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 0;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int) { Q_UNREACHABLE(); }
+    static RegisterID registerForArgument(int) { Q_UNREACHABLE(); }
 
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
+    {
+        if (frameSize > 0)
+            as->add32(TrustedImm32(frameSize), StackPointerRegister);
+        as->pop(FramePointerRegister);
+    }
 
 #if OS(WINDOWS) || OS(QNX) || \
     ((OS(LINUX) || OS(FREEBSD)) && (defined(__PIC__) || defined(__PIE__)))
 
-#define RESTORE_EBX_ON_CALL
-    static JSC::MacroAssembler::Address ebxAddressOnStack()
-    {
+    static const int gotRegister = JSC::X86Registers::ebx;
+    static int savedGOTRegisterSlotOnStack() {
         static int ebxIdx = -1;
         if (ebxIdx == -1) {
             int calleeSaves = 0;
@@ -146,34 +167,47 @@ public:
             Q_ASSERT(ebxIdx >= 0);
             ebxIdx += 1;
         }
-        return JSC::MacroAssembler::Address(FramePointerRegister, ebxIdx * -int(sizeof(void*)));
+        return ebxIdx * -int(sizeof(void*));
     }
+#else
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 #endif
-
-#endif // Windows on x86
+};
+#endif // x86
 
 #if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X) || OS(FREEBSD) || OS(QNX) || defined(Q_OS_IOS))
+template <>
+class TargetPlatform<JSC::MacroAssemblerX86_64, NoOperatingSystemSpecialization>
+{
+public:
+    using PlatformAssembler = JSC::MacroAssemblerX86_64;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
+
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
-    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::r10;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister       = JSC::X86Registers::r12;
+    static const RegisterID EngineRegister      = JSC::X86Registers::r14;
+    static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
+    static const RegisterID ScratchRegister      = JSC::X86Registers::r10;
+    static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
 
-    static RegisterInformation getPlatformRegisterInfo()
+    static RegisterInformation getRegisterInfo()
     {
         typedef RegisterInfo RI;
-        return RegisterInformation()
+        static RegisterInformation info = RegisterInformation()
                 << RI(JSC::X86Registers::ebx,  QStringLiteral("rbx"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::edi,  QStringLiteral("rdi"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::esi,  QStringLiteral("rsi"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::edx,  QStringLiteral("rdx"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                   // r11 is used as scratch register by the macro assembler
                 << RI(JSC::X86Registers::r12,  QStringLiteral("r12"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r14,  QStringLiteral("r14"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
@@ -185,17 +219,16 @@ public:
                 << RI(JSC::X86Registers::xmm6, QStringLiteral("xmm6"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::xmm7, QStringLiteral("xmm7"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                    ;
+        return info;
     }
 
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-#define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 6;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::X86Registers::edi,
             JSC::X86Registers::esi,
             JSC::X86Registers::edx,
@@ -210,51 +243,72 @@ public:
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
+    {
+        if (frameSize > 0)
+            as->add64(TrustedImm32(frameSize), StackPointerRegister);
+        as->pop(FramePointerRegister);
+    }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
+};
 #endif // Linux/MacOS on x86_64
 
 #if CPU(X86_64) && OS(WINDOWS)
-    // Register allocation is not (yet) supported on win64, because the ABI related stack handling
-    // is not completely implemented. Specifically, the saving of xmm registers, and the saving of
-    // incoming function parameters to the shadow space is missing.
-    enum { RegAllocIsSupported = 0 };
+template <>
+class TargetPlatform<JSC::MacroAssemblerX86_64, WindowsSpecialization>
+{
+public:
+    using PlatformAssembler = JSC::MacroAssemblerX86_64;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
-    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::r10;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+    enum { RegAllocIsSupported = 1 };
 
-    static RegisterInformation getPlatformRegisterInfo()
+    static const RegisterID FramePointerRegister   = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID LocalsRegister       = JSC::X86Registers::r12;
+    static const RegisterID EngineRegister      = JSC::X86Registers::r14;
+    static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
+    static const RegisterID ScratchRegister      = JSC::X86Registers::r10;
+    static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
+
+    static RegisterInformation getRegisterInfo()
     {
         typedef RegisterInfo RI;
-        return RegisterInformation()
-                << RI(JSC::X86Registers::ebx,  QStringLiteral("rbx"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::edi,  QStringLiteral("rdi"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::esi,  QStringLiteral("rsi"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::edx,  QStringLiteral("rdx"),  RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
+        static RegisterInformation info = RegisterInformation()
+                << RI(JSC::X86Registers::ebx,  QStringLiteral("rbx"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::edi,  QStringLiteral("rdi"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::esi,  QStringLiteral("rsi"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::edx,  QStringLiteral("rdx"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                   // r11 is used as scratch register by the macro assembler
                 << RI(JSC::X86Registers::r12,  QStringLiteral("r12"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::r14,  QStringLiteral("r14"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r15,  QStringLiteral("r15"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::X86Registers::r15,  QStringLiteral("r15"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm2, QStringLiteral("xmm2"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm3, QStringLiteral("xmm3"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm4, QStringLiteral("xmm4"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm5, QStringLiteral("xmm5"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm6, QStringLiteral("xmm6"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::xmm7, QStringLiteral("xmm7"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                    ;
+        return info;
     }
 
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
-#define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::X86Registers::ecx,
             JSC::X86Registers::edx,
             JSC::X86Registers::r8,
@@ -262,16 +316,34 @@ public:
         };
         Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
-    };
+    }
 
     static const int StackAlignment = 16;
     static const int StackShadowSpace = 32;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(FramePointerRegister); }
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(FramePointerRegister); }
+    static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
+    {
+        if (frameSize > 0)
+            as->add64(TrustedImm32(frameSize), StackPointerRegister);
+        as->pop(FramePointerRegister);
+    }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
+};
 #endif // Windows on x86_64
 
-#if CPU(ARM)
+#if CPU(ARM) || defined(V4_BOOTSTRAP)
+template <>
+class TargetPlatform<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>
+{
+public:
+    using PlatformAssembler = JSC::MacroAssemblerARMv7;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
+
     enum { RegAllocIsSupported = 1 };
 
     // The AAPCS specifies that the platform ABI has to define the usage of r9. Known are:
@@ -287,23 +359,25 @@ public:
     // is used for the subroutine: r7 for Thumb or Thumb2, and r11 for ARM. We assign the constants
     // accordingly, and assign the locals-register to the "other" register.
 #if CPU(ARM_THUMB2)
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARMRegisters::r7;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r11;
+    static const RegisterID FramePointerRegister = JSC::ARMRegisters::r7;
+    static const RegisterID LocalsRegister = JSC::ARMRegisters::r11;
 #else // Thumbs down
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARMRegisters::r11;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r7;
+    static const RegisterID FramePointerRegister = JSC::ARMRegisters::r11;
+    static const RegisterID LocalsRegister = JSC::ARMRegisters::r7;
 #endif
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARMRegisters::r5;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARMRegisters::r10;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
+    static const RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
+    static const RegisterID ScratchRegister = JSC::ARMRegisters::r5;
+    static const RegisterID EngineRegister = JSC::ARMRegisters::r10;
+    static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
+    static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
+    static const FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
+    static const RegisterID LowReturnValueRegister = JSC::ARMRegisters::r0;
+    static const RegisterID HighReturnValueRegister = JSC::ARMRegisters::r1;
 
-    static RegisterInformation getPlatformRegisterInfo()
+    static RegisterInformation getRegisterInfo()
     {
         typedef RegisterInfo RI;
-        return RegisterInformation()
+        static RegisterInformation info = RegisterInformation()
                 << RI(JSC::ARMRegisters::r0,  QStringLiteral("r0"),  RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
                 << RI(JSC::ARMRegisters::r1,  QStringLiteral("r1"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::r2,  QStringLiteral("r2"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
@@ -336,17 +410,16 @@ public:
                 << RI(JSC::ARMRegisters::d14, QStringLiteral("d14"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::d15, QStringLiteral("d15"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                    ;
+        return info;
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-#undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::ARMRegisters::r0,
             JSC::ARMRegisters::r1,
             JSC::ARMRegisters::r2,
@@ -361,35 +434,54 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
 
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->push(JSC::ARMRegisters::lr);
         as->push(FramePointerRegister);
     }
 
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
+        if (frameSize > 0) {
+            // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
+            // work well for large immediates.
+            as->move(TrustedImm32(frameSize), JSC::ARMRegisters::r3);
+            as->add32(JSC::ARMRegisters::r3, StackPointerRegister);
+        }
         as->pop(FramePointerRegister);
         as->pop(JSC::ARMRegisters::lr);
     }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
+};
 #endif // ARM (32 bit)
 
-#if CPU(ARM64)
+#if CPU(ARM64) || defined(V4_BOOTSTRAP)
+template <>
+class TargetPlatform<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>
+{
+public:
+    using PlatformAssembler = JSC::MacroAssemblerARM64;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
+
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::ARM64Registers::fp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARM64Registers::x28;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARM64Registers::sp;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARM64Registers::x9;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARM64Registers::x27;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARM64Registers::x0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARM64Registers::q0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARM64Registers::q1;
+    static const RegisterID FramePointerRegister = JSC::ARM64Registers::fp;
+    static const RegisterID LocalsRegister = JSC::ARM64Registers::x28;
+    static const RegisterID StackPointerRegister = JSC::ARM64Registers::sp;
+    static const RegisterID ScratchRegister = JSC::ARM64Registers::x9;
+    static const RegisterID EngineRegister = JSC::ARM64Registers::x27;
+    static const RegisterID ReturnValueRegister = JSC::ARM64Registers::x0;
+    static const FPRegisterID FPGpr0 = JSC::ARM64Registers::q0;
+    static const FPRegisterID FPGpr1 = JSC::ARM64Registers::q1;
 
-    static RegisterInformation getPlatformRegisterInfo()
+    static RegisterInformation getRegisterInfo()
     {
         typedef RegisterInfo RI;
-        return RegisterInformation()
+        static RegisterInformation info = RegisterInformation()
                 << RI(JSC::ARM64Registers::x0,  QStringLiteral("x0"),  RI::RegularRegister,       RI::CallerSaved, RI::Predefined)
                 << RI(JSC::ARM64Registers::x1,  QStringLiteral("x1"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARM64Registers::x2,  QStringLiteral("x2"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
@@ -447,17 +539,16 @@ public:
                 << RI(JSC::ARM64Registers::q30, QStringLiteral("q30"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::ARM64Registers::q31, QStringLiteral("q31"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
                    ;
+        return info;
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-#define VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 8;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 8;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::ARM64Registers::x0,
             JSC::ARM64Registers::x1,
             JSC::ARM64Registers::x2,
@@ -476,33 +567,49 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
 
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->pushPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
 
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
+        if (frameSize > 0)
+            as->add64(TrustedImm32(frameSize), StackPointerRegister);
         as->popPair(FramePointerRegister, JSC::ARM64Registers::lr);
     }
+
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
+};
 #endif // ARM64
 
 #if defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
+template <>
+class TargetPlatform<JSC::MacroAssemblerMIPS, NoOperatingSystemSpecialization>
+{
+public:
+    using PlatformAssembler = JSC::MacroAssemblerMIPS;
+    using RegisterID = PlatformAssembler::RegisterID;
+    using FPRegisterID = PlatformAssembler::FPRegisterID;
+    using TrustedImm32 = PlatformAssembler::TrustedImm32;
     enum { RegAllocIsSupported = 1 };
 
-    static const JSC::MacroAssembler::RegisterID FramePointerRegister = JSC::MIPSRegisters::fp;
-    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::MIPSRegisters::sp;
-    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::MIPSRegisters::s0;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::MIPSRegisters::s1;
-    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::MIPSRegisters::v0;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::MIPSRegisters::s2;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::MIPSRegisters::f0;
-    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::MIPSRegisters::f2;
+    static const RegisterID FramePointerRegister = JSC::MIPSRegisters::fp;
+    static const RegisterID StackPointerRegister = JSC::MIPSRegisters::sp;
+    static const RegisterID LocalsRegister = JSC::MIPSRegisters::s0;
+    static const RegisterID EngineRegister = JSC::MIPSRegisters::s1;
+    static const RegisterID ReturnValueRegister = JSC::MIPSRegisters::v0;
+    static const RegisterID ScratchRegister = JSC::MIPSRegisters::s2;
+    static const FPRegisterID FPGpr0 = JSC::MIPSRegisters::f0;
+    static const FPRegisterID FPGpr1 = JSC::MIPSRegisters::f2;
+    static const RegisterID LowReturnValueRegister = JSC::MIPSRegisters::v0;
+    static const RegisterID HighReturnValueRegister = JSC::MIPSRegisters::v1;
 
-    static RegisterInformation getPlatformRegisterInfo()
+    static RegisterInformation getRegisterInfo()
     {
         typedef RegisterInfo RI;
-        return RegisterInformation()
+        static RegisterInformation info = RegisterInformation()
                 // Note: t0, t1, t2, t3 and f16 are already used by MacroAssemblerMIPS.
                 << RI(JSC::MIPSRegisters::t4,  QStringLiteral("t4"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                 << RI(JSC::MIPSRegisters::t5,  QStringLiteral("t5"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
@@ -524,17 +631,16 @@ public:
                 << RI(JSC::MIPSRegisters::f26, QStringLiteral("f26"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::MIPSRegisters::f28, QStringLiteral("f28"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
                    ;
+        return info;
     }
 
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
-#undef VALUE_FITS_IN_REGISTER
     static const int RegisterSize = 4;
 
-#define ARGUMENTS_IN_REGISTERS
     static const int RegisterArgumentCount = 4;
-    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    static RegisterID registerForArgument(int index)
     {
-        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+        static RegisterID regs[RegisterArgumentCount] = {
             JSC::MIPSRegisters::a0,
             JSC::MIPSRegisters::a1,
             JSC::MIPSRegisters::a2,
@@ -549,27 +655,25 @@ public:
     static const int StackShadowSpace = 4 * RegisterSize; // Stack space for 4 argument registers.
     static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
 
-    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->push(JSC::MIPSRegisters::ra);
         as->push(FramePointerRegister);
     }
 
-    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as)
+    static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
+        if (frameSize > 0)
+            as->add32(TrustedImm32(frameSize), StackPointerRegister);
         as->pop(FramePointerRegister);
         as->pop(JSC::MIPSRegisters::ra);
     }
-#endif // Linux on MIPS (32 bit)
 
-public: // utility functions
-    static const RegisterInformation getRegisterInfo()
-    {
-        static const RegisterInformation info = getPlatformRegisterInfo();
 
-        return info;
-    }
+    static const int gotRegister = -1;
+    static int savedGOTRegisterSlotOnStack() { return -1; }
 };
+#endif // Linux on MIPS (32 bit)
 
 } // JIT namespace
 } // QV4 namespace

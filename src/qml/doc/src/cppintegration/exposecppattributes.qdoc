@@ -390,8 +390,8 @@ that is a public slot:
 \endcode
 
 If an instance of \c MessageBoard was set as the context data for a file \c
-MyItem.qml, as shown below left, then \c MyItem.qml could invoke the two
-methods, as shown below right:
+MyItem.qml, then \c MyItem.qml could invoke the two methods as shown in the
+examples below:
 
 \table
 \row

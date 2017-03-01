@@ -167,9 +167,9 @@ additional features. See the \l {qtqml-javascript-hostenvironment.html}
 The QML engine provides automatic type conversion between QVariantList and
 JavaScript arrays, and between QVariantMap and JavaScript objects.
 
-For example, the function defined in QML below left expects two arguments, an
+For example, the function defined in QML below expects two arguments, an
 array and an object, and prints their contents using the standard JavaScript
-syntax for array and object item access. The C++ code below right calls this
+syntax for array and object item access. The C++ code below calls this
 function, passing a QVariantList and a QVariantMap, which are automatically
 converted to JavaScript array and object values, repectively:
 
@@ -204,9 +204,9 @@ when it is passed to C++.
 The QML engine provides automatic type conversion between QDateTime values and
 JavaScript \c Date objects.
 
-For example, the function defined in QML below left expects a JavaScript
+For example, the function defined in QML below expects a JavaScript
 \c Date object, and also returns a new \c Date object with the current date and
-time. The C++ code below right calls this function, passing a QDateTime value
+time. The C++ code below calls this function, passing a QDateTime value
 that is automatically converted by the engine into a \c Date object when it is
 passed to the \c readDate() function. In turn, the readDate() function returns
 a \c Date object that is automatically converted into a QDateTime value when it
@@ -215,7 +215,7 @@ is received in C++:
 \table
 \header
 \row
-
+\li QML
 \li
 \qml
 // MyItem.qml
@@ -227,6 +227,7 @@ Item {
 }
 \endqml
 \row
+\li C++
 \li
 \code
 // C++

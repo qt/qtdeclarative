@@ -50,13 +50,13 @@ class FlatColorMaterialShader : public QSGMaterialShader
 public:
     FlatColorMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
 
     static QSGMaterialType type;
 
 private:
-    virtual void initialize();
+    void initialize() override;
 #if QT_CONFIG(opengl)
     int m_matrix_id;
     int m_color_id;

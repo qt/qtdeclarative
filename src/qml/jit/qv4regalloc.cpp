@@ -973,7 +973,15 @@ private:
                 break;
 
             Q_ASSERT(!i->isFixedInterval());
-            _liveIntervals.push_back(i);
+            auto it = _liveIntervals.begin();
+            for (; it != _liveIntervals.end(); ++it) {
+                if ((*it)->temp() == i->temp()) {
+                    *it = i;
+                    break;
+                }
+            }
+            if (it == _liveIntervals.end())
+                _liveIntervals.push_back(i);
 //            qDebug() << "-- Activating interval for temp" << i->temp().index;
 
             _unprocessedReverseOrder.removeLast();
@@ -1521,7 +1529,7 @@ static inline int indexOfRangeCoveringPosition(const LifeTimeInterval::Ranges &r
     return -1;
 }
 
-static inline int intersectionPosition(const LifeTimeInterval::Range &one, const LifeTimeInterval::Range &two)
+static inline int intersectionPosition(const LifeTimeIntervalRange &one, const LifeTimeIntervalRange &two)
 {
     if (one.covers(two.start))
         return two.start;
@@ -1567,7 +1575,7 @@ static void longestAvailableReg(int *nextUses, int nextUseCount, int &reg, int &
 
 #define CALLOC_ON_STACK(ty, ptr, sz, val) \
     Q_ASSERT(sz > 0); \
-    ty *ptr = reinterpret_cast<ty *>(alloca(sizeof(ty) * (sz))); \
+    Q_ALLOCA_VAR(ty, ptr, sizeof(ty) * (sz)); \
     for (ty *it = ptr, *eit = ptr + (sz); it != eit; ++it) \
         *it = val;
 
@@ -1779,9 +1787,9 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
         return -1;
 
     for (int currentEnd = currentRanges.size(); currentIt < currentEnd; ++currentIt) {
-        const LifeTimeInterval::Range currentRange = currentRanges.at(currentIt);
+        const LifeTimeIntervalRange currentRange = currentRanges.at(currentIt);
         for (int anotherIt = anotherItStart, anotherEnd = anotherRanges.size(); anotherIt < anotherEnd; ++anotherIt) {
-            const LifeTimeInterval::Range anotherRange = anotherRanges.at(anotherIt);
+            const LifeTimeIntervalRange anotherRange = anotherRanges.at(anotherIt);
             if (anotherRange.start > currentRange.end)
                 break;
             int intersectPos = intersectionPosition(currentRange, anotherRange);

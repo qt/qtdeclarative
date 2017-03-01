@@ -117,9 +117,9 @@ Rectangle{
         name:"mouserelease"
         when:windowShown
         function test_mouseDrag() {
-            mouseDrag(container, 10, 10, 20, 30);
-            compare(container.x, 20 - util.dragThreshold - 1);
-            compare(container.y, 30 - util.dragThreshold - 1);
+            mouseDrag(container, 10, 10, util.dragThreshold * 2, util.dragThreshold * 3);
+            compare(container.x, util.dragThreshold - 1);
+            compare(container.y, util.dragThreshold * 2 - 1);
         }
 
         function test_doSomethingWhileDragging() {

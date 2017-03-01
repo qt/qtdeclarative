@@ -640,6 +640,17 @@ void QQuickCanvasItem::releaseResources()
     }
 }
 
+bool QQuickCanvasItem::event(QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::PolishRequest:
+        polish();
+        return true;
+    default:
+        return QQuickItem::event(event);
+    }
+}
+
 void QQuickCanvasItem::invalidateSceneGraph()
 {
     Q_D(QQuickCanvasItem);
@@ -649,6 +660,12 @@ void QQuickCanvasItem::invalidateSceneGraph()
     d->node = 0; // managed by the scene graph, just reset the pointer
     delete d->textureProvider;
     d->textureProvider = 0;
+}
+
+void QQuickCanvasItem::schedulePolish()
+{
+    auto polishRequestEvent = new QEvent(QEvent::PolishRequest);
+    QCoreApplication::postEvent(this, polishRequestEvent);
 }
 
 void QQuickCanvasItem::componentComplete()
@@ -892,8 +909,9 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 
     d->animationCallbacks.insert(++id, QV4::PersistentValue(scope.engine, f->asReturnedValue()));
 
+    // QTBUG-55778: Calling polish directly here can lead to a polish loop
     if (isVisible())
-        polish();
+        schedulePolish();
 
     args->setReturnValue(QV4::Encode(id));
 }

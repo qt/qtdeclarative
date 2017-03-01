@@ -88,10 +88,12 @@ void ArgumentsObject::fullyCreate()
 
     Scope scope(engine());
     Scoped<MemberData> md(scope, d()->mappedArguments);
-    d()->mappedArguments = md->allocate(engine(), numAccessors);
-    for (uint i = 0; i < numAccessors; ++i) {
-        d()->mappedArguments->data[i] = context()->callData->args[i];
-        arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
+    if (numAccessors) {
+        d()->mappedArguments = md->allocate(engine(), numAccessors);
+        for (uint i = 0; i < numAccessors; ++i) {
+            d()->mappedArguments->data[i] = context()->callData->args[i];
+            arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
+        }
     }
     arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
@@ -164,18 +166,17 @@ ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *ha
     return Encode::undefined();
 }
 
-void ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
+bool ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->callData->argc))
         args->fullyCreate();
 
-    if (args->fullyCreated()) {
-        Object::putIndexed(m, index, value);
-        return;
-    }
+    if (args->fullyCreated())
+        return Object::putIndexed(m, index, value);
 
     args->context()->callData->args[index] = value;
+    return true;
 }
 
 bool ArgumentsObject::deleteIndexedProperty(Managed *m, uint index)

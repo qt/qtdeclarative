@@ -84,6 +84,7 @@
 
 QT_BEGIN_NAMESPACE
 
+const QLatin1String QQuickPixmap::itemGrabberScheme = QLatin1String("itemgrabber");
 
 #ifndef QT_NO_DEBUG
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
@@ -160,7 +161,7 @@ Q_SIGNALS:
     void downloadProgress(qint64, qint64);
 
 protected:
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickPixmapReply)
@@ -198,7 +199,7 @@ public:
     static QQuickPixmapReader *existingInstance(QQmlEngine *engine);
 
 protected:
-    void run();
+    void run() override;
 
 private:
     friend class QQuickPixmapReaderThreadObject;
@@ -1462,8 +1463,15 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
     QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.end();
 
     // If Cache is disabled, the pixmap will always be loaded, even if there is an existing
-    // cached version.
-    if (options & QQuickPixmap::Cache)
+    // cached version. Unless it's an itemgrabber url, since the cache is used to pass
+    // the result between QQuickItemGrabResult and QQuickImage.
+    if (url.scheme() == itemGrabberScheme) {
+        QSize dummy;
+        if (requestSize != dummy)
+            qWarning() << "Ignoring sourceSize request for image url that came from grabToImage. Use the targetSize parameter of the grabToImage() function instead.";
+        const QQuickPixmapKey grabberKey = { &url, &dummy, QQuickImageProviderOptions() };
+        iter = store->m_cache.find(grabberKey);
+    } else if (options & QQuickPixmap::Cache)
         iter = store->m_cache.find(key);
 
     if (iter == store->m_cache.end()) {
@@ -1533,9 +1541,9 @@ void QQuickPixmap::clear(QObject *obj)
     }
 }
 
-bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize)
+bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize, const QQuickImageProviderOptions &options)
 {
-    QQuickPixmapKey key = { &url, &requestSize, QQuickImageProviderOptions() };
+    QQuickPixmapKey key = { &url, &requestSize, options };
     QQuickPixmapStore *store = pixmapStore();
 
     return store->m_cache.contains(key);

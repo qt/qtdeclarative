@@ -100,7 +100,7 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
 
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    static bool put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static bool isEqualTo(Managed *that, Managed *o);
 

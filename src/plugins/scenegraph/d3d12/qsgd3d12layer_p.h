@@ -86,6 +86,7 @@ public:
     void setDevicePixelRatio(qreal ratio) override;
     void setMirrorHorizontal(bool mirror) override;
     void setMirrorVertical(bool mirror) override;
+    void setSamples(int) override { }
 
 public Q_SLOTS:
     void markDirtyTexture() override;

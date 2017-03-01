@@ -1714,6 +1714,14 @@ public:
     virtual void componentComplete();
 };
 
+class ClashingNames : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool clashes READ clashes CONSTANT)
+public:
+    Q_INVOKABLE bool clashes() const { return true; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

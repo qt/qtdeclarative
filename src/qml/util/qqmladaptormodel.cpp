@@ -103,8 +103,8 @@ public:
     virtual QVariant value(int role) const = 0;
     virtual void setValue(int role, const QVariant &value) = 0;
 
-    void setValue(const QString &role, const QVariant &value);
-    bool resolveIndex(const QQmlAdaptorModel &model, int idx);
+    void setValue(const QString &role, const QVariant &value) override;
+    bool resolveIndex(const QQmlAdaptorModel &model, int idx) override;
 
     static QV4::ReturnedValue get_property(QV4::CallContext *ctx, uint propertyId);
     static QV4::ReturnedValue set_property(QV4::CallContext *ctx, uint propertyId);
@@ -141,7 +141,7 @@ public:
             const QList<QQmlDelegateModelItem *> &items,
             int index,
             int count,
-            const QVector<int> &roles) const
+            const QVector<int> &roles) const override
     {
         bool changed = roles.isEmpty() && !watchedRoles.isEmpty();
         if (!changed && !watchedRoles.isEmpty() && watchedRoleIds.isEmpty()) {
@@ -185,7 +185,7 @@ public:
     void replaceWatchedRoles(
             QQmlAdaptorModel &,
             const QList<QByteArray> &oldRoles,
-            const QList<QByteArray> &newRoles) const
+            const QList<QByteArray> &newRoles) const override
     {
         VDMModelDelegateDataType *dataType = const_cast<VDMModelDelegateDataType *>(this);
 
@@ -239,12 +239,12 @@ public:
 
     // QAbstractDynamicMetaObject
 
-    void objectDestroyed(QObject *)
+    void objectDestroyed(QObject *) override
     {
         release();
     }
 
-    int metaCall(QObject *object, QMetaObject::Call call, int id, void **arguments)
+    int metaCall(QObject *object, QMetaObject::Call call, int id, void **arguments) override
     {
         return static_cast<QQmlDMCachedModelData *>(object)->metaCall(call, id, arguments);
     }
@@ -415,18 +415,18 @@ public:
         }
     }
 
-    QVariant value(int role) const
+    QVariant value(int role) const override
     {
         return type->model->aim()->index(index, 0, type->model->rootIndex).data(role);
     }
 
-    void setValue(int role, const QVariant &value)
+    void setValue(int role, const QVariant &value) override
     {
         type->model->aim()->setData(
                 type->model->aim()->index(index, 0, type->model->rootIndex), value, role);
     }
 
-    QV4::ReturnedValue get()
+    QV4::ReturnedValue get() override
     {
         if (type->prototype.isUndefined()) {
             QQmlAdaptorModelEngineData * const data = engineData(v4);
@@ -449,12 +449,12 @@ public:
     {
     }
 
-    int count(const QQmlAdaptorModel &model) const
+    int count(const QQmlAdaptorModel &model) const override
     {
         return model.aim()->rowCount(model.rootIndex);
     }
 
-    void cleanup(QQmlAdaptorModel &model, QQmlDelegateModel *vdm) const
+    void cleanup(QQmlAdaptorModel &model, QQmlDelegateModel *vdm) const override
     {
         QAbstractItemModel * const aim = model.aim();
         if (aim && vdm) {
@@ -477,7 +477,7 @@ public:
         const_cast<VDMAbstractItemModelDataType *>(this)->release();
     }
 
-    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
         QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
         if (it != roleNames.end()) {
@@ -489,26 +489,26 @@ public:
         }
     }
 
-    QVariant parentModelIndex(const QQmlAdaptorModel &model) const
+    QVariant parentModelIndex(const QQmlAdaptorModel &model) const override
     {
         return model
                 ? QVariant::fromValue(model.aim()->parent(model.rootIndex))
                 : QVariant();
     }
 
-    QVariant modelIndex(const QQmlAdaptorModel &model, int index) const
+    QVariant modelIndex(const QQmlAdaptorModel &model, int index) const override
     {
         return model
                 ? QVariant::fromValue(model.aim()->index(index, 0, model.rootIndex))
                 : QVariant();
     }
 
-    bool canFetchMore(const QQmlAdaptorModel &model) const
+    bool canFetchMore(const QQmlAdaptorModel &model) const override
     {
         return model && model.aim()->canFetchMore(model.rootIndex);
     }
 
-    void fetchMore(QQmlAdaptorModel &model) const
+    void fetchMore(QQmlAdaptorModel &model) const override
     {
         if (model)
             model.aim()->fetchMore(model.rootIndex);
@@ -518,7 +518,7 @@ public:
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
             QQmlEngine *engine,
-            int index) const
+            int index) const override
     {
         VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
         if (!metaObject)
@@ -606,7 +606,7 @@ public:
         return QV4::Encode::undefined();
     }
 
-    QV4::ReturnedValue get()
+    QV4::ReturnedValue get() override
     {
         QQmlAdaptorModelEngineData *data = engineData(v4);
         QV4::Scope scope(v4);
@@ -617,13 +617,13 @@ public:
         return o.asReturnedValue();
     }
 
-    void setValue(const QString &role, const QVariant &value)
+    void setValue(const QString &role, const QVariant &value) override
     {
         if (role == QLatin1String("modelData"))
             cachedData = value;
     }
 
-    bool resolveIndex(const QQmlAdaptorModel &model, int idx)
+    bool resolveIndex(const QQmlAdaptorModel &model, int idx) override
     {
         if (index == -1) {
             index = idx;
@@ -650,12 +650,12 @@ class VDMListDelegateDataType : public QQmlAdaptorModel::Accessors
 public:
     inline VDMListDelegateDataType() {}
 
-    int count(const QQmlAdaptorModel &model) const
+    int count(const QQmlAdaptorModel &model) const override
     {
         return model.list.count();
     }
 
-    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
         return role == QLatin1String("modelData")
                 ? model.list.at(index)
@@ -666,7 +666,7 @@ public:
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
             QQmlEngine *,
-            int index) const
+            int index) const override
     {
         return new QQmlDMListAccessorData(
                 metaType,
@@ -693,7 +693,7 @@ public:
             QObject *object);
 
     QObject *modelData() const { return object; }
-    QObject *proxiedObject() { return object; }
+    QObject *proxiedObject() override { return object; }
 
     QPointer<QObject> object;
 };
@@ -735,12 +735,12 @@ public:
         free(metaObject);
     }
 
-    int count(const QQmlAdaptorModel &model) const
+    int count(const QQmlAdaptorModel &model) const override
     {
         return model.list.count();
     }
 
-    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
         if (QObject *object = model.list.at(index).value<QObject *>())
             return object->property(role.toUtf8());
@@ -751,7 +751,7 @@ public:
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
             QQmlEngine *,
-            int index) const
+            int index) const override
     {
         VDMObjectDelegateDataType *dataType = const_cast<VDMObjectDelegateDataType *>(this);
         if (!metaObject)
@@ -768,7 +768,7 @@ public:
         metaObject = builder.toMetaObject();
     }
 
-    void cleanup(QQmlAdaptorModel &, QQmlDelegateModel *) const
+    void cleanup(QQmlAdaptorModel &, QQmlDelegateModel *) const override
     {
         const_cast<VDMObjectDelegateDataType *>(this)->release();
     }
@@ -792,7 +792,7 @@ public:
         m_type->release();
     }
 
-    int metaCall(QObject *o, QMetaObject::Call call, int id, void **arguments)
+    int metaCall(QObject *o, QMetaObject::Call call, int id, void **arguments) override
     {
         Q_ASSERT(o == m_data);
         Q_UNUSED(o);
@@ -813,7 +813,7 @@ public:
         }
     }
 
-    int createProperty(const char *name, const char *)
+    int createProperty(const char *name, const char *) override
     {
         if (!m_data->object)
             return -1;

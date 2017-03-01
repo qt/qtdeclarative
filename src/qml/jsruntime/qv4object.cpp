@@ -61,7 +61,8 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
-    if (!d()->memberData || (d()->memberData->size < ic->size))
+    bool hasMD = d()->memberData != nullptr;
+    if ((!hasMD && ic->size) || (hasMD && d()->memberData->size < ic->size))
         d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
 }
 
@@ -92,13 +93,6 @@ bool Object::setPrototype(Object *proto)
     return true;
 }
 
-void Object::put(ExecutionEngine *engine, const QString &name, const Value &value)
-{
-    Scope scope(engine);
-    ScopedString n(scope, engine->newString(name));
-    put(n, value);
-}
-
 ReturnedValue Object::getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
@@ -114,11 +108,11 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
     return scope.result.asReturnedValue();
 }
 
-void Object::putValue(uint memberIndex, const Value &value)
+bool Object::putValue(uint memberIndex, const Value &value)
 {
     QV4::InternalClass *ic = internalClass();
     if (ic->engine->hasException)
-        return;
+        return false;
 
     PropertyAttributes attrs = ic->propertyData[memberIndex];
 
@@ -131,7 +125,7 @@ void Object::putValue(uint memberIndex, const Value &value)
             callData->args[0] = value;
             callData->thisObject = this;
             setter->call(scope, callData);
-            return;
+            return !ic->engine->hasException;
         }
         goto reject;
     }
@@ -140,11 +134,12 @@ void Object::putValue(uint memberIndex, const Value &value)
         goto reject;
 
     *propertyData(memberIndex) = value;
-    return;
+    return true;
 
   reject:
     if (engine()->current->strictMode)
         engine()->throwTypeError();
+    return false;
 }
 
 void Object::defineDefaultProperty(const QString &name, const Value &value)
@@ -162,7 +157,7 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     ScopedString s(scope, e->newIdentifier(name));
     ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
-    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(s, function);
 }
 
@@ -173,7 +168,7 @@ void Object::defineDefaultProperty(const QString &name, void (*code)(const Built
     ScopedString s(scope, e->newIdentifier(name));
     ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
-    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(s, function);
 }
 
@@ -183,7 +178,7 @@ void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallConte
     Scope scope(e);
     ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
-    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
 }
 
@@ -193,7 +188,7 @@ void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunct
     Scope scope(e);
     ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
-    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
 }
 
@@ -248,6 +243,19 @@ void Object::defineReadonlyProperty(const QString &name, const Value &value)
 void Object::defineReadonlyProperty(String *name, const Value &value)
 {
     insertMember(name, value, Attr_ReadOnly);
+}
+
+void Object::defineReadonlyConfigurableProperty(const QString &name, const Value &value)
+{
+    QV4::ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    defineReadonlyConfigurableProperty(s, value);
+}
+
+void Object::defineReadonlyConfigurableProperty(String *name, const Value &value)
+{
+    insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
 
 void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
@@ -440,14 +448,14 @@ ReturnedValue Object::getIndexed(const Managed *m, uint index, bool *hasProperty
     return static_cast<const Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-void Object::put(Managed *m, String *name, const Value &value)
+bool Object::put(Managed *m, String *name, const Value &value)
 {
-    static_cast<Object *>(m)->internalPut(name, value);
+    return static_cast<Object *>(m)->internalPut(name, value);
 }
 
-void Object::putIndexed(Managed *m, uint index, const Value &value)
+bool Object::putIndexed(Managed *m, uint index, const Value &value)
 {
-    static_cast<Object *>(m)->internalPutIndexed(index, value);
+    return static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
 PropertyAttributes Object::query(const Managed *m, String *name)
@@ -705,10 +713,10 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 
 
 // Section 8.12.5
-void Object::internalPut(String *name, const Value &value)
+bool Object::internalPut(String *name, const Value &value)
 {
     if (internalClass()->engine->hasException)
-        return;
+        return false;
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -737,7 +745,7 @@ void Object::internalPut(String *name, const Value &value)
             uint l = value.asArrayLength(&ok);
             if (!ok) {
                 engine()->throwRangeError(value);
-                return;
+                return false;
             }
             ok = setArrayLength(l);
             if (!ok)
@@ -745,7 +753,7 @@ void Object::internalPut(String *name, const Value &value)
         } else {
             *v = value;
         }
-        return;
+        return true;
     } else if (!prototype()) {
         if (!isExtensible())
             goto reject;
@@ -776,24 +784,26 @@ void Object::internalPut(String *name, const Value &value)
         callData->args[0] = value;
         callData->thisObject = this;
         setter->call(scope, callData);
-        return;
+        return !internalClass()->engine->hasException;
     }
 
     insertMember(name, value);
-    return;
+    return true;
 
   reject:
+    // ### this should be removed once everything is ported to use Object::set()
     if (engine()->current->strictMode) {
         QString message = QLatin1String("Cannot assign to read-only property \"") +
                 name->toQString() + QLatin1Char('\"');
         engine()->throwTypeError(message);
     }
+    return false;
 }
 
-void Object::internalPutIndexed(uint index, const Value &value)
+bool Object::internalPutIndexed(uint index, const Value &value)
 {
     if (internalClass()->engine->hasException)
-        return;
+        return false;
 
     PropertyAttributes attrs;
 
@@ -815,7 +825,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
             goto reject;
         else
             *v = value;
-        return;
+        return true;
     } else if (!prototype()) {
         if (!isExtensible())
             goto reject;
@@ -846,15 +856,17 @@ void Object::internalPutIndexed(uint index, const Value &value)
         callData->args[0] = value;
         callData->thisObject = this;
         setter->call(scope, callData);
-        return;
+        return !internalClass()->engine->hasException;
     }
 
     arraySet(index, value);
-    return;
+    return true;
 
   reject:
+    // ### this should be removed once everything is ported to use Object::setIndexed()
     if (engine()->current->strictMode)
         engine()->throwTypeError();
+    return false;
 }
 
 // Section 8.12.7
@@ -1153,6 +1165,49 @@ uint Object::getLength(const Managed *m)
     Scope scope(static_cast<const Object *>(m)->engine());
     ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length()));
     return v->toUInt32();
+}
+
+// 'var' is 'V' in 15.3.5.3.
+ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
+{
+    QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
+
+    // 15.3.5.3, Assume F is a Function object.
+    const FunctionObject *function = typeObject->as<FunctionObject>();
+    if (!function)
+        return engine->throwTypeError();
+
+    Heap::FunctionObject *f = function->d();
+    if (function->isBoundFunction())
+        f = function->cast<BoundFunction>()->target();
+
+    // 15.3.5.3, 1: HasInstance can only be used on an object
+    const Object *lhs = var.as<Object>();
+    if (!lhs)
+        return Encode(false);
+
+    // 15.3.5.3, 2
+    const Object *o = f->protoProperty();
+    if (!o) // 15.3.5.3, 3
+        return engine->throwTypeError();
+
+    Heap::Object *v = lhs->d();
+
+    // 15.3.5.3, 4
+    while (v) {
+        // 15.3.5.3, 4, a
+        v = v->prototype;
+
+        // 15.3.5.3, 4, b
+        if (!v)
+            break; // will return false
+
+        // 15.3.5.3, 4, c
+        else if (o->d() == v)
+            return Encode(true);
+    }
+
+    return Encode(false);
 }
 
 bool Object::setArrayLength(uint newLen)

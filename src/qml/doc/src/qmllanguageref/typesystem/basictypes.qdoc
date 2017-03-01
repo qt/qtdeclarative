@@ -324,6 +324,9 @@ property is only invoked when the property is reassigned to a different object v
     \li Values in the list are accessed using the \c [index] syntax
     \endlist
 
+    Values can be dynamically added to the list by using the \c push method,
+    as if it were a JavaScript Array
+
     A \c list can only store QML objects, and cannot contain any
     \l {QML Basic Types}{basic type} values. (To store basic types within a
     list, use the \l var type instead.)

@@ -98,10 +98,10 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
 
     if (!m_cachedPixmap.isNull()) {
         painter->drawPixmap(m_rect, m_cachedPixmap, m_sourceRect);
-    } else if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+    } else if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
         const QPixmap &pm = pt->pixmap();
         painter->drawPixmap(m_rect, pm, m_sourceRect);
-    } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(m_texture)) {
+    } else if (QSGPlainTexture *pt = qobject_cast<QSGPlainTexture *>(m_texture)) {
         const QImage &im = pt->image();
         painter->drawImage(m_rect, im, m_sourceRect);
     }
@@ -113,14 +113,14 @@ void QSGSoftwareImageNode::updateCachedMirroredPixmap()
         m_cachedPixmap = QPixmap();
     } else {
 
-        if (QSGSoftwarePixmapTexture *pt = dynamic_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+        if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
             QTransform mirrorTransform;
             if (m_transformMode.testFlag(MirrorVertically))
                 mirrorTransform = mirrorTransform.scale(1, -1);
             if (m_transformMode.testFlag(MirrorHorizontally))
                 mirrorTransform = mirrorTransform.scale(-1, 1);
             m_cachedPixmap = pt->pixmap().transformed(mirrorTransform);
-        } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(m_texture)) {
+        } else if (QSGPlainTexture *pt = qobject_cast<QSGPlainTexture *>(m_texture)) {
             m_cachedPixmap = QPixmap::fromImage(pt->image().mirrored(m_transformMode.testFlag(MirrorHorizontally), m_transformMode.testFlag(MirrorVertically)));
         } else {
             m_cachedPixmap = QPixmap();

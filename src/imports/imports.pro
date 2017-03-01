@@ -5,16 +5,17 @@ SUBDIRS += \
     qtqml \
     folderlistmodel \
     localstorage \
-    models \
-    statemachine
+    models
 
 qtConfig(settings): SUBDIRS += settings
+qtConfig(statemachine): SUBDIRS += statemachine
 
 qtHaveModule(quick) {
     SUBDIRS += \
         layouts \
         qtquick2 \
         window \
+        sharedimage \
         testlib
 
     qtConfig(opengl(es1|es2)?): \

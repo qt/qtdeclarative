@@ -74,7 +74,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
 QQuickTextPrivate::QQuickTextPrivate()
-    : elideLayout(0), textLine(0), lineWidth(0)
+    : fontInfo(font), elideLayout(0), textLine(0), lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
     , lineCount(1), multilengthEos(-1)
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
@@ -1017,6 +1017,17 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
     implicitWidthValid = true;
     implicitHeightValid = true;
+
+    QFontInfo scaledFontInfo(scaledFont);
+    if (fontInfo.weight() != scaledFontInfo.weight()
+            || fontInfo.pixelSize() != scaledFontInfo.pixelSize()
+            || fontInfo.italic() != scaledFontInfo.italic()
+            || !qFuzzyCompare(fontInfo.pointSizeF(), scaledFontInfo.pointSizeF())
+            || fontInfo.family() != scaledFontInfo.family()
+            || fontInfo.styleName() != scaledFontInfo.styleName()) {
+        fontInfo = scaledFontInfo;
+        emit q->fontInfoChanged();
+    }
 
     if (eos != multilengthEos)
         truncated = true;
@@ -2972,6 +2983,82 @@ void QQuickText::resetBottomPadding()
 {
     Q_D(QQuickText);
     d->setBottomPadding(0, true);
+}
+
+/*!
+    \qmlproperty string QtQuick::Text::fontInfo.family
+    \since 5.9
+
+    The family name of the font that has been resolved for the current font
+    and fontSizeMode.
+*/
+
+/*!
+    \qmlproperty string QtQuick::Text::fontInfo.styleName
+    \since 5.9
+
+    The style name of the font info that has been resolved for the current font
+    and fontSizeMode.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::Text::fontInfo.bold
+    \since 5.9
+
+    The bold state of the font info that has been resolved for the current font
+    and fontSizeMode. This is true if the weight of the resolved font is bold or higher.
+*/
+
+/*!
+    \qmlproperty int QtQuick::Text::fontInfo.weight
+    \since 5.9
+
+    The weight of the font info that has been resolved for the current font
+    and fontSizeMode.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::Text::fontInfo.italic
+    \since 5.9
+
+    The italic state of the font info that has been resolved for the current font
+    and fontSizeMode.
+*/
+
+/*!
+    \qmlproperty real QtQuick::Text::fontInfo.pointSize
+    \since 5.9
+
+    The pointSize of the font info that has been resolved for the current font
+    and fontSizeMode.
+*/
+
+/*!
+    \qmlproperty string QtQuick::Text::fontInfo.pixelSize
+    \since 5.9
+
+    The pixel size of the font info that has been resolved for the current font
+    and fontSizeMode.
+*/
+QJSValue QQuickText::fontInfo() const
+{
+    Q_D(const QQuickText);
+
+    QJSEngine *engine = qjsEngine(this);
+    if (!engine) {
+        qmlWarning(this) << "fontInfo: item has no JS engine";
+        return QJSValue();
+    }
+
+    QJSValue value = engine->newObject();
+    value.setProperty(QStringLiteral("family"), d->fontInfo.family());
+    value.setProperty(QStringLiteral("styleName"), d->fontInfo.styleName());
+    value.setProperty(QStringLiteral("bold"), d->fontInfo.bold());
+    value.setProperty(QStringLiteral("weight"), d->fontInfo.weight());
+    value.setProperty(QStringLiteral("italic"), d->fontInfo.italic());
+    value.setProperty(QStringLiteral("pointSize"), d->fontInfo.pointSizeF());
+    value.setProperty(QStringLiteral("pixelSize"), d->fontInfo.pixelSize());
+    return value;
 }
 
 QT_END_NAMESPACE

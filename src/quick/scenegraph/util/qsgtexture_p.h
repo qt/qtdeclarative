@@ -69,11 +69,13 @@ public:
 
     uint wrapChanged : 1;
     uint filteringChanged : 1;
+    uint anisotropyChanged : 1;
 
     uint horizontalWrap : 2;
     uint verticalWrap : 2;
     uint mipmapMode : 2;
     uint filterMode : 2;
+    uint anisotropyLevel: 3;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGPlainTexture : public QSGTexture

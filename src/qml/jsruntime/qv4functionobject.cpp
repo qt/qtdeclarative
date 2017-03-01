@@ -131,7 +131,7 @@ void FunctionObject::init(String *n, bool createProto)
     }
 
     if (n)
-        defineReadonlyProperty(s.engine->id_name(), *n);
+        defineReadonlyConfigurableProperty(s.engine->id_name(), *n);
 }
 
 ReturnedValue FunctionObject::name() const
@@ -258,10 +258,10 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
 
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
 
-    defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(0));
+    defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
@@ -557,7 +557,7 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
         len -= boundArgs->size();
     if (len < 0)
         len = 0;
-    f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(len));
+    f->defineReadonlyConfigurableProperty(s.engine->id_length(), Primitive::fromInt32(len));
 
     ScopedProperty pd(s);
     pd->value = s.engine->thrower();

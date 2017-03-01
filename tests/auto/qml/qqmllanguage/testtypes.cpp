@@ -87,6 +87,10 @@ void registerTypes()
     qmlRegisterUncreatableType<MyUncreateableBaseClass,1>("Test", 1, 1, "MyUncreateableBaseClass", "Cannot create MyUncreateableBaseClass");
     qmlRegisterType<MyCreateableDerivedClass,1>("Test", 1, 1, "MyCreateableDerivedClass");
 
+    qmlRegisterExtendedUncreatableType<MyExtendedUncreateableBaseClass, MyExtendedUncreateableBaseClassExtension>("Test", 1, 0, "MyExtendedUncreateableBaseClass", "Cannot create MyExtendedUncreateableBaseClass");
+    qmlRegisterExtendedUncreatableType<MyExtendedUncreateableBaseClass, MyExtendedUncreateableBaseClassExtension, 1>("Test", 1, 1, "MyExtendedUncreateableBaseClass", "Cannot create MyExtendedUncreateableBaseClass");
+    qmlRegisterType<MyExtendedCreateableDerivedClass>("Test", 1, 0, "MyExtendedCreateableDerivedClass");
+
     qmlRegisterCustomType<CustomBinding>("Test", 1, 0, "CustomBinding", new CustomBindingParser);
     qmlRegisterCustomType<SimpleObjectWithCustomParser>("Test", 1, 0, "SimpleObjectWithCustomParser", new SimpleObjectCustomParser);
 

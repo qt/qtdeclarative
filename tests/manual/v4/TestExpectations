@@ -29,3 +29,150 @@ Sbp_12.5_A9_T3 failing
 Sbp_12.6.1_A13_T3 failing
 Sbp_12.6.2_A13_T3 failing
 Sbp_12.6.4_A13_T3 failing
+
+# es6: function length attributes are configurable, wasn't in es5
+S15.1.2.2_A9.2 failing
+S15.1.3.1_A5.2 failing
+S15.1.3.2_A5.2 failing
+S15.1.3.3_A5.2 failing
+S15.1.2.3_A7.2 failing
+S15.1.2.4_A2.2 failing
+S15.1.2.5_A2.2 failing
+S15.1.3.4_A5.2 failing
+15.2.3.3-4-186 failing
+S15.2.4.2_A9 failing
+S15.2.4.3_A9 failing
+S15.2.4.4_A9 failing
+S15.2.4.5_A9 failing
+S15.2.4.6_A9 failing
+S15.2.4.7_A9 failing
+15.3.3.2-1 failing
+15.4.4.2_A4.2
+S15.3.4.2_A9 failing
+S15.3.4.3_A9 failing
+S15.3.4.4_A9 failing
+15.3.4.5-15-2 failing
+S15.4.4.2_A4.2 failing
+S15.4.4.3_A4.2 failing
+S15.4.4.4_A4.2 failing
+S15.4.4.5_A6.2 failing
+S15.4.4.6_A5.2 failing
+S15.4.4.7_A6.2 failing
+S15.4.4.8_A5.2 failing
+S15.4.4.9_A5.2 failing
+S15.4.4.10_A5.2 failing
+S15.4.4.11_A7.2 failing
+S15.4.4.12_A5.2 failing
+S15.4.4.13_A5.2 failing
+S15.5.4.10_A9 failing
+S15.5.4.11_A9 failing
+S15.5.4.12_A9 failing
+S15.5.4.13_A9 failing
+S15.5.4.14_A9 failing
+S15.5.4.15_A9 failing
+S15.5.4.16_A9 failing
+S15.5.4.17_A9 failing
+S15.5.4.18_A9 failing
+S15.5.4.19_A9 failing
+S15.5.4.4_A9 failing
+S15.5.4.5_A9 failing
+S15.5.4.6_A9 failing
+S15.5.4.7_A9 failing
+S15.5.4.8_A9 failing
+S15.5.4.9_A9 failing
+S15.9.4.2_A3_T2 failing
+S15.9.4.3_A3_T2 failing
+S15.9.5.2_A3_T2 failing
+S15.9.5.3_A3_T2 failing
+S15.9.5.4_A3_T2 failing
+S15.9.5.5_A3_T2 failing
+S15.9.5.1_A3_T2 failing
+S15.9.5.10_A3_T2 failing
+S15.9.5.11_A3_T2 failing
+S15.9.5.12_A3_T2 failing
+S15.9.5.13_A3_T2 failing
+S15.9.5.14_A3_T2 failing
+S15.9.5.15_A3_T2 failing
+S15.9.5.16_A3_T2 failing
+S15.9.5.17_A3_T2 failing
+S15.9.5.18_A3_T2 failing
+S15.9.5.19_A3_T2 failing
+S15.9.5.20_A3_T2 failing
+S15.9.5.21_A3_T2 failing
+S15.9.5.22_A3_T2 failing
+S15.9.5.23_A3_T2 failing
+S15.9.5.24_A3_T2 failing
+S15.9.5.25_A3_T2 failing
+S15.9.5.26_A3_T2 failing
+S15.9.5.27_A3_T2 failing
+S15.9.5.28_A3_T2 failing
+S15.9.5.29_A3_T2 failing
+S15.9.5.30_A3_T2 failing
+S15.9.5.31_A3_T2 failing
+S15.9.5.32_A3_T2 failing
+S15.9.5.33_A3_T2 failing
+S15.9.5.34_A3_T2 failing
+S15.9.5.35_A3_T2 failing
+S15.9.5.36_A3_T2 failing
+S15.9.5.37_A3_T2 failing
+S15.9.5.38_A3_T2 failing
+S15.9.5.39_A3_T2 failing
+S15.9.5.40_A3_T2 failing
+S15.9.5.41_A3_T2 failing
+S15.9.5.42_A3_T2 failing
+S15.9.5.6_A3_T2 failing
+S15.9.5.7_A3_T2 failing
+S15.9.5.8_A3_T2 failing
+S15.9.5.9_A3_T2 failing
+S15.10.6.2_A9 failing
+S15.10.6.3_A9 failing
+S15.10.6.4_A9 failing
+
+# es6: Object.freeze(v) on a non-object returns v, no longer TypeError
+15.2.3.9-1 failing
+15.2.3.9-1-1 failing
+15.2.3.9-1-2 failing
+15.2.3.9-1-3 failing
+15.2.3.9-1-4 failing
+# es6: Object.preventExtensions(O) on a non-object, no longer TypeError
+15.2.3.10-1 failing
+15.2.3.10-1-3 failing
+15.2.3.10-1-4 failing
+# es6: Object.isSealed(O) on a non-object, no longer TypeError
+15.2.3.11-1
+# es6: Object.isFrozen(O) on a non-object, no longer TypeError
+15.2.3.12-1
+15.2.3.12-1-3
+15.2.3.12-1-4
+# es6: Object.isExtensible(O) on a non-object, no longer TypeError
+15.2.3.13-1
+15.2.3.13-1-3
+15.2.3.13-1-4
+# es6: Object.keys(O) on a non-object, no longer TypeError
+15.2.3.14-1-1
+15.2.3.14-1-2
+15.2.3.14-1-3
+15.2.3.14-1
+15.2.3.14-2
+15.2.3.14-3
+# es6: Object.getOwnPropertyDescriptor(O) on a non-object, no longer TypeError
+15.2.3.3-1
+15.2.3.3-1-3
+15.2.3.3-1-4
+# es6: Object.getPrototypeOf(O) on a non-object, no longer TypeError
+15.2.3.2-1
+15.2.3.2-1-3
+15.2.3.2-1-4
+# es6: Object.getOwnPropertyNames(O) on a non-object, no longer TypeError
+15.2.3.4-1
+15.2.3.4-1-4
+15.2.3.4-1-5
+# es6: Object.seal(O) on a non-object, no longer TypeError
+15.2.3.8-1
+15.2.3.8-1-1
+15.2.3.8-1-2
+15.2.3.8-1-3
+15.2.3.8-1-4
+
+# es6: Date.prototype is no longer a DateObject
+15.9.5.40_1 failing

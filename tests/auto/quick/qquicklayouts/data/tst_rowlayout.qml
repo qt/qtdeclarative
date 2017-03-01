@@ -959,5 +959,15 @@ Item {
             // Shouldn't crash.
             containerUser.destroy();
         }
+
+        function test_defaultPropertyAliasCrashAgain() {
+            var containerUserComponent = Qt.createComponent("rowlayout/ContainerUser2.qml");
+            compare(containerUserComponent.status, Component.Ready);
+
+            var containerUser = createTemporaryObject(containerUserComponent, testCase);
+            verify(containerUser);
+
+            // Shouldn't crash upon destroying containerUser.
+        }
     }
 }

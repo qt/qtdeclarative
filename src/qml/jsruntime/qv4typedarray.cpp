@@ -398,11 +398,11 @@ ReturnedValue TypedArray::getIndexed(const Managed *m, uint index, bool *hasProp
     return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
 }
 
-void TypedArray::putIndexed(Managed *m, uint index, const Value &value)
+bool TypedArray::putIndexed(Managed *m, uint index, const Value &value)
 {
     ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     if (v4->hasException)
-        return;
+        return false;
 
     Scope scope(v4);
     Scoped<TypedArray> a(scope, static_cast<TypedArray *>(m));
@@ -413,11 +413,12 @@ void TypedArray::putIndexed(Managed *m, uint index, const Value &value)
         goto reject;
 
     a->d()->type->write(scope.engine, a->d()->buffer->data->data(), byteOffset, value);
-    return;
+    return true;
 
 reject:
   if (scope.engine->current->strictMode)
       scope.engine->throwTypeError();
+  return false;
 }
 
 void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)

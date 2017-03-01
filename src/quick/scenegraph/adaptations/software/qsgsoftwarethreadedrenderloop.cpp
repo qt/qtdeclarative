@@ -188,8 +188,8 @@ public:
         delete rc;
     }
 
-    bool event(QEvent *e);
-    void run();
+    bool event(QEvent *e) override;
+    void run() override;
 
     void syncAndRender();
     void sync(bool inExpose);

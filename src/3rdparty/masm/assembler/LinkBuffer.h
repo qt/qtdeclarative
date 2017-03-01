@@ -36,12 +36,19 @@
 
 #include "JITCompilationEffort.h"
 #include "MacroAssembler.h"
+#include "Options.h"
 #include <wtf/DataLog.h>
 #include <wtf/Noncopyable.h>
 
 namespace JSC {
 
 class JSGlobalData;
+
+template <typename T>
+struct DefaultExecutableOffsetCalculator {
+    template <typename Assembler>
+    static T applyOffset(Assembler *, T src) { return src; }
+};
 
 // LinkBuffer:
 //
@@ -57,30 +64,24 @@ class JSGlobalData;
 //   * The address of a Label pointing into the code may be resolved.
 //   * The value referenced by a DataLabel may be set.
 //
-class LinkBuffer {
-    WTF_MAKE_NONCOPYABLE(LinkBuffer);
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+class LinkBufferBase {
+    WTF_MAKE_NONCOPYABLE(LinkBufferBase);
     typedef MacroAssemblerCodeRef CodeRef;
     typedef MacroAssemblerCodePtr CodePtr;
-    typedef MacroAssembler::Label Label;
-    typedef MacroAssembler::Jump Jump;
-    typedef MacroAssembler::PatchableJump PatchableJump;
-    typedef MacroAssembler::JumpList JumpList;
-    typedef MacroAssembler::Call Call;
-    typedef MacroAssembler::DataLabelCompact DataLabelCompact;
-    typedef MacroAssembler::DataLabel32 DataLabel32;
-    typedef MacroAssembler::DataLabelPtr DataLabelPtr;
-    typedef MacroAssembler::ConvertibleLoadLabel ConvertibleLoadLabel;
-#if ENABLE(BRANCH_COMPACTION)
-    typedef MacroAssembler::LinkRecord LinkRecord;
-    typedef MacroAssembler::JumpLinkType JumpLinkType;
-#endif
+    typedef typename MacroAssembler::Label Label;
+    typedef typename MacroAssembler::Jump Jump;
+    typedef typename MacroAssembler::PatchableJump PatchableJump;
+    typedef typename MacroAssembler::JumpList JumpList;
+    typedef typename MacroAssembler::Call Call;
+    typedef typename MacroAssembler::DataLabelCompact DataLabelCompact;
+    typedef typename MacroAssembler::DataLabel32 DataLabel32;
+    typedef typename MacroAssembler::DataLabelPtr DataLabelPtr;
+    typedef typename MacroAssembler::ConvertibleLoadLabel ConvertibleLoadLabel;
 
 public:
-    LinkBuffer(JSGlobalData& globalData, MacroAssembler* masm, void* ownerUID, JITCompilationEffort effort = JITCompilationMustSucceed)
+    LinkBufferBase(JSGlobalData& globalData, MacroAssembler* masm, JITCompilationEffort effort = JITCompilationMustSucceed)
         : m_size(0)
-#if ENABLE(BRANCH_COMPACTION)
-        , m_initialSize(0)
-#endif
         , m_code(0)
         , m_assembler(masm)
         , m_globalData(&globalData)
@@ -89,10 +90,13 @@ public:
         , m_effort(effort)
 #endif
     {
-        linkCode(ownerUID, effort);
+#ifdef NDEBUG
+        UNUSED_PARAM(effort)
+#endif
+        // Simon: Moved this to the sub-classes linkCode(ownerUID, effort);
     }
 
-    ~LinkBuffer()
+    ~LinkBufferBase()
     {
         ASSERT(m_completed || (!m_executableMemory && m_effort == JITCompilationCanFail));
     }
@@ -204,8 +208,8 @@ public:
     // finalizeCodeWithoutDisassembly() directly if you have your own way of
     // displaying disassembly.
     
-    CodeRef finalizeCodeWithoutDisassembly();
-    CodeRef finalizeCodeWithDisassembly(const char* format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
+    inline CodeRef finalizeCodeWithoutDisassembly();
+    inline CodeRef finalizeCodeWithDisassembly(const char* format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
 
     CodePtr trampolineAt(Label label)
     {
@@ -225,21 +229,19 @@ public:
 private:
     template <typename T> T applyOffset(T src)
     {
-#if ENABLE(BRANCH_COMPACTION)
-        src.m_offset -= m_assembler->executableOffsetFor(src.m_offset);
-#endif
-        return src;
+        return ExecutableOffsetCalculator<T>::applyOffset(m_assembler, src);
     }
     
+protected:
     // Keep this private! - the underlying code should only be obtained externally via finalizeCode().
     void* code()
     {
         return m_code;
     }
 
-    void linkCode(void* ownerUID, JITCompilationEffort);
+    inline void linkCode(void* ownerUID, JITCompilationEffort);
 
-    void performFinalization();
+    inline void performFinalization();
 
 #if DUMP_LINK_STATISTICS
     static void dumpLinkStatistics(void* code, size_t initialSize, size_t finalSize);
@@ -251,12 +253,10 @@ private:
     
     RefPtr<ExecutableMemoryHandle> m_executableMemory;
     size_t m_size;
-#if ENABLE(BRANCH_COMPACTION)
-    size_t m_initialSize;
-#endif
     void* m_code;
     MacroAssembler* m_assembler;
     JSGlobalData* m_globalData;
+protected:
 #ifndef NDEBUG
     bool m_completed;
     JITCompilationEffort m_effort;
@@ -289,6 +289,234 @@ private:
 
 #define FINALIZE_DFG_CODE(linkBufferReference, dataLogFArgumentsForHeading)  \
     FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, dataLogFArgumentsForHeading)
+
+
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithoutDisassembly()
+{
+    performFinalization();
+
+    return CodeRef(m_executableMemory);
+}
+
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char* format, ...)
+{
+    ASSERT(Options::showDisassembly() || Options::showDFGDisassembly());
+
+    CodeRef result = finalizeCodeWithoutDisassembly();
+
+    dataLogF("Generated JIT code for ");
+    va_list argList;
+    va_start(argList, format);
+    WTF::dataLogFV(format, argList);
+    va_end(argList);
+    dataLogF(":\n");
+
+    dataLogF(
+#if OS(WINDOWS)
+                "    Code at [0x%p, 0x%p):\n",
+#else
+                "    Code at [%p, %p):\n",
+#endif
+                result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
+    disassemble(result.code(), m_size, "    ", WTF::dataFile());
+
+    return result;
+}
+
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::linkCode(void* ownerUID, JITCompilationEffort effort)
+{
+    UNUSED_PARAM(ownerUID)
+    UNUSED_PARAM(effort)
+    ASSERT(!m_code);
+    m_executableMemory = m_assembler->m_assembler.executableCopy(*m_globalData, ownerUID, effort);
+    if (!m_executableMemory)
+        return;
+    m_code = m_executableMemory->start();
+    m_size = m_assembler->m_assembler.codeSize();
+    ASSERT(m_code);
+}
+
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::performFinalization()
+{
+    // NOTE: This function is specialized in LinkBuffer<MacroAssemblerARMv7>
+#ifndef NDEBUG
+    ASSERT(!m_completed);
+    ASSERT(isValid());
+    m_completed = true;
+#endif
+
+    ASSERT(m_size <= INT_MAX);
+    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
+    MacroAssembler::cacheFlush(code(), m_size);
+}
+
+template <typename MacroAssembler>
+class LinkBuffer : public LinkBufferBase<MacroAssembler, DefaultExecutableOffsetCalculator>
+{
+public:
+    LinkBuffer(JSGlobalData& globalData, MacroAssembler* masm, void* ownerUID, JITCompilationEffort effort = JITCompilationMustSucceed)
+        : LinkBufferBase<MacroAssembler, DefaultExecutableOffsetCalculator>(globalData, masm, effort)
+    {
+        this->linkCode(ownerUID, effort);
+    }
+};
+
+#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
+
+template <typename T>
+struct BranchCompactingExecutableOffsetCalculator {
+    template <typename Assembler>
+    static T applyOffset(Assembler *as, T src) {
+        src.m_offset -= as->executableOffsetFor(src.m_offset);
+        return src;
+    }
+};
+
+template <typename MacroAssembler>
+class BranchCompactingLinkBuffer : public LinkBufferBase<MacroAssembler, BranchCompactingExecutableOffsetCalculator>
+{
+public:
+    BranchCompactingLinkBuffer(JSGlobalData& globalData, MacroAssembler* masm, void* ownerUID, JITCompilationEffort effort = JITCompilationMustSucceed)
+        : LinkBufferBase<MacroAssembler, BranchCompactingExecutableOffsetCalculator>(globalData, masm, effort)
+    {
+        linkCode(ownerUID, effort);
+    }
+
+    inline void performFinalization();
+
+    inline void linkCode(void* ownerUID, JITCompilationEffort);
+
+private:
+    using Base = LinkBufferBase<MacroAssembler, BranchCompactingExecutableOffsetCalculator>;
+#ifndef NDEBUG
+    using Base::m_completed;
+#endif
+    using Base::isValid;
+    using Base::code;
+    using Base::m_code;
+    using Base::m_size;
+    using Base::m_assembler;
+    using Base::m_executableMemory;
+    using Base::m_globalData;
+
+    using LinkRecord = typename MacroAssembler::LinkRecord;
+    using JumpLinkType = typename MacroAssembler::JumpLinkType;
+
+    size_t m_initialSize = 0;
+};
+
+template <typename MacroAssembler>
+inline void BranchCompactingLinkBuffer<MacroAssembler>::performFinalization()
+{
+#ifndef NDEBUG
+    ASSERT(!m_completed);
+    ASSERT(isValid());
+    this->m_completed = true;
+#endif
+
+    ExecutableAllocator::makeExecutable(code(), m_initialSize);
+    MacroAssembler::cacheFlush(code(), m_size);
+}
+
+template <typename MacroAssembler>
+inline void BranchCompactingLinkBuffer<MacroAssembler>::linkCode(void* ownerUID, JITCompilationEffort effort)
+{
+    UNUSED_PARAM(ownerUID)
+    UNUSED_PARAM(effort)
+    ASSERT(!m_code);
+    m_initialSize = m_assembler->m_assembler.codeSize();
+    m_executableMemory = m_globalData->executableAllocator.allocate(*m_globalData, m_initialSize, ownerUID, effort);
+    if (!m_executableMemory)
+        return;
+    m_code = (uint8_t*)m_executableMemory->start();
+    ASSERT(m_code);
+    ExecutableAllocator::makeWritable(m_code, m_initialSize);
+    uint8_t* inData = (uint8_t*)m_assembler->unlinkedCode();
+    uint8_t* outData = reinterpret_cast<uint8_t*>(m_code);
+    int readPtr = 0;
+    int writePtr = 0;
+    Vector<LinkRecord, 0, UnsafeVectorOverflow>& jumpsToLink = m_assembler->jumpsToLink();
+    unsigned jumpCount = unsigned(jumpsToLink.size());
+    for (unsigned i = 0; i < jumpCount; ++i) {
+        int offset = readPtr - writePtr;
+        ASSERT(!(offset & 1));
+
+        // Copy the instructions from the last jump to the current one.
+        unsigned regionSize = unsigned(jumpsToLink[i].from() - readPtr);
+        uint16_t* copySource = reinterpret_cast_ptr<uint16_t*>(inData + readPtr);
+        uint16_t* copyEnd = reinterpret_cast_ptr<uint16_t*>(inData + readPtr + regionSize);
+        uint16_t* copyDst = reinterpret_cast_ptr<uint16_t*>(outData + writePtr);
+        ASSERT(!(regionSize % 2));
+        ASSERT(!(readPtr % 2));
+        ASSERT(!(writePtr % 2));
+        while (copySource != copyEnd)
+            *copyDst++ = *copySource++;
+        m_assembler->recordLinkOffsets(readPtr, jumpsToLink[i].from(), offset);
+        readPtr += regionSize;
+        writePtr += regionSize;
+
+        // Calculate absolute address of the jump target, in the case of backwards
+        // branches we need to be precise, forward branches we are pessimistic
+        const uint8_t* target;
+        if (jumpsToLink[i].to() >= jumpsToLink[i].from())
+            target = outData + jumpsToLink[i].to() - offset; // Compensate for what we have collapsed so far
+        else
+            target = outData + jumpsToLink[i].to() - m_assembler->executableOffsetFor(jumpsToLink[i].to());
+
+        JumpLinkType jumpLinkType = m_assembler->computeJumpType(jumpsToLink[i], outData + writePtr, target);
+        // Compact branch if we can...
+        if (m_assembler->canCompact(jumpsToLink[i].type())) {
+            // Step back in the write stream
+            int32_t delta = m_assembler->jumpSizeDelta(jumpsToLink[i].type(), jumpLinkType);
+            if (delta) {
+                writePtr -= delta;
+                m_assembler->recordLinkOffsets(jumpsToLink[i].from() - delta, readPtr, readPtr - writePtr);
+            }
+        }
+        jumpsToLink[i].setFrom(writePtr);
+    }
+    // Copy everything after the last jump
+    memcpy(outData + writePtr, inData + readPtr, m_initialSize - readPtr);
+    m_assembler->recordLinkOffsets(readPtr, unsigned(m_initialSize), readPtr - writePtr);
+
+    for (unsigned i = 0; i < jumpCount; ++i) {
+        uint8_t* location = outData + jumpsToLink[i].from();
+        uint8_t* target = outData + jumpsToLink[i].to() - m_assembler->executableOffsetFor(jumpsToLink[i].to());
+        m_assembler->link(jumpsToLink[i], location, target);
+    }
+
+    jumpsToLink.clear();
+    m_size = writePtr + m_initialSize - readPtr;
+    m_executableMemory->shrink(m_size);
+}
+
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+template <>
+class LinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>> : public BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>>
+{
+public:
+    LinkBuffer(JSGlobalData& globalData, JSC::MacroAssembler<MacroAssemblerARMv7>* masm, void* ownerUID, JITCompilationEffort effort = JITCompilationMustSucceed)
+        : BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>>(globalData, masm, ownerUID, effort)
+    {}
+};
+#endif
+
+#if CPU(ARM64) || defined(V4_BOOTSTRAP)
+template <>
+class LinkBuffer<JSC::MacroAssembler<MacroAssemblerARM64>> : public BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARM64>>
+{
+public:
+    LinkBuffer(JSGlobalData& globalData, JSC::MacroAssembler<MacroAssemblerARM64>* masm, void* ownerUID, JITCompilationEffort effort = JITCompilationMustSucceed)
+        : BranchCompactingLinkBuffer<JSC::MacroAssembler<JSC::MacroAssemblerARM64>>(globalData, masm, ownerUID, effort)
+    {}
+};
+#endif
+
+#endif
 
 } // namespace JSC
 

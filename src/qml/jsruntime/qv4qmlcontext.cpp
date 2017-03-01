@@ -225,21 +225,19 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
     return Encode::undefined();
 }
 
-void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
+bool QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
     QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);
     ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
     if (scope.hasException())
-        return;
+        return false;
     QV4::Scoped<QmlContextWrapper> wrapper(scope, resource);
 
     uint member = wrapper->internalClass()->find(name);
-    if (member < UINT_MAX) {
-        wrapper->putValue(member, value);
-        return;
-    }
+    if (member < UINT_MAX)
+        return wrapper->putValue(member, value);
 
     if (wrapper->d()->isNullWrapper) {
         if (wrapper && wrapper->d()->readOnly) {
@@ -247,11 +245,10 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
                             QLatin1Char('"');
             ScopedString e(scope, v4->newString(error));
             v4->throwError(e);
-            return;
+            return false;
         }
 
-        Object::put(m, name, value);
-        return;
+        return Object::put(m, name, value);
     }
 
     // Its possible we could delay the calculation of the "actual" context (in the case
@@ -260,7 +257,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     QQmlContextData *expressionContext = context;
 
     if (!context)
-        return;
+        return false;
 
     // See QV8ContextWrapper::Getter for resolution order
 
@@ -270,18 +267,18 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
         const QV4::IdentifierHash<int> &properties = context->propertyNames();
         // Search context properties
         if (properties.count() && properties.value(name) != -1)
-            return;
+            return false;
 
         // Search scope object
         if (scopeObject &&
             QV4::QObjectWrapper::setQmlProperty(v4, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
-            return;
+            return true;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
             QV4::QObjectWrapper::setQmlProperty(v4, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, value))
-            return;
+            return true;
 
         context = context->parent;
     }
@@ -292,10 +289,10 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
         v4->throwError(error);
-        return;
+        return false;
     }
 
-    Object::put(m, name, value);
+    return Object::put(m, name, value);
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)

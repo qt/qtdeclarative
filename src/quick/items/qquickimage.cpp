@@ -514,37 +514,41 @@ void QQuickImage::updatePaintedGeometry()
             setImplicitSize(0, 0);
             return;
         }
-        qreal w = widthValid() ? width() : d->pix.width();
-        qreal widthScale = w / qreal(d->pix.width());
-        qreal h = heightValid() ? height() : d->pix.height();
-        qreal heightScale = h / qreal(d->pix.height());
+        const qreal pixWidth = d->pix.width() / d->devicePixelRatio;
+        const qreal pixHeight = d->pix.height() / d->devicePixelRatio;
+        const qreal w = widthValid() ? width() : pixWidth;
+        const qreal widthScale = w / pixWidth;
+        const qreal h = heightValid() ? height() : pixHeight;
+        const qreal heightScale = h / pixHeight;
         if (widthScale <= heightScale) {
             d->paintedWidth = w;
-            d->paintedHeight = widthScale * qreal(d->pix.height());
+            d->paintedHeight = widthScale * pixHeight;
         } else if (heightScale < widthScale) {
-            d->paintedWidth = heightScale * qreal(d->pix.width());
+            d->paintedWidth = heightScale * pixWidth;
             d->paintedHeight = h;
         }
-        qreal iHeight = (widthValid() && !heightValid()) ? d->paintedHeight : d->pix.height();
-        qreal iWidth = (heightValid() && !widthValid()) ? d->paintedWidth : d->pix.width();
+        const qreal iHeight = (widthValid() && !heightValid()) ? d->paintedHeight : pixHeight;
+        const qreal iWidth = (heightValid() && !widthValid()) ? d->paintedWidth : pixWidth;
         setImplicitSize(iWidth, iHeight);
 
     } else if (d->fillMode == PreserveAspectCrop) {
         if (!d->pix.width() || !d->pix.height())
             return;
-        qreal widthScale = width() / qreal(d->pix.width());
-        qreal heightScale = height() / qreal(d->pix.height());
+        const qreal pixWidth = d->pix.width() / d->devicePixelRatio;
+        const qreal pixHeight = d->pix.height() / d->devicePixelRatio;
+        qreal widthScale = width() / pixWidth;
+        qreal heightScale = height() / pixHeight;
         if (widthScale < heightScale) {
             widthScale = heightScale;
         } else if (heightScale < widthScale) {
             heightScale = widthScale;
         }
 
-        d->paintedHeight = heightScale * qreal(d->pix.height());
-        d->paintedWidth = widthScale * qreal(d->pix.width());
+        d->paintedHeight = heightScale * pixHeight;
+        d->paintedWidth = widthScale * pixWidth;
     } else if (d->fillMode == Pad) {
-        d->paintedWidth = d->pix.width();
-        d->paintedHeight = d->pix.height();
+        d->paintedWidth = d->pix.width() / d->devicePixelRatio;
+        d->paintedHeight = d->pix.height() / d->devicePixelRatio;
     } else {
         d->paintedWidth = width();
         d->paintedHeight = height();

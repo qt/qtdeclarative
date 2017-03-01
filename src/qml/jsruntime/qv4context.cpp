@@ -155,7 +155,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         ctx = ctx->d()->outer;
     }
 
-    if (activation->hasProperty(name))
+    if (activation->hasOwnProperty(name))
         return;
     ScopedProperty desc(scope);
     PropertyAttributes attrs(Attr_Data);

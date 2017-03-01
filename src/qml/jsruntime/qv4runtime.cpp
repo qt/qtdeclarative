@@ -343,35 +343,15 @@ ReturnedValue Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
     return Encode(engine->currentContext->deleteProperty(name));
 }
 
-QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
+QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &lval, const Value &rval)
 {
-    const FunctionObject *function = right.as<FunctionObject>();
-    if (!function)
-        return engine->throwTypeError();
+    // 11.8.6, 5: rval must be an Object
+    const Object *rhs = rval.as<Object>();
+    if (!rhs)
+       return engine->throwTypeError();
 
-    Heap::FunctionObject *f = function->d();
-    if (function->isBoundFunction())
-        f = function->cast<BoundFunction>()->target();
-
-    const Object *o = left.as<Object>();
-    if (!o)
-        return Encode(false);
-    Heap::Object *v = o->d();
-
-    o = f->protoProperty();
-    if (!o)
-        return engine->throwTypeError();
-
-    while (v) {
-        v = v->prototype;
-
-        if (!v)
-            break;
-        else if (o->d() == v)
-            return Encode(true);
-    }
-
-    return Encode(false);
+    // 11.8.6, 7: call "HasInstance", which we term instanceOf, and return the result.
+    return rhs->instanceOf(lval);
 }
 
 QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left, const Value &right)
@@ -1284,12 +1264,16 @@ ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
  */
 void Runtime::method_pushWithScope(const Value &o, NoThrowEngine *engine)
 {
-    engine->pushContext(engine->currentContext->newWithContext(o.toObject(engine)));
+    QV4::Value *v = engine->jsAlloca(1);
+    Heap::Object *withObject = o.toObject(engine);
+    *v = withObject;
+    engine->pushContext(engine->currentContext->newWithContext(withObject));
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
 }
 
 void Runtime::method_pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
+    engine->jsAlloca(1); // keep this symmetric with pushWithScope
     ExecutionContext *c = engine->currentContext;
     engine->pushContext(c->newCatchContext(c->d()->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
@@ -1299,7 +1283,7 @@ void Runtime::method_popScope(NoThrowEngine *engine)
 {
     Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
     engine->popContext();
-    engine->jsStackTop -= 2;
+    engine->jsStackTop -= 3;
 }
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)

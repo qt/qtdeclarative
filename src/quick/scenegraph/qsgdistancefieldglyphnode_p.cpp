@@ -52,11 +52,11 @@ class QSGDistanceFieldTextMaterialShader : public QSGMaterialShader
 public:
     QSGDistanceFieldTextMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
 
 protected:
-    virtual void initialize();
+    void initialize() override;
 
     void updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc);
     void updateColor(const QVector4D &c);
@@ -261,10 +261,10 @@ class DistanceFieldStyledTextMaterialShader : public QSGDistanceFieldTextMateria
 public:
     DistanceFieldStyledTextMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 
 protected:
-    virtual void initialize();
+    void initialize() override;
 
     int m_styleColor_id;
 };
@@ -329,10 +329,10 @@ class DistanceFieldOutlineTextMaterialShader : public DistanceFieldStyledTextMat
 public:
     DistanceFieldOutlineTextMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 
 protected:
-    virtual void initialize();
+    void initialize() override;
 
     void updateOutlineAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc, int dfRadius);
 
@@ -413,10 +413,10 @@ class DistanceFieldShiftedStyleTextMaterialShader : public DistanceFieldStyledTe
 public:
     DistanceFieldShiftedStyleTextMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 
 protected:
-    virtual void initialize();
+    void initialize() override;
 
     void updateShift(qreal fontScale, const QPointF& shift);
 
@@ -492,10 +492,10 @@ class QSGHiQSubPixelDistanceFieldTextMaterialShader : public QSGDistanceFieldTex
 public:
     QSGHiQSubPixelDistanceFieldTextMaterialShader();
 
-    virtual void initialize();
-    virtual void activate();
-    virtual void deactivate();
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    void initialize() override;
+    void activate() override;
+    void deactivate() override;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 
 private:
     int m_fontScale_id;

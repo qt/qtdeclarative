@@ -26,9 +26,10 @@
 #ifndef ARM64Assembler_h
 #define ARM64Assembler_h
 
-#if ENABLE(ASSEMBLER) && CPU(ARM64)
+#if ENABLE(ASSEMBLER) && (CPU(ARM64) || defined(V4_BOOTSTRAP))
 
 #include "AssemblerBuffer.h"
+#include "AbstractMacroAssembler.h"
 #include <limits.h>
 #include <wtf/Assertions.h>
 #include <wtf/Vector.h>
@@ -520,8 +521,8 @@ typedef enum {
     #undef DECLARE_REGISTER
 } FPRegisterID;
 
-static constexpr bool isSp(RegisterID reg) { return reg == sp; }
-static constexpr bool isZr(RegisterID reg) { return reg == zr; }
+static Q_DECL_CONSTEXPR bool isSp(RegisterID reg) { return reg == sp; }
+static Q_DECL_CONSTEXPR bool isZr(RegisterID reg) { return reg == zr; }
 
 } // namespace ARM64Registers
 
@@ -530,15 +531,15 @@ public:
     typedef ARM64Registers::RegisterID RegisterID;
     typedef ARM64Registers::FPRegisterID FPRegisterID;
     
-    static constexpr RegisterID firstRegister() { return ARM64Registers::x0; }
-    static constexpr RegisterID lastRegister() { return ARM64Registers::sp; }
+    static Q_DECL_CONSTEXPR RegisterID firstRegister() { return ARM64Registers::x0; }
+    static Q_DECL_CONSTEXPR RegisterID lastRegister() { return ARM64Registers::sp; }
     
-    static constexpr FPRegisterID firstFPRegister() { return ARM64Registers::q0; }
-    static constexpr FPRegisterID lastFPRegister() { return ARM64Registers::q31; }
+    static Q_DECL_CONSTEXPR FPRegisterID firstFPRegister() { return ARM64Registers::q0; }
+    static Q_DECL_CONSTEXPR FPRegisterID lastFPRegister() { return ARM64Registers::q31; }
 
 private:
-    static constexpr bool isSp(RegisterID reg) { return ARM64Registers::isSp(reg); }
-    static constexpr bool isZr(RegisterID reg) { return ARM64Registers::isZr(reg); }
+    static Q_DECL_CONSTEXPR bool isSp(RegisterID reg) { return ARM64Registers::isSp(reg); }
+    static Q_DECL_CONSTEXPR bool isZr(RegisterID reg) { return ARM64Registers::isZr(reg); }
 
 public:
     ARM64Assembler()
@@ -546,7 +547,7 @@ public:
         , m_indexOfTailOfLastWatchpoint(INT_MIN)
     {
     }
-    
+
     AssemblerBuffer& buffer() { return m_buffer; }
 
     // (HS, LO, HI, LS) -> (AE, B, A, BE)
@@ -653,9 +654,7 @@ public:
         }
         void operator=(const LinkRecord& other)
         {
-            data.copyTypes.content[0] = other.data.copyTypes.content[0];
-            data.copyTypes.content[1] = other.data.copyTypes.content[1];
-            data.copyTypes.content[2] = other.data.copyTypes.content[2];
+            data.realTypes = other.data.realTypes;
         }
         intptr_t from() const { return data.realTypes.m_from; }
         void setFrom(intptr_t from) { data.realTypes.m_from = from; }
@@ -671,8 +670,8 @@ public:
     private:
         union {
             struct RealTypes {
-                intptr_t m_from : 48;
-                intptr_t m_to : 48;
+                int64_t m_from : 48;
+                int64_t m_to : 48;
                 JumpType m_type : 8;
                 JumpLinkType m_linkType : 8;
                 Condition m_condition : 4;
@@ -680,10 +679,6 @@ public:
                 RegisterID m_compareRegister : 6;
                 bool m_is64Bit : 1;
             } realTypes;
-            struct CopyTypes {
-                uint64_t content[3];
-            } copyTypes;
-            COMPILE_ASSERT(sizeof(RealTypes) == sizeof(CopyTypes), LinkRecordCopyStructSizeEqualsRealStruct);
         } data;
     };
 
@@ -742,6 +737,89 @@ public:
     {
         return isValidSignedImm9(offset);
     }
+
+
+    // Jump:
+    //
+    // A jump object is a reference to a jump instruction that has been planted
+    // into the code buffer - it is typically used to link the jump, setting the
+    // relative offset such that when executed it will jump to the desired
+    // destination.
+    template <typename LabelType>
+    class Jump {
+        template<class TemplateAssemblerType>
+        friend class AbstractMacroAssembler;
+        friend class Call;
+        template <typename, template <typename> class> friend class LinkBufferBase;
+    public:
+        Jump()
+        {
+        }
+
+        Jump(AssemblerLabel jmp, ARM64Assembler::JumpType type = ARM64Assembler::JumpNoCondition, ARM64Assembler::Condition condition = ARM64Assembler::ConditionInvalid)
+            : m_label(jmp)
+            , m_type(type)
+            , m_condition(condition)
+        {
+        }
+
+        Jump(AssemblerLabel jmp, ARM64Assembler::JumpType type, ARM64Assembler::Condition condition, bool is64Bit, ARM64Assembler::RegisterID compareRegister)
+            : m_label(jmp)
+            , m_type(type)
+            , m_condition(condition)
+            , m_is64Bit(is64Bit)
+            , m_compareRegister(compareRegister)
+        {
+            ASSERT((type == ARM64Assembler::JumpCompareAndBranch) || (type == ARM64Assembler::JumpCompareAndBranchFixedSize));
+        }
+
+        Jump(AssemblerLabel jmp, ARM64Assembler::JumpType type, ARM64Assembler::Condition condition, unsigned bitNumber, ARM64Assembler::RegisterID compareRegister)
+            : m_label(jmp)
+            , m_type(type)
+            , m_condition(condition)
+            , m_bitNumber(bitNumber)
+            , m_compareRegister(compareRegister)
+        {
+            ASSERT((type == ARM64Assembler::JumpTestBit) || (type == ARM64Assembler::JumpTestBitFixedSize));
+        }
+
+        LabelType label() const
+        {
+            LabelType result;
+            result.m_label = m_label;
+            return result;
+        }
+
+        void link(AbstractMacroAssembler<ARM64Assembler>* masm) const
+        {
+            if ((m_type == ARM64Assembler::JumpCompareAndBranch) || (m_type == ARM64Assembler::JumpCompareAndBranchFixedSize))
+                masm->m_assembler.linkJump(m_label, masm->m_assembler.label(), m_type, m_condition, m_is64Bit, m_compareRegister);
+            else if ((m_type == ARM64Assembler::JumpTestBit) || (m_type == ARM64Assembler::JumpTestBitFixedSize))
+                masm->m_assembler.linkJump(m_label, masm->m_assembler.label(), m_type, m_condition, m_bitNumber, m_compareRegister);
+            else
+                masm->m_assembler.linkJump(m_label, masm->m_assembler.label(), m_type, m_condition);
+        }
+
+        void linkTo(LabelType label, AbstractMacroAssembler<ARM64Assembler>* masm) const
+        {
+            if ((m_type == ARM64Assembler::JumpCompareAndBranch) || (m_type == ARM64Assembler::JumpCompareAndBranchFixedSize))
+                masm->m_assembler.linkJump(m_label, label.label(), m_type, m_condition, m_is64Bit, m_compareRegister);
+            else if ((m_type == ARM64Assembler::JumpTestBit) || (m_type == ARM64Assembler::JumpTestBitFixedSize))
+                masm->m_assembler.linkJump(m_label, label.label(), m_type, m_condition, m_bitNumber, m_compareRegister);
+            else
+                masm->m_assembler.linkJump(m_label, label.label(), m_type, m_condition);
+        }
+
+        bool isSet() const { return m_label.isSet(); }
+
+    private:
+        AssemblerLabel m_label;
+        ARM64Assembler::JumpType m_type;
+        ARM64Assembler::Condition m_condition;
+        bool m_is64Bit;
+        unsigned m_bitNumber;
+        ARM64Assembler::RegisterID m_compareRegister;
+    };
 
 private:
     int encodeFPImm(double d)
@@ -2857,11 +2935,11 @@ public:
 
         expected = disassembleMoveWideImediate(address + 1, sf, opc, hw, imm16, rd);
         ASSERT_UNUSED(expected, expected && sf && opc == MoveWideOp_K && hw == 1 && rd == rdFirst);
-        result |= static_cast<uintptr_t>(imm16) << 16;
+        result |= static_cast<uint64_t>(imm16) << 16;
 
         expected = disassembleMoveWideImediate(address + 2, sf, opc, hw, imm16, rd);
         ASSERT_UNUSED(expected, expected && sf && opc == MoveWideOp_K && hw == 2 && rd == rdFirst);
-        result |= static_cast<uintptr_t>(imm16) << 32;
+        result |= static_cast<uint64_t>(imm16) << 32;
 
         return reinterpret_cast<void*>(result);
     }
@@ -2932,7 +3010,10 @@ public:
 
     static void cacheFlush(void* code, size_t size)
     {
-#if OS(IOS)
+#if defined(V4_BOOTSTRAP)
+        UNUSED_PARAM(code)
+        UNUSED_PARAM(size)
+#elif OS(IOS)
         sys_cache_control(kCacheFunctionPrepareForExecution, code, size);
 #elif OS(LINUX)
         size_t page = pageSize();
@@ -2989,7 +3070,7 @@ public:
         case JumpCondition: {
             ASSERT(!(reinterpret_cast<intptr_t>(from) & 0x3));
             ASSERT(!(reinterpret_cast<intptr_t>(to) & 0x3));
-            intptr_t relative = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(from));
+            int64_t relative = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(from));
 
             if (((relative << 43) >> 43) == relative)
                 return LinkJumpConditionDirect;
@@ -2999,7 +3080,7 @@ public:
         case JumpCompareAndBranch:  {
             ASSERT(!(reinterpret_cast<intptr_t>(from) & 0x3));
             ASSERT(!(reinterpret_cast<intptr_t>(to) & 0x3));
-            intptr_t relative = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(from));
+            int64_t relative = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(from));
 
             if (((relative << 43) >> 43) == relative)
                 return LinkJumpCompareAndBranchDirect;
@@ -3009,7 +3090,7 @@ public:
         case JumpTestBit:   {
             ASSERT(!(reinterpret_cast<intptr_t>(from) & 0x3));
             ASSERT(!(reinterpret_cast<intptr_t>(to) & 0x3));
-            intptr_t relative = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(from));
+            int64_t relative = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(from));
 
             if (((relative << 50) >> 50) == relative)
                 return LinkJumpTestBitDirect;
@@ -3121,7 +3202,7 @@ private:
     {
         ASSERT(!(reinterpret_cast<intptr_t>(from) & 3));
         ASSERT(!(reinterpret_cast<intptr_t>(to) & 3));
-        intptr_t offset = (reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from)) >> 2;
+        int64_t offset = (reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from)) >> 2;
         ASSERT(((offset << 38) >> 38) == offset);
 
         bool useDirect = ((offset << 45) >> 45) == offset; // Fits in 19 bits
@@ -3142,7 +3223,7 @@ private:
     {
         ASSERT(!(reinterpret_cast<intptr_t>(from) & 3));
         ASSERT(!(reinterpret_cast<intptr_t>(to) & 3));
-        intptr_t offset = (reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from)) >> 2;
+        int64_t offset = (reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from)) >> 2;
         ASSERT(((offset << 38) >> 38) == offset);
 
         bool useDirect = ((offset << 45) >> 45) == offset; // Fits in 19 bits
@@ -3163,7 +3244,7 @@ private:
     {
         ASSERT(!(reinterpret_cast<intptr_t>(from) & 3));
         ASSERT(!(reinterpret_cast<intptr_t>(to) & 3));
-        intptr_t offset = (reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from)) >> 2;
+        int64_t offset = (reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from)) >> 2;
         ASSERT(static_cast<int>(offset) == offset);
         ASSERT(((offset << 38) >> 38) == offset);
 
@@ -3766,6 +3847,8 @@ private:
 #undef DATASIZE
 #undef MEMOPSIZE
 #undef CHECK_FP_MEMOP_DATASIZE
+#undef JUMP_ENUM_WITH_SIZE
+#undef JUMP_ENUM_SIZE
 
 #endif // ENABLE(ASSEMBLER) && CPU(ARM64)
 

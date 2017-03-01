@@ -58,7 +58,6 @@ QT_REQUIRE_CONFIG(quick_positioners);
 #include "qquickimplicitsizeitem_p.h"
 #include "qquickitemviewtransition_p.h"
 
-#include <QtQuick/private/qquickstate_p.h>
 #include <private/qpodvector_p.h>
 
 #include <QtCore/qobject.h>
@@ -133,6 +132,11 @@ public:
 
     static QQuickPositionerAttached *qmlAttachedProperties(QObject *obj);
 
+    static QQuickBasePositionerPrivate* get(QQuickBasePositioner *positioner)
+    {
+        return positioner->d_func();
+    }
+
     void updateAttachedProperties(QQuickPositionerAttached *specificProperty = 0, QQuickItem *specificPropertyOwner = 0) const;
 
     qreal padding() const;
@@ -183,7 +187,7 @@ protected:
     virtual void doPositioning(QSizeF *contentSize)=0;
     virtual void reportConflictingAnchors()=0;
 
-    class PositionedItem
+    class Q_QUICK_PRIVATE_EXPORT PositionedItem
     {
     public :
         PositionedItem(QQuickItem *i);
@@ -228,7 +232,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickBasePositioner)
 };
 
-class Q_AUTOTEST_EXPORT QQuickColumn : public QQuickBasePositioner
+class Q_QUICK_PRIVATE_EXPORT QQuickColumn : public QQuickBasePositioner
 {
     Q_OBJECT
 public:
@@ -242,7 +246,7 @@ private:
 };
 
 class QQuickRowPrivate;
-class Q_AUTOTEST_EXPORT QQuickRow: public QQuickBasePositioner
+class Q_QUICK_PRIVATE_EXPORT QQuickRow: public QQuickBasePositioner
 {
     Q_OBJECT
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
@@ -267,7 +271,7 @@ private:
 };
 
 class QQuickGridPrivate;
-class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
+class Q_QUICK_PRIVATE_EXPORT QQuickGrid : public QQuickBasePositioner
 {
     Q_OBJECT
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
@@ -354,7 +358,7 @@ private:
 };
 
 class QQuickFlowPrivate;
-class Q_AUTOTEST_EXPORT QQuickFlow: public QQuickBasePositioner
+class Q_QUICK_PRIVATE_EXPORT QQuickFlow: public QQuickBasePositioner
 {
     Q_OBJECT
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
@@ -387,6 +391,22 @@ private:
     Q_DECLARE_PRIVATE(QQuickFlow)
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickImplicitRow : public QQuickRow
+{
+    Q_OBJECT
+
+public:
+    QQuickImplicitRow(QQuickItem *parent = nullptr);
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickImplicitGrid : public QQuickGrid
+{
+    Q_OBJECT
+
+public:
+    QQuickImplicitGrid(QQuickItem *parent = nullptr);
+};
+
 
 QT_END_NAMESPACE
 
@@ -394,6 +414,8 @@ QML_DECLARE_TYPE(QQuickColumn)
 QML_DECLARE_TYPE(QQuickRow)
 QML_DECLARE_TYPE(QQuickGrid)
 QML_DECLARE_TYPE(QQuickFlow)
+QML_DECLARE_TYPE(QQuickImplicitRow)
+QML_DECLARE_TYPE(QQuickImplicitGrid)
 
 QML_DECLARE_TYPE(QQuickBasePositioner)
 QML_DECLARE_TYPEINFO(QQuickBasePositioner, QML_HAS_ATTACHED_PROPERTIES)
