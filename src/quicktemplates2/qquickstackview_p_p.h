@@ -53,6 +53,7 @@
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4value_p.h>
+#include <QtCore/qset.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -92,7 +93,8 @@ public:
     bool busy;
     QVariant initialItem;
     QQuickItem *currentItem;
-    QList<QQuickStackElement*> removals;
+    QSet<QQuickStackElement*> removing;
+    QList<QQuickStackElement*> removed;
     QStack<QQuickStackElement *> elements;
     QQuickItemViewTransitioner *transitioner;
 };

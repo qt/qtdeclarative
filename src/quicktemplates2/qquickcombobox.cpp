@@ -1069,7 +1069,7 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    d->deleteDelegate(d->indicator);
+    QQuickControlPrivate::destroyDelegate(d->indicator, this);
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
@@ -1103,9 +1103,10 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     if (d->popup == popup)
         return;
 
-    if (d->popup)
+    if (d->popup) {
         QObjectPrivate::disconnect(d->popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
-    d->deleteDelegate(d->popup);
+        QQuickControlPrivate::destroyDelegate(d->popup, this);
+    }
     if (popup) {
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
@@ -1552,7 +1553,7 @@ QFont QQuickComboBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickComboBox::accessibleRole() const
 {
     return QAccessible::ComboBox;
@@ -1566,6 +1567,6 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
     if (active)
         setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif //
 
 QT_END_NAMESPACE

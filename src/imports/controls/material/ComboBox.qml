@@ -108,13 +108,6 @@ T.ComboBox {
         radius: control.flat ? 0 : 2
         color: !control.editable ? control.Material.dialogColor : "transparent"
 
-        Behavior on color {
-            enabled: !control.editable
-            ColorAnimation {
-                duration: 400
-            }
-        }
-
         layer.enabled: control.enabled && !control.editable && control.Material.background.a > 0
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation

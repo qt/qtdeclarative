@@ -54,7 +54,7 @@
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <qpa/qplatformtheme.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAccessibleAttached;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
 {
@@ -90,7 +90,7 @@ public:
 
     virtual QQuickItem *getContentItem();
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif
@@ -111,19 +111,17 @@ public:
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(const QQuickItem *item);
 
+#if QT_CONFIG(quicktemplates2_hover)
     void updateHoverEnabled(bool enabled, bool xplicit);
     static void updateHoverEnabledRecur(QQuickItem *item, bool enabled);
     static bool calcHoverEnabled(const QQuickItem *item);
+#endif
 
-    void deleteDelegate(QObject *object);
+    static void destroyDelegate(QObject *object, QObject *parent);
 
     struct ExtraData {
         ExtraData();
         QFont font;
-        // This list contains the default delegates which were
-        // replaced with custom ones via declarative assignments
-        // before Component.completed() was emitted. See QTBUG-50992.
-        QVector<QObject*> pendingDeletions;
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -133,9 +131,11 @@ public:
     bool hasRightPadding;
     bool hasBottomPadding;
     bool hasLocale;
-    bool hovered;
     bool wheelEnabled;
+#if QT_CONFIG(quicktemplates2_hover)
+    bool hovered;
     bool explicitHoverEnabled;
+#endif
     qreal padding;
     qreal topPadding;
     qreal leftPadding;

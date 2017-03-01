@@ -141,7 +141,7 @@ void QQuickToolBar::setPosition(Position position)
     emit positionChanged();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickToolBar::accessibleRole() const
 {
     return QAccessible::ToolBar;

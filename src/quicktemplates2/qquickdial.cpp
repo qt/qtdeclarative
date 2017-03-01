@@ -588,7 +588,7 @@ void QQuickDial::setHandle(QQuickItem *handle)
     if (handle == d->handle)
         return;
 
-    d->deleteDelegate(d->handle);
+    QQuickControlPrivate::destroyDelegate(d->handle, this);
     d->handle = handle;
     if (d->handle && !d->handle->parentItem())
         d->handle->setParentItem(this);
@@ -768,7 +768,7 @@ void QQuickDial::componentComplete()
     d->updatePosition();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickDial::accessibilityActiveChanged(bool active)
 {
     QQuickControl::accessibilityActiveChanged(active);

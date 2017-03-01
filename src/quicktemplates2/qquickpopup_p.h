@@ -59,7 +59,7 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQuick/qquickitem.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -366,7 +366,7 @@ protected:
 
     virtual QFont defaultFont() const;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;
     virtual void accessibilityActiveChanged(bool active);
 #endif

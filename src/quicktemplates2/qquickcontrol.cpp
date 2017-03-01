@@ -51,8 +51,9 @@
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
+#include <QtQml/private/qqmlincubator_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -114,9 +115,11 @@ QQuickControlPrivate::QQuickControlPrivate()
       hasRightPadding(false),
       hasBottomPadding(false),
       hasLocale(false),
-      hovered(false),
       wheelEnabled(false),
+#if QT_CONFIG(quicktemplates2_hover)
+      hovered(false),
       explicitHoverEnabled(false),
+#endif
       padding(0),
       topPadding(0),
       leftPadding(0),
@@ -129,14 +132,14 @@ QQuickControlPrivate::QQuickControlPrivate()
       contentItem(nullptr),
       accessibleAttached(nullptr)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
 #endif
 }
 
 QQuickControlPrivate::~QQuickControlPrivate()
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
 }
@@ -234,7 +237,7 @@ QQuickItem *QQuickControlPrivate::getContentItem()
     return contentItem;
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickControlPrivate::accessibilityActiveChanged(bool active)
 {
     Q_Q(QQuickControl);
@@ -376,6 +379,7 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
     }
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickControlPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 {
     Q_Q(QQuickControl);
@@ -431,10 +435,11 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
 
     return QGuiApplication::styleHints()->useHoverEffects();
 }
+#endif
 
 QString QQuickControl::accessibleName() const
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(const QQuickControl);
     if (d->accessibleAttached)
         return d->accessibleAttached->name();
@@ -444,7 +449,7 @@ QString QQuickControl::accessibleName() const
 
 void QQuickControl::setAccessibleName(const QString &name)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(QQuickControl);
     if (d->accessibleAttached)
         d->accessibleAttached->setName(name);
@@ -455,7 +460,7 @@ void QQuickControl::setAccessibleName(const QString &name)
 
 QVariant QQuickControl::accessibleProperty(const char *propertyName)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(QQuickControl);
     if (d->accessibleAttached)
         return QQuickAccessibleAttached::property(this, propertyName);
@@ -466,7 +471,7 @@ QVariant QQuickControl::accessibleProperty(const char *propertyName)
 
 bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     Q_D(QQuickControl);
     if (d->accessibleAttached)
         return QQuickAccessibleAttached::setProperty(this, propertyName, value);
@@ -492,16 +497,20 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     QQuickItem::itemChange(change, value);
     switch (change) {
     case ItemVisibleHasChanged:
+#if QT_CONFIG(quicktemplates2_hover)
         if (!value.boolValue)
             setHovered(false);
+#endif
         break;
     case ItemParentHasChanged:
         if (value.item) {
             d->resolveFont();
             if (!d->hasLocale)
                 d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
+#if QT_CONFIG(quicktemplates2_hover)
             if (!d->explicitHoverEnabled)
                 d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+#endif
         }
         break;
     case ItemActiveFocusHasChanged:
@@ -857,15 +866,13 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
 }
 
 /*
-   Deletes "delegate" if Component.completed() has been emitted,
-   otherwise stores it in pendingDeletions.
+    Cancels incubation to avoid "Object destroyed during incubation" (QTBUG-50992)
 */
-void QQuickControlPrivate::deleteDelegate(QObject *delegate)
+void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
 {
-    if (componentComplete)
-        delete delegate;
-    else if (delegate)
-        extra.value().pendingDeletions.append(delegate);
+    if (delegate && parent)
+        QQmlIncubatorPrivate::cancel(delegate, qmlContext(parent));
+    delete delegate;
 }
 
 void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
@@ -1005,12 +1012,17 @@ bool QQuickControl::hasVisualFocus() const
 */
 bool QQuickControl::isHovered() const
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(const QQuickControl);
     return d->hovered;
+#else
+    return false;
+#endif
 }
 
 void QQuickControl::setHovered(bool hovered)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickControl);
     if (hovered == d->hovered)
         return;
@@ -1018,6 +1030,9 @@ void QQuickControl::setHovered(bool hovered)
     d->hovered = hovered;
     emit hoveredChanged();
     hoverChange();
+#else
+    Q_UNUSED(hovered);
+#endif
 }
 
 /*!
@@ -1037,27 +1052,37 @@ void QQuickControl::setHovered(bool hovered)
 */
 bool QQuickControl::isHoverEnabled() const
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(const QQuickControl);
     return d->hoverEnabled;
+#else
+    return false;
+#endif
 }
 
 void QQuickControl::setHoverEnabled(bool enabled)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickControl);
     if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
     d->updateHoverEnabled(enabled, true); // explicit=true
+#else
+    Q_UNUSED(enabled)
+#endif
 }
 
 void QQuickControl::resetHoverEnabled()
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickControl);
     if (!d->explicitHoverEnabled)
         return;
 
     d->explicitHoverEnabled = false;
     d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+#endif
 }
 
 /*!
@@ -1119,7 +1144,7 @@ void QQuickControl::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    d->deleteDelegate(d->background);
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -1136,15 +1161,6 @@ void QQuickControl::setBackground(QQuickItem *background)
 
     This property holds the visual content item.
 
-    \note The content item is automatically resized to fit within the
-    \l padding of the control.
-
-    \note Most controls use the implicit size of the content item to calculate
-    the implicit size of the control itself. If you replace the content item
-    with a custom one, you should also consider providing a sensible implicit
-    size for it (unless it is an item like \l Text which has its own implicit
-    size).
-
     \code
     Button {
         id: control
@@ -1156,6 +1172,15 @@ void QQuickControl::setBackground(QQuickItem *background)
         }
     }
     \endcode
+
+    \note The content item is automatically resized to fit within the
+    \l padding of the control.
+
+    \note Most controls use the implicit size of the content item to calculate
+    the implicit size of the control itself. If you replace the content item
+    with a custom one, you should also consider providing a sensible implicit
+    size for it (unless it is an item like \l Text which has its own implicit
+    size).
 
     \sa {Control Layout}, padding
 */
@@ -1172,7 +1197,7 @@ void QQuickControl::setContentItem(QQuickItem *item)
         return;
 
     contentItemChange(item, d->contentItem);
-    d->deleteDelegate(d->contentItem);
+    QQuickControlPrivate::destroyDelegate(d->contentItem, this);
     d->contentItem = item;
     if (item) {
         if (!item->parentItem())
@@ -1197,17 +1222,14 @@ void QQuickControl::componentComplete()
     d->resizeContent();
     if (!d->hasLocale)
         d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
+#if QT_CONFIG(quicktemplates2_hover)
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
-#ifndef QT_NO_ACCESSIBILITY
+#endif
+#if QT_CONFIG(accessibility)
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
 #endif
-
-    if (d->extra.isAllocated()) {
-        qDeleteAll(d->extra.value().pendingDeletions);
-        d->extra.value().pendingDeletions.clear();
-    }
 }
 
 QFont QQuickControl::defaultFont() const
@@ -1227,6 +1249,7 @@ void QQuickControl::focusOutEvent(QFocusEvent *event)
     setFocusReason(event->reason());
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickControl::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickControl);
@@ -1247,6 +1270,7 @@ void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
     setHovered(false);
     event->setAccepted(d->hoverEnabled);
 }
+#endif
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
@@ -1259,8 +1283,10 @@ void QQuickControl::mousePressEvent(QMouseEvent *event)
 
 void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickControl);
     setHovered(d->hoverEnabled && contains(event->pos()));
+#endif
     event->accept();
 }
 
@@ -1302,9 +1328,11 @@ void QQuickControl::fontChange(const QFont &newFont, const QFont &oldFont)
     Q_UNUSED(oldFont);
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickControl::hoverChange()
 {
 }
+#endif
 
 void QQuickControl::mirrorChange()
 {

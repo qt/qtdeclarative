@@ -521,7 +521,7 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
-    d->deleteDelegate(d->handle);
+    QQuickControlPrivate::destroyDelegate(d->handle, this);
     d->handle = handle;
     if (handle && !handle->parentItem())
         handle->setParentItem(this);
@@ -735,7 +735,7 @@ void QQuickSlider::componentComplete()
     d->updatePosition();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickSlider::accessibilityActiveChanged(bool active)
 {
     QQuickControl::accessibilityActiveChanged(active);

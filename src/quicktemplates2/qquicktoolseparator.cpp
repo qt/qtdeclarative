@@ -133,7 +133,7 @@ bool QQuickToolSeparator::isVertical() const
     return d->orientation == Qt::Vertical;
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickToolSeparator::accessibleRole() const
 {
     return QAccessible::Separator;

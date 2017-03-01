@@ -71,7 +71,7 @@ Q_SIGNALS:
 protected:
     QFont defaultFont() const override;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
 

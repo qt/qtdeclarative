@@ -84,7 +84,9 @@ public:
 
     QIconEngine *createIconEngine(const QString &iconName) const override;
 
+#if QT_CONFIG(shortcut)
     QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const override;
+#endif
 
     QString standardButtonText(int button) const override;
 

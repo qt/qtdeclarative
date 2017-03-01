@@ -228,7 +228,7 @@ void QQuickSwipeView::itemAdded(int, QQuickItem *item)
         item->setSize(QSizeF(d->contentItem->width(), d->contentItem->height()));
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickSwipeView::accessibleRole() const
 {
     return QAccessible::PageTabList;

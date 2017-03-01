@@ -1,12 +1,22 @@
 /****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -83,28 +93,28 @@ TestCase {
         control.month = 0
         compare(control.month, 0)
 
-        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":55:9: QML AbstractWeekNumberColumn: month -1 is out of range [0...11]")
+        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":65:9: QML AbstractWeekNumberColumn: month -1 is out of range [0...11]")
         control.month = -1
         compare(control.month, 0)
 
         control.month = 11
         compare(control.month, 11)
 
-        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":55:9: QML AbstractWeekNumberColumn: month 12 is out of range [0...11]")
+        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":65:9: QML AbstractWeekNumberColumn: month 12 is out of range [0...11]")
         control.month = 12
         compare(control.month, 11)
 
         control.year = -271820
         compare(control.year, -271820)
 
-        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":55:9: QML AbstractWeekNumberColumn: year -271821 is out of range [-271820...275759]")
+        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":65:9: QML AbstractWeekNumberColumn: year -271821 is out of range [-271820...275759]")
         control.year = -271821
         compare(control.year, -271820)
 
         control.year = 275759
         compare(control.year, 275759)
 
-        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":55:9: QML AbstractWeekNumberColumn: year 275760 is out of range [-271820...275759]")
+        ignoreWarning(Qt.resolvedUrl("tst_weeknumbercolumn.qml") + ":65:9: QML AbstractWeekNumberColumn: year 275760 is out of range [-271820...275759]")
         control.year = 275760
         compare(control.year, 275759)
 

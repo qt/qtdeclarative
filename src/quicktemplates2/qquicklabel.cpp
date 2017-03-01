@@ -42,7 +42,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -82,14 +82,14 @@ QQuickLabelPrivate::QQuickLabelPrivate()
     : background(nullptr),
       accessibleAttached(nullptr)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
 #endif
 }
 
 QQuickLabelPrivate::~QQuickLabelPrivate()
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
 }
@@ -125,7 +125,7 @@ void QQuickLabelPrivate::inheritFont(const QFont &f)
 
 void QQuickLabelPrivate::textChanged(const QString &text)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->setName(text);
 #else
@@ -133,7 +133,7 @@ void QQuickLabelPrivate::textChanged(const QString &text)
 #endif
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
 {
     if (accessibleAttached || !active)
@@ -154,18 +154,6 @@ QAccessible::Role QQuickLabelPrivate::accessibleRole() const
     return QAccessible::StaticText;
 }
 #endif
-
-/*
-   Deletes "delegate" if Component.completed() has been emitted,
-   otherwise stores it in pendingDeletions.
-*/
-void QQuickLabelPrivate::deleteDelegate(QObject *delegate)
-{
-    if (componentComplete)
-        delete delegate;
-    else if (delegate)
-        pendingDeletions.append(delegate);
-}
 
 QQuickLabel::QQuickLabel(QQuickItem *parent)
     : QQuickText(*(new QQuickLabelPrivate), parent)
@@ -212,7 +200,7 @@ void QQuickLabel::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    d->deleteDelegate(d->background);
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -233,13 +221,10 @@ void QQuickLabel::componentComplete()
 {
     Q_D(QQuickLabel);
     QQuickText::componentComplete();
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
-
-    qDeleteAll(d->pendingDeletions);
-    d->pendingDeletions.clear();
 }
 
 void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)

@@ -60,7 +60,7 @@ public:
     explicit QQuickMenuSeparator(QQuickItem *parent = nullptr);
 
 protected:
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
 

@@ -89,7 +89,9 @@
 #include <QtQuickTemplates2/private/qquicktoolbutton_p.h>
 #include <QtQuickTemplates2/private/qquicktoolseparator_p.h>
 #include <QtQuickTemplates2/private/qquicktooltip_p.h>
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
+#endif
 
 static inline void initResources()
 {
@@ -192,8 +194,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickToolButton>(uri, 2, 0, "ToolButton");
     qmlRegisterType<QQuickToolTipAttached>();
     qmlRegisterType<QQuickToolTip>(uri, 2, 0, "ToolTip");
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 2, 0, "Tumbler");
+#endif
 
     // NOTE: register the latest revisions of all template/control base classes to
     // make revisioned properties available to their subclasses (synced with Qt 5.7)
@@ -223,7 +227,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTextArea, 1>(uri, 2, 1, "TextArea");
     qmlRegisterType<QQuickTextField, 1>(uri, 2, 1, "TextField");
     qmlRegisterType<QQuickToolSeparator>(uri, 2, 1, "ToolSeparator");
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumbler, 1>(uri, 2, 1, "Tumbler");
+#endif
 
     // QtQuick.Templates 2.2 (new types and revisions in Qt 5.9)
     qmlRegisterRevision<QQuickAbstractButton, 2>(uri, 2, 2);
@@ -239,7 +245,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwipeDelegate, 2>(uri, 2, 2, "SwipeDelegate");
     qmlRegisterType<QQuickSwipeView, 2>(uri, 2, 2, "SwipeView");
     qmlRegisterType<QQuickTabBar, 2>(uri, 2, 2, "TabBar");
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumbler, 2>(uri, 2, 2, "Tumbler");
+#endif
 
     // NOTE: register the latest revisions of all template/control base classes to
     // make revisioned properties available to their subclasses (synced with Qt 5.9)

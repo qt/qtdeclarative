@@ -50,7 +50,7 @@
 
 #include <QtQuick/private/qquicktext_p_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAccessibleAttached;
 
 class QQuickLabelPrivate : public QQuickTextPrivate
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
 {
@@ -79,20 +79,14 @@ public:
 
     void textChanged(const QString &text);
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif
 
-    void deleteDelegate(QObject *object);
-
     QFont font;
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
-    // This list contains the default delegates which were
-    // replaced with custom ones via declarative assignments
-    // before Component.completed() was emitted. See QTBUG-50992.
-    QVector<QObject *> pendingDeletions;
 };
 
 QT_END_NAMESPACE

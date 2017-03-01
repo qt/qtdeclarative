@@ -307,7 +307,7 @@ void QQuickToolTip::timerEvent(QTimerEvent *event)
     }
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickToolTip::accessibleRole() const
 {
     return QAccessible::ToolTip;

@@ -102,7 +102,7 @@ protected:
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
     void spacingChange(qreal newSpacing, qreal oldSpacing) override;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
     void accessibilityActiveChanged(bool active) override;
 #endif

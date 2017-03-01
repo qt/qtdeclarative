@@ -333,7 +333,7 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    delete d->background;
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(QQuickWindow::contentItem());

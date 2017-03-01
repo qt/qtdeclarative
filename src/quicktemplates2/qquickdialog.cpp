@@ -345,7 +345,7 @@ void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
     d->layout->update();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickDialog::accessibleRole() const
 {
     return QAccessible::Dialog;

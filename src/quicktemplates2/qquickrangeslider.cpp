@@ -230,7 +230,7 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
-    QQuickControlPrivate::get(d->slider)->deleteDelegate(d->handle);
+    QQuickControlPrivate::destroyDelegate(d->handle, d->slider);
     d->handle = handle;
     if (handle) {
         if (!handle->parentItem())
@@ -1116,7 +1116,7 @@ void QQuickRangeSlider::componentComplete()
     \sa second
 */
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickRangeSlider::accessibleRole() const
 {
     return QAccessible::Slider;

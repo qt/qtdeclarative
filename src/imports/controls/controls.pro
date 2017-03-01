@@ -17,7 +17,7 @@ RESOURCES += \
     $$PWD/qtquickcontrols2plugin.qrc
 
 include(controls.pri)
-!static: include(designer/designer.pri)
+!static: qtConfig(quick-designer): include(designer/designer.pri)
 include(doc/doc.pri)
 
 qtquickcompiler {
@@ -28,3 +28,5 @@ qtquickcompiler {
 
 CONFIG += no_cxx_module
 load(qml_plugin)
+
+requires(qtConfig(quickcontrols2-default))

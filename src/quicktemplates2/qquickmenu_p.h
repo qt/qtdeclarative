@@ -91,9 +91,9 @@ Q_SIGNALS:
     void titleChanged();
 
 protected:
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
-#endif // QT_NO_ACCESSIBILITY
+#endif
 
 private:
     Q_DISABLE_COPY(QQuickMenu)

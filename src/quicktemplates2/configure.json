@@ -1,0 +1,20 @@
+{
+    "module": "quicktemplates2",
+
+    "features": {
+        "quicktemplates2-hover": {
+            "label": "Hover support",
+            "purpose": "Provides support for hover effects in Qt Quick Templates 2",
+            "output": [ "privateFeature" ]
+        }
+    },
+
+    "summary": [
+        {
+            "section": "Qt Quick Templates 2",
+            "entries": [
+                "quicktemplates2-hover"
+            ]
+        }
+    ]
+}

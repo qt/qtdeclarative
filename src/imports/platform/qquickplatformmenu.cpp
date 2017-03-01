@@ -691,7 +691,7 @@ void QQuickPlatformMenu::open(QQmlV4Function *args)
         QRectF sceneBounds = targetItem->mapRectToScene(targetItem->boundingRect());
         targetRect = sceneBounds.toAlignedRect().translated(offset);
     } else {
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
         QPoint pos = QCursor::pos();
         if (window)
             pos = window->mapFromGlobal(pos);

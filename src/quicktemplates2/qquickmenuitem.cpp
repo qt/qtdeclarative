@@ -141,7 +141,7 @@ void QQuickMenuItem::setHighlighted(bool highlighted)
     emit highlightedChanged();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickMenuItem::accessibleRole() const
 {
     return QAccessible::MenuItem;

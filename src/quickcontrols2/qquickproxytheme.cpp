@@ -151,12 +151,14 @@ QIconEngine *QQuickProxyTheme::createIconEngine(const QString &iconName) const
     return QPlatformTheme::createIconEngine(iconName);
 }
 
+#if QT_CONFIG(shortcut)
 QList<QKeySequence> QQuickProxyTheme::keyBindings(QKeySequence::StandardKey key) const
 {
     if (m_theme)
         return m_theme->keyBindings(key);
     return QPlatformTheme::keyBindings(key);
 }
+#endif
 
 QString QQuickProxyTheme::standardButtonText(int button) const
 {

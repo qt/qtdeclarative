@@ -41,7 +41,9 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
+#endif
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 
@@ -132,7 +134,9 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ToolBar.qml")), uri, 2, 0, "ToolBar");
     qmlRegisterType(selector.select(QStringLiteral("ToolButton.qml")), uri, 2, 0, "ToolButton");
     qmlRegisterType(selector.select(QStringLiteral("ToolTip.qml")), uri, 2, 0, "ToolTip");
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType(selector.select(QStringLiteral("Tumbler.qml")), uri, 2, 0, "Tumbler");
+#endif
 
     // QtQuick.Controls 2.1 (new types in Qt 5.8)
     qmlRegisterType<QQuickButtonGroup,1 >(uri, 2, 1, "ButtonGroup");
@@ -170,7 +174,9 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
     qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
+#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
+#endif
     qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
     qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");

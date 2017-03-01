@@ -114,7 +114,7 @@ protected:
     void itemAdded(int index, QQuickItem *item) override;
     void itemRemoved(int index, QQuickItem *item) override;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
 

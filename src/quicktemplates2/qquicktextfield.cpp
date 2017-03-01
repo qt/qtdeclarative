@@ -43,7 +43,7 @@
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -112,20 +112,23 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
-    : hovered(false),
+    : QQuickTextInputPrivate(),
+#if QT_CONFIG(quicktemplates2_hover)
+      hovered(false),
       explicitHoverEnabled(false),
+#endif
       background(nullptr),
       focusReason(Qt::OtherFocusReason),
       accessibleAttached(nullptr)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
 #endif
 }
 
 QQuickTextFieldPrivate::~QQuickTextFieldPrivate()
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
 }
@@ -175,6 +178,7 @@ void QQuickTextFieldPrivate::inheritFont(const QFont &f)
         emit q->fontChanged();
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickTextFieldPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 {
     Q_Q(QQuickTextField);
@@ -189,6 +193,7 @@ void QQuickTextFieldPrivate::updateHoverEnabled(bool enabled, bool xplicit)
         emit q->hoverEnabledChanged();
     }
 }
+#endif
 
 qreal QQuickTextFieldPrivate::getImplicitWidth() const
 {
@@ -216,7 +221,7 @@ void QQuickTextFieldPrivate::implicitHeightChanged()
 
 void QQuickTextFieldPrivate::readOnlyChanged(bool isReadOnly)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->set_readOnly(isReadOnly);
 #else
@@ -226,7 +231,7 @@ void QQuickTextFieldPrivate::readOnlyChanged(bool isReadOnly)
 
 void QQuickTextFieldPrivate::echoModeChanged(QQuickTextField::EchoMode echoMode)
 {
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->set_passwordEdit((echoMode == QQuickTextField::Password || echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
 #else
@@ -234,7 +239,7 @@ void QQuickTextFieldPrivate::echoModeChanged(QQuickTextField::EchoMode echoMode)
 #endif
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
 {
     if (accessibleAttached || !active)
@@ -258,18 +263,6 @@ QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 }
 #endif
 
-/*
-   Deletes "delegate" if Component.completed() has been emitted,
-   otherwise stores it in pendingDeletions.
-*/
-void QQuickTextFieldPrivate::deleteDelegate(QObject *delegate)
-{
-    if (componentComplete)
-        delete delegate;
-    else if (delegate)
-        pendingDeletions.append(delegate);
-}
-
 QQuickTextField::QQuickTextField(QQuickItem *parent)
     : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
@@ -278,7 +271,7 @@ QQuickTextField::QQuickTextField(QQuickItem *parent)
     d->setImplicitResizeEnabled(false);
     setAcceptedMouseButtons(Qt::AllButtons);
     setActiveFocusOnTab(true);
-#ifndef QT_NO_CURSOR
+#if QT_CONFIG(cursor)
     setCursor(Qt::IBeamCursor);
 #endif
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged, d, &QQuickTextFieldPrivate::readOnlyChanged);
@@ -321,7 +314,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    d->deleteDelegate(d->background);
+    QQuickControlPrivate::destroyDelegate(d->background, this);
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -352,7 +345,7 @@ void QQuickTextField::setPlaceholderText(const QString &text)
         return;
 
     d->placeholder = text;
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     if (d->accessibleAttached)
         d->accessibleAttached->setDescription(text);
 #endif
@@ -391,18 +384,26 @@ void QQuickTextField::setFocusReason(Qt::FocusReason reason)
 */
 bool QQuickTextField::isHovered() const
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(const QQuickTextField);
     return d->hovered;
+#else
+    return false;
+#endif
 }
 
 void QQuickTextField::setHovered(bool hovered)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickTextField);
     if (hovered == d->hovered)
         return;
 
     d->hovered = hovered;
     emit hoveredChanged();
+#else
+    Q_UNUSED(hovered);
+#endif
 }
 
 /*!
@@ -415,27 +416,37 @@ void QQuickTextField::setHovered(bool hovered)
 */
 bool QQuickTextField::isHoverEnabled() const
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(const QQuickTextField);
     return d->hoverEnabled;
+#else
+    return false;
+#endif
 }
 
 void QQuickTextField::setHoverEnabled(bool enabled)
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickTextField);
     if (d->explicitHoverEnabled && enabled == d->hoverEnabled)
         return;
 
     d->updateHoverEnabled(enabled, true); // explicit=true
+#else
+    Q_UNUSED(enabled);
+#endif
 }
 
 void QQuickTextField::resetHoverEnabled()
 {
+#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickTextField);
     if (!d->explicitHoverEnabled)
         return;
 
     d->explicitHoverEnabled = false;
     d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+#endif
 }
 
 void QQuickTextField::classBegin()
@@ -449,15 +460,14 @@ void QQuickTextField::componentComplete()
 {
     Q_D(QQuickTextField);
     QQuickTextInput::componentComplete();
+#if QT_CONFIG(quicktemplates2_hover)
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
-#ifndef QT_NO_ACCESSIBILITY
+#endif
+#if QT_CONFIG(accessibility)
     if (!d->accessibleAttached && QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
-
-    qDeleteAll(d->pendingDeletions);
-    d->pendingDeletions.clear();
 }
 
 void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -466,8 +476,10 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
     QQuickTextInput::itemChange(change, value);
     if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+#if QT_CONFIG(quicktemplates2_hover)
         if (!d->explicitHoverEnabled)
             d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+#endif
     }
 }
 
@@ -506,6 +518,7 @@ void QQuickTextField::focusOutEvent(QFocusEvent *event)
     setFocusReason(event->reason());
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void QQuickTextField::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickTextField);
@@ -521,6 +534,7 @@ void QQuickTextField::hoverLeaveEvent(QHoverEvent *event)
     setHovered(false);
     event->setAccepted(d->hoverEnabled);
 }
+#endif
 
 void QQuickTextField::mousePressEvent(QMouseEvent *event)
 {

@@ -20,3 +20,5 @@ include(material.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)
+
+requires(qtConfig(quickcontrols2-material))

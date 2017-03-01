@@ -105,28 +105,33 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     setVisible(false);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 
+#if QT_CONFIG(quicktemplates2_hover)
     // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
     setHoverEnabled(true);
     // setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
     // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
+#endif
 }
 
 void QQuickPopupItem::grabShortcut()
 {
-#ifndef QT_NO_SHORTCUT
+#if QT_CONFIG(shortcut)
     Q_D(QQuickPopupItem);
     QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
     if (!d->backId)
         d->backId = pApp->shortcutMap.addShortcut(this, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
     if (!d->escapeId)
         d->escapeId = pApp->shortcutMap.addShortcut(this, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
-#endif // QT_NO_SHORTCUT
+#endif
 }
 
 void QQuickPopupItem::ungrabShortcut()
 {
-#ifndef QT_NO_SHORTCUT
+#if QT_CONFIG(shortcut)
     Q_D(QQuickPopupItem);
     QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
     if (d->backId) {
@@ -137,7 +142,7 @@ void QQuickPopupItem::ungrabShortcut()
         pApp->shortcutMap.removeShortcut(d->escapeId, this);
         d->escapeId = 0;
     }
-#endif // QT_NO_SHORTCUT
+#endif
 }
 
 void QQuickPopupItem::updatePolish()
@@ -148,6 +153,7 @@ void QQuickPopupItem::updatePolish()
 
 bool QQuickPopupItem::event(QEvent *event)
 {
+#if QT_CONFIG(shortcut)
     Q_D(QQuickPopupItem);
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
@@ -159,6 +165,7 @@ bool QQuickPopupItem::event(QEvent *event)
             }
         }
     }
+#endif
     return QQuickItem::event(event);
 }
 
@@ -278,7 +285,7 @@ QFont QQuickPopupItem::defaultFont() const
     return d->popup->defaultFont();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickPopupItem::accessibleRole() const
 {
     Q_D(const QQuickPopupItem);
@@ -291,6 +298,6 @@ void QQuickPopupItem::accessibilityActiveChanged(bool active)
     QQuickControl::accessibilityActiveChanged(active);
     d->popup->accessibilityActiveChanged(active);
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif
 
 QT_END_NAMESPACE

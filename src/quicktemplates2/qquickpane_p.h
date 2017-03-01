@@ -86,7 +86,7 @@ protected:
 
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
 

@@ -48,6 +48,7 @@
 // We mean it.
 //
 
+#include <QtGui/qcolor.h>
 #include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE

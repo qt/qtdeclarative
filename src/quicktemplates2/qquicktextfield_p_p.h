@@ -53,7 +53,7 @@
 
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif
 
@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAccessibleAttached;
 
 class QQuickTextFieldPrivate : public QQuickTextInputPrivate
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
 {
@@ -79,7 +79,9 @@ public:
     void resolveFont();
     void inheritFont(const QFont &f);
 
+#if QT_CONFIG(quicktemplates2_hover)
     void updateHoverEnabled(bool h, bool e);
+#endif
 
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;
@@ -90,25 +92,21 @@ public:
     void readOnlyChanged(bool isReadOnly);
     void echoModeChanged(QQuickTextField::EchoMode echoMode);
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
 #endif
 
-    void deleteDelegate(QObject *object);
-
+#if QT_CONFIG(quicktemplates2_hover)
     bool hovered;
     bool explicitHoverEnabled;
+#endif
     QFont font;
     QQuickItem *background;
     QString placeholder;
     Qt::FocusReason focusReason;
     QQuickPressHandler pressHandler;
     QQuickAccessibleAttached *accessibleAttached;
-    // This list contains the default delegates which were
-    // replaced with custom ones via declarative assignments
-    // before Component.completed() was emitted. See QTBUG-50992.
-    QVector<QObject *> pendingDeletions;
 };
 
 QT_END_NAMESPACE

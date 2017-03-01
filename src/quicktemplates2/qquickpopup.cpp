@@ -1938,7 +1938,7 @@ QFont QQuickPopup::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickPopup::accessibleRole() const
 {
     return QAccessible::Dialog;
@@ -1948,7 +1948,7 @@ void QQuickPopup::accessibilityActiveChanged(bool active)
 {
     Q_UNUSED(active);
 }
-#endif // QT_NO_ACCESSIBILITY
+#endif
 
 QString QQuickPopup::accessibleName() const
 {

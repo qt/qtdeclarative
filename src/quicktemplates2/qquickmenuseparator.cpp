@@ -70,7 +70,7 @@ QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)
 {
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickMenuSeparator::accessibleRole() const
 {
     return QAccessible::Separator;

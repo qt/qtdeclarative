@@ -1,12 +1,22 @@
 /****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -322,11 +332,11 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: missing arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: missing arguments")
         compare(control.push(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: nothing to push")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: nothing to push")
         compare(control.push(StackView.Immediate), null)
 
         // push(item)
@@ -378,7 +388,7 @@ TestCase {
 
         control.push(items, StackView.Immediate)
 
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: pop: too many arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: pop: too many arguments")
         compare(control.pop(1, 2, 3), null)
 
         // pop the top most item
@@ -402,7 +412,7 @@ TestCase {
         compare(control.currentItem, items[2])
 
         // don't pop non-existent item
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: pop: unknown argument: " + testCase)
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: pop: unknown argument: " + testCase)
         compare(control.pop(testCase, StackView.Immediate), null)
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
@@ -418,11 +428,11 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: replace: missing arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: missing arguments")
         compare(control.replace(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: replace: nothing to push")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: nothing to push")
         compare(control.replace(StackView.Immediate), null)
 
         // replace(item)
@@ -873,6 +883,26 @@ TestCase {
         compare(testItem.cancels, 0)
     }
 
+    function test_ungrab() {
+        var control = createTemporaryObject(stackView, testCase, {initialItem: mouseArea, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        var testItem = control.currentItem
+        verify(testItem)
+
+        mousePress(testItem)
+        control.push(mouseArea)
+        tryCompare(control, "busy", false)
+        mouseRelease(testItem)
+
+        compare(testItem.presses, 1)
+        compare(testItem.releases, 0)
+        compare(testItem.clicks, 0)
+        compare(testItem.doubleClicks, 0)
+        compare(testItem.pressed, false)
+        compare(testItem.cancels, 1)
+    }
+
     function test_failures() {
         var control = createTemporaryObject(stackView, testCase, {initialItem: component})
         verify(control)
@@ -984,7 +1014,7 @@ TestCase {
         compare(control.depth, 1)
 
         // Pushing the same Item should do nothing.
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: nothing to push")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: nothing to push")
         control.push(item, StackView.Immediate)
         compare(control.currentItem, item)
         compare(control.depth, 1)

@@ -75,7 +75,7 @@ QFont QQuickTabButton::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::TabButtonFont);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickTabButton::accessibleRole() const
 {
     return QAccessible::PageTab;

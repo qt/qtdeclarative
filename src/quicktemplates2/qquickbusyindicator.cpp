@@ -115,7 +115,7 @@ void QQuickBusyIndicator::setRunning(bool running)
     emit runningChanged();
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 QAccessible::Role QQuickBusyIndicator::accessibleRole() const
 {
     return QAccessible::Indicator;

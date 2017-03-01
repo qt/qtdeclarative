@@ -49,6 +49,7 @@
 //
 
 #include <QtQuickControls2/qtquickcontrols2global.h>
+#include <QtQuickControls2/private/qtquickcontrols2-config_p.h>
 
 #define Q_QUICKCONTROLS2_PRIVATE_EXPORT Q_QUICKCONTROLS2_EXPORT
 

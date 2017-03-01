@@ -548,7 +548,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    d->deleteDelegate(d->indicator);
+    QQuickControlPrivate::destroyDelegate(d->indicator, this);
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
@@ -742,7 +742,7 @@ void QQuickAbstractButton::nextCheckState()
         d->toggle(!d->checked);
 }
 
-#ifndef QT_NO_ACCESSIBILITY
+#if QT_CONFIG(accessibility)
 void QQuickAbstractButton::accessibilityActiveChanged(bool active)
 {
     QQuickControl::accessibilityActiveChanged(active);
