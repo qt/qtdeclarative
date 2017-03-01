@@ -1140,7 +1140,7 @@ QSize QQuickWidget::initialSize() const
 
 /*!
   Returns the view's root \l {QQuickItem} {item}. Can be null
-  when setContents/setSource has not been called, if they were called with
+  when setSource() has not been called, if it was called with
   broken QtQuick code or while the QtQuick contents are being created.
  */
 QQuickItem *QQuickWidget::rootObject() const
