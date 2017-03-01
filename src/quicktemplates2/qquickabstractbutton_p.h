@@ -67,6 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickIcon *icon READ icon CONSTANT FINAL REVISION 3)
+    Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged REVISION 3)
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -99,6 +100,17 @@ public:
 
     QQuickIcon *icon() const;
 
+    enum Display {
+        IconOnly,
+        TextOnly,
+        TextBesideIcon,
+        TextUnderIcon // unused, but reserved for future use
+    };
+    Q_ENUM(Display)
+
+    Display display() const;
+    void setDisplay(Display display);
+
 public Q_SLOTS:
     void toggle();
 
@@ -117,6 +129,7 @@ Q_SIGNALS:
     void checkableChanged();
     void autoExclusiveChanged();
     void indicatorChanged();
+    Q_REVISION(3) void displayChanged();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);

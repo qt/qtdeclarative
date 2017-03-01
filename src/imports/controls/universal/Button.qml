@@ -63,6 +63,7 @@ T.Button {
     contentItem: DisplayLayout {
         spacing: control.spacing
         mirrored: control.mirrored
+        display: control.display
 
         icon: IconImage {
             id: iconImage

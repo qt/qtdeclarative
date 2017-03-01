@@ -50,7 +50,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.3
 
 TestCase {
     id: testCase
@@ -447,5 +447,55 @@ TestCase {
 
         // The implicitWidth of the Button itself should, therefore, also never include spacing while no icon is set.
         compare(control.implicitWidth, control.contentItem.text.implicitWidth + control.leftPadding + control.rightPadding)
+    }
+
+    function test_display_data() {
+        return [
+            { "tag": "IconOnly", display: Button.IconOnly },
+            { "tag": "TextOnly", display: Button.TextOnly },
+            { "tag": "TextBesideIcon", display: Button.TextBesideIcon },
+            { "tag": "IconOnly, mirrored", display: Button.IconOnly, mirrored: true },
+            { "tag": "TextOnly, mirrored", display: Button.TextOnly, mirrored: true },
+            { "tag": "TextBesideIcon, mirrored", display: Button.TextBesideIcon, mirrored: true }
+        ]
+    }
+
+    function test_display(data) {
+        var control = createTemporaryObject(button, testCase, {
+            text: "Button",
+            display: data.display,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "LayoutMirroring.enabled": !!data.mirrored
+        })
+        verify(control)
+        verify(control.icon.source.length > 0)
+
+        var iconImage = control.contentItem.icon
+        verify(iconImage)
+        verify(iconImage.hasOwnProperty("name"))
+        var text = control.contentItem.text
+        verify(text)
+        verify(text.hasOwnProperty("text"))
+
+        switch (control.display) {
+        case Button.IconOnly:
+            compare(iconImage.visible, true)
+            compare(text.visible, false)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            break;
+        case Button.TextOnly:
+            compare(iconImage.visible, false)
+            compare(text.visible, true)
+            compare(text.x, (control.availableWidth - text.width) / 2)
+            break;
+        case Button.TextBesideIcon:
+            compare(iconImage.visible, true)
+            compare(text.visible, true)
+            if (control.mirrored)
+                verify(text.x < iconImage.x)
+            else
+                verify(iconImage.x < text.x)
+            break;
+        }
     }
 }

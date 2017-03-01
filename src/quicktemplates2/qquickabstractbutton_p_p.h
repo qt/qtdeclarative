@@ -105,6 +105,7 @@ public:
     QQuickItem *indicator;
     QQuickButtonGroup *group;
     QQuickIcon *icon;
+    QQuickAbstractButton::Display display;
 };
 
 QT_END_NAMESPACE

@@ -92,6 +92,9 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     the behavior is the same as the \l {Image::}{sourceSize} property of
     \l Image.
 
+    The \l display property can be used to control how the icon and text are
+    displayed within the button.
+
     \sa ButtonGroup, {Button Controls}
 */
 
@@ -157,7 +160,8 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       repeatButton(Qt::NoButton),
       indicator(nullptr),
       group(nullptr),
-      icon(nullptr)
+      icon(nullptr),
+      display(QQuickAbstractButton::TextBesideIcon)
 {
 }
 
@@ -814,5 +818,37 @@ QAccessible::Role QQuickAbstractButton::accessibleRole() const
     return QAccessible::Button;
 }
 #endif
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty enumeration QtQuick.Controls::AbstractButton::display
+
+    This property determines how the \l icon and \l text are displayed within
+    the button.
+
+    \table
+    \header \li Display \li Result
+    \row \li \c AbstractButton.IconOnly \li \image qtquickcontrols2-button-icononly.png
+    \row \li \c AbstractButton.TextOnly \li \image qtquickcontrols2-button-textonly.png
+    \row \li \c AbstractButton.TextBesideIcon \li \image qtquickcontrols2-button-textbesideicon.png
+    \endtable
+
+    \sa {Control::}{spacing}, {Control::}{padding}
+*/
+QQuickAbstractButton::Display QQuickAbstractButton::display() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->display;
+}
+
+void QQuickAbstractButton::setDisplay(Display display)
+{
+    Q_D(QQuickAbstractButton);
+    if (display == d->display)
+        return;
+
+    d->display = display;
+    emit displayChanged();
+}
 
 QT_END_NAMESPACE
