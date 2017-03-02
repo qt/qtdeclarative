@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickIcon;
+
 class QQuickAbstractButtonPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickControl
@@ -64,6 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
+    Q_PROPERTY(QQuickIcon *icon READ icon CONSTANT FINAL REVISION 3)
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -93,6 +96,8 @@ public:
 
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
+
+    QQuickIcon *icon() const;
 
 public Q_SLOTS:
     void toggle();

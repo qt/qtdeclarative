@@ -54,6 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickButtonGroup;
+class QQuickIcon;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
@@ -103,6 +104,7 @@ public:
     Qt::MouseButton repeatButton;
     QQuickItem *indicator;
     QQuickButtonGroup *group;
+    QQuickIcon *icon;
 };
 
 QT_END_NAMESPACE

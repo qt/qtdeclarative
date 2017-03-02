@@ -164,4 +164,49 @@ TestCase {
 
         container.destroy()
     }
+
+    function test_icon() {
+        var control = createTemporaryObject(button, testCase)
+        verify(control)
+        compare(control.icon.name, "")
+        compare(control.icon.source, "")
+        compare(control.icon.width, 0)
+        compare(control.icon.height, 0)
+        compare(control.icon.color, "#00000000")
+
+        var iconNameSpy = signalSpy.createObject(control, { target: control.icon, signalName: "nameChanged"} )
+        verify(iconNameSpy.valid)
+
+        control.icon.name = "test-name"
+        compare(control.icon.name, "test-name")
+        compare(iconNameSpy.count, 1)
+
+        var iconSourceSpy = signalSpy.createObject(control, { target: control.icon, signalName: "sourceChanged"} )
+        verify(iconSourceSpy.valid)
+
+        control.icon.source = "test-source"
+        compare(control.icon.source, "test-source")
+        compare(iconSourceSpy.count, 1)
+
+        var iconWidthSpy = signalSpy.createObject(control, { target: control.icon, signalName: "widthChanged"} )
+        verify(iconWidthSpy.valid)
+
+        control.icon.width = 32
+        compare(control.icon.width, 32)
+        compare(iconWidthSpy.count, 1)
+
+        var iconHeightSpy = signalSpy.createObject(control, { target: control.icon, signalName: "heightChanged"} )
+        verify(iconHeightSpy.valid)
+
+        control.icon.height = 32
+        compare(control.icon.height, 32)
+        compare(iconHeightSpy.count, 1)
+
+        var iconColorSpy = signalSpy.createObject(control, { target: control.icon, signalName: "colorChanged"} )
+        verify(iconColorSpy.valid)
+
+        control.icon.color = "#ff0000"
+        compare(control.icon.color, "#ff0000")
+        compare(iconColorSpy.count, 1)
+    }
 }

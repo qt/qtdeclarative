@@ -255,6 +255,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
     qmlRegisterType<QQuickIcon>();
+    qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
 }
 
 QT_END_NAMESPACE

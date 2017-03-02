@@ -153,7 +153,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("DelayButton.qml")), uri, 2, 2, "DelayButton");
     qmlRegisterType(selector.select(QStringLiteral("ScrollView.qml")), uri, 2, 2, "ScrollView");
 
-    // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
+    // QtQuick.Controls 2.3 (new types in Qt 5.10)
     qmlRegisterType<QQuickIcon>();
 }
 

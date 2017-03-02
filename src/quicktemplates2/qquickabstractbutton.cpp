@@ -37,6 +37,7 @@
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
 #include "qquickbuttongroup_p.h"
+#include "qquickicon_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
@@ -62,6 +63,34 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     behavior; for example, push buttons and checkable controls like
     radio buttons and check boxes. As an abstract control, it has no delegate
     implementations, leaving them to the types that derive from it.
+
+    \section1 Button Icons
+
+    AbstractButton provides the following properties through which icons can
+    be set:
+
+    \list
+    \li \l icon.name
+    \li \l icon.source
+    \li \l icon.width
+    \li \l icon.height
+    \li \l icon.color
+    \endlist
+
+    For applications that target platforms that support both
+    \l {QIcon::fromTheme()}{theme icons} and regular icons,
+    both \l icon.name and \l icon.source can be set to ensure that an icon will
+    always be found. If the icon is found in the theme, it will always be used;
+    even if \l icon.source is also set. If the icon is not found,
+    \l icon.source will be used instead.
+
+    Each \l {Styling Qt Quick Controls 2}{style} sets a default size for
+    icons, but it is possible to override this by setting the \l icon.width and
+    \l icon.height properties. The image that is loaded by an icon whose
+    \c width and \c height are not set depends on the type of icon in use. For
+    theme icons, the closest available size will be chosen. For regular icons,
+    the behavior is the same as the \l {Image::}{sourceSize} property of
+    \l Image.
 
     \sa ButtonGroup, {Button Controls}
 */
@@ -127,7 +156,8 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       repeatTimer(0),
       repeatButton(Qt::NoButton),
       indicator(nullptr),
-      group(nullptr)
+      group(nullptr),
+      icon(nullptr)
 {
 }
 
@@ -556,6 +586,29 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
         indicator->setAcceptedMouseButtons(Qt::LeftButton);
     }
     emit indicatorChanged();
+}
+
+/*!
+    \qmlpropertygroup QtQuick.Controls::AbstractButton::icon
+    \qmlproperty string QtQuick.Controls::AbstractButton::icon.name
+    \qmlproperty string QtQuick.Controls::AbstractButton::icon.source
+    \qmlproperty int QtQuick.Controls::AbstractButton::icon.width
+    \qmlproperty int QtQuick.Controls::AbstractButton::icon.height
+    \qmlproperty color QtQuick.Controls::AbstractButton::icon.color
+
+    This property group was added in QtQuick.Controls 2.3.
+
+    \include qquickicon.qdocinc grouped-properties
+
+    \sa {Control::}{contentItem}
+*/
+
+QQuickIcon *QQuickAbstractButton::icon() const
+{
+    QQuickAbstractButtonPrivate *d = const_cast<QQuickAbstractButtonPrivate*>(d_func());
+    if (!d->icon)
+        d->icon = new QQuickIcon(const_cast<QQuickAbstractButton*>(this));
+    return d->icon;
 }
 
 /*!
