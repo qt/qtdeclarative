@@ -110,11 +110,6 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent)
     connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuItem::triggered);
 }
 
-QFont QQuickMenuItem::defaultFont() const
-{
-    return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
-}
-
 /*!
     \qmlproperty bool QtQuick.Controls::MenuItem::highlighted
 
@@ -139,6 +134,11 @@ void QQuickMenuItem::setHighlighted(bool highlighted)
 
     d->highlighted = highlighted;
     emit highlightedChanged();
+}
+
+QFont QQuickMenuItem::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
 }
 
 #if QT_CONFIG(accessibility)
