@@ -425,6 +425,7 @@ bool QSGRenderThread::event(QEvent *e)
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- sync scene graph";
             QQuickWindowPrivate *d = QQuickWindowPrivate::get(ce->window);
             d->syncSceneGraph();
+            sgrc->endSync();
 
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- rendering scene graph";
             QQuickWindowPrivate::get(ce->window)->renderSceneGraph(ce->window->size());

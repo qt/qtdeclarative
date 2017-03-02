@@ -461,6 +461,7 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     data.rc->initialize(nullptr);
 
     wd->syncSceneGraph();
+    data.rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();

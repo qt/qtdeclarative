@@ -432,9 +432,7 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     emit q->afterSynchronizing();
     runAndClearJobs(&afterSynchronizingJobs);
-    context->endSync();
 }
-
 
 void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 {

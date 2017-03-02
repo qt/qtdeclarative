@@ -149,6 +149,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
     emit window->afterAnimating();
 
     cd->syncSceneGraph();
+    rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
