@@ -47,6 +47,7 @@
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
+#include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 
@@ -154,6 +155,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ScrollView.qml")), uri, 2, 2, "ScrollView");
 
     // QtQuick.Controls 2.3 (new types in Qt 5.10)
+    qmlRegisterType<QQuickAction>(uri, 2, 3, "Action");
     qmlRegisterType<QQuickIcon>();
 }
 

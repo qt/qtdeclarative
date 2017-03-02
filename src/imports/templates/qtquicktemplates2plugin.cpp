@@ -37,6 +37,7 @@
 #include <QtQml/qqmlextensionplugin.h>
 
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickbusyindicator_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -256,6 +257,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
+    qmlRegisterType<QQuickAction>(uri, 2, 3, "Action");
     qmlRegisterType<QQuickIcon>();
     qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
     qmlRegisterType<QQuickScrollBar, 3>(uri, 2, 3, "ScrollBar");
