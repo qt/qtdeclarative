@@ -253,6 +253,7 @@ public:
     {
     }
 
+#if defined(V4_BOOTSTRAP)
     template <typename LabelType>
     class Jump {
         template<class TemplateAssemblerType>
@@ -291,6 +292,7 @@ public:
     private:
         AssemblerLabel m_label;
     };
+#endif
 
     // Stack operations:
 
