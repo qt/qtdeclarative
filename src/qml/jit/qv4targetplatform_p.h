@@ -55,6 +55,7 @@
 
 #if ENABLE(ASSEMBLER)
 
+#include <private/qv4value_p.h>
 #include "qv4registerinfo_p.h"
 #include <assembler/MacroAssembler.h>
 
@@ -140,6 +141,7 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformFinishEnteringStandardStackFrame(PlatformAssembler *) {}
     static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
         if (frameSize > 0)
@@ -194,6 +196,7 @@ public:
     static const RegisterID EngineRegister      = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister      = JSC::X86Registers::r10;
+    static const RegisterID DoubleMaskRegister   = JSC::X86Registers::r13;
     static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
     static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
 
@@ -209,7 +212,7 @@ public:
                 << RI(JSC::X86Registers::r8,   QStringLiteral("r8"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                    // r11 is used as scratch register by the macro assembler
                 << RI(JSC::X86Registers::r12,  QStringLiteral("r12"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::r14,  QStringLiteral("r14"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::r15,  QStringLiteral("r15"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::xmm2, QStringLiteral("xmm2"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
@@ -244,6 +247,10 @@ public:
     static const int StackShadowSpace = 0;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformFinishEnteringStandardStackFrame(PlatformAssembler *as)
+    {
+        as->move(PlatformAssembler::TrustedImm64(QV4::Value::NaNEncodeMask), DoubleMaskRegister);
+    }
     static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
         if (frameSize > 0)
@@ -274,6 +281,7 @@ public:
     static const RegisterID EngineRegister      = JSC::X86Registers::r14;
     static const RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
     static const RegisterID ScratchRegister      = JSC::X86Registers::r10;
+    static const RegisterID DoubleMaskRegister   = JSC::X86Registers::r13;
     static const FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
     static const FPRegisterID FPGpr1             = JSC::X86Registers::xmm1;
 
@@ -289,7 +297,7 @@ public:
                 << RI(JSC::X86Registers::r9,   QStringLiteral("r9"),   RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
                    // r11 is used as scratch register by the macro assembler
                 << RI(JSC::X86Registers::r12,  QStringLiteral("r12"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::X86Registers::r13,  QStringLiteral("r13"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::r14,  QStringLiteral("r14"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::X86Registers::r15,  QStringLiteral("r15"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::X86Registers::xmm2, QStringLiteral("xmm2"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
@@ -322,6 +330,10 @@ public:
     static const int StackShadowSpace = 32;
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize; // Return address is pushed onto stack by the CPU.
     static void platformEnterStandardStackFrame(PlatformAssembler *as) { as->push(FramePointerRegister); }
+    static void platformFinishEnteringStandardStackFrame(PlatformAssembler *as)
+    {
+        as->move(PlatformAssembler::TrustedImm64(QV4::Value::NaNEncodeMask), DoubleMaskRegister);
+    }
     static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
         if (frameSize > 0)
@@ -440,6 +452,8 @@ public:
         as->push(FramePointerRegister);
     }
 
+    static void platformFinishEnteringStandardStackFrame(PlatformAssembler *) {}
+
     static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {
         if (frameSize > 0) {
@@ -475,6 +489,7 @@ public:
     static const RegisterID ScratchRegister = JSC::ARM64Registers::x9;
     static const RegisterID EngineRegister = JSC::ARM64Registers::x27;
     static const RegisterID ReturnValueRegister = JSC::ARM64Registers::x0;
+    static const RegisterID DoubleMaskRegister = JSC::ARM64Registers::x26;
     static const FPRegisterID FPGpr0 = JSC::ARM64Registers::q0;
     static const FPRegisterID FPGpr1 = JSC::ARM64Registers::q1;
 
@@ -505,7 +520,7 @@ public:
                 << RI(JSC::ARM64Registers::x23, QStringLiteral("x23"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::ARM64Registers::x24, QStringLiteral("x24"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::ARM64Registers::x25, QStringLiteral("x25"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
-                << RI(JSC::ARM64Registers::x26, QStringLiteral("x26"), RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::ARM64Registers::x26, QStringLiteral("x26"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::ARM64Registers::x27, QStringLiteral("x27"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::ARM64Registers::x28, QStringLiteral("x28"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
 
@@ -570,6 +585,11 @@ public:
     static void platformEnterStandardStackFrame(PlatformAssembler *as)
     {
         as->pushPair(FramePointerRegister, JSC::ARM64Registers::lr);
+    }
+
+    static void platformFinishEnteringStandardStackFrame(PlatformAssembler *as)
+    {
+        as->move(PlatformAssembler::TrustedImm64(QV4::Value::NaNEncodeMask), DoubleMaskRegister);
     }
 
     static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
@@ -660,6 +680,8 @@ public:
         as->push(JSC::MIPSRegisters::ra);
         as->push(FramePointerRegister);
     }
+
+    static void platformFinishEnteringStandardStackFrame(PlatformAssembler *) {}
 
     static void platformLeaveStandardStackFrame(PlatformAssembler *as, int frameSize)
     {

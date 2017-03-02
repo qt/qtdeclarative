@@ -387,32 +387,28 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->load64(addr, TargetPlatform::ReturnValueRegister);
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
     {
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
     {
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
         as->store64(TargetPlatform::ReturnValueRegister, ptr);
     }
 
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
     {
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
@@ -427,16 +423,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             if (t->type == IR::DoubleType) {
                 as->moveDoubleTo64((FPRegisterID) t->index,
                                     TargetPlatform::ReturnValueRegister);
-                as->move(TrustedImm64(QV4::Value::NaNEncodeMask),
-                         TargetPlatform::ScratchRegister);
-                as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+                as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
             } else if (t->type == IR::UInt32Type) {
                 RegisterID srcReg = (RegisterID) t->index;
                 Jump intRange = as->branch32(RelationalCondition::GreaterThanOrEqual, srcReg, TrustedImm32(0));
                 as->convertUInt32ToDouble(srcReg, TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
                 as->moveDoubleTo64(TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
-                as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-                as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+                as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
                 Jump done = as->jump();
                 intRange.link(as);
                 as->zeroExtend32ToPtr(srcReg, TargetPlatform::ReturnValueRegister);
@@ -611,8 +604,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Jump fallback = as->branch32(RelationalCondition::GreaterThan, TargetPlatform::ScratchRegister, TrustedImm32(0));
 
         // it's a double
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, TargetPlatform::FPGpr0);
         Jump success =
                 as->branchTruncateDoubleToInt32(TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister,
@@ -718,6 +710,7 @@ public:
     using JITTargetPlatform::registerForArgument;
     using JITTargetPlatform::FPGpr0;
     using JITTargetPlatform::platformEnterStandardStackFrame;
+    using JITTargetPlatform::platformFinishEnteringStandardStackFrame;
     using JITTargetPlatform::platformLeaveStandardStackFrame;
 
     using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;

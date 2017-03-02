@@ -1039,7 +1039,7 @@ QQmlEngine::~QQmlEngine()
 
 /*! \fn void QQmlEngine::exit(int retCode)
     This signal is emitted when the QML loaded by the engine would like to exit
-    from the event loop with the specified return code.
+    from the event loop with the specified return code \a retCode.
 
     \since 5.8
     \sa quit()

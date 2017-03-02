@@ -16,8 +16,12 @@ SUBDIRS += \
         !static: {
             SUBDIRS += \
                 qmlscene \
-                qmlplugindump \
                 qmltime
+
+            qtConfig(regularexpression) {
+                SUBDIRS += \
+                    qmlplugindump
+            }
         }
         qtHaveModule(widgets): SUBDIRS += qmleasing
     }

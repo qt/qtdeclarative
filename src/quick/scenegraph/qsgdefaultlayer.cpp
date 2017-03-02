@@ -44,6 +44,7 @@
 
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QtGui/QOpenGLFunctions>
+#include <QtGui/private/qopenglextensions_p.h>
 
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 
@@ -330,9 +331,9 @@ void QSGDefaultLayer::grab()
             if (effectiveSamples <= 1) {
                 m_multisampling = false;
             } else {
-                const QSet<QByteArray> extensions = m_context->openglContext()->extensions();
-                m_multisampling = extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_multisample"))
-                    && extensions.contains(QByteArrayLiteral("GL_EXT_framebuffer_blit"));
+                QOpenGLExtensions *e = static_cast<QOpenGLExtensions *>(funcs);
+                m_multisampling = e->hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)
+                    && e->hasOpenGLExtension(QOpenGLExtensions::FramebufferBlit);
             }
             m_multisamplingChecked = true;
         }

@@ -356,6 +356,8 @@ void Assembler<TargetConfiguration>::enterStandardStackFrame(const RegisterInfor
         slotAddr.offset -= RegisterSize;
         storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
     }
+
+    platformFinishEnteringStandardStackFrame(this);
 }
 
 template <typename TargetConfiguration>
