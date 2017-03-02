@@ -254,10 +254,13 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             m_longPressTimer.stop();
             m_holdTimer.invalidate();
         }
-        if (m_gesturePolicy == DragThreshold)
-            setPassiveGrab(point, press);
-        else
-            setExclusiveGrab(point, press);
+        if (press) {
+            // on press, grab before emitting changed signals
+            if (m_gesturePolicy == DragThreshold)
+                setPassiveGrab(point, press);
+            else
+                setExclusiveGrab(point, press);
+        }
         if (!cancel && !press && point->timeHeld() < longPressThreshold()) {
             // Assuming here that pointerEvent()->timestamp() is in ms.
             qreal ts = point->pointerEvent()->timestamp() / 1000.0;
@@ -274,6 +277,13 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             m_lastTapPos = point->scenePos();
         }
         emit pressedChanged();
+        if (!press) {
+            // on release, ungrab after emitting changed signals
+            if (m_gesturePolicy == DragThreshold)
+                setPassiveGrab(point, press);
+            else
+                setExclusiveGrab(point, press);
+        }
     }
 }
 
