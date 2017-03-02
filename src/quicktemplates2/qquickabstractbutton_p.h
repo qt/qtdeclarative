@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickIcon;
-
+class QQuickAction;
 class QQuickAbstractButtonPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickControl
@@ -68,6 +68,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickIcon *icon READ icon CONSTANT FINAL REVISION 3)
     Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged REVISION 3)
+    Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -111,6 +112,9 @@ public:
     Display display() const;
     void setDisplay(Display display);
 
+    QQuickAction *action() const;
+    void setAction(QQuickAction *action);
+
 public Q_SLOTS:
     void toggle();
 
@@ -130,6 +134,7 @@ Q_SIGNALS:
     void autoExclusiveChanged();
     void indicatorChanged();
     Q_REVISION(3) void displayChanged();
+    Q_REVISION(3) void actionChanged();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);

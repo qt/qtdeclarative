@@ -50,7 +50,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.3
 
 TestCase {
     id: testCase
@@ -208,5 +208,99 @@ TestCase {
         control.icon.color = "#ff0000"
         compare(control.icon.color, "#ff0000")
         compare(iconColorSpy.count, 1)
+    }
+
+    Component {
+        id: actionButton
+        AbstractButton {
+            action: Action {
+                text: "Default"
+                icon.name: "default"
+                icon.source: "qrc:/icons/default.png"
+                checkable: true
+                checked: true
+                enabled: false
+            }
+        }
+    }
+
+    function test_action() {
+        var control = createTemporaryObject(actionButton, testCase)
+        verify(control)
+
+        // initial values
+        compare(control.text, "Default")
+        compare(control.icon.name, "default")
+        compare(control.icon.source, "qrc:/icons/default.png")
+        compare(control.checkable, true)
+        compare(control.checked, true)
+        compare(control.enabled, false)
+
+        // changes via action
+        control.action.text = "Action"
+        control.action.icon.name = "action"
+        control.action.icon.source = "qrc:/icons/action.png"
+        control.action.checkable = false
+        control.action.checked = false
+        control.action.enabled = true
+        compare(control.text, "Action") // propagates
+        compare(control.icon.name, "action") // propagates
+        compare(control.icon.source, "qrc:/icons/action.png") // propagates
+        compare(control.checkable, false) // propagates
+        compare(control.checked, false) // propagates
+        compare(control.enabled, true) // propagates
+
+        // changes via button
+        control.text = "Button"
+        control.icon.name = "button"
+        control.icon.source = "qrc:/icons/button.png"
+        control.checkable = true
+        control.checked = true
+        control.enabled = false
+        compare(control.text, "Button")
+        compare(control.icon.name, "button")
+        compare(control.icon.source, "qrc:/icons/button.png")
+        compare(control.checkable, true)
+        compare(control.checked, true)
+        compare(control.enabled, false)
+        compare(control.action.text, "Action") // does NOT propagate
+        compare(control.action.icon.name, "action") // does NOT propagate
+        compare(control.action.icon.source, "qrc:/icons/action.png") // does NOT propagate
+        compare(control.action.checkable, true) // propagates
+        compare(control.action.checked, true) // propagates
+        compare(control.action.enabled, true) // does NOT propagate
+    }
+
+    function test_trigger_data() {
+        return [
+            {tag: "click", click: true, button: true, action: true, clicked: true, triggered: true},
+            {tag: "click disabled button", click: true, button: false, action: true, clicked: false, triggered: false},
+            {tag: "click disabled action", click: true, button: true, action: false, clicked: true, triggered: false},
+            {tag: "trigger", trigger: true, button: true, action: true, clicked: true, triggered: true},
+            {tag: "trigger disabled button", trigger: true, button: false, action: true, clicked: false, triggered: true},
+            {tag: "trigger disabled action", trigger: true, button: true, action: false, clicked: false, triggered: false}
+        ]
+    }
+
+    function test_trigger(data) {
+        var control = createTemporaryObject(actionButton, testCase, {"enabled": data.button, "action.enabled": data.action})
+        verify(control)
+
+        compare(control.enabled, data.button)
+        compare(control.action.enabled, data.action)
+
+        var buttonSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        verify(buttonSpy.valid)
+
+        var actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})
+        verify(actionSpy.valid)
+
+        if (data.click)
+            mouseClick(control)
+        else if (data.trigger)
+            control.action.trigger()
+
+        compare(buttonSpy.count, data.clicked ? 1 : 0)
+        compare(actionSpy.count, data.triggered ? 1 : 0)
     }
 }

@@ -86,4 +86,52 @@ TestCase {
         action.trigger()
         compare(spy.count, 1)
     }
+
+    Component {
+        id: buttonAndMenu
+        Item {
+            property alias button: button
+            property alias menu: menu
+            property alias menuItem: menuItem
+            property alias action: sharedAction
+            property var lastSource
+            Action {
+                id: sharedAction
+                text: "Shared"
+                shortcut: "Ctrl+B"
+                onTriggered: lastSource = source
+            }
+            Button {
+                id: button
+                action: sharedAction
+                Menu {
+                    id: menu
+                    MenuItem {
+                        id: menuItem
+                        action: sharedAction
+                    }
+                }
+            }
+        }
+    }
+
+    function test_shared() {
+        var container = createTemporaryObject(buttonAndMenu, testCase)
+        verify(container)
+
+        keyClick(Qt.Key_B, Qt.ControlModifier)
+        compare(container.lastSource, container.button)
+
+        container.menu.open()
+        keyClick(Qt.Key_B, Qt.ControlModifier)
+        compare(container.lastSource, container.menuItem)
+
+        tryVerify(function() { return !container.menu.visible })
+        keyClick(Qt.Key_B, Qt.ControlModifier)
+        compare(container.lastSource, container.button)
+
+        container.button.visible = false
+        keyClick(Qt.Key_B, Qt.ControlModifier)
+        compare(container.lastSource, container.action)
+    }
 }

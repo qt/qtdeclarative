@@ -38,6 +38,8 @@
 #include "qquickabstractbutton_p_p.h"
 #include "qquickbuttongroup_p.h"
 #include "qquickicon_p.h"
+#include "qquickaction_p.h"
+#include "qquickaction_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
@@ -161,7 +163,8 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       indicator(nullptr),
       group(nullptr),
       icon(nullptr),
-      display(QQuickAbstractButton::TextBesideIcon)
+      display(QQuickAbstractButton::TextBesideIcon),
+      action(nullptr)
 {
 }
 
@@ -207,7 +210,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
     if (wasPressed) {
         emit q->released();
         if (!wasHeld)
-            emit q->clicked();
+            trigger();
     } else {
         emit q->canceled();
     }
@@ -280,6 +283,22 @@ void QQuickAbstractButtonPrivate::stopPressRepeat()
         q->killTimer(repeatTimer);
         repeatTimer = 0;
     }
+}
+
+void QQuickAbstractButtonPrivate::click()
+{
+    Q_Q(QQuickAbstractButton);
+    if (effectiveEnable)
+        emit q->clicked();
+}
+
+void QQuickAbstractButtonPrivate::trigger()
+{
+    Q_Q(QQuickAbstractButton);
+    if (action && action->isEnabled())
+        action->trigger(q); // -> click()
+    else if (effectiveEnable)
+        emit q->clicked();
 }
 
 void QQuickAbstractButtonPrivate::toggle(bool value)
@@ -486,6 +505,8 @@ void QQuickAbstractButton::setChecked(bool checked)
         setCheckable(true);
 
     d->checked = checked;
+    if (d->action)
+        d->action->setChecked(checked);
     setAccessibleProperty("checked", checked);
     buttonChange(ButtonCheckedChange);
     emit checkedChanged();
@@ -519,6 +540,8 @@ void QQuickAbstractButton::setCheckable(bool checkable)
         return;
 
     d->checkable = checkable;
+    if (d->action)
+        d->action->setCheckable(checkable);
     setAccessibleProperty("checkable", checkable);
     buttonChange(ButtonCheckableChange);
     emit checkableChanged();
@@ -654,6 +677,94 @@ void QQuickAbstractButton::setDisplay(Display display)
 }
 
 /*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty Action QtQuick.Controls::AbstractButton::action
+
+    This property holds the button action.
+
+    \sa Action
+*/
+QQuickAction *QQuickAbstractButton::action() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->action;
+}
+
+void QQuickAbstractButton::setAction(QQuickAction *action)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->action == action)
+        return;
+
+    if (QQuickAction *oldAction = d->action.data()) {
+        QQuickActionPrivate::get(oldAction)->unregisterItem(this);
+        QObjectPrivate::disconnect(oldAction, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
+
+        disconnect(oldAction, &QQuickAction::textChanged, this, &QQuickAbstractButton::setText);
+        disconnect(oldAction, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
+        disconnect(oldAction, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
+        disconnect(oldAction, &QQuickAction::enabledChanged, this, &QQuickItem::setEnabled);
+
+        QQuickIcon *actionIcon = QQuickActionPrivate::get(oldAction)->icon;
+        if (actionIcon && d->icon) {
+            disconnect(actionIcon, &QQuickIcon::nameChanged, d->icon, &QQuickIcon::setName);
+            disconnect(actionIcon, &QQuickIcon::sourceChanged, d->icon, &QQuickIcon::setSource);
+            disconnect(actionIcon, &QQuickIcon::widthChanged, d->icon, &QQuickIcon::setWidth);
+            disconnect(actionIcon, &QQuickIcon::heightChanged, d->icon, &QQuickIcon::setHeight);
+            disconnect(actionIcon, &QQuickIcon::colorChanged, d->icon, &QQuickIcon::setColor);
+        }
+    }
+
+    if (action) {
+        QQuickActionPrivate::get(action)->registerItem(this);
+        QObjectPrivate::connect(action, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
+
+        connect(action, &QQuickAction::textChanged, this, &QQuickAbstractButton::setText);
+        connect(action, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
+        connect(action, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
+        connect(action, &QQuickAction::enabledChanged, this, &QQuickItem::setEnabled);
+
+        QQuickIcon *actionIcon = QQuickActionPrivate::get(action)->icon;
+        if (actionIcon) {
+            QQuickIcon *buttonIcon = icon();
+            connect(actionIcon, &QQuickIcon::nameChanged, buttonIcon, &QQuickIcon::setName);
+            connect(actionIcon, &QQuickIcon::sourceChanged, buttonIcon, &QQuickIcon::setSource);
+            connect(actionIcon, &QQuickIcon::widthChanged, buttonIcon, &QQuickIcon::setWidth);
+            connect(actionIcon, &QQuickIcon::heightChanged, buttonIcon, &QQuickIcon::setHeight);
+            connect(actionIcon, &QQuickIcon::colorChanged, buttonIcon, &QQuickIcon::setColor);
+
+            QString name = actionIcon->name();
+            if (!name.isEmpty())
+                buttonIcon->setName(name);
+
+            QString source = actionIcon->source();
+            if (!source.isEmpty())
+                buttonIcon->setSource(source);
+
+            int width = actionIcon->width();
+            if (width > 0)
+                buttonIcon->setWidth(width);
+
+            int height = actionIcon->height();
+            if (height)
+                buttonIcon->setHeight(height);
+
+            QColor color = actionIcon->color();
+            if (color != Qt::transparent)
+                buttonIcon->setColor(color);
+        }
+
+        setText(action->text());
+        setChecked(action->isChecked());
+        setCheckable(action->isCheckable());
+        setEnabled(action->isEnabled());
+    }
+
+    d->action = action;
+    emit actionChanged();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::AbstractButton::toggle()
 
     Toggles the checked state of the button.
@@ -698,7 +809,7 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 
         nextCheckState();
         emit released();
-        emit clicked();
+        d->trigger();
 
         if (d->autoRepeat)
             d->stopPressRepeat();
@@ -752,7 +863,7 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
         d->startPressRepeat();
     } else if (event->timerId() == d->repeatTimer) {
         emit released();
-        emit clicked();
+        d->trigger();
         emit pressed();
     }
 }

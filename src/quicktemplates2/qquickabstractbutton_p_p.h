@@ -53,6 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAction;
 class QQuickButtonGroup;
 class QQuickIcon;
 
@@ -84,6 +85,8 @@ public:
     QQuickAbstractButton *findCheckedButton() const;
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
+    void click();
+    void trigger();
     void toggle(bool value);
 
     QString text;
@@ -106,6 +109,7 @@ public:
     QQuickButtonGroup *group;
     QQuickIcon *icon;
     QQuickAbstractButton::Display display;
+    QPointer<QQuickAction> action;
 };
 
 QT_END_NAMESPACE
