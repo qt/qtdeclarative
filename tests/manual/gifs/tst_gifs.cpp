@@ -416,6 +416,8 @@ void tst_Gifs::button()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setQmlFileName(qmlFileName);
+    // Seems to be necessary to show the Default button background.
+    gifRecorder.setHighQuality(true);
 
     gifRecorder.start();
 
