@@ -210,7 +210,6 @@ QQmlType *fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringR
 
 } // namespace
 
-#if QT_CONFIG(library)
 struct RegisteredPlugin {
     QString uri;
     QPluginLoader* loader;
@@ -221,21 +220,23 @@ struct StringRegisteredPluginMap : public QMap<QString, RegisteredPlugin> {
 };
 
 Q_GLOBAL_STATIC(StringRegisteredPluginMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri and the PluginLoaders
+
 void qmlClearEnginePlugins()
 {
     StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
     QMutexLocker lock(&plugins->mutex);
+#if QT_CONFIG(library)
     for (auto &plugin : qAsConst(*plugins)) {
         QPluginLoader* loader = plugin.loader;
         if (loader && !loader->unload())
             qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
         delete loader;
     }
+#endif
     plugins->clear();
 }
 
 typedef QPair<QStaticPlugin, QJsonArray> StaticPluginPair;
-#endif
 
 /*!
     \internal
@@ -332,10 +333,9 @@ public:
                                                       const QString &uri, const QString &url,
                                                       int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
-#if QT_CONFIG(library)
-   bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
+
+    bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
-#endif
 };
 
 /*!
@@ -959,7 +959,6 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
     return result;
 }
 
-#if QT_CONFIG(library)
 static QVector<QStaticPlugin> makePlugins()
 {
     QVector<QStaticPlugin> plugins;
@@ -1009,7 +1008,6 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
     }
     return true;
 }
-#endif
 
 #if defined(QT_SHARED) || !QT_CONFIG(library)
 static inline QString msgCannotLoadPlugin(const QString &uri, const QString &why)
@@ -1030,7 +1028,6 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                                          const QQmlTypeLoaderQmldirContent *qmldir,
                                          QList<QQmlError> *errors)
 {
-#if QT_CONFIG(library)
     Q_ASSERT(qmldir);
 
     if (qmlImportTrace())
@@ -1143,22 +1140,6 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
 
         database->qmlDirFilesForWhichPluginsHaveBeenLoaded.insert(qmldirFilePath);
     }
-
-#else
-    Q_UNUSED(vmaj);
-    Q_UNUSED(vmin);
-    Q_UNUSED(database);
-    Q_UNUSED(qmldir);
-
-    if (errors) {
-        QQmlError error;
-        error.setDescription(msgCannotLoadPlugin(uri, QQmlImportDatabase::tr("library loading is disabled")));
-        error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
-        errors->prepend(error);
-    }
-
-    return false;
-#endif // library
     return true;
 }
 
@@ -2014,7 +1995,6 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
 bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &basePath,
                                       const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
-#if QT_CONFIG(library)
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
     const QString uniquePluginID = QString::asprintf("%p", instance);
@@ -2050,15 +2030,6 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
     }
 
     return true;
-#else
-    Q_UNUSED(instance);
-    Q_UNUSED(basePath);
-    Q_UNUSED(uri);
-    Q_UNUSED(typeNamespace);
-    Q_UNUSED(vmaj);
-    Q_UNUSED(errors);
-    return false;
-#endif
 }
 
 /*!
