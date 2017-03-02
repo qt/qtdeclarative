@@ -77,13 +77,7 @@ namespace QV4 {
 
 namespace CompiledData {
 
-#ifdef V4_BOOTSTRAP
-static QString cacheFilePath(const QString &localSourcePath)
-{
-    const QString localCachePath = localSourcePath + QLatin1Char('c');
-    return localCachePath;
-}
-#else
+#if !defined(V4_BOOTSTRAP)
 static QString cacheFilePath(const QUrl &url)
 {
     const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
@@ -408,7 +402,7 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
 #endif // V4_BOOTSTRAP
 
 #if defined(V4_BOOTSTRAP)
-bool CompilationUnit::saveToDisk(const QString &unitUrl, QString *errorString)
+bool CompilationUnit::saveToDisk(const QString &outputFileName, QString *errorString)
 #else
 bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 #endif
@@ -425,11 +419,12 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
+    const QString outputFileName = cacheFilePath(unitUrl);
 #endif
 
 #if QT_CONFIG(temporaryfile)
     // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(cacheFilePath(unitUrl));
+    QSaveFile cacheFile(outputFileName);
     if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = cacheFile.errorString();
         return false;

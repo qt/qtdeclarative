@@ -908,7 +908,7 @@ protected:
 
 public:
 #if defined(V4_BOOTSTRAP)
-    bool saveToDisk(const QString &unitUrl, QString *errorString);
+    bool saveToDisk(const QString &outputFileName, QString *errorString);
 #else
     bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 #endif

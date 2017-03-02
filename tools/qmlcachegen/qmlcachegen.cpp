@@ -80,7 +80,7 @@ QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::Diagnostic
     return message;
 }
 
-static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
+static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
 
@@ -153,7 +153,7 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
         unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!irDocument.javaScriptCompilationUnit->saveToDisk(inputFileName, &error->message))
+        if (!irDocument.javaScriptCompilationUnit->saveToDisk(outputFileName, &error->message))
             return false;
 
         free(unit);
@@ -161,7 +161,7 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
     return true;
 }
 
-static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
+static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
 
@@ -233,7 +233,8 @@ static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *is
 
         // ### translation binding simplification
 
-        QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, /*executable allocator*/nullptr, &irDocument.jsModule, &irDocument.jsGenerator));
+        QV4::ExecutableAllocator allocator;
+        QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, &allocator, &irDocument.jsModule, &irDocument.jsGenerator));
         // Disable lookups in non-standalone (aka QML) mode
         isel->setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = isel->compile(/*generate unit*/false);
@@ -243,7 +244,7 @@ static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *is
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!irDocument.javaScriptCompilationUnit->saveToDisk(inputFileName, &error->message)) {
+        if (!irDocument.javaScriptCompilationUnit->saveToDisk(outputFileName, &error->message)) {
             engine->setDirectives(oldDirs);
             return false;
         }
@@ -270,6 +271,9 @@ int main(int argc, char **argv)
     QCommandLineOption targetArchitectureOption(QStringLiteral("target-architecture"), QCoreApplication::translate("main", "Target architecture"), QCoreApplication::translate("main", "architecture"));
     parser.addOption(targetArchitectureOption);
 
+    QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
+    parser.addOption(outputFileOption);
+
     parser.addPositionalArgument(QStringLiteral("[qml file]"),
             QStringLiteral("QML source file to generate cache for."));
 
@@ -294,13 +298,17 @@ int main(int argc, char **argv)
 
     Error error;
 
+    QString outputFileName = inputFile + QLatin1Char('c');
+    if (parser.isSet(outputFileOption))
+        outputFileName = parser.value(outputFileOption);
+
     if (inputFile.endsWith(QLatin1String(".qml"))) {
-        if (!compileQmlFile(inputFile, isel.data(), &error)) {
+        if (!compileQmlFile(inputFile, outputFileName, isel.data(), &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
-        if (!compileJSFile(inputFile, isel.data(), &error)) {
+        if (!compileJSFile(inputFile, outputFileName, isel.data(), &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
