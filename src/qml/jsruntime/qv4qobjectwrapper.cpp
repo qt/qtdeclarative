@@ -202,17 +202,59 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
 {
+    QObject *o = d()->object();
+    return findProperty(engine, o, qmlContext, name, revisionMode, local);
+}
+
+QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local)
+{
     Q_UNUSED(revisionMode);
 
-    QQmlData *ddata = QQmlData::get(d()->object(), false);
-    if (!ddata)
-        return 0;
+    QQmlData *ddata = QQmlData::get(o, false);
     QQmlPropertyData *result = 0;
     if (ddata && ddata->propertyCache)
-        result = ddata->propertyCache->property(name, d()->object(), qmlContext);
+        result = ddata->propertyCache->property(name, o, qmlContext);
     else
-        result = QQmlPropertyCache::property(engine->jsEngine(), d()->object(), name, qmlContext, *local);
+        result = QQmlPropertyCache::property(engine->jsEngine(), o, name, qmlContext, *local);
     return result;
+}
+
+ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired)
+{
+    QQmlData::flushPendingBinding(object, QQmlPropertyIndex(property->coreIndex()));
+
+    if (property->isFunction() && !property->isVarProperty()) {
+        if (property->isVMEFunction()) {
+            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+            Q_ASSERT(vmemo);
+            return vmemo->vmeMethod(property->coreIndex());
+        } else if (property->isV4Function()) {
+            Scope scope(engine);
+            ScopedContext global(scope, engine->qmlContext());
+            if (!global)
+                global = engine->rootContext();
+            return QV4::QObjectMethod::create(global, object, property->coreIndex());
+        } else if (property->isSignalHandler()) {
+            QmlSignalHandler::initProto(engine);
+            return engine->memoryManager->allocObject<QV4::QmlSignalHandler>(object, property->coreIndex())->asReturnedValue();
+        } else {
+            ExecutionContext *global = engine->rootContext();
+            return QV4::QObjectMethod::create(global, object, property->coreIndex());
+        }
+    }
+
+    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
+
+    if (captureRequired && ep && ep->propertyCapture && !property->isConstant())
+        ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
+
+    if (property->isVarProperty()) {
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+        Q_ASSERT(vmemo);
+        return vmemo->vmeProperty(property->coreIndex());
+    } else {
+        return loadProperty(engine, object, *property);
+    }
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode,
@@ -279,42 +321,19 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     return getProperty(v4, d()->object(), result);
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired)
+ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, bool captureRequired)
 {
-    QQmlData::flushPendingBinding(object, QQmlPropertyIndex(property->coreIndex()));
+    if (QQmlData::wasDeleted(object))
+        return QV4::Encode::null();
+    QQmlData *ddata = QQmlData::get(object, /*create*/false);
+    if (!ddata)
+        return QV4::Encode::undefined();
 
-    if (property->isFunction() && !property->isVarProperty()) {
-        if (property->isVMEFunction()) {
-            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-            Q_ASSERT(vmemo);
-            return vmemo->vmeMethod(property->coreIndex());
-        } else if (property->isV4Function()) {
-            Scope scope(engine);
-            ScopedContext global(scope, engine->qmlContext());
-            if (!global)
-                global = engine->rootContext();
-            return QV4::QObjectMethod::create(global, object, property->coreIndex());
-        } else if (property->isSignalHandler()) {
-            QmlSignalHandler::initProto(engine);
-            return engine->memoryManager->allocObject<QV4::QmlSignalHandler>(object, property->coreIndex())->asReturnedValue();
-        } else {
-            ExecutionContext *global = engine->rootContext();
-            return QV4::QObjectMethod::create(global, object, property->coreIndex());
-        }
-    }
-
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
-
-    if (captureRequired && ep && ep->propertyCapture && !property->isConstant())
-        ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
-
-    if (property->isVarProperty()) {
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-        Q_ASSERT(vmemo);
-        return vmemo->vmeProperty(property->coreIndex());
-    } else {
-        return loadProperty(engine, object, *property);
-    }
+    QQmlPropertyCache *cache = ddata->propertyCache;
+    Q_ASSERT(cache);
+    QQmlPropertyData *property = cache->property(propertyIndex);
+    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
+    return getProperty(engine, object, property, captureRequired);
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
@@ -325,11 +344,48 @@ ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlC
         return QV4::Encode::null();
     }
 
-    if (!QQmlData::get(object, true)) {
+    if (name->equals(engine->id_destroy()) || name->equals(engine->id_toString())) {
+        int index = name->equals(engine->id_destroy()) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
         if (hasProperty)
-            *hasProperty = false;
-        return QV4::Encode::null();
+            *hasProperty = true;
+        ExecutionContext *global = engine->rootContext();
+        return QV4::QObjectMethod::create(global, object, index);
     }
+
+    QQmlData *ddata = QQmlData::get(object, false);
+    QQmlPropertyData local;
+    QQmlPropertyData *result = findProperty(engine, object, qmlContext, name, revisionMode, &local);
+
+    if (result) {
+        if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
+            if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result)) {
+                if (hasProperty)
+                    *hasProperty = false;
+                return QV4::Encode::undefined();
+            }
+        }
+
+        if (hasProperty)
+            *hasProperty = true;
+
+        return getProperty(engine, object, result);
+    } else {
+        // Check if this object is already wrapped.
+        if (!ddata || (ddata->jsWrapper.isUndefined() &&
+                        (ddata->jsEngineId == 0 || // Nobody owns the QObject
+                          !ddata->hasTaintedV4Object))) { // Someone else has used the QObject, but it isn't tainted
+
+            // Not wrapped. Last chance: try query QObjectWrapper's prototype.
+            // If it can't handle this, then there is no point
+            // to wrap the QObject just to look at an empty set of JS props.
+            QV4::Object *proto = QObjectWrapper::defaultPrototype(engine);
+            return proto->get(name, hasProperty);
+        }
+    }
+
+    // If we get here, we must already be wrapped (which implies a ddata).
+    // There's no point wrapping again, as there wouldn't be any new props.
+    Q_ASSERT(ddata);
 
     QV4::Scope scope(engine);
     QV4::Scoped<QObjectWrapper> wrapper(scope, wrap(engine, object));
@@ -340,6 +396,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlC
     }
     return wrapper->getQmlProperty(qmlContext, name, revisionMode, hasProperty);
 }
+
 
 bool QObjectWrapper::setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name,
                                     QObjectWrapper::RevisionMode revisionMode, const Value &value)
@@ -552,21 +609,6 @@ void QObjectWrapper::markWrapper(QObject *object, MarkStack *markStack)
         ddata->jsWrapper.markOnce(markStack);
     else  if (markStack->engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
         markStack->engine->m_multiplyWrappedQObjects->mark(object, markStack);
-}
-
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, bool captureRequired)
-{
-    if (QQmlData::wasDeleted(object))
-        return QV4::Encode::null();
-    QQmlData *ddata = QQmlData::get(object, /*create*/false);
-    if (!ddata)
-        return QV4::Encode::undefined();
-
-    QQmlPropertyCache *cache = ddata->propertyCache;
-    Q_ASSERT(cache);
-    QQmlPropertyData *property = cache->property(propertyIndex);
-    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
-    return getProperty(engine, object, property, captureRequired);
 }
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value)
