@@ -534,13 +534,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
 void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos, int pointId, ulong timestamp, const QVector2D &velocity)
 {
     m_scenePos = scenePos;
-    if (m_pointId != pointId) {
-        if (m_exclusiveGrabber) {
-            qWarning() << m_exclusiveGrabber << "failed to ungrab previous point" << m_pointId;
-            cancelExclusiveGrab();
-        }
-        m_pointId = pointId;
-    }
+    m_pointId = pointId;
     m_accept = false;
     m_state = static_cast<QQuickEventPoint::State>(state);
     m_timestamp = timestamp;
@@ -784,6 +778,8 @@ QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
 void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
 {
     QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp, tp.velocity());
+    m_exclusiveGrabber.clear();
+    m_passiveGrabbers.clear();
     m_rotation = tp.rotation();
     m_pressure = tp.pressure();
     m_ellipseDiameters = tp.ellipseDiameters();

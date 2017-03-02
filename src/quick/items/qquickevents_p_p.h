@@ -325,7 +325,7 @@ protected:
 private:
     QVector2D estimatedVelocity() const;
 
-private:
+protected:
     QPointF m_pos;
     QPointF m_scenePos;
     QPointF m_scenePressPos;
