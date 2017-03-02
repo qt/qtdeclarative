@@ -17,7 +17,7 @@ SUBDIRS += \
                 qmlscene \
                 qmltime
 
-            qtConfig(regularexpression) {
+            qtConfig(regularexpression):qtConfig(process) {
                 SUBDIRS += \
                     qmlplugindump
             }

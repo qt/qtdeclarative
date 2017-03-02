@@ -29,7 +29,9 @@
 #include "../../shared/util.h"
 #include <QQmlApplicationEngine>
 #include <QSignalSpy>
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QDebug>
 
 class tst_qqmlapplicationengine : public QQmlDataTest
