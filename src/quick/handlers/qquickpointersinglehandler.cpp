@@ -79,7 +79,7 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
                 point->cancelAllGrabs(this);
             }
         } else {
-            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << m_pointId
+            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << hex << m_pointId
                 << "is missing from current event, but was neither canceled nor released";
             return false;
         }
