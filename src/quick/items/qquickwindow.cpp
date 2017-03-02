@@ -637,8 +637,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
 
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
     Q_ASSERT(pointerEvent->asPointerTouchEvent());
-    QTouchEvent *event = pointerEvent->asPointerTouchEvent()->touchEventForItem(item);
-    if (!event)
+    QScopedPointer<QTouchEvent> event(pointerEvent->asPointerTouchEvent()->touchEventForItem(item));
+    if (event.isNull())
         return false;
 
     // For each point, check if it is accepted, if not, try the next point.
@@ -655,7 +655,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 break;
 
             qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << p.id() << "->" << item;
-            QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
+            QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event.data(), item, false));
 
             // Send a single press and see if that's accepted
             QCoreApplication::sendEvent(item, mousePress.data());
@@ -669,7 +669,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 pointerEventPoint->setGrabberItem(item);
 
                 if (checkIfDoubleClicked(event->timestamp())) {
-                    QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item, false));
+                    QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event.data(), item, false));
                     QCoreApplication::sendEvent(item, mouseDoubleClick.data());
                     event->setAccepted(mouseDoubleClick->isAccepted());
                     if (!mouseDoubleClick->isAccepted()) {
@@ -686,7 +686,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
         } else if (touchMouseDevice == device && p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
-                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, mouseGrabberItem, false));
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event.data(), mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
@@ -697,7 +697,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     // no grabber, check if we care about mouse hover
                     // FIXME: this should only happen once, not recursively... I'll ignore it just ignore hover now.
                     // hover for touch???
-                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, item, false));
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event.data(), item, false));
                     if (lastMousePosition.isNull())
                         lastMousePosition = me->windowPos();
                     QPointF last = lastMousePosition;
@@ -715,7 +715,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
             } else if (p.state() & Qt::TouchPointReleased) {
                 // currently handled point was released
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
-                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem, false));
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event.data(), mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
 
                     if (item->acceptHoverEvents() && p.screenPos() != QGuiApplicationPrivate::lastCursorPosition) {
@@ -822,6 +822,10 @@ void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &
 void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool touch)
 {
     Q_Q(QQuickWindow);
+    if (Q_LIKELY(mouse) && q->mouseGrabberItem() == grabber) {
+        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << q->mouseGrabberItem() << "-> null";
+        setMouseGrabber(nullptr);
+    }
     if (Q_LIKELY(touch)) {
         const auto touchDevices = QQuickPointerDevice::touchDevices();
         for (auto device : touchDevices) {
@@ -834,10 +838,6 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
                 }
             }
         }
-    }
-    if (Q_LIKELY(mouse) && q->mouseGrabberItem() == grabber) {
-        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << q->mouseGrabberItem() << "-> null";
-        setMouseGrabber(nullptr);
     }
 }
 
@@ -1854,7 +1854,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     QPointF p = item->mapFromScene(event->posF());
 
     if (item->contains(p)) {
-        QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
+        QWheelEvent wheel(p, event->globalPosF(), event->pixelDelta(), event->angleDelta(), event->delta(),
                           event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
         wheel.setTimestamp(event->timestamp());
         wheel.accept();
@@ -4320,25 +4320,25 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty variant Window::targetScreen
+    \qmlproperty variant Window::screen
 
-    Specifies the screen the window should be placed on. Equivalent to
-    QWindow::setScreen().
+    The screen with which the window is associated.
 
-    The value must be an element from the Qt.application.screens array.
+    If specified before showing a window, will result in the window being shown
+    on that screen, unless an explicit window position has been set. The value
+    must be an element from the Qt.application.screens array.
 
-    By default the value is null which leads to using the primary screen.
-
-    \note To ensure that the window is associated with the desired screen right
-    upon the underlying native window's initial creation, make sure this
-    property is set as early as possible and that the setting of its value is
-    not deferred. This can be particularly important on embedded platforms
-    without a windowing system, where only one window per screen is allowed at a
-    time.
+    \note To ensure that the window is associated with the desired screen when
+    the underlying native window is created, make sure this property is set as
+    early as possible and that the setting of its value is not deferred. This
+    can be particularly important on embedded platforms without a windowing system,
+    where only one window per screen is allowed at a time. Setting the screen after
+    a window has been created does not move the window if the new screen is part of
+    the same virtual desktop as the old screen.
 
     \since 5.9
 
-    \sa QWindow::setScreen(), QScreen, Qt.application
+    \sa QWindow::setScreen(), QWindow::screen(), QScreen, Qt.application
  */
 
 /*!
@@ -4643,8 +4643,8 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     \note The call to the function must happen before constructing the first
     QQuickWindow in the application. It cannot be changed afterwards.
 
-    If \a backend is invalid or an error occurs, the default backend (OpenGL or
-    software, depending on the Qt configuration) is used.
+    If the selected backend is invalid or an error occurs, the default backend
+    (OpenGL or software, depending on the Qt configuration) is used.
 
     \since 5.8
  */

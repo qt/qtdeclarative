@@ -1021,6 +1021,60 @@ public:
     }
 };
 
+class MyExtendedUncreateableBaseClass : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool prop1 READ prop1 WRITE setprop1)
+    Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
+    Q_PROPERTY(bool prop3 READ prop3 WRITE setprop3 REVISION 1)
+public:
+    explicit MyExtendedUncreateableBaseClass(QObject *parent = 0)
+        : QObject(parent), _prop1(false), _prop2(false), _prop3(false)
+    {
+    }
+
+    bool _prop1;
+    bool prop1() const { return _prop1; }
+    void setprop1(bool p) { _prop1 = p; }
+    bool _prop2;
+    bool prop2() const { return _prop2; }
+    void setprop2(bool p) { _prop2 = p; }
+    bool _prop3;
+    bool prop3() const { return _prop3; }
+    void setprop3(bool p) { _prop3 = p; }
+};
+
+class MyExtendedUncreateableBaseClassExtension : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool prop4 READ prop4 WRITE setprop4)
+public:
+    explicit MyExtendedUncreateableBaseClassExtension(QObject *parent = 0)
+        : QObject(parent), _prop4(false)
+    {
+    }
+
+    bool _prop4;
+    bool prop4() const { return _prop4; }
+    void setprop4(bool p) { _prop4 = p; }
+};
+
+class MyExtendedCreateableDerivedClass : public MyExtendedUncreateableBaseClass
+{
+    Q_OBJECT
+    Q_PROPERTY(bool prop5 READ prop5 WRITE setprop5)
+
+public:
+    MyExtendedCreateableDerivedClass(QObject *parent = 0)
+        : MyExtendedUncreateableBaseClass(parent), _prop5(false)
+    {
+    }
+
+    bool _prop5;
+    bool prop5() const { return _prop5; }
+    void setprop5(bool p) { _prop5 = p; }
+};
+
 class MyVersion2Class : public QObject
 {
     Q_OBJECT

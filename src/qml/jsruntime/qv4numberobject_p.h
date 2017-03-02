@@ -88,6 +88,8 @@ struct NumberPrototype: NumberObject
     void init(ExecutionEngine *engine, Object *ctor);
 
     static void method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isInteger(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_isSafeInteger(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData);

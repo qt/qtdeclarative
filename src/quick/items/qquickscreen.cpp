@@ -207,9 +207,9 @@ QT_BEGIN_NAMESPACE
     By default it is set to the value of the QScreen that the window uses.
 */
 
-QQuickScreenInfo::QQuickScreenInfo(QObject *parent)
-    : QObject(parent),
-      m_screen(nullptr)
+QQuickScreenInfo::QQuickScreenInfo(QObject *parent, QScreen *wrappedScreen)
+    : QObject(parent)
+    , m_screen(wrappedScreen)
 {
 }
 

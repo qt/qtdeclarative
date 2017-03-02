@@ -2913,14 +2913,15 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
-#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
+#if QT_CONFIG(cursor)
     // if the added child has a cursor and we do not currently have any children
     // with cursors, bubble the notification up
     if (childPrivate->subtreeCursorEnabled && !subtreeCursorEnabled)
         setHasCursorInChild(true);
 #endif
+
     if (childPrivate->subtreeHoverEnabled && !subtreeHoverEnabled)
         setHasHoverInChild(true);
 
@@ -2941,13 +2942,14 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
-#if QT_CONFIG(cursor)
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
+#if QT_CONFIG(cursor)
     // turn it off, if nothing else is using it
     if (childPrivate->subtreeCursorEnabled && subtreeCursorEnabled)
         setHasCursorInChild(false);
 #endif
+
     if (childPrivate->subtreeHoverEnabled && subtreeHoverEnabled)
         setHasHoverInChild(false);
 
@@ -3816,10 +3818,10 @@ QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
 
 /*!
     This function is called when an item should release graphics
-    resources which are not already managed by the nodes returend from
+    resources which are not already managed by the nodes returned from
     QQuickItem::updatePaintNode().
 
-    This happens when the item is about to be removed from window it
+    This happens when the item is about to be removed from the window it
     was previously rendering to. The item is guaranteed to have a
     \l {QQuickItem::window()}{window} when the function is called.
 
@@ -7899,6 +7901,7 @@ QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     , m_effect(0)
     , m_effectSource(0)
     , m_textureMirroring(QQuickShaderEffectSource::MirrorVertically)
+    , m_samples(0)
 {
 }
 
@@ -7973,6 +7976,7 @@ void QQuickItemLayer::activate()
     m_effectSource->setWrapMode(m_wrapMode);
     m_effectSource->setFormat(m_format);
     m_effectSource->setTextureMirroring(m_textureMirroring);
+    m_effectSource->setSamples(m_samples);
 
     if (m_effectComponent)
         activateEffect();
@@ -8263,6 +8267,44 @@ void QQuickItemLayer::setTextureMirroring(QQuickShaderEffectSource::TextureMirro
         m_effectSource->setTextureMirroring(m_textureMirroring);
 
     emit textureMirroringChanged(mirroring);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::Item::layer.samples
+    \since 5.10
+
+    This property allows requesting multisampled rendering in the layer.
+
+    By default multisampling is enabled whenever multisampling is
+    enabled for the entire window, assuming the scenegraph renderer in
+    use and the underlying graphics API supports this.
+
+    By setting the value to 2, 4, etc. multisampled rendering can be requested
+    for a part of the scene without enabling multisampling for the entire
+    scene. This way multisampling is applied only to a given subtree, which can
+    lead to significant performance gains since multisampling is not applied to
+    other parts of the scene.
+
+    \note Enabling multisampling can be potentially expensive regardless of the
+    layer's size, as it incurs a hardware and driver dependent performance and
+    memory cost.
+
+    \note This property is only functional when support for multisample
+    renderbuffers and framebuffer blits is available. Otherwise the value is
+    silently ignored.
+ */
+
+void QQuickItemLayer::setSamples(int count)
+{
+    if (m_samples == count)
+        return;
+
+    m_samples = count;
+
+    if (m_effectSource)
+        m_effectSource->setSamples(m_samples);
+
+    emit samplesChanged(count);
 }
 
 /*!

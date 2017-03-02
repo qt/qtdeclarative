@@ -117,6 +117,8 @@ public:
     bool isComponentComplete() const;
     QString parseLog();
 
+    bool isOpenGLShaderEffect() const;
+
 Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();

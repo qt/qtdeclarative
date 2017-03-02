@@ -273,9 +273,11 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
     QV4::ScopedObject scopeObject(scope, engine()->newObject());
 
     Q_ASSERT(names.size() == m_collectedRefs.size());
-    for (int i = 0, ei = m_collectedRefs.size(); i != ei; ++i)
-        scopeObject->put(engine(), names.at(i),
-                         QV4::Value::fromReturnedValue(getValue(m_collectedRefs.at(i))));
+    QV4::ScopedString propName(scope);
+    for (int i = 0, ei = m_collectedRefs.size(); i != ei; ++i) {
+        propName = engine()->newString(names.at(i));
+        scopeObject->put(propName, QV4::Value::fromReturnedValue(getValue(m_collectedRefs.at(i))));
+    }
 
     Ref scopeObjectRef = addRef(scopeObject);
     dict->insert(QStringLiteral("ref"), qint64(scopeObjectRef));

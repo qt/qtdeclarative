@@ -70,7 +70,6 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 QT_BEGIN_NAMESPACE
 
 class QSGContext;
-class QSignalMapper;
 class QFileSelector;
 class QQuickOpenGLCustomMaterialShader;
 

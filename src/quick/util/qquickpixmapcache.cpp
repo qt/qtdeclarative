@@ -161,7 +161,7 @@ Q_SIGNALS:
     void downloadProgress(qint64, qint64);
 
 protected:
-    bool event(QEvent *event);
+    bool event(QEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickPixmapReply)
@@ -199,7 +199,7 @@ public:
     static QQuickPixmapReader *existingInstance(QQmlEngine *engine);
 
 protected:
-    void run();
+    void run() override;
 
 private:
     friend class QQuickPixmapReaderThreadObject;
@@ -1541,9 +1541,9 @@ void QQuickPixmap::clear(QObject *obj)
     }
 }
 
-bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize)
+bool QQuickPixmap::isCached(const QUrl &url, const QSize &requestSize, const QQuickImageProviderOptions &options)
 {
-    QQuickPixmapKey key = { &url, &requestSize, QQuickImageProviderOptions() };
+    QQuickPixmapKey key = { &url, &requestSize, options };
     QQuickPixmapStore *store = pixmapStore();
 
     return store->m_cache.contains(key);

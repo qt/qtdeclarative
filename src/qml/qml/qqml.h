@@ -238,6 +238,44 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+template<typename T, typename E, int metaObjectRevision>
+int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+{
+    QML_GETTYPENAMES
+
+    QQmlAttachedPropertiesFunc attached = QQmlPrivate::attachedPropertiesFunc<E>();
+    const QMetaObject * attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<E>();
+    if (!attached) {
+        attached = QQmlPrivate::attachedPropertiesFunc<T>();
+        attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<T>();
+    }
+
+    QQmlPrivate::RegisterType type = {
+        1,
+
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+        qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+        0,
+        Q_NULLPTR,
+        reason,
+
+        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
+
+        attached,
+        attachedMetaObject,
+
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
+
+        QQmlPrivate::createParent<E>, &E::staticMetaObject,
+
+        Q_NULLPTR,
+        metaObjectRevision
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
 
 Q_QML_EXPORT int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject, const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason);
 

@@ -89,7 +89,7 @@ public:
     {
         DataGuard(QObject *obj, QList<DataGuard> *l) : list(l) { (QQmlGuard<QObject>&)*this = obj; }
         QList<DataGuard> *list;
-        void objectDestroyed(QObject *) {
+        void objectDestroyed(QObject *) override {
             // we assume priv will always be destroyed after objectDestroyed calls
             list->removeOne(*this);
         }

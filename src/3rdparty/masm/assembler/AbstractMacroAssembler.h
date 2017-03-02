@@ -66,7 +66,7 @@ public:
     typedef MacroAssemblerCodePtr CodePtr;
     typedef MacroAssemblerCodeRef CodeRef;
 
-#if !CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
+#if !CPU(ARM_THUMB2) && !CPU(ARM64) && !defined(V4_BOOTSTRAP)
     class Jump;
 #endif
 
@@ -455,7 +455,7 @@ public:
         AssemblerLabel m_label;
     };
 
-#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
     using Jump = typename AssemblerType::template Jump<Label>;
     friend Jump;
 #endif
@@ -510,7 +510,7 @@ public:
     // into the code buffer - it is typically used to link the jump, setting the
     // relative offset such that when executed it will jump to the desired
     // destination.
-#if !CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
+#if !CPU(ARM_THUMB2) && !CPU(ARM64) && !defined(V4_BOOTSTRAP)
     class Jump {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;

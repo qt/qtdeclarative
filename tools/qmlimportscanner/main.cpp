@@ -291,7 +291,7 @@ struct ImportCollector : public QQmlJS::Directives
 {
     QVariantList imports;
 
-    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
+    void importFile(const QString &jsfile, const QString &module, int line, int column) override
     {
         QVariantMap entry;
         entry[typeLiteral()] = QStringLiteral("javascript");
@@ -303,7 +303,7 @@ struct ImportCollector : public QQmlJS::Directives
         Q_UNUSED(column);
     }
 
-    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
+    void importModule(const QString &uri, const QString &version, const QString &module, int line, int column) override
     {
         QVariantMap entry;
         if (uri.contains(QLatin1Char('/'))) {
@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
             if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;
             ++i;
-            if (!QFile::exists(arg)) {
+            if (arg != QLatin1String("-") && !QFile::exists(arg)) {
                 std::cerr << qPrintable(appName) << ": No such file or directory: \""
                     << qPrintable(arg) << "\"\n";
                 return 1;

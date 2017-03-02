@@ -66,8 +66,6 @@ void QQmlApplicationEnginePrivate::cleanUp()
 void QQmlApplicationEnginePrivate::init()
 {
     Q_Q(QQmlApplicationEngine);
-    q->connect(&statusMapper, SIGNAL(mapped(QObject*)),
-            q, SLOT(_q_finishLoad(QObject*)));
     q->connect(q, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
     q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(), &QCoreApplication::exit);
 #if QT_CONFIG(translation)
@@ -113,20 +111,15 @@ void QQmlApplicationEnginePrivate::startLoad(const QUrl &url, const QByteArray &
         c->loadUrl(url);
 
     if (!c->isLoading()) {
-        _q_finishLoad(c);
+        finishLoad(c);
         return;
     }
-    statusMapper.setMapping(c, c);
-    q->connect(c, SIGNAL(statusChanged(QQmlComponent::Status)),
-        &statusMapper, SLOT(map()));
+    QObject::connect(c, &QQmlComponent::statusChanged, q, [this, c] { this->finishLoad(c); });
 }
 
-void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
+void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
 {
     Q_Q(QQmlApplicationEngine);
-    QQmlComponent *c = qobject_cast<QQmlComponent *>(o);
-    if (!c)
-        return;
     switch (c->status()) {
     case QQmlComponent::Error:
         qWarning() << "QQmlApplicationEngine failed to load component";

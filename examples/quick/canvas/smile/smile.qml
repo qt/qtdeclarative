@@ -101,14 +101,14 @@ Item {
                 ctx.moveTo(75 + 50  * Math.cos(0),
                            75 - 50  * Math.sin(Math.PI*2));
                 ctx.arc(75,75,50,0,Math.PI*2,true); // Outer circle
-                ctx.moveTo(75,70);
-                ctx.arc(75,70,35,0,Math.PI,false);   // Mouth (clockwise)
-                ctx.moveTo(60,65);
-                ctx.arc(60,65,5,0,Math.PI*2,true);  // Left eye
+                ctx.moveTo(60,60);
+                ctx.arc(60,60,5,0,Math.PI*2,true);  // Left eye
                 ctx.moveTo(90 + 5  * Math.cos(0),
                            65 - 5  * Math.sin(Math.PI*2));
-                ctx.moveTo(90,65);
-                ctx.arc(90,65,5,0,Math.PI*2,true);  // Right eye
+                ctx.moveTo(90,60);
+                ctx.arc(90,60,5,-Math.PI,Math.PI*3,false);  // Right eye
+                ctx.moveTo(75,70);
+                ctx.arc(75,70,35,0,Math.PI,false);   // Mouth (clockwise)
                 ctx.closePath();
                 if (canvas.fill)
                     ctx.fill();

@@ -622,7 +622,7 @@ private:
     int _importedScriptsTemp;
 };
 
-struct IRLoader {
+struct Q_QML_PRIVATE_EXPORT IRLoader {
     IRLoader(const QV4::CompiledData::Unit *unit, QmlIR::Document *output);
 
     void load();

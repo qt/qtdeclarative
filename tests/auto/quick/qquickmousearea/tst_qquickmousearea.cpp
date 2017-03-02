@@ -88,6 +88,7 @@ private slots:
     void invalidDrag_data() { rejectedButton_data(); }
     void invalidDrag();
     void cancelDragging();
+    void availableDistanceLessThanDragThreshold();
     void setDragOnPressed();
     void updateMouseAreaPosOnClick();
     void updateMouseAreaPosOnResize();
@@ -583,6 +584,35 @@ void tst_QQuickMouseArea::cancelDragging()
     QCOMPARE(blackRect->y(), 61.0);
 
     QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(122,122));
+}
+
+// QTBUG-58347
+void tst_QQuickMouseArea::availableDistanceLessThanDragThreshold()
+{
+    QQuickView view;
+    QByteArray errorMessage;
+    QVERIFY2(initView(view, testFileUrl("availableDistanceLessThanDragThreshold.qml"), true, &errorMessage),
+             errorMessage.constData());
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QQuickMouseArea *mouseArea = view.rootObject()->findChild<QQuickMouseArea*>("mouseArea");
+    QVERIFY(mouseArea);
+
+    QPoint position(100, 100);
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    position.setX(301);
+    QTest::mouseMove(&view, position);
+    position.setX(501);
+    QTest::mouseMove(&view, position);
+    QVERIFY(mouseArea->drag()->active());
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    QVERIFY(!mouseArea->drag()->active());
+    QCOMPARE(mouseArea->x(), 200.0);
 }
 
 void tst_QQuickMouseArea::setDragOnPressed()

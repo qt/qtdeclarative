@@ -172,6 +172,7 @@ private slots:
     void touchPointDeliveryOrder();
 
     void hoverEnabled();
+    void implicitUngrab();
 
 protected:
     bool eventFilter(QObject *, QEvent *event)
@@ -1414,6 +1415,37 @@ void tst_TouchMouse::hoverEnabled()
     QVERIFY(!mouseArea2->hovered());
 }
 
+void tst_TouchMouse::implicitUngrab()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("singleitem.qml"));
+    window->show();
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root != 0);
+    EventItem *eventItem = root->findChild<EventItem*>("eventItem1");
+    eventItem->acceptMouse = true;
+    QPoint p1(20, 20);
+    QTest::touchEvent(window.data(), device).press(0, p1);
+
+    QCOMPARE(window->mouseGrabberItem(), eventItem);
+    eventItem->eventList.clear();
+    eventItem->setEnabled(false);
+    QVERIFY(!eventItem->eventList.isEmpty());
+    QCOMPARE(eventItem->eventList.at(0).type, QEvent::UngrabMouse);
+    QTest::touchEvent(window.data(), device).release(0, p1);   // clean up potential state
+
+    eventItem->setEnabled(true);
+    QTest::touchEvent(window.data(), device).press(0, p1);
+    eventItem->eventList.clear();
+    eventItem->setVisible(false);
+    QVERIFY(!eventItem->eventList.isEmpty());
+    QCOMPARE(eventItem->eventList.at(0).type, QEvent::UngrabMouse);
+    QTest::touchEvent(window.data(), device).release(0, p1);   // clean up potential state
+}
 QTEST_MAIN(tst_TouchMouse)
 
 #include "tst_touchmouse.moc"

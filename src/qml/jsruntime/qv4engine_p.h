@@ -157,6 +157,7 @@ public:
         IntegerNull, // Has to come after the RootContext to make the context stack safe
         ObjectProto,
         ArrayProto,
+        PropertyListProto,
         StringProto,
         NumberProto,
         BooleanProto,
@@ -225,6 +226,7 @@ public:
 
     Object *objectPrototype() const { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
     Object *arrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayProto); }
+    Object *propertyListPrototype() const { return reinterpret_cast<Object *>(jsObjects + PropertyListProto); }
     Object *stringPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringProto); }
     Object *numberPrototype() const { return reinterpret_cast<Object *>(jsObjects + NumberProto); }
     Object *booleanPrototype() const { return reinterpret_cast<Object *>(jsObjects + BooleanProto); }

@@ -145,11 +145,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using RegisterID = typename JITAssembler::RegisterID;
     using FPRegisterID = typename JITAssembler::FPRegisterID;
     using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using ResultCondition = typename JITAssembler::ResultCondition;
     using Address = typename JITAssembler::Address;
     using Pointer = typename JITAssembler::Pointer;
     using TrustedImm32 = typename JITAssembler::TrustedImm32;
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
     using Jump = typename JITAssembler::Jump;
+    using Label = typename JITAssembler::Label;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
@@ -352,6 +354,19 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         return as->branch32(RelationalCondition::NotEqual, tagOrValueRegister,
                             TrustedImm32(Value::NotDouble_Mask));
     }
+
+    static void initializeLocalVariables(JITAssembler *as, int localsCount)
+    {
+        as->move(TrustedImm32(0), TargetPlatform::ReturnValueRegister);
+        as->move(TrustedImm32(localsCount), TargetPlatform::ScratchRegister);
+        Label loop = as->label();
+        as->store32(TargetPlatform::ReturnValueRegister, Address(TargetPlatform::LocalsRegister));
+        as->add32(TrustedImm32(4), TargetPlatform::LocalsRegister);
+        as->store32(TargetPlatform::ReturnValueRegister, Address(TargetPlatform::LocalsRegister));
+        as->add32(TrustedImm32(4), TargetPlatform::LocalsRegister);
+        Jump jump = as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), TargetPlatform::ScratchRegister);
+        jump.linkTo(loop, as);
+    }
 };
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
@@ -364,38 +379,36 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using TrustedImm64 = typename JITAssembler::TrustedImm64;
     using Pointer = typename JITAssembler::Pointer;
     using RelationalCondition = typename JITAssembler::RelationalCondition;
+    using ResultCondition = typename JITAssembler::ResultCondition;
     using BranchTruncateType = typename JITAssembler::BranchTruncateType;
     using Jump = typename JITAssembler::Jump;
+    using Label = typename JITAssembler::Label;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->load64(addr, TargetPlatform::ReturnValueRegister);
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, Address addr)
     {
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->store64(TargetPlatform::ReturnValueRegister, addr);
     }
 
     static void storeDouble(JITAssembler *as, FPRegisterID source, IR::Expr* target)
     {
         as->moveDoubleTo64(source, TargetPlatform::ReturnValueRegister);
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         Pointer ptr = as->loadAddress(TargetPlatform::ScratchRegister, target);
         as->store64(TargetPlatform::ReturnValueRegister, ptr);
     }
 
     static void storeReturnValue(JITAssembler *as, FPRegisterID dest)
     {
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, dest);
     }
 
@@ -410,16 +423,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             if (t->type == IR::DoubleType) {
                 as->moveDoubleTo64((FPRegisterID) t->index,
                                     TargetPlatform::ReturnValueRegister);
-                as->move(TrustedImm64(QV4::Value::NaNEncodeMask),
-                         TargetPlatform::ScratchRegister);
-                as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+                as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
             } else if (t->type == IR::UInt32Type) {
                 RegisterID srcReg = (RegisterID) t->index;
                 Jump intRange = as->branch32(RelationalCondition::GreaterThanOrEqual, srcReg, TrustedImm32(0));
                 as->convertUInt32ToDouble(srcReg, TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
                 as->moveDoubleTo64(TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister);
-                as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-                as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+                as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
                 Jump done = as->jump();
                 intRange.link(as);
                 as->zeroExtend32ToPtr(srcReg, TargetPlatform::ReturnValueRegister);
@@ -464,7 +474,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     {
         // Use ReturnValueRegister as "scratch" register because loadArgument
         // and storeArgument are functions that may need a scratch register themselves.
-        as->loadArgumentInRegister(source, TargetPlatform::ReturnValueRegister, 0);
+        loadArgumentInRegister(as, source, TargetPlatform::ReturnValueRegister, 0);
         as->storeReturnValue(destination);
     }
 
@@ -475,6 +485,12 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         memcpy(&i, &c->value, sizeof(double));
         as->move(TrustedImm64(i), TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, target);
+    }
+
+    static void loadArgumentInRegister(JITAssembler *as, Address addressOfValue, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+        as->load64(addressOfValue, dest);
     }
 
     static void loadArgumentInRegister(JITAssembler *as, IR::Temp* temp, RegisterID dest, int argumentNumber)
@@ -588,8 +604,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Jump fallback = as->branch32(RelationalCondition::GreaterThan, TargetPlatform::ScratchRegister, TrustedImm32(0));
 
         // it's a double
-        as->move(TrustedImm64(QV4::Value::NaNEncodeMask), TargetPlatform::ScratchRegister);
-        as->xor64(TargetPlatform::ScratchRegister, TargetPlatform::ReturnValueRegister);
+        as->xor64(TargetPlatform::DoubleMaskRegister, TargetPlatform::ReturnValueRegister);
         as->move64ToDouble(TargetPlatform::ReturnValueRegister, TargetPlatform::FPGpr0);
         Jump success =
                 as->branchTruncateDoubleToInt32(TargetPlatform::FPGpr0, TargetPlatform::ReturnValueRegister,
@@ -624,6 +639,17 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->rshift32(TrustedImm32(Value::IsDoubleTag_Shift), tagOrValueRegister);
         return as->branch32(RelationalCondition::NotEqual, tagOrValueRegister,
                             TrustedImm32(0));
+    }
+
+    static void initializeLocalVariables(JITAssembler *as, int localsCount)
+    {
+        as->move(TrustedImm64(0), TargetPlatform::ReturnValueRegister);
+        as->move(TrustedImm32(localsCount), TargetPlatform::ScratchRegister);
+        Label loop = as->label();
+        as->store64(TargetPlatform::ReturnValueRegister, Address(TargetPlatform::LocalsRegister));
+        as->add64(TrustedImm32(8), TargetPlatform::LocalsRegister);
+        Jump jump = as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), TargetPlatform::ScratchRegister);
+        jump.linkTo(loop, as);
     }
 };
 
@@ -684,6 +710,7 @@ public:
     using JITTargetPlatform::registerForArgument;
     using JITTargetPlatform::FPGpr0;
     using JITTargetPlatform::platformEnterStandardStackFrame;
+    using JITTargetPlatform::platformFinishEnteringStandardStackFrame;
     using JITTargetPlatform::platformLeaveStandardStackFrame;
 
     using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
@@ -1338,9 +1365,8 @@ public:
         if (prepareCall(function))
             loadArgumentOnStackOrRegister<0>(arg1);
 
-#ifdef RESTORE_EBX_ON_CALL
-        load32(this->ebxAddressOnStack(), JSC::X86Registers::ebx); // restore the GOT ptr
-#endif
+        if (JITTargetPlatform::gotRegister != -1)
+            load32(Address(JITTargetPlatform::FramePointerRegister, JITTargetPlatform::savedGOTRegisterSlotOnStack()), static_cast<RegisterID>(JITTargetPlatform::gotRegister)); // restore the GOT ptr
 
         callAbsolute(functionName, function);
 
@@ -1585,6 +1611,15 @@ public:
 
     void setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave);
     const StackLayout &stackLayout() const { return *_stackLayout.data(); }
+    void initializeLocalVariables()
+    {
+        const int locals = _stackLayout->calculateJSStackFrameSize();
+        if (locals <= 0)
+            return;
+        loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), JITTargetPlatform::LocalsRegister);
+        RegisterSizeDependentOps::initializeLocalVariables(this, locals);
+        storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+    }
 
     Label exceptionReturnLabel;
     IR::BasicBlock * catchBlock;

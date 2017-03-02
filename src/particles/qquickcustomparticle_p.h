@@ -53,7 +53,6 @@
 #include "qquickparticlepainter_p.h"
 #include <private/qquickopenglshadereffectnode_p.h>
 #include <private/qquickopenglshadereffect_p.h>
-#include <QSignalMapper>
 
 QT_BEGIN_NAMESPACE
 

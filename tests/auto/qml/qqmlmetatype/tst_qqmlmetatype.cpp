@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 
+#include <qstandardpaths.h>
 #include <qtest.h>
 #include <qqml.h>
 #include <qqmlprivate.h>
@@ -53,6 +54,7 @@ private slots:
     void invalidQmlTypeName();
     void registrationType();
     void compositeType();
+    void externalEnums();
 
     void isList();
 
@@ -69,6 +71,20 @@ public:
     int foo() { return 0; }
 };
 QML_DECLARE_TYPE(TestType);
+
+class ExternalEnums : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(QStandardPaths::StandardLocation QStandardPaths::LocateOptions)
+public:
+    ExternalEnums(QObject *parent = nullptr) : QObject(parent) {}
+
+    static QObject *create(QQmlEngine *engine, QJSEngine *scriptEngine) {
+        Q_UNUSED(scriptEngine);
+        return new ExternalEnums(engine);
+    }
+};
+QML_DECLARE_TYPE(ExternalEnums);
 
 QObject *testTypeProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
@@ -269,6 +285,23 @@ void tst_qqmlmetatype::compositeType()
     QCOMPARE(type->elementName(), QLatin1String("ImplicitType"));
     QCOMPARE(type->qmlTypeName(), QLatin1String("ImplicitType"));
     QCOMPARE(type->sourceUrl(), testFileUrl("ImplicitType.qml"));
+}
+
+void tst_qqmlmetatype::externalEnums()
+{
+    QQmlEngine engine;
+    qmlRegisterSingletonType<ExternalEnums>("x.y.z", 1, 0, "ExternalEnums", ExternalEnums::create);
+
+    QQmlComponent c(&engine, testFileUrl("testExternalEnums.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj);
+    QVariant a = obj->property("a");
+    QCOMPARE(a.type(), QVariant::Int);
+    QCOMPARE(a.toInt(), int(QStandardPaths::DocumentsLocation));
+    QVariant b = obj->property("b");
+    QCOMPARE(b.type(), QVariant::Int);
+    QCOMPARE(b.toInt(), int(QStandardPaths::DocumentsLocation));
+
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

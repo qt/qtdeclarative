@@ -625,13 +625,13 @@ QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *has
     return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-void QObjectWrapper::put(Managed *m, String *name, const Value &value)
+bool QObjectWrapper::put(Managed *m, String *name, const Value &value)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = that->engine();
 
     if (v4->hasException || QQmlData::wasDeleted(that->d()->object()))
-        return;
+        return false;
 
     QQmlContextData *qmlContext = v4->callingQmlContext();
     if (!setQmlProperty(v4, qmlContext, that->d()->object(), name, QV4::QObjectWrapper::IgnoreRevision, value)) {
@@ -642,10 +642,13 @@ void QObjectWrapper::put(Managed *m, String *name, const Value &value)
             QString error = QLatin1String("Cannot assign to non-existent property \"") +
                             name->toQString() + QLatin1Char('\"');
             v4->throwError(error);
+            return false;
         } else {
-            QV4::Object::put(m, name, value);
+            return QV4::Object::put(m, name, value);
         }
     }
+
+    return true;
 }
 
 PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
@@ -673,18 +676,24 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
 
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
 
-    if (that->d()->object()) {
-        const QMetaObject *mo = that->d()->object()->metaObject();
+    QObject *thatObject = that->d()->object();
+    if (thatObject && !QQmlData::wasDeleted(thatObject)) {
+        const QMetaObject *mo = thatObject->metaObject();
         // These indices don't apply to gadgets, so don't block them.
         const bool preventDestruction = mo->superClass() || mo == &QObject::staticMetaObject;
         const int propertyCount = mo->propertyCount();
         if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-            Scope scope(that->engine());
-            ScopedString propName(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
+            ExecutionEngine *thatEngine = that->engine();
+            Scope scope(thatEngine);
+            const QMetaProperty property = mo->property(it->arrayIndex);
+            ScopedString propName(scope, thatEngine->newString(QString::fromUtf8(property.name())));
             name->setM(propName->d());
             ++it->arrayIndex;
             *attributes = QV4::Attr_Data;
-            p->value = that->get(propName);
+
+            QQmlPropertyData local;
+            local.load(property);
+            p->value = that->getProperty(thatEngine, thatObject, &local);
             return;
         }
         const int methodCount = mo->methodCount();
@@ -694,11 +703,15 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
             ++it->arrayIndex;
             if (method.access() == QMetaMethod::Private || (preventDestruction && (index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)))
                 continue;
-            Scope scope(that->engine());
-            ScopedString methodName(scope, that->engine()->newString(QString::fromUtf8(method.name())));
+            ExecutionEngine *thatEngine = that->engine();
+            Scope scope(thatEngine);
+            ScopedString methodName(scope, thatEngine->newString(QString::fromUtf8(method.name())));
             name->setM(methodName->d());
             *attributes = QV4::Attr_Data;
-            p->value = that->get(methodName);
+
+            QQmlPropertyData local;
+            local.load(method);
+            p->value = that->getProperty(thatEngine, thatObject, &local);
             return;
         }
     }

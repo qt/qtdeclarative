@@ -367,7 +367,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
         RETURN_RESULT(Encode::null());
     }
 
-    uint* matchOffsets = (uint*)alloca(r->value()->captureCount() * 2 * sizeof(uint));
+    Q_ALLOCA_VAR(uint, matchOffsets, r->value()->captureCount() * 2 * sizeof(uint));
     const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
 
     Scoped<RegExpCtor> regExpCtor(scope, scope.engine->regExpCtor());

@@ -114,7 +114,7 @@ public:
         return m_pluginName;
     }
 
-    void run();
+    void run() override;
 
 private:
     QQmlDebugServerImpl *m_server;

@@ -282,6 +282,9 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
 
 template<typename T, int metaObjectRevision>
 int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+
+template<typename T, typename E, int metaObjectRevision>
+int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
 \endcode
 
 For example, if \c BaseType is changed and now has a revision 1, you can

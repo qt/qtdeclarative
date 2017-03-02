@@ -200,6 +200,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare, 1);
     defineDefaultProperty(QStringLiteral("match"), method_match, 1);
+    defineDefaultProperty(QStringLiteral("repeat"), method_repeat, 1);
     defineDefaultProperty(QStringLiteral("replace"), method_replace, 2);
     defineDefaultProperty(QStringLiteral("search"), method_search, 1);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
@@ -458,6 +459,21 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
         scope.result = a;
 }
 
+void StringPrototype::method_repeat(const BuiltinFunction *, Scope &scope, CallData *callData)
+{
+    QString value = getThisString(scope, callData);
+    CHECK_EXCEPTION();
+
+    double repeats = callData->args[0].toInteger();
+
+    if (repeats < 0 || qIsInf(repeats)) {
+        scope.result = scope.engine->throwRangeError(QLatin1String("Invalid count value"));
+        return;
+    }
+
+    scope.result = scope.engine->newString(value.repeated(int(repeats)));
+}
+
 static void appendReplacementString(QString *result, const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
 {
     result->reserve(result->length() + replaceValue.length());
@@ -634,7 +650,7 @@ void StringPrototype::method_search(const BuiltinFunction *, Scope &scope, CallD
         Q_ASSERT(regExp);
     }
     Scoped<RegExp> re(scope, regExp->value());
-    uint* matchOffsets = (uint*)alloca(regExp->value()->captureCount() * 2 * sizeof(uint));
+    Q_ALLOCA_VAR(uint, matchOffsets, regExp->value()->captureCount() * 2 * sizeof(uint));
     uint result = re->match(string, /*offset*/0, matchOffsets);
     if (result == JSC::Yarr::offsetNoMatch)
         scope.result = Encode(-1);
@@ -705,7 +721,7 @@ void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallDa
     ScopedString s(scope);
     if (re) {
         uint offset = 0;
-        uint* matchOffsets = (uint*)alloca(re->value()->captureCount() * 2 * sizeof(uint));
+        Q_ALLOCA_VAR(uint, matchOffsets, re->value()->captureCount() * 2 * sizeof(uint));
         while (true) {
             Scoped<RegExp> regexp(scope, re->value());
             uint result = regexp->match(text, offset, matchOffsets);

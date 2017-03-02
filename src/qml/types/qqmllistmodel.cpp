@@ -1268,7 +1268,7 @@ void ModelNodeMetaObject::updateValues()
     const int roleCount = m_model->m_listModel->roleCount();
     if (!m_initialized) {
         if (roleCount) {
-            int *changedRoles = reinterpret_cast<int *>(alloca(roleCount * sizeof(int)));
+            Q_ALLOCA_VAR(int, changedRoles, roleCount * sizeof(int));
             for (int i = 0; i < roleCount; ++i)
                 changedRoles[i] = i;
             emitDirectNotifies(changedRoles, roleCount);
@@ -1333,7 +1333,7 @@ void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCo
 
 namespace QV4 {
 
-void ModelObject::put(Managed *m, String *name, const Value &value)
+bool ModelObject::put(Managed *m, String *name, const Value &value)
 {
     ModelObject *that = static_cast<ModelObject*>(m);
 
@@ -1347,6 +1347,7 @@ void ModelObject::put(Managed *m, String *name, const Value &value)
     ModelNodeMetaObject *mo = ModelNodeMetaObject::get(that->object());
     if (mo->initialized())
         mo->emitPropertyNotification(name->toQString().toUtf8());
+    return true;
 }
 
 ReturnedValue ModelObject::get(const Managed *m, String *name, bool *hasProperty)

@@ -1108,10 +1108,9 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
                         continue;
                     }
 
-                    // Try again later and resolve the target alias first.
-                    _objectsWithAliases.append(objectIndex);
                     // restore
                     alias->idIndex = idIndex;
+                    // Try again later and resolve the target alias first.
                     break;
                 }
             }

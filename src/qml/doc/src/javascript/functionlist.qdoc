@@ -182,6 +182,7 @@
     \li lastIndexOf(searchString, position)
     \li localeCompare(that)
     \li match(regexp)
+    \li repeat(count) // ECMAScript 6: Added in Qt 5.9
     \li replace(searchValue, replaceValue)
     \li search(regexp)
     \li slice(start, end)

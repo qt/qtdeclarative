@@ -36,6 +36,7 @@
 #include <QtQml/qqmlprivate.h>
 #include <QtQml/qqmlproperty.h>
 #include <QDebug>
+#include <private/qquickstate_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmllistreference : public QQmlDataTest
@@ -65,6 +66,7 @@ private slots:
     void qmlmetaproperty();
     void engineTypes();
     void variantToList();
+    void listProperty();
 };
 
 class TestType : public QObject
@@ -617,6 +619,28 @@ void tst_qqmllistreference::variantToList()
 
     delete o;
 }
+
+void tst_qqmllistreference::listProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("propertyList.qml"));
+
+    QScopedPointer<QObject> object( component.create() );
+    QVERIFY(object != 0);
+
+    QCOMPARE( object->property("state").toString(), QStringLiteral("MyState2") );
+    QQmlListReference list( object.data(), "states");
+    QCOMPARE( list.count(), 2 );
+
+    QQuickState* state1 = dynamic_cast<QQuickState*>( list.at( 0 ) );
+    QVERIFY(state1 != 0);
+    QCOMPARE( state1->name(), QStringLiteral("MyState1") );
+    QQuickState* state2 = dynamic_cast<QQuickState*>( list.at( 1 ) );
+    QVERIFY(state2 != 0);
+
+    QCOMPARE( state2->name(), QStringLiteral("MyState2") );
+}
+
 
 QTEST_MAIN(tst_qqmllistreference)
 

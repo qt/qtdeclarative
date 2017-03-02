@@ -68,13 +68,13 @@ QT_BEGIN_NAMESPACE
 namespace QSGMultisampleAntialiasing {
     class ImageNode : public QSGDefaultInternalImageNode {
     public:
-        void setAntialiasing(bool) { }
+        void setAntialiasing(bool) override { }
     };
 
 
     class RectangleNode : public QSGDefaultInternalRectangleNode {
     public:
-        void setAntialiasing(bool) { }
+        void setAntialiasing(bool) override { }
     };
 }
 

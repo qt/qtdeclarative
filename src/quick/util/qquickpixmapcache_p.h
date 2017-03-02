@@ -175,7 +175,7 @@ public:
     bool connectDownloadProgress(QObject *, int);
 
     static void purgeCache();
-    static bool isCached(const QUrl &url, const QSize &requestSize);
+    static bool isCached(const QUrl &url, const QSize &requestSize, const QQuickImageProviderOptions &options);
 
     static const QLatin1String itemGrabberScheme;
 

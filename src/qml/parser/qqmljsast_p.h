@@ -1315,9 +1315,17 @@ class QML_PARSER_EXPORT VariableDeclaration: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(VariableDeclaration)
 
-    VariableDeclaration(const QStringRef &n, ExpressionNode *e):
-        name (n), expression (e), readOnly(false)
+    enum VariableScope {
+        FunctionScope,
+        BlockScope, // let
+        ReadOnlyBlockScope // const
+    };
+
+    VariableDeclaration(const QStringRef &n, ExpressionNode *e, VariableScope s):
+        name (n), expression (e), scope(s)
         { kind = K; }
+
+    bool isLexicallyScoped() const { return scope != FunctionScope; }
 
     void accept0(Visitor *visitor) override;
 
@@ -1330,8 +1338,8 @@ public:
 // attributes
     QStringRef name;
     ExpressionNode *expression;
-    bool readOnly;
     SourceLocation identifierToken;
+    VariableScope scope;
 };
 
 class QML_PARSER_EXPORT VariableDeclarationList: public Node
@@ -1363,14 +1371,13 @@ public:
         return declaration->lastSourceLocation();
     }
 
-    inline VariableDeclarationList *finish (bool readOnly)
+    inline VariableDeclarationList *finish(VariableDeclaration::VariableScope s)
     {
         VariableDeclarationList *front = next;
         next = 0;
-        if (readOnly) {
-            VariableDeclarationList *vdl;
-            for (vdl = front; vdl != 0; vdl = vdl->next)
-                vdl->declaration->readOnly = true;
+        VariableDeclarationList *vdl;
+        for (vdl = front; vdl != 0; vdl = vdl->next) {
+            vdl->declaration->scope = s;
         }
         return front;
     }

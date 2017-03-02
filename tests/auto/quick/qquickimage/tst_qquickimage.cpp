@@ -91,6 +91,8 @@ private slots:
     void sourceSizeChanges();
     void correctStatus();
     void highdpi();
+    void highDpiFillModesAndSizes_data();
+    void highDpiFillModesAndSizes();
     void hugeImages();
 
 private:
@@ -969,6 +971,65 @@ void tst_qquickimage::highdpi()
     QCOMPARE(obj->paintedHeight(), 300.0);
 
     delete obj;
+}
+
+void tst_qquickimage::highDpiFillModesAndSizes_data()
+{
+    QTest::addColumn<QQuickImage::FillMode>("fillMode");
+    QTest::addColumn<qreal>("expectedHeightAfterSettingWidthTo100");
+    QTest::addColumn<qreal>("expectedImplicitHeightAfterSettingWidthTo100");
+    QTest::addColumn<qreal>("expectedPaintedWidthAfterSettingWidthTo100");
+    QTest::addColumn<qreal>("expectedPaintedHeightAfterSettingWidthTo100");
+
+    QTest::addRow("Stretch") << QQuickImage::Stretch << 150.0 << 150.0 << 100.0 << 150.0;
+    QTest::addRow("PreserveAspectFit") << QQuickImage::PreserveAspectFit << 100.0 << 100.0 << 100.0 << 100.0;
+    QTest::addRow("PreserveAspectCrop") << QQuickImage::PreserveAspectCrop << 150.0 << 150.0 << 150.0 << 150.0;
+    QTest::addRow("Tile") << QQuickImage::Tile << 150.0 << 150.0 << 100.0 << 150.0;
+    QTest::addRow("TileVertically") << QQuickImage::TileVertically << 150.0 << 150.0 << 100.0 << 150.0;
+    QTest::addRow("TileHorizontally") << QQuickImage::TileHorizontally << 150.0 << 150.0 << 100.0 << 150.0;
+    QTest::addRow("Pad") << QQuickImage::Pad << 150.0 << 150.0 << 150.0 << 150.0;
+}
+
+void tst_qquickimage::highDpiFillModesAndSizes()
+{
+    QFETCH(QQuickImage::FillMode, fillMode);
+    QFETCH(qreal, expectedHeightAfterSettingWidthTo100);
+    QFETCH(qreal, expectedImplicitHeightAfterSettingWidthTo100);
+    QFETCH(qreal, expectedPaintedWidthAfterSettingWidthTo100);
+    QFETCH(qreal, expectedPaintedHeightAfterSettingWidthTo100);
+
+    QString componentStr = "import QtQuick 2.0\nImage { source: srcImage; }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+
+    engine.rootContext()->setContextProperty("srcImage", testFileUrl("heart-highdpi@2x.png"));
+
+    QScopedPointer<QQuickImage> image(qobject_cast<QQuickImage*>(component.create()));
+    QVERIFY(image);
+    QCOMPARE(image->width(), 150.0);
+    QCOMPARE(image->height(), 150.0);
+    QCOMPARE(image->paintedWidth(), 150.0);
+    QCOMPARE(image->paintedHeight(), 150.0);
+    QCOMPARE(image->implicitWidth(), 150.0);
+    QCOMPARE(image->implicitHeight(), 150.0);
+    QCOMPARE(image->paintedWidth(), 150.0);
+    QCOMPARE(image->paintedHeight(), 150.0);
+
+    // The implicit size should not change when setting any fillMode here.
+    image->setFillMode(fillMode);
+    QCOMPARE(image->fillMode(), fillMode);
+    QCOMPARE(image->implicitWidth(), 150.0);
+    QCOMPARE(image->implicitHeight(), 150.0);
+    QCOMPARE(image->paintedWidth(), 150.0);
+    QCOMPARE(image->paintedHeight(), 150.0);
+
+    image->setWidth(100.0);
+    QCOMPARE(image->width(), 100.0);
+    QCOMPARE(image->height(), expectedHeightAfterSettingWidthTo100);
+    QCOMPARE(image->implicitWidth(), 150.0);
+    QCOMPARE(image->implicitHeight(), expectedImplicitHeightAfterSettingWidthTo100);
+    QCOMPARE(image->paintedWidth(), expectedPaintedWidthAfterSettingWidthTo100);
+    QCOMPARE(image->paintedHeight(), expectedPaintedHeightAfterSettingWidthTo100);
 }
 
 void tst_qquickimage::hugeImages()

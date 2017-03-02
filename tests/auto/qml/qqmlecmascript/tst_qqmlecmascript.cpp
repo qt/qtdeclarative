@@ -47,6 +47,7 @@
 #include <private/qv4runtime_p.h>
 #include <private/qv4object_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <private/qv4objectiterator_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -261,6 +262,7 @@ private slots:
     void nonNotifyable();
     void deleteWhileBindingRunning();
     void callQtInvokables();
+    void resolveClashingProperties();
     void invokableObjectArg();
     void invokableObjectRet();
     void invokableEnumRet();
@@ -336,6 +338,8 @@ private slots:
     void instanceof();
     void constkw_data();
     void constkw();
+    void redefineGlobalProp();
+    void freeze_empty_object();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -2987,6 +2991,48 @@ void tst_qqmlecmascript::callQtInvokables()
     QJSValue callback = qvariant_cast<QJSValue>(o->actuals().at(1));
     QVERIFY(!callback.isNull());
     QVERIFY(callback.isCallable());
+}
+
+void tst_qqmlecmascript::resolveClashingProperties()
+{
+    ClashingNames *o = new ClashingNames();
+    QQmlEngine qmlengine;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
+
+    QV4::ExecutionEngine *engine = QV8Engine::getV4(ep->v8engine());
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+    QV4::ObjectIterator it(scope, object->as<QV4::Object>(), QV4::ObjectIterator::EnumerableOnly);
+    QV4::ScopedValue name(scope);
+    QV4::ScopedValue value(scope);
+
+    bool seenProperty = false;
+    bool seenMethod = false;
+    while (true) {
+        QV4::Value v;
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
+            break;
+        QString key = name->toQStringNoThrow();
+        if (key == QLatin1String("clashes")) {
+            value = v;
+            QV4::ScopedValue typeString(scope, QV4::Runtime::method_typeofValue(engine, value));
+            QString type = typeString->toQStringNoThrow();
+            if (type == QLatin1String("boolean")) {
+                QVERIFY(!seenProperty);
+                seenProperty = true;
+            } else if (type == QLatin1String("function")) {
+                QVERIFY(!seenMethod);
+                seenMethod = true;
+            } else {
+                QFAIL(qPrintable(QString::fromLatin1("found 'clashes' property of type %1")
+                                 .arg(type)));
+            }
+        }
+    }
+    QVERIFY(seenProperty);
+    QVERIFY(seenMethod);
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)
@@ -8208,6 +8254,12 @@ void tst_qqmlecmascript::constkw_data()
            "v + i\n"
         << false
         << QVariant(25);
+    QTest::newRow("const-multiple-scopes-same-var")
+        << "const v = 3\n"
+           "function f() { const v = 1; return v; }\n"
+           "v + f()\n"
+        << false
+        << QVariant(4);
 
     // error cases
     QTest::newRow("const-no-initializer")
@@ -8218,6 +8270,35 @@ void tst_qqmlecmascript::constkw_data()
         << "const v = 1, i\n"
         << true
         << QVariant("SyntaxError: Missing initializer in const declaration");
+    QTest::newRow("const-no-duplicate")
+        << "const v = 1, v = 2\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("const-no-duplicate-2")
+        << "const v = 1\n"
+           "const v = 2\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("const-no-duplicate-var")
+        << "const v = 1\n"
+           "var v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("var-no-duplicate-const")
+        << "var v = 1\n"
+           "const v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("const-no-duplicate-let")
+        << "const v = 1\n"
+           "let v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
+    QTest::newRow("let-no-duplicate-const")
+        << "let v = 1\n"
+           "const v = 1\n"
+        << true
+        << QVariant("SyntaxError: Identifier v has already been declared");
 }
 
 void tst_qqmlecmascript::constkw()
@@ -8238,6 +8319,32 @@ void tst_qqmlecmascript::constkw()
     }
 }
 
+// Redefine a property found on the global object. It shouldn't throw.
+void tst_qqmlecmascript::redefineGlobalProp()
+{
+    {
+        QJSEngine engine;
+        QJSValue ret = engine.evaluate("\"use strict\"\n var toString = 1;");
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+    }
+    {
+        QJSEngine engine;
+        QJSValue ret = engine.evaluate("var toString = 1;");
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+    }
+}
+
+void tst_qqmlecmascript::freeze_empty_object()
+{
+    // this shouldn't crash
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "var obj = {};\n"
+            "Object.freeze(obj);\n"
+    ));
+    QVERIFY(!v.isError());
+    QCOMPARE(v.toBool(), true);
+}
 
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -55,11 +55,11 @@ class SmoothColorMaterialShader : public QSGMaterialShader
 public:
     SmoothColorMaterialShader();
 
-    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual char const *const *attributeNames() const;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
 
 private:
-    virtual void initialize();
+    void initialize() override;
 
     int m_matrixLoc;
     int m_opacityLoc;

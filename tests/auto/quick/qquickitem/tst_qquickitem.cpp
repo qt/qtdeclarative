@@ -48,7 +48,8 @@ public:
     TestItem(QQuickItem *parent = 0)
         : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
         , wheelCount(0), acceptIncomingTouchEvents(true)
-        , touchEventReached(false), timestamp(0) {}
+        , touchEventReached(false), timestamp(0)
+        , lastWheelEventPos(0, 0), lastWheelEventGlobalPos(0, 0) {}
 
     bool focused;
     int pressCount;
@@ -57,6 +58,8 @@ public:
     bool acceptIncomingTouchEvents;
     bool touchEventReached;
     ulong timestamp;
+    QPoint lastWheelEventPos;
+    QPoint lastWheelEventGlobalPos;
 protected:
     virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
@@ -66,7 +69,13 @@ protected:
         touchEventReached = true;
         event->setAccepted(acceptIncomingTouchEvents);
     }
-    virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; timestamp = event->timestamp(); }
+    virtual void wheelEvent(QWheelEvent *event) {
+        event->accept();
+        ++wheelCount;
+        timestamp = event->timestamp();
+        lastWheelEventPos = event->pos();
+        lastWheelEventGlobalPos = event->globalPos();
+    }
 };
 
 class TestWindow: public QQuickWindow
@@ -1422,19 +1431,24 @@ void tst_qquickitem::wheelEvent()
 
     const bool shouldReceiveWheelEvents = visible && enabled;
 
+    const int width = 200;
+    const int height = 200;
+
     QQuickWindow window;
-    window.resize(200, 200);
+    window.resize(width, height);
     window.show();
     QTest::qWaitForWindowExposed(&window);
 
     TestItem *item = new TestItem;
-    item->setSize(QSizeF(200, 100));
+    item->setSize(QSizeF(width, height));
     item->setParentItem(window.contentItem());
 
     item->setEnabled(enabled);
     item->setVisible(visible);
 
-    QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
+    QPoint localPoint(width / 2, height / 2);
+    QPoint globalPoint = window.mapToGlobal(localPoint);
+    QWheelEvent event(localPoint, globalPoint, -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
     event.setTimestamp(123456UL);
     event.setAccepted(false);
     QGuiApplication::sendEvent(&window, &event);
@@ -1443,6 +1457,8 @@ void tst_qquickitem::wheelEvent()
         QVERIFY(event.isAccepted());
         QCOMPARE(item->wheelCount, 1);
         QCOMPARE(item->timestamp, 123456UL);
+        QCOMPARE(item->lastWheelEventPos, localPoint);
+        QCOMPARE(item->lastWheelEventGlobalPos, globalPoint);
     } else {
         QVERIFY(!event.isAccepted());
         QCOMPARE(item->wheelCount, 0);

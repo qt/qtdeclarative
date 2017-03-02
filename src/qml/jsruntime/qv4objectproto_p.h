@@ -81,6 +81,7 @@ struct ObjectPrototype: Object
     static void method_getPrototypeOf(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_getOwnPropertyDescriptor(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_getOwnPropertyNames(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static void method_assign(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_create(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_defineProperty(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_defineProperties(const BuiltinFunction *, Scope &scope, CallData *callData);

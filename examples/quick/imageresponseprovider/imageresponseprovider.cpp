@@ -51,37 +51,37 @@ class AsyncImageResponse : public QQuickImageResponse, public QRunnable
 {
     public:
         AsyncImageResponse(const QString &id, const QSize &requestedSize)
-         : m_id(id), m_requestedSize(requestedSize), m_texture(0)
+         : m_id(id), m_requestedSize(requestedSize)
         {
             setAutoDelete(false);
         }
 
         QQuickTextureFactory *textureFactory() const
         {
-            return m_texture;
+            return QQuickTextureFactory::textureFactoryForImage(m_image);
         }
 
         void run()
         {
-            QImage image(50, 50, QImage::Format_RGB32);
+            m_image = QImage(50, 50, QImage::Format_RGB32);
             if (m_id == "slow") {
                 qDebug() << "Slow, red, sleeping for 5 seconds";
                 QThread::sleep(5);
-                image.fill(Qt::red);
+                m_image.fill(Qt::red);
             } else {
                 qDebug() << "Fast, blue, sleeping for 1 second";
                 QThread::sleep(1);
-                image.fill(Qt::blue);
+                m_image.fill(Qt::blue);
             }
             if (m_requestedSize.isValid())
-                image = image.scaled(m_requestedSize);
-            m_texture = QQuickTextureFactory::textureFactoryForImage(image);
+                m_image = m_image.scaled(m_requestedSize);
+
             emit finished();
         }
 
         QString m_id;
         QSize m_requestedSize;
-        QQuickTextureFactory *m_texture;
+        QImage m_image;
 };
 
 class AsyncImageProvider : public QQuickAsyncImageProvider

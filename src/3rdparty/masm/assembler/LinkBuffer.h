@@ -505,7 +505,7 @@ public:
 };
 #endif
 
-#if CPU(ARM64)
+#if CPU(ARM64) || defined(V4_BOOTSTRAP)
 template <>
 class LinkBuffer<JSC::MacroAssembler<MacroAssemblerARM64>> : public BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARM64>>
 {

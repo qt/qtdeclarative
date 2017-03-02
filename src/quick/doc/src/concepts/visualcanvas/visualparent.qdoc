@@ -125,7 +125,7 @@ the blue rectangle and beneath any of the blue rectangle's children.
 
 Stacking order can be influenced with the \l Item::z property. Z values below 0 will stack below the parent, and if z
 values are assigned then siblings will stack in z-order (with creation order used to break ties). Z values only affect
-stacking compared to siblings and the parent item. If you have an item who is obscured by a subtree rooted above its
+stacking compared to siblings and the parent item. If you have an item which is obscured by a subtree rooted above its
 parent item, no z value on that item will increase its stacking order to stack above that subtree. To stack that item
 above the other subtree you'll have to alter z values farther up in the hierarchy, or re-arrange the visual item
 hierarchy.

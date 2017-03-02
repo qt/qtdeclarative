@@ -55,71 +55,48 @@ static inline DWORD protection(bool writable, bool executable)
 
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool writable, bool executable)
 {
+    void *result = VirtualAllocFromApp(0, bytes, MEM_RESERVE, protection(writable, executable));
+    return result;
+}
+
+void* OSAllocator::reserveAndCommit(size_t bytes, Usage, bool writable, bool executable, bool includesGuardPages)
+{
     void *result;
-    if (qt_winrt_use_jit) {
-        result = VirtualAllocFromApp(0, bytes, MEM_RESERVE, protection(writable, executable));
-        if (!result) {
-            qt_winrt_use_jit = false;
-            return reserveUncommitted(bytes, UnknownUsage, writable, executable);
-        }
-    } else {
-        static const size_t pageSize = getPageSize();
-        result = _aligned_malloc(bytes, pageSize);
-        if (!result)
+    result = VirtualAllocFromApp(0, bytes, MEM_RESERVE | MEM_COMMIT,
+                                 protection(writable, executable));
+
+    if (includesGuardPages && qt_winrt_use_jit) {
+        size_t guardSize = pageSize();
+        DWORD oldProtect;
+        if (!VirtualProtectFromApp(result, guardSize, protection(false, false), &oldProtect) ||
+            !VirtualProtectFromApp(static_cast<char*>(result) + bytes - guardSize, guardSize,
+                                   protection(false, false), &oldProtect)) {
             CRASH();
-        memset(result, 0, bytes);
+        }
     }
     return result;
 }
 
-void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bool executable, bool includesGuardPages)
+void OSAllocator::commit(void *bytes, size_t size, bool writable, bool executable)
 {
-    void *result;
-    if (qt_winrt_use_jit) {
-        result = VirtualAllocFromApp(0, bytes, MEM_RESERVE | MEM_COMMIT,
-                                           protection(writable, executable));
-        if (!result) {
-            qt_winrt_use_jit = false;
-            return reserveAndCommit(bytes, usage, writable, executable, includesGuardPages);
-        }
-
-        if (includesGuardPages) {
-            size_t guardSize = pageSize();
-            DWORD oldProtect;
-            if (!VirtualProtectFromApp(result, guardSize, protection(false, false), &oldProtect) ||
-                !VirtualProtectFromApp(static_cast<char*>(result) + bytes - guardSize, guardSize,
-                                       protection(false, false), &oldProtect)) {
-                CRASH();
-            }
-        }
-    } else {
-        result = reserveUncommitted(bytes, usage, writable, executable);
-    }
-    return result;
+    void *result = VirtualAllocFromApp(bytes, size, MEM_COMMIT,
+                                       protection(writable, executable));
+    if (!result)
+        CRASH();
 }
 
-void OSAllocator::commit(void*, size_t, bool, bool)
+void OSAllocator::decommit(void* address, size_t bytes)
 {
-    CRASH(); // Unimplemented
+    bool result = VirtualFree(address, bytes, MEM_DECOMMIT);
+    if (!result)
+        CRASH();
 }
 
-void OSAllocator::decommit(void* address, size_t)
+void OSAllocator::releaseDecommitted(void* address, size_t)
 {
-    if (qt_winrt_use_jit)
-        Q_UNREACHABLE();
-    else
-        _aligned_free(address);
-}
-
-void OSAllocator::releaseDecommitted(void* address, size_t bytes)
-{
-    if (qt_winrt_use_jit) {
-        bool result = VirtualFree(address, 0, MEM_RELEASE);
-        if (!result)
-            CRASH();
-    } else {
-        decommit(address, bytes);
-    }
+    bool result = VirtualFree(address, 0, MEM_RELEASE);
+    if (!result)
+        CRASH();
 }
 
 bool OSAllocator::canAllocateExecutableMemory()
