@@ -1,12 +1,26 @@
 qtPrepareTool(QML_CACHEGEN, qmlcachegen)
 
+isEmpty(TARGETPATH): error("Must set TARGETPATH (QML import name) for ahead-of-time QML cache generation")
+
 !isEmpty(QT_TARGET_ARCH):QML_CACHEGEN_ARCH=$$QT_TARGET_ARCH
 else:QML_CACHEGEN_ARCH=$$QT_ARCH
 
-qmlcachegen.input = QML_FILES
-qmlcachegen.output = ${QMAKE_FILE_IN}c
-qmlcachegen.commands = $$QML_CACHEGEN --target-architecture=$$QML_CACHEGEN_ARCH ${QMAKE_FILE_IN}
+CACHEGEN_FILES=
+for(qmlf, QML_FILES) {
+    contains(qmlf,.*\\.js$)|contains(qmlf,.*\\.qml$) {
+        CACHEGEN_FILES += $$qmlf
+    }
+}
+
+qmlcachegen.input = CACHEGEN_FILES
+prefix_build {
+    qmlcachegen.output = ${QMAKE_FILE_IN}c
+} else {
+    qmlcachegen.output = $$[QT_INSTALL_QML]/$$TARGETPATH/${QMAKE_FILE_IN}c
+    qmlcachegen.CONFIG = no_link target_predeps
+}
+qmlcachegen.commands = $$QML_CACHEGEN --target-architecture=$$QML_CACHEGEN_ARCH -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 qmlcachegen.name = Generate QML Cache ${QMAKE_FILE_IN}
-qmlcachegen.variable_out = AUX_QML_FILES
+qmlcachegen.variable_out = GENERATED_FILES
 
 QMAKE_EXTRA_COMPILERS += qmlcachegen
