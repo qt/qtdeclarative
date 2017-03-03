@@ -274,10 +274,31 @@ int main(int argc, char **argv)
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
+    QCommandLineOption checkIfSupportedOption(QStringLiteral("check-if-supported"), QCoreApplication::translate("main", "Check if cache generate is supported on the specified target architecture"));
+    parser.addOption(checkIfSupportedOption);
+
     parser.addPositionalArgument(QStringLiteral("[qml file]"),
             QStringLiteral("QML source file to generate cache for."));
 
     parser.process(app);
+
+    if (!parser.isSet(targetArchitectureOption)) {
+        fprintf(stderr, "Target architecture not specified. Please specify with --target-architecture=<arch>\n");
+        parser.showHelp();
+        return EXIT_FAILURE;
+    }
+
+    QScopedPointer<QV4::EvalISelFactory> isel;
+    const QString targetArchitecture = parser.value(targetArchitectureOption);
+
+    isel.reset(QV4::JIT::createISelForArchitecture(targetArchitecture));
+
+    if (parser.isSet(checkIfSupportedOption)) {
+        if (isel.isNull())
+            return EXIT_FAILURE;
+        else
+            return EXIT_SUCCESS;
+    }
 
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
@@ -287,11 +308,6 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     const QString inputFile = sources.first();
-
-    QScopedPointer<QV4::EvalISelFactory> isel;
-    const QString targetArchitecture = parser.value(targetArchitectureOption);
-
-    isel.reset(QV4::JIT::createISelForArchitecture(targetArchitecture));
 
     if (!isel)
         isel.reset(new QV4::Moth::ISelFactory);
