@@ -97,5 +97,14 @@ T.RangeSlider {
         scale: horizontal && control.mirrored ? -1 : 1
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
+
+        Rectangle {
+            x: parent.horizontal ? control.first.position * parent.width + 3 : 0
+            y: parent.horizontal ? 0 : control.second.visualPosition * parent.height + 3
+            width: parent.horizontal ? control.second.position * parent.width - control.first.position * parent.width - 6 : 6
+            height: parent.horizontal ? 6 : control.second.position * parent.height - control.first.position * parent.height - 6
+
+            color: Default.textColor
+        }
     }
 }
