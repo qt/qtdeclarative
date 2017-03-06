@@ -876,6 +876,7 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
     return 0;
 }
 
+#if QT_CONFIG(library)
 /*!
     Returns the list of possible versioned URI combinations. For example, if \a uri is
     QtQml.Models, \a vmaj is 2, and \a vmin is 0, this method returns the following:
@@ -897,7 +898,6 @@ static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
     return result;
 }
 
-#if QT_CONFIG(library)
 /*!
     Get all static plugins that are QML plugins and has a meta data URI that matches with one of
     \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
