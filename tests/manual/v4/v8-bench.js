@@ -3645,6 +3645,7 @@ Flog.RayTracer.Vector.prototype = {
     },
 
     magnitude : function() {
+        // return Math.hypot(this.x, this.y, this.z); but keep results Qt5-comparable:
         return Math.sqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
     },
 

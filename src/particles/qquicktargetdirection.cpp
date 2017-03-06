@@ -123,7 +123,7 @@ QPointF QQuickTargetDirection::sample(const QPointF &from)
     qreal theta = std::atan2(targetY, targetX);
     qreal mag = m_magnitude + QRandomGenerator::global()->generateDouble() * m_magnitudeVariation * 2 - m_magnitudeVariation;
     if (m_proportionalMagnitude)
-        mag *= std::sqrt(targetX * targetX + targetY * targetY);
+        mag *= qHypot(targetX, targetY);
     ret.setX(mag * std::cos(theta));
     ret.setY(mag * std::sin(theta));
     return ret;
