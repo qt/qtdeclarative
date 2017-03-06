@@ -109,7 +109,7 @@ void tst_toolsupport::offsets_data()
             = QTest::newRow("CompiledData::CompilationUnit::runtimeStrings")
             << pmm_to_offsetof(&QV4::CompiledData::CompilationUnit::runtimeStrings);
 
-        data << 16 << 32;
+        data << 12 << 24;
     }
 
     {

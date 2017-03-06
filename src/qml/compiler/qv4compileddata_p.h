@@ -816,13 +816,11 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     // Called only when building QML, when we build the header for JS first and append QML data
     virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
 
-#ifndef V4_BOOTSTRAP
-    ExecutionEngine *engine;
-#endif
-
     QV4::Heap::String **runtimeStrings; // Array
 
 #ifndef V4_BOOTSTRAP
+    ExecutionEngine *engine;
+
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
 

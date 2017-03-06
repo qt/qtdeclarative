@@ -42,6 +42,7 @@
 #include "qqmldebugserviceinterfaces_p.h"
 
 #include <private/qqmlengine_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -181,12 +182,12 @@ bool QQmlDebuggingEnabler::startDebugConnector(const QString &pluginName,
     return connector ? connector->open(configuration) : false;
 }
 
-enum { HookCount = 3 };
+enum { HookCount = 4 };
 
 // Only add to the end, and bump version if you do.
 quintptr Q_QML_EXPORT qtDeclarativeHookData[] = {
     // Version of this Array. Bump if you add to end.
-    1,
+    2,
 
     // Number of entries in this array.
     HookCount,
@@ -194,7 +195,10 @@ quintptr Q_QML_EXPORT qtDeclarativeHookData[] = {
     // TypeInformationVersion, an integral value, bumped whenever private
     // object sizes or member offsets that are used in Qt Creator's
     // data structure "pretty printing" change.
-    2
+    3,
+
+    // Version of the cache data.
+    QV4_DATA_STRUCTURE_VERSION
 };
 
 Q_STATIC_ASSERT(HookCount == sizeof(qtDeclarativeHookData) / sizeof(qtDeclarativeHookData[0]));
