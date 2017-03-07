@@ -3399,6 +3399,11 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
     The specified FBO must be created in the context of the window
     or one that shares with it.
 
+    \note \a fboId can also be set to 0. In this case rendering will target the
+    default framebuffer of whichever surface is current when the scenegraph
+    renders. \a size must still be valid, specifying the dimensions of the
+    surface.
+
     \note
     This function only has an effect when using the default OpenGL scene
     graph adaptation.
