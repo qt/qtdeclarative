@@ -28,7 +28,9 @@
 
 import QtQuick 2.8
 import QtQuick.Window 2.2
+import Qt.labs.handlers 1.0
 import "qrc:/quick/shared/" as Examples
+import "content"
 
 Window {
     width: 800
@@ -52,5 +54,19 @@ Window {
             addExample("multibuttons", "TapHandler: gesturePolicy (99 red balloons)", Qt.resolvedUrl("multibuttons.qml"))
             addExample("flickable with Handlers", "Flickable with buttons, sliders etc. implemented in various ways", Qt.resolvedUrl("flickableWithHandlers.qml"))
         }
+    }
+    Item {
+        id: glassPane
+        objectName: "glassPane"
+        z: 10000
+        anchors.fill: parent
+
+        // TODO use Instantiator to create these... but we need to be able to set their parents to glassPane somehow (QTBUG-64546)
+        TouchpointFeedbackSprite { }
+        TouchpointFeedbackSprite { }
+        TouchpointFeedbackSprite { }
+        TouchpointFeedbackSprite { }
+        TouchpointFeedbackSprite { }
+        TouchpointFeedbackSprite { }
     }
 }

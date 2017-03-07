@@ -22,9 +22,11 @@
         <file>content/ScrollBar.qml</file>
         <file>content/Slider.qml</file>
         <file>content/TapHandlerButton.qml</file>
+        <file>content/TouchpointFeedbackSprite.qml</file>
         <file>resources/arrowhead.png</file>
         <file>resources/balloon.png</file>
         <file>resources/fighter.png</file>
+        <file>resources/fingersprite.png</file>
         <file>resources/grabbing-location.svg</file>
         <file>resources/joystick-outer-case-pov.jpg</file>
         <file>resources/map.svgz</file>
