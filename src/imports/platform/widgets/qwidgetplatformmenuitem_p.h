@@ -81,6 +81,7 @@ public:
     void setIconSize(int size) override;
 
 private:
+    quintptr m_tag;
     QScopedPointer<QAction> m_action;
 };
 

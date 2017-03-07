@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformMenu::QWidgetPlatformMenu(QObject *parent)
-    : m_menu(new QMenu)
+    : m_tag(reinterpret_cast<quintptr>(this)), m_menu(new QMenu)
 {
     setParent(parent);
 
@@ -69,6 +69,10 @@ void QWidgetPlatformMenu::insertMenuItem(QPlatformMenuItem *item, QPlatformMenuI
 
     QWidgetPlatformMenuItem *widgetBefore = qobject_cast<QWidgetPlatformMenuItem *>(before);
     m_menu->insertAction(widgetBefore ? widgetBefore->action() : nullptr, widgetItem->action());
+    int index = m_items.indexOf(widgetBefore);
+    if (index < 0)
+        index = m_items.count();
+    m_items.insert(index, widgetItem);
 }
 
 void QWidgetPlatformMenu::removeMenuItem(QPlatformMenuItem *item)
@@ -77,6 +81,7 @@ void QWidgetPlatformMenu::removeMenuItem(QPlatformMenuItem *item)
     if (!widgetItem)
         return;
 
+    m_items.removeOne(widgetItem);
     m_menu->removeAction(widgetItem->action());
 }
 
@@ -87,17 +92,17 @@ void QWidgetPlatformMenu::syncMenuItem(QPlatformMenuItem *item)
 
 void QWidgetPlatformMenu::syncSeparatorsCollapsible(bool enable)
 {
-    Q_UNUSED(enable);
+    m_menu->setSeparatorsCollapsible(enable);
 }
 
 quintptr QWidgetPlatformMenu::tag() const
 {
-    return 0;
+    return m_tag;
 }
 
 void QWidgetPlatformMenu::setTag(quintptr tag)
 {
-    Q_UNUSED(tag);
+    m_tag = tag;
 }
 
 void QWidgetPlatformMenu::setText(const QString &text)
@@ -163,24 +168,26 @@ void QWidgetPlatformMenu::dismiss()
 
 QPlatformMenuItem *QWidgetPlatformMenu::menuItemAt(int position) const
 {
-    Q_UNUSED(position);
-    return nullptr;
+    return m_items.value(position);
 }
 
 QPlatformMenuItem *QWidgetPlatformMenu::menuItemForTag(quintptr tag) const
 {
-    Q_UNUSED(tag);
+    for (QWidgetPlatformMenuItem *item : m_items) {
+        if (item->tag() == tag)
+            return item;
+    }
     return nullptr;
 }
 
 QPlatformMenuItem *QWidgetPlatformMenu::createMenuItem() const
 {
-    return nullptr;
+    return new QWidgetPlatformMenuItem;
 }
 
 QPlatformMenu *QWidgetPlatformMenu::createSubMenu() const
 {
-    return nullptr;
+    return new QWidgetPlatformMenu;
 }
 
 QT_END_NAMESPACE

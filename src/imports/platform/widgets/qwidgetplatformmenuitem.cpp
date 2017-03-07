@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qwidgetplatformmenuitem_p.h"
+#include "qwidgetplatformmenu_p.h"
 
 #include <QtWidgets/qmenu.h>
 #include <QtWidgets/qaction.h>
@@ -42,7 +43,7 @@
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformMenuItem::QWidgetPlatformMenuItem(QObject *parent)
-    : m_action(new QAction)
+    : m_tag(reinterpret_cast<quintptr>(this)), m_action(new QAction)
 {
     setParent(parent);
     connect(m_action.data(), &QAction::hovered, this, &QPlatformMenuItem::hovered);
@@ -60,12 +61,12 @@ QAction *QWidgetPlatformMenuItem::action() const
 
 quintptr QWidgetPlatformMenuItem::tag() const
 {
-    return 0;
+    return m_tag;
 }
 
 void QWidgetPlatformMenuItem::setTag(quintptr tag)
 {
-    Q_UNUSED(tag);
+    m_tag = tag;
 }
 
 void QWidgetPlatformMenuItem::setText(const QString &text)
@@ -80,7 +81,8 @@ void QWidgetPlatformMenuItem::setIcon(const QIcon &icon)
 
 void QWidgetPlatformMenuItem::setMenu(QPlatformMenu *menu)
 {
-    m_action->setMenu(qobject_cast<QMenu *>(menu));
+    QWidgetPlatformMenu *widgetMenu = qobject_cast<QWidgetPlatformMenu *>(menu);
+    m_action->setMenu(widgetMenu ? widgetMenu->menu() : nullptr);
 }
 
 void QWidgetPlatformMenuItem::setVisible(bool visible)
