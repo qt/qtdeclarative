@@ -17,22 +17,36 @@ QML_CACHEGEN_ARGS=--target-architecture=$$QML_CACHEGEN_ARCH
     return()
 }
 
+load(qt_build_paths)
+
+prefix_build: QMLCACHE_DESTDIR = $$MODULE_BASE_OUTDIR/qml/$$TARGETPATH
+else: QMLCACHE_DESTDIR = $$[QT_INSTALL_QML]/$$TARGETPATH
+
 CACHEGEN_FILES=
+qmlcacheinst.files =
 for(qmlf, QML_FILES) {
     contains(qmlf,.*\\.js$)|contains(qmlf,.*\\.qml$) {
-        CACHEGEN_FILES += $$qmlf
+        CACHEGEN_FILES += $$absolute_path($$qmlf, $$_PRO_FILE_PWD_)
+        qmlcacheinst.files += $$QMLCACHE_DESTDIR/$$relative_path($$qmlf, $$_PRO_FILE_PWD_)c
     }
 }
 
-qmlcachegen.input = CACHEGEN_FILES
-prefix_build {
-    qmlcachegen.output = ${QMAKE_FILE_IN}c
-} else {
-    qmlcachegen.output = $$[QT_INSTALL_QML]/$$TARGETPATH/${QMAKE_FILE_IN}c
-    qmlcachegen.CONFIG = no_link target_predeps
+defineReplace(qmlCacheOutputFileName) {
+    return($$relative_path($$QMLCACHE_DESTDIR/$$relative_path($$1, $$_PRO_FILE_PWD_)c, $$OUT_PWD))
 }
+
+qmlcacheinst.base = $$QMLCACHE_DESTDIR
+qmlcacheinst.path = $$[QT_INSTALL_QML]/$$TARGETPATH
+qmlcacheinst.CONFIG = no_check_exist
+
+qmlcachegen.input = CACHEGEN_FILES
+qmlcachegen.output = ${QMAKE_FUNC_FILE_IN_qmlCacheOutputFileName}
+qmlcachegen.CONFIG = no_link target_predeps
 qmlcachegen.commands = $$QML_CACHEGEN $$QML_CACHEGEN_ARGS -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 qmlcachegen.name = Generate QML Cache ${QMAKE_FILE_IN}
 qmlcachegen.variable_out = GENERATED_FILES
 
-QMAKE_EXTRA_COMPILERS += qmlcachegen
+!debug_and_release|!build_all|CONFIG(release, debug|release) {
+    QMAKE_EXTRA_COMPILERS += qmlcachegen
+    INSTALLS += qmlcacheinst
+}
