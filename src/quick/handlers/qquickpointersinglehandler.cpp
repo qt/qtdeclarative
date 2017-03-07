@@ -148,15 +148,17 @@ bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
 
 void QQuickPointerSingleHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
     if (grabber != this)
         return;
     switch (stateChange) {
     case QQuickEventPoint::GrabExclusive:
+        m_sceneGrabPos = point->sceneGrabPos();
         setActive(true);
-        Q_FALLTHROUGH();
+        QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
+        break;
     case QQuickEventPoint::GrabPassive:
         m_sceneGrabPos = point->sceneGrabPos();
+        QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
         break;
     case QQuickEventPoint::OverrideGrabPassive:
         return; // don't emit
@@ -165,6 +167,7 @@ void QQuickPointerSingleHandler::onGrabChanged(QQuickPointerHandler *grabber, QQ
     case QQuickEventPoint::CancelGrabPassive:
     case QQuickEventPoint::CancelGrabExclusive:
         // the grab is lost or relinquished, so the point is no longer relevant
+        QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
         reset();
         break;
     }

@@ -650,6 +650,10 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
     if (exclusive) {
         if (grabber != m_exclusiveGrabber.data()) {
             if (grabber) {
+                // set variables before notifying the new grabber
+                m_exclusiveGrabber = QPointer<QObject>(grabber);
+                m_grabberIsHandler = true;
+                m_sceneGrabPos = m_scenePos;
                 grabber->onGrabChanged(grabber, GrabExclusive, this);
                 for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers) {
                     if (passiveGrabber != grabber)
@@ -664,7 +668,7 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
                 if (pointerEvent()->asPointerTouchEvent())
                     oldGrabberItem->touchUngrabEvent();
             }
-
+            // set variables after notifying the old grabber
             m_exclusiveGrabber = QPointer<QObject>(grabber);
             m_grabberIsHandler = true;
             m_sceneGrabPos = m_scenePos;
@@ -943,8 +947,9 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
             point->setGrabberItem(nullptr);
             point->clearPassiveGrabbers();
         } else {
-            point->setExclusiveGrabber(grabbers.at(i));
-            point->setPassiveGrabbers(passiveGrabberses.at(i));
+            // Restore the grabbers without notifying (don't call onGrabChanged)
+            point->m_exclusiveGrabber = grabbers.at(i);
+            point->m_passiveGrabbers = passiveGrabberses.at(i);
         }
     }
     m_pointCount = newPointCount;

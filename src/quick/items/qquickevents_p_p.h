@@ -370,6 +370,8 @@ private:
     QSizeF m_ellipseDiameters;
     QPointingDeviceUniqueId m_uniqueId;
 
+    friend class QQuickPointerTouchEvent;
+
     Q_DISABLE_COPY(QQuickEventTouchPoint)
 };
 
