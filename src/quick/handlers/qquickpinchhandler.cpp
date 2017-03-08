@@ -214,7 +214,6 @@ void QQuickPinchHandler::onActiveChanged()
             m_activeRotation = 0;
             m_activeTranslation = QPointF(0,0);
             qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
-            grabPoints(m_currentPoints);
         }
     } else {
         qCInfo(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
@@ -224,16 +223,23 @@ void QQuickPinchHandler::onActiveChanged()
 void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     Q_UNUSED(event)
-    // TODO wait for the drag threshold before setting active
-    // but the old behavior was that whenever we "want" all the points, we're active
-    // so that behavior is retained here temporarily
-    setActive(m_currentPoints.count() > 0 && m_currentPoints.at(0)->state() != QQuickEventPoint::Released);
-
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
         for (QQuickEventPoint *point : qAsConst(m_currentPoints))
             qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPos() << "->" << point->scenePos();
     }
 
+    if (!active()) {
+        // Verify that least one of the points have moved beyond threshold needed to activate the handler
+        for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
+            if (QQuickWindowPrivate::dragOverThreshold(point)) {
+                grabPoints(m_currentPoints);
+                setActive(true);
+                break;
+            }
+        }
+        if (!active())
+            return;
+    }
     // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
     m_centroid = touchPointCentroid();
     QRectF bounds(m_minimumX, m_minimumY, m_maximumX, m_maximumY);
