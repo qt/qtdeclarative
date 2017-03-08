@@ -1337,10 +1337,12 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
         d->hidePopup(false);
         setPressed(false);
         break;
+#if QT_CONFIG(im)
     case QEvent::InputMethod:
         if (d->extra.isAllocated())
             d->extra->allowComplete = !static_cast<QInputMethodEvent*>(event)->commitString().isEmpty();
         break;
+#endif
     default:
         break;
     }
@@ -1363,6 +1365,7 @@ void QQuickComboBox::focusOutEvent(QFocusEvent *event)
     setPressed(false);
 }
 
+#if QT_CONFIG(im)
 void QQuickComboBox::inputMethodEvent(QInputMethodEvent *event)
 {
     Q_D(QQuickComboBox);
@@ -1372,6 +1375,7 @@ void QQuickComboBox::inputMethodEvent(QInputMethodEvent *event)
     else
         event->ignore();
 }
+#endif
 
 void QQuickComboBox::keyPressEvent(QKeyEvent *event)
 {

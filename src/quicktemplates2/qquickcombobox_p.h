@@ -178,7 +178,9 @@ protected:
     bool eventFilter(QObject *object, QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+#if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *event) override;
+#endif
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
