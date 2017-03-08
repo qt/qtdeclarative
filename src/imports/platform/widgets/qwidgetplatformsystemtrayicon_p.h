@@ -50,6 +50,8 @@
 
 #include <QtGui/qpa/qplatformsystemtrayicon.h>
 
+QT_REQUIRE_CONFIG(systemtrayicon);
+
 QT_BEGIN_NAMESPACE
 
 class QSystemTrayIcon;

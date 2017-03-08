@@ -38,7 +38,6 @@
 #include "qquickplatformmenubar_p.h"
 #include "qquickplatformmenuitem_p.h"
 #include "qquickplatformiconloader_p.h"
-#include "qquickplatformsystemtrayicon_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qicon.h>
@@ -53,6 +52,10 @@
 #include <QtQuick/qquickitem.h>
 
 #include "widgets/qwidgetplatform_p.h"
+
+#if QT_CONFIG(systemtrayicon)
+#include "qquickplatformsystemtrayicon_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -173,8 +176,10 @@ QPlatformMenu * QQuickPlatformMenu::create()
             m_handle = m_menuBar->handle()->createMenu();
         else if (m_parentMenu && m_parentMenu->handle())
             m_handle = m_parentMenu->handle()->createSubMenu();
+#if QT_CONFIG(systemtrayicon)
         else if (m_systemTrayIcon && m_systemTrayIcon->handle())
             m_handle = m_systemTrayIcon->handle()->createMenu();
+#endif
 
         // TODO: implement ^
         // - QCocoaMenuBar::createMenu()
@@ -227,8 +232,10 @@ void QQuickPlatformMenu::sync()
 
     if (m_menuBar && m_menuBar->handle())
         m_menuBar->handle()->syncMenu(m_handle);
+#if QT_CONFIG(systemtrayicon)
     else if (m_systemTrayIcon && m_systemTrayIcon->handle())
         m_systemTrayIcon->handle()->updateMenu(m_handle);
+#endif
 
     for (QQuickPlatformMenuItem *item : m_items)
         item->sync();

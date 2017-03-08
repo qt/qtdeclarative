@@ -11,8 +11,7 @@ HEADERS += \
     $$PWD/qquickplatformmenuitemgroup_p.h \
     $$PWD/qquickplatformmenuseparator_p.h \
     $$PWD/qquickplatformmessagedialog_p.h \
-    $$PWD/qquickplatformstandardpaths_p.h \
-    $$PWD/qquickplatformsystemtrayicon_p.h
+    $$PWD/qquickplatformstandardpaths_p.h
 
 SOURCES += \
     $$PWD/qquickplatformcolordialog.cpp \
@@ -27,5 +26,12 @@ SOURCES += \
     $$PWD/qquickplatformmenuitemgroup.cpp \
     $$PWD/qquickplatformmenuseparator.cpp \
     $$PWD/qquickplatformmessagedialog.cpp \
-    $$PWD/qquickplatformstandardpaths.cpp \
-    $$PWD/qquickplatformsystemtrayicon.cpp
+    $$PWD/qquickplatformstandardpaths.cpp
+
+
+qtConfig(systemtrayicon) {
+    HEADERS += \
+        $$PWD/qquickplatformsystemtrayicon_p.h
+    SOURCES += \
+        $$PWD/qquickplatformsystemtrayicon.cpp
+}

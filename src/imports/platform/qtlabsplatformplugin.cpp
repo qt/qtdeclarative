@@ -52,8 +52,9 @@
 #include "qquickplatformmenuseparator_p.h"
 
 #include "qquickplatformstandardpaths_p.h"
-
-#include "qquickplatformsystemtrayicon_p.h"
+#if QT_CONFIG(systemtrayicon)
+# include "qquickplatformsystemtrayicon_p.h"
+#endif
 
 Q_DECLARE_METATYPE(QStandardPaths::StandardLocation)
 Q_DECLARE_METATYPE(QStandardPaths::LocateOptions)
@@ -107,7 +108,9 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qRegisterMetaType<QStandardPaths::StandardLocation>();
     qRegisterMetaType<QStandardPaths::LocateOptions>();
 
+#if QT_CONFIG(systemtrayicon)
     qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
+#endif
 }
 
 QT_END_NAMESPACE
