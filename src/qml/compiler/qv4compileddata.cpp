@@ -361,7 +361,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
     QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
-    if (sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+    if (data->sourceFileIndex != 0 && sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
         *errorString = QStringLiteral("QML source file has moved to a different location.");
         return false;
     }
@@ -409,12 +409,12 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 {
     errorString->clear();
 
+#if !defined(V4_BOOTSTRAP)
     if (data->sourceTimeStamp == 0) {
         *errorString = QStringLiteral("Missing time stamp for source file");
         return false;
     }
 
-#if !defined(V4_BOOTSTRAP)
     if (!QQmlFile::isLocalFile(unitUrl)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;

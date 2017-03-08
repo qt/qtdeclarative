@@ -96,7 +96,6 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
             error->message = QLatin1String("Error reading from ") + inputFileName + QLatin1Char(':') + f.errorString();
             return false;
         }
-        irDocument.jsModule.sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
     }
 
     {
@@ -177,7 +176,6 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
             error->message = QLatin1String("Error reading from ") + inputFileName + QLatin1Char(':') + f.errorString();
             return false;
         }
-        irDocument.jsModule.sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
     }
 
     QQmlJS::Engine *engine = &irDocument.jsParserEngine;

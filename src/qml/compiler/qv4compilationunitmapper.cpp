@@ -76,7 +76,7 @@ bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, const
         return false;
     }
 
-    {
+    if (header->sourceTimeStamp) {
         QFileInfo sourceCode(sourcePath);
         QDateTime sourceTimeStamp;
         if (sourceCode.exists())
