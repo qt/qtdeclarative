@@ -115,10 +115,12 @@ void QWidgetPlatformMenuItem::setChecked(bool checked)
     m_action->setChecked(checked);
 }
 
+#if QT_CONFIG(shortcut)
 void QWidgetPlatformMenuItem::setShortcut(const QKeySequence &shortcut)
 {
     m_action->setShortcut(shortcut);
 }
+#endif
 
 void QWidgetPlatformMenuItem::setEnabled(bool enabled)
 {

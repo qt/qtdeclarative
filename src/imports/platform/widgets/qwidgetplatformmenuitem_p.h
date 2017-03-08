@@ -76,7 +76,9 @@ public:
     void setRole(MenuRole role) override;
     void setCheckable(bool checkable) override;
     void setChecked(bool checked) override;
+#if QT_CONFIG(shortcut)
     void setShortcut(const QKeySequence& shortcut) override;
+#endif
     void setEnabled(bool enabled) override;
     void setIconSize(int size) override;
 
