@@ -1158,8 +1158,10 @@ void QQuickComboBox::setValidator(QValidator *validator)
         return;
 
     d->extra.value().validator = validator;
+#if QT_CONFIG(validator)
     if (validator)
         validator->setLocale(d->locale);
+#endif
     emit validatorChanged();
 }
 
@@ -1548,8 +1550,10 @@ void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
 {
     QQuickControl::localeChange(newLocale, oldLocale);
+#if QT_CONFIG(validator)
     if (QValidator *v = validator())
         v->setLocale(newLocale);
+#endif
 }
 
 QFont QQuickComboBox::defaultFont() const
