@@ -71,7 +71,9 @@ bool QWidgetPlatformMessageDialog::show(Qt::WindowFlags flags, Qt::WindowModalit
     m_dialog->setIcon(static_cast<QMessageBox::Icon>(options->icon()));
     m_dialog->setText(options->text());
     m_dialog->setInformativeText(options->informativeText());
+#if QT_CONFIG(textedit)
     m_dialog->setDetailedText(options->detailedText());
+#endif
     m_dialog->setStandardButtons(static_cast<QMessageBox::StandardButtons>(int(options->standardButtons())));
 
     return QWidgetPlatformDialog::show(m_dialog.data(), flags, modality, parent);
