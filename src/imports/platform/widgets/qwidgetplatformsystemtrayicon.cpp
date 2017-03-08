@@ -78,11 +78,13 @@ void QWidgetPlatformSystemTrayIcon::updateToolTip(const QString &tooltip)
 
 void QWidgetPlatformSystemTrayIcon::updateMenu(QPlatformMenu *menu)
 {
+#if QT_CONFIG(menu)
     QWidgetPlatformMenu *widgetMenu = qobject_cast<QWidgetPlatformMenu *>(menu);
     if (!widgetMenu)
         return;
 
     m_systray->setContextMenu(widgetMenu->menu());
+#endif
 }
 
 QRect QWidgetPlatformSystemTrayIcon::geometry() const
