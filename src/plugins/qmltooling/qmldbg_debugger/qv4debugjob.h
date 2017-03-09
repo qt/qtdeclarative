@@ -78,11 +78,24 @@ class CollectJob : public QV4DebugJob
 protected:
     QV4DataCollector *collector;
     QJsonObject result;
-    QJsonArray collectedRefs;
+    QJsonArray collectedRefs; // only for redundantRefs
+
+    void flushRedundantRefs()
+    {
+        if (collector->redundantRefs())
+            collectedRefs = collector->flushCollectedRefs();
+    }
+
 public:
     CollectJob(QV4DataCollector *collector) : collector(collector) {}
     const QJsonObject &returnValue() const { return result; }
-    const QJsonArray &refs() const { return collectedRefs; }
+
+    // TODO: Drop this method once we don't need to support redundantRefs anymore
+    const QJsonArray &refs() const
+    {
+        Q_ASSERT(collector->redundantRefs());
+        return collectedRefs;
+    }
 };
 
 class BacktraceJob: public CollectJob
@@ -133,7 +146,7 @@ class ExpressionEvalJob: public JavaScriptJob
     QV4DataCollector *collector;
     QString exception;
     QJsonObject result;
-    QJsonArray collectedRefs;
+    QJsonArray collectedRefs; // only for redundantRefs
 
 public:
     ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, int context,
@@ -141,7 +154,7 @@ public:
     void handleResult(QV4::ScopedValue &value) override;
     const QString &exceptionMessage() const;
     const QJsonObject &returnValue() const;
-    const QJsonArray &refs() const;
+    const QJsonArray &refs() const; // only for redundantRefs
 };
 
 class GatherSourcesJob: public QV4DebugJob
