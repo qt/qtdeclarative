@@ -97,6 +97,14 @@
                 "privateFeature"
             ]
         },
+        "quick-particles": {
+            "label": "Particle support",
+            "purpose": "Provides a particle system for Qt Quick",
+            "condition": "features.quick-shadereffect && features.quick-sprite && features.opengl",
+            "output": [
+                "privateFeature"
+            ]
+        },
         "quick-path": {
             "label": "Path support",
             "purpose": "Provides Path elements in Qt Quick",

@@ -10,7 +10,7 @@ qtHaveModule(gui):qtConfig(animation) {
         quick \
         qmltest
 
-    qtConfig(quick-shadereffect):qtConfig(quick-sprite):qtConfig(opengl(es1|es2)?): \
+    qtConfig(quick-particles): \
         SUBDIRS += particles
     qtHaveModule(widgets): SUBDIRS += quickwidgets
 }
