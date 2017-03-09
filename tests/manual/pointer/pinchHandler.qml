@@ -71,6 +71,8 @@ Rectangle {
             y: 200
             rotation: 30
             transformOrigin: Item.TopRight
+            border.width: pinch2.active ? 2 : 0
+            border.color: pinch2.active ? "red" : "transparent"
 
             Text {
                 anchors.centerIn: parent
@@ -98,13 +100,18 @@ Rectangle {
             height: 300
             color: "wheat"
             antialiasing: true
+            border.width: (dragHandler.active || pinch3.active) ? 2 : 0
+            border.color: border.width > 0 ? "red" : "transparent"
 
             Text {
                 anchors.centerIn: parent
                 text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
                     + getTransformationDetails(rect3, pinch3)
             }
-            DragHandler { objectName: "DragHandler" }
+            DragHandler {
+                id: dragHandler
+                objectName: "DragHandler"
+            }
 
             PinchHandler {
                 id: pinch3
