@@ -2007,6 +2007,16 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 {
 }
 
+QString QQmlTypeData::TypeReference::qualifiedName() const
+{
+    QString result;
+    if (!prefix.isEmpty()) {
+        result = prefix + QLatin1Char('.');
+    }
+    result.append(type->qmlTypeName());
+    return result;
+}
+
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_implicitImportLoaded(false)
@@ -2147,6 +2157,23 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
     aliasCreator.appendAliasPropertiesToMetaObjects();
 }
 
+static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash, QQmlEngine *engine)
+{
+    for (const auto &typeRef: typeRefs) {
+        if (typeRef.typeData) {
+            const auto unit = typeRef.typeData->compilationUnit();
+            hash->addData(unit->data->md5Checksum, sizeof(unit->data->md5Checksum));
+        } else if (typeRef.type) {
+            const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type->metaObject());
+            bool ok = false;
+            hash->addData(propertyCache->checksum(&ok));
+            if (!ok)
+                return false;
+        }
+    }
+    return true;
+}
+
 void QQmlTypeData::done()
 {
     QDeferredCleanup cleanup([this]{
@@ -2227,8 +2254,10 @@ void QQmlTypeData::done()
 
     QQmlEngine *const engine = typeLoader()->engine();
 
-    const auto dependencyHasher = [engine, resolvedTypeCache](QCryptographicHash *hash) {
-        return resolvedTypeCache.addToHash(hash, engine);
+    const auto dependencyHasher = [engine, resolvedTypeCache, this](QCryptographicHash *hash) {
+        if (!resolvedTypeCache.addToHash(hash, engine))
+            return false;
+        return ::addTypeReferenceChecksumsToHash(m_compositeSingletons, hash, engine);
     };
 
     // verify if any dependencies changed if we're using a cache
@@ -2567,6 +2596,10 @@ void QQmlTypeData::resolveTypes()
             m_compositeSingletons << ref;
         }
     }
+
+    std::stable_sort(m_compositeSingletons.begin(), m_compositeSingletons.end(), [](const TypeReference &lhs, const TypeReference &rhs){
+        return lhs.qualifiedName() < rhs.qualifiedName();
+    });
 
     for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_typeReferences.constBegin(), end = m_typeReferences.constEnd();
          unresolvedRef != end; ++unresolvedRef) {

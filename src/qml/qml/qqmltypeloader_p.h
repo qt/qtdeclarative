@@ -400,6 +400,7 @@ public:
         int minorVersion;
         QQmlTypeData *typeData;
         QString prefix; // used by CompositeSingleton types
+        QString qualifiedName() const;
         bool needsCreation;
     };
 
