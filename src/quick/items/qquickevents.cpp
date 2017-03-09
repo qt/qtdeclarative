@@ -949,6 +949,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
         } else {
             // Restore the grabbers without notifying (don't call onGrabChanged)
             point->m_exclusiveGrabber = grabbers.at(i);
+            point->m_grabberIsHandler = (qmlobject_cast<QQuickPointerHandler *>(point->m_exclusiveGrabber) != nullptr);
             point->m_passiveGrabbers = passiveGrabberses.at(i);
         }
     }
