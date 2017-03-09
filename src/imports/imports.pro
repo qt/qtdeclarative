@@ -20,7 +20,7 @@ qtHaveModule(quick) {
         sharedimage \
         testlib
 
-    qtConfig(quick-sprite):qtConfig(opengl(es1|es2)?): \
+    qtConfig(quick-shadereffect):qtConfig(quick-sprite):qtConfig(opengl(es1|es2)?): \
         SUBDIRS += particles
 }
 
