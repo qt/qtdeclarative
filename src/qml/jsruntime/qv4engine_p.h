@@ -559,6 +559,12 @@ inline void Value::mark(MarkStack *markStack)
         o->mark(markStack);
 }
 
+inline void Managed::mark(MarkStack *markStack)
+{
+    Q_ASSERT(m());
+    m()->mark(markStack);
+}
+
 #define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return; \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
