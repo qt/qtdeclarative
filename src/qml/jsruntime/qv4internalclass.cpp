@@ -388,9 +388,9 @@ void InternalClass::destroy()
     }
 }
 
-void InternalClassPool::markObjects(ExecutionEngine *engine)
+void InternalClassPool::markObjects(MarkStack *markStack)
 {
-    Q_UNUSED(engine);
+    Q_UNUSED(markStack);
 }
 
 QT_END_NAMESPACE

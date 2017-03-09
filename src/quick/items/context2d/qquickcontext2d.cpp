@@ -927,9 +927,9 @@ struct QQuickJSContext2DImageData : public QV4::Object
     static void method_get_height(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_get_data(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
-    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *engine) {
-        static_cast<QQuickJSContext2DImageData::Data *>(that)->pixelData.mark(engine);
-        QV4::Object::markObjects(that, engine);
+    static void markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack) {
+        static_cast<QQuickJSContext2DImageData::Data *>(that)->pixelData.mark(markStack);
+        QV4::Object::markObjects(that, markStack);
     }
 };
 

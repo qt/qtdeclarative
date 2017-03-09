@@ -8441,19 +8441,19 @@ struct QQuickItemWrapper : public QObjectWrapper {
 
 struct QQuickItemWrapper : public QV4::QObjectWrapper {
     V4_OBJECT2(QQuickItemWrapper, QV4::QObjectWrapper)
-    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
+    static void markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack);
 };
 
 DEFINE_OBJECT_VTABLE(QQuickItemWrapper);
 
-void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack)
 {
     QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
     if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
         for (QQuickItem *child : qAsConst(QQuickItemPrivate::get(item)->childItems))
-            QV4::QObjectWrapper::markWrapper(child, e);
+            QV4::QObjectWrapper::markWrapper(child, markStack);
     }
-    QV4::QObjectWrapper::markObjects(that, e);
+    QV4::QObjectWrapper::markObjects(that, markStack);
 }
 
 quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)

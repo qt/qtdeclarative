@@ -136,6 +136,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , currentContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
+    , gcStack(new WTF::PageAllocation)
     , globalCode(0)
     , v8Engine(0)
     , argumentsAccessors(0)
@@ -188,17 +189,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     iselFactory.reset(factory);
 
     // reserve space for the JS stack
-    // we allow it to grow to 2 times JSStackLimit, as we can overshoot due to garbage collection
-    // and ScopedValues allocated outside of JIT'ed methods.
-    *jsStack = WTF::PageAllocation::allocate(2 * JSStackLimit, WTF::OSAllocator::JSVMStackPages,
+    // we allow it to grow to a bit more than JSStackLimit, as we can overshoot due to ScopedValues
+    // allocated outside of JIT'ed methods.
+    *jsStack = WTF::PageAllocation::allocate(JSStackLimit + 256*1024, WTF::OSAllocator::JSVMStackPages,
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
 #ifdef V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
+    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, JSStackLimit + 256*1024);
 #endif
 
     jsStackTop = jsStackBase;
+
+    *gcStack = WTF::PageAllocation::allocate(GCStackLimit, WTF::OSAllocator::JSVMStackPages,
+                                             /* writable */ true, /* executable */ false,
+                                             /* includesGuardPages */ true);
 
     exceptionValue = jsAlloca(1);
     globalObject = static_cast<Object *>(jsAlloca(1));
@@ -493,6 +498,8 @@ ExecutionEngine::~ExecutionEngine()
     delete executableAllocator;
     jsStack->deallocate();
     delete jsStack;
+    gcStack->deallocate();
+    delete gcStack;
     delete [] argumentsAccessors;
 }
 
@@ -930,23 +937,23 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     }
 }
 
-void ExecutionEngine::markObjects()
+void ExecutionEngine::markObjects(MarkStack *markStack)
 {
-    identifierTable->mark(this);
+    identifierTable->mark(markStack);
 
     for (int i = 0; i < nArgumentsAccessors; ++i) {
         const Property &pd = argumentsAccessors[i];
         if (Heap::FunctionObject *getter = pd.getter())
-            getter->mark(this);
+            getter->mark(markStack);
         if (Heap::FunctionObject *setter = pd.setter())
-            setter->mark(this);
+            setter->mark(markStack);
     }
 
-    classPool->markObjects(this);
+    classPool->markObjects(markStack);
 
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
          it != end; ++it)
-        (*it)->markObjects(this);
+        (*it)->markObjects(markStack);
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)

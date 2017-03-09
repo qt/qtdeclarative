@@ -1170,16 +1170,16 @@ void QQmlVMEMetaObject::ensureQObjectWrapper()
     QV4::QObjectWrapper::wrap(v4, object);
 }
 
-void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
+void QQmlVMEMetaObject::mark(QV4::MarkStack *markStack)
 {
     QV4::ExecutionEngine *v4 = cache ? cache->engine : 0;
-    if (v4 != e)
+    if (v4 != markStack->engine)
         return;
 
-    propertyAndMethodStorage.markOnce(e);
+    propertyAndMethodStorage.markOnce(markStack);
 
     if (QQmlVMEMetaObject *parent = parentVMEMetaObject())
-        parent->mark(e);
+        parent->mark(markStack);
 }
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const

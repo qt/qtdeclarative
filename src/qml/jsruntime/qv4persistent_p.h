@@ -65,7 +65,7 @@ struct Q_QML_EXPORT PersistentValueStorage
     Value *allocate();
     static void free(Value *e);
 
-    void mark(ExecutionEngine *e);
+    void mark(MarkStack *markStack);
 
     struct Iterator {
         Iterator(void *p, int idx);
@@ -203,7 +203,7 @@ public:
     bool isNullOrUndefined() const { return !val || val->isNullOrUndefined(); }
     void clear() { free(); }
 
-    void markOnce(ExecutionEngine *e);
+    void markOnce(MarkStack *markStack);
 
 private:
     Value *val;

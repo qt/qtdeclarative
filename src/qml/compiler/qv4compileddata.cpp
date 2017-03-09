@@ -249,14 +249,14 @@ void CompilationUnit::unlink()
 #endif
 }
 
-void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
+void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 {
     for (uint i = 0; i < data->stringTableSize; ++i)
         if (runtimeStrings[i])
-            runtimeStrings[i]->mark(e);
+            runtimeStrings[i]->mark(markStack);
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
-            runtimeRegularExpressions[i].mark(e);
+            runtimeRegularExpressions[i].mark(markStack);
     }
 }
 

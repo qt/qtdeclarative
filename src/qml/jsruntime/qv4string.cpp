@@ -54,12 +54,12 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(String);
 
-void String::markObjects(Heap::Base *that, ExecutionEngine *e)
+void String::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     String::Data *s = static_cast<String::Data *>(that);
     if (s->largestSubLength) {
-        s->left->mark(e);
-        s->right->mark(e);
+        s->left->mark(markStack);
+        s->right->mark(markStack);
     }
 }
 

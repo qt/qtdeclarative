@@ -59,6 +59,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct MarkStack;
+
 /*
  * Chunks are the basic structure containing GC managed objects.
  *
@@ -185,7 +187,7 @@ struct Chunk {
     void sweep();
     void freeAll();
     void resetBlackBits();
-    void collectGrayItems(ExecutionEngine *engine);
+    void collectGrayItems(QV4::MarkStack *markStack);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };
@@ -264,6 +266,24 @@ Q_STATIC_ASSERT(1 << Chunk::SlotSizeShift == Chunk::SlotSize);
 Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
+
+struct MarkStack {\
+    MarkStack(ExecutionEngine *engine);
+    Heap::Base **top = 0;
+    Heap::Base **base = 0;
+    Heap::Base **limit = 0;
+    ExecutionEngine *engine;
+    void push(Heap::Base *m) {
+        *top = m;
+        ++top;
+    }
+    Heap::Base *pop() {
+        --top;
+        return *top;
+    }
+    void drain();
+
+};
 
 // Base class for the execution engine
 

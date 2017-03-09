@@ -204,7 +204,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     Identifier *identifier() const { return d()->identifier; }
 
 protected:
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
     static bool isEqualTo(Managed *that, Managed *o);
     static uint getLength(const Managed *m);
 #endif

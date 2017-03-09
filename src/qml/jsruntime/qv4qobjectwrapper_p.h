@@ -171,7 +171,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
-    static void markWrapper(QObject *object, ExecutionEngine *engine);
+    static void markWrapper(QObject *object, MarkStack *markStack);
 
     using Object::get;
 
@@ -195,7 +195,7 @@ protected:
     static bool put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, QV4::MarkStack *markStack);
 
     static void method_connect(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_disconnect(const BuiltinFunction *, Scope &scope, CallData *callData);
@@ -295,7 +295,7 @@ public:
     ReturnedValue value(QObject *key) const { return QHash<QObject*, QV4::WeakValue>::value(key).value(); }
     Iterator erase(Iterator it);
     void remove(QObject *key);
-    void mark(QObject *key, ExecutionEngine *engine);
+    void mark(QObject *key, MarkStack *markStack);
 
 private Q_SLOTS:
     void removeDestroyedObject(QObject*);

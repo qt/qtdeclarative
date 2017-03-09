@@ -93,14 +93,14 @@ public:
 
     Heap::String *stringFromIdentifier(Identifier *i);
 
-    void mark(ExecutionEngine *e) {
+    void mark(MarkStack *markStack) {
         for (int i = 0; i < alloc; ++i) {
             Heap::String *entry = entries[i];
             if (!entry || entry->isMarked())
                 continue;
             entry->setMarkBit();
             Q_ASSERT(entry->vtable()->markObjects);
-            entry->vtable()->markObjects(entry, e);
+            entry->vtable()->markObjects(entry, markStack);
         }
     }
 };

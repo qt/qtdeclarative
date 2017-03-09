@@ -475,7 +475,7 @@ public:
     // Section 9.12
     bool sameValue(Value other) const;
 
-    inline void mark(ExecutionEngine *e);
+    inline void mark(MarkStack *markStack);
 
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { _val = v; return *this; }

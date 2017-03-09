@@ -108,18 +108,14 @@ public:
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
-    enum { JSStackLimit = 4*1024*1024 };
+    enum {
+        JSStackLimit = 4*1024*1024,
+        GCStackLimit = 2*1024*1024
+    };
     WTF::PageAllocation *jsStack;
     Value *jsStackBase;
 
-    void pushForGC(Heap::Base *m) {
-        *jsStackTop = m;
-        ++jsStackTop;
-    }
-    Heap::Base *popForGC() {
-        --jsStackTop;
-        return jsStackTop->m();
-    }
+    WTF::PageAllocation *gcStack;
 
     QML_NEARLY_ALWAYS_INLINE Value *jsAlloca(int nValues) {
         Value *ptr = jsStackTop;
@@ -446,7 +442,7 @@ public:
 
     void requireArgumentsAccessors(int n);
 
-    void markObjects();
+    void markObjects(MarkStack *markStack);
 
     void initRootContext();
 
@@ -541,7 +537,7 @@ inline ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *contex
 }
 
 inline
-void Heap::Base::mark(QV4::ExecutionEngine *engine)
+void Heap::Base::mark(QV4::MarkStack *markStack)
 {
     Q_ASSERT(inUse());
     const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
@@ -552,15 +548,15 @@ void Heap::Base::mark(QV4::ExecutionEngine *engine)
     quintptr bit = Chunk::bitForIndex(index);
     if (!(*bitmap & bit)) {
         *bitmap |= bit;
-        engine->pushForGC(this);
+        markStack->push(this);
     }
 }
 
-inline void Value::mark(ExecutionEngine *e)
+inline void Value::mark(MarkStack *markStack)
 {
     Heap::Base *o = heapObject();
     if (o)
-        o->mark(e);
+        o->mark(markStack);
 }
 
 #define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return; \
