@@ -1568,12 +1568,6 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     return 0;
 }
 
-void ExecutionEngine::assertObjectBelongsToEngine(const Heap::Base &baseObject)
-{
-    Q_ASSERT(!baseObject.vtable()->isObject || static_cast<const Heap::Object&>(baseObject).internalClass->engine == this);
-    Q_UNUSED(baseObject);
-}
-
 void ExecutionEngine::failStackLimitCheck(Scope &scope)
 {
     scope.result = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));

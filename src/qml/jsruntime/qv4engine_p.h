@@ -483,8 +483,6 @@ public:
     bool metaTypeFromJS(const Value *value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
-    void assertObjectBelongsToEngine(const Heap::Base &baseObject);
-
     bool checkStackLimits(Scope &scope);
 
 private:
@@ -553,9 +551,6 @@ void Heap::Base::mark(QV4::ExecutionEngine *engine)
     quintptr *bitmap = c->blackBitmap + Chunk::bitmapIndex(index);
     quintptr bit = Chunk::bitForIndex(index);
     if (!(*bitmap & bit)) {
-#ifndef QT_NO_DEBUG
-        engine->assertObjectBelongsToEngine(*this);
-#endif
         *bitmap |= bit;
         engine->pushForGC(this);
     }
