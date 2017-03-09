@@ -193,6 +193,7 @@ void QQuickPointerSingleHandler::setAcceptedButtons(Qt::MouseButtons buttons)
 
 void QQuickPointerSingleHandler::reset()
 {
+    setActive(false);
     bool pointIdChange = m_pointId != 0;
     m_pointId = 0;
     m_uniquePointId = QPointingDeviceUniqueId();
