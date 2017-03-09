@@ -2227,8 +2227,12 @@ void QQmlTypeData::done()
 
     QQmlEngine *const engine = typeLoader()->engine();
 
+    const auto dependencyHasher = [engine, resolvedTypeCache](QCryptographicHash *hash) {
+        return resolvedTypeCache.addToHash(hash, engine);
+    };
+
     // verify if any dependencies changed if we're using a cache
-    if (m_document.isNull() && !m_compiledData->verifyChecksum(engine, resolvedTypeCache)) {
+    if (m_document.isNull() && !m_compiledData->verifyChecksum(dependencyHasher)) {
         qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->url().toString();
         if (!loadFromSource())
             return;
@@ -2238,7 +2242,7 @@ void QQmlTypeData::done()
 
     if (!m_document.isNull()) {
         // Compile component
-        compile(importCache, resolvedTypeCache);
+        compile(importCache, resolvedTypeCache, dependencyHasher);
     } else {
         createTypeAndPropertyCaches(importCache, resolvedTypeCache);
     }
@@ -2487,12 +2491,13 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
-void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
+void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache,
+                           const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     Q_ASSERT(m_compiledData.isNull());
 
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
-    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), importCache, resolvedTypeCache);
+    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), importCache, resolvedTypeCache, dependencyHasher);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
         setError(compiler.compilationErrors());
@@ -2934,8 +2939,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         irUnit.jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::ResolvedTypeReferenceMap emptyDependencies;
-    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit, m_typeLoader->engine(), emptyDependencies);
+    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
     Q_ASSERT(!unit->data);
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;

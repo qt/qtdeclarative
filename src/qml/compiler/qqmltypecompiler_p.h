@@ -89,7 +89,8 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &importCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache,
+                     const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
 
     // --- interface used by QQmlPropertyCacheCreator
     typedef QmlIR::Object CompiledObject;
@@ -139,6 +140,7 @@ private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
     QQmlTypeData *typeData;
+    const QV4::CompiledData::DependentTypesHasher &dependencyHasher;
     QQmlRefPointer<QQmlTypeNameCache> importCache;
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)

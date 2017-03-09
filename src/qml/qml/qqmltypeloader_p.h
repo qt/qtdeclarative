@@ -453,7 +453,7 @@ private:
             QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
     void compile(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
-                 const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
+                 const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
     void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &importCache,
                                       const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref);

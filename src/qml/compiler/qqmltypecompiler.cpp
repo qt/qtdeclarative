@@ -58,10 +58,11 @@ QT_BEGIN_NAMESPACE
 
 QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
                                    QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &importCache,
-                                   const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
+                                   const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)
     , typeData(typeData)
+    , dependencyHasher(dependencyHasher)
     , importCache(importCache)
     , document(parsedQML)
 {
@@ -156,7 +157,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     // Generate QML compiled type data structures
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::Unit *qmlUnit = qmlGenerator.generate(*document, QQmlEnginePrivate::get(engine), resolvedTypes);
+    QV4::CompiledData::Unit *qmlUnit = qmlGenerator.generate(*document, dependencyHasher);
 
     Q_ASSERT(document->javaScriptCompilationUnit);
     // The js unit owns the data and will free the qml unit.
