@@ -80,6 +80,39 @@ QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::Diagnostic
     return message;
 }
 
+// Ensure that ListElement objects keep all property assignments in their string form
+static void annotateListElements(QmlIR::Document *document)
+{
+    QStringList listElementNames;
+
+    foreach (const QV4::CompiledData::Import *import, document->imports) {
+        const QString uri = document->stringAt(import->uriIndex);
+        if (uri != QStringLiteral("QtQml.Models") && uri != QStringLiteral("QtQuick"))
+            continue;
+
+         QString listElementName = QStringLiteral("ListElement");
+         const QString qualifier = document->stringAt(import->qualifierIndex);
+         if (!qualifier.isEmpty()) {
+             listElementName.prepend(QLatin1Char('.'));
+             listElementName.prepend(qualifier);
+         }
+         listElementNames.append(listElementName);
+    }
+
+    if (listElementNames.isEmpty())
+        return;
+
+    foreach (QmlIR::Object *object, document->objects) {
+        if (!listElementNames.contains(document->stringAt(object->inheritedTypeNameIndex)))
+            continue;
+        for (QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
+            if (binding->type != QV4::CompiledData::Binding::Type_Script)
+                continue;
+            binding->stringIndex = document->registerString(object->bindingAsString(document, binding->value.compiledScriptIndex));
+        }
+    }
+}
+
 static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
@@ -110,6 +143,8 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
             return false;
         }
     }
+
+    annotateListElements(&irDocument);
 
     {
         QmlIR::JSCodeGen v4CodeGen(/*empty input file name*/QString(), irDocument.code, &irDocument.jsModule, &irDocument.jsParserEngine, irDocument.program, /*import cache*/0, &irDocument.jsGenerator.stringTable);
