@@ -53,6 +53,7 @@ private slots:
     void screenshots_data();
 
 private:
+    QQuickView view;
     QMap<QString, QStringPair> snippetPaths;
     QMap<QString, QStringPair> screenshotSnippetPaths;
 };
@@ -97,7 +98,15 @@ static void loadAndShow(QQuickView *view, const QString &source)
     QSignalSpy warnings(view->engine(), SIGNAL(warnings(QList<QQmlError>)));
     QVERIFY(warnings.isValid());
 
-    view->setSource(QUrl::fromLocalFile(source));
+    QUrl url = QUrl::fromLocalFile(source);
+    QQmlComponent *component = new QQmlComponent(view->engine(), view);
+    component->loadUrl(url);
+
+    QObject *root = component->beginCreate(view->rootContext());
+    QVERIFY(root);
+    view->setContent(url, component, root);
+    component->completeCreate();
+
     QCOMPARE(view->status(), QQuickView::Ready);
     QVERIFY(view->errors().isEmpty());
     QVERIFY(view->rootObject());
@@ -113,7 +122,6 @@ void tst_Snippets::verify()
 {
     QFETCH(QString, input);
 
-    QQuickView view;
     loadAndShow(&view, input);
     QGuiApplication::processEvents();
 }
@@ -132,7 +140,6 @@ void tst_Snippets::screenshots()
     QFETCH(QString, input);
     QFETCH(QString, output);
 
-    QQuickView view;
     loadAndShow(&view, input);
 
     QSharedPointer<QQuickItemGrabResult> result = view.contentItem()->grabToImage();

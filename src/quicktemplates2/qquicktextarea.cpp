@@ -358,11 +358,13 @@ void QQuickTextAreaPrivate::implicitHeightChanged()
 
 void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 {
+    Q_UNUSED(isReadOnly);
 #if QT_CONFIG(accessibility)
     if (accessibleAttached)
         accessibleAttached->set_readOnly(isReadOnly);
-#else
-    Q_UNUSED(isReadOnly)
+#endif
+#if QT_CONFIG(cursor)
+    q_func()->setCursor(isReadOnly ? Qt::ArrowCursor : Qt::IBeamCursor);
 #endif
 }
 

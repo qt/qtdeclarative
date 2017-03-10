@@ -72,6 +72,7 @@ private slots:
     void activeFocusControl_data();
     void activeFocusControl();
     void focusAfterPopupClosed();
+    void clearFocusOnDestruction();
     void layout();
 };
 
@@ -683,6 +684,47 @@ void tst_applicationwindow::focusAfterPopupClosed()
 
     QTest::keyClick(window.data(), Qt::Key_Space);
     QCOMPARE(spy.count(), 2);
+}
+
+void tst_applicationwindow::clearFocusOnDestruction()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("clearfocusondestruction.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow*>(component.create()));
+    QVERIFY(window);
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(QGuiApplication::focusWindow() == window.data());
+
+    QQuickItem* contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QVERIFY(contentItem->hasActiveFocus());
+
+    QQuickItem* focusScope = window->property("textfield").value<QQuickItem*>();
+    QVERIFY(focusScope);
+    QVERIFY(focusScope->hasActiveFocus());
+
+    QSignalSpy spy(window.data(), SIGNAL(activeFocusControlChanged()));
+    // destroy the window, do not crash
+    window.reset();
+
+    /*
+       QQuickWindow::activeFocusItemChanged() is emitted inconsistently and
+       only for certain use cases. Ideally it should be emitted whenever a
+       QQuickWindow with a focus item is destroyed, but it doesn't... It might
+       also be favorable to not emit it for performance reason.
+
+       However, activeFocusControlChanged() is emitted more consistently, which
+       of course makes it inconsistent with the emission of
+       activeFocusItemChanged()....
+
+       Therefore, if you have good reasons to change the behavior (and not emit
+       it) take the test below with a grain of salt.
+     */
+    QCOMPARE(spy.count(), 1);
 }
 
 void tst_applicationwindow::layout()
