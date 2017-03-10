@@ -36,6 +36,7 @@
 
 #include "qquicktumbler_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
@@ -687,6 +688,16 @@ void QQuickTumbler::updatePolish()
 
         d->pendingCurrentIndex = -1;
     }
+}
+
+QFont QQuickTumbler::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ItemViewFont);
+}
+
+QPalette QQuickTumbler::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ItemViewPalette);
 }
 
 class QQuickTumblerAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener

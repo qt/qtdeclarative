@@ -315,7 +315,7 @@ void tst_palette::defaultPalette_data()
     QTest::newRow("ToolButton") << "ToolButton" << QPlatformTheme::ToolButtonPalette;
     QTest::newRow("ToolSeparator") << "ToolSeparator" << QPlatformTheme::ToolButtonPalette;
     QTest::newRow("ToolTip") << "ToolTip" << QPlatformTheme::ToolTipPalette;
-    QTest::newRow("Tumbler") << "Tumbler" << QPlatformTheme::SystemPalette;
+    QTest::newRow("Tumbler") << "Tumbler" << QPlatformTheme::ItemViewPalette;
 }
 
 void tst_palette::defaultPalette()

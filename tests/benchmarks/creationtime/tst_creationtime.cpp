@@ -47,6 +47,9 @@ private slots:
     void controls();
     void controls_data();
 
+    void imagine();
+    void imagine_data();
+
     void material();
     void material_data();
 
@@ -123,6 +126,18 @@ void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+}
+
+void tst_CreationTime::imagine()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_CreationTime::imagine_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(&engine, "controls/imagine", "QtQuick/Controls.2/Imagine");
 }
 
 void tst_CreationTime::material()

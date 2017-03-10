@@ -4,6 +4,7 @@
     "commandline": {
         "options": {
             "style-fusion": { "type": "boolean", "name": "quickcontrols2-fusion" },
+            "style-imagine": { "type": "boolean", "name": "quickcontrols2-imagine" },
             "style-material": { "type": "boolean", "name": "quickcontrols2-material" },
             "style-universal": { "type": "boolean", "name": "quickcontrols2-universal" }
         }
@@ -17,6 +18,13 @@
         "quickcontrols2-fusion": {
             "label": "Fusion",
             "purpose": "Provides the platform agnostic desktop-oriented Fusion style.",
+            "section": "Quick Controls 2",
+            "condition": "features.quickcontrols2-default",
+            "output": [ "privateFeature" ]
+        },
+        "quickcontrols2-imagine": {
+            "label": "Imagine",
+            "purpose": "Provides a style based on configurable image assets.",
             "section": "Quick Controls 2",
             "condition": "features.quickcontrols2-default",
             "output": [ "privateFeature" ]
@@ -44,7 +52,7 @@
                 {
                     "message": "Styles",
                     "type": "featureList",
-                    "args": "quickcontrols2-default quickcontrols2-fusion quickcontrols2-material quickcontrols2-universal"
+                    "args": "quickcontrols2-default quickcontrols2-fusion quickcontrols2-imagine quickcontrols2-material quickcontrols2-universal"
                 }
             ]
         }

@@ -63,6 +63,10 @@
                 The value can be set to \c 0 or \c 1 to disable or enable hover effects, respectively.
      \endtable
 
+    \l {Imagine style} specific environment variables:
+
+    \include qquickimaginestyle.qdocinc env
+
     \l {Material style} specific environment variables:
 
     \include qquickmaterialstyle.qdocinc env

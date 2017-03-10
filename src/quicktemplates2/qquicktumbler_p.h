@@ -113,6 +113,9 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void updatePolish() override;
 
+    QFont defaultFont() const override;
+    QPalette defaultPalette() const override;
+
 private:
     Q_DISABLE_COPY(QQuickTumbler)
     Q_DECLARE_PRIVATE(QQuickTumbler)

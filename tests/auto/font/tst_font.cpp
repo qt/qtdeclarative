@@ -252,7 +252,7 @@ void tst_font::defaultFont_data()
     QTest::newRow("ToolButton") << "ToolButton" << QPlatformTheme::ToolButtonFont;
     QTest::newRow("ToolSeparator") << "ToolSeparator" << QPlatformTheme::SystemFont;
     QTest::newRow("ToolTip") << "ToolTip" << QPlatformTheme::TipLabelFont;
-    QTest::newRow("Tumbler") << "Tumbler" << QPlatformTheme::SystemFont;
+    QTest::newRow("Tumbler") << "Tumbler" << QPlatformTheme::ItemViewFont;
 }
 
 void tst_font::defaultFont()
@@ -260,11 +260,13 @@ void tst_font::defaultFont()
     QFETCH(QString, control);
     QFETCH(QPlatformTheme::Font, fontType);
 
-    TestFontTheme theme(QGuiApplicationPrivate::platform_theme);
-
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick.Controls 2.2; %1 { }").arg(control).toUtf8(), QUrl());
+
+    // The call to setData() above causes QQuickDefaultTheme to be set as the platform theme,
+    // so we must make sure we only set our theme afterwards.
+    TestFontTheme theme(QGuiApplicationPrivate::platform_theme);
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));

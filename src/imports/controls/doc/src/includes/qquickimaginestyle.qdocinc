@@ -1,0 +1,14 @@
+//! [conf]
+TODO
+//! [conf]
+
+//! [env]
+\table
+    \header
+        \li Variable
+        \li Description
+    \row
+        \li \c QT_QUICK_CONTROLS_IMAGINE_PATH
+        \li TODO
+\endtable
+//! [env]

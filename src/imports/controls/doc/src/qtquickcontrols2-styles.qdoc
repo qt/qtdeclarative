@@ -127,6 +127,7 @@
     \list
     \li \l {Default Style}
     \li \l {Fusion Style}
+    \li \l {Imagine Style}
     \li \l {Material Style}
     \li \l {Universal Style}
     \li \l {Using File Selectors with Qt Quick Controls 2}
