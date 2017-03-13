@@ -54,105 +54,98 @@ import "../Style"
 import "notifications.js" as NotificationData
 
 Item {
-    Item {
-        anchors.centerIn: parent
+    QQC2.SwipeView {
+        id: svNotificationsContainer
 
-        width: UIStyle.visibleDiameter
-        height: UIStyle.visibleRectHeight
+        anchors.fill: parent
 
-        QQC2.SwipeView {
-            id: svNotificationsContainer
+        clip: true
+        currentIndex: 0
 
-            anchors.fill: parent
+        Item {
+            id: notificationsPage1
 
-            clip: true
-            currentIndex: 0
+            ListModel {
+                id: missedCallsList
+            }
 
-            Item {
-                id: notificationsPage1
+            Row {
+                anchors.fill: parent
+                leftPadding: 30
+                spacing: 2
 
-                ListModel {
-                    id: missedCallsList
+                Image {
+                    id: missedCallIcon
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 64
+                    width: 64
+                    source: "images/missedcall.png"
                 }
 
-                Row {
-                    anchors.fill: parent
-                    leftPadding: 30
-                    spacing: 2
+                ListView {
+                    id: missedCallsView
+                    width: parent.width - missedCallIcon.width
+                    height: parent.height
 
-                    Image {
-                        id: missedCallIcon
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 64
-                        width: 64
-                        source: "images/missedcall.png"
-                    }
+                    clip: true
+                    focus: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    snapMode: ListView.SnapToItem
 
-                    ListView {
-                        id: missedCallsView
-                        width: parent.width - missedCallIcon.width
-                        height: parent.height
+                    model: missedCallsList
 
-                        clip: true
-                        focus: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        snapMode: ListView.SnapToItem
+                    delegate: Item {
+                        height: missedCallsView.height
+                        width: missedCallsView.width
+                        Column {
+                            anchors.fill: parent
+                            spacing: 15
+                            topPadding: 35
+                            Image {
+                                anchors.horizontalCenter:
+                                 parent.horizontalCenter
+                                height: 64
+                                width: 64
+                                source: (gender == "m") ?
+                                "images/avatarm.png"
+                                :"images/avatarf.png"
+                            }
 
-                        model: missedCallsList
-
-                        delegate: Item {
-                            height: missedCallsView.height
-                            width: missedCallsView.width
-                            Column {
-                                anchors.fill: parent
-                                spacing: 15
-                                topPadding: 35
-                                Image {
-                                    anchors.horizontalCenter:
-                                     parent.horizontalCenter
-                                    height: 64
-                                    width: 64
-                                    source: (gender == "m") ?
-                                    "images/avatarm.png"
-                                    :"images/avatarf.png"
-                                }
-
-                                Text {
-                                    anchors.horizontalCenter:
-                                     parent.horizontalCenter
-                                    text: name
-                                    font.bold: true
-                                    font.pixelSize: UIStyle.fontSizeS
-                                    color: UIStyle.colorQtGray1
-                                }
-                                Text {
-                                    anchors.horizontalCenter:
-                                     parent.horizontalCenter
-                                    text: date + " " + time
-                                    font.pixelSize: UIStyle.fontSizeXS
-                                    font.italic: true
-                                    color: UIStyle.colorQtGray2
-                                }
+                            Text {
+                                anchors.horizontalCenter:
+                                 parent.horizontalCenter
+                                text: name
+                                font.bold: true
+                                font.pixelSize: UIStyle.fontSizeS
+                                color: UIStyle.colorQtGray1
+                            }
+                            Text {
+                                anchors.horizontalCenter:
+                                 parent.horizontalCenter
+                                text: date + " " + time
+                                font.pixelSize: UIStyle.fontSizeXS
+                                font.italic: true
+                                color: UIStyle.colorQtGray2
                             }
                         }
                     }
                 }
             }
         }
+    }
 
-        QQC2.PageIndicator {
-            id: pgNotificationsIndicator
+    QQC2.PageIndicator {
+        id: pgNotificationsIndicator
 
-            anchors.bottom: svNotificationsContainer.bottom
-            anchors.bottomMargin: 1
-            anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: svNotificationsContainer.bottom
+        anchors.bottomMargin: 1
+        anchors.horizontalCenter: parent.horizontalCenter
 
-            count: svNotificationsContainer.count
-            currentIndex: svNotificationsContainer.currentIndex
-        }
+        count: svNotificationsContainer.count
+        currentIndex: svNotificationsContainer.currentIndex
+    }
 
-        Component.onCompleted: {
-            NotificationData.populateData(missedCallsList)
-        }
+    Component.onCompleted: {
+        NotificationData.populateData(missedCallsList)
     }
 }

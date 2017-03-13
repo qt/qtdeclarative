@@ -54,290 +54,282 @@ import "../Style"
 import "weather.js" as WeatherData
 
 Item {
-    Item {
-        id: weatherCntr
-        anchors.centerIn: parent
+    QQC2.SwipeView {
+        id: svWeatherContainer
 
-        width: UIStyle.visibleDiameter
-        height: UIStyle.visibleRectHeight
+        anchors.fill: parent
+        currentIndex: 0
 
-        QQC2.SwipeView {
-            id: svWeatherContainer
+        Item {
+            id: weatherPage1
 
-            anchors.fill: parent
-            currentIndex: 0
+            Row {
+                anchors.centerIn: parent
+                width: UIStyle.visibleDiameter
+                height: UIStyle.visibleRectHeight
+                padding: 20
+                spacing: 2
 
-            Item {
-                id: weatherPage1
+                Image {
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 64
+                    width: 64
+                    source: "images/temperature.png"
+                }
 
-                Row {
-                    anchors.centerIn: parent
-                    width: UIStyle.visibleDiameter
-                    height: UIStyle.visibleRectHeight
-                    padding: 20
-                    spacing: 2
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: parent.height
+                    topPadding: 20
+                    spacing: 40
+
+                    Text {
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.temp) ?
+                                  qsTr("Avg: ")
+                                  + String(wDataCntr.weatherData.main.temp)
+                                  + " °F" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
+                    }
+                    Text {
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.temp_min) ?
+                                  qsTr("Min: ")
+                                  + String(wDataCntr.weatherData.main.temp_min)
+                                  + " °F" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
+                    }
+                    Text {
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.temp_max) ?
+                                  qsTr("Max: ")
+                                  + String(wDataCntr.weatherData.main.temp_max)
+                                  + " °F " : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: weatherPage2
+
+            Column {
+                anchors.centerIn: parent
+                width: UIStyle.visibleRectWidth
+                height: UIStyle.visibleRectHeight
+
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: parent.height / 2
+                    width: parent.width
 
                     Image {
+                        id: wImg
+                        anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         height: 64
                         width: 64
-                        source: "images/temperature.png"
+                        source: "images/wind.png"
                     }
 
-                    Column {
+                    Text {
+                        anchors.left: wImg.right
+                        leftPadding: 20
                         anchors.verticalCenter: parent.verticalCenter
-                        height: parent.height
-                        topPadding: 20
-                        spacing: 40
-
-                        Text {
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.temp) ?
-                                      qsTr("Avg: ")
-                                      + String(wDataCntr.weatherData.main.temp)
-                                      + " °F" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
-                        Text {
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.temp_min) ?
-                                      qsTr("Min: ")
-                                      + String(wDataCntr.weatherData.main.temp_min)
-                                      + " °F" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
-                        Text {
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.temp_max) ?
-                                      qsTr("Max: ")
-                                      + String(wDataCntr.weatherData.main.temp_max)
-                                      + " °F " : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.wind
+                               && wDataCntr.weatherData.wind.speed) ?
+                                  String(wDataCntr.weatherData.wind.speed)
+                                  + " mph" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
                     }
                 }
-            }
-
-            Item {
-                id: weatherPage2
-
-                Column {
-                    anchors.centerIn: parent
-                    width: UIStyle.visibleRectWidth
-                    height: UIStyle.visibleRectHeight
-
-                    Item {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        height: parent.height / 2
-                        width: parent.width
-
-                        Image {
-                            id: wImg
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 64
-                            width: 64
-                            source: "images/wind.png"
-                        }
-
-                        Text {
-                            anchors.left: wImg.right
-                            leftPadding: 20
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.wind
-                                   && wDataCntr.weatherData.wind.speed) ?
-                                      String(wDataCntr.weatherData.wind.speed)
-                                      + " mph" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
-                    }
-                    Item {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        height: parent.height / 2
-                        width: parent.width
-
-                        Image {
-                            id: hImg
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 64
-                            width: 64
-                            source: "images/humidity.png"
-                        }
-                        Text {
-                            anchors.left: hImg.right
-                            leftPadding: 20
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.humidity) ?
-                                      String(wDataCntr.weatherData.main.humidity)
-                                      + " %" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
-                    }
-                }
-            }
-
-            Item {
-                id: weatherPage3
-
-                Row {
-                    anchors.centerIn: parent
-                    width: UIStyle.visibleRectWidth
-                    height: UIStyle.visibleRectHeight
-                    spacing: 10
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: parent.height / 2
+                    width: parent.width
 
                     Image {
+                        id: hImg
+                        anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         height: 64
                         width: 64
-                        source: "images/pressure.png"
+                        source: "images/humidity.png"
                     }
-
-                    Column {
+                    Text {
+                        anchors.left: hImg.right
+                        leftPadding: 20
                         anchors.verticalCenter: parent.verticalCenter
-                        height: parent.height
-                        topPadding: 25
-                        spacing: 40
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.pressure) ?
-                                      String(wDataCntr.weatherData.main.pressure)
-                                      + " hPa" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.sea_level) ?
-                                      String(wDataCntr.weatherData.main.sea_level)
-                                      + " hPa" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.main
-                                   && wDataCntr.weatherData.main.grnd_level) ?
-                                      String(wDataCntr.weatherData.main.grnd_level)
-                                      + " hPa" : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.humidity) ?
+                                  String(wDataCntr.weatherData.main.humidity)
+                                  + " %" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
                     }
                 }
             }
+        }
 
-            Item {
-                id: weatherPage4
+        Item {
+            id: weatherPage3
+
+            Row {
+                anchors.centerIn: parent
+                width: UIStyle.visibleRectWidth
+                height: UIStyle.visibleRectHeight
+                spacing: 10
+
+                Image {
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 64
+                    width: 64
+                    source: "images/pressure.png"
+                }
 
                 Column {
-                    anchors.centerIn: parent
-                    width: UIStyle.visibleDiameter
-                    height: UIStyle.visibleRectHeight
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: parent.height
+                    topPadding: 25
+                    spacing: 40
 
-                    Item {
+                    Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        height: parent.height / 2
-                        width: parent.width
-
-                        Image {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 30
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 64
-                            width: 64
-                            source: "images/sunrise.png"
-                        }
-
-                        Text {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 30
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.sys
-                                   && wDataCntr.weatherData.sys.sunrise) ?
-                                      WeatherData.getTimeHMS(wDataCntr.weatherData.sys.sunrise)
-                                    : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.pressure) ?
+                                  String(wDataCntr.weatherData.main.pressure)
+                                  + " hPa" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
                     }
-
-                    Item {
+                    Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        height: parent.height / 2
-                        width: parent.width
-
-                        Image {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 30
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 64
-                            width: 64
-                            source: "images/sunset.png"
-                        }
-
-                        Text {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 30
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: (wDataCntr.weatherData
-                                   && wDataCntr.weatherData.sys
-                                   && wDataCntr.weatherData.sys.sunset) ?
-                                      WeatherData.getTimeHMS(wDataCntr.weatherData.sys.sunset)
-                                    : "N/A"
-                            font.pixelSize: UIStyle.fontSizeM
-                            font.letterSpacing: 1
-                            color: UIStyle.colorQtGray1
-                        }
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.sea_level) ?
+                                  String(wDataCntr.weatherData.main.sea_level)
+                                  + " hPa" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.main
+                               && wDataCntr.weatherData.main.grnd_level) ?
+                                  String(wDataCntr.weatherData.main.grnd_level)
+                                  + " hPa" : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
                     }
                 }
             }
         }
 
-        QtObject {
-            id: wDataCntr
-            property var weatherData
-        }
+        Item {
+            id: weatherPage4
 
-        QQC2.PageIndicator {
-            id: pgWeatherIndicator
+            Column {
+                anchors.centerIn: parent
+                width: UIStyle.visibleDiameter
+                height: UIStyle.visibleRectHeight
 
-            anchors.bottom: svWeatherContainer.bottom
-            anchors.bottomMargin: 1
-            anchors.horizontalCenter: parent.horizontalCenter
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: parent.height / 2
+                    width: parent.width
 
-            count: svWeatherContainer.count
-            currentIndex: svWeatherContainer.currentIndex
+                    Image {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 30
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 64
+                        width: 64
+                        source: "images/sunrise.png"
+                    }
+
+                    Text {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 30
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.sys
+                               && wDataCntr.weatherData.sys.sunrise) ?
+                                  WeatherData.getTimeHMS(wDataCntr.weatherData.sys.sunrise)
+                                : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
+                    }
+                }
+
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: parent.height / 2
+                    width: parent.width
+
+                    Image {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 30
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 64
+                        width: 64
+                        source: "images/sunset.png"
+                    }
+
+                    Text {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 30
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: (wDataCntr.weatherData
+                               && wDataCntr.weatherData.sys
+                               && wDataCntr.weatherData.sys.sunset) ?
+                                  WeatherData.getTimeHMS(wDataCntr.weatherData.sys.sunset)
+                                : "N/A"
+                        font.pixelSize: UIStyle.fontSizeM
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray1
+                    }
+                }
+            }
         }
-        Component.onCompleted: {
-            WeatherData.requestWeatherData(wDataCntr)
-        }
+    }
+
+    QtObject {
+        id: wDataCntr
+        property var weatherData
+    }
+
+    QQC2.PageIndicator {
+        id: pgWeatherIndicator
+
+        anchors.bottom: svWeatherContainer.bottom
+        anchors.bottomMargin: 1
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        count: svWeatherContainer.count
+        currentIndex: svWeatherContainer.currentIndex
+    }
+    Component.onCompleted: {
+        WeatherData.requestWeatherData(wDataCntr)
     }
 }

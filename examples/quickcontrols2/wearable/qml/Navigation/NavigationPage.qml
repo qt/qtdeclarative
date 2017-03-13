@@ -53,70 +53,63 @@ import "../Style"
 import "navigation.js" as NavigationData
 
 Item {
-    Item {
-        anchors.centerIn: parent
+    Column {
+        anchors.fill: parent
+        spacing: 2
 
-        width: UIStyle.visibleDiameter
-        height: UIStyle.visibleRectHeight
+        Rectangle {
+            id: titleRowCntr
 
-        Column {
-            anchors.fill: parent
-            spacing: 2
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            height: 64
 
-            Rectangle {
-                id: titleRowCntr
+            color: UIStyle.colorQtGray9
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width
-                height: 64
+            Row {
+                spacing: 10
+                anchors.centerIn: parent
 
-                color: UIStyle.colorQtGray9
-
-                Row {
-                    spacing: 10
-                    anchors.centerIn: parent
-
-                    Image {
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 64
-                        width: 64
-                        source: "images/route.png"
-                        fillMode: Image.PreserveAspectCrop
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("Walking")
-                        font.pixelSize: UIStyle.fontSizeM
-                        font.letterSpacing: 2
-                        color: UIStyle.colorQtGray2
-                    }
+                Image {
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 64
+                    width: 64
+                    source: "images/route.png"
+                    fillMode: Image.PreserveAspectCrop
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: qsTr("Walking")
+                    font.pixelSize: UIStyle.fontSizeM
+                    font.letterSpacing: 2
+                    color: UIStyle.colorQtGray2
                 }
             }
+        }
 
-            ListModel {
-                id: routeModel
-            }
+        ListModel {
+            id: routeModel
+        }
 
-            ListView {
-                id: routeView
+        ListView {
+            id: routeView
 
-                width: parent.width
-                height: UIStyle.visibleRectHeight - titleRowCntr.height
-                property var imageList: ["straight.png",
-                                         "leftturn.png",
-                                         "rightturn.png",
-                                         "uturn.png",
-                                         "start.png",
-                                         "end.png"]
+            width: parent.width
+            height: UIStyle.visibleRectHeight - titleRowCntr.height
+            property var imageList: ["straight.png",
+                                     "leftturn.png",
+                                     "rightturn.png",
+                                     "uturn.png",
+                                     "start.png",
+                                     "end.png"]
 
-                clip: true
-                focus: true
-                boundsBehavior: Flickable.StopAtBounds
-                snapMode: ListView.SnapToItem
-                currentIndex: 0
-                model: routeModel
-                delegate: RouteElement {}
-            }
+            clip: true
+            focus: true
+            boundsBehavior: Flickable.StopAtBounds
+            snapMode: ListView.SnapToItem
+            currentIndex: 0
+            model: routeModel
+            delegate: RouteElement {}
         }
     }
     Component.onCompleted: {

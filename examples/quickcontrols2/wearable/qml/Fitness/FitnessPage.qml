@@ -54,94 +54,87 @@ import "../Style"
 import "fitness.js" as FitnessData
 
 Item {
-    Item {
-        anchors.centerIn: parent
+    QQ2.SwipeView {
+        id: svFitnessContainer
 
-        width: UIStyle.visibleDiameter
-        height: UIStyle.visibleRectHeight
+        anchors.fill: parent
 
-        QQ2.SwipeView {
-            id: svFitnessContainer
+        clip: true
+        currentIndex: 0
 
-            anchors.fill: parent
+        Item {
+            id: fitnessPage1
 
-            clip: true
-            currentIndex: 0
+            Column {
+                anchors.centerIn: parent
+                spacing: 15
 
-            Item {
-                id: fitnessPage1
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 15
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Steps: ") + FitnessData.getSteps()
-                        font.italic: true
-                        font.pixelSize: UIStyle.fontSizeM
-                        color: UIStyle.colorQtGray1
-                    }
-                    Image {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        height: 64
-                        width: 64
-                        source: "images/man-walking.png"
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Calories: ") + FitnessData.getCalories()
-                        font.pixelSize: UIStyle.fontSizeS
-                        font.italic: true
-                        color: UIStyle.colorQtGray3
-                    }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Steps: ") + FitnessData.getSteps()
+                    font.italic: true
+                    font.pixelSize: UIStyle.fontSizeM
+                    color: UIStyle.colorQtGray1
                 }
-            }
-
-            Item {
-                id: fitnessPage2
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 15
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Distance: ")
-                              + FitnessData.getDistance()
-                              + qsTr(" miles")
-                        font.italic: true
-                        font.pixelSize: UIStyle.fontSizeM
-                        color: UIStyle.colorQtGray1
-                    }
-                    Image {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        height: 64
-                        width: 64
-                        source: "images/man-running.png"
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Time: ")
-                              + FitnessData.getTime()
-                              + qsTr(" mins")
-                        font.pixelSize: UIStyle.fontSizeS
-                        font.italic: true
-                        color: UIStyle.colorQtGray3
-                    }
+                Image {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: 64
+                    width: 64
+                    source: "images/man-walking.png"
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Calories: ") + FitnessData.getCalories()
+                    font.pixelSize: UIStyle.fontSizeS
+                    font.italic: true
+                    color: UIStyle.colorQtGray3
                 }
             }
         }
 
-        QQ2.PageIndicator {
-            id: pgFitnessIndicator
+        Item {
+            id: fitnessPage2
 
-            anchors.bottom: svFitnessContainer.bottom
-            anchors.bottomMargin: 1
-            anchors.horizontalCenter: parent.horizontalCenter
+            Column {
+                anchors.centerIn: parent
+                spacing: 15
 
-            count: svFitnessContainer.count
-            currentIndex: svFitnessContainer.currentIndex
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Distance: ")
+                          + FitnessData.getDistance()
+                          + qsTr(" miles")
+                    font.italic: true
+                    font.pixelSize: UIStyle.fontSizeM
+                    color: UIStyle.colorQtGray1
+                }
+                Image {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: 64
+                    width: 64
+                    source: "images/man-running.png"
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Time: ")
+                          + FitnessData.getTime()
+                          + qsTr(" mins")
+                    font.pixelSize: UIStyle.fontSizeS
+                    font.italic: true
+                    color: UIStyle.colorQtGray3
+                }
+            }
         }
+    }
+
+    QQ2.PageIndicator {
+        id: pgFitnessIndicator
+
+        anchors.bottom: svFitnessContainer.bottom
+        anchors.bottomMargin: 1
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        count: svFitnessContainer.count
+        currentIndex: svFitnessContainer.currentIndex
     }
 }
