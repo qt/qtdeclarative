@@ -132,7 +132,7 @@ void InstructionSelection<JITAssembler>::run(int functionIndex)
         for (IR::Stmt *s : _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
-                    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
+                    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, JITAssembler::targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
                     Address lineAddr(JITTargetPlatform::ScratchRegister, qOffsetOf(QV4::ExecutionContext::Data, lineNumber));
                     _as->store32(TrustedImm32(s->location.startLine), lineAddr);
                     lastLine = s->location.startLine;
@@ -447,7 +447,7 @@ void InstructionSelection<JITAssembler>::callValue(IR::Expr *value, IR::ExprList
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::loadThisObject(IR::Expr *temp)
 {
-    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
+    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, JITAssembler::targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
     _as->loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, callData)), JITTargetPlatform::ScratchRegister);
     _as->copyValue(temp, Address(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)));
 }

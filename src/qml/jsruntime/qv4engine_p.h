@@ -88,7 +88,7 @@ struct CompilationUnit;
 struct InternalClass;
 struct InternalClassPool;
 
-struct Q_QML_EXPORT ExecutionEngine
+struct Q_QML_EXPORT ExecutionEngine : public EngineBase
 {
 private:
     static qint32 maxCallDepth;
@@ -97,10 +97,6 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    Heap::ExecutionContext *current;
-
-    Value *jsStackTop;
-    quint32 hasException;
     qint32 callDepth;
 
     MemoryManager *memoryManager;

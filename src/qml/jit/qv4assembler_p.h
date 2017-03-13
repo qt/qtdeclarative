@@ -713,6 +713,12 @@ public:
     using JITTargetPlatform::platformFinishEnteringStandardStackFrame;
     using JITTargetPlatform::platformLeaveStandardStackFrame;
 
+    static qint32 targetStructureOffset(qint32 hostOffset)
+    {
+        Q_ASSERT(hostOffset % QT_POINTER_SIZE == 0);
+        return (hostOffset * RegisterSize) / QT_POINTER_SIZE;
+    }
+
     using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
 
     struct LookupCall {
@@ -1249,7 +1255,7 @@ public:
                                  const RegisterInformation &fpRegistersToSave);
 
     void checkException() {
-        load32(Address(EngineRegister, qOffsetOf(QV4::ExecutionEngine, hasException)), ScratchRegister);
+        load32(Address(EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, hasException))), ScratchRegister);
         Jump exceptionThrown = branch32(RelationalCondition::NotEqual, ScratchRegister, TrustedImm32(0));
         if (catchBlock)
             addPatch(catchBlock, exceptionThrown);
@@ -1317,7 +1323,7 @@ public:
         // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
 
         // load the table from the context
-        loadPtr(Address(EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), ScratchRegister);
+        loadPtr(Address(EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), ScratchRegister);
         loadPtr(Address(ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
                     lookupCall.addr.base);
         // pre-calculate the indirect address for the lookupCall table:
@@ -1616,9 +1622,9 @@ public:
         const int locals = _stackLayout->calculateJSStackFrameSize();
         if (locals <= 0)
             return;
-        loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), JITTargetPlatform::LocalsRegister);
+        loadPtr(Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))), JITTargetPlatform::LocalsRegister);
         RegisterSizeDependentOps::initializeLocalVariables(this, locals);
-        storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+        storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
     }
 
     Label exceptionReturnLabel;
