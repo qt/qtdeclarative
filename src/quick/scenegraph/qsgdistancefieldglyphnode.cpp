@@ -39,7 +39,6 @@
 
 #include "qsgdistancefieldglyphnode_p.h"
 #include "qsgdistancefieldglyphnode_p_p.h"
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qsgdistancefieldglyphnode_p_p.h"
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/qopenglfunctions.h>
 #include <QtGui/qsurface.h>

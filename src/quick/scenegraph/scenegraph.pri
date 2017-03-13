@@ -45,7 +45,6 @@ HEADERS += \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider.h \
-    $$PWD/util/qsgdistancefieldutil_p.h \
     $$PWD/util/qsgflatcolormaterial.h \
     $$PWD/util/qsgsimplematerial.h \
     $$PWD/util/qsgtexturematerial.h \
@@ -62,7 +61,6 @@ SOURCES += \
     $$PWD/util/qsgsimpletexturenode.cpp \
     $$PWD/util/qsgtexture.cpp \
     $$PWD/util/qsgtextureprovider.cpp \
-    $$PWD/util/qsgdistancefieldutil.cpp \
     $$PWD/util/qsgflatcolormaterial.cpp \
     $$PWD/util/qsgsimplematerial.cpp \
     $$PWD/util/qsgtexturematerial.cpp \

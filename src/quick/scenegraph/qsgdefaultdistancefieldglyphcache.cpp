@@ -42,7 +42,6 @@
 #include <QtGui/private/qdistancefield_p.h>
 #include <QtGui/private/qopenglcontext_p.h>
 #include <QtQml/private/qqmlglobal_p.h>
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
 #include <qopenglframebufferobject.h>
 #include <qmath.h>
@@ -60,8 +59,8 @@ DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSI
 #  define QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
 #endif
 
-QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
-    : QSGDistanceFieldGlyphCache(man, c, font)
+QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font)
+    : QSGDistanceFieldGlyphCache(c, font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
     , m_blitProgram(0)

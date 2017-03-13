@@ -40,7 +40,6 @@
 #include "qsgadaptationlayer_p.h"
 
 #include <qmath.h>
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qrawfont_p.h>
@@ -57,9 +56,8 @@ static QElapsedTimer qsg_render_timer;
 
 QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;
 
-QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
-    : m_manager(man)
-    , m_pendingGlyphs(64)
+QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font)
+    : m_pendingGlyphs(64)
 {
     Q_ASSERT(font.isValid());
 

@@ -45,7 +45,6 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgatlastexture_p.h>
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -159,8 +158,8 @@ void QSGDefaultRenderContext::invalidate()
     delete m_depthStencilManager;
     m_depthStencilManager = 0;
 
-    delete m_distanceFieldCacheManager;
-    m_distanceFieldCacheManager = 0;
+    qDeleteAll(m_glyphCaches);
+    m_glyphCaches.clear();
 
     if (m_gl->property(QSG_RENDERCONTEXT_PROPERTY) == QVariant::fromValue(this))
         m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
@@ -294,13 +293,10 @@ QT_END_NAMESPACE
 
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)
 {
-    if (!m_distanceFieldCacheManager)
-        m_distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager;
-
-    QSGDistanceFieldGlyphCache *cache = m_distanceFieldCacheManager->cache(font);
+    QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(font, 0);
     if (!cache) {
-        cache = new QSGDefaultDistanceFieldGlyphCache(m_distanceFieldCacheManager, openglContext(), font);
-        m_distanceFieldCacheManager->insertCache(font, cache);
+        cache = new QSGDefaultDistanceFieldGlyphCache(openglContext(), font);
+        m_glyphCaches.insert(font, cache);
     }
 
     return cache;
