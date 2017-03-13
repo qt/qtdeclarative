@@ -54,13 +54,11 @@ import "../Common"
 import "fitness.js" as FitnessData
 
 Item {
-    Rectangle {
+    Item {
         anchors.centerIn: parent
 
         width: UIStyle.visibleDiameter
         height: UIStyle.visibleRectHeight
-
-        color: "transparent"
 
         QQ2.SwipeView {
             id: svFitnessContainer

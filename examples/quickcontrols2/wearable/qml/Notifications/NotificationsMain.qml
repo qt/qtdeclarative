@@ -54,13 +54,11 @@ import "../Common"
 import "notifications.js" as NotificationData
 
 Item {
-    Rectangle {
+    Item {
         anchors.centerIn: parent
 
         width: UIStyle.visibleDiameter
         height: UIStyle.visibleRectHeight
-
-        color: "transparent"
 
         QQC2.SwipeView {
             id: svNotificationsContainer
@@ -102,9 +100,7 @@ Item {
 
                         model: missedCallsList
 
-                        delegate: Rectangle {
-                            radius: 10
-                            color: "transparent"
+                        delegate: Item {
                             height: missedCallsView.height
                             width: missedCallsView.width
                             Column {

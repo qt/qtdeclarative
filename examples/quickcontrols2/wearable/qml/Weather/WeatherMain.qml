@@ -54,14 +54,12 @@ import "../Common"
 import "weather.js" as WeatherData
 
 Item {
-    Rectangle {
+    Item {
         id: weatherCntr
         anchors.centerIn: parent
 
         width: UIStyle.visibleDiameter
         height: UIStyle.visibleRectHeight
-
-        color: "transparent"
 
         QQC2.SwipeView {
             id: svWeatherContainer

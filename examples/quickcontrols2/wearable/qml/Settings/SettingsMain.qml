@@ -53,13 +53,11 @@ import QtQuick.Controls 2.0 as QQC2
 import "../Common"
 
 Item {
-    Rectangle {
+    Item {
         anchors.centerIn: parent
 
         width: UIStyle.visibleDiameter
         height: UIStyle.visibleRectHeight
-
-        color: "transparent"
 
         SettingsData {
             id: settingsData

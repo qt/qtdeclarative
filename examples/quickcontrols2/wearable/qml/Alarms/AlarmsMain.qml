@@ -54,15 +54,11 @@ import "../Common"
 import "alarms.js" as AlarmData
 
 Item {
-    Rectangle {
+    Item {
         anchors.centerIn: parent
 
         width: UIStyle.visibleDiameter
         height: width
-
-        radius: width / 2
-
-        color: "transparent"
 
         QQC2.SwipeView {
             id: svAlarmsContainer
