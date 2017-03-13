@@ -49,63 +49,40 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQC2
-import "../Style"
+import QtQuick.Templates 2.0 as T
+import "."
 
-Item {
-    QQC2.SwipeView {
-        id: svWatchContainer
+T.PageIndicator {
+    id: control
 
-        anchors.fill: parent
-        currentIndex: 0
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
 
-        ListModel {
-            id: placesList
-            ListElement {
-                cityName: "New York"
-                timeShift: -4
-            }
-            ListElement {
-                cityName: "London"
-                timeShift: 0
-            }
-            ListElement {
-                cityName: "Oslo"
-                timeShift: 1
-            }
-            ListElement {
-                cityName: "Mumbai"
-                timeShift: 5.5
-            }
-            ListElement {
-                cityName: "Tokyo"
-                timeShift: 9
-            }
-            ListElement {
-                cityName: "Brisbane"
-                timeShift: 10
-            }
-            ListElement {
-                cityName: "Los Angeles"
-                timeShift: -8
-            }
-        }
+    spacing: 6
+    padding: 6
 
-        Repeater {
-            model: placesList
-            delegate: Clock {
+    delegate: Rectangle {
+        implicitWidth: 8
+        implicitHeight: 8
+
+        radius: width / 2
+        color: UIStyle.colorQtGray3
+
+        opacity: index === control.currentIndex ? 1.0 : 0.35
+
+        Behavior on opacity {
+            OpacityAnimator {
+                duration: 100
             }
         }
     }
 
-    QQC2.PageIndicator {
-        id: pgWatchIndicator
+    contentItem: Row {
+        spacing: control.spacing
 
-        anchors.bottom: svWatchContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        count: svWatchContainer.count
-        currentIndex: svWatchContainer.currentIndex
+        Repeater {
+            model: control.count
+            delegate: control.delegate
+        }
     }
 }

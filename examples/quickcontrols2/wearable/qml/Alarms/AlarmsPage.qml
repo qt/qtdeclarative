@@ -163,22 +163,6 @@ Item {
 
             count: svAlarmsContainer.count
             currentIndex: svAlarmsContainer.currentIndex
-
-            delegate: Rectangle {
-                implicitWidth: 8
-                implicitHeight: 8
-
-                radius: width / 2
-                color: UIStyle.colorQtGray3
-
-                opacity: index === pgAlarmsIndicator.currentIndex ? 1.0 : 0.35
-
-                Behavior on opacity {
-                    OpacityAnimator {
-                        duration: 100
-                    }
-                }
-            }
         }
     }
 }

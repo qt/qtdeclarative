@@ -335,22 +335,6 @@ Item {
 
             count: svWeatherContainer.count
             currentIndex: svWeatherContainer.currentIndex
-
-            delegate: Rectangle {
-                implicitWidth: 8
-                implicitHeight: 8
-
-                radius: width / 2
-                color: UIStyle.colorQtGray3
-
-                opacity: index === pgWeatherIndicator.currentIndex ? 1.0 : 0.35
-
-                Behavior on opacity {
-                    OpacityAnimator {
-                        duration: 100
-                    }
-                }
-            }
         }
         Component.onCompleted: {
             WeatherData.requestWeatherData(wDataCntr)

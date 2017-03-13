@@ -16,9 +16,10 @@
         <file>qml/Settings/SettingsData.qml</file>
         <file>qml/Settings/SettingsPage.qml</file>
         <file>qml/Style/qmldir</file>
-        <file>qml/Style/UIStyle.qml</file>
+        <file>qml/Style/PageIndicator.qml</file>
         <file>qml/Style/Slider.qml</file>
         <file>qml/Style/Switch.qml</file>
+        <file>qml/Style/UIStyle.qml</file>
         <file>qml/Weather/weather.js</file>
         <file>qml/Weather/weather.json</file>
         <file>qml/Weather/WeatherPage.qml</file>

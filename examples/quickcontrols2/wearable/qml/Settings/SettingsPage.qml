@@ -162,22 +162,6 @@ Item {
 
             count: svSettingsContainer.count
             currentIndex: svSettingsContainer.currentIndex
-
-            delegate: Rectangle {
-                implicitWidth: 8
-                implicitHeight: 8
-
-                radius: width / 2
-                color: UIStyle.colorQtGray3
-
-                opacity: index === pgSettingsIndicator.currentIndex ? 1.0 : 0.35
-
-                Behavior on opacity {
-                    OpacityAnimator {
-                        duration: 100
-                    }
-                }
-            }
         }
     }
 }
