@@ -80,7 +80,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 64
                         width: 64
-                        source: "../../images/navigation/route.png"
+                        source: "images/route.png"
                         fillMode: Image.PreserveAspectCrop
                     }
                     Text {

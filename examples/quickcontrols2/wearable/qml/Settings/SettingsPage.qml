@@ -81,7 +81,7 @@ Item {
                     spacing: 50
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "../../images/settings/bluetooth.png"
+                        source: "images/bluetooth.png"
                     }
                     QQC2.Switch {
                         id: bluetoothSwitch
@@ -93,7 +93,7 @@ Item {
                     spacing: 50
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "../../images/settings/wifi.png"
+                        source: "images/wifi.png"
                     }
                     QQC2.Switch {
                         id: wirelessSwitch
@@ -114,7 +114,7 @@ Item {
                 Column {
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        source: "../../images/settings/brightness.png"
+                        source: "images/brightness.png"
                     }
                     QQC2.Slider {
                         id: brightnessSlider
@@ -129,7 +129,7 @@ Item {
                     spacing: 2
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        source: "../../images/settings/contrast.png"
+                        source: "images/contrast.png"
                     }
                     QQC2.Slider {
                         id: contrastSlider

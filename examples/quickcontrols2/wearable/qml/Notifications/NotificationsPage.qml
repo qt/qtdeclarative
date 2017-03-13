@@ -85,7 +85,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 64
                         width: 64
-                        source: "../../images/notifications/missedcall.png"
+                        source: "images/missedcall.png"
                     }
 
                     ListView {
@@ -113,8 +113,8 @@ Item {
                                     height: 64
                                     width: 64
                                     source: (gender == "m") ?
-                                    "../../images/notifications/avatarm.png"
-                                    :"../../images/notifications/avatarf.png"
+                                    "images/avatarm.png"
+                                    :"images/avatarf.png"
                                 }
 
                                 Text {

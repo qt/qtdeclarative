@@ -69,7 +69,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             height: 64
             width: 64
-            source: "../../images/navigation/" + navImage
+            source: "images/" + navImage
             fillMode: Image.PreserveAspectFit
         }
 

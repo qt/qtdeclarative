@@ -64,7 +64,7 @@ QQC2.ApplicationWindow {
     title: qsTr("Wearable")
 
     background: Image {
-        source: "images/background/HomeBackground.png"
+        source: "images/background.png"
     }
 
     header: NaviButton {

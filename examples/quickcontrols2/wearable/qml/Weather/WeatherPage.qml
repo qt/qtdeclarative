@@ -81,7 +81,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 64
                         width: 64
-                        source: "../../images/weather/temperature.png"
+                        source: "images/temperature.png"
                     }
 
                     Column {
@@ -146,7 +146,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 64
                             width: 64
-                            source: "../../images/weather/wind.png"
+                            source: "images/wind.png"
                         }
 
                         Text {
@@ -174,7 +174,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 64
                             width: 64
-                            source: "../../images/weather/humidity.png"
+                            source: "images/humidity.png"
                         }
                         Text {
                             anchors.left: hImg.right
@@ -206,7 +206,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 64
                         width: 64
-                        source: "../../images/weather/pressure.png"
+                        source: "images/pressure.png"
                     }
 
                     Column {
@@ -271,7 +271,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 64
                             width: 64
-                            source: "../../images/weather/sunrise.png"
+                            source: "images/sunrise.png"
                         }
 
                         Text {
@@ -300,7 +300,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 64
                             width: 64
-                            source: "../../images/weather/sunset.png"
+                            source: "images/sunset.png"
                         }
 
                         Text {

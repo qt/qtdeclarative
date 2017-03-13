@@ -86,7 +86,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         height: 64
                         width: 64
-                        source: "../../images/fitness/man-walking.png"
+                        source: "images/man-walking.png"
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -118,7 +118,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         height: 64
                         width: 64
-                        source: "../../images/fitness/man-running.png"
+                        source: "images/man-running.png"
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter

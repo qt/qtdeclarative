@@ -69,37 +69,37 @@ PathView {
     model: ListModel {
         ListElement {
             title: qsTr("World Clock")
-            icon: "../images/worldclock/watch.png"
+            icon: "WorldClock/images/watch.png"
             page: "WorldClock/WorldClockPage.qml"
         }
         ListElement {
             title: qsTr("Navigation")
-            icon: "../images/navigation/route.png"
+            icon: "Navigation/images/route.png"
             page: "Navigation/NavigationPage.qml"
         }
         ListElement {
             title: qsTr("Weather")
-            icon: "../images/weather/weather.png"
+            icon: "Weather/images/weather.png"
             page: "Weather/WeatherPage.qml"
         }
         ListElement {
             title: qsTr("Fitness")
-            icon: "../images/fitness/fitness.png"
+            icon: "Fitness/images/fitness.png"
             page: "Fitness/FitnessPage.qml"
         }
         ListElement {
             title: qsTr("Notifications")
-            icon: "../images/notifications/notifications.png"
+            icon: "Notifications/images/notifications.png"
             page: "Notifications/NotificationsPage.qml"
         }
         ListElement {
             title: qsTr("Alarm")
-            icon: "../images/alarms/alarms.png"
+            icon: "Alarms/images/alarms.png"
             page: "Alarms/AlarmsPage.qml"
         }
         ListElement {
             title: qsTr("Settings")
-            icon: "../images/settings/settings.png"
+            icon: "Settings/images/settings.png"
             page: "Settings/SettingsPage.qml"
         }
     }
