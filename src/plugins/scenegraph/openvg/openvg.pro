@@ -31,7 +31,6 @@ HEADERS += \
     qsgopenvghelpers.h \
     qsgopenvgfontglyphcache.h \
     qsgopenvgpainternode.h \
-    qsgopenvgspritenode.h \
     qsgopenvgrenderable.h \
     qopenvgoffscreensurface.h
 
@@ -52,6 +51,10 @@ SOURCES += \
     qsgopenvghelpers.cpp \
     qsgopenvgfontglyphcache.cpp \
     qsgopenvgpainternode.cpp \
-    qsgopenvgspritenode.cpp \
     qsgopenvgrenderable.cpp \
     qopenvgoffscreensurface.cpp
+
+qtConfig(quick-sprite) {
+    HEADERS += qsgopenvgspritenode.h
+    SOURCES += qsgopenvgspritenode.cpp
+}

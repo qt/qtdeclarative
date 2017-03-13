@@ -43,6 +43,8 @@
 #include <private/qsgadaptationlayer_p.h>
 #include "qsgopenvgrenderable.h"
 
+QT_REQUIRE_CONFIG(quick_sprite);
+
 QT_BEGIN_NAMESPACE
 class QSGOpenVGTexture;
 class QSGOpenVGSpriteNode : public QSGSpriteNode, public QSGOpenVGRenderable

@@ -73,8 +73,10 @@ public:
     void endVisit(QSGGlyphNode *) override;
     bool visit(QSGRootNode *) override;
     void endVisit(QSGRootNode *) override;
+#if QT_CONFIG(quick_sprite)
     bool visit(QSGSpriteNode *) override;
     void endVisit(QSGSpriteNode *) override;
+#endif
     bool visit(QSGRenderNode *) override;
     void endVisit(QSGRenderNode *) override;
 

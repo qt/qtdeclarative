@@ -95,7 +95,9 @@ public:
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGInternalRectangleNode *createInternalRectangleNode() override;
     QSGInternalImageNode *createInternalImageNode() override;
+#if QT_CONFIG(quick_sprite)
     QSGSpriteNode *createSpriteNode() override;
+#endif
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
 };
 
