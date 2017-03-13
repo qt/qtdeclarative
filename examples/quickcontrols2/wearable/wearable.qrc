@@ -13,7 +13,6 @@
         <file>qml/Navigation/walk_route.json</file>
         <file>qml/Notifications/notifications.js</file>
         <file>qml/Notifications/NotificationsPage.qml</file>
-        <file>qml/Settings/SettingsData.qml</file>
         <file>qml/Settings/SettingsPage.qml</file>
         <file>qml/Style/qmldir</file>
         <file>qml/Style/PageIndicator.qml</file>

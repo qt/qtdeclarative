@@ -50,118 +50,108 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
+import Qt.labs.settings 1.0
 import "../Style"
 
 Item {
-    Item {
-        anchors.centerIn: parent
 
-        width: UIStyle.visibleDiameter
-        height: UIStyle.visibleRectHeight
+    Settings {
+        id: settings
+        property alias wireless: wirelessSwitch.checked
+        property alias bluetooth: bluetoothSwitch.checked
+        property alias contrast: contrastSlider.value
+        property alias brightness: brightnessSlider.value
+    }
 
-        SettingsData {
-            id: settingsData
-        }
+    QQC2.SwipeView {
+        id: svSettingsContainer
 
-        QQC2.SwipeView {
-            id: svSettingsContainer
+        anchors.fill: parent
 
-            anchors.fill: parent
+        currentIndex: 0
 
-            clip: true
-            currentIndex: 0
+        Item {
+            id: settingsPage1
 
-            Item {
-                id: settingsPage1
+            Column {
+                anchors.centerIn: parent
+                spacing: 25
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 25
-
-                    Row {
-                        spacing: 50
-                        Image {
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 64
-                            width: 64
-                            source: "../../images/settings/bluetooth.png"
-                        }
-                        QQC2.Switch {
-                            id: bluetoothSwitch
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: settingsData.bluetooth.state
-                        }
+                Row {
+                    spacing: 50
+                    Image {
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: "../../images/settings/bluetooth.png"
                     }
-                    Row {
-                        spacing: 50
-                        Image {
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 64
-                            width: 64
-                            source: "../../images/settings/wifi.png"
-                        }
-                        QQC2.Switch {
-                            id: wirelessSwitch
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: settingsData.wireless.state
-                        }
+                    QQC2.Switch {
+                        id: bluetoothSwitch
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: settings.bluetooth
+                    }
+                }
+                Row {
+                    spacing: 50
+                    Image {
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: "../../images/settings/wifi.png"
+                    }
+                    QQC2.Switch {
+                        id: wirelessSwitch
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: settings.wireless
                     }
                 }
             }
+        }
 
-            Item {
-                id: settingsPage2
+        Item {
+            id: settingsPage2
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 2
 
                 Column {
-                    anchors.centerIn: parent
+                    Image {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        source: "../../images/settings/brightness.png"
+                    }
+                    QQC2.Slider {
+                        id: brightnessSlider
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        from: 0
+                        to: 5
+                        stepSize: 1
+                        value: settings.brightness
+                    }
+                }
+                Column {
                     spacing: 2
-
-                    Column {
-                        Image {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            height: 64
-                            width: 64
-                            source: "../../images/settings/brightness.png"
-                        }
-                        QQC2.Slider {
-                            id: brightnessSlider
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            value: settingsData.brightness.value
-                            from: settingsData.brightness.min
-                            to: settingsData.brightness.max
-                            stepSize: settingsData.brightness.steps
-                        }
+                    Image {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        source: "../../images/settings/contrast.png"
                     }
-                    Column {
-                        spacing: 2
-                        Image {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            height: 64
-                            width: 64
-                            source: "../../images/settings/contrast.png"
-                        }
-                        QQC2.Slider {
-                            id: contrastSlider
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            value: settingsData.contrast.value
-                            from: settingsData.contrast.min
-                            to: settingsData.contrast.max
-                            stepSize: settingsData.contrast.steps
-                        }
+                    QQC2.Slider {
+                        id: contrastSlider
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        from: 0
+                        to: 10
+                        stepSize: 1
+                        value: settings.contrast
                     }
                 }
             }
         }
+    }
 
-        QQC2.PageIndicator {
-            id: pgSettingsIndicator
+    QQC2.PageIndicator {
+        id: pgSettingsIndicator
 
-            anchors.bottom: svSettingsContainer.bottom
-            anchors.bottomMargin: 1
-            anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: svSettingsContainer.bottom
+        anchors.bottomMargin: 1
+        anchors.horizontalCenter: parent.horizontalCenter
 
-            count: svSettingsContainer.count
-            currentIndex: svSettingsContainer.currentIndex
-        }
+        count: svSettingsContainer.count
+        currentIndex: svSettingsContainer.currentIndex
     }
 }
