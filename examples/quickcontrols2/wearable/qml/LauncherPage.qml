@@ -69,8 +69,8 @@ PathView {
     model: ListModel {
         ListElement {
             title: qsTr("World Clock")
-            icon: "../images/watchface/watch.png"
-            page: "WatchFace/WatchFacePage.qml"
+            icon: "../images/worldclock/watch.png"
+            page: "WorldClock/WorldClockPage.qml"
         }
         ListElement {
             title: qsTr("Navigation")

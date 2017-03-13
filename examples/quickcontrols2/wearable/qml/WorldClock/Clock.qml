@@ -65,7 +65,7 @@ Item {
     property bool internationalTime: true //Unset for local time
 
     function getWatchFaceImage(imageName) {
-        return "../../images/watchface/" + imageName
+        return "../../images/worldclock/" + imageName
     }
 
     function timeChanged() {

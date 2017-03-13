@@ -19,11 +19,11 @@
         <file>qml/Style/UIStyle.qml</file>
         <file>qml/Style/Slider.qml</file>
         <file>qml/Style/Switch.qml</file>
-        <file>qml/WatchFace/Clock.qml</file>
-        <file>qml/WatchFace/WatchFacePage.qml</file>
         <file>qml/Weather/weather.js</file>
         <file>qml/Weather/weather.json</file>
         <file>qml/Weather/WeatherPage.qml</file>
+        <file>qml/WorldClock/Clock.qml</file>
+        <file>qml/WorldClock/WorldClockPage.qml</file>
         <file>images/alarms/alarms.png</file>
         <file>images/background/HomeBackground.png</file>
         <file>images/back.png</file>
@@ -48,15 +48,6 @@
         <file>images/settings/contrast.png</file>
         <file>images/settings/settings.png</file>
         <file>images/settings/wifi.png</file>
-        <file>images/watchface/center.png</file>
-        <file>images/watchface/second.png</file>
-        <file>images/watchface/swissdaydial.png</file>
-        <file>images/watchface/swissdayhour.png</file>
-        <file>images/watchface/swissdayminute.png</file>
-        <file>images/watchface/swissnightdial.png</file>
-        <file>images/watchface/swissnighthour.png</file>
-        <file>images/watchface/swissnightminute.png</file>
-        <file>images/watchface/watch.png</file>
         <file>images/weather/humidity.png</file>
         <file>images/weather/pressure.png</file>
         <file>images/weather/sunrise.png</file>
@@ -64,5 +55,14 @@
         <file>images/weather/temperature.png</file>
         <file>images/weather/weather.png</file>
         <file>images/weather/wind.png</file>
+        <file>images/worldclock/center.png</file>
+        <file>images/worldclock/second.png</file>
+        <file>images/worldclock/swissdaydial.png</file>
+        <file>images/worldclock/swissdayhour.png</file>
+        <file>images/worldclock/swissdayminute.png</file>
+        <file>images/worldclock/swissnightdial.png</file>
+        <file>images/worldclock/swissnighthour.png</file>
+        <file>images/worldclock/swissnightminute.png</file>
+        <file>images/worldclock/watch.png</file>
     </qresource>
 </RCC>
