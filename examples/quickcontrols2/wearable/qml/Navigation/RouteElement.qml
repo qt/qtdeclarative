@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import "../Common"
+import "../Style"
 
 Rectangle {
     color: UIStyle.colorQtGray8

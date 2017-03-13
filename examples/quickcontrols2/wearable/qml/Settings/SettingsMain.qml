@@ -50,7 +50,7 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
-import "../Common"
+import "../Style"
 
 Item {
     Item {
@@ -86,7 +86,7 @@ Item {
                             width: 64
                             source: "../../images/settings/bluetooth.png"
                         }
-                        WSwitch {
+                        QQC2.Switch {
                             id: bluetoothSwitch
                             anchors.verticalCenter: parent.verticalCenter
                             checked: settingsData.bluetooth.state
@@ -100,7 +100,7 @@ Item {
                             width: 64
                             source: "../../images/settings/wifi.png"
                         }
-                        WSwitch {
+                        QQC2.Switch {
                             id: wirelessSwitch
                             anchors.verticalCenter: parent.verticalCenter
                             checked: settingsData.wireless.state
@@ -123,7 +123,7 @@ Item {
                             width: 64
                             source: "../../images/settings/brightness.png"
                         }
-                        WSlider {
+                        QQC2.Slider {
                             id: brightnessSlider
                             anchors.horizontalCenter: parent.horizontalCenter
                             value: settingsData.brightness.value
@@ -140,7 +140,7 @@ Item {
                             width: 64
                             source: "../../images/settings/contrast.png"
                         }
-                        WSlider {
+                        QQC2.Slider {
                             id: contrastSlider
                             anchors.horizontalCenter: parent.horizontalCenter
                             value: settingsData.contrast.value

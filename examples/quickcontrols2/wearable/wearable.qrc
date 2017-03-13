@@ -3,10 +3,6 @@
         <file>wearable.qml</file>
         <file>qml/Alarms/alarms.js</file>
         <file>qml/Alarms/AlarmsMain.qml</file>
-        <file>qml/Common/qmldir</file>
-        <file>qml/Common/UIStyle.qml</file>
-        <file>qml/Common/WSlider.qml</file>
-        <file>qml/Common/WSwitch.qml</file>
         <file>qml/Fitness/fitness.js</file>
         <file>qml/Fitness/FitnessMain.qml</file>
         <file>qml/LauncherMain.qml</file>
@@ -19,6 +15,10 @@
         <file>qml/Notifications/NotificationsMain.qml</file>
         <file>qml/Settings/SettingsData.qml</file>
         <file>qml/Settings/SettingsMain.qml</file>
+        <file>qml/Style/qmldir</file>
+        <file>qml/Style/UIStyle.qml</file>
+        <file>qml/Style/Slider.qml</file>
+        <file>qml/Style/Switch.qml</file>
         <file>qml/WatchFace/Clock.qml</file>
         <file>qml/WatchFace/WatchFaceMain.qml</file>
         <file>qml/Weather/weather.js</file>

@@ -51,7 +51,7 @@
 import QtQuick 2.7
 import QtQuick.Window 2.0
 import "qml"
-import "qml/Common"
+import "qml/Style"
 
 Window {
     id: rootWindow

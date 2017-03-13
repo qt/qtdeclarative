@@ -49,39 +49,38 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 import "."
 
-Slider {
+T.Switch {
     id: control
 
-    background: Rectangle {
-        x: control.leftPadding
-        y: control.topPadding + control.availableHeight / 2 - height / 2
-        implicitWidth: 200
-        implicitHeight: 4
-        width: control.availableWidth
-        height: implicitHeight
-        radius: 2
-        color: UIStyle.colorQtGray3
+    implicitWidth: 48
+    implicitHeight: 26
 
-        Rectangle {
-            width: control.visualPosition * parent.width
-            height: parent.height
-            color: UIStyle.colorQtAuxGreen2
-            radius: 2
+    indicator: Rectangle {
+        x: control.visualPosition * (control.width - width)
+        y: (control.height - height) / 2
+        width: 26
+        height: 26
+
+        radius: 13
+        color: control.down ? UIStyle.colorQtGray6 : UIStyle.colorQtGray10
+        border.color: !control.checked ? "#999999"
+                                       : (control.down ? UIStyle.colorQtAuxGreen2
+                                                       : UIStyle.colorQtAuxGreen1)
+
+        Behavior on x {
+            enabled: !control.pressed
+            SmoothedAnimation { velocity: 200 }
         }
     }
 
-    handle: Rectangle {
-        x: control.leftPadding
-            + control.visualPosition
-            * (control.availableWidth - width)
-        y: control.topPadding + control.availableHeight / 2 - height / 2
-        implicitWidth: 20
-        implicitHeight: 15
-        radius: 5
-        color: control.pressed ? "#f0f0f0" : "#f6f6f6"
-        border.color: UIStyle.colorQtGray7
+    background: Rectangle {
+        radius: 13
+        color: control.checked ? UIStyle.colorQtAuxGreen2 : "#E6173D"
+        border.color: control.checked ? UIStyle.colorQtAuxGreen2
+                                      : UIStyle.colorQtGray6
     }
 }
+

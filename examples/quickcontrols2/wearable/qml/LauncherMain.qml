@@ -52,7 +52,7 @@ import QtQuick 2.7
 import "WatchFace"
 import "Fitness"
 import "Navigation"
-import "Common"
+import "Style"
 
 Item {
     Item {

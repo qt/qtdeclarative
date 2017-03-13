@@ -55,7 +55,7 @@ import QtQml.StateMachine 1.0 as DeclSM
 import "WatchFace"
 import "Fitness"
 import "Navigation"
-import "Common"
+import "Style"
 
 Item {
     Image {

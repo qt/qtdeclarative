@@ -50,7 +50,7 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
-import "../Common"
+import "../Style"
 import "alarms.js" as AlarmData
 
 Item {
@@ -81,7 +81,7 @@ Item {
                         anchors.right: parent.right
                         anchors.rightMargin: 40
                         height: 30
-                        WSwitch {
+                        QQC2.Switch {
                             id: alarmsPage1State
                             checked: AlarmData.weekdaysAlarmDefaultState()
                         }
@@ -123,7 +123,7 @@ Item {
                         anchors.right: parent.right
                         anchors.rightMargin: 40
                         height: 30
-                        WSwitch {
+                        QQC2.Switch {
                             id: alarmsPage2State
                             checked: AlarmData.weekendAlarmDefaultState()
                         }
