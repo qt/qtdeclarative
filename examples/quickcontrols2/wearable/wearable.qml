@@ -93,6 +93,6 @@ QQC2.ApplicationWindow {
         focus: true
         anchors.fill: parent
 
-        initialItem: LauncherMain { }
+        initialItem: LauncherPage { }
     }
 }

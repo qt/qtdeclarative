@@ -2,28 +2,28 @@
     <qresource prefix="/">
         <file>wearable.qml</file>
         <file>qml/Alarms/alarms.js</file>
-        <file>qml/Alarms/AlarmsMain.qml</file>
+        <file>qml/Alarms/AlarmsPage.qml</file>
         <file>qml/Fitness/fitness.js</file>
-        <file>qml/Fitness/FitnessMain.qml</file>
-        <file>qml/LauncherMain.qml</file>
+        <file>qml/Fitness/FitnessPage.qml</file>
+        <file>qml/LauncherPage.qml</file>
         <file>qml/NaviButton.qml</file>
         <file>qml/Navigation/navigation.js</file>
-        <file>qml/Navigation/NavigationMain.qml</file>
+        <file>qml/Navigation/NavigationPage.qml</file>
         <file>qml/Navigation/RouteElement.qml</file>
         <file>qml/Navigation/walk_route.json</file>
         <file>qml/Notifications/notifications.js</file>
-        <file>qml/Notifications/NotificationsMain.qml</file>
+        <file>qml/Notifications/NotificationsPage.qml</file>
         <file>qml/Settings/SettingsData.qml</file>
-        <file>qml/Settings/SettingsMain.qml</file>
+        <file>qml/Settings/SettingsPage.qml</file>
         <file>qml/Style/qmldir</file>
         <file>qml/Style/UIStyle.qml</file>
         <file>qml/Style/Slider.qml</file>
         <file>qml/Style/Switch.qml</file>
         <file>qml/WatchFace/Clock.qml</file>
-        <file>qml/WatchFace/WatchFaceMain.qml</file>
+        <file>qml/WatchFace/WatchFacePage.qml</file>
         <file>qml/Weather/weather.js</file>
         <file>qml/Weather/weather.json</file>
-        <file>qml/Weather/WeatherMain.qml</file>
+        <file>qml/Weather/WeatherPage.qml</file>
         <file>images/alarms/alarms.png</file>
         <file>images/background/HomeBackground.png</file>
         <file>images/back.png</file>

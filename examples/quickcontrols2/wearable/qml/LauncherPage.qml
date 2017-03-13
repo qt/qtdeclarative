@@ -67,37 +67,37 @@ Item {
             ListElement { // 0
                 title: qsTr("World Clock")
                 icon: "../images/watchface/watch.png"
-                page: "WatchFace/WatchFaceMain.qml"
+                page: "WatchFace/WatchFacePage.qml"
             }
             ListElement { // 1
                 title: qsTr("Navigation")
                 icon: "../images/navigation/route.png"
-                page: "Navigation/NavigationMain.qml"
+                page: "Navigation/NavigationPage.qml"
             }
             ListElement { // 2
                 title: qsTr("Weather")
                 icon: "../images/weather/weather.png"
-                page: "Weather/WeatherMain.qml"
+                page: "Weather/WeatherPage.qml"
             }
             ListElement { // 3
                 title: qsTr("Fitness")
                 icon: "../images/fitness/fitness.png"
-                page: "Fitness/FitnessMain.qml"
+                page: "Fitness/FitnessPage.qml"
             }
             ListElement { // 4
                 title: qsTr("Notifications")
                 icon: "../images/notifications/notifications.png"
-                page: "Notifications/NotificationsMain.qml"
+                page: "Notifications/NotificationsPage.qml"
             }
             ListElement { // 5
                 title: qsTr("Alarm")
                 icon: "../images/alarms/alarms.png"
-                page: "Alarms/AlarmsMain.qml"
+                page: "Alarms/AlarmsPage.qml"
             }
             ListElement { // 6
                 title: qsTr("Settings")
                 icon: "../images/settings/settings.png"
-                page: "Settings/SettingsMain.qml"
+                page: "Settings/SettingsPage.qml"
             }
         }
 
