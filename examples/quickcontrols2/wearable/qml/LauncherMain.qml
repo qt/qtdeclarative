@@ -54,7 +54,7 @@ import "Fitness"
 import "Navigation"
 import "Common"
 
-PageContainer {
+Item {
     Item {
         anchors.centerIn: parent
 

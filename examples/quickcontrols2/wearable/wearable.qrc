@@ -3,7 +3,6 @@
         <file>wearable.qml</file>
         <file>qml/Alarms/alarms.js</file>
         <file>qml/Alarms/AlarmsMain.qml</file>
-        <file>qml/Common/PageContainer.qml</file>
         <file>qml/Common/qmldir</file>
         <file>qml/Common/UIStyle.qml</file>
         <file>qml/Common/WSlider.qml</file>

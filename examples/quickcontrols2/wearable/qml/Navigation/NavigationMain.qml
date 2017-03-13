@@ -53,7 +53,7 @@ import QtQuick.Layouts 1.3
 import "../Common"
 import "navigation.js" as NavigationData
 
-PageContainer {
+Item {
     Item {
         anchors.centerIn: parent
 

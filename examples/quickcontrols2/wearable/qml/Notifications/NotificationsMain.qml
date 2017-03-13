@@ -53,7 +53,7 @@ import QtQuick.Controls 2.0 as QQC2
 import "../Common"
 import "notifications.js" as NotificationData
 
-PageContainer {
+Item {
     Rectangle {
         anchors.centerIn: parent
 

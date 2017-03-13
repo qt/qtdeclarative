@@ -53,7 +53,7 @@ import QtQuick.Controls 2.0 as QQC2
 import "../Common"
 import "weather.js" as WeatherData
 
-PageContainer {
+Item {
     Rectangle {
         id: weatherCntr
         anchors.centerIn: parent

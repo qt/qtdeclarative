@@ -53,7 +53,7 @@ import QtQuick.Controls 2.0 as QQ2
 import "../Common"
 import "fitness.js" as FitnessData
 
-PageContainer {
+Item {
     Rectangle {
         anchors.centerIn: parent
 
