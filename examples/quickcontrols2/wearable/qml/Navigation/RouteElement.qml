@@ -54,31 +54,22 @@ import "../Style"
 Rectangle {
     color: UIStyle.colorQtGray8
 
-    width: UIStyle.visibleDiameter
-    height: UIStyle.visibleRectHeight - titleRowCntr.height
-
     Row {
-        anchors.centerIn: parent
-        width: UIStyle.visibleRectWidth
-        height: parent.height
-
         spacing: 5
+        width: parent.width - 80
+        anchors.centerIn: parent
 
         Image {
             id: img
             anchors.verticalCenter: parent.verticalCenter
-            height: 64
-            width: 64
             source: "images/" + navImage
             fillMode: Image.PreserveAspectFit
         }
 
         Column {
-            height: parent.height
-            width: parent.width - img.width
-
-            anchors.verticalCenter: parent.verticalCenter
             spacing: 5
+            width: parent.width - img.width
+            anchors.verticalCenter: parent.verticalCenter
 
             Text {
                 width: parent.width
@@ -89,6 +80,7 @@ Rectangle {
                 padding: 1
                 color: UIStyle.colorQtGray1
             }
+
             Text {
                 width: parent.width
                 wrapMode: Text.WordWrap

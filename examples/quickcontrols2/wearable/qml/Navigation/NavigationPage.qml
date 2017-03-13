@@ -55,25 +55,23 @@ import "navigation.js" as NavigationData
 Item {
     Column {
         anchors.fill: parent
+        anchors.margins: 2
         spacing: 2
 
         Rectangle {
-            id: titleRowCntr
-
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
-            height: 64
+            height: titleRow.height
 
             color: UIStyle.colorQtGray9
 
             Row {
+                id: titleRow
                 spacing: 10
                 anchors.centerIn: parent
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 64
-                    width: 64
                     source: "images/route.png"
                     fillMode: Image.PreserveAspectCrop
                 }
@@ -95,7 +93,7 @@ Item {
             id: routeView
 
             width: parent.width
-            height: UIStyle.visibleRectHeight - titleRowCntr.height
+            height: parent.height - titleRow.height - parent.spacing
             property var imageList: ["straight.png",
                                      "leftturn.png",
                                      "rightturn.png",
@@ -108,7 +106,10 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
             snapMode: ListView.SnapToItem
             model: routeModel
-            delegate: RouteElement {}
+            delegate: RouteElement {
+                width: routeView.width
+                height: routeView.height
+            }
         }
     }
     Component.onCompleted: {
