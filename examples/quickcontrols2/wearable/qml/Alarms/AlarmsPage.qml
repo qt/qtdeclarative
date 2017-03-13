@@ -51,7 +51,6 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
 import "../Style"
-import "alarms.js" as AlarmData
 
 Item {
     QQC2.SwipeView {
@@ -59,86 +58,44 @@ Item {
 
         anchors.fill: parent
 
-        Item {
-            id: alarmsPage1
-
-            Column {
-                anchors.centerIn: parent
-                width: parent.width
-                spacing: 30
-
-                Row {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 40
-                    height: 30
-                    QQC2.Switch {
-                        id: alarmsPage1State
-                        checked: AlarmData.weekdaysAlarmDefaultState()
-                    }
-                }
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    height: 30
-                    text: AlarmData.weekdaysAlarm()
-                    font.bold: alarmsPage1State.checked
-                    font.pixelSize: alarmsPage1State.checked ?
-                                        UIStyle.fontSizeXL : UIStyle.fontSizeL
-                    font.letterSpacing: 4
-                    color: UIStyle.colorQtGray1
-                }
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    height: 30
-                    text: qsTr("Week Days")
-                    font.pixelSize: UIStyle.fontSizeS
-                    font.italic: true
-                    font.bold: true
-                    font.letterSpacing: 1
-                    color: UIStyle.colorQtGray2
-                }
+        Repeater {
+            model: ListModel {
+                ListElement { name: qsTr("Week Days"); state: true; time: "06:00 AM" }
+                ListElement { name: qsTr("Week Ends"); state: false; time: "07:30 AM" }
             }
-        }
 
-        Item {
-            id: alarmsPage2
+            Item {
+                Column {
+                    spacing: 30
+                    anchors.centerIn: parent
 
-            Column {
-                anchors.centerIn: parent
-                width: parent.width
-                spacing: 30
-
-                Row {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 40
-                    height: 30
                     QQC2.Switch {
-                        id: alarmsPage2State
-                        checked: AlarmData.weekendAlarmDefaultState()
+                        id: stateSwitch
+                        checked: model.state
+                        anchors.left: nameLabel.right
                     }
-                }
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    height: 30
-                    text: AlarmData.weekendAlarm()
-                    font.bold: alarmsPage2State.checked
-                    font.pixelSize: alarmsPage2State.checked ?
-                                        UIStyle.fontSizeXL : UIStyle.fontSizeL
-                    font.letterSpacing: 4
-                    color: UIStyle.colorQtGray1
-                }
+                    Text {
+                        text: model.time
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        verticalAlignment: Text.AlignVCenter
+                        height: UIStyle.fontSizeXL
+                        font.bold: stateSwitch.checked
+                        font.pixelSize: stateSwitch.checked ? UIStyle.fontSizeXL : UIStyle.fontSizeL
+                        font.letterSpacing: 4
+                        color: UIStyle.colorQtGray1
+                    }
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    height: 30
-                    text: qsTr("Week Ends")
-                    font.pixelSize: UIStyle.fontSizeS
-                    font.italic: true
-                    font.bold: true
-                    font.letterSpacing: 1
-                    color: UIStyle.colorQtGray2
+                    Text {
+                        id: nameLabel
+                        text: model.name
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: UIStyle.fontSizeS
+                        font.italic: true
+                        font.bold: true
+                        font.letterSpacing: 1
+                        color: UIStyle.colorQtGray2
+                    }
                 }
             }
         }

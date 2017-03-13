@@ -6,7 +6,6 @@
         <file>images/background.png</file>
         <file>images/back.png</file>
         <file>images/home.png</file>
-        <file>qml/Alarms/alarms.js</file>
         <file>qml/Alarms/AlarmsPage.qml</file>
         <file>qml/Alarms/images/alarms.png</file>
         <file>qml/Fitness/fitness.js</file>
