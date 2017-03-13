@@ -70,12 +70,15 @@ qtHaveModule(widgets) {
         qjsvalue
 }
 
-SUBDIRS += $$PUBLICTESTS \
-    qqmlextensionplugin
+SUBDIRS += $$PUBLICTESTS
 SUBDIRS += $$METATYPETESTS
 qtConfig(process) {
     !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
     SUBDIRS += qmllint qmlplugindump
+}
+
+qtConfig(library) {
+    SUBDIRS += qqmlextensionplugin
 }
 
 qtConfig(private_tests): \
