@@ -64,22 +64,15 @@ Item {
 
             Row {
                 anchors.centerIn: parent
-                width: UIStyle.visibleDiameter
-                height: UIStyle.visibleRectHeight
-                padding: 20
                 spacing: 2
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 64
-                    width: 64
                     source: "images/temperature.png"
                 }
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    height: parent.height
-                    topPadding: 20
                     spacing: 40
 
                     Text {
@@ -93,6 +86,7 @@ Item {
                         font.letterSpacing: 1
                         color: UIStyle.colorQtGray1
                     }
+
                     Text {
                         text: (wDataCntr.weatherData
                                && wDataCntr.weatherData.main
@@ -104,6 +98,7 @@ Item {
                         font.letterSpacing: 1
                         color: UIStyle.colorQtGray1
                     }
+
                     Text {
                         text: (wDataCntr.weatherData
                                && wDataCntr.weatherData.main
@@ -123,27 +118,20 @@ Item {
             id: weatherPage2
 
             Column {
+                spacing: 40
                 anchors.centerIn: parent
-                width: UIStyle.visibleRectWidth
-                height: UIStyle.visibleRectHeight
 
-                Item {
+                Row {
+                    spacing: 20
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: parent.height / 2
-                    width: parent.width
 
                     Image {
                         id: wImg
-                        anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        height: 64
-                        width: 64
                         source: "images/wind.png"
                     }
 
                     Text {
-                        anchors.left: wImg.right
-                        leftPadding: 20
                         anchors.verticalCenter: parent.verticalCenter
                         text: (wDataCntr.weatherData
                                && wDataCntr.weatherData.wind
@@ -155,22 +143,18 @@ Item {
                         color: UIStyle.colorQtGray1
                     }
                 }
-                Item {
+
+                Row {
+                    spacing: 20
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: parent.height / 2
-                    width: parent.width
 
                     Image {
                         id: hImg
-                        anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        height: 64
-                        width: 64
                         source: "images/humidity.png"
                     }
+
                     Text {
-                        anchors.left: hImg.right
-                        leftPadding: 20
                         anchors.verticalCenter: parent.verticalCenter
                         text: (wDataCntr.weatherData
                                && wDataCntr.weatherData.main
@@ -190,21 +174,15 @@ Item {
 
             Row {
                 anchors.centerIn: parent
-                width: UIStyle.visibleRectWidth
-                height: UIStyle.visibleRectHeight
                 spacing: 10
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 64
-                    width: 64
                     source: "images/pressure.png"
                 }
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    height: parent.height
-                    topPadding: 25
                     spacing: 40
 
                     Text {
@@ -218,6 +196,7 @@ Item {
                         font.letterSpacing: 1
                         color: UIStyle.colorQtGray1
                     }
+
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: (wDataCntr.weatherData
@@ -229,6 +208,7 @@ Item {
                         font.letterSpacing: 1
                         color: UIStyle.colorQtGray1
                     }
+
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: (wDataCntr.weatherData
@@ -248,27 +228,19 @@ Item {
             id: weatherPage4
 
             Column {
+                spacing: 40
                 anchors.centerIn: parent
-                width: UIStyle.visibleDiameter
-                height: UIStyle.visibleRectHeight
 
-                Item {
+                Row {
+                    spacing: 30
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: parent.height / 2
-                    width: parent.width
 
                     Image {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 30
                         anchors.verticalCenter: parent.verticalCenter
-                        height: 64
-                        width: 64
                         source: "images/sunrise.png"
                     }
 
                     Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 30
                         anchors.verticalCenter: parent.verticalCenter
                         text: (wDataCntr.weatherData
                                && wDataCntr.weatherData.sys
@@ -281,23 +253,16 @@ Item {
                     }
                 }
 
-                Item {
+                Row {
+                    spacing: 30
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: parent.height / 2
-                    width: parent.width
 
                     Image {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 30
                         anchors.verticalCenter: parent.verticalCenter
-                        height: 64
-                        width: 64
                         source: "images/sunset.png"
                     }
 
                     Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 30
                         anchors.verticalCenter: parent.verticalCenter
                         text: (wDataCntr.weatherData
                                && wDataCntr.weatherData.sys
