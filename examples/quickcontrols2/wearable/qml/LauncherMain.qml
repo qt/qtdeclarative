@@ -68,43 +68,36 @@ Item {
                 title: qsTr("World Clock")
                 icon: "../images/watchface/watch.png"
                 page: "WatchFace/WatchFaceMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
             ListElement { // 1
                 title: qsTr("Navigation")
                 icon: "../images/navigation/route.png"
                 page: "Navigation/NavigationMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
             ListElement { // 2
                 title: qsTr("Weather")
                 icon: "../images/weather/weather.png"
                 page: "Weather/WeatherMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
             ListElement { // 3
                 title: qsTr("Fitness")
                 icon: "../images/fitness/fitness.png"
                 page: "Fitness/FitnessMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
             ListElement { // 4
                 title: qsTr("Notifications")
                 icon: "../images/notifications/notifications.png"
                 page: "Notifications/NotificationsMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
             ListElement { // 5
                 title: qsTr("Alarm")
                 icon: "../images/alarms/alarms.png"
                 page: "Alarms/AlarmsMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
             ListElement { // 6
                 title: qsTr("Settings")
                 icon: "../images/settings/settings.png"
                 page: "Settings/SettingsMain.qml"
-                background: "../images/background/HomeBackground.png"
             }
         }
 
@@ -221,7 +214,6 @@ Item {
                     }
                 }
                 function loadPage() {
-                    appBackgroundImg.source = background
                     stackView.push(Qt.resolvedUrl(page))
                 }
             }

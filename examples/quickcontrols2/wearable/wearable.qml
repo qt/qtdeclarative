@@ -49,21 +49,23 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Window 2.0
+import QtQuick.Controls 2.0
 import "qml"
 import "qml/Style"
 
-Window {
-    id: rootWindow
+ApplicationWindow {
+    id: window
 
     visible: true
 
     width: UIStyle.displayWidth
     height: UIStyle.displayHeight
 
-    color: UIStyle.colorQtGray1
-
     title: qsTr("Wearable")
+
+    background: Image {
+        source: "images/background/HomeBackground.png"
+    }
 
     MainContainer {
         anchors.fill: parent

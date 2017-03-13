@@ -58,12 +58,6 @@ import "Navigation"
 import "Style"
 
 Item {
-    Image {
-        id: appBackgroundImg
-        anchors.fill: parent
-        source: "../images/background/HomeBackground.png"
-    }
-
     Item {
         id: homeCntrl
 
