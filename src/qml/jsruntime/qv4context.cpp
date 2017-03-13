@@ -343,7 +343,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
                     if (index < c->v4Function->nFormals) {
                         c->callData->args[c->v4Function->nFormals - index - 1] = value;
                     } else {
-                        Q_ASSERT(c->type = Heap::ExecutionContext::Type_CallContext);
+                        Q_ASSERT(c->type == Heap::ExecutionContext::Type_CallContext);
                         index -= c->v4Function->nFormals;
                         static_cast<Heap::CallContext *>(c)->locals.set(scope.engine, index, value);
                     }
@@ -418,7 +418,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                Q_ASSERT(c->type = Heap::ExecutionContext::Type_CallContext);
+                Q_ASSERT(c->type == Heap::ExecutionContext::Type_CallContext);
                 return c->locals[index - c->v4Function->nFormals].asReturnedValue();
             }
             if (c->v4Function->isNamedExpression()) {
