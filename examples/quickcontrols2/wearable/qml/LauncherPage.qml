@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.7
+import QtQuick.Controls 2.0 as QQC2
 import "WatchFace"
 import "Fitness"
 import "Navigation"
@@ -159,64 +160,49 @@ Item {
         Component {
             id: pathDelegate
 
-            Item {
-                id: wrapper
+            QQC2.AbstractButton {
+                text: model.title
+                opacity: PathView.itemOpacity
 
-                width: childrenRect.width
-                height: childrenRect.height
-
-                Column {
-                    opacity: wrapper.PathView.itemOpacity
-                    Item {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        height: wrapper.PathView.view.objSize
-                        width: wrapper.PathView.view.objSize
-
-                        Image {
-                            anchors.fill: parent
-                            source: icon
-                        }
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: width / 2
-                            color: "transparent"
-
-                            border.width: 3
-                            border.color: wrapper.PathView.isCurrentItem ?
-                                            "transparent"
-                                            : UIStyle.colorQtGray4
-                        }
-                    }
-
-                    Text {
-                        id: appTitle
-
-                        opacity: wrapper.PathView.isCurrentItem
-                                    && (wrapper.PathView.itemOpacity === 1.0)
-
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        font.bold: true
-                        font.pixelSize: UIStyle.fontSizeS
-                        font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
-                        text: title
-                    }
+                contentItem: Image {
+                    source: model.icon
+                    fillMode: Image.Pad
                 }
 
-                MouseArea {
-                    id: pathItemMouseArea
-                    anchors.fill: parent
-                    onClicked: {
-                        if (circularView.currentIndex === index)
-                            loadPage()
-                        else
-                            circularView.currentIndex = index
-                    }
+                background: Rectangle {
+                    radius: width / 2
+                    color: "transparent"
+
+                    border.width: 3
+                    border.color: parent.PathView.isCurrentItem ?
+                                    "transparent"
+                                    : UIStyle.colorQtGray4
                 }
-                function loadPage() {
-                    stackView.push(Qt.resolvedUrl(page))
+
+                onClicked: {
+                    if (circularView.currentIndex === index)
+                        stackView.push(Qt.resolvedUrl(page))
+                    else
+                        circularView.currentIndex = index
                 }
             }
         }
+    }
+
+    Text {
+        id: appTitle
+
+        property Item currentItem: circularView.currentItem
+
+        visible: currentItem ? currentItem.PathView.itemOpacity === 1.0 : 0
+
+        text: currentItem ? currentItem.text : ""
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: (circularView.objSize + height) / 2
+
+        font.bold: true
+        font.pixelSize: UIStyle.fontSizeS
+        font.letterSpacing: 1
+        color: UIStyle.colorQtGray1
     }
 }
