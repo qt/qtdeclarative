@@ -143,13 +143,10 @@ Item {
     }
 
     QQC2.PageIndicator {
-        id: pgSettingsIndicator
-
-        anchors.bottom: svSettingsContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
         count: svSettingsContainer.count
         currentIndex: svSettingsContainer.currentIndex
+
+        anchors.bottom: svSettingsContainer.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 }

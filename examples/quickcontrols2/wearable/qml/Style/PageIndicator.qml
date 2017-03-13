@@ -60,6 +60,7 @@ T.PageIndicator {
 
     spacing: 6
     padding: 6
+    bottomPadding: 7
 
     delegate: Rectangle {
         implicitWidth: 8

@@ -132,14 +132,11 @@ Item {
     }
 
     QQC2.PageIndicator {
-        id: pgNotificationsIndicator
-
-        anchors.bottom: svNotificationsContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
         count: svNotificationsContainer.count
         currentIndex: svNotificationsContainer.currentIndex
+
+        anchors.bottom: svNotificationsContainer.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 
     Component.onCompleted: {

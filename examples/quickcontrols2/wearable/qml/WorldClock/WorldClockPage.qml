@@ -98,13 +98,10 @@ Item {
     }
 
     QQC2.PageIndicator {
-        id: pgWatchIndicator
-
-        anchors.bottom: svWatchContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
         count: svWatchContainer.count
         currentIndex: svWatchContainer.currentIndex
+
+        anchors.bottom: svWatchContainer.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 }

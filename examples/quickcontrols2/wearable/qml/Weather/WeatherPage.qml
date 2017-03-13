@@ -319,14 +319,11 @@ Item {
     }
 
     QQC2.PageIndicator {
-        id: pgWeatherIndicator
-
-        anchors.bottom: svWeatherContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
         count: svWeatherContainer.count
         currentIndex: svWeatherContainer.currentIndex
+
+        anchors.bottom: svWeatherContainer.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
     }
     Component.onCompleted: {
         WeatherData.requestWeatherData(wDataCntr)

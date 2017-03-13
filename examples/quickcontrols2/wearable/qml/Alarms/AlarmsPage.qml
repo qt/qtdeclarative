@@ -145,13 +145,10 @@ Item {
     }
 
     QQC2.PageIndicator {
-        id: pgAlarmsIndicator
-
-        anchors.bottom: svAlarmsContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
         count: svAlarmsContainer.count
         currentIndex: svAlarmsContainer.currentIndex
+
+        anchors.bottom: svAlarmsContainer.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 }

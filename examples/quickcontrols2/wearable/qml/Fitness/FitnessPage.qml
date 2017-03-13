@@ -125,13 +125,10 @@ Item {
     }
 
     QQ2.PageIndicator {
-        id: pgFitnessIndicator
-
-        anchors.bottom: svFitnessContainer.bottom
-        anchors.bottomMargin: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-
         count: svFitnessContainer.count
         currentIndex: svFitnessContainer.currentIndex
+
+        anchors.bottom: svFitnessContainer.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 }
