@@ -65,7 +65,19 @@ bool QQuickMultiPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
-    if (event->pointCount() < m_requiredPointCount)
+
+    const int pCount = event->pointCount();
+    int pointCandidateCount = 0;
+
+    // points that are grabbed by other handlers are not candidates for this handler
+    for (int i = 0; i < pCount; ++i) {
+        QQuickEventPoint *pt = event->point(i);
+        QObject *exclusiveGrabber = pt->exclusiveGrabber();
+        if (!exclusiveGrabber || exclusiveGrabber == this)
+            ++pointCandidateCount;
+    }
+
+    if (pointCandidateCount < m_requiredPointCount)
         return false;
     if (sameAsCurrentPoints(event))
         return true;
