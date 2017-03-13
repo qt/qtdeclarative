@@ -6,7 +6,6 @@
         <file>qml/Fitness/fitness.js</file>
         <file>qml/Fitness/FitnessMain.qml</file>
         <file>qml/LauncherMain.qml</file>
-        <file>qml/MainContainer.qml</file>
         <file>qml/NaviButton.qml</file>
         <file>qml/Navigation/navigation.js</file>
         <file>qml/Navigation/NavigationMain.qml</file>

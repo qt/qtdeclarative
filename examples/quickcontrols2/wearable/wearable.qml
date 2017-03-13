@@ -49,11 +49,11 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.0 as QQC2
 import "qml"
 import "qml/Style"
 
-ApplicationWindow {
+QQC2.ApplicationWindow {
     id: window
 
     visible: true
@@ -67,7 +67,32 @@ ApplicationWindow {
         source: "images/background/HomeBackground.png"
     }
 
-    MainContainer {
+    header: NaviButton {
+        id: homeButton
+
+        edge: Qt.TopEdge
+        enabled: stackView.depth > 1
+        imageSource: "images/home.png"
+
+        onClicked: stackView.pop(null)
+    }
+
+    footer: NaviButton {
+        id: backButton
+
+        edge: Qt.BottomEdge
+        enabled: stackView.depth > 1
+        imageSource: "images/back.png"
+
+        onClicked: stackView.pop()
+    }
+
+    QQC2.StackView {
+        id: stackView
+
+        focus: true
         anchors.fill: parent
+
+        initialItem: LauncherMain { }
     }
 }
