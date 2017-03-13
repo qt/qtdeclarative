@@ -53,90 +53,57 @@ import QtQuick.Controls 2.0 as QQC2
 import "../Style"
 import "notifications.js" as NotificationData
 
-Item {
-    QQC2.SwipeView {
-        id: svNotificationsContainer
+ListView {
+    id: missedCallsView
 
-        anchors.fill: parent
+    clip: true
+    focus: true
+    boundsBehavior: Flickable.StopAtBounds
+    snapMode: ListView.SnapToItem
 
-        Item {
-            id: notificationsPage1
-
-            ListModel {
-                id: missedCallsList
-            }
-
-            Row {
-                anchors.fill: parent
-                leftPadding: 30
-                spacing: 2
-
-                Image {
-                    id: missedCallIcon
-                    anchors.verticalCenter: parent.verticalCenter
-                    height: 64
-                    width: 64
-                    source: "images/missedcall.png"
-                }
-
-                ListView {
-                    id: missedCallsView
-                    width: parent.width - missedCallIcon.width
-                    height: parent.height
-
-                    clip: true
-                    focus: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    snapMode: ListView.SnapToItem
-
-                    model: missedCallsList
-
-                    delegate: Item {
-                        height: missedCallsView.height
-                        width: missedCallsView.width
-                        Column {
-                            anchors.fill: parent
-                            spacing: 15
-                            topPadding: 35
-                            Image {
-                                anchors.horizontalCenter:
-                                 parent.horizontalCenter
-                                height: 64
-                                width: 64
-                                source: (gender == "m") ?
-                                "images/avatarm.png"
-                                :"images/avatarf.png"
-                            }
-
-                            Text {
-                                anchors.horizontalCenter:
-                                 parent.horizontalCenter
-                                text: name
-                                font.bold: true
-                                font.pixelSize: UIStyle.fontSizeS
-                                color: UIStyle.colorQtGray1
-                            }
-                            Text {
-                                anchors.horizontalCenter:
-                                 parent.horizontalCenter
-                                text: date + " " + time
-                                font.pixelSize: UIStyle.fontSizeXS
-                                font.italic: true
-                                color: UIStyle.colorQtGray2
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    model: ListModel {
+        id: missedCallsList
     }
 
-    QQC2.PageIndicator {
-        count: svNotificationsContainer.count
-        currentIndex: svNotificationsContainer.currentIndex
+    Image {
+        id: missedCallIcon
+        width: parent.width / 2
+        anchors.right: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        source: "images/missedcall.png"
+        fillMode: Image.Pad
+    }
 
-        anchors.bottom: svNotificationsContainer.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
+    delegate: Item {
+        height: missedCallsView.height
+        width: missedCallsView.width / 2
+        anchors.left: parent.horizontalCenter
+
+        Column {
+            spacing: 15
+            anchors.verticalCenter: parent.verticalCenter
+
+            Image {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: qsTr("images/avatar%1.png").arg(model.gender)
+            }
+
+            Text {
+                text: model.name
+                anchors.horizontalCenter: parent.horizontalCenter
+                font.bold: true
+                font.pixelSize: UIStyle.fontSizeS
+                color: UIStyle.colorQtGray1
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: date + " " + time
+                font.pixelSize: UIStyle.fontSizeXS
+                font.italic: true
+                color: UIStyle.colorQtGray2
+            }
+        }
     }
 
     Component.onCompleted: {
