@@ -57,7 +57,6 @@ Item {
         id: svWatchContainer
 
         anchors.fill: parent
-        currentIndex: 0
 
         ListModel {
             id: placesList

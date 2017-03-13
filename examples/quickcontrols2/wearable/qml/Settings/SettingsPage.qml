@@ -68,8 +68,6 @@ Item {
 
         anchors.fill: parent
 
-        currentIndex: 0
-
         Item {
             id: settingsPage1
 

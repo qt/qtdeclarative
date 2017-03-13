@@ -59,9 +59,6 @@ Item {
 
         anchors.fill: parent
 
-        clip: true
-        currentIndex: 0
-
         Item {
             id: fitnessPage1
 

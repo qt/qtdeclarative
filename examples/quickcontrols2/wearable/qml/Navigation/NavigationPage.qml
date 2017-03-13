@@ -107,7 +107,6 @@ Item {
             focus: true
             boundsBehavior: Flickable.StopAtBounds
             snapMode: ListView.SnapToItem
-            currentIndex: 0
             model: routeModel
             delegate: RouteElement {}
         }

@@ -63,7 +63,6 @@ PathView {
     readonly property int size: Math.min(width - 80, height)
     readonly property int radius: size / 2 - itemSize / 3
 
-    currentIndex: 0
     snapMode: PathView.SnapToItem
 
     model: ListModel {

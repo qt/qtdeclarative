@@ -58,7 +58,6 @@ Item {
         id: svWeatherContainer
 
         anchors.fill: parent
-        currentIndex: 0
 
         Item {
             id: weatherPage1
