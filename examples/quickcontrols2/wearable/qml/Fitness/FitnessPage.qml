@@ -75,8 +75,6 @@ Item {
                 }
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: 64
-                    width: 64
                     source: "images/man-walking.png"
                 }
                 Text {
@@ -107,8 +105,6 @@ Item {
                 }
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    height: 64
-                    width: 64
                     source: "images/man-running.png"
                 }
                 Text {
