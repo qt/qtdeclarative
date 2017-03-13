@@ -57,9 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-typedef float (*ThresholdFunc)(float glyphScale);
-typedef float (*AntialiasingSpreadFunc)(float glyphScale);
-
 class QOpenGLShaderProgram;
 class QSGDistanceFieldGlyphCache;
 class QSGContext;
@@ -73,17 +70,8 @@ public:
     QSGDistanceFieldGlyphCache *cache(const QRawFont &font);
     void insertCache(const QRawFont &font, QSGDistanceFieldGlyphCache *cache);
 
-    ThresholdFunc thresholdFunc() const { return m_threshold_func; }
-    void setThresholdFunc(ThresholdFunc func) { m_threshold_func = func; }
-
-    AntialiasingSpreadFunc antialiasingSpreadFunc() const { return m_antialiasingSpread_func; }
-    void setAntialiasingSpreadFunc(AntialiasingSpreadFunc func) { m_antialiasingSpread_func = func; }
-
 private:
     QHash<QRawFont, QSGDistanceFieldGlyphCache *> m_caches;
-
-    ThresholdFunc m_threshold_func;
-    AntialiasingSpreadFunc m_antialiasingSpread_func;
 };
 
 QT_END_NAMESPACE

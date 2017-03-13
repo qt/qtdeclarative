@@ -47,33 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static float qt_sg_envFloat(const char *name, float defaultValue)
-{
-    if (Q_LIKELY(!qEnvironmentVariableIsSet(name)))
-        return defaultValue;
-    bool ok = false;
-    const float value = qgetenv(name).toFloat(&ok);
-    return ok ? value : defaultValue;
-}
-
-static float defaultThresholdFunc(float glyphScale)
-{
-    static const float base = qt_sg_envFloat("QT_DF_BASE", 0.5f);
-    static const float baseDev = qt_sg_envFloat("QT_DF_BASEDEVIATION", 0.065f);
-    static const float devScaleMin = qt_sg_envFloat("QT_DF_SCALEFORMAXDEV", 0.15f);
-    static const float devScaleMax = qt_sg_envFloat("QT_DF_SCALEFORNODEV", 0.3f);
-    return base - ((qBound(devScaleMin, glyphScale, devScaleMax) - devScaleMin) / (devScaleMax - devScaleMin) * -baseDev + baseDev);
-}
-
-static float defaultAntialiasingSpreadFunc(float glyphScale)
-{
-    static const float range = qt_sg_envFloat("QT_DF_RANGE", 0.06f);
-    return range / glyphScale;
-}
-
 QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager()
-    : m_threshold_func(defaultThresholdFunc)
-    , m_antialiasingSpread_func(defaultAntialiasingSpreadFunc)
 {
 }
 
