@@ -50,55 +50,34 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
-import "WatchFace"
-import "Fitness"
-import "Navigation"
 import "Style"
 
-Item {
-    NaviButton {
-        id: homeButton
+QQC2.AbstractButton {
+    id: button
 
-        z: 2
+    property int edge: Qt.TopEdge
+    property alias imageSource: image.source
 
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        edge: Qt.TopEdge
-        enabled: stackView.depth > 1
-        imageSource: "../images/home.png"
-
-        onClicked: stackView.pop(null)
+    contentItem: Image {
+        id: image
+        fillMode: Image.Pad
+        sourceSize { width: 40; height: 40 } // ### TODO: resize the image
     }
 
-    QQC2.StackView {
-        id: stackView
+    background: Rectangle {
+        height: button.height * 4
+        width: height
+        radius: width / 2
 
-        anchors.top: homeButton.bottom
-        anchors.bottom: backButton.top
+        anchors.horizontalCenter: button.horizontalCenter
+        anchors.top: edge === Qt.BottomEdge ? button.top : undefined
+        anchors.bottom: edge === Qt.TopEdge ? button.bottom : undefined
 
-        width: parent.width
-
-        focus: true
-
-        initialItem: LauncherMain {
-        }
+        color: UIStyle.colorQtGray2
     }
 
-    NaviButton {
-        id: backButton
-
-        z: 2
-
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        edge: Qt.BottomEdge
-        enabled: stackView.depth > 1
-        imageSource: "../images/back.png"
-
-        onClicked: stackView.pop()
+    transform: Translate {
+        Behavior on y { NumberAnimation { } }
+        y: enabled ? 0 : edge === Qt.TopEdge ? -button.height : button.height
     }
 }
