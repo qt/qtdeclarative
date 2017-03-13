@@ -64,17 +64,6 @@ QtObject {
     readonly property int fontSizeXL: 35
     readonly property int fontSizeXXL: 40
 
-    // Display Dimensions
-    readonly property int displayWidth: 320
-    readonly property int displayHeight: 320
-
-    readonly property int containerWidth: 250
-    readonly property int containerHeight: 250
-
-    readonly property int visibleRectWidth: 223
-    readonly property int visibleRectHeight: 223
-    readonly property int visibleDiameter: 316
-
     // Color Scheme
     // Green
     readonly property color colorQtPrimGreen: "#41cd52"

@@ -58,8 +58,8 @@ QQC2.ApplicationWindow {
 
     visible: true
 
-    width: UIStyle.displayWidth
-    height: UIStyle.displayHeight
+    width: 320
+    height: 320
 
     title: qsTr("Wearable")
 
