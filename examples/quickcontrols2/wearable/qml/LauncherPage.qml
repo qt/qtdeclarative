@@ -50,142 +50,127 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
-import "WatchFace"
-import "Fitness"
-import "Navigation"
 import "Style"
 
-Item {
-    Item {
-        anchors.centerIn: parent
+PathView {
+    id: circularView
 
-        width: UIStyle.visibleDiameter
-        height: UIStyle.visibleDiameter
+    signal launched(string page)
 
-        ListModel {
-            id: viewModel
+    readonly property int cX: width / 2
+    readonly property int cY: height / 2
+    readonly property int itemSize: size / 4
+    readonly property int size: Math.min(width - 80, height)
+    readonly property int radius: size / 2 - itemSize / 3
 
-            ListElement { // 0
-                title: qsTr("World Clock")
-                icon: "../images/watchface/watch.png"
-                page: "WatchFace/WatchFacePage.qml"
-            }
-            ListElement { // 1
-                title: qsTr("Navigation")
-                icon: "../images/navigation/route.png"
-                page: "Navigation/NavigationPage.qml"
-            }
-            ListElement { // 2
-                title: qsTr("Weather")
-                icon: "../images/weather/weather.png"
-                page: "Weather/WeatherPage.qml"
-            }
-            ListElement { // 3
-                title: qsTr("Fitness")
-                icon: "../images/fitness/fitness.png"
-                page: "Fitness/FitnessPage.qml"
-            }
-            ListElement { // 4
-                title: qsTr("Notifications")
-                icon: "../images/notifications/notifications.png"
-                page: "Notifications/NotificationsPage.qml"
-            }
-            ListElement { // 5
-                title: qsTr("Alarm")
-                icon: "../images/alarms/alarms.png"
-                page: "Alarms/AlarmsPage.qml"
-            }
-            ListElement { // 6
-                title: qsTr("Settings")
-                icon: "../images/settings/settings.png"
-                page: "Settings/SettingsPage.qml"
-            }
+    currentIndex: 0
+    snapMode: PathView.SnapToItem
+
+    model: ListModel {
+        ListElement {
+            title: qsTr("World Clock")
+            icon: "../images/watchface/watch.png"
+            page: "WatchFace/WatchFacePage.qml"
+        }
+        ListElement {
+            title: qsTr("Navigation")
+            icon: "../images/navigation/route.png"
+            page: "Navigation/NavigationPage.qml"
+        }
+        ListElement {
+            title: qsTr("Weather")
+            icon: "../images/weather/weather.png"
+            page: "Weather/WeatherPage.qml"
+        }
+        ListElement {
+            title: qsTr("Fitness")
+            icon: "../images/fitness/fitness.png"
+            page: "Fitness/FitnessPage.qml"
+        }
+        ListElement {
+            title: qsTr("Notifications")
+            icon: "../images/notifications/notifications.png"
+            page: "Notifications/NotificationsPage.qml"
+        }
+        ListElement {
+            title: qsTr("Alarm")
+            icon: "../images/alarms/alarms.png"
+            page: "Alarms/AlarmsPage.qml"
+        }
+        ListElement {
+            title: qsTr("Settings")
+            icon: "../images/settings/settings.png"
+            page: "Settings/SettingsPage.qml"
+        }
+    }
+
+    delegate: QQC2.AbstractButton {
+        text: model.title
+        opacity: PathView.itemOpacity
+
+        contentItem: Image {
+            source: model.icon
+            fillMode: Image.Pad
+            sourceSize.width: circularView.itemSize
+            sourceSize.height: circularView.itemSize
         }
 
-        PathView {
-            id: circularView
-            property int objSize: 60
-            property int cX: parent.width / 2
-            property int cY: parent.height / 2
+        background: Rectangle {
+            radius: width / 2
+            color: "transparent"
 
-            currentIndex: 0
-
-            anchors.fill: parent
-            model: viewModel
-            delegate: pathDelegate
-            snapMode: PathView.SnapToItem
-
-            path: Path {
-                startX: circularView.cX
-                startY: circularView.cY
-                PathAttribute {
-                    name: "itemOpacity"
-                    value: 1.0
-                }
-                PathLine {
-                    x: circularView.width - circularView.objSize
-                    y: circularView.cY
-                }
-                PathAttribute {
-                    name: "itemOpacity"
-                    value: 0.7
-                }
-                PathArc {
-                    x: circularView.objSize
-                    y: circularView.cY
-                    radiusX: circularView.cX - circularView.objSize
-                    radiusY: circularView.cY - circularView.objSize
-                    useLargeArc: true
-                    direction: PathArc.Clockwise
-                }
-                PathAttribute {
-                    name: "itemOpacity"
-                    value: 0.5
-                }
-                PathArc {
-                    x: circularView.width - circularView.objSize
-                    y: circularView.cY
-                    radiusX: circularView.cX - circularView.objSize
-                    radiusY: circularView.cY - circularView.objSize
-                    useLargeArc: true
-                    direction: PathArc.Clockwise
-                }
-                PathAttribute {
-                    name: "itemOpacity"
-                    value: 0.3
-                }
-            }
+            border.width: 3
+            border.color: parent.PathView.isCurrentItem ?
+                            "transparent"
+                            : UIStyle.colorQtGray4
         }
 
-        Component {
-            id: pathDelegate
+        onClicked: {
+            if (PathView.isCurrentItem)
+                circularView.launched(Qt.resolvedUrl(page))
+            else
+                circularView.currentIndex = index
+        }
+    }
 
-            QQC2.AbstractButton {
-                text: model.title
-                opacity: PathView.itemOpacity
-
-                contentItem: Image {
-                    source: model.icon
-                    fillMode: Image.Pad
-                }
-
-                background: Rectangle {
-                    radius: width / 2
-                    color: "transparent"
-
-                    border.width: 3
-                    border.color: parent.PathView.isCurrentItem ?
-                                    "transparent"
-                                    : UIStyle.colorQtGray4
-                }
-
-                onClicked: {
-                    if (circularView.currentIndex === index)
-                        stackView.push(Qt.resolvedUrl(page))
-                    else
-                        circularView.currentIndex = index
-                }
-            }
+    path: Path {
+        startX: circularView.cX
+        startY: circularView.cY
+        PathAttribute {
+            name: "itemOpacity"
+            value: 1.0
+        }
+        PathLine {
+            x: circularView.cX + circularView.radius
+            y: circularView.cY
+        }
+        PathAttribute {
+            name: "itemOpacity"
+            value: 0.7
+        }
+        PathArc {
+            x: circularView.cX - circularView.radius
+            y: circularView.cY
+            radiusX: circularView.radius
+            radiusY: circularView.radius
+            useLargeArc: true
+            direction: PathArc.Clockwise
+        }
+        PathAttribute {
+            name: "itemOpacity"
+            value: 0.5
+        }
+        PathArc {
+            x: circularView.cX + circularView.radius
+            y: circularView.cY
+            radiusX: circularView.radius
+            radiusY: circularView.radius
+            useLargeArc: true
+            direction: PathArc.Clockwise
+        }
+        PathAttribute {
+            name: "itemOpacity"
+            value: 0.3
         }
     }
 
@@ -198,10 +183,10 @@ Item {
 
         text: currentItem ? currentItem.text : ""
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: (circularView.objSize + height) / 2
+        anchors.verticalCenterOffset: (circularView.itemSize + height) / 2
 
         font.bold: true
-        font.pixelSize: UIStyle.fontSizeS
+        font.pixelSize: circularView.itemSize / 3
         font.letterSpacing: 1
         color: UIStyle.colorQtGray1
     }

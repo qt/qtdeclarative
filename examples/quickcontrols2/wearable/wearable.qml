@@ -93,6 +93,8 @@ QQC2.ApplicationWindow {
         focus: true
         anchors.fill: parent
 
-        initialItem: LauncherPage { }
+        initialItem: LauncherPage {
+            onLaunched: stackView.push(page)
+        }
     }
 }
