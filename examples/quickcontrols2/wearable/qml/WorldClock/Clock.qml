@@ -54,9 +54,6 @@ import "../Style"
 Item {
     id: clock
 
-    width: UIStyle.visibleDiameter
-    height: UIStyle.visibleDiameter
-
     property int hours
     property int minutes
     property int seconds
@@ -86,9 +83,7 @@ Item {
     }
 
     Item {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: 2
+        anchors.centerIn: parent
 
         width: 200
         height: 220
