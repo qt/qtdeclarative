@@ -462,7 +462,7 @@ MetaInfo {
         icon: "images/stackview-icon16.png"
 
         ItemLibraryEntry {
-            name: "stack View"
+            name: "Stack View"
             category: "Qt Quick - Views"
             libraryIcon: "images/stackview-icon.png"
             version: "2.1"
