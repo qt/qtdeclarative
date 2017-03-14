@@ -410,6 +410,8 @@ MetaInfo {
             libraryIcon: "images/tumbler-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+
+            Property { name: "model"; type: "int"; value: "10" }
         }
     }
 
