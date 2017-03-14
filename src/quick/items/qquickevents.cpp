@@ -846,9 +846,24 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         auto p = m_touchPoints.at(i);
         if (p->isAccepted())
             continue;
+        // include points where item is the grabber
         bool isGrabber = p->grabber() == item;
+        // include newly pressed points inside the bounds
         bool isPressInside = p->state() == QQuickEventPoint::Pressed && item->contains(item->mapFromScene(p->scenePos()));
-        if (!(isGrabber || isPressInside || isFiltering))
+
+        // filtering: (childMouseEventFilter) include points that are grabbed by children of the target item
+        bool grabberIsChild = false;
+        auto parent = p->grabber();
+        while (isFiltering && parent) {
+            if (parent == item) {
+                grabberIsChild = true;
+                break;
+            }
+            parent = parent->parentItem();
+        }
+        bool filterRelevant = isFiltering && grabberIsChild;
+
+        if (!(isGrabber || isPressInside || filterRelevant))
             continue;
 
         const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
