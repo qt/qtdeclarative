@@ -1324,7 +1324,7 @@ public:
 
         // load the table from the context
         loadPtr(Address(EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), ScratchRegister);
-        loadPtr(Address(ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
+        loadPtr(Address(ScratchRegister, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, lookups))),
                     lookupCall.addr.base);
         // pre-calculate the indirect address for the lookupCall table:
         if (lookupCall.addr.offset)

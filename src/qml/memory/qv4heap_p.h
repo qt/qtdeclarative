@@ -160,6 +160,12 @@ struct Q_QML_EXPORT Base {
 #endif
 };
 V4_ASSERT_IS_TRIVIAL(Base)
+// This class needs to consist only of pointer sized members to allow
+// for a size/offset translation when cross-compiling between 32- and
+// 64-bit.
+Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
+Q_STATIC_ASSERT(offsetof(Base, vt) == 0);
+Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
 
 template <typename T>
 struct Pointer {

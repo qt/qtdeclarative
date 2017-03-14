@@ -270,18 +270,22 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
     int32_t offset = 0;
     int scope = al->scope;
     loadPtr(Address(EngineRegister, targetStructureOffset(offsetof(EngineBase, current))), baseReg);
+
+    const qint32 outerOffset = targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, outer));
+
     if (scope) {
-        loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
+        loadPtr(Address(baseReg, outerOffset), baseReg);
         --scope;
         while (scope) {
-            loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
+            loadPtr(Address(baseReg, outerOffset), baseReg);
             --scope;
         }
     }
     switch (al->kind) {
     case IR::ArgLocal::Formal:
     case IR::ArgLocal::ScopedFormal: {
-        loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, callData)), baseReg);
+        const qint32 callDataOffset = targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, callData));
+        loadPtr(Address(baseReg, callDataOffset), baseReg);
         offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
     } break;
     case IR::ArgLocal::Local:
@@ -299,7 +303,7 @@ template <typename TargetConfiguration>
 typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadStringAddress(RegisterID reg, const QString &string)
 {
     loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), Assembler::ScratchRegister);
-    loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
+    loadPtr(Address(Assembler::ScratchRegister, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, compilationUnit))), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, offsetof(CompiledData::CompilationUnitBase, runtimeStrings)), reg);
     const int id = _jsGenerator->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
@@ -315,7 +319,7 @@ template <typename TargetConfiguration>
 typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const Primitive &v, RegisterID baseReg)
 {
     loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), baseReg);
-    loadPtr(Address(baseReg, qOffsetOf(QV4::Heap::ExecutionContext, constantTable)), baseReg);
+    loadPtr(Address(baseReg, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, constantTable))), baseReg);
     const int index = _jsGenerator->registerConstant(v.asReturnedValue());
     return Address(baseReg, index * sizeof(QV4::Value));
 }
@@ -519,7 +523,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
     const int locals = stackLayout().calculateJSStackFrameSize();
     subPtr(TrustedImm32(sizeof(QV4::Value)*locals), JITTargetPlatform::LocalsRegister);
     loadPtr(Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
-    loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, engine)), JITTargetPlatform::ScratchRegister);
+    loadPtr(Address(JITTargetPlatform::ScratchRegister, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, engine))), JITTargetPlatform::ScratchRegister);
     storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::ScratchRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
 
     leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);

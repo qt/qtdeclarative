@@ -101,7 +101,37 @@ namespace Heap {
 
 struct QmlContext;
 
-struct ExecutionContext : Base {
+// ### Temporary arrangment until this code hits the dev branch and
+// can use the Members macro
+struct ExecutionContextData {
+    CallData *callData;
+    ExecutionEngine *engine;
+    ExecutionContext *outer;
+    Lookup *lookups;
+    const QV4::Value *constantTable;
+    CompiledData::CompilationUnitBase *compilationUnit;
+    // as member of non-pointer size this has to come last to preserve the ability to
+    // translate offsetof of it between 64-bit and 32-bit.
+    int lineNumber;
+#if QT_POINTER_SIZE == 8
+    uint padding_;
+#endif
+};
+
+Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, callData) == 0);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, engine) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, engine) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, lookups) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, constantTable) == offsetof(ExecutionContextData, lookups) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, compilationUnit) == offsetof(ExecutionContextData, constantTable) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, compilationUnit) + QT_POINTER_SIZE);
+
+struct ExecutionContextSizeStruct : public Base, public ExecutionContextData {};
+
+struct ExecutionContext : Base, public ExecutionContextData {
+    static Q_CONSTEXPR size_t baseOffset = sizeof(ExecutionContextSizeStruct) - sizeof(ExecutionContextData);
+
     enum ContextType {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
@@ -120,17 +150,8 @@ struct ExecutionContext : Base {
         lineNumber = -1;
     }
 
-    CallData *callData;
-
-    ExecutionEngine *engine;
-    Pointer<ExecutionContext> outer;
-    Lookup *lookups;
-    const QV4::Value *constantTable;
-    CompiledData::CompilationUnitBase *compilationUnit;
-
     ContextType type : 8;
     bool strictMode : 8;
-    int lineNumber;
 };
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 
