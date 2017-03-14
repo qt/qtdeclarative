@@ -141,6 +141,13 @@ struct Lookup {
 
 };
 
+Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
+// Ensure that these offsets are always at this point to keep generated code compatible
+// across 32-bit and 64-bit (matters when cross-compiling).
+Q_STATIC_ASSERT(offsetof(Lookup, indexedGetter) == 0);
+Q_STATIC_ASSERT(offsetof(Lookup, getter) == 0);
+Q_STATIC_ASSERT(offsetof(Lookup, engine) == offsetof(Lookup, getter) + QT_POINTER_SIZE);
+
 }
 
 QT_END_NAMESPACE

@@ -519,7 +519,7 @@ void InstructionSelection<JITAssembler>::getActivationProperty(const IR::Name *n
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, JITAssembler::Void);
+        generateLookupCall(target, index, offsetof(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, JITAssembler::Void);
         return;
     }
     generateRuntimeCall(_as, target, getActivationProperty, JITTargetPlatform::EngineRegister, StringToIndex(*name->id));
@@ -545,7 +545,7 @@ void InstructionSelection<JITAssembler>::getProperty(IR::Expr *base, const QStri
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), JITTargetPlatform::EngineRegister, PointerToValue(base), JITAssembler::Void);
+        generateLookupCall(target, index, offsetof(QV4::Lookup, getter), JITTargetPlatform::EngineRegister, PointerToValue(base), JITAssembler::Void);
     } else {
         generateRuntimeCall(_as, target, getProperty, JITTargetPlatform::EngineRegister,
                              PointerToValue(base), StringToIndex(name));
@@ -584,7 +584,7 @@ void InstructionSelection<JITAssembler>::setProperty(IR::Expr *source, IR::Expr 
 {
     if (useFastLookups) {
         uint index = registerSetterLookup(targetName);
-        generateLookupCall(JITAssembler::Void, index, qOffsetOf(QV4::Lookup, setter),
+        generateLookupCall(JITAssembler::Void, index, offsetof(QV4::Lookup, setter),
                            JITTargetPlatform::EngineRegister,
                            PointerToValue(targetBase),
                            PointerToValue(source));
@@ -620,7 +620,7 @@ void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *in
 {
     if (useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
-        generateLookupCall(target, lookup, qOffsetOf(QV4::Lookup, indexedGetter),
+        generateLookupCall(target, lookup, offsetof(QV4::Lookup, indexedGetter),
                            PointerToValue(base),
                            PointerToValue(index));
         return;
@@ -635,7 +635,7 @@ void InstructionSelection<JITAssembler>::setElement(IR::Expr *source, IR::Expr *
 {
     if (useFastLookups) {
         uint lookup = registerIndexedSetterLookup();
-        generateLookupCall(JITAssembler::Void, lookup, qOffsetOf(QV4::Lookup, indexedSetter),
+        generateLookupCall(JITAssembler::Void, lookup, offsetof(QV4::Lookup, indexedSetter),
                            PointerToValue(targetBase), PointerToValue(targetIndex),
                            PointerToValue(source));
         return;
