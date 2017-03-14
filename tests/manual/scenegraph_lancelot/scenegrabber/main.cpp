@@ -29,6 +29,7 @@
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
+#include <QtCore/QHashFunctions>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
 
@@ -134,11 +135,9 @@ private:
 };
 
 
-Q_CORE_EXPORT extern QBasicAtomicInt qt_qhash_seed;
-
 int main(int argc, char *argv[])
 {
-    qt_qhash_seed = 0;
+    qSetGlobalQHashSeed(0);
 
     QGuiApplication a(argc, argv);
 
