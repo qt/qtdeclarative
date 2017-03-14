@@ -776,7 +776,7 @@ void Unit::generateChecksum()
 #ifndef V4_BOOTSTRAP
     QCryptographicHash hash(QCryptographicHash::Md5);
 
-    const int checksummableDataOffset = qOffsetOf(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
+    const int checksummableDataOffset = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
 
     const char *dataPtr = reinterpret_cast<const char *>(this) + checksummableDataOffset;
     hash.addData(dataPtr, unitSize - checksummableDataOffset);
