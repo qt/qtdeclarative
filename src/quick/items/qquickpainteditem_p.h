@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include "qquickpainteditem.h"
 #include "qquickitem_p.h"
 #include "qquickpainteditem.h"
 #include <QtGui/qcolor.h>
