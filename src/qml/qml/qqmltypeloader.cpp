@@ -2407,6 +2407,7 @@ void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> 
     m_document.reset(new QmlIR::Document(isDebugging()));
     QmlIR::IRLoader loader(unit->data, m_document.data());
     loader.load();
+    m_document->jsModule.setFileName(finalUrlString());
     m_document->javaScriptCompilationUnit = unit;
     continueLoadFromIR();
 }
@@ -2507,6 +2508,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 {
     Q_ASSERT(m_compiledData.isNull());
 
+    const bool typeRecompilation = m_document && m_document->javaScriptCompilationUnit && m_document->javaScriptCompilationUnit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation;
+
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
     QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache);
     m_compiledData = compiler.compile();
@@ -2515,7 +2518,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         return;
     }
 
-    const bool trySaveToDisk = (!disableDiskCache() || forceDiskCache()) && !m_document->jsModule.debugMode;
+    const bool trySaveToDisk = (!disableDiskCache() || forceDiskCache()) && !m_document->jsModule.debugMode && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {

@@ -44,6 +44,7 @@
 #include <private/qquickcontext2d_p.h>
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <qsgtextureprovider.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtGui/QGuiApplication>
 

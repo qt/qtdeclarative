@@ -77,13 +77,7 @@ namespace QV4 {
 
 namespace CompiledData {
 
-#ifdef V4_BOOTSTRAP
-static QString cacheFilePath(const QString &localSourcePath)
-{
-    const QString localCachePath = localSourcePath + QLatin1Char('c');
-    return localCachePath;
-}
-#else
+#if !defined(V4_BOOTSTRAP)
 static QString cacheFilePath(const QUrl &url)
 {
     const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
@@ -101,8 +95,8 @@ static QString cacheFilePath(const QUrl &url)
 #ifndef V4_BOOTSTRAP
 CompilationUnit::CompilationUnit()
     : data(0)
-    , engine(0)
     , runtimeStrings(0)
+    , engine(0)
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
@@ -374,7 +368,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
     QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
-    if (sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+    if (data->sourceFileIndex != 0 && sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
         *errorString = QStringLiteral("QML source file has moved to a different location.");
         return false;
     }
@@ -415,28 +409,29 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
 #endif // V4_BOOTSTRAP
 
 #if defined(V4_BOOTSTRAP)
-bool CompilationUnit::saveToDisk(const QString &unitUrl, QString *errorString)
+bool CompilationUnit::saveToDisk(const QString &outputFileName, QString *errorString)
 #else
 bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 #endif
 {
     errorString->clear();
 
+#if !defined(V4_BOOTSTRAP)
     if (data->sourceTimeStamp == 0) {
         *errorString = QStringLiteral("Missing time stamp for source file");
         return false;
     }
 
-#if !defined(V4_BOOTSTRAP)
     if (!QQmlFile::isLocalFile(unitUrl)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
+    const QString outputFileName = cacheFilePath(unitUrl);
 #endif
 
 #if QT_CONFIG(temporaryfile)
     // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(cacheFilePath(unitUrl));
+    QSaveFile cacheFile(outputFileName);
     if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = cacheFile.errorString();
         return false;
@@ -492,9 +487,21 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
         return irDocument->jsGenerator.generateUnit(QV4::Compiler::JSUnitGenerator::GenerateWithoutStringTable);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = irDocument->javaScriptCompilationUnit;
-    QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(irDocument->javaScriptCompilationUnit->data);
+    QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
+    auto ensureWritableUnit = [&jsUnit, &compilationUnit]() {
+        if (jsUnit == compilationUnit->data) {
+            char *unitCopy = (char*)malloc(jsUnit->unitSize);
+            memcpy(unitCopy, jsUnit, jsUnit->unitSize);
+            jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
+        }
+    };
 
     QV4::Compiler::StringTableGenerator &stringTable = irDocument->jsGenerator.stringTable;
+
+    if (jsUnit->sourceFileIndex == quint32(0) || jsUnit->stringAt(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
+        ensureWritableUnit();
+        jsUnit->sourceFileIndex = stringTable.registerString(irDocument->jsModule.fileName);
+    }
 
     // Collect signals that have had a change in signature (from onClicked to onClicked(mouse) for example)
     // and now need fixing in the QV4::CompiledData. Also register strings at the same time, to finalize
@@ -558,6 +565,7 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
     }
 
     if (!signalParameterNameTable.isEmpty()) {
+        ensureWritableUnit();
         Q_ASSERT(jsUnit != compilationUnit->data);
         const uint signalParameterTableSize = signalParameterNameTable.count() * sizeof(quint32);
         uint newSize = jsUnit->unitSize + signalParameterTableSize;

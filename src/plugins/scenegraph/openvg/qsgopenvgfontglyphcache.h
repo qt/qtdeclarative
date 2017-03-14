@@ -87,8 +87,7 @@ private:
     int m_glyphCount;
 
     VGFont m_font;
-    QSet<quint32> m_cachedGlyphs;
-    QSet<quint32> m_unusedGlyphs;
+    QHash<quint32, int> m_glyphReferences;
 };
 
 

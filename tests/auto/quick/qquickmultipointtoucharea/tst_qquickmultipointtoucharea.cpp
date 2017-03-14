@@ -800,7 +800,7 @@ void tst_QQuickMultiPointTouchArea::inFlickable2()
 
     QVERIFY(flickable->contentY() < 0);
     QVERIFY(flickable->isMoving());
-    QCOMPARE(point11->pressed(), true);
+    QCOMPARE(point11->pressed(), false);
 
     QTest::touchEvent(window.data(), device).release(0, p1);
     QQuickTouchUtils::flush(window.data());

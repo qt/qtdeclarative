@@ -2397,7 +2397,6 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
         } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
             QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
             if (deliverDragEvent(grabber, **grabItem, moveEvent)) {
-                moveEvent->setAccepted(true);
                 for (++grabItem; grabItem != grabber->end();) {
                     QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
                     if ((**grabItem)->contains(p)) {
@@ -2472,7 +2471,10 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
                     event->keyboardModifiers(),
                     event->type());
             QQuickDropEventEx::copyActions(&translatedEvent, *event);
+            translatedEvent.setAccepted(event->isAccepted());
             QCoreApplication::sendEvent(item, &translatedEvent);
+            event->setAccepted(translatedEvent.isAccepted());
+            event->setDropAction(translatedEvent.dropAction());
             if (event->type() == QEvent::DragEnter) {
                 if (translatedEvent.isAccepted()) {
                     grabber->grab(item);
@@ -2593,9 +2595,14 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                         qCDebug(DBG_TOUCH) << " - second chance intercepted on childMouseEventFilter by " << target;
                         if (t != QEvent::MouseButtonRelease) {
                             qCDebug(DBG_TOUCH_TARGET) << "TP" << tp.id() << "->" << target;
-                            touchMouseId = tp.id();
                             touchMouseDevice = event->device();
-                            touchMouseDevice->pointerEvent()->pointById(tp.id())->setGrabber(target);
+                            if (touchMouseId == -1) {
+                                // the point was grabbed as a pure touch point before, now it will be treated as mouse
+                                // but the old receiver still needs to be informed
+                                if (auto oldGrabber = touchMouseDevice->pointerEvent()->pointById(tp.id())->grabber())
+                                    oldGrabber->touchUngrabEvent();
+                            }
+                            touchMouseId = tp.id();
                             target->grabMouse();
                         }
                         filtered = true;

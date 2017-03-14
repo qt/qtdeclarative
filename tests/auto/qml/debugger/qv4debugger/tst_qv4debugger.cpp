@@ -176,6 +176,7 @@ public:
         , m_captureContextInfo(false)
         , m_thrownValue(-1)
         , collector(engine)
+        , m_resumeSpeed(QV4Debugger::FullThrottle)
         , m_debugger(0)
     {
     }
@@ -214,7 +215,7 @@ public slots:
         if (m_captureContextInfo)
             captureContextInfo(debugger);
 
-        debugger->resume(QV4Debugger::FullThrottle);
+        debugger->resume(m_resumeSpeed);
     }
 
 public:
@@ -280,6 +281,7 @@ public:
         int context;
     };
     QVector<ExpressionRequest> m_expressionRequests;
+    QV4Debugger::Speed m_resumeSpeed;
     QList<QJsonObject> m_expressionResults;
     QList<QJsonArray> m_expressionRefs;
     QV4Debugger *m_debugger;
@@ -324,7 +326,10 @@ private slots:
     void breakInWith();
 
     void evaluateExpression();
+    void stepToEndOfScript();
 
+    void lastLineOfLoop_data();
+    void lastLineOfLoop();
 private:
     QV4Debugger *debugger() const
     {
@@ -756,6 +761,70 @@ void tst_qv4debugger::evaluateExpression()
         QCOMPARE(result1.value("type").toString(), QStringLiteral("number"));
         QCOMPARE(result1.value("value").toInt(), 20);
     }
+}
+
+void tst_qv4debugger::stepToEndOfScript()
+{
+    QString script =
+            "var ret = 0;\n"
+            "ret += 4;\n"
+            "ret += 1;\n"
+            "ret += 5;\n";
+
+    debugger()->addBreakPoint("toEnd", 1);
+    m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
+    evaluateJavaScript(script, "toEnd");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Step);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 5);
+    for (int i = 0; i < 4; ++i) {
+        QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(i);
+        QCOMPARE(state.fileName, QString("toEnd"));
+        QCOMPARE(state.lineNumber, i + 1);
+    }
+
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(4);
+    QCOMPARE(state.fileName, QString("toEnd"));
+    QCOMPARE(state.lineNumber, -4); // A return instruction without proper line number.
+}
+
+void tst_qv4debugger::lastLineOfLoop_data()
+{
+    QTest::addColumn<QString>("loopHead");
+    QTest::addColumn<QString>("loopTail");
+
+    QTest::newRow("for")       << "for (var i = 0; i < 10; ++i) {\n"   << "}\n";
+    QTest::newRow("for..in")   << "for (var i in [0, 1, 2, 3, 4]) {\n" << "}\n";
+    QTest::newRow("while")     << "while (ret < 10) {\n"               << "}\n";
+    QTest::newRow("do..while") << "do {\n"                             << "} while (ret < 10);\n";
+}
+
+void tst_qv4debugger::lastLineOfLoop()
+{
+    QFETCH(QString, loopHead);
+    QFETCH(QString, loopTail);
+
+    QString script =
+            "var ret = 0;\n"
+            + loopHead +
+            "    if (ret == 2)\n"
+            "        ret += 4;\n" // breakpoint, then step over
+            "    else \n"
+            "        ret += 1;\n"
+            + loopTail;
+
+    debugger()->addBreakPoint("trueBranch", 4);
+    m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
+    evaluateJavaScript(script, "trueBranch");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Step);
+    QVERIFY(m_debuggerAgent->m_statesWhenPaused.count() > 1);
+    QV4Debugger::ExecutionState firstState = m_debuggerAgent->m_statesWhenPaused.first();
+    QCOMPARE(firstState.fileName, QString("trueBranch"));
+    QCOMPARE(firstState.lineNumber, 4);
+    QV4Debugger::ExecutionState secondState = m_debuggerAgent->m_statesWhenPaused.at(1);
+    QCOMPARE(secondState.fileName, QString("trueBranch"));
+    QCOMPARE(secondState.lineNumber, 7);
 }
 
 QTEST_MAIN(tst_qv4debugger)

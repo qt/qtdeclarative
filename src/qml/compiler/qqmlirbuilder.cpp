@@ -2116,7 +2116,8 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
     object->indexOfDefaultPropertyOrAlias = serializedObject->indexOfDefaultPropertyOrAlias;
     object->defaultPropertyIsAlias = serializedObject->defaultPropertyIsAlias;
-
+    object->flags = serializedObject->flags;
+    object->id = serializedObject->id;
     object->location = serializedObject->location;
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 
@@ -2175,6 +2176,15 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         object->properties->append(p);
     }
 
+    {
+        const QV4::CompiledData::Alias *serializedAlias = serializedObject->aliasTable();
+        for (uint i = 0; i < serializedObject->nAliases; ++i, ++serializedAlias) {
+            QmlIR::Alias *a = pool->New<QmlIR::Alias>();
+            *static_cast<QV4::CompiledData::Alias*>(a) = *serializedAlias;
+            object->aliases->append(a);
+        }
+    }
+
     QQmlJS::Engine *jsParserEngine = &output->jsParserEngine;
 
     const QV4::CompiledData::LEUInt32 *functionIdx = serializedObject->functionOffsetTable();
@@ -2204,6 +2214,11 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
         const QString name = unit->stringAt(compiledFunction->nameIndex);
         f->functionDeclaration = new(pool) QQmlJS::AST::FunctionDeclaration(jsParserEngine->newStringRef(name), paramList, /*body*/0);
+
+        f->formals.allocate(pool, int(compiledFunction->nFormals));
+        formalNameIdx = compiledFunction->formalsTable();
+        for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx)
+            f->formals[i] = *formalNameIdx;
 
         object->functions->append(f);
     }

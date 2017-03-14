@@ -42,7 +42,9 @@
 #include "qquickcanvasitem_p.h"
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qquickitem_p.h>
+#if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#endif
 #include <qsgrendererinterface.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
