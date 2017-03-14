@@ -449,7 +449,7 @@ void InstructionSelection<JITAssembler>::loadThisObject(IR::Expr *temp)
 {
     _as->loadPtr(Address(JITTargetPlatform::EngineRegister, JITAssembler::targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
     _as->loadPtr(Address(JITTargetPlatform::ScratchRegister, qOffsetOf(ExecutionContext::Data, callData)), JITTargetPlatform::ScratchRegister);
-    _as->copyValue(temp, Address(JITTargetPlatform::ScratchRegister, qOffsetOf(CallData, thisObject)));
+    _as->copyValue(temp, Address(JITTargetPlatform::ScratchRegister, offsetof(CallData, thisObject)));
 }
 
 template <typename JITAssembler>
@@ -1313,11 +1313,11 @@ int InstructionSelection<JITAssembler>::prepareCallData(IR::ExprList* args, IR::
         ++argc;
     }
 
-    Pointer p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, tag));
+    Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
     _as->store32(TrustedImm32(QV4::Value::Integer_Type_Internal), p);
-    p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, argc));
+    p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
     _as->store32(TrustedImm32(argc), p);
-    p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));
+    p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
     if (!thisObject)
         _as->storeValue(QV4::Primitive::undefinedValue(), p);
     else

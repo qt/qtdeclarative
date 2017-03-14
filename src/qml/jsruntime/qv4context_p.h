@@ -73,6 +73,8 @@ struct WithContext;
 struct QmlContext;
 struct QmlContextWrapper;
 
+// Attention: Make sure that this structure is the same size on 32-bit and 64-bit
+// architecture or you'll have to change the JIT code.
 struct CallData
 {
     // below is to be compatible with Value. Initialize tag to 0
@@ -90,6 +92,10 @@ struct CallData
     Value thisObject;
     Value args[1];
 };
+
+Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
+Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 8);
+Q_STATIC_ASSERT(offsetof(CallData, args) == 16);
 
 namespace Heap {
 
