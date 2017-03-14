@@ -78,8 +78,8 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     c->activation = 0;
 
     c->compilationUnit = function->compilationUnit;
-    c->lookups = c->compilationUnit->runtimeLookups;
-    c->constantTable = c->compilationUnit->constants;
+    c->lookups = function->compilationUnit->runtimeLookups;
+    c->constantTable = function->compilationUnit->constants;
     c->locals = (Value *)((quintptr(c + 1) + 7) & ~7);
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;

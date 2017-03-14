@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x10
+#define QV4_DATA_STRUCTURE_VERSION 0x11
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -795,11 +795,15 @@ typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
 // This is how this hooks into the existing structures:
 
-//VM::Function
-//    CompilationUnit * (for functions that need to clean up)
-//    CompiledData::Function *compiledFunction
+struct Q_QML_PRIVATE_EXPORT CompilationUnitBase
+{
+    QV4::Heap::String **runtimeStrings = 0; // Array
+};
 
-struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
+Q_STATIC_ASSERT(std::is_standard_layout<CompilationUnitBase>::value);
+Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeStrings) == 0);
+
+struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public QQmlRefCount
 {
 #ifdef V4_BOOTSTRAP
     CompilationUnit()
@@ -815,8 +819,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
     // Called only when building QML, when we build the header for JS first and append QML data
     virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
-
-    QV4::Heap::String **runtimeStrings; // Array
 
 #ifndef V4_BOOTSTRAP
     ExecutionEngine *engine;

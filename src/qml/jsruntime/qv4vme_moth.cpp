@@ -404,7 +404,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     Q_ALLOCA_VAR(QV4::Value*, scopes, sizeof(QV4::Value *)*(2 + 2*scopeDepth));
     {
-        scopes[0] = const_cast<QV4::Value *>(context->d()->compilationUnit->constants);
+        scopes[0] = const_cast<QV4::Value *>(static_cast<CompiledData::CompilationUnit*>(context->d()->compilationUnit)->constants);
         // stack gets setup in push instruction
         scopes[1] = 0;
         QV4::Heap::ExecutionContext *scope = context->d();
@@ -451,7 +451,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(LoadRegExp)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = context->d()->compilationUnit->runtimeRegularExpressions[instr.regExpId];
+        VALUE(instr.result) = static_cast<CompiledData::CompilationUnit*>(context->d()->compilationUnit)->runtimeRegularExpressions[instr.regExpId];
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)

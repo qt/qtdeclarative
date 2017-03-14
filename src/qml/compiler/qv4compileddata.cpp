@@ -95,7 +95,6 @@ static QString cacheFilePath(const QUrl &url)
 #ifndef V4_BOOTSTRAP
 CompilationUnit::CompilationUnit()
     : data(0)
-    , runtimeStrings(0)
     , engine(0)
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)

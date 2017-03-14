@@ -300,7 +300,7 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
 {
     loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
-    loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
+    loadPtr(Address(Assembler::ScratchRegister, offsetof(CompiledData::CompilationUnitBase, runtimeStrings)), reg);
     const int id = _jsGenerator->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
 }

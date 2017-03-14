@@ -300,7 +300,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 
 ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
 {
-    QV4::Function *clos = engine->current->compilationUnit->runtimeFunctions[functionId];
+    QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeFunctions[functionId];
     Q_ASSERT(clos);
     return FunctionObject::createScriptFunction(engine->currentContext, clos)->asReturnedValue();
 }
@@ -1301,7 +1301,7 @@ ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *value
 ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
 {
     Scope scope(engine);
-    QV4::InternalClass *klass = engine->current->compilationUnit->runtimeClasses[classId];
+    QV4::InternalClass *klass = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeClasses[classId];
     ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype()));
 
     {
@@ -1413,7 +1413,7 @@ ReturnedValue Runtime::method_getQmlContext(NoThrowEngine *engine)
 
 ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
 {
-    return engine->current->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
+    return static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
 }
 
 ReturnedValue Runtime::method_getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)

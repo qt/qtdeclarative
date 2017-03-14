@@ -61,7 +61,7 @@ class QQmlContextData;
 namespace QV4 {
 
 namespace CompiledData {
-struct CompilationUnit;
+struct CompilationUnitBase;
 struct Function;
 }
 
@@ -126,7 +126,7 @@ struct ExecutionContext : Base {
     Pointer<ExecutionContext> outer;
     Lookup *lookups;
     const QV4::Value *constantTable;
-    CompiledData::CompilationUnit *compilationUnit;
+    CompiledData::CompilationUnitBase *compilationUnit;
 
     ContextType type : 8;
     bool strictMode : 8;
