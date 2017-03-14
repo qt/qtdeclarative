@@ -787,7 +787,7 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
             if (parameters.contains("namesAsObjects"))
                 namesAsObjects = parameters.value("namesAsObjects").toBool();
             if (parameters.contains("redundantRefs"))
-                namesAsObjects = parameters.value("redundantRefs").toBool();
+                redundantRefs = parameters.value("redundantRefs").toBool();
 
             emit messageToClient(name(), packMessage(type));
             stopWaiting();
