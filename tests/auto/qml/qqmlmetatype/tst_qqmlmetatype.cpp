@@ -52,6 +52,7 @@ private slots:
     void qmlPropertyValueInterceptorCast();
     void qmlType();
     void invalidQmlTypeName();
+    void prettyTypeName();
     void registrationType();
     void compositeType();
     void externalEnums();
@@ -71,6 +72,16 @@ public:
     int foo() { return 0; }
 };
 QML_DECLARE_TYPE(TestType);
+
+class TestType2 : public QObject
+{
+    Q_OBJECT
+};
+
+class TestType3 : public QObject
+{
+    Q_OBJECT
+};
 
 class ExternalEnums : public QObject
 {
@@ -214,13 +225,28 @@ void tst_qqmlmetatype::invalidQmlTypeName()
 {
     QStringList currFailures = QQmlMetaType::typeRegistrationFailures();
     QCOMPARE(qmlRegisterType<TestType>("TestNamespace", 1, 0, "Test$Type"), -1); // should fail due to invalid QML type name.
+    QCOMPARE(qmlRegisterType<TestType>("Test", 1, 0, "EndingInSlash/"), -1);
     QStringList nowFailures = QQmlMetaType::typeRegistrationFailures();
 
     foreach (const QString &f, currFailures)
         nowFailures.removeOne(f);
 
-    QCOMPARE(nowFailures.size(), 1);
+    QCOMPARE(nowFailures.size(), 2);
     QCOMPARE(nowFailures.at(0), QStringLiteral("Invalid QML element name \"Test$Type\""));
+    QCOMPARE(nowFailures.at(1), QStringLiteral("Invalid QML element name \"EndingInSlash/\""));
+}
+
+void tst_qqmlmetatype::prettyTypeName()
+{
+    TestType2 obj2;
+    QCOMPARE(QQmlMetaType::prettyTypeName(&obj2), QString("TestType2"));
+    QVERIFY(qmlRegisterType<TestType2>("Test", 1, 0, "") >= 0);
+    QCOMPARE(QQmlMetaType::prettyTypeName(&obj2), QString("TestType2"));
+
+    TestType3 obj3;
+    QCOMPARE(QQmlMetaType::prettyTypeName(&obj3), QString("TestType3"));
+    QVERIFY(qmlRegisterType<TestType3>("Test", 1, 0, "OtherName") >= 0);
+    QCOMPARE(QQmlMetaType::prettyTypeName(&obj3), QString("OtherName"));
 }
 
 void tst_qqmlmetatype::isList()
