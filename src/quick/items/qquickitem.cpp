@@ -5986,7 +5986,6 @@ void QQuickItemPrivate::addToDirtyList()
         if (nextDirtyItem) QQuickItemPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
         prevDirtyItem = &p->dirtyItemList;
         p->dirtyItemList = q;
-        p->dirtyItem(q);
     }
     Q_ASSERT(prevDirtyItem);
 }
