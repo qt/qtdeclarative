@@ -54,6 +54,7 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qatomic.h>
+#include <QtCore/qfileinfo.h>
 #if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkreply.h>
 #endif
@@ -132,12 +133,14 @@ public:
 
     class SourceCodeData {
     public:
-        QString readAll(QString *error, qint64 *sourceTimeStamp = 0) const;
+        QString readAll(QString *error) const;
+        qint64 sourceTimeStamp() const;
+        bool exists() const;
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;
-        QString inlineSourceCodeOrFileName;
-        bool sourceCodeAvailable = false;
+        QString inlineSourceCode;
+        QFileInfo fileInfo;
     };
 
 protected:
@@ -460,8 +463,7 @@ private:
     void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
 
 
-    qint64 m_sourceTimeStamp = 0;
-    QString m_backupSourceCode; // used when cache verification fails.
+    SourceCodeData m_backupSourceCode; // used when cache verification fails.
     QScopedPointer<QmlIR::Document> m_document;
     QV4::CompiledData::TypeReferenceMap m_typeReferences;
 
