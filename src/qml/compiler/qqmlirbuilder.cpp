@@ -1361,7 +1361,7 @@ bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *prope
     return QQmlJS::AST::cast<QQmlJS::AST::NullExpression *>(expr);
 }
 
-QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine *engine, const QV4::CompiledData::ResolvedTypeReferenceMap &dependentTypes)
+QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
     QV4::CompiledData::Unit *jsUnit = compilationUnit->createUnitData(&output);
@@ -1404,17 +1404,16 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
     qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
 
 #ifndef V4_BOOTSTRAP
-    if (!dependentTypes.isEmpty()) {
+    if (dependencyHasher) {
         QCryptographicHash hash(QCryptographicHash::Md5);
-        if (dependentTypes.addToHash(&hash, engine)) {
+        if (dependencyHasher(&hash)) {
             QByteArray checksum = hash.result();
             Q_ASSERT(checksum.size() == sizeof(qmlUnit->dependencyMD5Checksum));
             memcpy(qmlUnit->dependencyMD5Checksum, checksum.constData(), sizeof(qmlUnit->dependencyMD5Checksum));
         }
     }
 #else
-    Q_UNUSED(dependentTypes);
-    Q_UNUSED(engine);
+    Q_UNUSED(dependencyHasher);
 #endif
 
     // write imports

@@ -133,7 +133,7 @@ struct Q_QML_EXPORT Base {
         else if (_livenessStatus == Destroyed)
             fprintf(stderr, "ERROR: use of object '%s' after call to destroy() !!\n",
                     vtable()->className);
-        Q_ASSERT(_livenessStatus = Initialized);
+        Q_ASSERT(_livenessStatus == Initialized);
     }
     void _checkIsDestroyed() {
         if (_livenessStatus == Initialized)

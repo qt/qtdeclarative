@@ -1743,6 +1743,8 @@ Bool Runtime::method_compareEqual(const Value &left, const Value &right)
         return !left.isNaN();
 
     if (left.type() == right.type()) {
+        if (left.isDouble() && left.doubleValue() == 0 && right.doubleValue() == 0)
+            return true; // this takes care of -0 == +0 (which obviously have different raw values)
         if (!left.isManaged())
             return false;
         if (left.isString() == right.isString())
