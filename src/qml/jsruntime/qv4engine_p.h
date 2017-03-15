@@ -54,7 +54,6 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
-#include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
 #ifndef V4_BOOTSTRAP
@@ -97,13 +96,8 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    // This must be the first member, so that its offset is a multiple of QT_POINTER_SIZE
-    // as the base class's size is.
-    Runtime runtime;
-
     qint32 callDepth;
 
-    MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;

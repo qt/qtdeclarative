@@ -89,8 +89,6 @@ inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
 inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
-#define qOffsetOf(s, m) ((size_t)((((char *)&(((s *)64)->m)) - 64)))
-
 // Decide whether to enable or disable the JIT
 
 // White list architectures

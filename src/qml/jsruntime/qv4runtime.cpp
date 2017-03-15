@@ -219,6 +219,14 @@ void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
 #endif // QV4_COUNT_RUNTIME_FUNCTIONS
 
 #ifndef V4_BOOTSTRAP
+
+Runtime::Runtime()
+{
+#define INIT_METHOD(returnvalue, name, args) runtimeMethods[name] = reinterpret_cast<void*>(&method_##name);
+FOR_EACH_RUNTIME_METHOD(INIT_METHOD)
+#undef INIT_METHOD
+}
+
 void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 {
     Q_ASSERT(result);

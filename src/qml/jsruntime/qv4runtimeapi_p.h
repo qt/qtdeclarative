@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+typedef uint Bool;
 struct NoThrowEngine;
 
 namespace {
@@ -223,12 +224,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(void, setQmlQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value))
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
-    Runtime()
-    {
-#define INIT_METHOD(returnvalue, name, args) runtimeMethods[name] = reinterpret_cast<void*>(&method_##name);
-FOR_EACH_RUNTIME_METHOD(INIT_METHOD)
-#undef INIT_METHOD
-    }
+    Runtime();
 
     typedef ReturnedValue (*UnaryOperation)(const Value &value);
     typedef ReturnedValue (*BinaryOperation)(const Value &left, const Value &right);
@@ -258,8 +254,6 @@ FOR_EACH_RUNTIME_METHOD(INIT_METHOD)
 static_assert(std::is_standard_layout<Runtime>::value, "Runtime needs to be standard layout in order for us to be able to use offsetof");
 static_assert(offsetof(Runtime, runtimeMethods) == 0, "JIT expects this to be the first member");
 static_assert(sizeof(Runtime::BinaryOperation) == sizeof(void*), "JIT expects a function pointer to fit into a regular pointer, for cross-compilation offset translation");
-
-#undef FOR_EACH_RUNTIME_METHOD
 
 } // namespace QV4
 

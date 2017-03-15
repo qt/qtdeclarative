@@ -131,7 +131,6 @@ qint32 ExecutionEngine::maxCallDepth = -1;
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : callDepth(0)
-    , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , currentContext(0)
@@ -149,6 +148,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_profiler(0)
 #endif
 {
+    memoryManager = new QV4::MemoryManager(this);
+
     if (maxCallDepth == -1) {
         bool ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);

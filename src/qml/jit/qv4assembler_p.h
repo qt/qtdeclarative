@@ -1687,7 +1687,7 @@ void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source)
 template <typename TargetConfiguration>
 inline Assembler<TargetConfiguration>::RuntimeCall::RuntimeCall(Runtime::RuntimeMethods method)
     : addr(Assembler::EngineRegister,
-           method == Runtime::InvalidRuntimeMethod ? -1 : (Assembler<TargetConfiguration>::targetStructureOffset(qOffsetOf(QV4::ExecutionEngine, runtime) + Runtime::runtimeMethodOffset(method))))
+           method == Runtime::InvalidRuntimeMethod ? -1 : (Assembler<TargetConfiguration>::targetStructureOffset(offsetof(EngineBase, runtime) + Runtime::runtimeMethodOffset(method))))
 {
 }
 
