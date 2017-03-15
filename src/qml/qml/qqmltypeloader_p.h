@@ -130,16 +130,14 @@ public:
 
     QList<QQmlError> errors() const;
 
-    class Data {
+    class SourceCodeData {
     public:
-        QByteArray readAll(QString *error, qint64 *sourceTimeStamp = 0) const;
+        QString readAll(QString *error, qint64 *sourceTimeStamp = 0) const;
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;
-        inline Data();
-        Data(const Data &);
-        Data &operator=(const Data &);
-        QBiPointer<const QByteArray, const QString> d;
+        QString inlineSourceCodeOrFileName;
+        bool sourceCodeAvailable = false;
     };
 
 protected:
@@ -152,7 +150,7 @@ protected:
     void addDependency(QQmlDataBlob *);
 
     // Callbacks made in load thread
-    virtual void dataReceived(const Data &) = 0;
+    virtual void dataReceived(const SourceCodeData &) = 0;
     virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*) = 0;
     virtual void done();
 #if QT_CONFIG(qml_network)
@@ -339,7 +337,7 @@ private:
 
     void setData(QQmlDataBlob *, const QByteArray &);
     void setData(QQmlDataBlob *, const QString &fileName);
-    void setData(QQmlDataBlob *, const QQmlDataBlob::Data &);
+    void setData(QQmlDataBlob *, const QQmlDataBlob::SourceCodeData &);
     void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
 
     template<typename T>
@@ -436,7 +434,7 @@ public:
 protected:
     void done() override;
     void completed() override;
-    void dataReceived(const Data &) override;
+    void dataReceived(const SourceCodeData &) override;
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
     void allDependenciesDone() override;
     void downloadProgressChanged(qreal) override;
@@ -463,7 +461,7 @@ private:
 
 
     qint64 m_sourceTimeStamp = 0;
-    QByteArray m_backupSourceCode; // used when cache verification fails.
+    QString m_backupSourceCode; // used when cache verification fails.
     QScopedPointer<QmlIR::Document> m_document;
     QV4::CompiledData::TypeReferenceMap m_typeReferences;
 
@@ -547,7 +545,7 @@ public:
     QQmlScriptData *scriptData() const;
 
 protected:
-    void dataReceived(const Data &) override;
+    void dataReceived(const SourceCodeData &) override;
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
     void done() override;
 
@@ -578,7 +576,7 @@ public:
     void setPriority(int);
 
 protected:
-    void dataReceived(const Data &) override;
+    void dataReceived(const SourceCodeData &) override;
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit*) override;
 
 private:
@@ -586,11 +584,6 @@ private:
     const QV4::CompiledData::Import *m_import;
     int m_priority;
 };
-
-QQmlDataBlob::Data::Data()
-{
-}
-
 
 
 QT_END_NAMESPACE
