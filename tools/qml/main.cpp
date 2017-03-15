@@ -567,7 +567,7 @@ int main(int argc, char *argv[])
         loadDummyDataFiles(e, dummyDir);
 
     for (const QString &path : qAsConst(files)) {
-        QUrl url = QUrl::fromUserInput(path, QDir::currentPath());
+        QUrl url = QUrl::fromUserInput(path, QDir::currentPath(), QUrl::AssumeLocalFile);
         if (verboseMode)
             printf("qml: loading %s\n", qPrintable(url.toString()));
         QByteArray strippedFile;
