@@ -95,7 +95,7 @@ QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeType
 
     QV4::ScopedContext it(scope, sctxt);
     for (; it; it = it->d()->outer)
-        types.append(it->d()->type);
+        types.append(QV4::Heap::ExecutionContext::ContextType(it->d()->type));
 
     return types;
 }

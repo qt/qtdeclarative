@@ -150,12 +150,28 @@ struct ExecutionContext : Base, public ExecutionContextData {
         lineNumber = -1;
     }
 
-    ContextType type : 8;
+    quint8 type;
     bool strictMode : 8;
+#if QT_POINTER_SIZE == 8
+    quint8 padding_[6];
+#else
+    quint8 padding_[2];
+#endif
 };
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
+Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
 
-struct CallContext : ExecutionContext {
+struct CallContextData {
+    Value *locals;
+};
+
+Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
+Q_STATIC_ASSERT(offsetof(CallContextData, locals) == 0);
+
+struct CallContextSizeStruct : public ExecutionContext, public CallContextData {};
+
+struct CallContext : ExecutionContext, public CallContextData {
+    static Q_CONSTEXPR size_t baseOffset = sizeof(CallContextSizeStruct) - sizeof(CallContextData);
     static CallContext *createSimpleContext(ExecutionEngine *v4);
     void freeSimpleCallContext();
 
@@ -168,7 +184,6 @@ struct CallContext : ExecutionContext {
 
     Pointer<FunctionObject> function;
     QV4::Function *v4Function;
-    Value *locals;
     Pointer<Object> activation;
 };
 V4_ASSERT_IS_TRIVIAL(CallContext)

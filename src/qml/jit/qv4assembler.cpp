@@ -290,7 +290,8 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
     } break;
     case IR::ArgLocal::Local:
     case IR::ArgLocal::ScopedLocal: {
-        loadPtr(Address(baseReg, qOffsetOf(CallContext::Data, locals)), baseReg);
+        const qint32 localsOffset = targetStructureOffset(Heap::CallContext::baseOffset + offsetof(Heap::CallContextData, locals));
+        loadPtr(Address(baseReg, localsOffset), baseReg);
         offset = al->index * sizeof(Value);
     } break;
     default:
