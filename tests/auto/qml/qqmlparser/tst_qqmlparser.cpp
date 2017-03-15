@@ -54,6 +54,7 @@ private slots:
     void qmlParser_data();
     void qmlParser();
 #endif
+    void invalidEscapeSequence();
 
 private:
     QStringList excludedDirs;
@@ -196,6 +197,17 @@ void tst_qqmlparser::qmlParser()
     chk(parser.rootNode());
 }
 #endif
+
+void tst_qqmlparser::invalidEscapeSequence()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    lexer.setCode(QLatin1String("\"\\"), 1);
+    Parser parser(&engine);
+    parser.parse();
+}
 
 QTEST_MAIN(tst_qqmlparser)
 
