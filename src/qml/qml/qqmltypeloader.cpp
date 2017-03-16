@@ -3086,7 +3086,15 @@ QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
         return QString();
     }
 
-    QByteArray data(fileInfo.size(), Qt::Uninitialized);
+    const qint64 fileSize = fileInfo.size();
+
+    if (uchar *mappedData = f.map(0, fileSize)) {
+        QString source = QString::fromUtf8(reinterpret_cast<const char *>(mappedData), fileSize);
+        f.unmap(mappedData);
+        return source;
+    }
+
+    QByteArray data(fileSize, Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();
         return QString();
