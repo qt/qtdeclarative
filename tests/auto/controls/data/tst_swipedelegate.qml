@@ -134,7 +134,7 @@ TestCase {
 
     function test_horizontalAnchors(data) {
         var warningMessage = Qt.resolvedUrl("tst_swipedelegate.qml") + data.warningLocation
-            + ": QML : SwipeDelegate: cannot use horizontal anchors with " + data.itemName + "; unable to layout the item."
+            + ": QML QQuickItem: SwipeDelegate: cannot use horizontal anchors with " + data.itemName + "; unable to layout the item."
 
         ignoreWarning(warningMessage);
 
