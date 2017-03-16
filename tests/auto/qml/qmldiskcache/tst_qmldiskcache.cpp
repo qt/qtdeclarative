@@ -174,7 +174,7 @@ struct TestCompiler
     {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
-        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), v4->iselFactory.data(), &lastErrorString);
+        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), QFileInfo(testFilePath).lastModified(), v4->iselFactory.data(), &lastErrorString);
     }
 
     void closeMapping()

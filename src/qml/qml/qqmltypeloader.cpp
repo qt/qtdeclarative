@@ -2065,7 +2065,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
     {
         QString error;
-        if (!unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
+        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
             qCDebug(DBG_DISK_CACHE) << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
@@ -2522,7 +2522,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {
             QString error;
-            if (!m_compiledData->loadFromDisk(url(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
+            if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
                 // ignore error, keep using the in-memory compilation unit.
             }
         } else {
@@ -2882,7 +2882,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     if (!disableDiskCache() || forceDiskCache()) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
         QString error;
-        if (unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
+        if (unit->loadFromDisk(url(), data.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
             initializeFromCompilationUnit(unit);
             return;
         } else {
@@ -3094,18 +3094,18 @@ QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
     return QString::fromUtf8(data);
 }
 
-qint64 QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
+QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
 {
     if (!inlineSourceCode.isEmpty())
-        return 0;
+        return QDateTime();
 
     QDateTime timeStamp = fileInfo.lastModified();
     if (timeStamp.isValid())
-        return timeStamp.toMSecsSinceEpoch();
+        return timeStamp;
 
-    static qint64 appTimeStamp = 0;
-    if (appTimeStamp == 0)
-        appTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified().toMSecsSinceEpoch();
+    static QDateTime appTimeStamp;
+    if (!appTimeStamp.isValid())
+        appTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
     return appTimeStamp;
 }
 

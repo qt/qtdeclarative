@@ -134,7 +134,7 @@ public:
     class SourceCodeData {
     public:
         QString readAll(QString *error) const;
-        qint64 sourceTimeStamp() const;
+        QDateTime sourceTimeStamp() const;
         bool exists() const;
     private:
         friend class QQmlDataBlob;

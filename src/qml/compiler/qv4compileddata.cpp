@@ -343,7 +343,7 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
-bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
+bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, EvalISelFactory *iselFactory, QString *errorString)
 {
     if (!QQmlFile::isLocalFile(url)) {
         *errorString = QStringLiteral("File has to be a local file.");
@@ -353,7 +353,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
+    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourceTimeStamp, errorString);
     if (!mappedUnit)
         return false;
 

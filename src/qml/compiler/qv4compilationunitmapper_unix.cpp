@@ -43,6 +43,7 @@
 #include <functional>
 #include <private/qcore_unix_p.h>
 #include <private/qdeferredcleanup_p.h>
+#include <QDateTime>
 
 #include "qv4compileddata_p.h"
 
@@ -50,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, const QString &sourcePath, QString *errorString)
+CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, const QDateTime &sourceTimeStamp, QString *errorString)
 {
     close();
 
@@ -72,7 +73,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    if (!verifyHeader(&header, sourcePath, errorString))
+    if (!verifyHeader(&header, sourceTimeStamp, errorString))
         return nullptr;
 
     // Data structure and qt version matched, so now we can access the rest of the file safely.
