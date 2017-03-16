@@ -36,6 +36,7 @@
 
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickcolor_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
 #include <QtQuickControls2/private/qquickplaceholdertext_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
@@ -162,6 +163,13 @@ static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
     return new QQuickDefaultStyle;
 }
 
+static QObject *colorSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    return new QQuickColor;
+}
+
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(uri);
@@ -184,7 +192,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
-
+    qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
 }
 
 QT_END_NAMESPACE
