@@ -187,9 +187,18 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
     case QV4::Value::Integer_Type:
         dict.insert(valueKey, value->integerValue());
         return 0;
-    default: // double
-        dict.insert(valueKey, value->doubleValue());
+    default: {// double
+        const double val = value->doubleValue();
+        if (qIsFinite(val))
+            dict.insert(valueKey, val);
+        else if (qIsNaN(val))
+            dict.insert(valueKey, QStringLiteral("NaN"));
+        else if (val < 0)
+            dict.insert(valueKey, QStringLiteral("-Infinity"));
+        else
+            dict.insert(valueKey, QStringLiteral("Infinity"));
         return 0;
+    }
     }
 }
 
