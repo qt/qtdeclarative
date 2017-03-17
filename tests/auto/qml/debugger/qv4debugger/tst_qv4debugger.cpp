@@ -630,7 +630,7 @@ void tst_qv4debugger::readObject()
     QCOMPARE(b_tail_head.value("value").toString(), QStringLiteral("asdf"));
     QJsonObject b_tail_tail = b_tail_props.at(1).toObject();
     QCOMPARE(b_tail_tail.value("name").toString(), QStringLiteral("tail"));
-    QCOMPARE(b_tail_tail.value("type").toString(), QStringLiteral("null"));
+    QCOMPARE(b_tail_tail.value("type").toString(), QStringLiteral("object"));
     QVERIFY(b_tail_tail.value("value").isNull());
 }
 
