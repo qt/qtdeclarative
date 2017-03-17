@@ -5,6 +5,7 @@ SOURCES += main.cpp
 RESOURCES += pathitem.qrc
 OTHER_FILES += content/pathitem.qml \
                content/pathitemgallery.qml \
+               content/pathiteminteract.qml \
                content/pathitemsampling.qml \
                content/pathitemtigers.qml \
                content/tiger.qml \

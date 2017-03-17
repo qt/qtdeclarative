@@ -4,8 +4,11 @@
         <file alias="SimpleLauncherDelegate.qml">../shared/SimpleLauncherDelegate.qml</file>
         <file alias="images/next.png">../shared/images/next.png</file>
         <file alias="images/back.png">../shared/images/back.png</file>
+        <file alias="images/slider_handle.png">../shared/images/slider_handle.png</file>
+        <file alias="Slider.qml">../shared/Slider.qml</file>
         <file alias="pathitem.qml">content/pathitem.qml</file>
         <file alias="pathitemgallery.qml">content/pathitemgallery.qml</file>
+        <file alias="pathiteminteract.qml">content/pathiteminteract.qml</file>
         <file alias="pathitemsampling.qml">content/pathitemsampling.qml</file>
         <file alias="pathitemtigers.qml">content/pathitemtigers.qml</file>
         <file alias="tiger.qml">content/tiger.qml</file>
