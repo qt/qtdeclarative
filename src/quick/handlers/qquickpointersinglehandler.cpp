@@ -71,8 +71,20 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
         // We already know which one we want, so check whether it's there.
         // It's expected to be an update or a release.
         // If we no longer want it, cancel the grab.
-        if (auto point = event->pointById(m_pointId)) {
-            if (wantsEventPoint(point)) {
+        int candidatePointCount = 0;
+        QQuickEventPoint *point = nullptr;
+        int c = event->pointCount();
+        for (int i = 0; i < c; ++i) {
+            QQuickEventPoint *p = event->point(i);
+            if (p->pointId() == m_pointId) {
+                point = p;
+                ++candidatePointCount;
+            } else if (wantsEventPoint(p)) {
+                ++candidatePointCount;
+            }
+        }
+        if (point) {
+            if (candidatePointCount == 1) {
                 point->setAccepted();
                 return true;
             } else {
@@ -85,13 +97,17 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
         }
     } else {
         // We have not yet chosen a point; choose the first one for which wantsEventPoint() returns true.
+        int candidatePointCount = 0;
         int c = event->pointCount();
-        for (int i = 0; i < c && !m_pointId; ++i) {
-            QQuickEventPoint *p = event->point(i);
-            if (!p->exclusiveGrabber() && wantsEventPoint(p)) {
-                m_pointId = p->pointId();
-                p->setAccepted();
-            }
+        QQuickEventPoint *p = nullptr;
+        for (int i = 0; i < c; ++i) {
+            p = event->point(i);
+            if (!p->exclusiveGrabber() && wantsEventPoint(p))
+                ++candidatePointCount;
+        }
+        if (p && candidatePointCount == 1) {
+            m_pointId = p->pointId();
+            p->setAccepted();
         }
     }
     return m_pointId;
