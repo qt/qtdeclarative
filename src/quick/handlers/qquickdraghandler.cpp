@@ -95,8 +95,9 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
                 enforceAxisConstraints(&pos);
                 target()->setPosition(pos);
             }
-        } else if ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
-                   (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point))) {
+        } else if (!point->exclusiveGrabber() &&
+                   ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
+                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point)))) {
             setExclusiveGrab(point);
             if (target()) {
                 if (point->pointerEvent()->asPointerTouchEvent())
