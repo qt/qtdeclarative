@@ -6746,8 +6746,27 @@ bool QQuickItem::heightValid() const
 }
 
 /*!
-    \internal
-  */
+    \since 5.10
+
+    Returns the size of the item.
+
+    \sa setSize, width, height
+ */
+
+QSizeF QQuickItem::size() const
+{
+    Q_D(const QQuickItem);
+    return QSizeF(d->width, d->height);
+}
+
+
+/*!
+    \since 5.10
+
+    Sets the size of the item to \a size.
+
+    \sa size, setWidth, setHeight
+ */
 void QQuickItem::setSize(const QSizeF &size)
 {
     Q_D(QQuickItem);
