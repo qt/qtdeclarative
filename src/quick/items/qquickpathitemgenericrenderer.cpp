@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static const qreal SCALE = 100;
+static const qreal TRI_SCALE = 1;
 
 struct ColoredVertex // must match QSGGeometry::ColoredPoint2D
 {
@@ -410,13 +410,13 @@ void QQuickPathItemGenericRenderer::triangulateFill(const QPainterPath &path,
 {
     const QVectorPath &vp = qtVectorPathForPath(path);
 
-    QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(SCALE, SCALE), 1, supportsElementIndexUint);
+    QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(TRI_SCALE, TRI_SCALE), 1, supportsElementIndexUint);
     const int vertexCount = ts.vertices.count() / 2; // just a qreal vector with x,y hence the / 2
     fillVertices->resize(vertexCount);
     ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(fillVertices->data());
     const qreal *vsrc = ts.vertices.constData();
     for (int i = 0; i < vertexCount; ++i)
-        vdst[i].set(vsrc[i * 2] / SCALE, vsrc[i * 2 + 1] / SCALE, fillColor);
+        vdst[i].set(vsrc[i * 2] / TRI_SCALE, vsrc[i * 2 + 1] / TRI_SCALE, fillColor);
 
     size_t indexByteSize;
     if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
@@ -441,7 +441,7 @@ void QQuickPathItemGenericRenderer::triangulateStroke(const QPainterPath &path,
 {
     const QVectorPath &vp = qtVectorPathForPath(path);
     const QRectF clip(QPointF(0, 0), clipSize);
-    const qreal inverseScale = 1.0 / SCALE;
+    const qreal inverseScale = 1.0 / TRI_SCALE;
 
     QTriangulatingStroker stroker;
     stroker.setInvScale(inverseScale);
@@ -508,8 +508,12 @@ void QQuickPathItemGenericRenderer::updateNode()
 
         if (m_accDirty & DirtyList)
             d.effectiveDirty |= DirtyFillGeom | DirtyStrokeGeom | DirtyColor | DirtyFillGradient;
-        if (!d.effectiveDirty)
+
+        if (!d.effectiveDirty) {
+            prevNode = node;
+            nodePtr = &node->m_next;
             continue;
+        }
 
         if (d.fillColor.a == 0) {
             delete node->m_fillNode;
