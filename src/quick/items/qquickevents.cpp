@@ -193,8 +193,8 @@ Item {
 */
 
 /*!
-    \qmlproperty int QtQuick::MouseEvent::x
-    \qmlproperty int QtQuick::MouseEvent::y
+    \qmlproperty real QtQuick::MouseEvent::x
+    \qmlproperty real QtQuick::MouseEvent::y
 
     These properties hold the coordinates of the position supplied by the mouse event.
 */
@@ -340,8 +340,8 @@ Item {
 */
 
 /*!
-    \qmlproperty int QtQuick::WheelEvent::x
-    \qmlproperty int QtQuick::WheelEvent::y
+    \qmlproperty real QtQuick::WheelEvent::x
+    \qmlproperty real QtQuick::WheelEvent::y
 
     These properties hold the coordinates of the position supplied by the wheel event.
 */
