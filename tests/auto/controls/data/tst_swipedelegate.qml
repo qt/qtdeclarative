@@ -119,29 +119,28 @@ TestCase {
         }
     }
 
-    // Temporary solution to allow qt5 merge to go through; see: QTBUG-59536
-//    function test_horizontalAnchors_data() {
-//        return [
-//            { tag: "background, fill", component: backgroundFillComponent, itemName: "background", warningLocation: ":69:25" },
-//            { tag: "background, centerIn", component: backgroundCenterInComponent, itemName: "background", warningLocation: ":76:25" },
-//            { tag: "background, left", component: backgroundLeftComponent, itemName: "background", warningLocation: ":83:25" },
-//            { tag: "background, right", component: backgroundRightComponent, itemName: "background", warningLocation: ":90:25" },
-//            { tag: "contentItem, fill", component: contentItemFillComponent, itemName: "contentItem", warningLocation: ":97:26" },
-//            { tag: "contentItem, centerIn", component: contentItemCenterInComponent, itemName: "contentItem", warningLocation: ":104:26" },
-//            { tag: "contentItem, left", component: contentItemLeftComponent, itemName: "contentItem", warningLocation: ":111:26" },
-//            { tag: "contentItem, right", component: contentItemRightComponent, itemName: "contentItem", warningLocation: ":118:26" }
-//        ];
-//    }
+    function test_horizontalAnchors_data() {
+        return [
+            { tag: "background, fill", component: backgroundFillComponent, itemName: "background", warningLocation: ":69:25" },
+            { tag: "background, centerIn", component: backgroundCenterInComponent, itemName: "background", warningLocation: ":76:25" },
+            { tag: "background, left", component: backgroundLeftComponent, itemName: "background", warningLocation: ":83:25" },
+            { tag: "background, right", component: backgroundRightComponent, itemName: "background", warningLocation: ":90:25" },
+            { tag: "contentItem, fill", component: contentItemFillComponent, itemName: "contentItem", warningLocation: ":97:26" },
+            { tag: "contentItem, centerIn", component: contentItemCenterInComponent, itemName: "contentItem", warningLocation: ":104:26" },
+            { tag: "contentItem, left", component: contentItemLeftComponent, itemName: "contentItem", warningLocation: ":111:26" },
+            { tag: "contentItem, right", component: contentItemRightComponent, itemName: "contentItem", warningLocation: ":118:26" }
+        ];
+    }
 
-//    function test_horizontalAnchors(data) {
-//        var warningMessage = Qt.resolvedUrl("tst_swipedelegate.qml") + data.warningLocation
-//            + ": QML : SwipeDelegate: cannot use horizontal anchors with " + data.itemName + "; unable to layout the item."
+    function test_horizontalAnchors(data) {
+        var warningMessage = Qt.resolvedUrl("tst_swipedelegate.qml") + data.warningLocation
+            + ": QML : SwipeDelegate: cannot use horizontal anchors with " + data.itemName + "; unable to layout the item."
 
-//        ignoreWarning(warningMessage);
+        ignoreWarning(warningMessage);
 
-//        var control = createTemporaryObject(data.component, testCase);
-//        verify(control.contentItem);
-//    }
+        var control = createTemporaryObject(data.component, testCase);
+        verify(control.contentItem);
+    }
 
     Component {
         id: greenLeftComponent
@@ -212,90 +211,90 @@ TestCase {
         }
     }
 
-//    function test_settingDelegates() {
-//        var control = createTemporaryObject(swipeDelegateComponent, testCase);
-//        verify(control);
+    function test_settingDelegates() {
+        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        verify(control);
 
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
-//        control.swipe.behind = itemComponent;
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        control.swipe.behind = itemComponent;
 
-//        // Shouldn't be any warnings when unsetting delegates.
-//        control.swipe.left = null;
-//        compare(control.swipe.leftItem, null);
+        // Shouldn't be any warnings when unsetting delegates.
+        control.swipe.left = null;
+        compare(control.swipe.leftItem, null);
 
-//        // right is still set.
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
-//        control.swipe.behind = itemComponent;
+        // right is still set.
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        control.swipe.behind = itemComponent;
 
-//        control.swipe.right = null;
-//        compare(control.swipe.rightItem, null);
+        control.swipe.right = null;
+        compare(control.swipe.rightItem, null);
 
-//        control.swipe.behind = itemComponent;
+        control.swipe.behind = itemComponent;
 
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
-//        control.swipe.left = itemComponent;
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        control.swipe.left = itemComponent;
 
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
-//        control.swipe.right = itemComponent;
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        control.swipe.right = itemComponent;
 
-//        control.swipe.behind = null;
-//        control.swipe.left = greenLeftComponent;
-//        control.swipe.right = redRightComponent;
+        control.swipe.behind = null;
+        control.swipe.left = greenLeftComponent;
+        control.swipe.right = redRightComponent;
 
-//        // Test that the user is warned when attempting to set or unset left or
-//        // right item while they're exposed.
-//        // First, try the left item.
-//        swipe(control, 0.0, 1.0);
+        // Test that the user is warned when attempting to set or unset left or
+        // right item while they're exposed.
+        // First, try the left item.
+        swipe(control, 0.0, 1.0);
 
-//        var oldLeft = control.swipe.left;
-//        var oldLeftItem = control.swipe.leftItem;
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
-//        control.swipe.left = null;
-//        compare(control.swipe.left, oldLeft);
-//        compare(control.swipe.leftItem, oldLeftItem);
+        var oldLeft = control.swipe.left;
+        var oldLeftItem = control.swipe.leftItem;
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+        control.swipe.left = null;
+        compare(control.swipe.left, oldLeft);
+        compare(control.swipe.leftItem, oldLeftItem);
 
-//        // Try the same thing with the right item.
-//        swipe(control, 1.0, -1.0);
+        // Try the same thing with the right item.
+        swipe(control, 1.0, -1.0);
 
-//        var oldRight = control.swipe.right;
-//        var oldRightItem = control.swipe.rightItem;
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
-//        control.swipe.right = null;
-//        compare(control.swipe.right, oldRight);
-//        compare(control.swipe.rightItem, oldRightItem);
+        var oldRight = control.swipe.right;
+        var oldRightItem = control.swipe.rightItem;
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+        control.swipe.right = null;
+        compare(control.swipe.right, oldRight);
+        compare(control.swipe.rightItem, oldRightItem);
 
-//        // Return to the default position.
-//        swipe(control, -1.0, 0.0);
+        // Return to the default position.
+        swipe(control, -1.0, 0.0);
 
-//        tryCompare(control.background, "x", 0, 1000);
+        tryCompare(control.background, "x", 0, 1000);
 
-//        // Try the same thing with the behind item.
-//        control.swipe.left = null;
-//        verify(!control.swipe.left);
-//        verify(!control.swipe.leftItem);
-//        control.swipe.right = null;
-//        verify(!control.swipe.right);
-//        verify(!control.swipe.rightItem);
-//        control.swipe.behind = greenLeftComponent;
-//        verify(control.swipe.behind);
-//        verify(!control.swipe.behindItem);
+        // Try the same thing with the behind item.
+        control.swipe.left = null;
+        verify(!control.swipe.left);
+        verify(!control.swipe.leftItem);
+        control.swipe.right = null;
+        verify(!control.swipe.right);
+        verify(!control.swipe.rightItem);
+        control.swipe.behind = greenLeftComponent;
+        verify(control.swipe.behind);
+        verify(!control.swipe.behindItem);
 
-//        swipe(control, 0.0, 1.0);
+        swipe(control, 0.0, 1.0);
 
-//        var oldBehind = control.swipe.behind;
-//        var oldBehindItem = control.swipe.behindItem;
-//        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-//            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
-//        control.swipe.behind = null;
-//        compare(control.swipe.behind, oldBehind);
-//        compare(control.swipe.behindItem, oldBehindItem);
-//    }
+        var oldBehind = control.swipe.behind;
+        var oldBehindItem = control.swipe.behindItem;
+        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
+            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+        control.swipe.behind = null;
+        compare(control.swipe.behind, oldBehind);
+        compare(control.swipe.behindItem, oldBehindItem);
+    }
 
     function test_defaults() {
         var control = createTemporaryObject(swipeDelegateComponent, testCase);
