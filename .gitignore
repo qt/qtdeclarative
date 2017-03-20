@@ -37,6 +37,8 @@
 /tests/auto/platform/tst_platform
 /tests/auto/popup/tst_popup
 /tests/auto/pressandhold/tst_pressandhold
+/tests/auto/qquickcolor/tst_qquickcolor
+/tests/auto/qquickiconimage/tst_qquickiconimage
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle
 /tests/auto/qquickmaterialstyleconf/tst_qquickmaterialstyleconf
 /tests/auto/qquickstyle/tst_qquickstyle
