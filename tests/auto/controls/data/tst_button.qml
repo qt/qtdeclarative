@@ -431,4 +431,21 @@ TestCase {
         control.highlighted = true
         verify(control.highlighted)
     }
+
+    function test_spacing() {
+        var control = createTemporaryObject(button, testCase, { text: "Some long, long, long text" })
+        verify(control)
+        verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
+
+        // The implicitWidth of the ImplicitRow that all buttons use as their contentItem
+        // should be equal to the implicitWidth of the Text while no icon is set.
+        compare(control.contentItem.implicitWidth, control.contentItem.text.implicitWidth)
+
+        // That means that spacing shouldn't affect it.
+        control.spacing += 100
+        compare(control.contentItem.implicitWidth, control.contentItem.text.implicitWidth)
+
+        // The implicitWidth of the Button itself should, therefore, also never include spacing while no icon is set.
+        compare(control.implicitWidth, control.contentItem.text.implicitWidth + control.leftPadding + control.rightPadding)
+    }
 }

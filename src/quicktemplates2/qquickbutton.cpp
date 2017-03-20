@@ -77,6 +77,9 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    In addition to displaying \l {AbstractButton::}{text}, buttons can also
+    display an \l [QML]{Button Icons}{icon}.
+
     \sa {Customizing Button}, {Button Controls}
 */
 

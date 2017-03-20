@@ -51,17 +51,35 @@ T.Button {
     padding: 6
     leftPadding: padding + 2
     rightPadding: padding + 2
+    spacing: 6
 
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
-        color: control.checked || control.highlighted ?
-            Default.textLightColor :
-            (control.visualFocus ? Default.focusColor : (control.down ? Default.textDarkColor : Default.textColor))
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+    icon.width: 24
+    icon.height: 24
+    icon.color: enabled ? undefined : Default.textDisabledLightColor
+
+    contentItem: DisplayLayout {
+        spacing: control.spacing
+        mirrored: control.mirrored
+
+        icon: IconImage {
+            id: iconImage
+            name: control.icon.name
+            source: control.icon.source
+            sourceSize.width: control.icon.width
+            sourceSize.height: control.icon.height
+            color: control.icon.color
+        }
+        text: Text {
+            text: control.text
+            font: control.font
+            opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
+            color: control.checked || control.highlighted ?
+                Default.textLightColor :
+                (control.visualFocus ? Default.focusColor : (control.down ? Default.textDarkColor : Default.textColor))
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+        }
     }
 
     background: Rectangle {
