@@ -637,6 +637,20 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
         emit q->fontChanged();
 }
 
+/*!
+    \qmlproperty Locale QtQuick.Controls::ApplicationWindow::locale
+
+    This property holds the locale of the window.
+
+    The default locale depends on the system environment. You can set the
+    default locale by calling QLocale::setDefault(), before loading any QML.
+
+    ApplicationWindow propagates the locale to child controls. If you change
+    the window's locale, that locale propagates to all child controls in the
+    window, overriding the system default locale.
+
+    \sa Control::locale, {LayoutMirroring}{LayoutMirroring}
+*/
 QLocale QQuickApplicationWindow::locale() const
 {
     Q_D(const QQuickApplicationWindow);
