@@ -198,10 +198,17 @@ QQuickItem *QQuickPointerHandler::target() const
 
 void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
 {
-    if (wantsPointerEvent(event))
+    if (wantsPointerEvent(event)) {
         handlePointerEventImpl(event);
-    else
+    } else {
         setActive(false);
+        int pCount = event->pointCount();
+        for (int i = 0; i < pCount; ++i) {
+            QQuickEventPoint *pt = event->point(i);
+            if (pt->grabberPointerHandler() == this)
+                pt->cancelExclusiveGrab();
+        }
+    }
 }
 
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
