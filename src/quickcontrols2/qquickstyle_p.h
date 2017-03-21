@@ -66,6 +66,7 @@ public:
     static void reset();
     static QString configFilePath();
     static QSharedPointer<QSettings> settings(const QString &group = QString());
+    static bool isDarkSystemTheme();
 };
 
 QT_END_NAMESPACE

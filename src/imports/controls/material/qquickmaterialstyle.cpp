@@ -419,12 +419,10 @@ static const QRgb rippleColorDark = 0x20FFFFFF;
 static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
 static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
 
-extern bool qt_is_dark_system_theme();
-
 static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme theme)
 {
     if (theme == QQuickMaterialStyle::System)
-        theme = qt_is_dark_system_theme() ? QQuickMaterialStyle::Dark : QQuickMaterialStyle::Light;
+        theme = QQuickStylePrivate::isDarkSystemTheme() ? QQuickMaterialStyle::Dark : QQuickMaterialStyle::Light;
     return theme;
 }
 
@@ -463,7 +461,7 @@ QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
 void QQuickMaterialStyle::setTheme(Theme theme)
 {
     if (theme == System)
-        theme = qt_is_dark_system_theme() ? Dark : Light;
+        theme = QQuickStylePrivate::isDarkSystemTheme() ? Dark : Light;
 
     m_explicitTheme = true;
     if (m_theme == theme)

@@ -132,12 +132,10 @@ static QRgb qquickuniversal_accent_color(QQuickUniversalStyle::Color accent)
     return colors[accent];
 }
 
-extern bool qt_is_dark_system_theme();
-
 static QQuickUniversalStyle::Theme qquickuniversal_effective_theme(QQuickUniversalStyle::Theme theme)
 {
     if (theme == QQuickUniversalStyle::System)
-        theme = qt_is_dark_system_theme() ? QQuickUniversalStyle::Dark : QQuickUniversalStyle::Light;
+        theme = QQuickStylePrivate::isDarkSystemTheme() ? QQuickUniversalStyle::Dark : QQuickUniversalStyle::Light;
     return theme;
 }
 

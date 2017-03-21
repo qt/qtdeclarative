@@ -43,7 +43,10 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
 #include <QtCore/qlibraryinfo.h>
+#include <QtGui/qcolor.h>
+#include <QtGui/qpalette.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
@@ -327,6 +330,23 @@ QSharedPointer<QSettings> QQuickStylePrivate::settings(const QString &group)
     }
 #endif // QT_NO_SETTINGS
     return QSharedPointer<QSettings>();
+}
+
+static bool qt_is_dark_system_theme()
+{
+    if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
+        if (const QPalette *systemPalette = theme->palette(QPlatformTheme::SystemPalette)) {
+            const QColor textColor = systemPalette->color(QPalette::WindowText);
+            return textColor.red() > 128 && textColor.blue() > 128 && textColor.green() > 128;
+        }
+    }
+    return false;
+}
+
+bool QQuickStylePrivate::isDarkSystemTheme()
+{
+    static bool dark = qt_is_dark_system_theme();
+    return dark;
 }
 
 /*!
