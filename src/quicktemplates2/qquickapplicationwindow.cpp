@@ -251,6 +251,29 @@ void QQuickApplicationWindowPrivate::itemImplicitHeightChanged(QQuickItem *item)
     relayout();
 }
 
+void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
+{
+    Q_Q(QQuickApplicationWindow);
+    const bool changed = font != f;
+    font = f;
+
+    QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
+
+    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
+    const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
+    for (QQuickPopup *popup : popups)
+        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritFont(f);
+
+    if (changed)
+        emit q->fontChanged();
+}
+
+void QQuickApplicationWindowPrivate::resolveFont()
+{
+    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    setFont_helper(resolvedFont);
+}
+
 void QQuickApplicationWindowPrivate::_q_updateActiveFocus()
 {
     Q_Q(QQuickApplicationWindow);
@@ -612,28 +635,6 @@ void QQuickApplicationWindow::resetFont()
     setFont(QFont());
 }
 
-void QQuickApplicationWindowPrivate::resolveFont()
-{
-    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
-    setFont_helper(resolvedFont);
-}
-
-void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
-{
-    Q_Q(QQuickApplicationWindow);
-    const bool changed = font != f;
-    font = f;
-
-    QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
-
-    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
-    const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
-    for (QQuickPopup *popup : popups)
-        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritFont(f);
-
-    if (changed)
-        emit q->fontChanged();
-}
 
 QLocale QQuickApplicationWindow::locale() const
 {
