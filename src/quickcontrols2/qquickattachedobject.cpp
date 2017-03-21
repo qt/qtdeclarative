@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickstyleattached_p.h"
+#include "qquickattachedobject_p.h"
 
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -42,41 +42,41 @@
 
 QT_BEGIN_NAMESPACE
 
-static QQuickStyleAttached *attachedStyle(const QMetaObject *type, QObject *object, bool create = false)
+static QQuickAttachedObject *attachedObject(const QMetaObject *type, QObject *object, bool create = false)
 {
     if (!object)
         return nullptr;
     int idx = -1;
-    return qobject_cast<QQuickStyleAttached *>(qmlAttachedPropertiesObject(&idx, object, type, create));
+    return qobject_cast<QQuickAttachedObject *>(qmlAttachedPropertiesObject(&idx, object, type, create));
 }
 
-static QQuickStyleAttached *findParentStyle(const QMetaObject *type, QObject *object)
+static QQuickAttachedObject *findAttachedParent(const QMetaObject *type, QObject *object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (item) {
         // lookup parent items and popups
         QQuickItem *parent = item->parentItem();
         while (parent) {
-            QQuickStyleAttached *style = attachedStyle(type, parent);
-            if (style)
-                return style;
+            QQuickAttachedObject *attached = attachedObject(type, parent);
+            if (attached)
+                return attached;
 
             QQuickPopup *popup = qobject_cast<QQuickPopup *>(parent->parent());
             if (popup)
-                return attachedStyle(type, popup);
+                return attachedObject(type, popup);
 
             parent = parent->parentItem();
         }
 
         // fallback to item's window
-        QQuickStyleAttached *style = attachedStyle(type, item->window());
-        if (style)
-            return style;
+        QQuickAttachedObject *attached = attachedObject(type, item->window());
+        if (attached)
+            return attached;
     } else {
         // lookup popup's window
         QQuickPopup *popup = qobject_cast<QQuickPopup *>(object);
         if (popup)
-            return attachedStyle(type, popup->popupItem()->window());
+            return attachedObject(type, popup->popupItem()->window());
     }
 
     // lookup parent window
@@ -84,9 +84,9 @@ static QQuickStyleAttached *findParentStyle(const QMetaObject *type, QObject *ob
     if (window) {
         QQuickWindow *parentWindow = qobject_cast<QQuickWindow *>(window->parent());
         if (parentWindow) {
-            QQuickStyleAttached *style = attachedStyle(type, window);
-            if (style)
-                return style;
+            QQuickAttachedObject *attached = attachedObject(type, window);
+            if (attached)
+                return attached;
         }
     }
 
@@ -95,21 +95,21 @@ static QQuickStyleAttached *findParentStyle(const QMetaObject *type, QObject *ob
         QQmlEngine *engine = qmlEngine(object);
         if (engine) {
             QByteArray name = QByteArray("_q_") + type->className();
-            QQuickStyleAttached *style = engine->property(name).value<QQuickStyleAttached*>();
-            if (!style) {
-                style = attachedStyle(type, engine, true);
-                engine->setProperty(name, QVariant::fromValue(style));
+            QQuickAttachedObject *attached = engine->property(name).value<QQuickAttachedObject *>();
+            if (!attached) {
+                attached = attachedObject(type, engine, true);
+                engine->setProperty(name, QVariant::fromValue(attached));
             }
-            return style;
+            return attached;
         }
     }
 
     return nullptr;
 }
 
-static QList<QQuickStyleAttached *> findChildStyles(const QMetaObject *type, QObject *object)
+static QList<QQuickAttachedObject *> findAttachedChildren(const QMetaObject *type, QObject *object)
 {
-    QList<QQuickStyleAttached *> children;
+    QList<QQuickAttachedObject *> children;
 
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
@@ -121,9 +121,9 @@ static QList<QQuickStyleAttached *> findChildStyles(const QMetaObject *type, QOb
             for (QObject *child : windowChildren) {
                 QQuickWindow *childWindow = qobject_cast<QQuickWindow *>(child);
                 if (childWindow) {
-                    QQuickStyleAttached *style = attachedStyle(type, childWindow);
-                    if (style)
-                        children += style;
+                    QQuickAttachedObject *attached = attachedObject(type, childWindow);
+                    if (attached)
+                        children += attached;
                 }
             }
         }
@@ -132,18 +132,18 @@ static QList<QQuickStyleAttached *> findChildStyles(const QMetaObject *type, QOb
     if (item) {
         const auto childItems = item->childItems();
         for (QQuickItem *child : childItems) {
-            QQuickStyleAttached *style = attachedStyle(type, child);
-            if (style)
-                children += style;
+            QQuickAttachedObject *attached = attachedObject(type, child);
+            if (attached)
+                children += attached;
             else
-                children += findChildStyles(type, child);
+                children += findAttachedChildren(type, child);
         }
     }
 
     return children;
 }
 
-QQuickStyleAttached::QQuickStyleAttached(QObject *parent) : QObject(parent)
+QQuickAttachedObject::QQuickAttachedObject(QObject *parent) : QObject(parent)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (!item) {
@@ -153,77 +153,77 @@ QQuickStyleAttached::QQuickStyleAttached(QObject *parent) : QObject(parent)
     }
 
     if (item) {
-        connect(item, &QQuickItem::windowChanged, this, &QQuickStyleAttached::itemWindowChanged);
+        connect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
     }
 }
 
-QQuickStyleAttached::~QQuickStyleAttached()
+QQuickAttachedObject::~QQuickAttachedObject()
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent());
     if (item) {
-        disconnect(item, &QQuickItem::windowChanged, this, &QQuickStyleAttached::itemWindowChanged);
+        disconnect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
     }
 
-    setParentStyle(nullptr);
+    setAttachedParent(nullptr);
 }
 
-QList<QQuickStyleAttached *> QQuickStyleAttached::childStyles() const
+QList<QQuickAttachedObject *> QQuickAttachedObject::attachedChildren() const
 {
-    return m_childStyles;
+    return m_attachedChildren;
 }
 
-QQuickStyleAttached *QQuickStyleAttached::parentStyle() const
+QQuickAttachedObject *QQuickAttachedObject::attachedParent() const
 {
-    return m_parentStyle;
+    return m_attachedParent;
 }
 
-void QQuickStyleAttached::setParentStyle(QQuickStyleAttached *style)
+void QQuickAttachedObject::setAttachedParent(QQuickAttachedObject *parent)
 {
-    if (m_parentStyle != style) {
-        QQuickStyleAttached *oldParent = m_parentStyle;
-        if (m_parentStyle)
-            m_parentStyle->m_childStyles.removeOne(this);
-        m_parentStyle = style;
-        if (style)
-            style->m_childStyles.append(this);
-        parentStyleChange(style, oldParent);
+    if (m_attachedParent != parent) {
+        QQuickAttachedObject *oldParent = m_attachedParent;
+        if (m_attachedParent)
+            m_attachedParent->m_attachedChildren.removeOne(this);
+        m_attachedParent = parent;
+        if (parent)
+            parent->m_attachedChildren.append(this);
+        attachedParentChange(parent, oldParent);
     }
 }
 
-void QQuickStyleAttached::init()
+void QQuickAttachedObject::init()
 {
-    QQuickStyleAttached *parentStyle = findParentStyle(metaObject(), parent());
-    if (parentStyle)
-        setParentStyle(parentStyle);
+    QQuickAttachedObject *attachedParent = findAttachedParent(metaObject(), parent());
+    if (attachedParent)
+        setAttachedParent(attachedParent);
 
-    const QList<QQuickStyleAttached *> children = findChildStyles(metaObject(), parent());
-    for (QQuickStyleAttached *child : children)
-        child->setParentStyle(this);
+    const QList<QQuickAttachedObject *> attachedChildren = findAttachedChildren(metaObject(), parent());
+    for (QQuickAttachedObject *child : attachedChildren)
+        child->setAttachedParent(this);
 }
 
-void QQuickStyleAttached::parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent)
+void QQuickAttachedObject::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)
 {
     Q_UNUSED(newParent);
     Q_UNUSED(oldParent);
 }
 
-void QQuickStyleAttached::itemWindowChanged(QQuickWindow *window)
+void QQuickAttachedObject::itemWindowChanged(QQuickWindow *window)
 {
-    QQuickStyleAttached *parentStyle = nullptr;
+    QQuickAttachedObject *attachedParent = nullptr;
     QQuickItem *item = qobject_cast<QQuickItem *>(sender());
     if (item)
-        parentStyle = findParentStyle(metaObject(), item);
-    if (!parentStyle)
-        parentStyle = attachedStyle(metaObject(), window);
-    setParentStyle(parentStyle);
+        attachedParent = findAttachedParent(metaObject(), item);
+    if (!attachedParent)
+        attachedParent = attachedObject(metaObject(), window);
+    setAttachedParent(attachedParent);
 }
 
-void QQuickStyleAttached::itemParentChanged(QQuickItem *item, QQuickItem *parent)
+void QQuickAttachedObject::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
     Q_UNUSED(parent);
-    setParentStyle(findParentStyle(metaObject(), item));
+    setAttachedParent(findAttachedParent(metaObject(), item));
 }
 
 QT_END_NAMESPACE

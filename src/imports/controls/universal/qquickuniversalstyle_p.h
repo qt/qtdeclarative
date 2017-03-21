@@ -49,13 +49,13 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtQuickControls2/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickattachedobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickUniversalStylePrivate;
 
-class QQuickUniversalStyle : public QQuickStyleAttached
+class QQuickUniversalStyle : public QQuickAttachedObject
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
@@ -208,7 +208,7 @@ Q_SIGNALS:
     void paletteChanged();
 
 protected:
-    void parentStyleChange(QQuickStyleAttached *newParent, QQuickStyleAttached *oldParent) override;
+    void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent) override;
 
 private:
     void init();
