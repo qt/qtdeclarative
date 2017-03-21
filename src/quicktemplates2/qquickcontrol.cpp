@@ -807,14 +807,14 @@ void QQuickControl::resetSpacing()
     \qmlproperty Locale QtQuick.Controls::Control::locale
 
     This property holds the locale of the control.
+
     It contains locale specific properties for formatting data and numbers.
     Unless a special locale has been set, this is either the parent's locale
     or the default locale.
 
-    Control propagates explicit locale properties from parent to children.
-    If you change a specific property on a control's locale, that property
-    propagates to all of the control's children, overriding any system defaults
-    for that property.
+    Control propagates the locale from parent to children. If you change the
+    control's locale, that locale propagates to all of the control's children,
+    overriding the system default locale.
 
     \sa mirrored, {LayoutMirroring}{LayoutMirroring}
 */
