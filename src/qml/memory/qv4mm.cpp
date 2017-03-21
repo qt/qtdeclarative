@@ -113,14 +113,16 @@ struct MemorySegment {
         pageReservation = PageReservation::reserve(size, OSAllocator::JSGCHeapPages);
         base = reinterpret_cast<Chunk *>((reinterpret_cast<quintptr>(pageReservation.base()) + Chunk::ChunkSize - 1) & ~(Chunk::ChunkSize - 1));
         nChunks = NumChunks;
-        if (base != pageReservation.base())
+        availableBytes = size - (reinterpret_cast<quintptr>(base) - reinterpret_cast<quintptr>(pageReservation.base()));
+        if (availableBytes < SegmentSize)
             --nChunks;
     }
     MemorySegment(MemorySegment &&other) {
         qSwap(pageReservation, other.pageReservation);
         qSwap(base, other.base);
-        qSwap(nChunks, other.nChunks);
         qSwap(allocatedMap, other.allocatedMap);
+        qSwap(availableBytes, other.availableBytes);
+        qSwap(nChunks, other.nChunks);
     }
 
     ~MemorySegment() {
@@ -150,7 +152,7 @@ struct MemorySegment {
     void free(Chunk *chunk, size_t size) {
         DEBUG << "freeing chunk" << chunk;
         size_t index = static_cast<size_t>(chunk - base);
-        size_t end = index + (size - 1)/Chunk::ChunkSize + 1;
+        size_t end = qMin(static_cast<size_t>(NumChunks), index + (size - 1)/Chunk::ChunkSize + 1);
         while (index < end) {
             Q_ASSERT(testBit(index));
             clearBit(index);
@@ -169,11 +171,19 @@ struct MemorySegment {
     PageReservation pageReservation;
     Chunk *base = 0;
     quint64 allocatedMap = 0;
+    size_t availableBytes = 0;
     uint nChunks = 0;
 };
 
 Chunk *MemorySegment::allocate(size_t size)
 {
+    if (!allocatedMap && size >= SegmentSize) {
+        // chunk allocated for one huge allocation
+        Q_ASSERT(availableBytes >= size);
+        pageReservation.commit(base, size);
+        allocatedMap = ~static_cast<quintptr>(0);
+        return base;
+    }
     size_t requiredChunks = (size + sizeof(Chunk) - 1)/sizeof(Chunk);
     uint sequence = 0;
     Chunk *candidate = 0;
