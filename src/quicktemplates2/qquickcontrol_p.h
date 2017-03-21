@@ -201,8 +201,8 @@ protected:
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
 
 #if QT_CONFIG(accessibility)
-    virtual void accessibilityActiveChanged(bool active);
     virtual QAccessible::Role accessibleRole() const;
+    virtual void accessibilityActiveChanged(bool active);
 #endif
 
     // helper functions which avoid to check QT_CONFIG(accessibility)

@@ -249,29 +249,6 @@ QAccessible::Role QQuickControlPrivate::accessibleRole() const
     Q_Q(const QQuickControl);
     return q->accessibleRole();
 }
-
-QAccessible::Role QQuickControl::accessibleRole() const
-{
-    return QAccessible::NoRole;
-}
-
-void QQuickControl::accessibilityActiveChanged(bool active)
-{
-    Q_D(QQuickControl);
-    if (d->accessibleAttached || !active)
-        return;
-
-    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-
-    // QQuickControl relies on the existence of a QQuickAccessibleAttached object.
-    // However, qmlAttachedPropertiesObject(create=true) creates an instance only
-    // for items that have been created by a QML engine. Therefore we create the
-    // object by hand for items created in C++ (QQuickPopupItem, for instance).
-    if (!d->accessibleAttached)
-        d->accessibleAttached = new QQuickAccessibleAttached(this);
-
-    d->accessibleAttached->setRole(accessibleRole());
-}
 #endif
 
 /*!
@@ -379,6 +356,58 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
     }
 }
 
+QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
+{
+    const QQuickItem *p = item;
+    while (p) {
+        if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
+            return control->locale();
+
+        QVariant v = p->property("locale");
+        if (v.isValid() && v.userType() == QMetaType::QLocale)
+            return v.toLocale();
+
+        p = p->parentItem();
+    }
+
+    if (item) {
+        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
+            return window->locale();
+    }
+
+    return QLocale();
+}
+
+void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
+{
+    Q_Q(QQuickControl);
+    if (!e && hasLocale)
+        return;
+
+    QLocale old = q->locale();
+    hasLocale = e;
+    if (old != l) {
+        bool wasMirrored = q->isMirrored();
+        q->localeChange(l, old);
+        locale = l;
+        QQuickControlPrivate::updateLocaleRecur(q, l);
+        emit q->localeChanged();
+        if (wasMirrored != q->isMirrored())
+            q->mirrorChange();
+    }
+}
+
+void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
+{
+    const auto childItems = item->childItems();
+    for (QQuickItem *child : childItems) {
+        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
+            QQuickControlPrivate::get(control)->updateLocale(l, false);
+        else
+            updateLocaleRecur(child, l);
+    }
+}
+
 #if QT_CONFIG(quicktemplates2_hover)
 void QQuickControlPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 {
@@ -437,48 +466,14 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
 }
 #endif
 
-QString QQuickControl::accessibleName() const
+/*
+    Cancels incubation to avoid "Object destroyed during incubation" (QTBUG-50992)
+*/
+void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
 {
-#if QT_CONFIG(accessibility)
-    Q_D(const QQuickControl);
-    if (d->accessibleAttached)
-        return d->accessibleAttached->name();
-#endif
-    return QString();
-}
-
-void QQuickControl::setAccessibleName(const QString &name)
-{
-#if QT_CONFIG(accessibility)
-    Q_D(QQuickControl);
-    if (d->accessibleAttached)
-        d->accessibleAttached->setName(name);
-#else
-    Q_UNUSED(name)
-#endif
-}
-
-QVariant QQuickControl::accessibleProperty(const char *propertyName)
-{
-#if QT_CONFIG(accessibility)
-    Q_D(QQuickControl);
-    if (d->accessibleAttached)
-        return QQuickAccessibleAttached::property(this, propertyName);
-#endif
-    Q_UNUSED(propertyName)
-    return QVariant();
-}
-
-bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
-{
-#if QT_CONFIG(accessibility)
-    Q_D(QQuickControl);
-    if (d->accessibleAttached)
-        return QQuickAccessibleAttached::setProperty(this, propertyName, value);
-#endif
-    Q_UNUSED(propertyName)
-    Q_UNUSED(value)
-    return false;
+    if (delegate && parent)
+        QQmlIncubatorPrivate::cancel(delegate, qmlContext(parent));
+    delete delegate;
 }
 
 QQuickControl::QQuickControl(QQuickItem *parent)
@@ -841,68 +836,6 @@ void QQuickControl::resetLocale()
 
     d->hasLocale = false;
     d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
-}
-
-QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
-{
-    const QQuickItem *p = item;
-    while (p) {
-        if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
-            return control->locale();
-
-        QVariant v = p->property("locale");
-        if (v.isValid() && v.userType() == QMetaType::QLocale)
-            return v.toLocale();
-
-        p = p->parentItem();
-    }
-
-    if (item) {
-        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
-            return window->locale();
-    }
-
-    return QLocale();
-}
-
-/*
-    Cancels incubation to avoid "Object destroyed during incubation" (QTBUG-50992)
-*/
-void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
-{
-    if (delegate && parent)
-        QQmlIncubatorPrivate::cancel(delegate, qmlContext(parent));
-    delete delegate;
-}
-
-void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
-{
-    Q_Q(QQuickControl);
-    if (!e && hasLocale)
-        return;
-
-    QLocale old = q->locale();
-    hasLocale = e;
-    if (old != l) {
-        bool wasMirrored = q->isMirrored();
-        q->localeChange(l, old);
-        locale = l;
-        QQuickControlPrivate::updateLocaleRecur(q, l);
-        emit q->localeChanged();
-        if (wasMirrored != q->isMirrored())
-            q->mirrorChange();
-    }
-}
-
-void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
-{
-    const auto childItems = item->childItems();
-    for (QQuickItem *child : childItems) {
-        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
-            QQuickControlPrivate::get(control)->updateLocale(l, false);
-        else
-            updateLocaleRecur(child, l);
-    }
 }
 
 /*!
@@ -1363,6 +1296,75 @@ void QQuickControl::localeChange(const QLocale &newLocale, const QLocale &oldLoc
 {
     Q_UNUSED(newLocale);
     Q_UNUSED(oldLocale);
+}
+
+#if QT_CONFIG(accessibility)
+QAccessible::Role QQuickControl::accessibleRole() const
+{
+    return QAccessible::NoRole;
+}
+
+void QQuickControl::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickControl);
+    if (d->accessibleAttached || !active)
+        return;
+
+    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+
+    // QQuickControl relies on the existence of a QQuickAccessibleAttached object.
+    // However, qmlAttachedPropertiesObject(create=true) creates an instance only
+    // for items that have been created by a QML engine. Therefore we create the
+    // object by hand for items created in C++ (QQuickPopupItem, for instance).
+    if (!d->accessibleAttached)
+        d->accessibleAttached = new QQuickAccessibleAttached(this);
+
+    d->accessibleAttached->setRole(accessibleRole());
+}
+#endif
+
+QString QQuickControl::accessibleName() const
+{
+#if QT_CONFIG(accessibility)
+    Q_D(const QQuickControl);
+    if (d->accessibleAttached)
+        return d->accessibleAttached->name();
+#endif
+    return QString();
+}
+
+void QQuickControl::setAccessibleName(const QString &name)
+{
+#if QT_CONFIG(accessibility)
+    Q_D(QQuickControl);
+    if (d->accessibleAttached)
+        d->accessibleAttached->setName(name);
+#else
+    Q_UNUSED(name)
+#endif
+}
+
+QVariant QQuickControl::accessibleProperty(const char *propertyName)
+{
+#if QT_CONFIG(accessibility)
+    Q_D(QQuickControl);
+    if (d->accessibleAttached)
+        return QQuickAccessibleAttached::property(this, propertyName);
+#endif
+    Q_UNUSED(propertyName)
+    return QVariant();
+}
+
+bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
+{
+#if QT_CONFIG(accessibility)
+    Q_D(QQuickControl);
+    if (d->accessibleAttached)
+        return QQuickAccessibleAttached::setProperty(this, propertyName, value);
+#endif
+    Q_UNUSED(propertyName)
+    Q_UNUSED(value)
+    return false;
 }
 
 QT_END_NAMESPACE
