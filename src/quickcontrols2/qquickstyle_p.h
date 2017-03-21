@@ -49,9 +49,12 @@
 //
 
 #include <QtCore/qurl.h>
+#include <QtCore/qsharedpointer.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class QSettings;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePrivate
 {
@@ -62,6 +65,7 @@ public:
     static void init(const QUrl &baseUrl);
     static void reset();
     static QString configFilePath();
+    static QSharedPointer<QSettings> settings(const QString &group = QString());
 };
 
 QT_END_NAMESPACE

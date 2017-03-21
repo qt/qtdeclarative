@@ -35,11 +35,7 @@
 ****************************************************************************/
 
 #include "qquickstyleattached_p.h"
-#include "qquickstyle_p.h"
 
-#include <QtCore/qfile.h>
-#include <QtCore/qsettings.h>
-#include <QtCore/qfileselector.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qpalette.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -192,21 +188,6 @@ QQuickStyleAttached::~QQuickStyleAttached()
     }
 
     setParentStyle(nullptr);
-}
-
-QSharedPointer<QSettings> QQuickStyleAttached::settings(const QString &group)
-{
-#ifndef QT_NO_SETTINGS
-    const QString filePath = QQuickStylePrivate::configFilePath();
-    if (QFile::exists(filePath)) {
-        QFileSelector selector;
-        QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
-        if (!group.isEmpty())
-            settings->beginGroup(group);
-        return QSharedPointer<QSettings>(settings);
-    }
-#endif // QT_NO_SETTINGS
-    return QSharedPointer<QSettings>();
 }
 
 QList<QQuickStyleAttached *> QQuickStyleAttached::childStyles() const

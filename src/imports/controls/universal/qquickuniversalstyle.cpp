@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtQuickControls2/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -542,7 +542,7 @@ void QQuickUniversalStyle::init()
 {
     static bool globalsInitialized = false;
     if (!globalsInitialized) {
-        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Universal"));
+        QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Universal"));
 
         bool ok = false;
         QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));

@@ -36,11 +36,12 @@
 
 #include "qquickstyle.h"
 #include "qquickstyle_p.h"
-#include "qquickstyleattached_p.h"
 
 #include <QtCore/qdir.h>
+#include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
+#include <QtCore/qfileselector.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>
@@ -176,7 +177,7 @@ struct QQuickStyleSpec
             setFallbackStyle(QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
 #if QT_CONFIG(settings)
         if (style.isEmpty() || fallbackStyle.isEmpty()) {
-            QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Controls"));
+            QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Controls"));
             if (settings) {
                 if (style.isEmpty())
                     style = settings->value(QStringLiteral("Style")).toString();
@@ -311,6 +312,21 @@ void QQuickStylePrivate::reset()
 QString QQuickStylePrivate::configFilePath()
 {
     return styleSpec()->resolveConfigFilePath();
+}
+
+QSharedPointer<QSettings> QQuickStylePrivate::settings(const QString &group)
+{
+#ifndef QT_NO_SETTINGS
+    const QString filePath = QQuickStylePrivate::configFilePath();
+    if (QFile::exists(filePath)) {
+        QFileSelector selector;
+        QSettings *settings = new QSettings(selector.select(filePath), QSettings::IniFormat);
+        if (!group.isEmpty())
+            settings->beginGroup(group);
+        return QSharedPointer<QSettings>(settings);
+    }
+#endif // QT_NO_SETTINGS
+    return QSharedPointer<QSettings>();
 }
 
 /*!

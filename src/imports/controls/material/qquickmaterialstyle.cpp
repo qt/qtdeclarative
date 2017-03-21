@@ -39,7 +39,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qsettings.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtQuickControls2/private/qquickstyleattached_p.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1171,7 +1171,7 @@ void QQuickMaterialStyle::init()
 {
     static bool globalsInitialized = false;
     if (!globalsInitialized) {
-        QSharedPointer<QSettings> settings = QQuickStyleAttached::settings(QStringLiteral("Material"));
+        QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Material"));
 
         bool ok = false;
         QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));

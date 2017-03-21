@@ -52,13 +52,11 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qpointer.h>
-#include <QtCore/qsharedpointer.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSettings;
 class QQuickWindow;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStyleAttached : public QObject, public QQuickItemChangeListener
@@ -68,8 +66,6 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStyleAttached : public QObject, publ
 public:
     explicit QQuickStyleAttached(QObject *parent = nullptr);
     ~QQuickStyleAttached();
-
-    static QSharedPointer<QSettings> settings(const QString &group = QString());
 
 protected:
     void init();
