@@ -51,6 +51,8 @@ private slots:
     void display_data();
     void display();
     void explicitLayoutSize();
+    void spacingWithOneDelegate_data();
+    void spacingWithOneDelegate();
 };
 
 tst_qquickdisplaylayout::tst_qquickdisplaylayout()
@@ -225,6 +227,42 @@ void tst_qquickdisplaylayout::explicitLayoutSize()
     layout->setMirrored(true);
     QCOMPARE(icon->x(), layout->width() - icon->implicitWidth());
     QCOMPARE(text->x(), 0.0);
+}
+
+void tst_qquickdisplaylayout::spacingWithOneDelegate_data()
+{
+    QTest::addColumn<QString>("qmlFileName");
+
+    QTest::addRow("spacingWithOnlyIcon") << QStringLiteral("spacingWithOnlyIcon.qml");
+    QTest::addRow("spacingWithOnlyText") << QStringLiteral("spacingWithOnlyText.qml");
+}
+
+void tst_qquickdisplaylayout::spacingWithOneDelegate()
+{
+    QFETCH(QString, qmlFileName);
+
+    QQuickView view(testFileUrl(qmlFileName));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *rootItem = view.rootObject();
+    QVERIFY(rootItem);
+
+    QQuickDisplayLayout *layout = qobject_cast<QQuickDisplayLayout*>(rootItem->childItems().first());
+    QVERIFY(layout);
+    QQuickItem *delegate = nullptr;
+    if (layout->icon()) {
+        QVERIFY(!layout->text());
+        delegate = layout->icon();
+    } else {
+        QVERIFY(!layout->icon());
+        delegate = layout->text();
+    }
+
+    QVERIFY(delegate);
+    QCOMPARE(delegate->x(), 0.0);
+    QCOMPARE(delegate->width(), layout->width());
 }
 
 QTEST_MAIN(tst_qquickdisplaylayout)

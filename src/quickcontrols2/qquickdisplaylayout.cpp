@@ -122,13 +122,16 @@ void QQuickDisplayLayoutPrivate::layout()
             icon->setHeight(qMin(icon->implicitHeight(), availableHeight));
             iconWidth = icon->width();
         }
+        qreal effectiveSpacing = 0;
         if (text) {
-            text->setWidth(qMin(text->implicitWidth(), availableWidth - iconWidth - spacing));
+            if (icon)
+                effectiveSpacing = spacing;
+            text->setWidth(qMin(text->implicitWidth(), availableWidth - iconWidth - effectiveSpacing));
             text->setHeight(qMin(text->implicitHeight(), availableHeight));
             textWidth = text->width();
         }
 
-        const qreal combinedWidth = iconWidth + spacing + textWidth;
+        const qreal combinedWidth = iconWidth + effectiveSpacing + textWidth;
         const qreal contentX = horizontalCenter - combinedWidth / 2;
         if (icon) {
             icon->setX(mirrored ? contentX + combinedWidth - iconWidth : contentX);
