@@ -50,7 +50,6 @@ public:
 private slots:
     void display_data();
     void display();
-    void explicitLayoutSize();
     void spacingWithOneDelegate_data();
     void spacingWithOneDelegate();
 };
@@ -197,36 +196,6 @@ void tst_qquickdisplaylayout::display()
             break;
         }
     }
-}
-
-void tst_qquickdisplaylayout::explicitLayoutSize()
-{
-    QQuickView view(testFileUrl("layout.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&view));
-
-    QQuickItem *rootItem = view.rootObject();
-    QVERIFY(rootItem);
-
-    QQuickDisplayLayout *layout = qobject_cast<QQuickDisplayLayout*>(rootItem->childItems().first());
-    QVERIFY(layout);
-
-    QQuickItem *icon = layout->icon();
-    QVERIFY(icon);
-
-    QQuickItem *text = layout->text();
-    QVERIFY(text);
-
-    // Make the row larger than its implicit width, and check that
-    // the items are still positioned correctly.
-    layout->setWidth(layout->implicitWidth() + 100);
-    QCOMPARE(icon->x(), 0.0);
-    QCOMPARE(text->x(), icon->implicitWidth());
-
-    layout->setMirrored(true);
-    QCOMPARE(icon->x(), layout->width() - icon->implicitWidth());
-    QCOMPARE(text->x(), 0.0);
 }
 
 void tst_qquickdisplaylayout::spacingWithOneDelegate_data()
