@@ -1485,7 +1485,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     IR::Function *f = _function;
 
     while (f && e->parent) {
-        if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
+        if (f->insideWithOrCatch || (f->isNamedExpression && QStringRef(f->name) == name))
             return _block->NAME(name, line, col);
 
         int index = e->findMember(name);
@@ -1496,7 +1496,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
                 al->isArgumentsOrEval = true;
             return al;
         }
-        const int argIdx = f->indexOfArgument(&name);
+        const int argIdx = f->indexOfArgument(QStringRef(&name));
         if (argIdx != -1)
             return _block->ARG(argIdx, scope);
 
