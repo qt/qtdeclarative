@@ -68,7 +68,7 @@ void QQuickDisplayLayoutPrivate::updateImplicitSize()
     const qreal iconImplicitHeight = showIcon ? icon->implicitHeight() : 0;
     const qreal textImplicitWidth = showText ? text->implicitWidth() : 0;
     const qreal textImplicitHeight = showText ? text->implicitHeight() : 0;
-    const qreal effectiveSpacing = showText && showIcon ? spacing : 0;
+    const qreal effectiveSpacing = showText && showIcon && icon->implicitWidth() > 0 ? spacing : 0;
     const qreal implicitWidth = iconImplicitWidth + textImplicitWidth + effectiveSpacing + horizontalPadding;
     const qreal implicitHeight = qMax(iconImplicitHeight, textImplicitHeight) + verticalPadding;
     q->setImplicitSize(implicitWidth, implicitHeight);
@@ -124,7 +124,7 @@ void QQuickDisplayLayoutPrivate::layout()
         }
         qreal effectiveSpacing = 0;
         if (text) {
-            if (icon)
+            if (iconWidth > 0)
                 effectiveSpacing = spacing;
             text->setWidth(qMin(text->implicitWidth(), availableWidth - iconWidth - effectiveSpacing));
             text->setHeight(qMin(text->implicitHeight(), availableHeight));
