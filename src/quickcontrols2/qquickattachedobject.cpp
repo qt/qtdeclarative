@@ -143,7 +143,7 @@ static QList<QQuickAttachedObject *> findAttachedChildren(const QMetaObject *typ
     return children;
 }
 
-QQuickAttachedObject::QQuickAttachedObject(QObject *parent) : QObject(parent)
+static QQuickItem *findAttachedItem(QObject *parent)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (!item) {
@@ -151,21 +151,17 @@ QQuickAttachedObject::QQuickAttachedObject(QObject *parent) : QObject(parent)
         if (popup)
             item = popup->popupItem();
     }
+    return item;
+}
 
-    if (item) {
-        connect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
-        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
-    }
+QQuickAttachedObject::QQuickAttachedObject(QObject *parent) : QObject(parent)
+{
+    attachTo(parent);
 }
 
 QQuickAttachedObject::~QQuickAttachedObject()
 {
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
-    if (item) {
-        disconnect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
-        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
-    }
-
+    detachFrom(parent());
     setAttachedParent(nullptr);
 }
 
@@ -224,6 +220,24 @@ void QQuickAttachedObject::itemParentChanged(QQuickItem *item, QQuickItem *paren
 {
     Q_UNUSED(parent);
     setAttachedParent(findAttachedParent(metaObject(), item));
+}
+
+void QQuickAttachedObject::attachTo(QObject *object)
+{
+    QQuickItem *item = findAttachedItem(object);
+    if (item) {
+        connect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
+}
+
+void QQuickAttachedObject::detachFrom(QObject *object)
+{
+    QQuickItem *item = findAttachedItem(object);
+    if (item) {
+        disconnect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
+        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
 }
 
 QT_END_NAMESPACE

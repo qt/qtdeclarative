@@ -81,6 +81,9 @@ protected:
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
 private:
+    void attachTo(QObject *object);
+    void detachFrom(QObject *object);
+
     QList<QQuickAttachedObject *> m_attachedChildren;
     QPointer<QQuickAttachedObject> m_attachedParent;
 };
