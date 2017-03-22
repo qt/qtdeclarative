@@ -559,7 +559,8 @@ void QQuickImage::updatePaintedGeometry()
 void QQuickImage::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     QQuickImageBase::geometryChanged(newGeometry, oldGeometry);
-    updatePaintedGeometry();
+    if (newGeometry.size() != oldGeometry.size())
+        updatePaintedGeometry();
 }
 
 QRectF QQuickImage::boundingRect() const
