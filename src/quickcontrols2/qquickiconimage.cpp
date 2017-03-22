@@ -181,7 +181,7 @@ void QQuickIconImage::geometryChanged(const QRectF &newGeometry, const QRectF &o
 {
     Q_D(QQuickIconImage);
     QQuickImage::geometryChanged(newGeometry, oldGeometry);
-    if (isComponentComplete())
+    if (isComponentComplete() && newGeometry.size() != oldGeometry.size())
         d->updateIcon();
 }
 
