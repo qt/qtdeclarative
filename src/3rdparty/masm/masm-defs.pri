@@ -38,3 +38,10 @@ INCLUDEPATH += $$_OUT_PWD
 win32-msvc2008|wince*: INCLUDEPATH += $$PWD/stubs/compat
 
 CONFIG(release, debug|release): DEFINES += NDEBUG
+
+!intel_icc:!clang:gcc {
+    greaterThan(QT_GCC_MAJOR_VERSION, 6) { # GCC 7
+        QMAKE_CXXFLAGS_WARN_ON += -Wno-expansion-to-defined
+        QMAKE_CXXFLAGS += -Wno-expansion-to-defined
+    }
+}
