@@ -73,6 +73,8 @@ public:
     void setAttachedParent(QQuickAttachedObject *parent);
 
 protected:
+    QQuickAttachedObject(QObjectPrivate &dd, QObject *parent = nullptr);
+
     void init();
 
     virtual void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent);

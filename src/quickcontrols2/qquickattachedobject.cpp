@@ -159,6 +159,12 @@ QQuickAttachedObject::QQuickAttachedObject(QObject *parent) : QObject(parent)
     attachTo(parent);
 }
 
+QQuickAttachedObject::QQuickAttachedObject(QObjectPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
+{
+    attachTo(parent);
+}
+
 QQuickAttachedObject::~QQuickAttachedObject()
 {
     detachFrom(parent());
