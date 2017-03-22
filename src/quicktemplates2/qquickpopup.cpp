@@ -509,6 +509,7 @@ QQuickPopup::~QQuickPopup()
     setParentItem(nullptr);
     d->popupItem->ungrabShortcut();
     delete d->popupItem;
+    d->popupItem = nullptr;
 }
 
 /*!
