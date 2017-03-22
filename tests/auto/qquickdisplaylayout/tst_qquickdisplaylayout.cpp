@@ -52,6 +52,7 @@ private slots:
     void display();
     void spacingWithOneDelegate_data();
     void spacingWithOneDelegate();
+    void emptyIconSource();
 };
 
 tst_qquickdisplaylayout::tst_qquickdisplaylayout()
@@ -232,6 +233,43 @@ void tst_qquickdisplaylayout::spacingWithOneDelegate()
     QVERIFY(delegate);
     QCOMPARE(delegate->x(), 0.0);
     QCOMPARE(delegate->width(), layout->width());
+}
+
+void tst_qquickdisplaylayout::emptyIconSource()
+{
+    QQuickView view(testFileUrl("layout.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *rootItem = view.rootObject();
+    QVERIFY(rootItem);
+
+    QQuickDisplayLayout *layout = qobject_cast<QQuickDisplayLayout*>(rootItem->childItems().first());
+    QVERIFY(layout);
+    QCOMPARE(layout->spacing(), 0.0);
+    QCOMPARE(layout->display(), QQuickDisplayLayout::TextBesideIcon);
+    QCOMPARE(layout->isMirrored(), false);
+
+    QQuickItem *icon = layout->icon();
+    QVERIFY(icon);
+
+    QQuickItem *text = layout->text();
+    QVERIFY(text);
+    qreal horizontalCenter = layout->width() / 2;
+    const qreal combinedWidth = icon->width() + text->width();
+    const qreal contentX = horizontalCenter - combinedWidth / 2;
+    // The text should be positioned next to an item.
+    QCOMPARE(text->x(), contentX + icon->width() + layout->spacing());
+
+    // Now give the layout an explicit width large enough so that implicit size
+    // changes in its children don't affect its implicit size.
+    layout->setWidth(layout->implicitWidth() + 200);
+    layout->setHeight(layout->implicitWidth() + 100);
+    QVERIFY(icon->property("source").isValid());
+    QVERIFY(icon->setProperty("source", QUrl()));
+    horizontalCenter = layout->width() / 2;
+    QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
 }
 
 QTEST_MAIN(tst_qquickdisplaylayout)

@@ -167,11 +167,13 @@ void QQuickDisplayLayoutPrivate::unwatchChanges(QQuickItem* item)
 void QQuickDisplayLayoutPrivate::itemImplicitWidthChanged(QQuickItem *)
 {
     updateImplicitSize();
+    layout();
 }
 
 void QQuickDisplayLayoutPrivate::itemImplicitHeightChanged(QQuickItem *)
 {
     updateImplicitSize();
+    layout();
 }
 
 void QQuickDisplayLayoutPrivate::itemDestroyed(QQuickItem *item)
