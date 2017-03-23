@@ -733,7 +733,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
 
 #ifdef MM_STATS
 static int allocationCount = 0;
-static int lastAllocRequestedSlots = 0;
+static size_t lastAllocRequestedSlots = 0;
 #endif
 
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
