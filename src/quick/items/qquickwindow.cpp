@@ -746,6 +746,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 
     qCDebug(DBG_MOUSE_TARGET) << "grabber" << q->mouseGrabberItem() << "->" << grabber;
     QQuickItem *oldGrabber = q->mouseGrabberItem();
+    bool fromTouch = false;
 
     if (grabber && touchMouseId != -1 && touchMouseDevice) {
         // update the touch item for mouse touch id to the new grabber
@@ -753,6 +754,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
         auto point = touchMouseDevice->pointerEvent()->pointById(touchMouseId);
         if (point)
             point->setGrabber(grabber);
+        fromTouch = true;
     } else {
         QQuickPointerEvent *event = QQuickPointerDevice::genericMouseDevice()->pointerEvent();
         Q_ASSERT(event->pointCount() == 1);
@@ -762,8 +764,11 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     if (oldGrabber) {
         QEvent e(QEvent::UngrabMouse);
         QSet<QQuickItem *> hasFiltered;
-        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered))
+        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered)) {
             oldGrabber->mouseUngrabEvent();
+            if (fromTouch)
+                oldGrabber->touchUngrabEvent();
+        }
     }
 }
 
@@ -2585,27 +2590,38 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                     break;
                 }
 
+                bool touchMouseUnset = (touchMouseId == -1);
                 // Only deliver mouse event if it is the touchMouseId or it could become the touchMouseId
-                if (touchMouseId == -1 || touchMouseId == tp.id()) {
+                if (touchMouseUnset || touchMouseId == tp.id()) {
                     // targetEvent is already transformed wrt local position, velocity, etc.
 
                     // FIXME: remove asTouchEvent!!!
                     QScopedPointer<QMouseEvent> mouseEvent(touchToMouseEvent(t, tp, event->asTouchEvent(), item, false));
+                    // If a filtering item calls QQuickWindow::mouseGrabberItem(), it should
+                    // report the touchpoint's grabber.  Whenever we send a synthetic mouse event,
+                    // touchMouseId and touchMouseDevice must be set, even if it's only temporarily and isn't grabbed.
+                    touchMouseId = tp.id();
+                    touchMouseDevice = event->device();
                     if (target->childMouseEventFilter(item, mouseEvent.data())) {
                         qCDebug(DBG_TOUCH) << " - second chance intercepted on childMouseEventFilter by " << target;
                         if (t != QEvent::MouseButtonRelease) {
                             qCDebug(DBG_TOUCH_TARGET) << "TP" << tp.id() << "->" << target;
-                            touchMouseDevice = event->device();
-                            if (touchMouseId == -1) {
+                            if (touchMouseUnset) {
                                 // the point was grabbed as a pure touch point before, now it will be treated as mouse
                                 // but the old receiver still needs to be informed
                                 if (auto oldGrabber = touchMouseDevice->pointerEvent()->pointById(tp.id())->grabber())
                                     oldGrabber->touchUngrabEvent();
                             }
-                            touchMouseId = tp.id();
+                            touchMouseUnset = false; // We want to leave touchMouseId and touchMouseDevice set
                             target->grabMouse();
                         }
                         filtered = true;
+                    }
+                    if (touchMouseUnset) {
+                        // Now that we're done sending a synth mouse event, and it wasn't grabbed,
+                        // the touchpoint is no longer acting as a synthetic mouse.  Restore previous state.
+                        touchMouseId = -1;
+                        touchMouseDevice = nullptr;
                     }
                     // Only one event can be filtered as a mouse event.
                     break;
