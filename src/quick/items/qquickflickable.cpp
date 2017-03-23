@@ -2301,7 +2301,8 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 
     bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || contains(localPos)) && (!receiver || !receiver->keepMouseGrab() || receiverDisabled)) {
+    bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
+    if ((stealThisEvent || contains(localPos)) && (!receiver || !receiverKeepsGrab || receiverDisabled)) {
         QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
         mouseEvent->setAccepted(false);
 
@@ -2321,7 +2322,7 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
         default:
             break;
         }
-        if ((receiver && stealThisEvent && !receiver->keepMouseGrab() && receiver != this) || receiverDisabled) {
+        if ((receiver && stealThisEvent && !receiverKeepsGrab && receiver != this) || receiverDisabled) {
             d->clearDelayedPress();
             grabMouse();
         } else if (d->delayedPressEvent) {
@@ -2337,7 +2338,7 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
         d->lastPosTime = -1;
         returnToBounds();
     }
-    if (event->type() == QEvent::MouseButtonRelease || (receiver && receiver->keepMouseGrab() && !receiverDisabled)) {
+    if (event->type() == QEvent::MouseButtonRelease || (receiverKeepsGrab && !receiverDisabled)) {
         // mouse released, or another item has claimed the grab
         d->lastPosTime = -1;
         d->clearDelayedPress();
