@@ -907,12 +907,14 @@ TestCase {
         var control = createTemporaryObject(stackView, testCase, {initialItem: component})
         verify(control)
 
+        var error = Qt.resolvedUrl("non-existent.qml") + ":-1 No such file or directory"
+
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 No such file or directory")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: " + error)
         control.push(Qt.resolvedUrl("non-existent.qml"))
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 No such file or directory")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: " + error)
         control.replace(Qt.resolvedUrl("non-existent.qml"))
 
         control.pop()

@@ -152,7 +152,7 @@ bool QQuickStackElement::load(QQuickStackView *parent)
                 if (status == QQmlComponent::Ready)
                     load(view);
                 else if (status == QQmlComponent::Error)
-                    qWarning() << qPrintable(component->errorString().trimmed());
+                    QQuickStackViewPrivate::get(view)->warn(component->errorString().trimmed());
             });
             return true;
         }
@@ -166,7 +166,7 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         QQuickStackIncubator incubator(this);
         component->create(incubator, context);
         if (component->isError())
-            qWarning() << qPrintable(component->errorString().trimmed());
+            QQuickStackViewPrivate::get(parent)->warn(component->errorString().trimmed());
     } else {
         initialize();
     }
