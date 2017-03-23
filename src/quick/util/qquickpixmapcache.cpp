@@ -386,37 +386,15 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
                       const QSize &requestSize, const QQuickImageProviderOptions &providerOptions,
                       QQuickImageProviderOptions::AutoTransform *appliedTransform = nullptr)
 {
-    const bool preserveAspectCropOrFit = providerOptions.preserveAspectRatioCrop() || providerOptions.preserveAspectRatioFit();
-
     QImageReader imgio(dev);
     if (providerOptions.autoTransform() != QQuickImageProviderOptions::UsePluginDefaultTransform)
         imgio.setAutoTransform(providerOptions.autoTransform() == QQuickImageProviderOptions::ApplyTransform);
     else if (appliedTransform)
         *appliedTransform = imgio.autoTransform() ? QQuickImageProviderOptions::ApplyTransform : QQuickImageProviderOptions::DoNotApplyTransform;
 
-    const bool force_scale = imgio.format() == "svg" || imgio.format() == "svgz";
-
-    if (requestSize.width() > 0 || requestSize.height() > 0) {
-        QSize s = imgio.size();
-        qreal ratio = 0.0;
-        if (requestSize.width() && (preserveAspectCropOrFit || force_scale || requestSize.width() < s.width())) {
-            ratio = qreal(requestSize.width())/s.width();
-        }
-        if (requestSize.height() && (preserveAspectCropOrFit || force_scale || requestSize.height() < s.height())) {
-            qreal hr = qreal(requestSize.height())/s.height();
-            if (ratio == 0.0)
-                ratio = hr;
-            else if (!preserveAspectCropOrFit && (hr < ratio))
-                ratio = hr;
-            else if (preserveAspectCropOrFit && (hr > ratio))
-                ratio = hr;
-        }
-        if (ratio > 0.0) {
-            s.setHeight(qRound(s.height() * ratio));
-            s.setWidth(qRound(s.width() * ratio));
-            imgio.setScaledSize(s);
-        }
-    }
+    QSize scSize = QQuickImageProviderWithOptions::loadSize(imgio.size(), requestSize, imgio.format(), providerOptions);
+    if (scSize.isValid())
+        imgio.setScaledSize(scSize);
 
     if (impsize)
         *impsize = imgio.size();
