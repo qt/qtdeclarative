@@ -95,7 +95,6 @@ static QString cacheFilePath(const QUrl &url)
 #ifndef V4_BOOTSTRAP
 CompilationUnit::CompilationUnit()
     : data(0)
-    , runtimeStrings(0)
     , engine(0)
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
@@ -351,7 +350,7 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
-bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
+bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, EvalISelFactory *iselFactory, QString *errorString)
 {
     if (!QQmlFile::isLocalFile(url)) {
         *errorString = QStringLiteral("File has to be a local file.");
@@ -361,7 +360,7 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
+    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourceTimeStamp, errorString);
     if (!mappedUnit)
         return false;
 
@@ -784,7 +783,7 @@ void Unit::generateChecksum()
 #ifndef V4_BOOTSTRAP
     QCryptographicHash hash(QCryptographicHash::Md5);
 
-    const int checksummableDataOffset = qOffsetOf(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
+    const int checksummableDataOffset = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
 
     const char *dataPtr = reinterpret_cast<const char *>(this) + checksummableDataOffset;
     hash.addData(dataPtr, unitSize - checksummableDataOffset);

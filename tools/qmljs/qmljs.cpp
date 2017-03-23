@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
                 if (cache && QFile::exists(fn + QLatin1Char('c'))) {
                     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = iSelFactory->createUnitForLoading();
                     QString error;
-                    if (unit->loadFromDisk(QUrl::fromLocalFile(fn), iSelFactory, &error)) {
+                    if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), iSelFactory, &error)) {
                         script.reset(new QV4::Script(&vm, nullptr, unit));
                     } else {
                         std::cout << "Error loading" << qPrintable(fn) << "from disk cache:" << qPrintable(error) << std::endl;

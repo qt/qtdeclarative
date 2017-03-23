@@ -80,10 +80,6 @@
 #  define NAME_MAX _POSIX_SYMLINK_MAX
 #endif
 
-// LSB has a broken version of qOffsetOf that can't be used at compile time
-// https://lsbbugs.linuxfoundation.org/show_bug.cgi?id=3462
-#undef qOffsetOf
-#define qOffsetOf(TYPE, MEMBER) __builtin_qOffsetOf (TYPE, MEMBER)
 #endif
 
 // #define DATABLOB_DEBUG
@@ -1249,20 +1245,20 @@ void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface,
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlDataBlob::Data d;
-    d.d = &data;
+    QQmlDataBlob::SourceCodeData d;
+    d.inlineSourceCode = QString::fromUtf8(data);
     setData(blob, d);
 }
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlDataBlob::Data d;
-    d.d = &fileName;
+    QQmlDataBlob::SourceCodeData d;
+    d.fileInfo = QFileInfo(fileName);
     setData(blob, d);
 }
 
-void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
+void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob);
@@ -2069,7 +2065,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
     {
         QString error;
-        if (!unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
+        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
             qCDebug(DBG_DISK_CACHE) << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
@@ -2239,7 +2235,7 @@ void QQmlTypeData::done()
         qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->url().toString();
         if (!loadFromSource())
             return;
-        m_backupSourceCode.clear();
+        m_backupSourceCode = SourceCodeData();
         m_compiledData = nullptr;
     }
 
@@ -2346,13 +2342,9 @@ bool QQmlTypeData::loadImplicitImport()
     return true;
 }
 
-void QQmlTypeData::dataReceived(const Data &data)
+void QQmlTypeData::dataReceived(const SourceCodeData &data)
 {
-    QString error;
-    m_backupSourceCode = data.readAll(&error, &m_sourceTimeStamp);
-    // if we failed to read the source code, process it _after_ we've tried
-    // to use the disk cache, in order to support scenarios where the source
-    // was removed deliberately.
+    m_backupSourceCode = data;
 
     if (tryLoadFromDiskCache())
         return;
@@ -2360,8 +2352,8 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (isError())
         return;
 
-    if (!error.isEmpty()) {
-        setError(error);
+    if (!m_backupSourceCode.exists()) {
+        setError(QQmlTypeLoader::tr("No such file or directory"));
         return;
     }
 
@@ -2380,12 +2372,19 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
 
 bool QQmlTypeData::loadFromSource()
 {
-    QString code = QString::fromUtf8(m_backupSourceCode);
     m_document.reset(new QmlIR::Document(isDebugging()));
-    m_document->jsModule.sourceTimeStamp = m_sourceTimeStamp;
+    m_document->jsModule.sourceTimeStamp = m_backupSourceCode.sourceTimeStamp();
     QQmlEngine *qmlEngine = typeLoader()->engine();
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
-    if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
+
+    QString sourceError;
+    const QString source = m_backupSourceCode.readAll(&sourceError);
+    if (!sourceError.isEmpty()) {
+        setError(sourceError);
+        return false;
+    }
+
+    if (!compiler.generateFromQml(source, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
         errors.reserve(compiler.errors.count());
         for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
@@ -2523,7 +2522,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {
             QString error;
-            if (!m_compiledData->loadFromDisk(url(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
+            if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
                 // ignore error, keep using the in-memory compilation unit.
             }
         } else {
@@ -2876,14 +2875,14 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
     void linkBackendToEngine(QV4::ExecutionEngine *) override {}
 };
 
-void QQmlScriptBlob::dataReceived(const Data &data)
+void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
     if (!disableDiskCache() || forceDiskCache()) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
         QString error;
-        if (unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
+        if (unit->loadFromDisk(url(), data.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
             initializeFromCompilationUnit(unit);
             return;
         } else {
@@ -2894,8 +2893,9 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 
     QmlIR::Document irUnit(isDebugging());
 
+    irUnit.jsModule.sourceTimeStamp = data.sourceTimeStamp();
     QString error;
-    QString source = QString::fromUtf8(data.readAll(&error, &irUnit.jsModule.sourceTimeStamp));
+    QString source = data.readAll(&error);
     if (!error.isEmpty()) {
         setError(error);
         return;
@@ -3059,10 +3059,10 @@ void QQmlQmldirData::setPriority(int priority)
     m_priority = priority;
 }
 
-void QQmlQmldirData::dataReceived(const Data &data)
+void QQmlQmldirData::dataReceived(const SourceCodeData &data)
 {
     QString error;
-    m_content = QString::fromUtf8(data.readAll(&error));
+    m_content = data.readAll(&error);
     if (!error.isEmpty()) {
         setError(error);
         return;
@@ -3074,34 +3074,54 @@ void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *
     Q_UNIMPLEMENTED();
 }
 
-QByteArray QQmlDataBlob::Data::readAll(QString *error, qint64 *sourceTimeStamp) const
+QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
 {
-    Q_ASSERT(!d.isNull());
     error->clear();
-    if (d.isT1()) {
-        if (sourceTimeStamp)
-            *sourceTimeStamp = 0;
-        return *d.asT1();
-    }
-    QFile f(*d.asT2());
+    if (!inlineSourceCode.isEmpty())
+        return inlineSourceCode;
+
+    QFile f(fileInfo.absoluteFilePath());
     if (!f.open(QIODevice::ReadOnly)) {
         *error = f.errorString();
-        return QByteArray();
+        return QString();
     }
-    if (sourceTimeStamp) {
-        QDateTime timeStamp = QFileInfo(f).lastModified();
-        // Files from the resource system do not have any time stamps, so fall back to the application
-        // executable.
-        if (!timeStamp.isValid())
-            timeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
-        *sourceTimeStamp = timeStamp.toMSecsSinceEpoch();
+
+    const qint64 fileSize = fileInfo.size();
+
+    if (uchar *mappedData = f.map(0, fileSize)) {
+        QString source = QString::fromUtf8(reinterpret_cast<const char *>(mappedData), fileSize);
+        f.unmap(mappedData);
+        return source;
     }
-    QByteArray data(f.size(), Qt::Uninitialized);
+
+    QByteArray data(fileSize, Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();
-        return QByteArray();
+        return QString();
     }
-    return data;
+    return QString::fromUtf8(data);
+}
+
+QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
+{
+    if (!inlineSourceCode.isEmpty())
+        return QDateTime();
+
+    QDateTime timeStamp = fileInfo.lastModified();
+    if (timeStamp.isValid())
+        return timeStamp;
+
+    static QDateTime appTimeStamp;
+    if (!appTimeStamp.isValid())
+        appTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+    return appTimeStamp;
+}
+
+bool QQmlDataBlob::SourceCodeData::exists() const
+{
+    if (!inlineSourceCode.isEmpty())
+        return true;
+    return fileInfo.exists();
 }
 
 QT_END_NAMESPACE

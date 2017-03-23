@@ -43,7 +43,9 @@
 #include "qsgopenvgpublicnodes.h"
 #include "qsgopenvgglyphnode_p.h"
 #include "qsgopenvgpainternode.h"
+#if QT_CONFIG(quick_sprite)
 #include "qsgopenvgspritenode.h"
+#endif
 #include "qsgopenvgrenderable.h"
 
 #include "qopenvgcontext_p.h"
@@ -209,6 +211,7 @@ void QSGOpenVGNodeVisitor::endVisit(QSGRootNode *)
 {
 }
 
+#if QT_CONFIG(quick_sprite)
 bool QSGOpenVGNodeVisitor::visit(QSGSpriteNode *node)
 {
     renderRenderableNode(static_cast<QSGOpenVGSpriteNode*>(node));
@@ -218,6 +221,7 @@ bool QSGOpenVGNodeVisitor::visit(QSGSpriteNode *node)
 void QSGOpenVGNodeVisitor::endVisit(QSGSpriteNode *)
 {
 }
+#endif
 
 bool QSGOpenVGNodeVisitor::visit(QSGRenderNode *)
 {

@@ -61,6 +61,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/qurl.h>
 #include <QtCore/QVarLengthArray>
+#include <QtCore/QDateTime>
 #include <qglobal.h>
 
 #if defined(CONST) && defined(Q_OS_WIN)
@@ -942,7 +943,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
-    qint64 sourceTimeStamp;
+    QDateTime sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
     uint unitFlags; // flags merged into CompiledData::Unit::flags
 #ifdef QT_NO_QML_DEBUGGER
@@ -955,7 +956,6 @@ struct Q_QML_PRIVATE_EXPORT Module {
 
     Module(bool debugMode)
         : rootFunction(0)
-        , sourceTimeStamp(0)
         , isQmlModule(false)
         , unitFlags(0)
 #ifndef QT_NO_QML_DEBUGGER

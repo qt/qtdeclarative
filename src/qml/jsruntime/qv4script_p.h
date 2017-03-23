@@ -72,7 +72,7 @@ struct ContextStateSaver {
     bool strictMode;
     Lookup *lookups;
     const QV4::Value *constantTable;
-    CompiledData::CompilationUnit *compilationUnit;
+    CompiledData::CompilationUnitBase *compilationUnit;
     int lineNumber;
 
     ContextStateSaver(const Scope &scope, ExecutionContext *context)

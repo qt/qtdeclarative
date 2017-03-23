@@ -642,8 +642,10 @@ is finished.
 
     \section1 Limitations
 
-    \note Due to an implementation detail, items placed inside a Flickable cannot anchor to it by
-    \c id. Use \c parent instead.
+    \note Due to an implementation detail, items placed inside a Flickable
+    cannot anchor to the Flickable. Instead, use \l {Item::}{parent}, which
+    refers to the Flickable's \l contentItem. The size of the content item is
+    determined by \l contentWidth and \l contentHeight.
 */
 
 /*!

@@ -135,7 +135,7 @@ void QQmlDebugMsgClient::messageReceived(const QByteArray &data)
         QVERIFY(ds.atEnd());
 
         QVERIFY(type >= QtDebugMsg);
-        QVERIFY(type <= QtFatalMsg);
+        QVERIFY(type <= QtInfoMsg);
         QVERIFY(timestamp > 0);
 
         LogEntry entry((QtMsgType)type, QString::fromUtf8(message));

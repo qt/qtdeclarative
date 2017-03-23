@@ -33,6 +33,7 @@
 #include <QtCore/qpointer.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtextstream.h>
+#include <QtCore/qregexp.h>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFunctions>

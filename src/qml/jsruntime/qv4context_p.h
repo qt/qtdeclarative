@@ -61,7 +61,7 @@ class QQmlContextData;
 namespace QV4 {
 
 namespace CompiledData {
-struct CompilationUnit;
+struct CompilationUnitBase;
 struct Function;
 }
 
@@ -74,6 +74,8 @@ struct WithContext;
 struct QmlContext;
 struct QmlContextWrapper;
 
+// Attention: Make sure that this structure is the same size on 32-bit and 64-bit
+// architecture or you'll have to change the JIT code.
 struct CallData
 {
     // below is to be compatible with Value. Initialize tag to 0
@@ -92,15 +94,27 @@ struct CallData
     Value args[1];
 };
 
+Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
+Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 8);
+Q_STATIC_ASSERT(offsetof(CallData, args) == 16);
+
 namespace Heap {
 
 struct QmlContext;
 
 #define ExecutionContextMembers(class, Member) \
-    Member(class, Pointer, ExecutionContext *, outer)
+    Member(class, NoMark, CallData *, callData)  \
+    Member(class, NoMark, ExecutionEngine *, engine) \
+    Member(class, Pointer, ExecutionContext *, outer) \
+    Member(class, NoMark, Lookup *, lookups) \
+    Member(class, NoMark, const QV4::Value *, constantTable) \
+    Member(class, NoMark, CompiledData::CompilationUnitBase *, compilationUnit) \
+    Member(class, NoMark, int, lineNumber) // as member of non-pointer size this has to come last to preserve the ability to
+                                           // translate offsetof of it between 64-bit and 32-bit.
 
 DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     DECLARE_MARK_TABLE(ExecutionContext);
+
     enum ContextType {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
@@ -119,18 +133,25 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
         lineNumber = -1;
     }
 
-    CallData *callData;
-
-    ExecutionEngine *engine;
-    Lookup *lookups;
-    const QV4::Value *constantTable;
-    CompiledData::CompilationUnit *compilationUnit;
-
-    ContextType type : 8;
+    quint8 type;
     bool strictMode : 8;
-    int lineNumber;
+#if QT_POINTER_SIZE == 8
+    quint8 padding_[6];
+#else
+    quint8 padding_[2];
+#endif
 };
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)
+Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
+
+Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, callData) == 0);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, engine) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, engine) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, lookups) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, constantTable) == offsetof(ExecutionContextData, lookups) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, compilationUnit) == offsetof(ExecutionContextData, constantTable) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, compilationUnit) + QT_POINTER_SIZE);
 
 #define SimpleCallContextMembers(class, Member) \
     Member(class, Pointer, Object *, activation) \
@@ -148,16 +169,35 @@ DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
 
 };
 V4_ASSERT_IS_TRIVIAL(SimpleCallContext)
+Q_STATIC_ASSERT(std::is_standard_layout<SimpleCallContextData>::value);
+Q_STATIC_ASSERT(offsetof(SimpleCallContextData, activation) == 0);
+Q_STATIC_ASSERT(offsetof(SimpleCallContextData, v4Function) == offsetof(SimpleCallContextData, activation) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(sizeof(SimpleCallContextData) == 2 * QT_POINTER_SIZE);
+Q_STATIC_ASSERT(sizeof(SimpleCallContext) == sizeof(ExecutionContext) + sizeof(SimpleCallContextData));
 
+#if QT_POINTER_SIZE == 8
 #define CallContextMembers(class, Member) \
     Member(class, Pointer, FunctionObject *, function) \
-    Member(class, ValueArray, ValueArray, locals) \
+    Member(class, ValueArray, ValueArray, locals)
+#else
+#define CallContextMembers(class, Member) \
+    Member(class, Pointer, FunctionObject *, function) \
+    Member(class, NoMark, void *, padding) \
+    Member(class, ValueArray, ValueArray, locals)
+#endif
 
 DECLARE_HEAP_OBJECT(CallContext, SimpleCallContext) {
     DECLARE_MARK_TABLE(CallContext);
 
     using SimpleCallContext::formalParameterCount;
 };
+
+Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
+Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
+// IMPORTANT: we cannot do offsetof(CallContextData, locals) in the JIT as the offset does not scale with
+// the pointer size. On 32-bit ARM the offset of the ValueArray is aligned to 8 bytes, on 32-bit x86 for
+// example it is not. Therefore we have a padding in place and always have a distance of 8 bytes.
+Q_STATIC_ASSERT(offsetof(CallContextData, locals) == offsetof(CallContextData, function) + 8);
 
 #define GlobalContextMembers(class, Member) \
     Member(class, Pointer, Object *, global)

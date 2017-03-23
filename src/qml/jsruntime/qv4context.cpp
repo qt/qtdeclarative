@@ -75,8 +75,8 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     c->outer.set(d()->engine, this->d());
 
     c->compilationUnit = function->compilationUnit;
-    c->lookups = c->compilationUnit->runtimeLookups;
-    c->constantTable = c->compilationUnit->constants;
+    c->lookups = function->compilationUnit->runtimeLookups;
+    c->constantTable = function->compilationUnit->constants;
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     uint nLocals = compiledFunction->nLocals;

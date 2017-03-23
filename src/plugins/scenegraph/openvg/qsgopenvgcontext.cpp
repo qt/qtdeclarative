@@ -45,7 +45,9 @@
 #include "qsgopenvgglyphnode_p.h"
 #include "qsgopenvgfontglyphcache.h"
 #include "qsgopenvgpainternode.h"
+#if QT_CONFIG(quick_sprite)
 #include "qsgopenvgspritenode.h"
+#endif
 
 #include "qopenvgcontext_p.h"
 
@@ -171,11 +173,12 @@ int QSGOpenVGRenderContext::maxTextureSize() const
     return qMin(width, height);
 }
 
-
+#if QT_CONFIG(quick_sprite)
 QSGSpriteNode *QSGOpenVGContext::createSpriteNode()
 {
     return new QSGOpenVGSpriteNode();
 }
+#endif
 
 QSGRendererInterface *QSGOpenVGContext::rendererInterface(QSGRenderContext *renderContext)
 {

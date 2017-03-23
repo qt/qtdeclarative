@@ -54,7 +54,6 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
-#include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
 #ifndef V4_BOOTSTRAP
@@ -99,7 +98,6 @@ private:
 public:
     qint32 callDepth;
 
-    MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
@@ -107,8 +105,6 @@ public:
     ExecutionContext *currentContext;
 
     Value *jsStackLimit;
-
-    Runtime runtime;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 

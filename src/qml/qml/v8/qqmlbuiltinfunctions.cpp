@@ -1885,7 +1885,7 @@ void GlobalExtensions::method_qsTr(const BuiltinFunction *, Scope &scope, CallDa
         ExecutionContext *parentCtx = scope.engine->currentContext;
         // The first non-empty source URL in the call stack determines the translation context.
         while (!!parentCtx && context.isEmpty()) {
-            if (QV4::CompiledData::CompilationUnit *unit = parentCtx->d()->compilationUnit) {
+            if (CompiledData::CompilationUnit *unit = static_cast<CompiledData::CompilationUnit*>(parentCtx->d()->compilationUnit)) {
                 QString fileName = unit->fileName();
                 QUrl url(unit->fileName());
                 if (url.isValid() && url.isRelative()) {

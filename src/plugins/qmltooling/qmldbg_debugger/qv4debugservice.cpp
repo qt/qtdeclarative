@@ -121,8 +121,18 @@ protected:
         response.insert(QStringLiteral("running"), debugService->debuggerAgent.isRunning());
     }
 
+    QV4DataCollector *saneCollector(QV4Debugger *debugger)
+    {
+        QV4DataCollector *collector = debugger->collector();
+        collector->setNamesAsObjects(debugService->clientRequiresNamesAsObjects());
+        collector->setRedundantRefs(debugService->clientRequiresRedundantRefs());
+        return collector;
+    }
+
+    // TODO: drop this method once we don't need to support redundantRefs anymore.
     void addRefs(const QJsonArray &refs)
     {
+        Q_ASSERT(debugService->clientRequiresRedundantRefs());
         response.insert(QStringLiteral("refs"), refs);
     }
 
@@ -286,7 +296,7 @@ public:
             return;
         }
 
-        BacktraceJob job(debugger->collector(), fromFrame, toFrame);
+        BacktraceJob job(saneCollector(debugger), fromFrame, toFrame);
         debugger->runInEngine(&job);
 
         // response:
@@ -295,7 +305,8 @@ public:
         addSuccess(true);
         addRunning();
         addBody(job.returnValue());
-        addRefs(job.refs());
+        if (debugService->clientRequiresRedundantRefs())
+            addRefs(job.refs());
     }
 };
 
@@ -322,7 +333,7 @@ public:
             return;
         }
 
-        FrameJob job(debugger->collector(), frameNr);
+        FrameJob job(saneCollector(debugger), frameNr);
         debugger->runInEngine(&job);
         if (!job.wasSuccessful()) {
             createErrorResponse(QStringLiteral("frame retrieval failed"));
@@ -337,7 +348,8 @@ public:
         addSuccess(true);
         addRunning();
         addBody(job.returnValue());
-        addRefs(job.refs());
+        if (debugService->clientRequiresRedundantRefs())
+            addRefs(job.refs());
     }
 };
 
@@ -369,7 +381,7 @@ public:
             return;
         }
 
-        ScopeJob job(debugger->collector(), frameNr, scopeNr);
+        ScopeJob job(saneCollector(debugger), frameNr, scopeNr);
         debugger->runInEngine(&job);
         if (!job.wasSuccessful()) {
             createErrorResponse(QStringLiteral("scope retrieval failed"));
@@ -382,7 +394,8 @@ public:
         addSuccess(true);
         addRunning();
         addBody(job.returnValue());
-        addRefs(job.refs());
+        if (debugService->clientRequiresRedundantRefs())
+            addRefs(job.refs());
     }
 };
 
@@ -410,7 +423,7 @@ public:
             debugger = debuggers.first();
         }
 
-        ValueLookupJob job(handles, debugger->collector());
+        ValueLookupJob job(handles, saneCollector(debugger));
         debugger->runInEngine(&job);
         if (!job.exceptionMessage().isEmpty()) {
             createErrorResponse(job.exceptionMessage());
@@ -421,7 +434,8 @@ public:
             addSuccess(true);
             addRunning();
             addBody(job.returnValue());
-            addRefs(job.refs());
+            if (debugService->clientRequiresRedundantRefs())
+                addRefs(job.refs());
         }
     }
 };
@@ -630,7 +644,7 @@ public:
         }
 
         ExpressionEvalJob job(debugger->engine(), frame, context, expression,
-                              debugger->collector());
+                              saneCollector(debugger));
         debugger->runInEngine(&job);
         if (job.hasExeption()) {
             createErrorResponse(job.exceptionMessage());
@@ -640,7 +654,8 @@ public:
             addSuccess(true);
             addRunning();
             addBody(job.returnValue());
-            addRefs(job.refs());
+            if (debugService->clientRequiresRedundantRefs())
+                addRefs(job.refs());
         }
     }
 };
@@ -662,7 +677,7 @@ V8CommandHandler *QV4DebugServiceImpl::v8CommandHandler(const QString &command) 
 
 QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QV4DebugService>(1, parent),
-    debuggerAgent(this), theSelectedFrame(0),
+    debuggerAgent(this), theSelectedFrame(0), redundantRefs(true), namesAsObjects(true),
     unknownV8CommandHandler(new UnknownV8CommandHandler)
 {
     addHandler(new V8VersionRequest);
@@ -766,6 +781,14 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
         TRACE_PROTOCOL(qDebug() << "... type:" << type);
 
         if (type == V4_CONNECT) {
+            QJsonObject parameters = QJsonDocument::fromJson(payload).object();
+            namesAsObjects = true;
+            redundantRefs = true;
+            if (parameters.contains("namesAsObjects"))
+                namesAsObjects = parameters.value("namesAsObjects").toBool();
+            if (parameters.contains("redundantRefs"))
+                redundantRefs = parameters.value("redundantRefs").toBool();
+
             emit messageToClient(name(), packMessage(type));
             stopWaiting();
         } else if (type == V4_PAUSE) {

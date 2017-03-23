@@ -48,7 +48,7 @@ using namespace JIT;
 #define stringIfy(s) stringIfyx(s)
 #define setOp(operation) \
     do { \
-        call = typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); name = "Runtime::" stringIfy(operation); \
+        call = typename JITAssembler::RuntimeCall(QV4::Runtime::operation); name = "Runtime::" stringIfy(operation); \
         needsExceptionCheck = Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 

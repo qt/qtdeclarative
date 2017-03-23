@@ -132,8 +132,8 @@ void InstructionSelection<JITAssembler>::run(int functionIndex)
         for (IR::Stmt *s : _block->statements()) {
             if (s->location.isValid()) {
                 if (int(s->location.startLine) != lastLine) {
-                    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ScratchRegister);
-                    Address lineAddr(JITTargetPlatform::ScratchRegister, qOffsetOf(QV4::ExecutionContext::Data, lineNumber));
+                    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, JITAssembler::targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
+                    Address lineAddr(JITTargetPlatform::ScratchRegister, JITAssembler::targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, lineNumber)));
                     _as->store32(TrustedImm32(s->location.startLine), lineAddr);
                     lastLine = s->location.startLine;
                 }
@@ -449,9 +449,9 @@ void InstructionSelection<JITAssembler>::loadThisObject(IR::Expr *temp)
 {
     WriteBarrier::Type barrier;
     Pointer addr = _as->loadAddressForWriting(JITTargetPlatform::ScratchRegister, temp, &barrier);
-    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), JITTargetPlatform::ReturnValueRegister);
-    _as->loadPtr(Address(JITTargetPlatform::ReturnValueRegister, qOffsetOf(ExecutionContext::Data, callData)), JITTargetPlatform::ReturnValueRegister);
-    _as->copyValue(addr, Address(JITTargetPlatform::ReturnValueRegister, qOffsetOf(CallData, thisObject)), barrier);
+    _as->loadPtr(Address(JITTargetPlatform::EngineRegister, JITAssembler::targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ReturnValueRegister);
+    _as->loadPtr(Address(JITTargetPlatform::ReturnValueRegister,JITAssembler::targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, callData))), JITTargetPlatform::ReturnValueRegister);
+    _as->copyValue(addr, Address(JITTargetPlatform::ReturnValueRegister, offsetof(CallData, thisObject)), barrier);
 }
 
 template <typename JITAssembler>
@@ -522,7 +522,7 @@ void InstructionSelection<JITAssembler>::getActivationProperty(const IR::Name *n
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, JITAssembler::Void);
+        generateLookupCall(target, index, offsetof(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, JITAssembler::Void);
         return;
     }
     generateRuntimeCall(_as, target, getActivationProperty, JITTargetPlatform::EngineRegister, StringToIndex(*name->id));
@@ -548,7 +548,7 @@ void InstructionSelection<JITAssembler>::getProperty(IR::Expr *base, const QStri
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), JITTargetPlatform::EngineRegister, PointerToValue(base), JITAssembler::Void);
+        generateLookupCall(target, index, offsetof(QV4::Lookup, getter), JITTargetPlatform::EngineRegister, PointerToValue(base), JITAssembler::Void);
     } else {
         generateRuntimeCall(_as, target, getProperty, JITTargetPlatform::EngineRegister,
                              PointerToValue(base), StringToIndex(name));
@@ -587,7 +587,7 @@ void InstructionSelection<JITAssembler>::setProperty(IR::Expr *source, IR::Expr 
 {
     if (useFastLookups) {
         uint index = registerSetterLookup(targetName);
-        generateLookupCall(JITAssembler::Void, index, qOffsetOf(QV4::Lookup, setter),
+        generateLookupCall(JITAssembler::Void, index, offsetof(QV4::Lookup, setter),
                            JITTargetPlatform::EngineRegister,
                            PointerToValue(targetBase),
                            PointerToValue(source));
@@ -623,7 +623,7 @@ void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *in
 {
     if (useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
-        generateLookupCall(target, lookup, qOffsetOf(QV4::Lookup, indexedGetter),
+        generateLookupCall(target, lookup, offsetof(QV4::Lookup, indexedGetter),
                            JITTargetPlatform::EngineRegister,
                            PointerToValue(base),
                            PointerToValue(index));
@@ -639,7 +639,7 @@ void InstructionSelection<JITAssembler>::setElement(IR::Expr *source, IR::Expr *
 {
     if (useFastLookups) {
         uint lookup = registerIndexedSetterLookup();
-        generateLookupCall(JITAssembler::Void, lookup, qOffsetOf(QV4::Lookup, indexedSetter),
+        generateLookupCall(JITAssembler::Void, lookup, offsetof(QV4::Lookup, indexedSetter),
                            JITTargetPlatform::EngineRegister,
                            PointerToValue(targetBase), PointerToValue(targetIndex),
                            PointerToValue(source));
@@ -799,12 +799,12 @@ void InstructionSelection<JITAssembler>::swapValues(IR::Expr *source, IR::Expr *
 
 #define setOp(op, opName, operation) \
     do { \
-        op = typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        op = typename JITAssembler::RuntimeCall(QV4::Runtime::operation); opName = "Runtime::" isel_stringIfy(operation); \
         needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 #define setOpContext(op, opName, operation) \
     do { \
-        opContext = typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); \
+        opContext = typename JITAssembler::RuntimeCall(QV4::Runtime::operation); opName = "Runtime::" isel_stringIfy(operation); \
         needsExceptionCheck = QV4::Runtime::Method_##operation##_NeedsExceptionCheck; \
     } while (0)
 
@@ -1321,11 +1321,11 @@ int InstructionSelection<JITAssembler>::prepareCallData(IR::ExprList* args, IR::
         ++argc;
     }
 
-    Pointer p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, tag));
+    Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
     _as->store32(TrustedImm32(QV4::Value::Integer_Type_Internal), p);
-    p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, argc));
+    p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
     _as->store32(TrustedImm32(argc), p);
-    p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));
+    p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
     if (!thisObject)
         _as->storeValue(QV4::Primitive::undefinedValue(), p, WriteBarrier::NoBarrier);
     else

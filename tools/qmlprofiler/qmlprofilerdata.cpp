@@ -33,6 +33,7 @@
 #include <QHash>
 #include <QFile>
 #include <QXmlStreamReader>
+#include <QRegExp>
 
 #include <limits>
 

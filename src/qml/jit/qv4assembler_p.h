@@ -132,7 +132,7 @@ typedef AssemblerTargetConfiguration<DefaultPlatformMacroAssembler, NoOperatingS
 #define isel_stringIfy(s) isel_stringIfyx(s)
 
 #define generateRuntimeCall(as, t, function, ...) \
-    as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), typename JITAssembler::RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
+    as->generateFunctionCallImp(Runtime::Method_##function##_NeedsExceptionCheck, t, "Runtime::" isel_stringIfy(function), typename JITAssembler::RuntimeCall(QV4::Runtime::function), __VA_ARGS__)
 
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform, int RegisterSize>
@@ -845,6 +845,12 @@ public:
     using JITTargetPlatform::platformFinishEnteringStandardStackFrame;
     using JITTargetPlatform::platformLeaveStandardStackFrame;
 
+    static qint32 targetStructureOffset(qint32 hostOffset)
+    {
+        Q_ASSERT(hostOffset % QT_POINTER_SIZE == 0);
+        return (hostOffset * RegisterSize) / QT_POINTER_SIZE;
+    }
+
     using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
 
     struct LookupCall {
@@ -860,7 +866,7 @@ public:
     struct RuntimeCall {
         Address addr;
 
-        inline RuntimeCall(uint offset = uint(INT_MIN));
+        inline RuntimeCall(Runtime::RuntimeMethods method = Runtime::InvalidRuntimeMethod);
         bool isValid() const { return addr.offset >= 0; }
     };
 
@@ -1406,7 +1412,7 @@ public:
                                  const RegisterInformation &fpRegistersToSave);
 
     void checkException() {
-        this->load8(Address(EngineRegister, qOffsetOf(QV4::ExecutionEngine, hasException)), ScratchRegister);
+        this->load8(Address(EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, hasException))), ScratchRegister);
         Jump exceptionThrown = branch32(RelationalCondition::NotEqual, ScratchRegister, TrustedImm32(0));
         if (catchBlock)
             addPatch(catchBlock, exceptionThrown);
@@ -1474,8 +1480,8 @@ public:
         // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
 
         // load the table from the context
-        loadPtr(Address(EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), ScratchRegister);
-        loadPtr(Address(ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
+        loadPtr(Address(EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), ScratchRegister);
+        loadPtr(Address(ScratchRegister, targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, lookups))),
                     lookupCall.addr.base);
         // pre-calculate the indirect address for the lookupCall table:
         if (lookupCall.addr.offset)
@@ -1778,9 +1784,9 @@ public:
         const int locals = _stackLayout->calculateJSStackFrameSize();
         if (locals <= 0)
             return;
-        loadPtr(Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), JITTargetPlatform::LocalsRegister);
+        loadPtr(Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))), JITTargetPlatform::LocalsRegister);
         RegisterSizeDependentOps::initializeLocalVariables(this, locals);
-        storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+        storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
     }
 
     Label exceptionReturnLabel;
@@ -1841,8 +1847,9 @@ void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source, 
 }
 
 template <typename TargetConfiguration>
-inline Assembler<TargetConfiguration>::RuntimeCall::RuntimeCall(uint offset)
-    : addr(Assembler::EngineRegister, offset + qOffsetOf(QV4::ExecutionEngine, runtime))
+inline Assembler<TargetConfiguration>::RuntimeCall::RuntimeCall(Runtime::RuntimeMethods method)
+    : addr(Assembler::EngineRegister,
+           method == Runtime::InvalidRuntimeMethod ? -1 : (Assembler<TargetConfiguration>::targetStructureOffset(offsetof(EngineBase, runtime) + Runtime::runtimeMethodOffset(method))))
 {
 }
 

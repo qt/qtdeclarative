@@ -32,13 +32,13 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QHashFunctions>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qv4isel_moth_p.h>
 #include <private/qqmljsparser_p.h>
 
 QT_BEGIN_NAMESPACE
-extern Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed;
 
 namespace QV4 { namespace JIT {
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture);
@@ -291,7 +291,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
 int main(int argc, char **argv)
 {
     // Produce reliably the same output for the same input by disabling QHash's random seeding.
-    qt_qhash_seed.testAndSetRelaxed(-1, 0);
+    qSetGlobalQHashSeed(0);
 
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("qmlcachegen"));

@@ -49,8 +49,9 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquicksvgparser_p.h>
+#if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
-
+#endif
 #include <private/qquickimage_p_p.h>
 
 #include <qqmlinfo.h>
@@ -567,9 +568,10 @@ struct QQuickJSContext2D : public QV4::Object
     static void method_set_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
     // should these two be on the proto?
+#if QT_CONFIG(quick_path)
     static void method_get_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_set_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-
+#endif
     static void method_get_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_set_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_get_textAlign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
@@ -2032,6 +2034,7 @@ void QQuickJSContext2D::method_set_shadowOffsetY(const QV4::BuiltinFunction *, Q
     RETURN_UNDEFINED();
 }
 
+#if QT_CONFIG(quick_path)
 void QQuickJSContext2D::method_get_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
@@ -2058,6 +2061,7 @@ void QQuickJSContext2D::method_set_path(const QV4::BuiltinFunction *, QV4::Scope
     r->d()->context->m_v4path.set(scope.engine, value);
     RETURN_UNDEFINED();
 }
+#endif // QT_CONFIG(quick_path)
 
 //rects
 /*!
@@ -4208,7 +4212,9 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV4::ExecutionEngine *v4)
     proto->defineAccessorProperty(QStringLiteral("fillStyle"), QQuickJSContext2D::method_get_fillStyle, QQuickJSContext2D::method_set_fillStyle);
     proto->defineAccessorProperty(QStringLiteral("shadowColor"), QQuickJSContext2D::method_get_shadowColor, QQuickJSContext2D::method_set_shadowColor);
     proto->defineAccessorProperty(QStringLiteral("textBaseline"), QQuickJSContext2D::method_get_textBaseline, QQuickJSContext2D::method_set_textBaseline);
+#if QT_CONFIG(quick_path)
     proto->defineAccessorProperty(QStringLiteral("path"), QQuickJSContext2D::method_get_path, QQuickJSContext2D::method_set_path);
+#endif
     proto->defineAccessorProperty(QStringLiteral("lineJoin"), QQuickJSContext2D::method_get_lineJoin, QQuickJSContext2D::method_set_lineJoin);
     proto->defineAccessorProperty(QStringLiteral("lineWidth"), QQuickJSContext2D::method_get_lineWidth, QQuickJSContext2D::method_set_lineWidth);
     proto->defineAccessorProperty(QStringLiteral("textAlign"), QQuickJSContext2D::method_get_textAlign, QQuickJSContext2D::method_set_textAlign);

@@ -275,11 +275,11 @@ Module {
             Parameter { name: "arg"; type: "double" }
         }
         Method {
-            name: "setAcceleration"
+            name: "setMagnitude"
             Parameter { name: "arg"; type: "double" }
         }
         Method {
-            name: "setMagnitude"
+            name: "setAcceleration"
             Parameter { name: "arg"; type: "double" }
         }
         Method {
@@ -552,7 +552,7 @@ Module {
             Parameter { name: "arg"; type: "bool" }
         }
         Method {
-            name: "setmirrored"
+            name: "setMirrored"
             Parameter { name: "arg"; type: "bool" }
         }
     }

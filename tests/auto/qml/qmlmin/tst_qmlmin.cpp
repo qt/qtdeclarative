@@ -29,7 +29,9 @@
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QDebug>
 #include <QQmlError>
 #include <cstdlib>
@@ -42,7 +44,7 @@ public:
 
 private slots:
     void initTestCase();
-#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void qmlMinify_data();
     void qmlMinify();
 #endif
@@ -166,7 +168,7 @@ Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
 
-#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qmlmin::qmlMinify_data()
 {
     QTest::addColumn<QString>("file");
@@ -183,7 +185,7 @@ void tst_qmlmin::qmlMinify_data()
 }
 #endif
 
-#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qmlmin::qmlMinify()
 {
     QFETCH(QString, file);
