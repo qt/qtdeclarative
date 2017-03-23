@@ -339,6 +339,10 @@ TestCase {
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: nothing to push")
         compare(control.push(StackView.Immediate), null)
 
+        // unsupported type
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: QtObject is not supported. Must be Item or Component.")
+        control.push(Qt.createQmlObject('import QtQml 2.0; QtObject { }', control))
+
         // push(item)
         var item1 = component.createObject(control, {objectName:"1"})
         compare(control.push(item1, StackView.Immediate), item1)
@@ -434,6 +438,10 @@ TestCase {
         // nothing to push
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: nothing to push")
         compare(control.replace(StackView.Immediate), null)
+
+        // unsupported type
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: QtObject is not supported. Must be Item or Component.")
+        compare(control.replace(Qt.createQmlObject('import QtQml 2.0; QtObject { }', control)), null)
 
         // replace(item)
         var item1 = component.createObject(control, {objectName:"1"})
@@ -916,6 +924,12 @@ TestCase {
         ignoreWarning("QQmlComponent: Component is not ready")
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: " + error)
         control.replace(Qt.resolvedUrl("non-existent.qml"))
+
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: invalid url: x://[v]")
+        control.push("x://[v]")
+
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: invalid url: x://[v]")
+        control.replace("x://[v]")
 
         control.pop()
     }

@@ -90,7 +90,7 @@ static bool initProperties(QQuickStackElement *element, const QV4::Value &props,
     return false;
 }
 
-QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(QQmlV4Function *args, int from)
+QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQmlV4Function *args, QStringList *errors)
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
@@ -103,8 +103,9 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(QQmlV4Function
         if (QV4::ArrayObject *array = arg->as<QV4::ArrayObject>()) {
             int len = array->getLength();
             for (int j = 0; j < len; ++j) {
+                QString error;
                 QV4::ScopedValue value(scope, array->getIndexed(j));
-                QQuickStackElement *element = createElement(value);
+                QQuickStackElement *element = createElement(value, &error);
                 if (element) {
                     if (j < len - 1) {
                         QV4::ScopedValue props(scope, array->getIndexed(j + 1));
@@ -112,10 +113,13 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(QQmlV4Function
                             ++j;
                     }
                     elements += element;
+                } else if (!error.isEmpty()) {
+                    *errors += error;
                 }
             }
         } else {
-            QQuickStackElement *element = createElement(arg);
+            QString error;
+            QQuickStackElement *element = createElement(arg, &error);
             if (element) {
                 if (i < argc - 1) {
                     QV4::ScopedValue props(scope, (*args)[i + 1]);
@@ -123,6 +127,8 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(QQmlV4Function
                         ++i;
                 }
                 elements += element;
+            } else if (!error.isEmpty()) {
+                *errors += error;
             }
         }
     }
@@ -147,13 +153,13 @@ QQuickStackElement *QQuickStackViewPrivate::findElement(const QV4::Value &value)
     return nullptr;
 }
 
-QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value)
+QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value, QString *error)
 {
     Q_Q(QQuickStackView);
     if (const QV4::String *s = value.as<QV4::String>())
-        return QQuickStackElement::fromString(s->toQString(), q);
+        return QQuickStackElement::fromString(s->toQString(), q, error);
     if (const QV4::QObjectWrapper *o = value.as<QV4::QObjectWrapper>())
-        return QQuickStackElement::fromObject(o->object(), q);
+        return QQuickStackElement::fromObject(o->object(), q, error);
     return nullptr;
 }
 

@@ -67,8 +67,8 @@ class QQuickStackElement : public QQuickItemViewTransitionableItem, public QQuic
 public:
     ~QQuickStackElement();
 
-    static QQuickStackElement *fromString(const QString &str, QQuickStackView *view);
-    static QQuickStackElement *fromObject(QObject *object, QQuickStackView *view);
+    static QQuickStackElement *fromString(const QString &str, QQuickStackView *view, QString *error);
+    static QQuickStackElement *fromObject(QObject *object, QQuickStackView *view, QString *error);
 
     bool load(QQuickStackView *parent);
     void incubate(QObject *object);

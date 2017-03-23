@@ -76,10 +76,10 @@ public:
 
     void setCurrentItem(QQuickStackElement *element);
 
-    QList<QQuickStackElement *> parseElements(QQmlV4Function *args, int from = 0);
+    QList<QQuickStackElement *> parseElements(int from, QQmlV4Function *args, QStringList *errors);
     QQuickStackElement *findElement(QQuickItem *item) const;
     QQuickStackElement *findElement(const QV4::Value &value) const;
-    QQuickStackElement *createElement(const QV4::Value &value);
+    QQuickStackElement *createElement(const QV4::Value &value, QString *error);
     bool pushElements(const QList<QQuickStackElement *> &elements);
     bool pushElement(QQuickStackElement *element);
     bool popElements(QQuickStackElement *element);
