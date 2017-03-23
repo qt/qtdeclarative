@@ -671,8 +671,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             return;
         }
 
-        QQuickImageProviderWithOptions *providerV2 = provider->d->isProviderWithOptions ? static_cast<QQuickImageProviderWithOptions *>(provider)
-                                                                                        : nullptr;
+        QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider);
 
         switch (imageType) {
             case QQuickImageProvider::Invalid:
@@ -1174,6 +1173,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
         QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
         QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
+        QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider);
         if (provider)
             imageType = provider->imageType();
 
@@ -1183,7 +1183,8 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                     QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString()));
             case QQuickImageProvider::Texture:
             {
-                QQuickTextureFactory *texture = provider->requestTexture(imageId(url), &readSize, requestSize);
+                QQuickTextureFactory *texture = providerV2 ? providerV2->requestTexture(imageId(url), &readSize, requestSize, providerOptions)
+                                                           : provider->requestTexture(imageId(url), &readSize, requestSize);
                 if (texture) {
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, texture, readSize, requestSize, providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform);
@@ -1193,7 +1194,8 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
             case QQuickImageProvider::Image:
             {
-                QImage image = provider->requestImage(imageId(url), &readSize, requestSize);
+                QImage image = providerV2 ? providerV2->requestImage(imageId(url), &readSize, requestSize, providerOptions)
+                                          : provider->requestImage(imageId(url), &readSize, requestSize);
                 if (!image.isNull()) {
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestSize, providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform);
@@ -1202,7 +1204,8 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             }
             case QQuickImageProvider::Pixmap:
             {
-                QPixmap pixmap = provider->requestPixmap(imageId(url), &readSize, requestSize);
+                QPixmap pixmap = providerV2 ? providerV2->requestPixmap(imageId(url), &readSize, requestSize, providerOptions)
+                                            : provider->requestPixmap(imageId(url), &readSize, requestSize);
                 if (!pixmap.isNull()) {
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(pixmap.toImage()), readSize, requestSize, providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform);

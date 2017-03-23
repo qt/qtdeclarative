@@ -206,6 +206,7 @@ public:
     virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize, const QQuickImageProviderOptions &options);
 
     static QSize loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options);
+    static QQuickImageProviderWithOptions *checkedCast(QQuickImageProvider *provider);
 };
 
 QT_END_NAMESPACE

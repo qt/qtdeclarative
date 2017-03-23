@@ -695,5 +695,13 @@ QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const 
     return res;
 }
 
+QQuickImageProviderWithOptions *QQuickImageProviderWithOptions::checkedCast(QQuickImageProvider *provider)
+{
+    if (provider && provider->d && provider->d->isProviderWithOptions)
+        return static_cast<QQuickImageProviderWithOptions *>(provider);
+
+    return nullptr;
+}
+
 QT_END_NAMESPACE
 
