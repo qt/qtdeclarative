@@ -72,6 +72,8 @@ public:
         return view->d_func();
     }
 
+    void warn(const QString &error);
+
     void setCurrentItem(QQuickStackElement *element);
 
     QList<QQuickStackElement *> parseElements(QQmlV4Function *args, int from = 0);
@@ -91,6 +93,7 @@ public:
     void setBusy(bool busy);
 
     bool busy;
+    QString operation;
     QVariant initialItem;
     QQuickItem *currentItem;
     QSet<QQuickStackElement*> removing;

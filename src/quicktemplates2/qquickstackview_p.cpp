@@ -38,6 +38,7 @@
 #include "qquickstackelement_p_p.h"
 #include "qquickstacktransition_p_p.h"
 
+#include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/private/qv4qmlcontext_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
@@ -51,6 +52,15 @@ QQuickStackViewPrivate::QQuickStackViewPrivate()
       currentItem(nullptr),
       transitioner(nullptr)
 {
+}
+
+void QQuickStackViewPrivate::warn(const QString &error)
+{
+    Q_Q(QQuickStackView);
+    if (operation.isEmpty())
+        qmlWarning(q) << error;
+    else
+        qmlWarning(q) << operation << ": " << error;
 }
 
 void QQuickStackViewPrivate::setCurrentItem(QQuickStackElement *element)
