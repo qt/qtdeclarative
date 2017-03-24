@@ -50,6 +50,9 @@ class tst_qquickflickable : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_qquickflickable()
+      : touchDevice(QTest::createTouchDevice())
+    {}
 
 private slots:
     void create();
@@ -101,7 +104,8 @@ private slots:
     void overshoot_reentrant();
 
 private:
-    void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
+    void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
+    QTouchDevice *touchDevice;
 };
 
 void tst_qquickflickable::cleanup()
@@ -1530,12 +1534,6 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
 
 void tst_qquickflickable::flickTwiceUsingTouches()
 {
-    QTouchDevice *touchDevice = new QTouchDevice;
-    touchDevice->setName("Fake Touchscreen");
-    touchDevice->setType(QTouchDevice::TouchScreen);
-    touchDevice->setCapabilities(QTouchDevice::Position);
-    QWindowSystemInterface::registerTouchDevice(touchDevice);
-
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("longList.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
@@ -1548,7 +1546,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QVERIFY(flickable != 0);
 
     QCOMPARE(flickable->contentY(), 0.0f);
-    flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
+    flickWithTouch(window.data(), QPoint(100, 400), QPoint(100, 240));
 
     qreal contentYAfterFirstFlick = flickable->contentY();
     qDebug() << "contentYAfterFirstFlick " << contentYAfterFirstFlick;
@@ -1556,7 +1554,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     // Wait until view stops moving
     QTRY_VERIFY(!flickable->isMoving());
 
-    flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
+    flickWithTouch(window.data(), QPoint(100, 400), QPoint(100, 240));
 
     // In the original bug, that second flick would cause Flickable to halt immediately
     qreal contentYAfterSecondFlick = flickable->contentY();
@@ -1564,7 +1562,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QTRY_VERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
 }
 
-void tst_qquickflickable::flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to)
+void tst_qquickflickable::flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to)
 {
     QTest::touchEvent(window, touchDevice).press(0, from, window);
     QQuickTouchUtils::flush(window);
@@ -1869,12 +1867,6 @@ void tst_qquickflickable::stopAtBounds()
 
 void tst_qquickflickable::nestedMouseAreaUsingTouch()
 {
-    QTouchDevice *touchDevice = new QTouchDevice;
-    touchDevice->setName("Fake Touchscreen");
-    touchDevice->setType(QTouchDevice::TouchScreen);
-    touchDevice->setCapabilities(QTouchDevice::Position);
-    QWindowSystemInterface::registerTouchDevice(touchDevice);
-
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedmousearea.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
@@ -1887,7 +1879,7 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     QVERIFY(flickable != 0);
 
     QCOMPARE(flickable->contentY(), 50.0f);
-    flickWithTouch(window.data(), touchDevice, QPoint(100, 300), QPoint(100, 200));
+    flickWithTouch(window.data(), QPoint(100, 300), QPoint(100, 200));
 
     // flickable should not have moved
     QCOMPARE(flickable->contentY(), 50.0);
