@@ -81,7 +81,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     bool needsActivation() const { return function ? function->needsActivation() : false; }
 
-    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->cast<QV4::Object>(); }
+    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->as<QV4::Object>(); }
 
     Pointer<ExecutionContext> scope;
     Function *function;
