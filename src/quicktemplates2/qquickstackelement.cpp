@@ -173,7 +173,7 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         QQmlContext *creationContext = component->creationContext();
         if (!creationContext)
             creationContext = qmlContext(parent);
-        context = new QQmlContext(creationContext);
+        context = new QQmlContext(creationContext, parent);
         context->setContextObject(parent);
 
         QQuickStackIncubator incubator(this);
