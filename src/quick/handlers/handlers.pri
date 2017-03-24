@@ -2,6 +2,7 @@ HEADERS += \
     $$PWD/qquickdraghandler_p.h \
     $$PWD/qquickhandlerpoint_p.h \
     $$PWD/qquickhandlersmodule_p.h \
+    $$PWD/qquickhoverhandler_p.h \
     $$PWD/qquickmultipointhandler_p.h \
     $$PWD/qquickpinchhandler_p.h \
     $$PWD/qquickpointerdevicehandler_p.h \
@@ -17,6 +18,7 @@ SOURCES += \
     $$PWD/qquickdraghandler.cpp \
     $$PWD/qquickhandlerpoint.cpp \
     $$PWD/qquickhandlersmodule.cpp \
+    $$PWD/qquickhoverhandler.cpp \
     $$PWD/qquickmultipointhandler.cpp \
     $$PWD/qquickpinchhandler.cpp \
     $$PWD/qquickpointerdevicehandler.cpp \

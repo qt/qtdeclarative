@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPOINTERSINGLEHANDLER_H
-#define QQUICKPOINTERSINGLEHANDLER_H
+#ifndef QQUICKHOVERHANDLER_H
+#define QQUICKHOVERHANDLER_H
 
 //
 //  W A R N I N G
@@ -51,55 +51,41 @@
 // We mean it.
 //
 
-#include "qquickhandlerpoint_p.h"
-#include "qquickpointerdevicehandler_p.h"
+#include "qquickitem.h"
+#include "qevent.h"
+#include "qquicksinglepointhandler_p.h"
+#include <QtCore/qbasictimer.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
+class Q_AUTOTEST_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
-    Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
+    Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged)
+
 public:
-    explicit QQuickSinglePointHandler(QObject *parent = nullptr);
-    virtual ~QQuickSinglePointHandler() { }
+    explicit QQuickHoverHandler(QObject *parent = 0);
+    ~QQuickHoverHandler();
 
-    Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
-    void setAcceptedButtons(Qt::MouseButtons buttons);
-
-    QQuickHandlerPoint point() const { return m_pointInfo; }
+    bool isHovered() const { return m_hovered; }
 
 Q_SIGNALS:
-    void pointChanged();
-    void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
-    void acceptedButtonsChanged();
+    void hoveredChanged();
 
 protected:
+    void componentComplete() override;
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void handlePointerEventImpl(QQuickPointerEvent *event) override;
-    virtual void handleEventPoint(QQuickEventPoint *point) = 0;
-
-    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointInfo.m_id); }
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
-
-    void setIgnoreAdditionalPoints(bool v = true);
-
-    void moveTarget(QPointF pos, QQuickEventPoint *point);
-
-    void setPointId(int id);
+    void handleEventPoint(QQuickEventPoint *point) override;
 
 private:
-    void reset();
+    void setHovered(bool hovered);
 
 private:
-    QQuickHandlerPoint m_pointInfo;
-    Qt::MouseButtons m_acceptedButtons;
-    bool m_ignoreAdditionalPoints : 1;
+    bool m_hovered;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSinglePointHandler)
+QML_DECLARE_TYPE(QQuickHoverHandler)
 
-#endif // QQUICKPOINTERSINGLEHANDLER_H
+#endif // QQUICKHOVERHANDLER_H

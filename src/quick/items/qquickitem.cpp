@@ -67,6 +67,7 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
+#include <QtQuick/private/qquickhoverhandler_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 
 #include <private/qv4engine_p.h>
@@ -7342,6 +7343,8 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeHoverEnabled || otherChildPrivate->hoverEnabled)
                 return; // nope! sorry, something else wants it kept on.
+            if (otherChildPrivate->hasHoverHandlers())
+                return; // nope! sorry, we have pointer handlers which are interested.
         }
     }
 
@@ -8093,6 +8096,16 @@ QQuickItemLayer *QQuickItemPrivate::layer() const
 bool QQuickItemPrivate::hasPointerHandlers() const
 {
     return extra.isAllocated() && !extra->pointerHandlers.isEmpty();
+}
+
+bool QQuickItemPrivate::hasHoverHandlers() const
+{
+    if (!hasPointerHandlers())
+        return false;
+    for (QQuickPointerHandler *h : extra->pointerHandlers)
+        if (qmlobject_cast<QQuickHoverHandler *>(h))
+            return true;
+    return false;
 }
 
 #if QT_CONFIG(quick_shadereffect)

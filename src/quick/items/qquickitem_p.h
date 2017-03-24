@@ -280,6 +280,7 @@ public:
     QQuickItemLayer *layer() const;
 
     bool hasPointerHandlers() const;
+    bool hasHoverHandlers() const;
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

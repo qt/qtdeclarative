@@ -40,6 +40,7 @@
 #include "qquickhandlersmodule_p.h"
 #include "qquickpointerhandler_p.h"
 #include "qquickdraghandler_p.h"
+#include "qquickhoverhandler_p.h"
 #include "qquickpinchhandler_p.h"
 #include "qquickpointhandler_p.h"
 #include "qquicktaphandler_p.h"
@@ -87,6 +88,7 @@ static void qt_quickhandlers_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickDragHandler>(uri,major,minor,"DragHandler");
     qmlRegisterUncreatableType<QQuickDragAxis>(uri, major, minor, "DragAxis",
         QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));
+    qmlRegisterType<QQuickHoverHandler>(uri,major,minor,"HoverHandler");
     qmlRegisterType<QQuickPinchHandler>(uri,major,minor,"PinchHandler");
     qmlRegisterType<QQuickTapHandler>(uri,major,minor,"TapHandler");
     qRegisterMetaType<QQuickHandlerPoint>();

@@ -46,6 +46,7 @@
 #include "qquickevents_p_p.h"
 
 #include <private/qquickdrag_p.h>
+#include <private/qquickhoverhandler_p.h>
 #include <private/qquickpointerhandler_p.h>
 
 #include <QtQuick/private/qsgrenderer_p.h>
@@ -1546,8 +1547,20 @@ bool QQuickWindowPrivate::clearHover(ulong timestamp)
     QPointF pos = q->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
 
     bool accepted = false;
-    for (QQuickItem* item : qAsConst(hoverItems))
+    for (QQuickItem* item : qAsConst(hoverItems)) {
         accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), timestamp, true) || accepted;
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        if (itemPrivate->hasPointerHandlers()) {
+            pos = q->mapFromGlobal(QCursor::pos());
+            QQuickPointerEvent *pointerEvent = pointerEventInstance(QQuickPointerDevice::genericMouseDevice(), QEvent::MouseMove);
+            pointerEvent->point(0)->reset(Qt::TouchPointMoved, pos, quint64(1) << 24 /* mouse has device ID 1 */, timestamp, QVector2D());
+            pointerEvent->point(0)->setAccepted(true);
+            pointerEvent->localize(item);
+            for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers)
+                if (QQuickHoverHandler *hh = qmlobject_cast<QQuickHoverHandler *>(h))
+                    hh->handlePointerEvent(pointerEvent);
+        }
+    }
     hoverItems.clear();
     return accepted;
 }
@@ -1841,6 +1854,16 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
             if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, timestamp, accepted))
                 return true;
         }
+    }
+
+    if (itemPrivate->hasPointerHandlers()) {
+        QQuickPointerEvent *pointerEvent = pointerEventInstance(QQuickPointerDevice::genericMouseDevice(), QEvent::MouseMove);
+        pointerEvent->point(0)->reset(Qt::TouchPointMoved, scenePos, quint64(1) << 24 /* mouse has device ID 1 */, timestamp, QVector2D());
+        pointerEvent->point(0)->setAccepted(true);
+        pointerEvent->localize(item);
+        for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers)
+            if (QQuickHoverHandler *hh = qmlobject_cast<QQuickHoverHandler *>(h))
+                hh->handlePointerEvent(pointerEvent);
     }
 
     if (itemPrivate->hoverEnabled) {

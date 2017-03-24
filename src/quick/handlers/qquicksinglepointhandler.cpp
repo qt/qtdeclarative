@@ -120,7 +120,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
             }
         }
         if (chosen && candidatePointCount == 1) {
-            m_pointInfo.m_id = chosen->pointId();
+            setPointId(chosen->pointId());
             chosen->setAccepted();
         }
     }
@@ -183,6 +183,11 @@ void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
     target()->setPosition(pos);
     m_pointInfo.m_scenePosition = point->scenePosition();
     m_pointInfo.m_position = target()->mapFromScene(m_pointInfo.m_scenePosition);
+}
+
+void QQuickSinglePointHandler::setPointId(int id)
+{
+    m_pointInfo.m_id = id;
 }
 
 /*!

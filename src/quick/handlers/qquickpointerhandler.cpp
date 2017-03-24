@@ -310,9 +310,15 @@ QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
 
 bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
 {
-    if (point) {
-        if (QQuickItem *par = parentItem())
-            return par->contains(par->mapFromScene(point->scenePosition()));
+    if (!point)
+        return false;
+    if (QQuickItem *par = parentItem()) {
+        if (par->window()) {
+            QPoint screenPosition = par->window()->mapToGlobal(point->scenePosition().toPoint());
+            if (!par->window()->geometry().contains(screenPosition))
+                return false;
+        }
+        return par->contains(par->mapFromScene(point->scenePosition()));
     }
     return false;
 }
