@@ -39,11 +39,13 @@
 
 #include <sharedimageprovider.h>
 #include <qsharedimageloader_p.h>
-#include <qquickimageprovider.h>
+#include <private/qquickpixmapcache_p.h>
 #include <private/qimage_p.h>
 #include <QImageReader>
 #include <QFileInfo>
 #include <QDir>
+
+Q_DECLARE_METATYPE(QQuickImageProviderOptions)
 
 class QuickSharedImageLoader : public QSharedImageLoader
 {
@@ -51,6 +53,13 @@ class QuickSharedImageLoader : public QSharedImageLoader
     friend class SharedImageProvider;
 
 public:
+    enum ImageParameter {
+        OriginalSize = 0,
+        RequestedSize,
+        ProviderOptions,
+        NumImageParameters
+    };
+
     QuickSharedImageLoader(QObject *parent = Q_NULLPTR)
         : QSharedImageLoader(parent)
     {
@@ -61,29 +70,17 @@ protected:
     {
         QImageReader imgio(path);
         QSize realSize = imgio.size();
-        QSize requestSize = params ? params->value(RequestedSize).toSize() : QSize();
-
-        // Following qquickpixmapcache's readImage, from here...
-        const bool force_scale = imgio.format() == "svg" || imgio.format() == "svgz";
-
-        if (requestSize.width() > 0 || requestSize.height() > 0) {
-            QSize s = realSize;
-            qreal ratio = 0.0;
-            if (requestSize.width() && (force_scale || requestSize.width() < s.width())) {
-                ratio = qreal(requestSize.width())/s.width();
-            }
-            if (requestSize.height() && (force_scale || requestSize.height() < s.height())) {
-                qreal hr = qreal(requestSize.height())/s.height();
-                if (ratio == 0.0 || hr < ratio)
-                    ratio = hr;
-            }
-            if (ratio > 0.0) {
-                s.setHeight(qRound(s.height() * ratio));
-                s.setWidth(qRound(s.width() * ratio));
-                imgio.setScaledSize(s);
-            }
+        QSize requestSize;
+        QQuickImageProviderOptions options;
+        if (params) {
+            requestSize = params->value(RequestedSize).toSize();
+            options = params->value(ProviderOptions).value<QQuickImageProviderOptions>();
         }
-        // ... to here
+
+        QSize scSize = QQuickImageProviderWithOptions::loadSize(imgio.size(), requestSize, imgio.format(), options);
+
+        if (scSize.isValid())
+            imgio.setScaledSize(scSize);
 
         QImage image;
         if (imgio.read(&image)) {
@@ -108,11 +105,17 @@ protected:
 
     QString key(const QString &path, ImageParameters *params) override
     {
-        QSize reqSz = params->value(RequestedSize).toSize();
+        QSize reqSz;
+        QQuickImageProviderOptions opts;
+        if (params) {
+            reqSz = params->value(RequestedSize).toSize();
+            opts = params->value(ProviderOptions).value<QQuickImageProviderOptions>();
+        }
         if (!reqSz.isValid())
             return path;
+        int aspect = opts.preserveAspectRatioCrop() || opts.preserveAspectRatioFit() ? 1 : 0;
 
-        QString key = path + QStringLiteral("_%1x%2").arg(reqSz.width()).arg(reqSz.height());
+        QString key = path + QStringLiteral("_%1x%2_%3").arg(reqSz.width()).arg(reqSz.height()).arg(aspect);
         qCDebug(lcSharedImage) << "KEY:" << key;
         return key;
     }
@@ -120,19 +123,20 @@ protected:
 
 
 SharedImageProvider::SharedImageProvider()
-    : QQuickImageProvider(QQuickImageProvider::Image), loader(new QuickSharedImageLoader)
+    : QQuickImageProviderWithOptions(QQuickImageProvider::Image), loader(new QuickSharedImageLoader)
 {
 }
 
-QImage SharedImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
+QImage SharedImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize, const QQuickImageProviderOptions &options)
 {
     QFileInfo fi(QDir::root(), id);
     QString path = fi.canonicalFilePath();
     if (path.isEmpty())
         return QImage();
 
-    QSharedImageLoader::ImageParameters params(QSharedImageLoader::NumImageParameters);
-    params[QSharedImageLoader::RequestedSize].setValue(requestedSize);
+    QSharedImageLoader::ImageParameters params(QuickSharedImageLoader::NumImageParameters);
+    params[QuickSharedImageLoader::RequestedSize].setValue(requestedSize);
+    params[QuickSharedImageLoader::ProviderOptions].setValue(options);
 
     QImage img = loader->load(path, &params);
     if (img.isNull()) {
