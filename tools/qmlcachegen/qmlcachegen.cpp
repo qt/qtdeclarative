@@ -180,9 +180,7 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
         // Disable lookups in non-standalone (aka QML) mode
         isel->setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = isel->compile(/*generate unit*/false);
-        // ###
-        QV4::CompiledData::ResolvedTypeReferenceMap dummyDependencies;
-        QV4::CompiledData::Unit *unit = generator.generate(irDocument, /*engine*/nullptr, dummyDependencies);
+        QV4::CompiledData::Unit *unit = generator.generate(irDocument);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
         irDocument.javaScriptCompilationUnit->data = unit;
@@ -271,9 +269,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
         // Disable lookups in non-standalone (aka QML) mode
         isel->setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = isel->compile(/*generate unit*/false);
-        // ###
-        QV4::CompiledData::ResolvedTypeReferenceMap dummyDependencies;
-        QV4::CompiledData::Unit *unit = generator.generate(irDocument, /*engine*/nullptr, dummyDependencies);
+        QV4::CompiledData::Unit *unit = generator.generate(irDocument);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         irDocument.javaScriptCompilationUnit->data = unit;
 

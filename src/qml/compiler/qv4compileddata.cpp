@@ -324,10 +324,9 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
     totalObjectCount = objectCount;
 }
 
-bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
-                                     const ResolvedTypeReferenceMap &dependentTypes) const
+bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHasher) const
 {
-    if (dependentTypes.isEmpty()) {
+    if (!dependencyHasher) {
         for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
             if (data->dependencyMD5Checksum[i] != 0)
                 return false;
@@ -335,7 +334,7 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
         return true;
     }
     QCryptographicHash hash(QCryptographicHash::Md5);
-    if (!dependentTypes.addToHash(&hash, engine))
+    if (!dependencyHasher(&hash))
         return false;
     QByteArray checksum = hash.result();
     Q_ASSERT(checksum.size() == sizeof(data->dependencyMD5Checksum));

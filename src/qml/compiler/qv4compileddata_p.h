@@ -786,8 +786,10 @@ struct ResolvedTypeReferenceMap: public QMap<int, ResolvedTypeReference*>
 {
     bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
 };
+
+using DependentTypesHasher = std::function<bool(QCryptographicHash *)>;
 #else
-struct ResolvedTypeReferenceMap {};
+struct DependentTypesHasher {};
 #endif
 
 // index is per-object binding index
@@ -860,8 +862,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     QVector<QQmlScriptData *> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
 
-    bool verifyChecksum(QQmlEngine *engine,
-                        const ResolvedTypeReferenceMap &dependentTypes) const;
+    bool verifyChecksum(const DependentTypesHasher &dependencyHasher) const;
 
     int metaTypeId;
     int listMetaTypeId;
