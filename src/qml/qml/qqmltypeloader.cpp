@@ -1525,7 +1525,8 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
                 return false;
             }
 
-            *it = priority;
+            if (it != m_unresolvedImports.end())
+                *it = priority;
             return true;
         }
     }
@@ -2005,6 +2006,16 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 {
 }
 
+QString QQmlTypeData::TypeReference::qualifiedName() const
+{
+    QString result;
+    if (!prefix.isEmpty()) {
+        result = prefix + QLatin1Char('.');
+    }
+    result.append(type->qmlTypeName());
+    return result;
+}
+
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_implicitImportLoaded(false)
@@ -2150,6 +2161,23 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
     aliasCreator.appendAliasPropertiesToMetaObjects();
 }
 
+static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash, QQmlEngine *engine)
+{
+    for (const auto &typeRef: typeRefs) {
+        if (typeRef.typeData) {
+            const auto unit = typeRef.typeData->compilationUnit();
+            hash->addData(unit->data->md5Checksum, sizeof(unit->data->md5Checksum));
+        } else if (typeRef.type) {
+            const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type->metaObject());
+            bool ok = false;
+            hash->addData(propertyCache->checksum(&ok));
+            if (!ok)
+                return false;
+        }
+    }
+    return true;
+}
+
 void QQmlTypeData::done()
 {
     QDeferredCleanup cleanup([this]{
@@ -2230,8 +2258,14 @@ void QQmlTypeData::done()
 
     QQmlEngine *const engine = typeLoader()->engine();
 
+    const auto dependencyHasher = [engine, resolvedTypeCache, this](QCryptographicHash *hash) {
+        if (!resolvedTypeCache.addToHash(hash, engine))
+            return false;
+        return ::addTypeReferenceChecksumsToHash(m_compositeSingletons, hash, engine);
+    };
+
     // verify if any dependencies changed if we're using a cache
-    if (m_document.isNull() && !m_compiledData->verifyChecksum(engine, resolvedTypeCache)) {
+    if (m_document.isNull() && !m_compiledData->verifyChecksum(dependencyHasher)) {
         qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->url().toString();
         if (!loadFromSource())
             return;
@@ -2241,7 +2275,7 @@ void QQmlTypeData::done()
 
     if (!m_document.isNull()) {
         // Compile component
-        compile(typeNameCache, resolvedTypeCache);
+        compile(typeNameCache, resolvedTypeCache, dependencyHasher);
     } else {
         createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
     }
@@ -2503,14 +2537,15 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
-void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
+void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache,
+                           const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     Q_ASSERT(m_compiledData.isNull());
 
     const bool typeRecompilation = m_document && m_document->javaScriptCompilationUnit && m_document->javaScriptCompilationUnit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation;
 
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
-    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache);
+    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
         setError(compiler.compilationErrors());
@@ -2581,6 +2616,10 @@ void QQmlTypeData::resolveTypes()
             m_compositeSingletons << ref;
         }
     }
+
+    std::stable_sort(m_compositeSingletons.begin(), m_compositeSingletons.end(), [](const TypeReference &lhs, const TypeReference &rhs){
+        return lhs.qualifiedName() < rhs.qualifiedName();
+    });
 
     for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_typeReferences.constBegin(), end = m_typeReferences.constEnd();
          unresolvedRef != end; ++unresolvedRef) {
@@ -2920,8 +2959,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         irUnit.jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::ResolvedTypeReferenceMap emptyDependencies;
-    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit, m_typeLoader->engine(), emptyDependencies);
+    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
     Q_ASSERT(!unit->data);
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;

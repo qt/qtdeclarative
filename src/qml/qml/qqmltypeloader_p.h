@@ -401,6 +401,7 @@ public:
         int minorVersion;
         QQmlTypeData *typeData;
         QString prefix; // used by CompositeSingleton types
+        QString qualifiedName() const;
         bool needsCreation;
     };
 
@@ -455,7 +456,7 @@ private:
             QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
     void compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                 const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
+                 const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
     void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                                       const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion, TypeReference &ref, int lineNumber = -1, int columnNumber = -1, bool reportErrors = true);

@@ -62,7 +62,8 @@ PRIVATETESTS += \
     qqmlimport \
     qqmlobjectmodel \
     qmldiskcache \
-    qv4mm
+    qv4mm \
+    ecmascripttests
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \

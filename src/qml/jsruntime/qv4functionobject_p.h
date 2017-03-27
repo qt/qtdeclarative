@@ -85,7 +85,7 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
 
-    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->cast<QV4::Object>(); }
+    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->as<QV4::Object>(); }
 };
 
 struct FunctionCtor : FunctionObject {

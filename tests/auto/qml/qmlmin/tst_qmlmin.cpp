@@ -84,6 +84,7 @@ void tst_qmlmin::initTestCase()
     excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
     excludedDirs << "doc/src/snippets/qtquick1/imports";
     excludedDirs << "tests/manual/v4";
+    excludedDirs << "tests/auto/qml/ecmascripttests";
     excludedDirs << "tests/auto/qml/qmllint";
 
     // Add invalid files (i.e. files with syntax errors)

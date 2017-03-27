@@ -71,6 +71,7 @@ public:
         resolveUniforms();
     }
 
+    // ### Qt 6: make both virtual and fix docs
     const char *uniformMatrixName() const { return "qt_Matrix"; }
     const char *uniformOpacityName() const { return "qt_Opacity"; }
 
