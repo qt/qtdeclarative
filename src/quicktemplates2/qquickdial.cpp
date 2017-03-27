@@ -521,7 +521,7 @@ void QQuickDial::setPressed(bool pressed)
 
     The default value is \c true.
 
-    \sa value, valueAt()
+    \sa value
 */
 bool QQuickDial::live() const
 {
