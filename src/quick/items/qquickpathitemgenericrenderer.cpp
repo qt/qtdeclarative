@@ -642,6 +642,12 @@ void QQuickPathItemGenericRenderer::updateStrokeNode(VisualPathData *d, QQuickPa
 
     n->markDirty(QSGNode::DirtyGeometry);
 
+    // Async loading runs update once, bails out above, then updates again once
+    // ready. Set the material dirty then. This is in-line with fill where the
+    // first activateMaterial() achieves the same.
+    if (!g->vertexCount())
+        n->markDirty(QSGNode::DirtyMaterial);
+
     if ((d->effectiveDirty & DirtyColor) && !(d->effectiveDirty & DirtyStrokeGeom)) {
         ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(g->vertexData());
         for (int i = 0; i < g->vertexCount(); ++i)
