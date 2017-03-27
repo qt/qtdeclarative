@@ -64,6 +64,7 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlextensioninterface.h>
+#include <QtCore/qcryptographichash.h>
 
 #include <functional>
 
