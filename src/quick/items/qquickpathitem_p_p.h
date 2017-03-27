@@ -194,6 +194,8 @@ public:
         QVector<QQuickPathItemPath> paths;
         QVector<QQuickPathItemStrokeFillParams> sfp;
     } jsData;
+
+    bool enableVendorExts;
 };
 
 class QQuickPathItemPathObject : public QObject

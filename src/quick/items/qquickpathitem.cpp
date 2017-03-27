@@ -114,6 +114,60 @@ QPainterPath QQuickPathItemPath::toPainterPath() const
     return p;
 }
 
+/*!
+    \qmltype VisualPath
+    \instantiates QQuickVisualPath
+    \inqmlmodule QtQuick
+    \ingroup qtquick-paths
+    \ingroup qtquick-views
+    \inherits Object
+    \brief Describes a Path and associated properties for stroking and filling
+    \since 5.10
+
+    A PathItem contains one or more VisualPath elements. At least one
+    VisualPath is necessary in order to have a PathItem output anything
+    visible. A VisualPath in turn contains a Path and properties describing the
+    stroking and filling parameters, such as the stroke width and color, the
+    fill color or gradient, join and cap styles, and so on. Finally, the Path
+    object contains a list of path elements like PathMove, PathLine, PathCubic,
+    PathQuad, PathArc.
+
+    Any property changes in these data sets will be bubble up and change the
+    output of the PathItem. This means that it is simple and easy to change, or
+    even animate, the starting and ending position, control points, or any
+    stroke or fill parameters using the usual QML bindings and animation types
+    like NumberAnimation.
+
+    In the following example the line join style changes automatically based on
+    the value of joinStyleIndex:
+
+    \code
+    VisualPath {
+        strokeColor: "black"
+        strokeWidth: 16
+        fillColor: "transparent"
+        capStyle: VisualPath.RoundCap
+
+        property int joinStyleIndex: 0
+        property variant styles: [ VisualPath.BevelJoin, VisualPath.MiterJoin, VisualPath.RoundJoin ]
+
+        joinStyle: styles[joinStyleIndex]
+
+        Path {
+            startX: 30
+            startY: 30
+            PathLine { x: 100; y: 100 }
+            PathLine { x: 30; y: 100 }
+        }
+    }
+    \endcode
+
+    Once associated with a PathItem, here is the output with a joinStyleIndex
+    of 2 (VisualPath.RoundJoin):
+
+    \image visualpath-code-example.png
+ */
+
 QQuickVisualPathPrivate::QQuickVisualPathPrivate()
     : path(nullptr),
       dirty(DirtyAll)
@@ -128,6 +182,14 @@ QQuickVisualPath::QQuickVisualPath(QObject *parent)
 QQuickVisualPath::~QQuickVisualPath()
 {
 }
+
+/*!
+    \qmlproperty Path QtQuick::VisualPath::path
+
+    This property holds the Path object.
+
+    \default
+ */
 
 QQuickPath *QQuickVisualPath::path() const
 {
@@ -160,6 +222,16 @@ void QQuickVisualPathPrivate::_q_pathChanged()
     emit q->changed();
 }
 
+/*!
+    \qmlproperty color QtQuick::VisualPath::strokeColor
+
+    This property holds the stroking color.
+
+    When set to \c transparent, no stroking occurs.
+
+    The default value is \c white.
+ */
+
 QColor QQuickVisualPath::strokeColor() const
 {
     Q_D(const QQuickVisualPath);
@@ -176,6 +248,16 @@ void QQuickVisualPath::setStrokeColor(const QColor &color)
         emit changed();
     }
 }
+
+/*!
+    \qmlproperty color QtQuick::VisualPath::strokeWidth
+
+    This property holds the stroke width.
+
+    When set to a negative value, no stroking occurs.
+
+    The default value is 1.
+ */
 
 qreal QQuickVisualPath::strokeWidth() const
 {
@@ -194,6 +276,16 @@ void QQuickVisualPath::setStrokeWidth(qreal w)
     }
 }
 
+/*!
+    \qmlproperty color QtQuick::VisualPath::fillColor
+
+    This property holds the fill color.
+
+    When set to \c transparent, no filling occurs.
+
+    The default value is \c white.
+ */
+
 QColor QQuickVisualPath::fillColor() const
 {
     Q_D(const QQuickVisualPath);
@@ -210,6 +302,19 @@ void QQuickVisualPath::setFillColor(const QColor &color)
         emit changed();
     }
 }
+
+/*!
+    \qmlproperty enumeration QtQuick::VisualPath::fillRule
+
+    This property holds the fill rule. The default value is
+    VisualPath.OddEvenFill. For an example on fill rules, see
+    QPainterPath::setFillRule().
+
+    \list
+    \li VisualPath.OddEvenFill
+    \li VisualPath.WindingFill
+    \endlist
+ */
 
 QQuickVisualPath::FillRule QQuickVisualPath::fillRule() const
 {
@@ -228,6 +333,19 @@ void QQuickVisualPath::setFillRule(FillRule fillRule)
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick::VisualPath::joinStyle
+
+    This property defines how joins between two connected lines are drawn. The
+    default value is VisualPath.BevelJoin.
+
+    \list
+    \li VisualPath.MiterJoin - The outer edges of the lines are extended to meet at an angle, and this area is filled.
+    \li VisualPath.BevelJoin - The triangular notch between the two lines is filled.
+    \li VisualPath.RoundJoin - A circular arc between the two lines is filled.
+    \endlist
+ */
+
 QQuickVisualPath::JoinStyle QQuickVisualPath::joinStyle() const
 {
     Q_D(const QQuickVisualPath);
@@ -244,6 +362,15 @@ void QQuickVisualPath::setJoinStyle(JoinStyle style)
         emit changed();
     }
 }
+
+/*!
+    \qmlproperty int QtQuick::VisualPath::miterLimit
+
+    When VisualPath.joinStyle is set to VisualPath.MiterJoin, this property
+    specifies how far the miter join can extend from the join point.
+
+    The default value is 2.
+ */
 
 int QQuickVisualPath::miterLimit() const
 {
@@ -262,6 +389,19 @@ void QQuickVisualPath::setMiterLimit(int limit)
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick::VisualPath::capStyle
+
+    This property defines how the end points of lines are drawn. The
+    default value is VisualPath.SquareCap.
+
+    \list
+    \li VisualPath.FlatCap - A square line end that does not cover the end point of the line.
+    \li VisualPath.SquareCap - A square line end that covers the end point and extends beyond it by half the line width.
+    \li VisualPath.RoundCap - A rounded line end.
+    \endlist
+ */
+
 QQuickVisualPath::CapStyle QQuickVisualPath::capStyle() const
 {
     Q_D(const QQuickVisualPath);
@@ -278,6 +418,18 @@ void QQuickVisualPath::setCapStyle(CapStyle style)
         emit changed();
     }
 }
+
+/*!
+    \qmlproperty enumeration QtQuick::VisualPath::strokeStyle
+
+    This property defines the style of stroking. The default value is
+    VisualPath.SolidLine.
+
+    \list
+    \li VisualPath.SolidLine - A plain line.
+    \li VisualPath.DashLine - Dashes separated by a few pixels.
+    \endlist
+ */
 
 QQuickVisualPath::StrokeStyle QQuickVisualPath::strokeStyle() const
 {
@@ -296,6 +448,17 @@ void QQuickVisualPath::setStrokeStyle(StrokeStyle style)
     }
 }
 
+/*!
+    \qmlproperty real QtQuick::VisualPath::dashOffset
+
+    This property defines the starting point on the dash pattern, measured in
+    units used to specify the dash pattern.
+
+    The default value is 0.
+
+    \sa QPen::setDashOffset()
+ */
+
 qreal QQuickVisualPath::dashOffset() const
 {
     Q_D(const QQuickVisualPath);
@@ -313,6 +476,20 @@ void QQuickVisualPath::setDashOffset(qreal offset)
     }
 }
 
+/*!
+    \qmlproperty list<real> QtQuick::VisualPath::dashPattern
+
+    This property defines the dash pattern when VisualPath.strokeStyle is set
+    to VisualPath.DashLine. The pattern must be specified as an even number of
+    positive entries where the entries 1, 3, 5... are the dashes and 2, 4, 6...
+    are the spaces. The pattern is specified in units of the pen's width.
+
+    The default value is (4, 2), meaning a dash of 4 * VisualPath.strokeWidth
+    pixels followed by a space of 2 * VisualPath.strokeWidth pixels.
+
+    \sa QPen::setDashPattern()
+ */
+
 QVector<qreal> QQuickVisualPath::dashPattern() const
 {
     Q_D(const QQuickVisualPath);
@@ -329,6 +506,17 @@ void QQuickVisualPath::setDashPattern(const QVector<qreal> &array)
         emit changed();
     }
 }
+
+/*!
+    \qmlproperty PathGradient QtQuick::VisualPath::fillGradient
+
+    This property defines the fill gradient. By default no gradient is enabled
+    and the value is \c null. In this case the fill uses a solid color based on
+    the value of VisuaLPath.fillColor.
+
+    When set, VisualPath.fillColor is ignored and filling is done using one of
+    the PathGradient subtypes.
+ */
 
 QQuickPathGradient *QQuickVisualPath::fillGradient() const
 {
@@ -375,15 +563,56 @@ void QQuickVisualPath::resetFillGradient()
     \since 5.10
 
     Renders a path either by generating geometry via QPainterPath and manual
-    triangulation or by using an extension like \c{GL_NV_path_rendering}.
+    triangulation or by using a GPU vendor extension like \c{GL_NV_path_rendering}.
 
     This approach is different from rendering shapes via QQuickPaintedItem or
     the 2D Canvas because the path never gets rasterized in software. Therefore
-    it is suitable for creating shapes spreading over larger areas of the
+    PathItem is suitable for creating shapes spreading over larger areas of the
     screen, avoiding the performance penalty for texture uploads or framebuffer
-    blits.
+    blits. In addition, the declarative API allows manipulating, binding to,
+    and even animating the path element properties like starting and ending
+    position, the control points, etc.
 
-    Nonetheless it is important to be aware of performance implications, in
+    The types for specifying path elements are shared between \l PathView and
+    PathItem. However, not all PathItem implementations support all path
+    element types, while some may not make sense for PathView. PathItem's
+    currently supported subset is: PathMove, PathLine, PathQuad, PathCubic,
+    PathArc, PathSvg.
+
+    See \l Path for a detailed overview of the supported path elements.
+
+    \code
+    PathItem {
+        width: 200
+        height: 150
+        anchors.centerIn: parent
+        VisualPath {
+            strokeWidth: 4
+            strokeColor: "red"
+            fillGradient: PathLinearGradient {
+                x1: 20; y1: 20
+                x2: 180; y2: 130
+                PathGradientStop { position: 0; color: "blue" }
+                PathGradientStop { position: 0.2; color: "green" }
+                PathGradientStop { position: 0.4; color: "red" }
+                PathGradientStop { position: 0.6; color: "yellow" }
+                PathGradientStop { position: 1; color: "cyan" }
+            }
+            strokeStyle: VisualPath.DashLine
+            dashPattern: [ 1, 4 ]
+            Path {
+                startX: 20; startY: 20
+                PathLine { x: 180; y: 130 }
+                PathLine { x: 20; y: 130 }
+                PathLine { x: 20; y: 20 }
+            }
+        }
+    }
+    \endcode
+
+    \image pathitem-code-example.png
+
+    \note It is important to be aware of performance implications, in
     particular when the application is running on the generic PathItem
     implementation due to not having support for accelerated path rendering.
     The geometry generation happens entirely on the CPU in this case, and this
@@ -396,18 +625,25 @@ void QQuickVisualPath::resetFillGradient()
     \c{GL_NV_path_rendering} where the cost of path property changes is much
     smaller.
 
-    \note The types for specifying path elements are shared between \l PathView
-    and PathItem. However, not all PathItem implementations support all path
-    element types, while some may not make sense for PathView. PathItem's
-    currently supported subset is: PathMove, PathLine, PathQuad, PathCubic,
-    PathArc.
+    The following list summarizes the available PathItem rendering approaches:
 
-    \note Limited support for PathSvg is also provided in most cases. However,
-    there is no guarantee that this element is going to be supported for all
-    future PathItem backends. It is recommended to avoid the PathSvg element in
-    practice.
+    \list
 
-    See \l Path for a detailed overview of the supported path elements.
+    \li When running with the default, OpenGL backend of Qt Quick, both the
+    generic, triangulation-based and the NVIDIA-specific
+    \c{GL_NV_path_rendering} methods are available. The choice is made at
+    runtime, depending on the graphics driver's capabilities. When this is not
+    desired, applications can force using the generic method by setting the
+    PathItem.enableVendorExtensions property to \c false.
+
+    \li The \c software backend is fully supported. The path is rendered via
+    QPainter::strokePath() and QPainter::fillPath() in this case.
+
+    \li The Direct 3D 12 backend is not currently supported.
+
+    \li The OpenVG backend is not currently supported.
+
+    \endlist
 
     \sa Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
@@ -418,7 +654,8 @@ QQuickPathItemPrivate::QQuickPathItemPrivate()
       rendererType(QQuickPathItem::UnknownRenderer),
       async(false),
       status(QQuickPathItem::Null),
-      renderer(nullptr)
+      renderer(nullptr),
+      enableVendorExts(true)
 {
 }
 
@@ -453,11 +690,53 @@ QQuickPathItem::~QQuickPathItem()
 {
 }
 
+/*!
+    \qmlproperty enumeration QtQuick::PathItem::rendererType
+
+    This property determines which path rendering backend is active.
+
+    \list
+
+    \li PathItem.UnknownRenderer - The renderer is unknown.
+
+    \li PathItem.GeometryRenderer - The generic, driver independent solution
+    for OpenGL. Uses the same CPU-based triangulation approach as QPainter's
+    OpenGL 2 paint engine. This is the default on non-NVIDIA hardware when the
+    default, OpenGL Qt Quick scenegraph backend is in use.
+
+    \li PathItem.NvprRenderer - Path items are rendered by performing OpenGL
+    calls using the \c{GL_NV_path_rendering} extension. This is the default on
+    NVIDIA hardware when the default, OpenGL Qt Quick scenegraph backend is in
+    use.
+
+    \li PathItem.SoftwareRenderer - Pure QPainter drawing using the raster
+    paint engine. This is the default, and only, option when the Qt Quick
+    scenegraph is running with the \c software backend.
+
+    \endlist
+*/
+
 QQuickPathItem::RendererType QQuickPathItem::rendererType() const
 {
     Q_D(const QQuickPathItem);
     return d->rendererType;
 }
+
+/*!
+    \qmlproperty bool QtQuick::PathItem::asynchronous
+
+    When PathItem.rendererType is PathItem.GeometryRenderer, the input path is
+    triangulated on the CPU during the polishing phase of the PathItem. This is
+    potentially expensive. To offload this work to separate worker threads, set
+    this property to \c true.
+
+    When enabled, making a PathItem visible will not wait for the content to
+    become available. Instead, the gui/main thread is not blocked and the
+    results of the path rendering are shown only when all the asynchronous work
+    has been finished.
+
+    The default value is \c false.
+ */
 
 bool QQuickPathItem::asynchronous() const
 {
@@ -475,6 +754,49 @@ void QQuickPathItem::setAsynchronous(bool async)
             d->_q_visualPathChanged();
     }
 }
+
+/*!
+    \qmlproperty bool QtQuick::PathItem::enableVendorExtensions
+
+    This property controls the usage of non-standard OpenGL extensions like
+    GL_NV_path_rendering. To disable PathItem.NvprRenderer and force a uniform
+    behavior regardless of the graphics card and drivers, set this property to
+    \c false.
+
+    The default value is \c true.
+ */
+
+bool QQuickPathItem::enableVendorExtensions() const
+{
+    Q_D(const QQuickPathItem);
+    return d->enableVendorExts;
+}
+
+void QQuickPathItem::setEnableVendorExtensions(bool enable)
+{
+    Q_D(QQuickPathItem);
+    if (d->enableVendorExts != enable) {
+        d->enableVendorExts = enable;
+        emit enableVendorExtensionsChanged();
+    }
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::PathItem::status
+
+    This property determines the status of the PathItem and is relevant when
+    PathItem.asynchronous is set to \c true.
+
+    \list
+
+    \li PathItem.Null - Not yet initialized.
+
+    \li PathItem.Ready - The PathItem has finished processing.
+
+    \li PathItem.Processing - The path is being processed.
+
+    \endlist
+ */
 
 QQuickPathItem::Status QQuickPathItem::status() const
 {
@@ -519,6 +841,15 @@ static void vpe_clear(QQmlListProperty<QQuickVisualPath> *property)
     if (d->componentComplete)
         d->_q_visualPathChanged();
 }
+
+/*!
+    \qmlproperty list<VisualPath> QtQuick::PathItem::elements
+
+    This property holds the VisualPath objects that define the contents of the
+    PathItem.
+
+    \default
+ */
 
 QQmlListProperty<QQuickVisualPath> QQuickPathItem::elements()
 {
@@ -608,7 +939,7 @@ void QQuickPathItemPrivate::createRenderer()
     switch (ri->graphicsApi()) {
 #ifndef QT_NO_OPENGL
     case QSGRendererInterface::OpenGL:
-        if (QQuickPathItemNvprRenderNode::isSupported()) {
+        if (enableVendorExts && QQuickPathItemNvprRenderNode::isSupported()) {
             rendererType = QQuickPathItem::NvprRenderer;
             renderer = new QQuickPathItemNvprRenderer;
         } else {
@@ -641,7 +972,7 @@ QSGNode *QQuickPathItemPrivate::createNode()
     switch (ri->graphicsApi()) {
 #ifndef QT_NO_OPENGL
     case QSGRendererInterface::OpenGL:
-        if (QQuickPathItemNvprRenderNode::isSupported()) {
+        if (enableVendorExts && QQuickPathItemNvprRenderNode::isSupported()) {
             node = new QQuickPathItemNvprRenderNode;
             static_cast<QQuickPathItemNvprRenderer *>(renderer)->setNode(
                 static_cast<QQuickPathItemNvprRenderNode *>(node));
@@ -740,12 +1071,32 @@ void QQuickPathItemPrivate::sync()
 
 // ***** gradient support *****
 
+/*!
+    \qmltype PathGradientStop
+    \instantiates QQuickPathGradientStop
+    \inqmlmodule QtQuick
+    \ingroup qtquick-paths
+    \ingroup qtquick-views
+    \inherits Object
+    \brief Defines a color at a position in a gradient
+    \since 5.10
+ */
+
 QQuickPathGradientStop::QQuickPathGradientStop(QObject *parent)
     : QObject(parent),
       m_position(0),
       m_color(Qt::black)
 {
 }
+
+/*!
+    \qmlproperty real QtQuick::PathGradientStop::position
+
+    The position and color properties describe the color used at a given
+    position in a gradient, as represented by a gradient stop.
+
+    The default value is 0.
+ */
 
 qreal QQuickPathGradientStop::position() const
 {
@@ -761,6 +1112,15 @@ void QQuickPathGradientStop::setPosition(qreal position)
     }
 }
 
+/*!
+    \qmlproperty real QtQuick::PathGradientStop::color
+
+    The position and color properties describe the color used at a given
+    position in a gradient, as represented by a gradient stop.
+
+    The default value is \c black.
+ */
+
 QColor QQuickPathGradientStop::color() const
 {
     return m_color;
@@ -774,6 +1134,20 @@ void QQuickPathGradientStop::setColor(const QColor &color)
             emit grad->updated();
     }
 }
+
+/*!
+    \qmltype PathGradient
+    \instantiates QQuickPathGradient
+    \inqmlmodule QtQuick
+    \ingroup qtquick-paths
+    \ingroup qtquick-views
+    \inherits Object
+    \brief Base type of PathItem fill gradients
+    \since 5.10
+
+    This is an abstract base class for gradients like PathLinearGradient and
+    cannot be created directly.
+ */
 
 QQuickPathGradient::QQuickPathGradient(QObject *parent)
     : QObject(parent),
@@ -794,6 +1168,14 @@ void QQuickPathGradient::appendStop(QQmlListProperty<QObject> *list, QObject *st
     grad->m_stops.append(sstop);
 }
 
+/*!
+    \qmlproperty list<Object> QtQuick::PathGradient::stops
+    \default
+
+    The list of PathGradientStop objects defining the colors at given positions
+    in the gradient.
+ */
+
 QQmlListProperty<QObject> QQuickPathGradient::stops()
 {
     return QQmlListProperty<QObject>(this, nullptr, &QQuickPathGradient::appendStop, nullptr, nullptr, nullptr);
@@ -812,6 +1194,19 @@ QGradientStops QQuickPathGradient::sortedGradientStops() const
     return result;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick::PathGradient::spred
+
+    Specifies how the area outside the gradient area should be filled. The
+    default value is PathGradient.PadSpread.
+
+    \list
+    \li PathGradient.PadSpread - The area is filled with the closest stop color.
+    \li PathGradient.RepeatSpread - The gradient is repeated outside the gradient area.
+    \li PathGradient.ReflectSpread - The gradient is reflected outside the gradient area.
+    \endlist
+ */
+
 QQuickPathGradient::SpreadMode QQuickPathGradient::spread() const
 {
     return m_spread;
@@ -826,10 +1221,38 @@ void QQuickPathGradient::setSpread(SpreadMode mode)
     }
 }
 
+/*!
+    \qmltype PathLinearGradient
+    \instantiates QQuickPathLinearGradient
+    \inqmlmodule QtQuick
+    \ingroup qtquick-paths
+    \ingroup qtquick-views
+    \inherits PathGradient
+    \brief Linear gradient
+    \since 5.10
+
+    Linear gradients interpolate colors between start and end points. Outside
+    these points the gradient is either padded, reflected or repeated depending
+    on the spread type.
+
+    \sa QLinearGradient
+ */
+
 QQuickPathLinearGradient::QQuickPathLinearGradient(QObject *parent)
     : QQuickPathGradient(parent)
 {
 }
+
+/*!
+    \qmlproperty real QtQuick::PathLinearGradient::x1
+    \qmlproperty real QtQuick::PathLinearGradient::y1
+    \qmlproperty real QtQuick::PathLinearGradient::x2
+    \qmlproperty real QtQuick::PathLinearGradient::y2
+
+    These properties define the start and end points between which color
+    interpolation occurs. By default both the stard and end points are set to
+    (0, 0).
+ */
 
 qreal QQuickPathLinearGradient::x1() const
 {

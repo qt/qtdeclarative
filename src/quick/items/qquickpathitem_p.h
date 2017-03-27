@@ -265,6 +265,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathItem : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
+    Q_PROPERTY(bool enableVendorExtensions READ enableVendorExtensions WRITE setEnableVendorExtensions NOTIFY enableVendorExtensionsChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QQmlListProperty<QQuickVisualPath> elements READ elements)
     Q_CLASSINFO("DefaultProperty", "elements")
@@ -293,6 +294,9 @@ public:
     bool asynchronous() const;
     void setAsynchronous(bool async);
 
+    bool enableVendorExtensions() const;
+    void setEnableVendorExtensions(bool enable);
+
     Status status() const;
 
     QQmlListProperty<QQuickVisualPath> elements();
@@ -313,6 +317,7 @@ protected:
 Q_SIGNALS:
     void rendererChanged();
     void asynchronousChanged();
+    void enableVendorExtensionsChanged();
     void statusChanged();
 
 private:
