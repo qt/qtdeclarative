@@ -95,6 +95,12 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
         JSC::MacroAssemblerCodeRef codeRef = JSC::MacroAssemblerCodeRef::createSelfManagedCodeRef(JSC::MacroAssemblerCodePtr(codePtr));
         JSC::ExecutableAllocator::makeExecutable(codePtr, compiledFunction->codeSize);
         codeRefs[i] = codeRef;
+
+        static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
+        if (showCode) {
+            WTF::dataLogF("Mapped JIT code for %s\n", qPrintable(stringAt(compiledFunction->nameIndex)));
+            disassemble(codeRef.code(), compiledFunction->codeSize, "    ", WTF::dataFile());
+        }
     }
 
     return true;
