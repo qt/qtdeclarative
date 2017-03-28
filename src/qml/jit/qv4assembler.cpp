@@ -319,15 +319,15 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
 template <typename TargetConfiguration>
 typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(IR::Const *c, RegisterID baseReg)
 {
-    return loadConstant(convertToValue(c), baseReg);
+    return loadConstant(convertToValue<TargetPrimitive>(c), baseReg);
 }
 
 template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const Primitive &v, RegisterID baseReg)
+typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const TargetPrimitive &v, RegisterID baseReg)
 {
     loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), baseReg);
     loadPtr(Address(baseReg, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, constantTable))), baseReg);
-    const int index = _jsGenerator->registerConstant(v.asReturnedValue());
+    const int index = _jsGenerator->registerConstant(v.rawValue());
     return Address(baseReg, index * sizeof(QV4::Value));
 }
 
@@ -339,7 +339,7 @@ void Assembler<TargetConfiguration>::loadStringRef(RegisterID reg, const QString
 }
 
 template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::storeValue(QV4::Primitive value, IR::Expr *destination)
+void Assembler<TargetConfiguration>::storeValue(TargetPrimitive value, IR::Expr *destination)
 {
     Address addr = loadAddress(ScratchRegister, destination);
     storeValue(value, addr);
@@ -518,7 +518,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
     } else if (IR::Temp *t = s->expr->asTemp()) {
         RegisterSizeDependentOps::setFunctionReturnValueFromTemp(this, t);
     } else if (IR::Const *c = s->expr->asConst()) {
-        QV4::Primitive retVal = convertToValue(c);
+        auto retVal = convertToValue<TargetPrimitive>(c);
         RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
     } else {
         Q_UNREACHABLE();
@@ -535,7 +535,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
     ret();
 
     exceptionReturnLabel = label();
-    QV4::Primitive retVal = Primitive::undefinedValue();
+    auto retVal = TargetPrimitive::undefinedValue();
     RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
     jump(leaveStackFrame);
 }

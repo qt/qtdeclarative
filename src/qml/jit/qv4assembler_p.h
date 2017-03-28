@@ -154,6 +154,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Label = typename JITAssembler::Label;
 
     using ValueTypeInternal = Value::ValueTypeInternal_32;
+    using TargetPrimitive = TargetPrimitive32;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
@@ -171,9 +172,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->storeDouble(source, ptr);
     }
 
-    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
+    static void storeValue(JITAssembler *as, TargetPrimitive value, Address destination)
     {
-        as->store32(TrustedImm32(value.int_32()), destination);
+        as->store32(TrustedImm32(value.value()), destination);
         destination.offset += 4;
         as->store32(TrustedImm32(value.tag()), destination);
     }
@@ -243,9 +244,9 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         }
     }
 
-    static void setFunctionReturnValueFromConst(JITAssembler *as, QV4::Primitive retVal)
+    static void setFunctionReturnValueFromConst(JITAssembler *as, TargetPrimitive retVal)
     {
-        as->move(TrustedImm32(retVal.int_32()), TargetPlatform::LowReturnValueRegister);
+        as->move(TrustedImm32(retVal.value()), TargetPlatform::LowReturnValueRegister);
         as->move(TrustedImm32(retVal.tag()), TargetPlatform::HighReturnValueRegister);
     }
 
@@ -387,6 +388,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Label = typename JITAssembler::Label;
 
     using ValueTypeInternal = Value::ValueTypeInternal_64;
+    using TargetPrimitive = TargetPrimitive64;
 
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
@@ -463,12 +465,12 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         }
     }
 
-    static void setFunctionReturnValueFromConst(JITAssembler *as, QV4::Primitive retVal)
+    static void setFunctionReturnValueFromConst(JITAssembler *as, TargetPrimitive retVal)
     {
         as->move(TrustedImm64(retVal.rawValue()), TargetPlatform::ReturnValueRegister);
     }
 
-    static void storeValue(JITAssembler *as, QV4::Primitive value, Address destination)
+    static void storeValue(JITAssembler *as, TargetPrimitive value, Address destination)
     {
         as->store64(TrustedImm64(value.rawValue()), destination);
     }
@@ -505,7 +507,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             Pointer addr = as->loadTempAddress(temp);
             as->load64(addr, dest);
         } else {
-            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            auto undefined = TargetPrimitive::undefinedValue();
             as->move(TrustedImm64(undefined.rawValue()), dest);
         }
     }
@@ -518,7 +520,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             Pointer addr = as->loadArgLocalAddress(dest, al);
             as->load64(addr, dest);
         } else {
-            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            auto undefined = TargetPrimitive::undefinedValue();
             as->move(TrustedImm64(undefined.rawValue()), dest);
         }
     }
@@ -527,7 +529,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     {
         Q_UNUSED(argumentNumber);
 
-        QV4::Value v = convertToValue(c);
+        auto v = convertToValue<TargetPrimitive64>(c);
         as->move(TrustedImm64(v.rawValue()), dest);
     }
 
@@ -536,7 +538,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Q_UNUSED(argumentNumber);
 
         if (!expr) {
-            QV4::Value undefined = QV4::Primitive::undefinedValue();
+            auto undefined = TargetPrimitive::undefinedValue();
             as->move(TrustedImm64(undefined.rawValue()), dest);
         } else if (IR::Temp *t = expr->asTemp()){
             loadArgumentInRegister(as, t, dest, argumentNumber);
@@ -755,6 +757,7 @@ public:
 
     using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
     using ValueTypeInternal = typename RegisterSizeDependentOps::ValueTypeInternal;
+    using TargetPrimitive = typename RegisterSizeDependentOps::TargetPrimitive;
 
     // V4 uses two stacks: one stack with QV4::Value items, which is checked by the garbage
     // collector, and one stack used by the native C/C++/ABI code. This C++ stack is not scanned
@@ -978,7 +981,7 @@ public:
     Pointer loadArgLocalAddress(RegisterID baseReg, IR::ArgLocal *al);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
     Address loadConstant(IR::Const *c, RegisterID baseReg);
-    Address loadConstant(const Primitive &v, RegisterID baseReg);
+    Address loadConstant(const TargetPrimitive &v, RegisterID baseReg);
     void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(IR::Temp *t) const
     {
@@ -1240,12 +1243,12 @@ public:
         TargetConfiguration::MacroAssembler::storeDouble(fpScratchRegister, loadAddress(scratchRegister, target));
     }
 
-    void storeValue(QV4::Primitive value, Address destination)
+    void storeValue(TargetPrimitive value, Address destination)
     {
         RegisterSizeDependentOps::storeValue(this, value, destination);
     }
 
-    void storeValue(QV4::Primitive value, IR::Expr* temp);
+    void storeValue(TargetPrimitive value, IR::Expr* temp);
 
     void enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
                                  const RegisterInformation &fpRegistersToSave);
@@ -1422,8 +1425,8 @@ public:
             Address tagAddr = addr;
             tagAddr.offset += 4;
 
-            QV4::Primitive v = convertToValue(c);
-            store32(TrustedImm32(v.int_32()), addr);
+            auto v = convertToValue<TargetPrimitive>(c);
+            store32(TrustedImm32(v.value()), addr);
             store32(TrustedImm32(v.tag()), tagAddr);
             return Pointer(addr);
         }
@@ -1439,7 +1442,7 @@ public:
     {
         store32(reg, addr);
         addr.offset += 4;
-        store32(TrustedImm32(QV4::Primitive::fromBoolean(0).tag()), addr);
+        store32(TrustedImm32(TargetPrimitive::fromBoolean(0).tag()), addr);
     }
 
     void storeBool(RegisterID src, RegisterID dest)
@@ -1483,7 +1486,7 @@ public:
     {
         store32(reg, addr);
         addr.offset += 4;
-        store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag()), addr);
+        store32(TrustedImm32(TargetPrimitive::fromInt32(0).tag()), addr);
     }
 
     void storeInt32(RegisterID reg, IR::Expr *target)
@@ -1552,7 +1555,7 @@ public:
     RegisterID toInt32Register(IR::Expr *e, RegisterID scratchReg)
     {
         if (IR::Const *c = e->asConst()) {
-            move(TrustedImm32(convertToValue(c).int_32()), scratchReg);
+            move(TrustedImm32(convertToValue<Primitive>(c).int_32()), scratchReg);
             return scratchReg;
         }
 
@@ -1595,7 +1598,7 @@ public:
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
-        Address inversionAddress = loadConstant(QV4::Primitive::fromDouble(double(INT_MAX) + 1), scratchReg);
+        Address inversionAddress = loadConstant(TargetPrimitive::fromDouble(double(INT_MAX) + 1), scratchReg);
         subDouble(inversionAddress, FPGpr0);
         Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
         canNeverHappen.link(this);
@@ -1675,7 +1678,7 @@ void Assembler<TargetConfiguration>::copyValue(Result result, IR::Expr* source)
     } else if (source->asTemp() || source->asArgLocal()) {
         RegisterSizeDependentOps::copyValueViaRegisters(this, source, result);
     } else if (IR::Const *c = source->asConst()) {
-        QV4::Primitive v = convertToValue(c);
+        auto v = convertToValue<TargetPrimitive>(c);
         storeValue(v, result);
     } else {
         Q_UNREACHABLE();

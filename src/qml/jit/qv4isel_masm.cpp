@@ -256,7 +256,7 @@ void InstructionSelection<JITAssembler>::callBuiltinDeleteName(const QString &na
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::callBuiltinDeleteValue(IR::Expr *result)
 {
-    _as->storeValue(Primitive::fromBoolean(false), result);
+    _as->storeValue(JITAssembler::TargetPrimitive::fromBoolean(false), result);
 }
 
 template <typename JITAssembler>
@@ -376,7 +376,7 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineObjectLiteral(IR::Expr
         ++arrayValueCount;
 
         // Index
-        _as->storeValue(QV4::Primitive::fromUInt32(index), _as->stackLayout().argumentAddressForCall(argc++));
+        _as->storeValue(JITAssembler::TargetPrimitive::fromUInt32(index), _as->stackLayout().argumentAddressForCall(argc++));
 
         // Value
         _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr);
@@ -400,7 +400,7 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineObjectLiteral(IR::Expr
         ++arrayGetterSetterCount;
 
         // Index
-        _as->storeValue(QV4::Primitive::fromUInt32(index), _as->stackLayout().argumentAddressForCall(argc++));
+        _as->storeValue(JITAssembler::TargetPrimitive::fromUInt32(index), _as->stackLayout().argumentAddressForCall(argc++));
 
         // Getter
         _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr);
@@ -486,7 +486,7 @@ void InstructionSelection<JITAssembler>::loadConst(IR::Const *sourceConst, IR::E
                 _as->toUInt32Register(sourceConst, (RegisterID) targetTemp->index);
             } else if (targetTemp->type == IR::BoolType) {
                 Q_ASSERT(sourceConst->type == IR::BoolType);
-                _as->move(TrustedImm32(convertToValue(sourceConst).int_32()),
+                _as->move(TrustedImm32(convertToValue<Primitive>(sourceConst).int_32()),
                           (RegisterID) targetTemp->index);
             } else {
                 Q_UNREACHABLE();
@@ -495,7 +495,7 @@ void InstructionSelection<JITAssembler>::loadConst(IR::Const *sourceConst, IR::E
         }
     }
 
-    _as->storeValue(convertToValue(sourceConst), target);
+    _as->storeValue(convertToValue<typename JITAssembler::TargetPrimitive>(sourceConst), target);
 }
 
 template <typename JITAssembler>
@@ -1320,7 +1320,7 @@ int InstructionSelection<JITAssembler>::prepareCallData(IR::ExprList* args, IR::
     _as->store32(TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
     if (!thisObject)
-        _as->storeValue(QV4::Primitive::undefinedValue(), p);
+        _as->storeValue(JITAssembler::TargetPrimitive::undefinedValue(), p);
     else
         _as->copyValue(p, thisObject);
 
