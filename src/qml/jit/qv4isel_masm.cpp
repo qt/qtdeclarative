@@ -774,10 +774,10 @@ void InstructionSelection<JITAssembler>::swapValues(IR::Expr *source, IR::Expr *
             quint32 tag;
             switch (regTemp->type) {
             case IR::BoolType:
-                tag = QV4::Value::Boolean_Type_Internal;
+                tag = quint32(JITAssembler::ValueTypeInternal::Boolean);
                 break;
             case IR::SInt32Type:
-                tag = QV4::Value::Integer_Type_Internal;
+                tag = quint32(JITAssembler::ValueTypeInternal::Integer);
                 break;
             default:
                 tag = 31337; // bogus value
@@ -925,7 +925,7 @@ void InstructionSelection<JITAssembler>::convertTypeToDouble(IR::Expr *source, I
 
         // check if it's an int32:
         Jump isNoInt = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
-                                                TrustedImm32(Value::Integer_Type_Internal));
+                                     TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Integer)));
         convertIntToDouble(source, target);
         Jump intDone = _as->jump();
 
@@ -1003,13 +1003,13 @@ void InstructionSelection<JITAssembler>::convertTypeToBool(IR::Expr *source, IR:
 
         // checkif it's a bool:
         Jump notBool = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ReturnValueRegister,
-                                                TrustedImm32(Value::Boolean_Type_Internal));
+                                     TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Boolean)));
         _as->load32(addr, JITTargetPlatform::ReturnValueRegister);
         Jump boolDone = _as->jump();
         // check if it's an int32:
         notBool.link(_as);
         Jump fallback = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ReturnValueRegister,
-                                                 TrustedImm32(Value::Integer_Type_Internal));
+                                      TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Integer)));
         _as->load32(addr, JITTargetPlatform::ReturnValueRegister);
         Jump isZero = _as->branch32(RelationalCondition::Equal, JITTargetPlatform::ReturnValueRegister,
                                                TrustedImm32(0));
@@ -1079,7 +1079,7 @@ void InstructionSelection<JITAssembler>::convertTypeToUInt32(IR::Expr *source, I
 
         // check if it's an int32:
         Jump isNoInt = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
-                                                TrustedImm32(Value::Integer_Type_Internal));
+                                     TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Integer)));
         Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);
         _as->storeUInt32(_as->toInt32Register(addr, JITTargetPlatform::ScratchRegister), target);
         Jump intDone = _as->jump();
@@ -1195,7 +1195,8 @@ void InstructionSelection<JITAssembler>::visitCJump(IR::CJump *s)
             Address temp = _as->loadAddress(JITTargetPlatform::ScratchRegister, s->cond);
             Address tag = temp;
             tag.offset += QV4::Value::tagOffset();
-            Jump booleanConversion = _as->branch32(RelationalCondition::NotEqual, tag, TrustedImm32(QV4::Value::Boolean_Type_Internal));
+            Jump booleanConversion = _as->branch32(RelationalCondition::NotEqual, tag,
+                                                   TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Boolean)));
 
             Address data = temp;
             data.offset += QV4::Value::valueOffset();
@@ -1314,7 +1315,7 @@ int InstructionSelection<JITAssembler>::prepareCallData(IR::ExprList* args, IR::
     }
 
     Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
-    _as->store32(TrustedImm32(QV4::Value::Integer_Type_Internal), p);
+    _as->store32(TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Integer)), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
     _as->store32(TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
@@ -1456,7 +1457,7 @@ bool InstructionSelection<JITAssembler>::visitCJumpStrictNull(IR::Binop *binop,
 
     RelationalCondition cond = binop->op == IR::OpStrictEqual ? RelationalCondition::Equal
                                                                          : RelationalCondition::NotEqual;
-    const TrustedImm32 tag(QV4::Value::Null_Type_Internal);
+    const TrustedImm32 tag{quint32(JITAssembler::ValueTypeInternal::Null)};
     _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
 }
@@ -1538,7 +1539,7 @@ bool InstructionSelection<JITAssembler>::visitCJumpStrictBool(IR::Binop *binop, 
     // check if the tag of the var operand is indicates 'boolean'
     _as->load32(otherAddr, JITTargetPlatform::ScratchRegister);
     Jump noBool = _as->branch32(RelationalCondition::NotEqual, JITTargetPlatform::ScratchRegister,
-                                           TrustedImm32(QV4::Value::Boolean_Type_Internal));
+                                TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Boolean)));
     if (binop->op == IR::OpStrictEqual)
         _as->addPatch(falseBlock, noBool);
     else
@@ -1588,7 +1589,7 @@ bool InstructionSelection<JITAssembler>::visitCJumpNullUndefined(IR::Type nullOr
 
     if (binop->op == IR::OpNotEqual)
         qSwap(trueBlock, falseBlock);
-    Jump isNull = _as->branch32(RelationalCondition::Equal, tagReg, TrustedImm32(int(QV4::Value::Null_Type_Internal)));
+    Jump isNull = _as->branch32(RelationalCondition::Equal, tagReg, TrustedImm32(quint32(JITAssembler::ValueTypeInternal::Null)));
     Jump isNotUndefinedTag = _as->branch32(RelationalCondition::NotEqual, tagReg, TrustedImm32(int(QV4::Value::Managed_Type_Internal)));
     tagAddr.offset -= 4;
     _as->load32(tagAddr, tagReg);

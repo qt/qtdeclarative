@@ -153,6 +153,8 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Jump = typename JITAssembler::Jump;
     using Label = typename JITAssembler::Label;
 
+    using ValueTypeInternal = Value::ValueTypeInternal_32;
+
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->MacroAssembler::loadDouble(addr, dest);
@@ -219,16 +221,16 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                 Jump done = as->jump();
                 intRange.link(as);
                 as->move(srcReg, lowReg);
-                as->move(TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
+                as->move(TrustedImm32(quint32(QV4::Value::ValueTypeInternal_32::Integer)), highReg);
                 done.link(as);
             } break;
             case IR::SInt32Type:
                 as->move((RegisterID) t->index, lowReg);
-                as->move(TrustedImm32(QV4::Value::Integer_Type_Internal), highReg);
+                as->move(TrustedImm32(quint32(QV4::Value::ValueTypeInternal_32::Integer)), highReg);
                 break;
             case IR::BoolType:
                 as->move((RegisterID) t->index, lowReg);
-                as->move(TrustedImm32(QV4::Value::Boolean_Type_Internal), highReg);
+                as->move(TrustedImm32(quint32(QV4::Value::ValueTypeInternal_32::Boolean)), highReg);
                 break;
             default:
                 Q_UNREACHABLE();
@@ -319,14 +321,14 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
         // check if it's an int32:
         Jump fallback = as->branch32(RelationalCondition::NotEqual, TargetPlatform::ReturnValueRegister,
-                                      TrustedImm32(Value::Integer_Type_Internal));
+                                     TrustedImm32(quint32(Value::ValueTypeInternal_32::Integer)));
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
             as->load32(addr, TargetPlatform::ReturnValueRegister);
             Pointer targetAddr = as->loadAddress(TargetPlatform::ScratchRegister, target);
             as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
-            as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+            as->store32(TrustedImm32(quint32(Value::ValueTypeInternal_32::Integer)), targetAddr);
         } else {
             as->load32(addr, (RegisterID) targetTemp->index);
         }
@@ -384,6 +386,8 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
     using Jump = typename JITAssembler::Jump;
     using Label = typename JITAssembler::Label;
 
+    using ValueTypeInternal = Value::ValueTypeInternal_64;
+
     static void loadDouble(JITAssembler *as, Address addr, FPRegisterID dest)
     {
         as->load64(addr, TargetPlatform::ReturnValueRegister);
@@ -433,7 +437,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                 Jump done = as->jump();
                 intRange.link(as);
                 as->zeroExtend32ToPtr(srcReg, TargetPlatform::ReturnValueRegister);
-                quint64 tag = QV4::Value::Integer_Type_Internal;
+                quint64 tag = quint64(QV4::Value::ValueTypeInternal_64::Integer);
                 as->or64(TrustedImm64(tag << 32),
                          TargetPlatform::ReturnValueRegister);
                 done.link(as);
@@ -442,10 +446,10 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
                 quint64 tag;
                 switch (t->type) {
                 case IR::SInt32Type:
-                    tag = QV4::Value::Integer_Type_Internal;
+                    tag = quint64(QV4::Value::ValueTypeInternal_64::Integer);
                     break;
                 case IR::BoolType:
-                    tag = QV4::Value::Boolean_Type_Internal;
+                    tag = quint64(QV4::Value::ValueTypeInternal_64::Boolean);
                     break;
                 default:
                     tag = 31337; // bogus value
@@ -623,7 +627,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
             Pointer targetAddr = as->loadAddress(TargetPlatform::ScratchRegister, target);
             as->store32(TargetPlatform::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
-            as->store32(TrustedImm32(Value::Integer_Type_Internal), targetAddr);
+            as->store32(TrustedImm32(quint32(Value::ValueTypeInternal_64::Integer)), targetAddr);
         } else {
             as->storeInt32(TargetPlatform::ReturnValueRegister, target);
         }
@@ -719,8 +723,6 @@ public:
         return (hostOffset * RegisterSize) / QT_POINTER_SIZE;
     }
 
-    using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
-
     struct LookupCall {
         Address addr;
         uint getterSetterOffset;
@@ -750,6 +752,9 @@ public:
             : Address(reg, offset)
         {}
     };
+
+    using RegisterSizeDependentOps = RegisterSizeDependentAssembler<Assembler<TargetConfiguration>, MacroAssembler, JITTargetPlatform, RegisterSize>;
+    using ValueTypeInternal = typename RegisterSizeDependentOps::ValueTypeInternal;
 
     // V4 uses two stacks: one stack with QV4::Value items, which is checked by the garbage
     // collector, and one stack used by the native C/C++/ABI code. This C++ stack is not scanned
@@ -1586,7 +1591,7 @@ public:
         Pointer tagAddr = addr;
         tagAddr.offset += 4;
         load32(tagAddr, scratchReg);
-        Jump inIntRange = branch32(RelationalCondition::Equal, scratchReg, TrustedImm32(QV4::Value::Integer_Type_Internal));
+        Jump inIntRange = branch32(RelationalCondition::Equal, scratchReg, TrustedImm32(quint32(ValueTypeInternal::Integer)));
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);

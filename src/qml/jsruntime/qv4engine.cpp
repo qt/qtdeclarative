@@ -498,7 +498,7 @@ void ExecutionEngine::initRootContext()
                                 sizeof(GlobalContext::Data) + sizeof(CallData)));
     r->d_unchecked()->init(this);
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
-    r->d()->callData->tag = QV4::Value::Integer_Type_Internal;
+    r->d()->callData->tag = quint32(Value::ValueTypeInternal::Integer);
     r->d()->callData->argc = 0;
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();

@@ -437,7 +437,7 @@ typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::ge
 
     // check if it's an int32:
     Assembler::Jump isNoInt = branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                            Assembler::TrustedImm32(Value::Integer_Type_Internal));
+                                       Assembler::TrustedImm32(quint32(ValueTypeInternal::Integer)));
     convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister), dest);
     Assembler::Jump intDone = jump();
 
