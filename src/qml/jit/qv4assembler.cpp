@@ -529,9 +529,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
 
     const int locals = stackLayout().calculateJSStackFrameSize();
     subPtr(TrustedImm32(sizeof(QV4::Value)*locals), JITTargetPlatform::LocalsRegister);
-    loadPtr(Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
-    loadPtr(Address(JITTargetPlatform::ScratchRegister, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, engine))), JITTargetPlatform::ScratchRegister);
-    storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::ScratchRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
+    storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
 
     leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
     ret();
