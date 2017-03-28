@@ -1155,6 +1155,20 @@ QQuickPathGradient::QQuickPathGradient(QObject *parent)
 {
 }
 
+int QQuickPathGradient::countStops(QQmlListProperty<QObject> *list)
+{
+    QQuickPathGradient *grad = qobject_cast<QQuickPathGradient *>(list->object);
+    Q_ASSERT(grad);
+    return grad->m_stops.count();
+}
+
+QObject *QQuickPathGradient::atStop(QQmlListProperty<QObject> *list, int index)
+{
+    QQuickPathGradient *grad = qobject_cast<QQuickPathGradient *>(list->object);
+    Q_ASSERT(grad);
+    return grad->m_stops.at(index);
+}
+
 void QQuickPathGradient::appendStop(QQmlListProperty<QObject> *list, QObject *stop)
 {
     QQuickPathGradientStop *sstop = qobject_cast<QQuickPathGradientStop *>(stop);
@@ -1178,7 +1192,11 @@ void QQuickPathGradient::appendStop(QQmlListProperty<QObject> *list, QObject *st
 
 QQmlListProperty<QObject> QQuickPathGradient::stops()
 {
-    return QQmlListProperty<QObject>(this, nullptr, &QQuickPathGradient::appendStop, nullptr, nullptr, nullptr);
+    return QQmlListProperty<QObject>(this, nullptr,
+                                     &QQuickPathGradient::appendStop,
+                                     &QQuickPathGradient::countStops,
+                                     &QQuickPathGradient::atStop,
+                                     nullptr);
 }
 
 QGradientStops QQuickPathGradient::sortedGradientStops() const

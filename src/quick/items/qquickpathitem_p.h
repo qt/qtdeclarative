@@ -114,6 +114,8 @@ signals:
     void spreadChanged();
 
 private:
+    static int countStops(QQmlListProperty<QObject> *list);
+    static QObject *atStop(QQmlListProperty<QObject> *list, int index);
     static void appendStop(QQmlListProperty<QObject> *list, QObject *stop);
 
     QVector<QObject *> m_stops;
