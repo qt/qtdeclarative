@@ -478,6 +478,36 @@ void QQuickSlider::setPressed(bool pressed)
 }
 
 /*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::Slider::horizontal
+    \readonly
+
+    This property holds whether the slider is horizontal.
+
+    \sa orientation
+*/
+bool QQuickSlider::isHorizontal() const
+{
+    Q_D(const QQuickSlider);
+    return d->orientation == Qt::Horizontal;
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::Slider::vertical
+    \readonly
+
+    This property holds whether the slider is vertical.
+
+    \sa orientation
+*/
+bool QQuickSlider::isVertical() const
+{
+    Q_D(const QQuickSlider);
+    return d->orientation == Qt::Vertical;
+}
+
+/*!
     \qmlproperty enumeration QtQuick.Controls::Slider::orientation
 
     This property holds the orientation.
@@ -485,6 +515,8 @@ void QQuickSlider::setPressed(bool pressed)
     Possible values:
     \value Qt.Horizontal Horizontal (default)
     \value Qt.Vertical Vertical
+
+    \sa horizontal, vertical
 */
 Qt::Orientation QQuickSlider::orientation() const
 {

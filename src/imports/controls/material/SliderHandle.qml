@@ -48,7 +48,6 @@ Item {
     property bool handlePressed: false
     property bool handleHovered: false
     readonly property int initialSize: 13
-    readonly property bool horizontal: control.orientation === Qt.Horizontal
     readonly property var control: parent
 
     Rectangle {
