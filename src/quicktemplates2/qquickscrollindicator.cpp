@@ -276,6 +276,8 @@ void QQuickScrollIndicator::setActive(bool active)
 
     This property is automatically set when the scroll indicator is
     \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
+
+    \sa horizontal, vertical
 */
 Qt::Orientation QQuickScrollIndicator::orientation() const
 {
@@ -293,6 +295,36 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
     if (isComponentComplete())
         d->resizeContent();
     emit orientationChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::ScrollIndicator::horizontal
+    \readonly
+
+    This property holds whether the scroll indicator is horizontal.
+
+    \sa orientation
+*/
+bool QQuickScrollIndicator::isHorizontal() const
+{
+    Q_D(const QQuickScrollIndicator);
+    return d->orientation == Qt::Horizontal;
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::ScrollIndicator::vertical
+    \readonly
+
+    This property holds whether the scroll indicator is vertical.
+
+    \sa orientation
+*/
+bool QQuickScrollIndicator::isVertical() const
+{
+    Q_D(const QQuickScrollIndicator);
+    return d->orientation == Qt::Vertical;
 }
 
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener

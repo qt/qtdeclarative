@@ -63,6 +63,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollIndicator : public QQuickCont
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
 
 public:
     explicit QQuickScrollIndicator(QQuickItem *parent = nullptr);
@@ -77,6 +79,9 @@ public:
 
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
+
+    bool isHorizontal() const;
+    bool isVertical() const;
 
 public Q_SLOTS:
     void setSize(qreal size);

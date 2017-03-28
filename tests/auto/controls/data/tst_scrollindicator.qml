@@ -217,4 +217,18 @@ TestCase {
         compare(horizontal.contentItem.x, horizontal.leftPadding + 0.8 * horizontal.availableWidth)
         compare(horizontal.contentItem.width, 0.2 * horizontal.availableWidth)
     }
+
+    function test_orientation() {
+        var control = createTemporaryObject(scrollIndicator, testCase)
+        verify(control)
+
+        compare(control.orientation, Qt.Vertical)
+        compare(control.horizontal, false)
+        compare(control.vertical, true)
+
+        control.orientation = Qt.Horizontal
+        compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
+    }
 }
