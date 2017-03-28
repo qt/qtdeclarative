@@ -52,8 +52,8 @@ T.RangeSlider {
     padding: 6
 
     first.handle: Rectangle {
-        x: control.leftPadding + (horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
-        y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
+        x: control.leftPadding + (control.horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
+        y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
@@ -64,13 +64,11 @@ T.RangeSlider {
         color: control.enabled ? (first.pressed
             ? (activeFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
             : (activeFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
-
-        readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
 
     second.handle: Rectangle {
-        x: control.leftPadding + (horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
-        y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
+        x: control.leftPadding + (control.horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
+        y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
@@ -81,21 +79,17 @@ T.RangeSlider {
         color: control.enabled ? (second.pressed
             ? (activeFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
             : (activeFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
-
-        readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
 
     background: Rectangle {
-        x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
-        y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
-        implicitWidth: horizontal ? 200 : 6
-        implicitHeight: horizontal ? 6 : 200
-        width: horizontal ? control.availableWidth : implicitWidth
-        height: horizontal ? implicitHeight : control.availableHeight
+        x: control.leftPadding + (control.horizontal ? 0 : (control.availableWidth - width) / 2)
+        y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : 0)
+        implicitWidth: control.horizontal ? 200 : 6
+        implicitHeight: control.horizontal ? 6 : 200
+        width: control.horizontal ? control.availableWidth : implicitWidth
+        height: control.horizontal ? implicitHeight : control.availableHeight
         radius: 3
         color: Default.buttonColor
-        scale: horizontal && control.mirrored ? -1 : 1
-
-        readonly property bool horizontal: control.orientation === Qt.Horizontal
+        scale: control.horizontal && control.mirrored ? -1 : 1
     }
 }

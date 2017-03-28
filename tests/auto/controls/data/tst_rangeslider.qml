@@ -96,6 +96,8 @@ TestCase {
         compare(control.stepSize, 0)
         compare(control.snapMode, RangeSlider.NoSnap)
         compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
     }
 
     function test_values() {
@@ -262,9 +264,14 @@ TestCase {
         verify(control)
 
         compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
         verify(control.width > control.height)
+
         control.orientation = Qt.Vertical
         compare(control.orientation, Qt.Vertical)
+        compare(control.horizontal, false)
+        compare(control.vertical, true)
         verify(control.width < control.height)
     }
 

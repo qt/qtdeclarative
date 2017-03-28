@@ -256,6 +256,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
     qmlRegisterType<QQuickIcon>();
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
+    qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
     qmlRegisterType<QQuickSlider, 3>(uri, 2, 3, "Slider");
 }
 
