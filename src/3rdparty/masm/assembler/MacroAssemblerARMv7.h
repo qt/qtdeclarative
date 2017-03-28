@@ -1242,7 +1242,7 @@ public:
     void pop(RegisterID dest)
     {
         // store postindexed with writeback
-        m_assembler.ldr(dest, ARMRegisters::sp, sizeof(void*), false, true);
+        m_assembler.ldr(dest, ARMRegisters::sp, 4 /*sizeof(void*)*/, false, true);
     }
 
     void push(RegisterID src)
