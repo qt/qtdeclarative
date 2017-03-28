@@ -536,4 +536,18 @@ TestCase {
 
         container.destroy()
     }
+
+    function test_orientation() {
+        var control = createTemporaryObject(scrollBar, testCase)
+        verify(control)
+
+        compare(control.orientation, Qt.Vertical)
+        compare(control.horizontal, false)
+        compare(control.vertical, true)
+
+        control.orientation = Qt.Horizontal
+        compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
+    }
 }

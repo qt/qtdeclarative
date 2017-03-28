@@ -257,6 +257,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickIcon>();
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
     qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
+    qmlRegisterType<QQuickScrollBar, 3>(uri, 2, 3, "ScrollBar");
     qmlRegisterType<QQuickSlider, 3>(uri, 2, 3, "Slider");
 }
 

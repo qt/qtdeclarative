@@ -422,6 +422,8 @@ void QQuickScrollBar::setPressed(bool pressed)
 
     This property is automatically set when the scroll bar is
     \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
+
+    \sa horizontal, vertical
 */
 Qt::Orientation QQuickScrollBar::orientation() const
 {
@@ -540,6 +542,36 @@ void QQuickScrollBar::setPolicy(Policy policy)
 
     d->policy = policy;
     emit policyChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::ScrollBar::horizontal
+    \readonly
+
+    This property holds whether the scroll bar is horizontal.
+
+    \sa orientation
+*/
+bool QQuickScrollBar::isHorizontal() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->orientation == Qt::Horizontal;
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::ScrollBar::vertical
+    \readonly
+
+    This property holds whether the scroll bar is vertical.
+
+    \sa orientation
+*/
+bool QQuickScrollBar::isVertical() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->orientation == Qt::Vertical;
 }
 
 /*!
