@@ -92,7 +92,7 @@ void tst_Snippets::initTestCase()
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
 
-static void loadAndShow(QQuickView *view, const QString &source)
+static void loadSnippet(QQuickView *view, const QString &source)
 {
     qRegisterMetaType<QList<QQmlError> >();
     QSignalSpy warnings(view->engine(), SIGNAL(warnings(QList<QQmlError>)));
@@ -112,18 +112,13 @@ static void loadAndShow(QQuickView *view, const QString &source)
     QVERIFY(view->rootObject());
 
     QVERIFY(warnings.isEmpty());
-
-    view->show();
-    view->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(view));
 }
 
 void tst_Snippets::verify()
 {
     QFETCH(QString, input);
 
-    loadAndShow(&view, input);
-    QGuiApplication::processEvents();
+    loadSnippet(&view, input);
 }
 
 void tst_Snippets::verify_data()
@@ -140,7 +135,11 @@ void tst_Snippets::screenshots()
     QFETCH(QString, input);
     QFETCH(QString, output);
 
-    loadAndShow(&view, input);
+    loadSnippet(&view, input);
+
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QSharedPointer<QQuickItemGrabResult> result = view.contentItem()->grabToImage();
     QSignalSpy spy(result.data(), SIGNAL(ready()));
