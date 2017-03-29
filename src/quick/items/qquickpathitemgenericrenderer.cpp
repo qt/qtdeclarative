@@ -744,6 +744,10 @@ int QQuickPathItemLinearGradientMaterial::compare(const QSGMaterial *other) cons
 
     const QQuickPathItemGradientCache::GradientDesc *ga = &a->m_fillGradient;
     const QQuickPathItemGradientCache::GradientDesc *gb = &b->m_fillGradient;
+
+    if (int d = ga->spread - gb->spread)
+        return d;
+
     if (int d = ga->start.x() - gb->start.x())
         return d;
     if (int d = ga->start.y() - gb->start.y())
