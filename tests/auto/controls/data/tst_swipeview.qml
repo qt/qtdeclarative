@@ -539,6 +539,8 @@ TestCase {
             control.addItem(page.createObject(control, {text: i}))
 
         compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
 
         for (i = 0; i < control.count; ++i) {
             control.currentIndex = i
@@ -547,6 +549,8 @@ TestCase {
 
         control.orientation = Qt.Vertical
         compare(control.orientation, Qt.Vertical)
+        compare(control.horizontal, false)
+        compare(control.vertical, true)
 
         for (i = 0; i < control.count; ++i) {
             control.currentIndex = i

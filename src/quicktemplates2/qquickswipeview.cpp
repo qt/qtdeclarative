@@ -189,6 +189,8 @@ void QQuickSwipeView::setInteractive(bool interactive)
     Possible values:
     \value Qt.Horizontal Horizontal (default)
     \value Qt.Vertical Vertical
+
+    \sa horizontal, vertical
 */
 Qt::Orientation QQuickSwipeView::orientation() const
 {
@@ -206,6 +208,36 @@ void QQuickSwipeView::setOrientation(Qt::Orientation orientation)
     if (isComponentComplete())
         d->resizeItems();
     emit orientationChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::SwipeView::horizontal
+    \readonly
+
+    This property holds whether the swipe view is horizontal.
+
+    \sa orientation
+*/
+bool QQuickSwipeView::isHorizontal() const
+{
+    Q_D(const QQuickSwipeView);
+    return d->orientation == Qt::Horizontal;
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::SwipeView::vertical
+    \readonly
+
+    This property holds whether the swipe view is vertical.
+
+    \sa orientation
+*/
+bool QQuickSwipeView::isVertical() const
+{
+    Q_D(const QQuickSwipeView);
+    return d->orientation == Qt::Vertical;
 }
 
 QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)

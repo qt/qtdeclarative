@@ -60,6 +60,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
     Q_OBJECT
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 1)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL REVISION 2)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = nullptr);
@@ -69,6 +71,9 @@ public:
 
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
+
+    bool isHorizontal() const;
+    bool isVertical() const;
 
     static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
 
