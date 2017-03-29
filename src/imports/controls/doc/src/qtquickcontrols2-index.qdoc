@@ -60,6 +60,48 @@
 
     For more details, see \l {Getting Started with Qt Quick Controls 2}.
 
+    \section1 Versions
+
+    Qt Quick Controls 2.0 was released in Qt 5.7. Subsequent minor Qt releases
+    increment the import version of the Qt Quick Controls 2 modules by one. The
+    experimental Qt Labs modules use import version 1.0.
+
+    \table
+      \header
+        \li \c Qt
+        \li \l {Qt Quick QML Types}{\c QtQuick}
+        \li \l {Qt Quick Controls 2 QML Types}{\c QtQuick.Controls},\br
+            \l {Qt Quick Templates 2 QML Types}{\c QtQuick.Templates},
+        \li \l {Material Style}{\c QtQuick.Controls.Material},\br
+            \l {Universal Style}{\c QtQuick.Controls.Universal}
+        \li \l {Qt Labs Calendar QML Types}{\c Qt.labs.calendar},\br
+            \l {Qt Labs Platform QML Types}{\c Qt.labs.platform}
+      \row
+        \li 5.7
+        \li 2.7
+        \li 2.0
+        \li 2.0
+        \li 1.0
+      \row
+        \li 5.8
+        \li 2.8
+        \li 2.1
+        \li 2.1
+        \li 1.0
+      \row
+        \li 5.9
+        \li 2.9
+        \li 2.2
+        \li 2.2
+        \li 1.0
+      \row
+        \li ...
+        \li ...
+        \li ...
+        \li ...
+        \li ...
+    \endtable
+
     \section1 Important Concepts in Qt Quick Controls 2
 
     \list
