@@ -1973,10 +1973,141 @@ void QQuickPathItemPathObject::setV4Engine(QV4::ExecutionEngine *engine)
     m_v4value = wrapper;
 }
 
+/*!
+    \qmltype JSPath
+    \inqmlmodule QtQuick
+    \ingroup qtquick-path
+    \brief Describes a path via a JavaScript API
+ */
+
+/*!
+    \qmlmethod void QtQuick::JSPath::moveTo(x, y)
+
+    Moves the path's position to the absolute position specified by (\a x, \a y).
+ */
+
+/*!
+    \qmlmethod void QtQuick::JSPath::lineTo(x, y)
+
+    Defines a straight line to the absolute position specified by (\a x, \a y).
+ */
+
+/*!
+    \qmlmethod void QtQuick::JSPath::quadTo(cx, cy, x, y)
+
+    Defines a quadratic Bezier curve with a control point (\a cx, \a cy) and an
+    end point of (\a x, \a y).
+ */
+
+/*!
+    \qmlmethod void QtQuick::JSPath::cubicTo(c1x, c1y, c2x, c2y, x, y)
+
+    Defines a cubic Bezier curve with two control points (\a c1x, \a c1y) and
+    (\a c2x, \a c2y), and an end point of (\a x, \a y).
+ */
+
+/*!
+    \qmlmethod void QtQuick::JSPath::arcTo(radiusX, radiusY, xAxisRotation, x, y, sweepFlag, largeArc)
+
+    Defines an elliptical arc, following the elliptical arc command in SVG. See
+    \l{https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands}{the
+    SVG path specification} for details on the parameters.
+ */
+
+/*!
+    \qmlmethod void QtQuick::JSPath::clear()
+
+    Clears the path object removing all path elements. This is more lightweight
+    than creating a new JSPath object.
+  */
+
 void QQuickPathItemPathObject::clear()
 {
     path = QQuickPathItemPath();
 }
+
+/*!
+    \qmltype StrokeFillParams
+    \inqmlmodule QtQuick
+    \ingroup qtquick-path
+    \brief Describes stroke and fill parameters via a JavaScript API
+
+    The properties of StrokeFillParams objects correspond 1:1 to VisualPath
+    properties. The possible values for enumerations are the same as well, for
+    example:
+
+    \code
+    sfp.strokeStyle = VisualPath.DashLine;
+    sfp.capStyle = VisualPath.RoundCap;
+    \endcode
+ */
+
+/*!
+    \qmlproperty color QtQuick::StrokeFillParams::strokeColor
+ */
+
+/*!
+    \qmlproperty real QtQuick::StrokeFillParams::strokeWidth
+ */
+
+/*!
+    \qmlproperty color QtQuick::StrokeFillParams::fillColor
+ */
+
+/*!
+    \qmlproperty enumeration QtQuick::StrokeFillParams::fillRule
+ */
+
+/*!
+    \qmlproperty enumeration QtQuick::StrokeFillParams::joinStyle
+ */
+
+/*!
+    \qmlproperty int QtQuick::StrokeFillParams::miterLimit
+ */
+
+/*!
+    \qmlproperty enumeration QtQuick::StrokeFillParams::capStyle
+ */
+
+/*!
+    \qmlproperty enumeration QtQuick::StrokeFillParams::strokeStyle
+ */
+
+/*!
+    \qmlproperty real QtQuick::StrokeFillParams::dashOffset
+ */
+
+/*!
+    \qmlproperty list<real> QtQuick::StrokeFillParams::dashPattern
+
+    The dash pattern can be specified using JavaScript arrays.
+
+    \code
+    sfp.dashPattern = [ 4, 2 ];
+    \endcode
+ */
+
+/*!
+    \qmlproperty object QtQuick::StrokeFillParams::fillGradient
+
+    Sets the fill gradient. The default value is null. Gradients cannot be
+    created from JavaScript. Instead, reference a PathLinearGradient or other
+    item by id.
+
+    \code
+    PathLinearGradient { id: grad; ... }
+    ...
+    sfp.fillGradient = grad;
+    \endcode
+ */
+
+/*!
+    \qmlmethod void QtQuick::StrokeFillParams::clear()
+
+    Resets all values to their defaults. This is more lightweight than creating
+    a new StrokeFillParams object.
+ */
 
 void QQuickPathItemStrokeFillParamsObject::clear()
 {
@@ -1996,6 +2127,45 @@ void QQuickPathItemStrokeFillParamsObject::setV4Engine(QV4::ExecutionEngine *eng
     m_v4value = wrapper;
 }
 
+/*!
+    \qmlmethod JSPath QtQuick::PathItem::newPath()
+
+    Creates and returns a new object that describes a path and offers a
+    JavaScript API. Paired with a stroke-fill parameter object it is
+    equivalent to a VisualPath.
+
+    The following two snippets are equivalent when it comes to the end result:
+
+    \code
+    var p = pathItem.newPath();
+    var sfp = pathItem.newStrokeFillParams();
+    sfp.fillColor =  "white";
+    sfp.strokeColor = "black";
+    sfp.strokeWidth = 0.172;
+    p.moveTo(-122.304, 84.285);
+    p.cubicTo(-122.304, 84.285, -122.203, 86.179, -123.027, 86.16);
+    pathItem.appendVisualPath(p, sfp);
+    \endcode
+
+    \code
+    PathItem {
+        VisualPath {
+            fillColor: "white"
+            strokeColor: "black"
+            strokeWidth: 0.172
+            Path {
+                startX: -122.304; startY: 84.285
+                PathCubic { control1X: -122.304; control1Y: 84.285; control2X: -122.203; control2Y: 86.179; x: -123.027; y: 86.16 }
+            }
+        }
+    }
+    \endcode
+
+    The latter offers a full declarative API, with the possibility to binding
+    to and animating properties, while the former uses less resources due to
+    greatly reducing the number of QObject instances created.
+*/
+
 void QQuickPathItem::newPath(QQmlV4Function *args)
 {
     QQuickPathItemPathObject *obj = new QQuickPathItemPathObject(this);
@@ -2003,12 +2173,29 @@ void QQuickPathItem::newPath(QQmlV4Function *args)
     args->setReturnValue(obj->v4value());
 }
 
+/*!
+    \qmlmethod StrokeFillParams QtQuick::PathItem::newStrokeFillParams()
+
+    Creates and returns a new object that describes stroke and fill parameters
+    and offers a JavaScript API. Paired with a path object it is equivalent to
+    a VisualPath.
+ */
+
 void QQuickPathItem::newStrokeFillParams(QQmlV4Function *args)
 {
     QQuickPathItemStrokeFillParamsObject *obj = new QQuickPathItemStrokeFillParamsObject(this);
     obj->setV4Engine(QQmlEnginePrivate::get(qmlEngine(this))->v4engine());
     args->setReturnValue(obj->v4value());
 }
+
+/*!
+    \qmlmethod void QtQuick::PathItem::clearVisualPaths()
+
+    Clears the list of visual paths.
+
+    \note This applies only to path and stroke-fill parameter objects registered
+    via appendVisualPaths().
+ */
 
 void QQuickPathItem::clearVisualPaths(QQmlV4Function *args)
 {
@@ -2018,12 +2205,36 @@ void QQuickPathItem::clearVisualPaths(QQmlV4Function *args)
     d->jsData.sfp.clear();
 }
 
+/*!
+    \qmlmethod void QtQuick::PathItem::commitVisualPaths()
+
+    Updates the PathItem.
+
+    In order to avoid rendering a half-prepared PathItem, calling
+    PathItem.appendVisualPath() does not trigger any processing. Instead,
+    applications must call this function when all path and stroke-fill
+    parameter objects are registered.
+ */
+
 void QQuickPathItem::commitVisualPaths(QQmlV4Function *args)
 {
     Q_UNUSED(args);
     Q_D(QQuickPathItem);
     d->_q_visualPathChanged();
 }
+
+/*!
+    \qmlmethod void QtQuick::PathItem::appendVisualPath(object path, object strokeFillParams)
+
+    Adds the visual path compoes of \a path and \a strokeFillParams into the
+    PathItem.
+
+    \note The declarative and imprative (JavaScript) APIs of PathItem use
+    independent data structures. Calling this function has no effect on the
+    PathItem.elements property and vice versa. Once this function is called,
+    the PathItem will only consider the data registered via this function and
+    will ignore the declarative elements property.
+ */
 
 void QQuickPathItem::appendVisualPath(QQmlV4Function *args)
 {
