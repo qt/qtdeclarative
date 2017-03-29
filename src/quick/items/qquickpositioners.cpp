@@ -48,19 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
-// The default item change types that positioners are interested in.
-static const QQuickItemPrivate::ChangeTypes explicitSizeItemChangeTypes =
-    QQuickItemPrivate::Geometry
-    | QQuickItemPrivate::SiblingOrder
-    | QQuickItemPrivate::Visibility
-    | QQuickItemPrivate::Destroyed;
-
-// The item change types for positioners that are only interested in the implicit
-// size of the items they manage. These are used if useImplicitSize is true.
-// useImplicitSize should be set in the constructor, before any items are added.
-static const QQuickItemPrivate::ChangeTypes implicitSizeItemChangeTypes =
-    QQuickItemPrivate::ImplicitWidth
-    | QQuickItemPrivate::ImplicitHeight
+static const QQuickItemPrivate::ChangeTypes watchedChanges
+    = QQuickItemPrivate::Geometry
     | QQuickItemPrivate::SiblingOrder
     | QQuickItemPrivate::Visibility
     | QQuickItemPrivate::Destroyed;
@@ -68,15 +57,13 @@ static const QQuickItemPrivate::ChangeTypes implicitSizeItemChangeTypes =
 void QQuickBasePositionerPrivate::watchChanges(QQuickItem *other)
 {
     QQuickItemPrivate *otherPrivate = QQuickItemPrivate::get(other);
-    otherPrivate->addItemChangeListener(this, useImplicitSize
-        ? implicitSizeItemChangeTypes : explicitSizeItemChangeTypes);
+    otherPrivate->addItemChangeListener(this, watchedChanges);
 }
 
 void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
 {
     QQuickItemPrivate *otherPrivate = QQuickItemPrivate::get(other);
-    otherPrivate->removeItemChangeListener(this, useImplicitSize
-        ? implicitSizeItemChangeTypes : explicitSizeItemChangeTypes);
+    otherPrivate->removeItemChangeListener(this, watchedChanges);
 }
 
 
@@ -336,7 +323,7 @@ void QQuickBasePositioner::prePositioning()
         if (wIdx < 0) {
             d->watchChanges(child);
             posItem.isNew = true;
-            if (!childPrivate->explicitVisible || !d->itemWidth(child) || !d->itemHeight(child)) {
+            if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 posItem.isVisible = false;
                 posItem.index = -1;
                 unpositionedItems.append(posItem);
@@ -358,7 +345,7 @@ void QQuickBasePositioner::prePositioning()
             PositionedItem *item = &oldItems[wIdx];
             // Items are only omitted from positioning if they are explicitly hidden
             // i.e. their positioning is not affected if an ancestor is hidden.
-            if (!childPrivate->explicitVisible || !d->itemWidth(child) || !d->itemHeight(child)) {
+            if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 item->isVisible = false;
                 item->index = -1;
                 unpositionedItems.append(*item);
@@ -957,7 +944,6 @@ QQuickColumn::QQuickColumn(QQuickItem *parent)
 void QQuickColumn::doPositioning(QSizeF *contentSize)
 {
     //Precondition: All items in the positioned list have a valid item pointer and should be positioned
-    QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate*>(QQuickBasePositionerPrivate::get(this));
     qreal voffset = topPadding();
     const qreal padding = leftPadding() + rightPadding();
     contentSize->setWidth(qMax(contentSize->width(), padding));
@@ -966,9 +952,9 @@ void QQuickColumn::doPositioning(QSizeF *contentSize)
         PositionedItem &child = positionedItems[ii];
         positionItem(child.itemX() + leftPadding() - child.leftPadding, voffset, &child);
         child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
-        contentSize->setWidth(qMax(contentSize->width(), d->itemWidth(child.item) + padding));
+        contentSize->setWidth(qMax(contentSize->width(), child.item->width() + padding));
 
-        voffset += d->itemHeight(child.item);
+        voffset += child.item->height();
         voffset += spacing();
     }
 
@@ -1236,9 +1222,9 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
             hoffsets << hoffset;
         }
 
-        contentSize->setHeight(qMax(contentSize->height(), d->itemHeight(child.item) + padding));
+        contentSize->setHeight(qMax(contentSize->height(), child.item->height() + padding));
 
-        hoffset += d->itemWidth(child.item);
+        hoffset += child.item->width();
         hoffset += spacing();
     }
 
@@ -1259,7 +1245,7 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
     int acc = 0;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         PositionedItem &child = positionedItems[ii];
-        hoffset = end - hoffsets[acc++] - d->itemWidth(child.item);
+        hoffset = end - hoffsets[acc++] - child.item->width();
         positionItem(hoffset, child.itemY() + topPadding() - child.topPadding, &child);
         child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
     }
@@ -1760,12 +1746,10 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
                     break;
 
                 const PositionedItem &child = positionedItems.at(childIndex++);
-                const qreal childWidth = d->itemWidth(child.item);
-                const qreal childHeight = d->itemHeight(child.item);
-                if (childWidth > maxColWidth[j])
-                    maxColWidth[j] = childWidth;
-                if (childHeight > maxRowHeight[i])
-                    maxRowHeight[i] = childHeight;
+                if (child.item->width() > maxColWidth[j])
+                    maxColWidth[j] = child.item->width();
+                if (child.item->height() > maxRowHeight[i])
+                    maxRowHeight[i] = child.item->height();
             }
         }
     } else {
@@ -1780,12 +1764,10 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
                     break;
 
                 const PositionedItem &child = positionedItems.at(childIndex++);
-                const qreal childWidth = d->itemWidth(child.item);
-                const qreal childHeight = d->itemHeight(child.item);
-                if (childWidth > maxColWidth[j])
-                    maxColWidth[j] = childWidth;
-                if (childHeight > maxRowHeight[i])
-                    maxRowHeight[i] = childHeight;
+                if (child.item->width() > maxColWidth[j])
+                    maxColWidth[j] = child.item->width();
+                if (child.item->height() > maxRowHeight[i])
+                    maxRowHeight[i] = child.item->height();
             }
         }
     }
@@ -1827,22 +1809,20 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     for (int i = 0; i < positionedItems.count(); ++i) {
         PositionedItem &child = positionedItems[i];
         qreal childXOffset = xoffset;
-        const qreal childWidth = d->itemWidth(child.item);
-        const qreal childHeight = d->itemHeight(child.item);
 
         if (effectiveHAlign() == AlignRight)
-            childXOffset += maxColWidth[curCol] - childWidth;
+            childXOffset += maxColWidth[curCol] - child.item->width();
         else if (hItemAlign() == AlignHCenter)
-            childXOffset += (maxColWidth[curCol] - childWidth)/2.0;
+            childXOffset += (maxColWidth[curCol] - child.item->width())/2.0;
 
         if (!d->isLeftToRight())
             childXOffset -= maxColWidth[curCol];
 
         qreal alignYOffset = yoffset;
         if (m_vItemAlign == AlignVCenter)
-            alignYOffset += (maxRowHeight[curRow] - childHeight)/2.0;
+            alignYOffset += (maxRowHeight[curRow] - child.item->height())/2.0;
         else if (m_vItemAlign == AlignBottom)
-            alignYOffset += maxRowHeight[curRow] - childHeight;
+            alignYOffset += maxRowHeight[curRow] - child.item->height();
 
         positionItem(childXOffset, alignYOffset, &child);
         child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
@@ -2160,17 +2140,15 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
 
     for (int i = 0; i < positionedItems.count(); ++i) {
         PositionedItem &child = positionedItems[i];
-        const qreal childWidth = d->itemWidth(child.item);
-        const qreal childHeight = d->itemHeight(child.item);
 
         if (d->flow == LeftToRight)  {
-            if (widthValid() && hoffset != hoffset1 && hoffset + childWidth + hoffset2 > width()) {
+            if (widthValid() && hoffset != hoffset1 && hoffset + child.item->width() + hoffset2 > width()) {
                 hoffset = hoffset1;
                 voffset += linemax + spacing();
                 linemax = 0;
             }
         } else {
-            if (heightValid() && voffset != voffset1 && voffset + childHeight + bottomPadding() > height()) {
+            if (heightValid() && voffset != voffset1 && voffset + child.item->height() + bottomPadding() > height()) {
                 voffset = voffset1;
                 hoffset += linemax + spacing();
                 linemax = 0;
@@ -2187,17 +2165,17 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
             child.bottomPadding = bottomPadding();
         }
 
-        contentSize->setWidth(qMax(contentSize->width(), hoffset + childWidth + hoffset2));
-        contentSize->setHeight(qMax(contentSize->height(), voffset + childHeight + bottomPadding()));
+        contentSize->setWidth(qMax(contentSize->width(), hoffset + child.item->width() + hoffset2));
+        contentSize->setHeight(qMax(contentSize->height(), voffset + child.item->height() + bottomPadding()));
 
         if (d->flow == LeftToRight)  {
-            hoffset += childWidth;
+            hoffset += child.item->width();
             hoffset += spacing();
-            linemax = qMax(linemax, childHeight);
+            linemax = qMax(linemax, child.item->height());
         } else {
-            voffset += childHeight;
+            voffset += child.item->height();
             voffset += spacing();
-            linemax = qMax(linemax, childWidth);
+            linemax = qMax(linemax, child.item->width());
         }
     }
 
@@ -2212,7 +2190,7 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
     int acc = 0;
     for (int i = 0; i < positionedItems.count(); ++i) {
         PositionedItem &child = positionedItems[i];
-        hoffset = end - hoffsets[acc++] - d->itemWidth(child.item);
+        hoffset = end - hoffsets[acc++] - child.item->width();
         positionItemX(hoffset, &child);
         child.leftPadding = leftPadding();
         child.rightPadding = rightPadding();
@@ -2234,20 +2212,6 @@ void QQuickFlow::reportConflictingAnchors()
     }
     if (d->anchorConflict)
         qmlWarning(this) << "Cannot specify anchors for items inside Flow." << " Flow will not function.";
-}
-
-QQuickImplicitRow::QQuickImplicitRow(QQuickItem *parent)
-    : QQuickRow(parent)
-{
-    QQuickBasePositionerPrivate *d = QQuickBasePositioner::get(this);
-    d->useImplicitSize = true;
-}
-
-QQuickImplicitGrid::QQuickImplicitGrid(QQuickItem *parent)
-    : QQuickGrid(parent)
-{
-    QQuickBasePositionerPrivate *d = QQuickBasePositioner::get(this);
-    d->useImplicitSize = true;
 }
 
 QT_END_NAMESPACE
