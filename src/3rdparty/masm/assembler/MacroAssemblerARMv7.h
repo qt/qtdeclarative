@@ -46,6 +46,8 @@ protected: // the YarrJIT needs know about addressTempRegister in order to push 
     inline ARMRegisters::FPSingleRegisterID fpTempRegisterAsSingle() { return ARMRegisters::asSingle(fpTempRegister); }
 
 public:
+    static const int PointerSize = 4;
+
     MacroAssemblerARMv7()
         : m_makeJumpPatchable(false)
     {

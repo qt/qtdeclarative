@@ -1299,7 +1299,7 @@ public:
     template <int ArgumentIndex, typename Parameter>
     struct SizeOnStack
     {
-        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, sizeof(void*), 0>::Chosen };
+        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, RegisterSize, 0>::Chosen };
     };
 
     template <int ArgumentIndex>

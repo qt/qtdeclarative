@@ -127,6 +127,8 @@ private:
     static const ptrdiff_t REPATCH_OFFSET_CALL_TO_POINTER = -16;
     
 public:
+    static const int PointerSize = 8;
+
     MacroAssemblerARM64()
         : m_dataMemoryTempRegister(this, dataTempRegister)
         , m_cachedMemoryTempRegister(this, memoryTempRegister)
