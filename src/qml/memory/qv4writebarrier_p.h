@@ -55,8 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
-#define WRITEBARRIER_steele 1
-#define WRITEBARRIER_none -1
+#define WRITEBARRIER_steele -1
+#define WRITEBARRIER_none 1
 
 #define WRITEBARRIER(x) (1/WRITEBARRIER_##x == 1)
 
