@@ -179,21 +179,21 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSpinButton>();
     qmlRegisterType<QQuickStackView>(uri, 2, 0, "StackView");
     qmlRegisterType<QQuickStackViewAttached>();
-    qmlRegisterType<QQuickSwipeDelegate>(uri, 2, 0, "SwipeDelegate");
     qmlRegisterType<QQuickSwipe>();
-    qmlRegisterType<QQuickSwipeViewAttached>();
+    qmlRegisterType<QQuickSwipeDelegate>(uri, 2, 0, "SwipeDelegate");
     qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "SwipeView");
+    qmlRegisterType<QQuickSwipeViewAttached>();
     qmlRegisterType<QQuickSwitch>(uri, 2, 0, "Switch");
     qmlRegisterType<QQuickSwitchDelegate>(uri, 2, 0, "SwitchDelegate");
     qmlRegisterType<QQuickTabBar>(uri, 2, 0, "TabBar");
     qmlRegisterType<QQuickTabButton>(uri, 2, 0, "TabButton");
-    qmlRegisterType<QQuickTextAreaAttached>();
     qmlRegisterType<QQuickTextArea>(uri, 2, 0, "TextArea");
+    qmlRegisterType<QQuickTextAreaAttached>();
     qmlRegisterType<QQuickTextField>(uri, 2, 0, "TextField");
     qmlRegisterType<QQuickToolBar>(uri, 2, 0, "ToolBar");
     qmlRegisterType<QQuickToolButton>(uri, 2, 0, "ToolButton");
-    qmlRegisterType<QQuickToolTipAttached>();
     qmlRegisterType<QQuickToolTip>(uri, 2, 0, "ToolTip");
+    qmlRegisterType<QQuickToolTipAttached>();
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 2, 0, "Tumbler");
@@ -202,10 +202,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // NOTE: register the latest revisions of all template/control base classes to
     // make revisioned properties available to their subclasses (synced with Qt 5.7)
     qmlRegisterRevision<QQuickItem, 7>(uri, 2, 0);
-    qmlRegisterRevision<QQuickWindow, 2>(uri, 2, 0);
     qmlRegisterRevision<QQuickText, 6>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextInput, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
+    qmlRegisterRevision<QQuickWindow, 2>(uri, 2, 0);
 
     // QtQuick.Templates 2.1 (new types and revisions in Qt 5.8)
     qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
@@ -254,8 +254,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
 
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
-    qmlRegisterType<QQuickIcon>();
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
+    qmlRegisterType<QQuickIcon>();
     qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
     qmlRegisterType<QQuickScrollBar, 3>(uri, 2, 3, "ScrollBar");
     qmlRegisterType<QQuickScrollIndicator, 3>(uri, 2, 3, "ScrollIndicator");
