@@ -92,7 +92,7 @@
 
     \section1 Versions
 
-    Qt Quick Controls 2.0 was released in Qt 5.7. Subsequent minor Qt releases
+    Qt Quick Controls 2.0 was introduced in Qt 5.7. Subsequent minor Qt releases
     increment the import version of the Qt Quick Controls 2 modules by one. The
     experimental Qt Labs modules use import version 1.0.
 
