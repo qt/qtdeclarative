@@ -370,7 +370,7 @@ public:
     // There are two designated frame-pointer registers on ARM, depending on which instruction set
     // is used for the subroutine: r7 for Thumb or Thumb2, and r11 for ARM. We assign the constants
     // accordingly, and assign the locals-register to the "other" register.
-#if CPU(ARM_THUMB2)
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
     static const RegisterID FramePointerRegister = JSC::ARMRegisters::r7;
     static const RegisterID LocalsRegister = JSC::ARMRegisters::r11;
 #else // Thumbs down
@@ -397,7 +397,7 @@ public:
                 << RI(JSC::ARMRegisters::r4,  QStringLiteral("r4"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
                 << RI(JSC::ARMRegisters::r5,  QStringLiteral("r5"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
                 << RI(JSC::ARMRegisters::r6,  QStringLiteral("r6"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-#if !CPU(ARM_THUMB2)
+#if !CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
                 << RI(JSC::ARMRegisters::r7,  QStringLiteral("r7"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
 #endif
                 << RI(JSC::ARMRegisters::r8,  QStringLiteral("r8"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
@@ -405,7 +405,7 @@ public:
                 << RI(JSC::ARMRegisters::r9,  QStringLiteral("r9"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
 #endif
                 << RI(JSC::ARMRegisters::r10, QStringLiteral("r10"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-#if CPU(ARM_THUMB2)
+#if CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
                 << RI(JSC::ARMRegisters::r11, QStringLiteral("r11"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
 #endif
                 << RI(JSC::ARMRegisters::d2,  QStringLiteral("d2"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)

@@ -58,6 +58,7 @@ private slots:
     void grabBeforeShow();
     void reparentToNewWindow();
     void nullEngine();
+    void keyEvents();
 };
 
 
@@ -335,6 +336,33 @@ void tst_qquickwidget::nullEngine()
     // A QML engine should be created lazily.
     QVERIFY(widget.rootContext());
     QVERIFY(widget.engine());
+}
+
+class KeyHandlingWidget : public QQuickWidget
+{
+public:
+    void keyPressEvent(QKeyEvent *e) override {
+        if (e->key() == Qt::Key_A)
+            ok = true;
+    }
+
+    bool ok = false;
+};
+
+void tst_qquickwidget::keyEvents()
+{
+    // A QQuickWidget should behave like a normal widget when it comes to event handling.
+    // Verify that key events actually reach the widget. (QTBUG-45757)
+    KeyHandlingWidget widget;
+    widget.setSource(testFileUrl("rectangle.qml"));
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(widget.window(), 5000));
+
+    // Note: send the event to the QWindow, not the QWidget, in order
+    // to simulate the full event processing chain.
+    QTest::keyClick(widget.window()->windowHandle(), Qt::Key_A);
+
+    QTRY_VERIFY(widget.ok);
 }
 
 QTEST_MAIN(tst_qquickwidget)

@@ -99,8 +99,6 @@ public:
     void destroyContext();
     void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
 
-    QObject *focusObject() Q_DECL_OVERRIDE;
-
 #if QT_CONFIG(opengl)
     GLuint textureId() const Q_DECL_OVERRIDE;
     QImage grabFramebuffer() Q_DECL_OVERRIDE;

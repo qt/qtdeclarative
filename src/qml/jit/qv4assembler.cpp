@@ -95,6 +95,12 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
         JSC::MacroAssemblerCodeRef codeRef = JSC::MacroAssemblerCodeRef::createSelfManagedCodeRef(JSC::MacroAssemblerCodePtr(codePtr));
         JSC::ExecutableAllocator::makeExecutable(codePtr, compiledFunction->codeSize);
         codeRefs[i] = codeRef;
+
+        static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
+        if (showCode) {
+            WTF::dataLogF("Mapped JIT code for %s\n", qPrintable(stringAt(compiledFunction->nameIndex)));
+            disassemble(codeRef.code(), compiledFunction->codeSize, "    ", WTF::dataFile());
+        }
     }
 
     return true;
@@ -535,9 +541,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
 
     const int locals = stackLayout().calculateJSStackFrameSize();
     subPtr(TrustedImm32(sizeof(QV4::Value)*locals), JITTargetPlatform::LocalsRegister);
-    loadPtr(Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), JITTargetPlatform::ScratchRegister);
-    loadPtr(Address(JITTargetPlatform::ScratchRegister, targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, engine))), JITTargetPlatform::ScratchRegister);
-    storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::ScratchRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
+    storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
 
     leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
     ret();

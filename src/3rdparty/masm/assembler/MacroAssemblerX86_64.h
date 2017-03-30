@@ -37,6 +37,7 @@ namespace JSC {
 class MacroAssemblerX86_64 : public MacroAssemblerX86Common {
 public:
     static const Scale ScalePtr = TimesEight;
+    static const int PointerSize = 8;
 
     using MacroAssemblerX86Common::add32;
     using MacroAssemblerX86Common::and32;

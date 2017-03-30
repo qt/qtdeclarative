@@ -71,7 +71,7 @@ void tst_EcmaScriptTests::runTests()
 #endif
 }
 
-QTEST_MAIN(tst_EcmaScriptTests)
+QTEST_GUILESS_MAIN(tst_EcmaScriptTests)
 
 #include "tst_ecmascripttests.moc"
 

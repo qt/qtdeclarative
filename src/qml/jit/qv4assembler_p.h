@@ -1387,13 +1387,6 @@ public:
             RegisterSizeDependentOps::emitWriteBarrier(this, dest);
     }
 
-    void storeValue(QV4::Primitive value, RegisterID destination)
-    {
-        Q_UNUSED(value);
-        Q_UNUSED(destination);
-        Q_UNREACHABLE();
-    }
-
     void storeValue(QV4::Primitive value, Address destination, WriteBarrier::Type barrier)
     {
         RegisterSizeDependentOps::storeValue(this, value, destination, barrier);
@@ -1463,7 +1456,7 @@ public:
     template <int ArgumentIndex, typename Parameter>
     struct SizeOnStack
     {
-        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, sizeof(void*), 0>::Chosen };
+        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, RegisterSize, 0>::Chosen };
     };
 
     template <int ArgumentIndex>

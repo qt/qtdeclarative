@@ -7,6 +7,9 @@ PUBLICTESTS += \
     parserstress \
     qjsvalueiterator \
     qjsonbinding \
+
+!boot2qt {
+PUBLICTESTS += \
     qmlmin \
     qqmlcomponent \
     qqmlconsole \
@@ -25,15 +28,21 @@ PUBLICTESTS += \
     qquickfolderlistmodel \
     qqmlapplicationengine \
     qqmlsettings \
-    qqmlstatemachine
+    qqmlstatemachine \
+    qmldiskcache
+}
 
 PRIVATETESTS += \
-    animation \
     qqmlcpputils \
+    qqmldirparser \
+    v4misc \
+
+!boot2qt {
+PRIVATETESTS += \
+    animation \
     qqmlecmascript \
     qqmlcontext \
     qqmlexpression \
-    qqmldirparser \
     qqmlglobal \
     qqmllanguage \
     qqmlopenmetaobject \
@@ -57,13 +66,12 @@ PRIVATETESTS += \
     qqmltimer \
     qqmlinstantiator \
     qqmlenginecleanup \
-    v4misc \
     qqmltranslation \
     qqmlimport \
     qqmlobjectmodel \
-    qmldiskcache \
     qv4mm \
     ecmascripttests
+}
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \
@@ -73,7 +81,7 @@ qtHaveModule(widgets) {
 
 SUBDIRS += $$PUBLICTESTS
 SUBDIRS += $$METATYPETESTS
-qtConfig(process) {
+qtConfig(process):!boot2qt {
     !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
     SUBDIRS += qmllint qmlplugindump
 }
