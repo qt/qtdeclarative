@@ -2,8 +2,9 @@ TEMPLATE = subdirs
 QT_FOR_CONFIG += qml-private
 SUBDIRS += \
     qmlmin \
-    qmlimportscanner \
-    qmlcachegen
+    qmlimportscanner
+
+qtConfig(commandlineparser): SUBDIRS += qmlcachegen
 
 !android|android_app {
     SUBDIRS += \
