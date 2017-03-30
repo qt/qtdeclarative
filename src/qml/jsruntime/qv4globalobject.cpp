@@ -394,6 +394,7 @@ void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) c
     // set the correct strict mode flag on the context
     ctx->d()->strictMode = false;
     ctx->d()->compilationUnit = function->compilationUnit;
+    ctx->d()->constantTable = function->compilationUnit->constants;
 
     scope.result = Q_V4_PROFILE(ctx->engine(), function);
 }
