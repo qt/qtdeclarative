@@ -77,6 +77,10 @@ Column {
         width: parent.width
     }
 
+    FontSection {
+        width: parent.width
+    }
+
     PaddingSection {
         width: parent.width
     }

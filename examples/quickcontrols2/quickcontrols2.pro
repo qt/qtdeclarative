@@ -6,4 +6,5 @@ SUBDIRS += \
     contactlist \
     sidepanel \
     swipetoremove \
-    flatstyle
+    flatstyle \
+    wearable

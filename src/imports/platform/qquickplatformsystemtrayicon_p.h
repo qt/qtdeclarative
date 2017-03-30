@@ -53,6 +53,8 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
 
+QT_REQUIRE_CONFIG(systemtrayicon);
+
 QT_BEGIN_NAMESPACE
 
 class QQuickPlatformMenu;

@@ -410,6 +410,8 @@ MetaInfo {
             libraryIcon: "images/tumbler-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+
+            Property { name: "model"; type: "int"; value: "10" }
         }
     }
 
@@ -460,7 +462,7 @@ MetaInfo {
         icon: "images/stackview-icon16.png"
 
         ItemLibraryEntry {
-            name: "stack View"
+            name: "Stack View"
             category: "Qt Quick - Views"
             libraryIcon: "images/stackview-icon.png"
             version: "2.1"
@@ -480,6 +482,22 @@ MetaInfo {
             category: "Qt Quick - Views"
             libraryIcon: "images/swipeview-icon.png"
             version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.ScrollView"
+        icon: "images/scrollview-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Scroll View"
+            category: "Qt Quick - Views"
+            libraryIcon: "images/scrollview-icon.png"
+            version: "2.2"
             requiredImport: "QtQuick.Controls"
 
             Property { name: "width"; type: "int"; value: 200 }

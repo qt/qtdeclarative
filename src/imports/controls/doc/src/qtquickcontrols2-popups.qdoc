@@ -70,7 +70,7 @@
     A popup can be used for:
 
     \list
-    \li communicating a message to the user that he must read and acknowledge.
+    \li communicating a message to the user that they must read and acknowledge.
     \li displaying an error message.
     \li prompting the user to make a choice and/or enter a value.
     \endlist

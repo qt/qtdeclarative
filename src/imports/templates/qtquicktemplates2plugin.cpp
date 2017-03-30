@@ -232,7 +232,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 #endif
 
     // QtQuick.Templates 2.2 (new types and revisions in Qt 5.9)
-    qmlRegisterRevision<QQuickAbstractButton, 2>(uri, 2, 2);
+    qmlRegisterType<QQuickAbstractButton, 2>(uri, 2, 2, "AbstractButton");
     qmlRegisterType<QQuickComboBox, 2>(uri, 2, 2, "ComboBox");
     qmlRegisterType<QQuickDelayButton>(uri, 2, 2, "DelayButton");
     qmlRegisterType<QQuickDial, 2>(uri, 2, 2, "Dial");

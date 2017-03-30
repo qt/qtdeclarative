@@ -2,11 +2,14 @@ QT += widgets
 DEPENDPATH += $$PWD
 
 HEADERS += \
-    $$PWD/qwidgetplatform_p.h \
-    $$PWD/qwidgetplatformsystemtrayicon_p.h
+    $$PWD/qwidgetplatform_p.h
 
-SOURCES += \
-    $$PWD/qwidgetplatformsystemtrayicon.cpp
+qtConfig(systemtrayicon) {
+    HEADERS += \
+        $$PWD/qwidgetplatformsystemtrayicon_p.h
+    SOURCES += \
+        $$PWD/qwidgetplatformsystemtrayicon.cpp
+}
 
 qtConfig(colordialog) | qtConfig(filedialog) | qtConfig(fontdialog) | qtConfig(messagebox) {
     HEADERS += \

@@ -79,12 +79,12 @@
     be taken, a switch is recommended.
 
     When options can be grouped, you can use a partially checked CheckBox to
-    represent the whole group. Use the checkbox's indeterminate state when
-    a user selects some, but not all, sub-items in the group.
+    represent the whole group. Use the checkbox's
+    \l {CheckBox::checkState}{partially checked state} when a user selects
+    some, but not all, sub-items in the group.
 
-    The three availables statuses are: checked, unchecked and disabled.
-    "Disabled" is useful when the user should not be able to check or uncheck
-    a checkbox.
+    The three availables check states are: checked, partially checked and
+    unchecked.
 
     The checkable options are often listed vertically.
 
@@ -120,9 +120,6 @@
 
     \l RadioButton is used to select only one option from a set of options.
     Selecting one option automatically deselects the one selected before.
-
-    The set of options should not be too large, otherwise it starts taking too much
-    space on the screen. In that case it would be more practical to use a \l ComboBox.
 
     If there are only two mutually exclusive options, combine them into a
     single checkbox or a switch.

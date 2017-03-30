@@ -53,6 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 class QMenu;
+class QWidgetPlatformMenuItem;
 
 class QWidgetPlatformMenu : public QPlatformMenu
 {
@@ -91,7 +92,9 @@ public:
     QPlatformMenu *createSubMenu() const override;
 
 private:
+    quintptr m_tag;
     QScopedPointer<QMenu> m_menu;
+    QVector<QWidgetPlatformMenuItem *> m_items;
 };
 
 QT_END_NAMESPACE
