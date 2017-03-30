@@ -106,6 +106,8 @@ protected:
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointId); }
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
+    void setIgnoreAdditionalPoints(bool v = true);
+
 private:
     void setPressedButtons(Qt::MouseButtons buttons);
     void reset();
@@ -122,6 +124,7 @@ private:
     qreal m_pressure;
     QSizeF m_ellipseDiameters;
     Qt::MouseButtons m_acceptedButtons;
+    bool m_ignoreAdditionalPoints : 1;
 };
 
 QT_END_NAMESPACE

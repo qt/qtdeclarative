@@ -56,6 +56,7 @@ QQuickPointerSingleHandler::QQuickPointerSingleHandler(QObject *parent)
   , m_rotation(0)
   , m_pressure(0)
   , m_acceptedButtons(Qt::AllButtons)
+  , m_ignoreAdditionalPoints(false)
 {
 }
 
@@ -83,7 +84,7 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
             }
         }
         if (point) {
-            if (candidatePointCount == 1) {
+            if (candidatePointCount == 1 || (candidatePointCount > 1 && m_ignoreAdditionalPoints)) {
                 point->setAccepted();
                 return true;
             } else {
@@ -190,6 +191,11 @@ void QQuickPointerSingleHandler::onGrabChanged(QQuickPointerHandler *grabber, QQ
         break;
     }
     emit singlePointGrabChanged();
+}
+
+void QQuickPointerSingleHandler::setIgnoreAdditionalPoints(bool v)
+{
+    m_ignoreAdditionalPoints = v;
 }
 
 void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
