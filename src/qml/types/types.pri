@@ -7,7 +7,6 @@ SOURCES += \
     $$PWD/qqmlmodelsmodule.cpp \
     $$PWD/qqmlmodelindexvaluetype.cpp \
     $$PWD/qqmlobjectmodel.cpp \
-    $$PWD/qqmltimer.cpp \
     $$PWD/qquickpackage.cpp \
     $$PWD/qquickworkerscript.cpp \
     $$PWD/qqmlinstantiator.cpp
@@ -23,8 +22,15 @@ HEADERS += \
     $$PWD/qqmlmodelsmodule_p.h \
     $$PWD/qqmlmodelindexvaluetype_p.h \
     $$PWD/qqmlobjectmodel_p.h \
-    $$PWD/qqmltimer_p.h \
     $$PWD/qquickpackage_p.h \
     $$PWD/qquickworkerscript_p.h \
     $$PWD/qqmlinstantiator_p.h \
     $$PWD/qqmlinstantiator_p_p.h
+
+qtConfig(animation) {
+    SOURCES += \
+        $$PWD/qqmltimer.cpp
+
+    HEADERS += \
+    $$PWD/qqmltimer_p.h
+}

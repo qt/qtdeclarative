@@ -55,7 +55,9 @@
 #include <QLibraryInfo>
 #include <qqml.h>
 #include <qqmldebug.h>
+#if QT_CONFIG(animation)
 #include <private/qabstractanimation_p.h>
+#endif
 
 #include <cstdio>
 #include <cstring>
@@ -476,10 +478,12 @@ int main(int argc, char *argv[])
             break;
         else if (arg == QLatin1String("-verbose"))
             verboseMode = true;
+#if QT_CONFIG(animation)
         else if (arg == QLatin1String("-slow-animations"))
             QUnifiedTimer::instance()->setSlowModeEnabled(true);
         else if (arg == QLatin1String("-fixed-animations"))
             QUnifiedTimer::instance()->setConsistentTiming(true);
+#endif
         else if (arg == QLatin1String("-I")) {
             if (i+1 == argList.count())
                 continue;//Invalid usage, but just ignore it

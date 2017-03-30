@@ -48,7 +48,9 @@ include(jit/jit.pri)
 include(jsruntime/jsruntime.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
-include(animations/animations.pri)
+qtConfig(animation) {
+    include(animations/animations.pri)
+}
 include(types/types.pri)
 
 MODULE_PLUGIN_TYPES = \
