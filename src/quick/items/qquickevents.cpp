@@ -1224,7 +1224,12 @@ const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int point
     \internal
     Make a new QTouchEvent, giving it a subset of the original touch points.
 
-    Returns a nullptr if all points are stationary or there are no points inside the item.
+    Returns a nullptr if all points are stationary, or there are no points inside the item,
+    or none of the points were pressed inside and the item was not grabbing any of them
+    and isFiltering is false.  When isFiltering is true, it is assumed that the item
+    cares about all points which are inside its bounds, because most filtering items
+    need to monitor eventpoint movements until a drag threshold is exceeded or the
+    requirements for a gesture to be recognized are met in some other way.
 */
 QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool isFiltering) const
 {
@@ -1234,6 +1239,8 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
     // Or else just document that velocity is always scene-relative and is not scaled and rotated with the item
     // but that would require changing tst_qquickwindow::touchEvent_velocity(): it expects transformed velocity
 
+    bool anyPressInside = false;
+    bool anyGrabber = false;
     QMatrix4x4 transformMatrix(QQuickItemPrivate::get(item)->windowToItemTransform());
     for (int i = 0; i < m_pointCount; ++i) {
         auto p = m_touchPoints.at(i);
@@ -1241,8 +1248,10 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             continue;
         // include points where item is the grabber
         bool isGrabber = p->exclusiveGrabber() == item;
-        // include newly pressed points inside the bounds
-        bool isPressInside = p->state() == QQuickEventPoint::Pressed && item->contains(item->mapFromScene(p->scenePos()));
+        if (isGrabber)
+            anyGrabber = true;
+        // include points inside the bounds
+        bool isInside = item->contains(item->mapFromScene(p->scenePos()));
 
         // filtering: (childMouseEventFilter) include points that are grabbed by children of the target item
         bool grabberIsChild = false;
@@ -1256,9 +1265,11 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         }
         bool filterRelevant = isFiltering && grabberIsChild;
 
-        if (!(isGrabber || isPressInside || filterRelevant))
+        if (!(isGrabber || isInside || filterRelevant))
             continue;
-
+        bool isPress = p->state() == QQuickEventPoint::Pressed;
+        if (isPress && isInside)
+            anyPressInside = true;
         const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
         if (tp) {
             eventStates |= tp->state();
@@ -1272,7 +1283,9 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         }
     }
 
-    if (eventStates == Qt::TouchPointStationary || touchPoints.isEmpty())
+    // Now touchPoints will have only points which are inside the item.
+    // But if none of them were just pressed inside, and the item has no other reason to care, ignore them anyway.
+    if (eventStates == Qt::TouchPointStationary || touchPoints.isEmpty() || (!anyPressInside && !anyGrabber && !isFiltering))
         return nullptr;
 
     // if all points have the same state, set the event type accordingly

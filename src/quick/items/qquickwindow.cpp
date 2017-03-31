@@ -754,6 +754,9 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
         qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << touchMouseId << "->" << q->mouseGrabberItem();
         auto point = touchMouseDevice->pointerEvent()->pointById(touchMouseId);
         if (point) {
+            auto originalEvent = point->pointerEvent()->device()->pointerEvent();
+            for (int i = 0; i < originalEvent->pointCount(); ++i)
+                originalEvent->point(i)->cancelExclusiveGrab();
             point->setGrabberItem(grabber);
             for (auto handler : point->passiveGrabbers())
                 point->cancelPassiveGrab(handler);
@@ -2362,11 +2365,13 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
 // Deliver newly pressed touch points
 bool QQuickWindowPrivate::deliverPressEvent(QQuickPointerEvent *event)
 {
-    const QVector<QPointF> points = event->unacceptedPressedPointScenePositions();
+    int pointCount = event->pointCount();
     QVector<QQuickItem *> targetItems;
     bool isTouchEvent = (event->asPointerTouchEvent() != nullptr);
-    for (QPointF point: points) {
-        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point, !isTouchEvent, isTouchEvent);
+    for (int i = 0; i < pointCount; ++i) {
+        auto point = event->point(i);
+        point->setAccepted(false); // because otherwise touchEventForItem will ignore it
+        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePos(), !isTouchEvent, isTouchEvent);
         if (targetItems.count()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
         } else {
@@ -2458,10 +2463,11 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     if (eventAccepted) {
         // If the touch was accepted (regardless by whom or in what form),
         // update accepted new points.
+        bool isPress = pointerEvent->isPressEvent();
         for (auto point: qAsConst(touchEvent->touchPoints())) {
             auto pointerEventPoint = ptEvent->pointById(point.id());
             pointerEventPoint->setAccepted();
-            if (point.state() == Qt::TouchPointPressed)
+            if (isPress)
                 pointerEventPoint->setGrabberItem(item);
         }
     } else {
