@@ -152,6 +152,16 @@ QPointF QQuickMultiPointerHandler::touchPointCentroid()
     return ret / m_currentPoints.size();
 }
 
+QVector2D QQuickMultiPointerHandler::touchPointCentroidVelocity()
+{
+    QVector2D ret;
+    if (Q_UNLIKELY(m_currentPoints.size() == 0))
+        return ret;
+    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
+        ret += point->velocity();
+    return ret / m_currentPoints.size();
+}
+
 qreal QQuickMultiPointerHandler::averageTouchPointDistance(const QPointF &ref)
 {
     qreal ret = 0;

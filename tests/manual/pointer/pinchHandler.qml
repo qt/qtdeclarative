@@ -40,6 +40,7 @@
 
 import QtQuick 2.8
 import Qt.labs.handlers 1.0
+import "content"
 
 Rectangle {
     width: 1024; height: 600
@@ -119,7 +120,13 @@ Rectangle {
                 requiredPointCount: 3
                 minimumScale: 0.1
                 maximumScale: 10
+                onActiveChanged: {
+                    if (!active)
+                        anim.restart(centroidVelocity)
+                }
             }
+
+            MomentumAnimation { id: anim; target: rect3 }
         }
     }
     Rectangle {

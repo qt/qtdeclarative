@@ -90,6 +90,7 @@ protected:
     bool sameAsCurrentPoints(QQuickPointerEvent *event);
     QVector<QQuickEventPoint *> pointsInsideOrNearTarget(QQuickPointerEvent *event);
     QPointF touchPointCentroid();
+    QVector2D touchPointCentroidVelocity();
     qreal averageTouchPointDistance(const QPointF &ref);
     qreal averageStartingDistance(const QPointF &ref);
     qreal averageTouchPointAngle(const QPointF &ref);

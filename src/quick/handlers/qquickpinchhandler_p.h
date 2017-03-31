@@ -67,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointerHandler
     Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
     Q_PROPERTY(PinchOrigin pinchOrigin READ pinchOrigin WRITE setPinchOrigin NOTIFY pinchOriginChanged)
     Q_PROPERTY(QPointF centroid READ centroid NOTIFY updated)
+    Q_PROPERTY(QVector2D centroidVelocity READ centroidVelocity NOTIFY updated)
     Q_PROPERTY(qreal scale READ scale NOTIFY updated)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
     Q_PROPERTY(QPointF translation READ translation NOTIFY updated)
@@ -103,6 +104,7 @@ public:
     qreal scale() const { return m_activeScale; }
     qreal rotation() const { return m_activeRotation; }
     QPointF centroid() const { return m_centroid; }
+    QVector2D centroidVelocity() const { return m_centroidVelocity; }
 
     qreal minimumX() const { return m_minimumX; }
     void setMinimumX(qreal minX);
@@ -136,6 +138,7 @@ private:
     qreal m_activeRotation;
     QPointF m_activeTranslation;
     QPointF m_centroid;
+    QVector2D m_centroidVelocity;
 
     qreal m_minimumScale;
     qreal m_maximumScale;
