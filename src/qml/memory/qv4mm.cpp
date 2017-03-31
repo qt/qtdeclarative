@@ -885,9 +885,21 @@ void MemoryManager::drainMarkStack(Value *markBase)
                     ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
                     Value *v = a->values;
                     const Value *end = v + a->alloc;
-                    while (v < end) {
-                        v->mark(engine);
-                        ++v;
+                    if (a->alloc > 32*1024) {
+                        // drain from time to time to avoid overflows in the js stack
+                        Value *currentBase = engine->jsStackTop;
+                        while (v < end) {
+                            v->mark(engine);
+                            ++v;
+                            if (engine->jsStackTop >= currentBase + 32*1024)
+                                drainMarkStack(currentBase);
+                        }
+
+                    } else {
+                        while (v < end) {
+                            v->mark(engine);
+                            ++v;
+                        }
                     }
                     break;
                 }
