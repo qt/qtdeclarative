@@ -709,6 +709,8 @@ void QQuickEventPoint::cancelExclusiveGrabImpl(QTouchEvent *cancelEvent)
     } else if (auto item = grabberItem()) {
         if (cancelEvent)
             QCoreApplication::sendEvent(item, cancelEvent);
+        else
+            item->touchUngrabEvent();
     }
     m_exclusiveGrabber.clear();
 }
