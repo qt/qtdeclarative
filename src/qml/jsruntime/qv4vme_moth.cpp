@@ -249,10 +249,11 @@ int qt_v4DebuggerHook(const char *json)
     return -NoSuchCommand; // Failure.
 }
 
-static void qt_v4CheckForBreak(QV4::ExecutionContext *context, QV4::Value **scopes, int scopeDepth)
+static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
 {
-    Q_UNUSED(scopes);
-    Q_UNUSED(scopeDepth);
+    if (!qt_v4IsStepping && !qt_v4Breakpoints.size())
+        return;
+
     const int lineNumber = context->d()->lineNumber;
     QV4::Function *function = qt_v4ExtractFunction(context);
     QString engineName = function->sourceFile();
@@ -915,13 +916,13 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
         if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(context, scopes, scopeDepth);
+            qt_v4CheckForBreak(context);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
         engine->current->lineNumber = instr.lineNumber;
         if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(context, scopes, scopeDepth);
+            qt_v4CheckForBreak(context);
     MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
 
