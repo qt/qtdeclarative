@@ -91,6 +91,7 @@ Rectangle {
                 minimumX: 0
                 maximumX: 600
                 pointDistanceThreshold: 0
+                // acceptedModifiers: Qt.ControlModifier
             }
         }
 

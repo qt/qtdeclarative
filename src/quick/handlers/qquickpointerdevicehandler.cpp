@@ -53,6 +53,7 @@ QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QObject *parent)
     : QQuickPointerHandler(parent)
     , m_acceptedDevices(QQuickPointerDevice::AllDevices)
     , m_acceptedPointerTypes(QQuickPointerDevice::AllPointerTypes)
+    , m_acceptedModifiers(Qt::KeyboardModifierMask)
 {
 }
 
@@ -78,16 +79,53 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
     emit acceptedPointerTypesChanged();
 }
 
+/*!
+     \qmlproperty QQuickPointerDeviceHandler::acceptedModifiers
+
+     If this property is set, it will require the given keyboard modifiers to
+     be pressed in order to react to pointer events, and otherwise ignore them.
+
+     If this property is set to Qt.KeyboardModifierMask (the default value),
+     then the PointerHandler ignores the modifier keys.
+
+     For example an Item could have two handlers of the same type, one of which
+     is enabled only if the required keyboard modifiers are pressed:
+
+     \qml
+     Item {
+        TapHandler {
+            acceptedModifiers: Qt.ControlModifier
+            onTapped: console.log("control-tapped")
+        }
+        TapHandler {
+            acceptedModifiers: Qt.NoModifier
+            onTapped: console.log("tapped")
+        }
+     }
+     \endqml
+*/
+void QQuickPointerDeviceHandler::setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers)
+{
+    if (m_acceptedModifiers == acceptedModifiers)
+        return;
+
+    m_acceptedModifiers = acceptedModifiers;
+    emit acceptedModifiersChanged();
+}
+
 bool QQuickPointerDeviceHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerHandler::wantsPointerEvent(event))
         return false;
     qCDebug(lcPointerHandlerDispatch) << objectName()
         << "checking device type" << m_acceptedDevices
-        << "pointer type" << m_acceptedPointerTypes;
+        << "pointer type" << m_acceptedPointerTypes
+        << "modifiers" << m_acceptedModifiers;
     if ((event->device()->type() & m_acceptedDevices) == 0)
         return false;
     if ((event->device()->pointerType() & m_acceptedPointerTypes) == 0)
+        return false;
+    if (m_acceptedModifiers != Qt::KeyboardModifierMask && event->modifiers() != m_acceptedModifiers)
         return false;
     return true;
 }

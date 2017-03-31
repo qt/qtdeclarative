@@ -60,6 +60,7 @@ class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
     Q_OBJECT
     Q_PROPERTY(QQuickPointerDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE setAcceptedDevices NOTIFY acceptedDevicesChanged)
     Q_PROPERTY(QQuickPointerDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged)
+    Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged)
 
 public:
     explicit QQuickPointerDeviceHandler(QObject *parent = 0);
@@ -67,14 +68,17 @@ public:
 
     QQuickPointerDevice::DeviceTypes acceptedDevices() const { return m_acceptedDevices; }
     QQuickPointerDevice::PointerTypes acceptedPointerTypes() const { return m_acceptedPointerTypes; }
+    Qt::KeyboardModifiers acceptedModifiers() const { return m_acceptedModifiers; }
 
 public slots:
     void setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices);
     void setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes);
+    void setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers);
 
 Q_SIGNALS:
     void acceptedDevicesChanged();
     void acceptedPointerTypesChanged();
+    void acceptedModifiersChanged();
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
@@ -82,6 +86,7 @@ protected:
 protected:
     QQuickPointerDevice::DeviceTypes m_acceptedDevices;
     QQuickPointerDevice::PointerTypes m_acceptedPointerTypes;
+    Qt::KeyboardModifiers m_acceptedModifiers;
 };
 
 QT_END_NAMESPACE
