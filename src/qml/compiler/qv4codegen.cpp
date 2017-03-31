@@ -92,6 +92,27 @@ static bool cjumpCanHandle(IR::AluOp op)
     }
 }
 
+static inline void setJumpOutLocation(IR::Stmt *s, const Statement *body,
+                                      const SourceLocation &fallback)
+{
+    switch (body->kind) {
+    // Statements where we might never execute the last line.
+    // Use the fallback.
+    case Statement::Kind_ConditionalExpression:
+    case Statement::Kind_ForEachStatement:
+    case Statement::Kind_ForStatement:
+    case Statement::Kind_IfStatement:
+    case Statement::Kind_LocalForEachStatement:
+    case Statement::Kind_LocalForStatement:
+    case Statement::Kind_WhileStatement:
+        setLocation(s, fallback);
+        break;
+    default:
+        setLocation(s, body->lastSourceLocation());
+        break;
+    }
+}
+
 Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
     : _cg(cg)
     , _sourceCode(sourceCode)
@@ -2256,7 +2277,7 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     _block = loopbody;
     statement(ast->statement);
-    setLocation(_block->JUMP(loopcond), ast->statement->lastSourceLocation());
+    setJumpOutLocation(_block->JUMP(loopcond), ast->statement, ast->semicolonToken);
 
     _block = loopcond;
     condition(ast->expression, loopbody, loopend);
@@ -2321,7 +2342,7 @@ bool Codegen::visit(ForEachStatement *ast)
         return false;
     move(*init, _block->TEMP(temp));
     statement(ast->statement);
-    setLocation(_block->JUMP(foreachin), ast->lastSourceLocation());
+    setJumpOutLocation(_block->JUMP(foreachin), ast->statement, ast->forToken);
 
     _block = foreachin;
 
@@ -2360,7 +2381,7 @@ bool Codegen::visit(ForStatement *ast)
 
     _block = forbody;
     statement(ast->statement);
-    setLocation(_block->JUMP(forstep), ast->lastSourceLocation());
+    setJumpOutLocation(_block->JUMP(forstep), ast->statement, ast->forToken);
 
     _block = forstep;
     statement(ast->expression);
@@ -2386,12 +2407,12 @@ bool Codegen::visit(IfStatement *ast)
 
     _block = iftrue;
     statement(ast->ok);
-    _block->JUMP(endif);
+    setJumpOutLocation(_block->JUMP(endif), ast->ok, ast->ifToken);
 
     if (ast->ko) {
         _block = iffalse;
         statement(ast->ko);
-        _block->JUMP(endif);
+        setJumpOutLocation(_block->JUMP(endif), ast->ko, ast->elseToken);
     }
 
     _block = endif;
@@ -2460,7 +2481,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     int temp = _block->newTemp();
     move(identifier(ast->declaration->name.toString()), _block->TEMP(temp));
     statement(ast->statement);
-    setLocation(_block->JUMP(foreachin), ast->lastSourceLocation());
+    setJumpOutLocation(_block->JUMP(foreachin), ast->statement, ast->forToken);
 
     _block = foreachin;
 
@@ -2499,7 +2520,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
     _block = forbody;
     statement(ast->statement);
-    setLocation(_block->JUMP(forstep), ast->lastSourceLocation());
+    setJumpOutLocation(_block->JUMP(forstep), ast->statement, ast->forToken);
 
     _block = forstep;
     statement(ast->expression);
@@ -2800,7 +2821,7 @@ bool Codegen::visit(WhileStatement *ast)
 
     _block = whilebody;
     statement(ast->statement);
-    setLocation(_block->JUMP(whilecond), ast->lastSourceLocation());
+    setJumpOutLocation(_block->JUMP(whilecond), ast->statement, ast->whileToken);
 
     _block = whileend;
     leaveLoop();
