@@ -156,9 +156,6 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 }
 
 template <typename TargetConfiguration>
-const typename Assembler<TargetConfiguration>::VoidType Assembler<TargetConfiguration>::Void;
-
-template <typename TargetConfiguration>
 Assembler<TargetConfiguration>::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
     : _function(function)
     , _nextBlock(0)

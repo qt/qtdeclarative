@@ -1654,6 +1654,9 @@ private:
 };
 
 template <typename TargetConfiguration>
+const typename Assembler<TargetConfiguration>::VoidType Assembler<TargetConfiguration>::Void;
+
+template <typename TargetConfiguration>
 template <typename Result, typename Source>
 void Assembler<TargetConfiguration>::copyValue(Result result, Source source)
 {
