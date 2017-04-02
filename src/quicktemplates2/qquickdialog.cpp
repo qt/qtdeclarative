@@ -257,6 +257,8 @@ void QQuickDialog::setFooter(QQuickItem *footer)
 
     \snippet qtquickcontrols2-dialog.qml 1
 
+    The buttons will be positioned in the appropriate order for the user's platform.
+
     Possible flags:
     \value Dialog.Ok An "OK" button defined with the \c AcceptRole.
     \value Dialog.Open An "Open" button defined with the \c AcceptRole.
