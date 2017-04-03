@@ -178,7 +178,7 @@ void QQuickMaterialBusyIndicatorNode::sync(QQuickItem *item)
 }
 
 QQuickMaterialBusyIndicator::QQuickMaterialBusyIndicator(QQuickItem *parent) :
-    QQuickItem(parent)
+    QQuickItem(parent), m_elapsed(0), m_color(Qt::black)
 {
     setFlag(ItemHasContents);
 }
