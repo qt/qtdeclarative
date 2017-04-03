@@ -56,9 +56,10 @@ Item {
     width: 200
     height: 200
 
-    DisplayLayout {
-        spacing: 10
-
+    IconLabel {
+        icon: Image {
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+        }
         text: Text {
             text: "Some text"
         }

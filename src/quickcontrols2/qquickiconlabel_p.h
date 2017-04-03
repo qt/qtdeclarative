@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDISPLAYLAYOUT_P_H
-#define QQUICKDISPLAYLAYOUT_P_H
+#ifndef QQUICKICONLABEL_P_H
+#define QQUICKICONLABEL_P_H
 
 //
 //  W A R N I N G
@@ -53,9 +53,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDisplayLayoutPrivate;
+class QQuickIconLabelPrivate;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickDisplayLayout : public QQuickItem
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *icon READ icon WRITE setIcon NOTIFY iconChanged FINAL)
@@ -77,8 +77,8 @@ public:
     };
     Q_ENUM(Display)
 
-    explicit QQuickDisplayLayout(QQuickItem *parent = nullptr);
-    ~QQuickDisplayLayout();
+    explicit QQuickIconLabel(QQuickItem *parent = nullptr);
+    ~QQuickIconLabel();
 
     QQuickItem *icon() const;
     void setIcon(QQuickItem *icon);
@@ -127,12 +127,12 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 private:
-    Q_DISABLE_COPY(QQuickDisplayLayout)
-    Q_DECLARE_PRIVATE(QQuickDisplayLayout)
+    Q_DISABLE_COPY(QQuickIconLabel)
+    Q_DECLARE_PRIVATE(QQuickIconLabel)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDisplayLayout)
+QML_DECLARE_TYPE(QQuickIconLabel)
 
-#endif // QQUICKDISPLAYLAYOUT_P_H
+#endif // QQUICKICONLABEL_P_H

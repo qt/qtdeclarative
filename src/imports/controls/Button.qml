@@ -57,7 +57,7 @@ T.Button {
     icon.height: 24
     icon.color: enabled ? undefined : Default.textDisabledLightColor
 
-    contentItem: DisplayLayout {
+    contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display

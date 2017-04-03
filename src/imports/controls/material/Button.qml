@@ -64,7 +64,7 @@ T.Button {
                              : control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined
 
-    contentItem: DisplayLayout {
+    contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display

@@ -56,7 +56,7 @@ Item {
     width: 200
     height: 200
 
-    DisplayLayout {
+    IconLabel {
         spacing: 10
         mirrored: true
 

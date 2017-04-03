@@ -3,10 +3,10 @@ HEADERS += \
     $$PWD/qquickattachedobject_p.h \
     $$PWD/qquickcolor_p.h \
     $$PWD/qquickcolorimageprovider_p.h \
-    $$PWD/qquickdisplaylayout_p.h \
-    $$PWD/qquickdisplaylayout_p_p.h \
     $$PWD/qquickiconimage_p.h \
     $$PWD/qquickiconimage_p_p.h \
+    $$PWD/qquickiconlabel_p.h \
+    $$PWD/qquickiconlabel_p_p.h \
     $$PWD/qquickplaceholdertext_p.h \
     $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickstyle.h \
@@ -21,8 +21,8 @@ SOURCES += \
     $$PWD/qquickattachedobject.cpp \
     $$PWD/qquickcolor.cpp \
     $$PWD/qquickcolorimageprovider.cpp \
-    $$PWD/qquickdisplaylayout.cpp \
     $$PWD/qquickiconimage.cpp \
+    $$PWD/qquickiconlabel.cpp \
     $$PWD/qquickplaceholdertext.cpp \
     $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickstyle.cpp \

@@ -34,17 +34,17 @@
 **
 ****************************************************************************/
 
-#include "qquickdisplaylayout_p.h"
-#include "qquickdisplaylayout_p_p.h"
+#include "qquickiconlabel_p.h"
+#include "qquickiconlabel_p_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickDisplayLayoutPrivate::QQuickDisplayLayoutPrivate()
+QQuickIconLabelPrivate::QQuickIconLabelPrivate()
     : icon(nullptr),
       text(nullptr),
-      display(QQuickDisplayLayout::TextBesideIcon),
+      display(QQuickIconLabel::TextBesideIcon),
       spacing(0),
       mirrored(false),
       topPadding(0),
@@ -54,14 +54,14 @@ QQuickDisplayLayoutPrivate::QQuickDisplayLayoutPrivate()
 {
 }
 
-void QQuickDisplayLayoutPrivate::updateImplicitSize()
+void QQuickIconLabelPrivate::updateImplicitSize()
 {
-    Q_Q(QQuickDisplayLayout);
+    Q_Q(QQuickIconLabel);
     if (!q->isComponentComplete())
         return;
 
-    const bool showIcon = icon && display != QQuickDisplayLayout::TextOnly;
-    const bool showText = text && display != QQuickDisplayLayout::IconOnly;
+    const bool showIcon = icon && display != QQuickIconLabel::TextOnly;
+    const bool showText = text && display != QQuickIconLabel::IconOnly;
     const qreal horizontalPadding = leftPadding + rightPadding;
     const qreal verticalPadding = topPadding + bottomPadding;
     const qreal iconImplicitWidth = showIcon ? icon->implicitWidth() : 0;
@@ -74,9 +74,9 @@ void QQuickDisplayLayoutPrivate::updateImplicitSize()
     q->setImplicitSize(implicitWidth, implicitHeight);
 }
 
-void QQuickDisplayLayoutPrivate::layout()
+void QQuickIconLabelPrivate::layout()
 {
-    Q_Q(QQuickDisplayLayout);
+    Q_Q(QQuickIconLabel);
     if (!q->isComponentComplete())
         return;
 
@@ -90,7 +90,7 @@ void QQuickDisplayLayoutPrivate::layout()
     const qreal verticalCenter = h / 2;
 
     switch (display) {
-    case QQuickDisplayLayout::IconOnly:
+    case QQuickIconLabel::IconOnly:
         if (icon) {
             icon->setWidth(qMin(icon->implicitWidth(), availableWidth));
             icon->setHeight(qMin(icon->implicitHeight(), availableHeight));
@@ -101,7 +101,7 @@ void QQuickDisplayLayoutPrivate::layout()
         if (text)
             text->setVisible(false);
         break;
-    case QQuickDisplayLayout::TextOnly:
+    case QQuickIconLabel::TextOnly:
         if (text) {
             text->setWidth(qMin(text->implicitWidth(), availableWidth));
             text->setHeight(qMin(text->implicitHeight(), availableHeight));
@@ -112,7 +112,7 @@ void QQuickDisplayLayoutPrivate::layout()
         if (icon)
             icon->setVisible(false);
         break;
-    case QQuickDisplayLayout::TextBesideIcon:
+    case QQuickIconLabel::TextBesideIcon:
     default:
         // Work out the sizes first, as the positions depend on them.
         qreal iconWidth = 0;
@@ -152,31 +152,31 @@ static const QQuickItemPrivate::ChangeTypes itemChangeTypes =
     | QQuickItemPrivate::ImplicitHeight
     | QQuickItemPrivate::Destroyed;
 
-void QQuickDisplayLayoutPrivate::watchChanges(QQuickItem *item)
+void QQuickIconLabelPrivate::watchChanges(QQuickItem *item)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     itemPrivate->addItemChangeListener(this, itemChangeTypes);
 }
 
-void QQuickDisplayLayoutPrivate::unwatchChanges(QQuickItem* item)
+void QQuickIconLabelPrivate::unwatchChanges(QQuickItem* item)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     itemPrivate->removeItemChangeListener(this, itemChangeTypes);
 }
 
-void QQuickDisplayLayoutPrivate::itemImplicitWidthChanged(QQuickItem *)
+void QQuickIconLabelPrivate::itemImplicitWidthChanged(QQuickItem *)
 {
     updateImplicitSize();
     layout();
 }
 
-void QQuickDisplayLayoutPrivate::itemImplicitHeightChanged(QQuickItem *)
+void QQuickIconLabelPrivate::itemImplicitHeightChanged(QQuickItem *)
 {
     updateImplicitSize();
     layout();
 }
 
-void QQuickDisplayLayoutPrivate::itemDestroyed(QQuickItem *item)
+void QQuickIconLabelPrivate::itemDestroyed(QQuickItem *item)
 {
     unwatchChanges(item);
     if (item == icon)
@@ -185,29 +185,29 @@ void QQuickDisplayLayoutPrivate::itemDestroyed(QQuickItem *item)
         text = nullptr;
 }
 
-QQuickDisplayLayout::QQuickDisplayLayout(QQuickItem *parent)
-    : QQuickItem(*(new QQuickDisplayLayoutPrivate), parent)
+QQuickIconLabel::QQuickIconLabel(QQuickItem *parent)
+    : QQuickItem(*(new QQuickIconLabelPrivate), parent)
 {
 }
 
-QQuickDisplayLayout::~QQuickDisplayLayout()
+QQuickIconLabel::~QQuickIconLabel()
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (d->icon)
         d->unwatchChanges(d->icon);
     if (d->text)
         d->unwatchChanges(d->text);
 }
 
-QQuickItem *QQuickDisplayLayout::icon() const
+QQuickItem *QQuickIconLabel::icon() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->icon;
 }
 
-void QQuickDisplayLayout::setIcon(QQuickItem *icon)
+void QQuickIconLabel::setIcon(QQuickItem *icon)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (d->icon == icon)
         return;
 
@@ -226,15 +226,15 @@ void QQuickDisplayLayout::setIcon(QQuickItem *icon)
     emit iconChanged();
 }
 
-QQuickItem *QQuickDisplayLayout::text() const
+QQuickItem *QQuickIconLabel::text() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->text;
 }
 
-void QQuickDisplayLayout::setText(QQuickItem *text)
+void QQuickIconLabel::setText(QQuickItem *text)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (d->text == text)
         return;
 
@@ -253,15 +253,15 @@ void QQuickDisplayLayout::setText(QQuickItem *text)
     emit textChanged();
 }
 
-QQuickDisplayLayout::Display QQuickDisplayLayout::display() const
+QQuickIconLabel::Display QQuickIconLabel::display() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->display;
 }
 
-void QQuickDisplayLayout::setDisplay(Display display)
+void QQuickIconLabel::setDisplay(Display display)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (d->display == display)
         return;
 
@@ -271,15 +271,15 @@ void QQuickDisplayLayout::setDisplay(Display display)
     emit displayChanged();
 }
 
-qreal QQuickDisplayLayout::spacing() const
+qreal QQuickIconLabel::spacing() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->spacing;
 }
 
-void QQuickDisplayLayout::setSpacing(qreal spacing)
+void QQuickIconLabel::setSpacing(qreal spacing)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (qFuzzyCompare(d->spacing, spacing))
         return;
 
@@ -289,15 +289,15 @@ void QQuickDisplayLayout::setSpacing(qreal spacing)
     emit spacingChanged();
 }
 
-bool QQuickDisplayLayout::isMirrored() const
+bool QQuickIconLabel::isMirrored() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->mirrored;
 }
 
-void QQuickDisplayLayout::setMirrored(bool mirrored)
+void QQuickIconLabel::setMirrored(bool mirrored)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (d->mirrored == mirrored)
         return;
 
@@ -307,15 +307,15 @@ void QQuickDisplayLayout::setMirrored(bool mirrored)
     emit mirroredChanged();
 }
 
-qreal QQuickDisplayLayout::topPadding() const
+qreal QQuickIconLabel::topPadding() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->topPadding;
 }
 
-void QQuickDisplayLayout::setTopPadding(qreal padding)
+void QQuickIconLabel::setTopPadding(qreal padding)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (qFuzzyCompare(d->topPadding, padding))
         return;
 
@@ -325,20 +325,20 @@ void QQuickDisplayLayout::setTopPadding(qreal padding)
     emit topPaddingChanged();
 }
 
-void QQuickDisplayLayout::resetTopPadding()
+void QQuickIconLabel::resetTopPadding()
 {
     setTopPadding(0);
 }
 
-qreal QQuickDisplayLayout::leftPadding() const
+qreal QQuickIconLabel::leftPadding() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->leftPadding;
 }
 
-void QQuickDisplayLayout::setLeftPadding(qreal padding)
+void QQuickIconLabel::setLeftPadding(qreal padding)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (qFuzzyCompare(d->leftPadding, padding))
         return;
 
@@ -348,20 +348,20 @@ void QQuickDisplayLayout::setLeftPadding(qreal padding)
     emit leftPaddingChanged();
 }
 
-void QQuickDisplayLayout::resetLeftPadding()
+void QQuickIconLabel::resetLeftPadding()
 {
     setLeftPadding(0);
 }
 
-qreal QQuickDisplayLayout::rightPadding() const
+qreal QQuickIconLabel::rightPadding() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->rightPadding;
 }
 
-void QQuickDisplayLayout::setRightPadding(qreal padding)
+void QQuickIconLabel::setRightPadding(qreal padding)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (qFuzzyCompare(d->rightPadding, padding))
         return;
 
@@ -371,20 +371,20 @@ void QQuickDisplayLayout::setRightPadding(qreal padding)
     emit rightPaddingChanged();
 }
 
-void QQuickDisplayLayout::resetRightPadding()
+void QQuickIconLabel::resetRightPadding()
 {
     setRightPadding(0);
 }
 
-qreal QQuickDisplayLayout::bottomPadding() const
+qreal QQuickIconLabel::bottomPadding() const
 {
-    Q_D(const QQuickDisplayLayout);
+    Q_D(const QQuickIconLabel);
     return d->bottomPadding;
 }
 
-void QQuickDisplayLayout::setBottomPadding(qreal padding)
+void QQuickIconLabel::setBottomPadding(qreal padding)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     if (qFuzzyCompare(d->bottomPadding, padding))
         return;
 
@@ -394,22 +394,22 @@ void QQuickDisplayLayout::setBottomPadding(qreal padding)
     emit bottomPaddingChanged();
 }
 
-void QQuickDisplayLayout::resetBottomPadding()
+void QQuickIconLabel::resetBottomPadding()
 {
     setBottomPadding(0);
 }
 
-void QQuickDisplayLayout::componentComplete()
+void QQuickIconLabel::componentComplete()
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     QQuickItem::componentComplete();
     d->updateImplicitSize();
     d->layout();
 }
 
-void QQuickDisplayLayout::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickIconLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    Q_D(QQuickDisplayLayout);
+    Q_D(QQuickIconLabel);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     d->layout();
 }

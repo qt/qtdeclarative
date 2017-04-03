@@ -34,18 +34,18 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 
-#include <QtQuickControls2/private/qquickdisplaylayout_p.h>
+#include <QtQuickControls2/private/qquickiconlabel_p.h>
 
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
 using namespace QQuickVisualTestUtil;
 
-class tst_qquickdisplaylayout : public QQmlDataTest
+class tst_qquickiconlabel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickdisplaylayout();
+    tst_qquickiconlabel();
 
 private slots:
     void display_data();
@@ -55,22 +55,22 @@ private slots:
     void emptyIconSource();
 };
 
-tst_qquickdisplaylayout::tst_qquickdisplaylayout()
+tst_qquickiconlabel::tst_qquickiconlabel()
 {
 }
 
-void tst_qquickdisplaylayout::display_data()
+void tst_qquickiconlabel::display_data()
 {
-    QTest::addColumn<QVector<QQuickDisplayLayout::Display> >("displayTypes");
+    QTest::addColumn<QVector<QQuickIconLabel::Display> >("displayTypes");
     QTest::addColumn<bool>("mirrored");
-    QTest::addColumn<qreal>("layoutWidth");
-    QTest::addColumn<qreal>("layoutHeight");
+    QTest::addColumn<qreal>("labelWidth");
+    QTest::addColumn<qreal>("labelHeight");
     QTest::addColumn<qreal>("spacing");
 
-    typedef QVector<QQuickDisplayLayout::Display> DisplayVector;
-    QQuickDisplayLayout::Display IconOnly = QQuickDisplayLayout::IconOnly;
-    QQuickDisplayLayout::Display TextOnly = QQuickDisplayLayout::TextOnly;
-    QQuickDisplayLayout::Display TextBesideIcon = QQuickDisplayLayout::TextBesideIcon;
+    typedef QVector<QQuickIconLabel::Display> DisplayVector;
+    QQuickIconLabel::Display IconOnly = QQuickIconLabel::IconOnly;
+    QQuickIconLabel::Display TextOnly = QQuickIconLabel::TextOnly;
+    QQuickIconLabel::Display TextBesideIcon = QQuickIconLabel::TextBesideIcon;
 
     QTest::addRow("IconOnly") << (DisplayVector() << IconOnly) << false << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextOnly") << (DisplayVector() << TextOnly) << false << -1.0 << -1.0 << 0.0;
@@ -80,26 +80,26 @@ void tst_qquickdisplaylayout::display_data()
     QTest::addRow("TextBesideIcon, spacing=10") << (DisplayVector() << TextBesideIcon) << false << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextBesideIcon => IconOnly => TextBesideIcon")
         << (DisplayVector() << TextBesideIcon << IconOnly << TextBesideIcon) << false << -1.0 << -1.0 << 0.0;
-    QTest::addRow("TextBesideIcon => IconOnly => TextBesideIcon, layoutWidth=400")
+    QTest::addRow("TextBesideIcon => IconOnly => TextBesideIcon, labelWidth=400")
         << (DisplayVector() << TextBesideIcon << IconOnly << TextBesideIcon) << false << 400.0 << -1.0 << 0.0;
     QTest::addRow("TextBesideIcon => TextOnly => TextBesideIcon")
         << (DisplayVector() << TextBesideIcon << TextOnly << TextBesideIcon) << false << -1.0 << -1.0 << 0.0;
-    QTest::addRow("TextBesideIcon => TextOnly => TextBesideIcon, layoutWidth=400")
+    QTest::addRow("TextBesideIcon => TextOnly => TextBesideIcon, labelWidth=400")
         << (DisplayVector() << TextBesideIcon << TextOnly << TextBesideIcon) << false << 400.0 << -1.0 << 0.0;
     QTest::addRow("IconOnly, mirrored") << (DisplayVector() << IconOnly) << true << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextOnly, mirrored") << (DisplayVector() << TextOnly) << true << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextBesideIcon, mirrored") << (DisplayVector() << TextBesideIcon) << true << -1.0 << -1.0 << 0.0;
 }
 
-void tst_qquickdisplaylayout::display()
+void tst_qquickiconlabel::display()
 {
-    QFETCH(QVector<QQuickDisplayLayout::Display>, displayTypes);
+    QFETCH(QVector<QQuickIconLabel::Display>, displayTypes);
     QFETCH(bool, mirrored);
-    QFETCH(qreal, layoutWidth);
-    QFETCH(qreal, layoutHeight);
+    QFETCH(qreal, labelWidth);
+    QFETCH(qreal, labelHeight);
     QFETCH(qreal, spacing);
 
-    QQuickView view(testFileUrl("layout.qml"));
+    QQuickView view(testFileUrl("iconlabel.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -107,99 +107,99 @@ void tst_qquickdisplaylayout::display()
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
 
-    QQuickDisplayLayout *layout = qobject_cast<QQuickDisplayLayout*>(rootItem->childItems().first());
-    QVERIFY(layout);
-    QCOMPARE(layout->spacing(), 0.0);
-    QCOMPARE(layout->display(), QQuickDisplayLayout::TextBesideIcon);
-    QCOMPARE(layout->isMirrored(), false);
+    QQuickIconLabel *label = qobject_cast<QQuickIconLabel*>(rootItem->childItems().first());
+    QVERIFY(label);
+    QCOMPARE(label->spacing(), 0.0);
+    QCOMPARE(label->display(), QQuickIconLabel::TextBesideIcon);
+    QCOMPARE(label->isMirrored(), false);
 
-    // Setting layoutWidth allows us to test the issue where the icon's
+    // Setting labelWidth allows us to test the issue where the icon's
     // width was not updated after switching between different display types.
-    if (!qFuzzyCompare(layoutWidth, -1)) {
-        layout->setWidth(layoutWidth);
-        QCOMPARE(layout->width(), layoutWidth);
+    if (!qFuzzyCompare(labelWidth, -1)) {
+        label->setWidth(labelWidth);
+        QCOMPARE(label->width(), labelWidth);
     }
-    if (!qFuzzyCompare(layoutHeight, -1)) {
-        layout->setHeight(layoutHeight);
-        QCOMPARE(layout->height(), layoutHeight);
+    if (!qFuzzyCompare(labelHeight, -1)) {
+        label->setHeight(labelHeight);
+        QCOMPARE(label->height(), labelHeight);
     }
 
-    QQuickItem *icon = layout->icon();
+    QQuickItem *icon = label->icon();
     QVERIFY(icon);
 
-    QQuickItem *text = layout->text();
+    QQuickItem *text = label->text();
     QVERIFY(text);
 
-    QSignalSpy mirroredSpy(layout, SIGNAL(mirroredChanged()));
-    bool expectChange = layout->isMirrored() != mirrored;
-    layout->setMirrored(mirrored);
-    QCOMPARE(layout->isMirrored(), mirrored);
+    QSignalSpy mirroredSpy(label, SIGNAL(mirroredChanged()));
+    bool expectChange = label->isMirrored() != mirrored;
+    label->setMirrored(mirrored);
+    QCOMPARE(label->isMirrored(), mirrored);
     QCOMPARE(mirroredSpy.count(), expectChange ? 1 : 0);
 
-    QSignalSpy spacingSpy(layout, SIGNAL(spacingChanged()));
-    expectChange = !qFuzzyCompare(layout->spacing(), spacing);
-    layout->setSpacing(spacing);
-    QCOMPARE(layout->spacing(), spacing);
+    QSignalSpy spacingSpy(label, SIGNAL(spacingChanged()));
+    expectChange = !qFuzzyCompare(label->spacing(), spacing);
+    label->setSpacing(spacing);
+    QCOMPARE(label->spacing(), spacing);
     QCOMPARE(spacingSpy.count(), expectChange ? 1 : 0);
 
-    const qreal horizontalPadding = layout->leftPadding() + layout->rightPadding();
-    const qreal verticalPadding = layout->topPadding() + layout->bottomPadding();
+    const qreal horizontalPadding = label->leftPadding() + label->rightPadding();
+    const qreal verticalPadding = label->topPadding() + label->bottomPadding();
 
     // Test that the icon and text are correctly positioned and sized after
     // setting several different display types in succession.
-    for (QQuickDisplayLayout::Display displayType : qAsConst(displayTypes)) {
-        QSignalSpy displaySpy(layout, SIGNAL(displayChanged()));
-        const bool expectChange = layout->display() != displayType;
-        layout->setDisplay(displayType);
-        QCOMPARE(layout->display(), displayType);
+    for (QQuickIconLabel::Display displayType : qAsConst(displayTypes)) {
+        QSignalSpy displaySpy(label, SIGNAL(displayChanged()));
+        const bool expectChange = label->display() != displayType;
+        label->setDisplay(displayType);
+        QCOMPARE(label->display(), displayType);
         QCOMPARE(displaySpy.count(), expectChange ? 1 : 0);
 
-        const qreal horizontalCenter = layout->width() / 2;
-        const qreal verticalCenter = layout->height() / 2;
+        const qreal horizontalCenter = label->width() / 2;
+        const qreal verticalCenter = label->height() / 2;
 
         switch (displayType) {
-        case QQuickDisplayLayout::IconOnly:
+        case QQuickIconLabel::IconOnly:
             QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
             QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(icon->isVisible(), true);
             QCOMPARE(text->isVisible(), false);
-            QCOMPARE(layout->implicitWidth(), icon->implicitWidth() + horizontalPadding);
-            QCOMPARE(layout->implicitHeight(), icon->implicitHeight() + verticalPadding);
+            QCOMPARE(label->implicitWidth(), icon->implicitWidth() + horizontalPadding);
+            QCOMPARE(label->implicitHeight(), icon->implicitHeight() + verticalPadding);
             break;
-        case QQuickDisplayLayout::TextOnly:
+        case QQuickIconLabel::TextOnly:
             QCOMPARE(icon->isVisible(), false);
             QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
             QCOMPARE(text->y(), verticalCenter - text->height() / 2);
             QCOMPARE(text->width(), text->implicitWidth());
             QCOMPARE(text->height(), text->implicitHeight());
             QCOMPARE(text->isVisible(), true);
-            QCOMPARE(layout->implicitWidth(), text->implicitWidth() + horizontalPadding);
-            QCOMPARE(layout->implicitHeight(), text->implicitHeight() + verticalPadding);
+            QCOMPARE(label->implicitWidth(), text->implicitWidth() + horizontalPadding);
+            QCOMPARE(label->implicitHeight(), text->implicitHeight() + verticalPadding);
             break;
-        case QQuickDisplayLayout::TextBesideIcon:
+        case QQuickIconLabel::TextBesideIcon:
         default:
-            const qreal combinedWidth = icon->width() + layout->spacing() + text->width();
+            const qreal combinedWidth = icon->width() + label->spacing() + text->width();
             const qreal contentX = horizontalCenter - combinedWidth / 2;
-            QCOMPARE(icon->x(), contentX + (layout->isMirrored() ? text->width() + layout->spacing() : 0));
+            QCOMPARE(icon->x(), contentX + (label->isMirrored() ? text->width() + label->spacing() : 0));
             QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(icon->isVisible(), true);
-            QCOMPARE(text->x(), contentX + (layout->isMirrored() ? 0 : icon->width() + layout->spacing()));
+            QCOMPARE(text->x(), contentX + (label->isMirrored() ? 0 : icon->width() + label->spacing()));
             QCOMPARE(text->y(), verticalCenter - text->height() / 2);
             QCOMPARE(text->width(), text->implicitWidth());
             QCOMPARE(text->height(), text->implicitHeight());
             QCOMPARE(text->isVisible(), true);
-            QCOMPARE(layout->implicitWidth(), combinedWidth + horizontalPadding);
-            QCOMPARE(layout->implicitHeight(), qMax(icon->implicitHeight(), text->implicitHeight()) + verticalPadding);
+            QCOMPARE(label->implicitWidth(), combinedWidth + horizontalPadding);
+            QCOMPARE(label->implicitHeight(), qMax(icon->implicitHeight(), text->implicitHeight()) + verticalPadding);
             break;
         }
     }
 }
 
-void tst_qquickdisplaylayout::spacingWithOneDelegate_data()
+void tst_qquickiconlabel::spacingWithOneDelegate_data()
 {
     QTest::addColumn<QString>("qmlFileName");
 
@@ -207,7 +207,7 @@ void tst_qquickdisplaylayout::spacingWithOneDelegate_data()
     QTest::addRow("spacingWithOnlyText") << QStringLiteral("spacingWithOnlyText.qml");
 }
 
-void tst_qquickdisplaylayout::spacingWithOneDelegate()
+void tst_qquickiconlabel::spacingWithOneDelegate()
 {
     QFETCH(QString, qmlFileName);
 
@@ -219,25 +219,25 @@ void tst_qquickdisplaylayout::spacingWithOneDelegate()
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
 
-    QQuickDisplayLayout *layout = qobject_cast<QQuickDisplayLayout*>(rootItem->childItems().first());
-    QVERIFY(layout);
+    QQuickIconLabel *label = qobject_cast<QQuickIconLabel*>(rootItem->childItems().first());
+    QVERIFY(label);
     QQuickItem *delegate = nullptr;
-    if (layout->icon()) {
-        QVERIFY(!layout->text());
-        delegate = layout->icon();
+    if (label->icon()) {
+        QVERIFY(!label->text());
+        delegate = label->icon();
     } else {
-        QVERIFY(!layout->icon());
-        delegate = layout->text();
+        QVERIFY(!label->icon());
+        delegate = label->text();
     }
 
     QVERIFY(delegate);
     QCOMPARE(delegate->x(), 0.0);
-    QCOMPARE(delegate->width(), layout->width());
+    QCOMPARE(delegate->width(), label->width());
 }
 
-void tst_qquickdisplaylayout::emptyIconSource()
+void tst_qquickiconlabel::emptyIconSource()
 {
-    QQuickView view(testFileUrl("layout.qml"));
+    QQuickView view(testFileUrl("iconlabel.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -245,33 +245,33 @@ void tst_qquickdisplaylayout::emptyIconSource()
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
 
-    QQuickDisplayLayout *layout = qobject_cast<QQuickDisplayLayout*>(rootItem->childItems().first());
-    QVERIFY(layout);
-    QCOMPARE(layout->spacing(), 0.0);
-    QCOMPARE(layout->display(), QQuickDisplayLayout::TextBesideIcon);
-    QCOMPARE(layout->isMirrored(), false);
+    QQuickIconLabel *label = qobject_cast<QQuickIconLabel*>(rootItem->childItems().first());
+    QVERIFY(label);
+    QCOMPARE(label->spacing(), 0.0);
+    QCOMPARE(label->display(), QQuickIconLabel::TextBesideIcon);
+    QCOMPARE(label->isMirrored(), false);
 
-    QQuickItem *icon = layout->icon();
+    QQuickItem *icon = label->icon();
     QVERIFY(icon);
 
-    QQuickItem *text = layout->text();
+    QQuickItem *text = label->text();
     QVERIFY(text);
-    qreal horizontalCenter = layout->width() / 2;
+    qreal horizontalCenter = label->width() / 2;
     const qreal combinedWidth = icon->width() + text->width();
     const qreal contentX = horizontalCenter - combinedWidth / 2;
     // The text should be positioned next to an item.
-    QCOMPARE(text->x(), contentX + icon->width() + layout->spacing());
+    QCOMPARE(text->x(), contentX + icon->width() + label->spacing());
 
-    // Now give the layout an explicit width large enough so that implicit size
+    // Now give the label an explicit width large enough so that implicit size
     // changes in its children don't affect its implicit size.
-    layout->setWidth(layout->implicitWidth() + 200);
-    layout->setHeight(layout->implicitWidth() + 100);
+    label->setWidth(label->implicitWidth() + 200);
+    label->setHeight(label->implicitWidth() + 100);
     QVERIFY(icon->property("source").isValid());
     QVERIFY(icon->setProperty("source", QUrl()));
-    horizontalCenter = layout->width() / 2;
+    horizontalCenter = label->width() / 2;
     QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
 }
 
-QTEST_MAIN(tst_qquickdisplaylayout)
+QTEST_MAIN(tst_qquickiconlabel)
 
-#include "tst_qquickdisplaylayout.moc"
+#include "tst_qquickiconlabel.moc"

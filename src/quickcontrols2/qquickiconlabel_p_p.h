@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDISPLAYLAYOUT_P_P_H
-#define QQUICKDISPLAYLAYOUT_P_P_H
+#ifndef QQUICKICONLABEL_P_P_H
+#define QQUICKICONLABEL_P_P_H
 
 //
 //  W A R N I N G
@@ -50,16 +50,16 @@
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
-#include <QtQuickControls2/private/qquickdisplaylayout_p.h>
+#include <QtQuickControls2/private/qquickiconlabel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDisplayLayoutPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
-    Q_DECLARE_PUBLIC(QQuickDisplayLayout)
+    Q_DECLARE_PUBLIC(QQuickIconLabel)
 
 public:
-    explicit QQuickDisplayLayoutPrivate();
+    explicit QQuickIconLabelPrivate();
 
     void updateImplicitSize();
     void layout();
@@ -76,7 +76,7 @@ public:
 
     QQuickItem *icon;
     QQuickItem *text;
-    QQuickDisplayLayout::Display display;
+    QQuickIconLabel::Display display;
     qreal spacing;
     bool mirrored;
     qreal topPadding;
@@ -87,4 +87,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDISPLAYLAYOUT_P_P_H
+#endif // QQUICKICONLABEL_P_P_H

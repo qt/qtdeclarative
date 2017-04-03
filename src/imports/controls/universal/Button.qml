@@ -60,7 +60,7 @@ T.Button {
 
     property bool useSystemFocusVisuals: true
 
-    contentItem: DisplayLayout {
+    contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
