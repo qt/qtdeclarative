@@ -17,6 +17,7 @@ SUBDIRS += \
     qquickuniversalstyleconf \
     revisions \
     sanity \
+    scrollbar \
     snippets
 
 # QTBUG-50295

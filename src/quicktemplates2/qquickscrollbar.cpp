@@ -274,6 +274,9 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
 {
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
