@@ -251,6 +251,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // NOTE: register the latest revisions of all template/control base classes to
     // make revisioned properties available to their subclasses (synced with Qt 5.9)
     qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
+    qmlRegisterRevision<QQuickTextInput, 9>(uri, 2, 2);
 }
 
 QT_END_NAMESPACE
