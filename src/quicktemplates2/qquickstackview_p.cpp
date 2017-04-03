@@ -93,6 +93,7 @@ static bool initProperties(QQuickStackElement *element, const QV4::Value &props,
 QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQmlV4Function *args, QStringList *errors)
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
+    QQmlContextData *context = v4->callingQmlContext();
     QV4::Scope scope(v4);
 
     QList<QQuickStackElement *> elements;
@@ -105,7 +106,7 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQml
             for (int j = 0; j < len; ++j) {
                 QString error;
                 QV4::ScopedValue value(scope, array->getIndexed(j));
-                QQuickStackElement *element = createElement(value, &error);
+                QQuickStackElement *element = createElement(value, context, &error);
                 if (element) {
                     if (j < len - 1) {
                         QV4::ScopedValue props(scope, array->getIndexed(j + 1));
@@ -119,7 +120,7 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQml
             }
         } else {
             QString error;
-            QQuickStackElement *element = createElement(arg, &error);
+            QQuickStackElement *element = createElement(arg, context, &error);
             if (element) {
                 if (i < argc - 1) {
                     QV4::ScopedValue props(scope, (*args)[i + 1]);
@@ -153,11 +154,19 @@ QQuickStackElement *QQuickStackViewPrivate::findElement(const QV4::Value &value)
     return nullptr;
 }
 
-QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value, QString *error)
+static QString resolvedUrl(const QString &str, QQmlContextData *context)
+{
+    QUrl url(str);
+    if (url.isRelative())
+        return context->resolvedUrl(url).toString();
+    return str;
+}
+
+QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value, QQmlContextData *context, QString *error)
 {
     Q_Q(QQuickStackView);
     if (const QV4::String *s = value.as<QV4::String>())
-        return QQuickStackElement::fromString(s->toQString(), q, error);
+        return QQuickStackElement::fromString(resolvedUrl(s->toQString(), context), q, error);
     if (const QV4::QObjectWrapper *o = value.as<QV4::QObjectWrapper>())
         return QQuickStackElement::fromObject(o->object(), q, error);
     return nullptr;
