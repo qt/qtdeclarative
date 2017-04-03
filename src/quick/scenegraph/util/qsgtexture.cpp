@@ -256,6 +256,8 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
     Specifies how the texture should treat texture coordinates.
 
+    \note Texture wrapping needs to be handled explicitly for atlas textures.
+
     \value Repeat Only the factional part of the texture coordiante is
     used, causing values above 1 and below 0 to repeat.
 
