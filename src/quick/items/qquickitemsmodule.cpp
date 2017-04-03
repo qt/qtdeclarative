@@ -70,7 +70,6 @@
 #if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
 #include <private/qquickpathinterpolator_p.h>
-#include "qquickpathitem_p.h"
 #endif
 #if QT_CONFIG(quick_positioners)
 #include "qquickpositioners_p.h"
@@ -381,11 +380,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_path)
     qmlRegisterType<QQuickPathArc, 2>(uri, 2, 9, "PathArc");
     qmlRegisterType<QQuickPathMove>(uri, 2, 9, "PathMove");
-    qmlRegisterType<QQuickPathItem>(uri, 2, 9, "PathItem");
-    qmlRegisterType<QQuickVisualPath>(uri, 2, 9, "VisualPath");
-    qmlRegisterType<QQuickPathGradientStop>(uri, 2, 9, "PathGradientStop");
-    qmlRegisterUncreatableType<QQuickPathGradient>(uri, 2, 9, "PathGradient", QQuickPathGradient::tr("PathGradient is an abstract base class"));
-    qmlRegisterType<QQuickPathLinearGradient>(uri, 2, 9, "PathLinearGradient");
 #endif
 
     qmlRegisterType<QQuickText, 9>(uri, 2, 9, "Text");

@@ -48,7 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9 // to get PathItem
+import QtQuick 2.9
+import Qt.labs.pathitem 1.0
 
 Rectangle {
     id: root
@@ -170,7 +171,7 @@ Rectangle {
         property variant funcs
 
         function genResizer(obj, x, y, xprop, yprop, color) {
-            var ma = Qt.createQmlObject('import QtQuick 2.9; Rectangle { id: rr; property variant obj; color: "' + color + '"; width: 20; height: 20;'+
+            var ma = Qt.createQmlObject('import QtQuick 2.9; import Qt.labs.pathitem 1.0; Rectangle { id: rr; property variant obj; color: "' + color + '"; width: 20; height: 20;'+
                                          'MouseArea { anchors.fill: parent; hoverEnabled: true;' +
                                          'onEntered: color = "yellow"; onExited: color = "' + color + '";' +
                                          'property bool a: false; onPressed: a = true; onReleased: a = false; ' +
@@ -188,7 +189,7 @@ Rectangle {
         Component.onCompleted: {
             funcs = [
                         { "start": function(x, y) {
-                            var p = Qt.createQmlObject('import QtQuick 2.9; VisualPath {' +
+                            var p = Qt.createQmlObject('import QtQuick 2.9; import Qt.labs.pathitem 1.0; VisualPath {' +
                                                        'strokeColor: "black"; fillColor: "transparent";'+
                                                        'strokeWidth: ' + widthSlider.value + ';' +
                                                        'Path { startX: ' + x + '; startY: ' + y + ';' +
@@ -210,7 +211,7 @@ Rectangle {
                         }
                         },
                         { "start": function(x, y) {
-                            var p = Qt.createQmlObject('import QtQuick 2.9; VisualPath {' +
+                            var p = Qt.createQmlObject('import QtQuick 2.9; import Qt.labs.pathitem 1.0; VisualPath {' +
                                                        'strokeColor: "black"; fillColor: "' + (root.fill ? 'green' : 'transparent') + '";'+
                                                        'strokeWidth: ' + widthSlider.value + ';' +
                                                        'Path { startX: ' + x + '; startY: ' + y + ';' +
@@ -235,7 +236,7 @@ Rectangle {
                         }
                         },
                         { "start": function(x, y) {
-                            var p = Qt.createQmlObject('import QtQuick 2.9; VisualPath {' +
+                            var p = Qt.createQmlObject('import QtQuick 2.9; import Qt.labs.pathitem 1.0; VisualPath {' +
                                                        'strokeColor: "black"; fillColor: "' + (root.fill ? 'green' : 'transparent') + '";'+
                                                        'strokeWidth: ' + widthSlider.value + ';' +
                                                        'Path { startX: ' + x + '; startY: ' + y + ';' +

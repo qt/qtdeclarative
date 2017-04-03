@@ -1681,7 +1681,7 @@ void QQuickPathItemJSStrokeFillParamsPrototype::method_clear(const QV4::BuiltinF
     scope.result = callData->thisObject.asReturnedValue();
 }
 
-extern QColor qt_color_from_string(const QV4::Value &name); // qquickcontext2d.cpp
+Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name); // qquickcontext2d.cpp
 
 static inline QString qt_color_string(const QColor &color)
 {

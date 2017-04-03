@@ -33,7 +33,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
-#include <QtQuick/private/qquickpathitem_p.h>
+#include "../../../../src/imports/pathitem/qquickpathitem_p.h"
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -61,6 +61,13 @@ tst_QQuickPathItem::tst_QQuickPathItem()
 {
     // Force the software backend to get reliable rendering results regardless of the hw and drivers.
     QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
+
+    const char *uri = "tst_qquickpathitem";
+    qmlRegisterType<QQuickPathItem>(uri, 1, 0, "PathItem");
+    qmlRegisterType<QQuickVisualPath>(uri, 1, 0, "VisualPath");
+    qmlRegisterType<QQuickPathGradientStop>(uri, 1, 0, "PathGradientStop");
+    qmlRegisterUncreatableType<QQuickPathGradient>(uri, 1, 0, "PathGradient", QQuickPathGradient::tr("PathGradient is an abstract base class"));
+    qmlRegisterType<QQuickPathLinearGradient>(uri, 1, 0, "PathLinearGradient");
 }
 
 void tst_QQuickPathItem::initValues()

@@ -52,7 +52,7 @@
 //
 
 #include "qquickpathitem_p.h"
-#include "qquickitem_p.h"
+#include <QtQuick/private/qquickitem_p.h>
 #include <QPainterPath>
 #include <QColor>
 #include <QBrush>

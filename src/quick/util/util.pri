@@ -79,11 +79,4 @@ qtConfig(quick-path) {
         $$PWD/qquickpath_p.h \
         $$PWD/qquickpath_p_p.h \
         $$PWD/qquickpathinterpolator_p.h
-    qtConfig(opengl) {
-        SOURCES += \
-            $$PWD/qquicknvprfunctions.cpp
-        HEADERS += \
-            $$PWD/qquicknvprfunctions_p.h \
-            $$PWD/qquicknvprfunctions_p_p.h
-    }
 }

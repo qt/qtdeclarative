@@ -52,8 +52,8 @@
 //
 
 #include "qquickpathitem_p_p.h"
+#include "qquicknvprfunctions_p.h"
 #include <qsgrendernode.h>
-#include <private/qquicknvprfunctions_p.h>
 #include <QColor>
 #include <QVector4D>
 #include <QDebug>

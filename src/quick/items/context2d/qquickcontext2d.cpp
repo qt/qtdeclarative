@@ -40,6 +40,7 @@
 #include "qquickcontext2d_p.h"
 #include "qquickcontext2dcommandbuffer_p.h"
 #include "qquickcanvasitem_p.h"
+#include <private/qtquickglobal_p.h>
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qquickitem_p.h>
 #if QT_CONFIG(quick_shadereffect)
@@ -136,7 +137,7 @@ Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
                                        THROW_GENERIC_ERROR("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
-QColor qt_color_from_string(const QV4::Value &name)
+Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name)
 {
     QByteArray str = name.toQString().toUtf8();
 

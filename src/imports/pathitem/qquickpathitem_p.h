@@ -58,14 +58,12 @@
 #include <private/qv8engine_p.h>
 #include <QGradientStops>
 
-QT_REQUIRE_CONFIG(quick_path);
-
 QT_BEGIN_NAMESPACE
 
 class QQuickVisualPathPrivate;
 class QQuickPathItemPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathGradientStop : public QObject
+class QQuickPathGradientStop : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition)
@@ -85,7 +83,7 @@ private:
     QColor m_color;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathGradient : public QObject
+class QQuickPathGradient : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QObject> stops READ stops)
@@ -122,7 +120,7 @@ private:
     SpreadMode m_spread;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathLinearGradient : public QQuickPathGradient
+class QQuickPathLinearGradient : public QQuickPathGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal x1 READ x1 WRITE setX1 NOTIFY x1Changed)
@@ -154,7 +152,7 @@ private:
     QPointF m_end;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVisualPath : public QObject
+class QQuickVisualPath : public QObject
 {
     Q_OBJECT
 
@@ -262,7 +260,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_fillGradientChanged())
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPathItem : public QQuickItem
+class QQuickPathItem : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)

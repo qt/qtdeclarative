@@ -148,20 +148,9 @@ qtConfig(quick-listview) {
 qtConfig(quick-pathview) {
     HEADERS += \
         $$PWD/qquickpathview_p.h \
-        $$PWD/qquickpathview_p_p.h \
-        $$PWD/qquickpathitem_p.h \
-        $$PWD/qquickpathitem_p_p.h \
-        $$PWD/qquickpathitemgenericrenderer_p.h \
-        $$PWD/qquickpathitemsoftwarerenderer_p.h
+        $$PWD/qquickpathview_p_p.h
     SOURCES += \
-        $$PWD/qquickpathview.cpp \
-        $$PWD/qquickpathitem.cpp \
-        $$PWD/qquickpathitemgenericrenderer.cpp \
-        $$PWD/qquickpathitemsoftwarerenderer.cpp
-     qtConfig(opengl) {
-         HEADERS += $$PWD/qquickpathitemnvprrenderer_p.h
-         SOURCES += $$PWD/qquickpathitemnvprrenderer.cpp
-     }
+        $$PWD/qquickpathview.cpp
 }
 
 qtConfig(quick-positioners) {

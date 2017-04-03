@@ -48,7 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9 // to get PathItem
+import QtQuick 2.9
+import Qt.labs.pathitem 1.0
 
 Rectangle {
     color: "lightGray"

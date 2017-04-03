@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,34 +37,38 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSVGPARSER_P_H
-#define QQUICKSVGPARSER_P_H
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qquickpathitem_p.h"
 
-#include <private/qtquickglobal_p.h>
-#include <QtCore/qstring.h>
-#include <QtGui/qpainterpath.h>
+static void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_pathitem);
+#endif
+}
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickSvgParser
+class QmlPathItemPlugin : public QQmlExtensionPlugin
 {
-    bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
-    Q_QUICK_PRIVATE_EXPORT void pathArc(QPainterPath &path, qreal rx, qreal ry, qreal x_axis_rotation,
-                                        int large_arc_flag, int sweep_flag, qreal x, qreal y, qreal curx,
-                                        qreal cury);
-}
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+
+public:
+    QmlPathItemPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    {
+        Q_ASSERT(QByteArray(uri) == QByteArray("Qt.labs.pathitem"));
+        qmlRegisterType<QQuickPathItem>(uri, 1, 0, "PathItem");
+        qmlRegisterType<QQuickVisualPath>(uri, 1, 0, "VisualPath");
+        qmlRegisterType<QQuickPathGradientStop>(uri, 1, 0, "PathGradientStop");
+        qmlRegisterUncreatableType<QQuickPathGradient>(uri, 1, 0, "PathGradient", QQuickPathGradient::tr("PathGradient is an abstract base class"));
+        qmlRegisterType<QQuickPathLinearGradient>(uri, 1, 0, "PathLinearGradient");
+    }
+};
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSVGPARSER_P_H
+#include "plugin.moc"
