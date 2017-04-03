@@ -66,44 +66,34 @@ bool QQuickMultiPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
 
-    const int pCount = event->pointCount();
-    int pointCandidateCount = 0;
-
-    // If one or more points are newly pressed, all points are candidates for this handler.
-    // In other cases however, do not steal the grab: that is, if a point has a grabber,
-    // it's not a candidate for this handler.
-    if (event->isPressEvent()) {
-        pointCandidateCount = pCount;
-    } else {
-        for (int i = 0; i < pCount; ++i) {
-            QQuickEventPoint *pt = event->point(i);
-            QObject *exclusiveGrabber = pt->exclusiveGrabber();
-            if (!exclusiveGrabber || exclusiveGrabber == this)
-                ++pointCandidateCount;
-        }
-    }
-
-    if (pointCandidateCount < m_requiredPointCount)
-        return false;
     if (sameAsCurrentPoints(event))
         return true;
 
-    const QVector<QQuickEventPoint *> candidatePoints = pointsInsideOrNearTarget(event);
+    const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
     const bool ret = (candidatePoints.size() == m_requiredPointCount);
     if (ret)
         m_currentPoints = candidatePoints;
     return ret;
 }
 
-QVector<QQuickEventPoint *> QQuickMultiPointerHandler::pointsInsideOrNearTarget(QQuickPointerEvent *event)
+QVector<QQuickEventPoint *> QQuickMultiPointerHandler::eligiblePoints(QQuickPointerEvent *event)
 {
     QVector<QQuickEventPoint *> ret;
     int c = event->pointCount();
     QRectF targetBounds = target()->mapRectToScene(target()->boundingRect())
             .marginsAdded(QMarginsF(m_pointDistanceThreshold, m_pointDistanceThreshold, m_pointDistanceThreshold, m_pointDistanceThreshold));
+    // If one or more points are newly pressed or released, all non-released points are candidates for this handler.
+    // In other cases however, do not steal the grab: that is, if a point has a grabber,
+    // it's not a candidate for this handler.
+    bool stealingAllowed = event->isPressEvent() || event->isReleaseEvent();
     for (int i = 0; i < c; ++i) {
         QQuickEventPoint *p = event->point(i);
-        if (targetBounds.contains(p->scenePos()))
+        if (!stealingAllowed) {
+            QObject *exclusiveGrabber = p->exclusiveGrabber();
+            if (exclusiveGrabber && exclusiveGrabber != this)
+                continue;
+        }
+        if (p->state() != QQuickEventPoint::Released && targetBounds.contains(p->scenePos()))
             ret << p;
     }
     return ret;
@@ -136,6 +126,8 @@ bool QQuickMultiPointerHandler::sameAsCurrentPoints(QQuickPointerEvent *event)
     // TODO optimize: either ensure the points are sorted,
     // or use std::equal with a predicate
     for (int i = 0; ret && i < c; ++i) {
+        if (event->point(i)->state() == QQuickEventPoint::Released)
+            return false;
         bool found = false;
         int pointId = event->point(i)->pointId();
         for (QQuickEventPoint *o : qAsConst(m_currentPoints))

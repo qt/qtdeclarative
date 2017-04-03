@@ -272,7 +272,8 @@ public:
         Released    = Qt::TouchPointReleased
         // Canceled    = Qt::TouchPointReleased << 1 // 0x10 // TODO maybe
     };
-    Q_ENUM(State)
+    Q_DECLARE_FLAGS(States, State)
+    Q_FLAG(States)
 
     enum GrabState {
         GrabPassive = 0,
@@ -406,6 +407,8 @@ public: // helpers for C++ only (during event delivery)
     virtual void localize(QQuickItem *target) = 0;
 
     virtual bool isPressEvent() const = 0;
+    virtual bool isUpdateEvent() const = 0;
+    virtual bool isReleaseEvent() const = 0;
     virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
     virtual QQuickPointerTouchEvent *asPointerTouchEvent() { return nullptr; }
     virtual QQuickPointerTabletEvent *asPointerTabletEvent() { return nullptr; }
@@ -448,6 +451,8 @@ public:
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
     bool isPressEvent() const override;
+    bool isUpdateEvent() const override;
+    bool isReleaseEvent() const override;
     QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }
     const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
     int pointCount() const override { return 1; }
@@ -481,6 +486,8 @@ public:
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
     bool isPressEvent() const override;
+    bool isUpdateEvent() const override;
+    bool isReleaseEvent() const override;
     QQuickPointerTouchEvent *asPointerTouchEvent() override { return this; }
     const QQuickPointerTouchEvent *asPointerTouchEvent() const override { return this; }
     int pointCount() const override { return m_pointCount; }

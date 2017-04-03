@@ -168,9 +168,9 @@ public:
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
-    bool deliverPressEvent(QQuickPointerEvent *);
+    bool deliverPressOrReleaseEvent(QQuickPointerEvent *, bool handlersOnly = false);
     void deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event);
-    void deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent);
+    void deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent, bool handlersOnly = false);
 
     QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointF &, bool checkMouseButtons, bool checkAcceptsTouch) const;
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;

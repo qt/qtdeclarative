@@ -270,7 +270,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             else
                 setExclusiveGrab(point, press);
         }
-        if (!cancel && !press) {
+        if (!cancel && !press && parentContains(point)) {
             if (point->timeHeld() < longPressThreshold()) {
                 // Assuming here that pointerEvent()->timestamp() is in ms.
                 qreal ts = point->pointerEvent()->timestamp() / 1000.0;
@@ -301,8 +301,9 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
 void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
     QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
-    if (grabber == this && (stateChange == QQuickEventPoint::CancelGrabExclusive || stateChange == QQuickEventPoint::CancelGrabPassive))
-        setPressed(false, true, point);
+    bool isCanceled = stateChange == QQuickEventPoint::CancelGrabExclusive || stateChange == QQuickEventPoint::CancelGrabPassive;
+    if (grabber == this && (isCanceled || point->state() == QQuickEventPoint::Released))
+        setPressed(false, isCanceled, point);
 }
 
 void QQuickTapHandler::connectPreRenderSignal(bool conn)

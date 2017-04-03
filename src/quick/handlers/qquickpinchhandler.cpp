@@ -228,7 +228,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPos() << "->" << point->scenePos();
     }
 
-    if (!active()) {
+    bool containsReleasedPoints = event->isReleaseEvent();
+    if (!active() && !containsReleasedPoints) {
         // Verify that least one of the points have moved beyond threshold needed to activate the handler
         for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
             if (QQuickWindowPrivate::dragOverThreshold(point)) {
@@ -302,7 +303,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                                 << ", rotation" << rotation;
     }
 
-    acceptPoints(m_currentPoints);
+    if (!containsReleasedPoints)
+        acceptPoints(m_currentPoints);
     emit updated();
 }
 

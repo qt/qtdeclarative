@@ -216,6 +216,7 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
                 pt->cancelExclusiveGrab();
         }
     }
+    event->device()->eventDeliveryTargets().append(this);
 }
 
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)

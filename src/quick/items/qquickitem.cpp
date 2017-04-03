@@ -5113,7 +5113,6 @@ bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoid
             if ((!avoidExclusiveGrabber || !event->hasExclusiveGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
                 handler->handlePointerEvent(event);
                 delivered = true;
-                eventDeliveryTargets.append(handler);
             }
         }
     }

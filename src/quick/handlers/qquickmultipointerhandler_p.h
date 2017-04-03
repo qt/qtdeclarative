@@ -88,7 +88,7 @@ protected:
 
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
     bool sameAsCurrentPoints(QQuickPointerEvent *event);
-    QVector<QQuickEventPoint *> pointsInsideOrNearTarget(QQuickPointerEvent *event);
+    QVector<QQuickEventPoint *> eligiblePoints(QQuickPointerEvent *event);
     QPointF touchPointCentroid();
     QVector2D touchPointCentroidVelocity();
     qreal averageTouchPointDistance(const QPointF &ref);
