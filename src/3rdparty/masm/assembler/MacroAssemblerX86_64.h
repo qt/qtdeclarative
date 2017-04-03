@@ -37,6 +37,7 @@ namespace JSC {
 class MacroAssemblerX86_64 : public MacroAssemblerX86Common {
 public:
     static const Scale ScalePtr = TimesEight;
+    static const int PointerSize = 8;
 
     using MacroAssemblerX86Common::add32;
     using MacroAssemblerX86Common::and32;
@@ -327,14 +328,61 @@ public:
         m_assembler.xorq_ir(imm.m_value, srcDest);
     }
 
+    void lshift64(TrustedImm32 imm, RegisterID dest)
+    {
+        m_assembler.shlq_i8r(imm.m_value, dest);
+    }
+
+    void lshift64(RegisterID src, RegisterID dest)
+    {
+        if (src == X86Registers::ecx)
+            m_assembler.shlq_CLr(dest);
+        else {
+            ASSERT(src != dest);
+
+            // Can only shift by ecx, so we do some swapping if we see anything else.
+            swap(src, X86Registers::ecx);
+            m_assembler.shlq_CLr(dest == X86Registers::ecx ? src : dest);
+            swap(src, X86Registers::ecx);
+        }
+    }
+
+    void rshift64(TrustedImm32 imm, RegisterID dest)
+    {
+        m_assembler.sarq_i8r(imm.m_value, dest);
+    }
+
+    void rshift64(RegisterID src, RegisterID dest)
+    {
+        if (src == X86Registers::ecx)
+            m_assembler.sarq_CLr(dest);
+        else {
+            ASSERT(src != dest);
+
+            // Can only shift by ecx, so we do some swapping if we see anything else.
+            swap(src, X86Registers::ecx);
+            m_assembler.sarq_CLr(dest == X86Registers::ecx ? src : dest);
+            swap(src, X86Registers::ecx);
+        }
+    }
+
     void urshift64(TrustedImm32 imm, RegisterID dest)
     {
         m_assembler.shrq_i8r(imm.m_value, dest);
     }
 
-    void lshift64(TrustedImm32 imm, RegisterID dest)
+    void urshift64(RegisterID src, RegisterID dest)
     {
-        m_assembler.shlq_i8r(imm.m_value, dest);
+        if (src == X86Registers::ecx)
+            m_assembler.shrq_CLr(dest);
+        else {
+            ASSERT(src != dest);
+
+            // Can only shift by ecx, so we do some swapping if we see anything else.
+            swap(src, X86Registers::ecx);
+            m_assembler.shrq_CLr(dest == X86Registers::ecx ? src : dest);
+            swap(src, X86Registers::ecx);
+        }
     }
 
     void load64(ImplicitAddress address, RegisterID dest)

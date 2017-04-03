@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 #include <QDebug>
+#include <QMimeData>
 #include <QTouchEvent>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
@@ -371,6 +372,8 @@ private slots:
     void pointerEventTypeAndPointCount();
 
     void grabContentItemToImage();
+
+    void testDragEventPropertyPropagation();
 
 private:
     QTouchDevice *touchDevice;
@@ -2565,6 +2568,261 @@ void tst_qquickwindow::grabContentItemToImage()
 
     QMetaObject::invokeMethod(window, "grabContentItemToImage");
     QTRY_COMPARE(created->property("success").toInt(), 1);
+}
+
+class TestDropTarget : public QQuickItem
+{
+    Q_OBJECT
+public:
+    TestDropTarget(QQuickItem *parent = 0)
+        : QQuickItem(parent)
+        , enterDropAction(Qt::CopyAction)
+        , moveDropAction(Qt::CopyAction)
+        , dropDropAction(Qt::CopyAction)
+        , enterAccept(true)
+        , moveAccept(true)
+        , dropAccept(true)
+    {
+        setFlags(ItemAcceptsDrops);
+    }
+
+    void reset()
+    {
+        enterDropAction = Qt::CopyAction;
+        moveDropAction = Qt::CopyAction;
+        dropDropAction = Qt::CopyAction;
+        enterAccept = true;
+        moveAccept = true;
+        dropAccept = true;
+    }
+
+    void dragEnterEvent(QDragEnterEvent *event)
+    {
+        event->setAccepted(enterAccept);
+        event->setDropAction(enterDropAction);
+    }
+
+    void dragMoveEvent(QDragMoveEvent *event)
+    {
+        event->setAccepted(moveAccept);
+        event->setDropAction(moveDropAction);
+    }
+
+    void dropEvent(QDropEvent *event)
+    {
+        event->setAccepted(dropAccept);
+        event->setDropAction(dropDropAction);
+    }
+
+    Qt::DropAction enterDropAction;
+    Qt::DropAction moveDropAction;
+    Qt::DropAction dropDropAction;
+    bool enterAccept;
+    bool moveAccept;
+    bool dropAccept;
+};
+
+class DragEventTester {
+public:
+    DragEventTester()
+        : pos(60, 60)
+        , actions(Qt::CopyAction | Qt::MoveAction | Qt::LinkAction)
+        , buttons(Qt::LeftButton)
+        , modifiers(Qt::NoModifier)
+    {
+    }
+
+    ~DragEventTester() {
+        qDeleteAll(events);
+        events.clear();
+        enterEvent = 0;
+        moveEvent = 0;
+        dropEvent = 0;
+        leaveEvent = 0;
+    }
+
+    void addEnterEvent()
+    {
+        enterEvent = new QDragEnterEvent(pos, actions, &data, buttons, modifiers);
+        events.append(enterEvent);
+    }
+
+    void addMoveEvent()
+    {
+        moveEvent = new QDragMoveEvent(pos, actions, &data, buttons, modifiers, QEvent::DragMove);
+        events.append(moveEvent);
+    }
+
+    void addDropEvent()
+    {
+        dropEvent = new QDropEvent(pos, actions, &data, buttons, modifiers, QEvent::Drop);
+        events.append(dropEvent);
+    }
+
+    void addLeaveEvent()
+    {
+        leaveEvent = new QDragLeaveEvent();
+        events.append(leaveEvent);
+    }
+
+    void sendDragEventSequence(QQuickWindow *window) const {
+        for (int i = 0; i < events.size(); ++i) {
+            QCoreApplication::sendEvent(window, events[i]);
+        }
+    }
+
+    // Used for building events.
+    QMimeData data;
+    QPoint pos;
+    Qt::DropActions actions;
+    Qt::MouseButtons buttons;
+    Qt::KeyboardModifiers modifiers;
+
+    // Owns events.
+    QList<QEvent *> events;
+
+    // Non-owner pointers for easy acccess.
+    QDragEnterEvent *enterEvent;
+    QDragMoveEvent *moveEvent;
+    QDropEvent *dropEvent;
+    QDragLeaveEvent *leaveEvent;
+};
+
+void tst_qquickwindow::testDragEventPropertyPropagation()
+{
+    QQuickWindow window;
+    TestDropTarget dropTarget(window.contentItem());
+
+    // Setting the size is important because the QQuickWindow checks if the drag happened inside
+    // the drop target.
+    dropTarget.setSize(QSizeF(100, 100));
+
+    // Test enter events property propagation.
+    // For enter events, only isAccepted gets propagated.
+    {
+        DragEventTester builder;
+        dropTarget.enterAccept = false;
+        dropTarget.enterDropAction = Qt::IgnoreAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragEnterEvent* enterEvent = builder.enterEvent;
+        QCOMPARE(enterEvent->isAccepted(), dropTarget.enterAccept);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.enterAccept = false;
+        dropTarget.enterDropAction = Qt::CopyAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragEnterEvent* enterEvent = builder.enterEvent;
+        QCOMPARE(enterEvent->isAccepted(), dropTarget.enterAccept);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.enterAccept = true;
+        dropTarget.enterDropAction = Qt::IgnoreAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragEnterEvent* enterEvent = builder.enterEvent;
+        QCOMPARE(enterEvent->isAccepted(), dropTarget.enterAccept);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.enterAccept = true;
+        dropTarget.enterDropAction = Qt::CopyAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragEnterEvent* enterEvent = builder.enterEvent;
+        QCOMPARE(enterEvent->isAccepted(), dropTarget.enterAccept);
+    }
+
+    // Test move events property propagation.
+    // For move events, both isAccepted and dropAction get propagated.
+    dropTarget.reset();
+    {
+        DragEventTester builder;
+        dropTarget.moveAccept = false;
+        dropTarget.moveDropAction = Qt::IgnoreAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragMoveEvent* moveEvent = builder.moveEvent;
+        QCOMPARE(moveEvent->isAccepted(), dropTarget.moveAccept);
+        QCOMPARE(moveEvent->dropAction(), dropTarget.moveDropAction);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.moveAccept = false;
+        dropTarget.moveDropAction = Qt::CopyAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragMoveEvent* moveEvent = builder.moveEvent;
+        QCOMPARE(moveEvent->isAccepted(), dropTarget.moveAccept);
+        QCOMPARE(moveEvent->dropAction(), dropTarget.moveDropAction);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.moveAccept = true;
+        dropTarget.moveDropAction = Qt::IgnoreAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragMoveEvent* moveEvent = builder.moveEvent;
+        QCOMPARE(moveEvent->isAccepted(), dropTarget.moveAccept);
+        QCOMPARE(moveEvent->dropAction(), dropTarget.moveDropAction);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.moveAccept = true;
+        dropTarget.moveDropAction = Qt::CopyAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addLeaveEvent();
+        builder.sendDragEventSequence(&window);
+        QDragMoveEvent* moveEvent = builder.moveEvent;
+        QCOMPARE(moveEvent->isAccepted(), dropTarget.moveAccept);
+        QCOMPARE(moveEvent->dropAction(), dropTarget.moveDropAction);
+    }
+
+    // Test drop events property propagation.
+    // For drop events, both isAccepted and dropAction get propagated.
+    dropTarget.reset();
+    {
+        DragEventTester builder;
+        dropTarget.dropAccept = false;
+        dropTarget.dropDropAction = Qt::IgnoreAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addDropEvent();
+        builder.sendDragEventSequence(&window);
+        QDropEvent* dropEvent = builder.dropEvent;
+        QCOMPARE(dropEvent->isAccepted(), dropTarget.dropAccept);
+        QCOMPARE(dropEvent->dropAction(), dropTarget.dropDropAction);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.dropAccept = false;
+        dropTarget.dropDropAction = Qt::CopyAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addDropEvent();
+        builder.sendDragEventSequence(&window);
+        QDropEvent* dropEvent = builder.dropEvent;
+        QCOMPARE(dropEvent->isAccepted(), dropTarget.dropAccept);
+        QCOMPARE(dropEvent->dropAction(), dropTarget.dropDropAction);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.dropAccept = true;
+        dropTarget.dropDropAction = Qt::IgnoreAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addDropEvent();
+        builder.sendDragEventSequence(&window);
+        QDropEvent* dropEvent = builder.dropEvent;
+        QCOMPARE(dropEvent->isAccepted(), dropTarget.dropAccept);
+        QCOMPARE(dropEvent->dropAction(), dropTarget.dropDropAction);
+    }
+    {
+        DragEventTester builder;
+        dropTarget.dropAccept = true;
+        dropTarget.dropDropAction = Qt::CopyAction;
+        builder.addEnterEvent(); builder.addMoveEvent(); builder.addDropEvent();
+        builder.sendDragEventSequence(&window);
+        QDropEvent* dropEvent = builder.dropEvent;
+        QCOMPARE(dropEvent->isAccepted(), dropTarget.dropAccept);
+        QCOMPARE(dropEvent->dropAction(), dropTarget.dropDropAction);
+    }
 }
 
 QTEST_MAIN(tst_qquickwindow)

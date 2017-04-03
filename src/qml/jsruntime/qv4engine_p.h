@@ -54,7 +54,6 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
-#include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
 #ifndef V4_BOOTSTRAP
@@ -88,7 +87,7 @@ struct CompilationUnit;
 struct InternalClass;
 struct InternalClassPool;
 
-struct Q_QML_EXPORT ExecutionEngine
+struct Q_QML_EXPORT ExecutionEngine : public EngineBase
 {
 private:
     static qint32 maxCallDepth;
@@ -97,13 +96,8 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    Heap::ExecutionContext *current;
-
-    Value *jsStackTop;
-    quint32 hasException;
     qint32 callDepth;
 
-    MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
@@ -111,8 +105,6 @@ public:
     ExecutionContext *currentContext;
 
     Value *jsStackLimit;
-
-    Runtime runtime;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
@@ -126,7 +118,7 @@ public:
     }
     Heap::Base *popForGC() {
         --jsStackTop;
-        return jsStackTop->heapObject();
+        return jsStackTop->m();
     }
 
     QML_NEARLY_ALWAYS_INLINE Value *jsAlloca(int nValues) {
@@ -454,7 +446,7 @@ public:
 
     void requireArgumentsAccessors(int n);
 
-    void markObjects();
+    void markObjects(bool incremental);
 
     void initRootContext();
 
@@ -554,13 +546,19 @@ inline
 void Heap::Base::mark(QV4::ExecutionEngine *engine)
 {
     Q_ASSERT(inUse());
-    if (isMarked())
-        return;
+    const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+    Chunk *c = h->chunk();
+    size_t index = h - c->realBase();
+    Q_ASSERT(!Chunk::testBit(c->extendsBitmap, index));
+    quintptr *bitmap = c->blackBitmap + Chunk::bitmapIndex(index);
+    quintptr bit = Chunk::bitForIndex(index);
+    if (!(*bitmap & bit)) {
 #ifndef QT_NO_DEBUG
-    engine->assertObjectBelongsToEngine(*this);
+        engine->assertObjectBelongsToEngine(*this);
 #endif
-    setMarkBit();
-    engine->pushForGC(this);
+        *bitmap |= bit;
+        engine->pushForGC(this);
+    }
 }
 
 inline void Value::mark(ExecutionEngine *e)

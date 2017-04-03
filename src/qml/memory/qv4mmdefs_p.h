@@ -51,6 +51,7 @@
 //
 
 #include <private/qv4global_p.h>
+#include <private/qv4runtimeapi_p.h>
 #include <QtCore/qalgorithms.h>
 #include <qdebug.h>
 
@@ -111,22 +112,29 @@ struct Chunk {
     HeapItem *realBase();
     HeapItem *first();
 
+    static Q_ALWAYS_INLINE size_t bitmapIndex(size_t index) {
+        return index >> BitShift;
+    }
+    static Q_ALWAYS_INLINE quintptr bitForIndex(size_t index) {
+        return static_cast<quintptr>(1) << (index & (Bits - 1));
+    }
+
     static void setBit(quintptr *bitmap, size_t index) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index < ChunkSize/SlotSize);
-        bitmap += index >> BitShift;
-        quintptr bit = static_cast<quintptr>(1) << (index & (Bits - 1));
+        bitmap += bitmapIndex(index);
+        quintptr bit = bitForIndex(index);
         *bitmap |= bit;
     }
     static void clearBit(quintptr *bitmap, size_t index) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index < ChunkSize/SlotSize);
-        bitmap += index >> BitShift;
-        quintptr bit = static_cast<quintptr>(1) << (index & (Bits - 1));
+        bitmap += bitmapIndex(index);
+        quintptr bit = bitForIndex(index);
         *bitmap &= ~bit;
     }
     static bool testBit(quintptr *bitmap, size_t index) {
 //        Q_ASSERT(index >= HeaderSize/SlotSize && index < ChunkSize/SlotSize);
-        bitmap += index >> BitShift;
-        quintptr bit = static_cast<quintptr>(1) << (index & (Bits - 1));
+        bitmap += bitmapIndex(index);
+        quintptr bit = bitForIndex(index);
         return (*bitmap & bit);
     }
     static void setBits(quintptr *bitmap, size_t index, size_t nBits) {
@@ -176,6 +184,8 @@ struct Chunk {
 
     void sweep();
     void freeAll();
+    void resetBlackBits();
+    void collectGrayItems(ExecutionEngine *engine);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };
@@ -254,6 +264,102 @@ Q_STATIC_ASSERT(1 << Chunk::SlotSizeShift == Chunk::SlotSize);
 Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
+
+// Base class for the execution engine
+
+#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
+#pragma pack(push, 1)
+#endif
+struct EngineBase {
+    Heap::ExecutionContext *current = 0;
+
+    Value *jsStackTop = 0;
+    quint8 hasException = false;
+    quint8 writeBarrierActive = false;
+    quint16 unused = 0;
+#if QT_POINTER_SIZE == 8
+    quint8 padding[4];
+#endif
+    MemoryManager *memoryManager = 0;
+    Runtime runtime;
+};
+#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
+#pragma pack(pop)
+#endif
+
+Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
+Q_STATIC_ASSERT(offsetof(EngineBase, current) == 0);
+Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
+
+// Some helper classes and macros to automate the generation of our
+// tables used for marking objects
+
+enum MarkFlags {
+    Mark_NoMark = 0,
+    Mark_Value = 1,
+    Mark_Pointer = 2,
+    Mark_ValueArray = 3
+};
+
+template <typename T>
+struct MarkFlagEvaluator {
+    static Q_CONSTEXPR quint64 value = 0;
+};
+template <typename T, size_t o>
+struct MarkFlagEvaluator<Heap::Pointer<T, o>> {
+    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_Pointer) << (2*o / sizeof(quintptr));
+};
+template <size_t o>
+struct MarkFlagEvaluator<ValueArray<o>> {
+    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_ValueArray) << (2*o / sizeof(quintptr));
+};
+template <size_t o>
+struct MarkFlagEvaluator<HeapValue<o>> {
+    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_Value) << (2 *o / sizeof(quintptr));
+};
+
+#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION(c, gcType, type, name) \
+    HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_##gcType(c, type, name)
+
+#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_Pointer(c, type, name) Pointer<type, 0> name;
+#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_NoMark(c, type, name) type name;
+#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_HeapValue(c, type, name) HeapValue<0> name;
+#define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_ValueArray(c, type, name) type<0> name;
+
+#define HEAP_OBJECT_MEMBER_EXPANSION(c, gcType, type, name) \
+    HEAP_OBJECT_MEMBER_EXPANSION_##gcType(c, type, name)
+
+#define HEAP_OBJECT_MEMBER_EXPANSION_Pointer(c, type, name) \
+    Pointer<type, offsetof(c##OffsetStruct, name) + baseOffset> name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_NoMark(c, type, name) \
+    type name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_HeapValue(c, type, name) \
+    HeapValue<offsetof(c##OffsetStruct, name) + baseOffset> name;
+#define HEAP_OBJECT_MEMBER_EXPANSION_ValueArray(c, type, name) \
+    type<offsetof(c##OffsetStruct, name) + baseOffset> name;
+
+#define HEAP_OBJECT_MARK_EXPANSION(class, gcType, type, name) \
+    MarkFlagEvaluator<decltype(class::name)>::value |
+
+#define DECLARE_HEAP_OBJECT(name, base) \
+struct name##OffsetStruct { \
+    name##Members(name, HEAP_OBJECT_OFFSET_MEMBER_EXPANSION) \
+}; \
+struct name##SizeStruct : base, name##OffsetStruct {}; \
+struct name##Data { \
+    static Q_CONSTEXPR size_t baseOffset = sizeof(name##SizeStruct) - sizeof(name##OffsetStruct); \
+    name##Members(name, HEAP_OBJECT_MEMBER_EXPANSION) \
+}; \
+Q_STATIC_ASSERT(sizeof(name##SizeStruct) == sizeof(name##Data) + name##Data::baseOffset); \
+static Q_CONSTEXPR quint64 name##_markTable = \
+    (name##Members(name##Data, HEAP_OBJECT_MARK_EXPANSION) 0) | QV4::Heap::base::markTable; \
+    \
+struct name : base, name##Data
+
+#define DECLARE_MARK_TABLE(class) static Q_CONSTEXPR quint64 markTable = class##_markTable
 
 }
 

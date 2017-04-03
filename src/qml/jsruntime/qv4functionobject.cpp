@@ -69,11 +69,13 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
+Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
+
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
 {
     Object::init();
     function = nullptr;
-    this->scope = scope->d();
+    this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     f->init(name, createProto);
@@ -84,7 +86,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
     Object::init();
     this->function = function;
     function->compilationUnit->addref();
-    this->scope = scope->d();
+    this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedString name(s, function->name());
     ScopedFunctionObject f(s, this);
@@ -102,9 +104,9 @@ void Heap::FunctionObject::init()
 {
     Object::init();
     function = nullptr;
-    this->scope = internalClass->engine->rootContext()->d();
+    this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
     Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()) == Index_Prototype);
-    *propertyData(Index_Prototype) = Encode::undefined();
+    setProperty(internalClass->engine, Index_Prototype, Primitive::undefinedValue());
 }
 
 
@@ -124,10 +126,10 @@ void FunctionObject::init(String *n, bool createProto)
     if (createProto) {
         ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype()));
         Q_ASSERT(s.engine->protoClass->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
-        *proto->propertyData(Heap::FunctionObject::Index_ProtoConstructor) = this->asReturnedValue();
-        *propertyData(Heap::FunctionObject::Index_Prototype) = proto.asReturnedValue();
+        proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
+        setProperty(Heap::FunctionObject::Index_Prototype, proto);
     } else {
-        *propertyData(Heap::FunctionObject::Index_Prototype) = Encode::undefined();
+        setProperty(Heap::FunctionObject::Index_Prototype, Primitive::undefinedValue());
     }
 
     if (n)
@@ -147,15 +149,6 @@ void FunctionObject::construct(const Managed *that, Scope &scope, CallData *)
 void FunctionObject::call(const Managed *, Scope &scope, CallData *)
 {
     scope.result = Encode::undefined();
-}
-
-void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    Heap::FunctionObject *o = static_cast<Heap::FunctionObject *>(that);
-    if (o->scope)
-        o->scope->mark(e);
-
-    Object::markObjects(that, e);
 }
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
@@ -309,7 +302,7 @@ void FunctionPrototype::method_apply(const BuiltinFunction *, Scope &scope, Call
                 cData->args[i] = Primitive::undefinedValue();
         } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
             auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
-            uint alen = sad ? sad->len : 0;
+            uint alen = sad ? sad->values.size : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
@@ -352,8 +345,9 @@ void FunctionPrototype::method_bind(const BuiltinFunction *, Scope &scope, CallD
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
     if (callData->argc > 1) {
         boundArgs = MemberData::allocate(scope.engine, callData->argc - 1);
-        boundArgs->d()->size = callData->argc - 1;
-        memcpy(boundArgs->data(), callData->args + 1, (callData->argc - 1)*sizeof(Value));
+        boundArgs->d()->values.size = callData->argc - 1;
+        for (uint i = 0; i < static_cast<uint>(callData->argc - 1); ++i)
+            boundArgs->set(scope.engine, i, callData->args[i + 1]);
     }
 
     ExecutionContext *global = scope.engine->rootContext();
@@ -420,7 +414,7 @@ void ScriptFunction::call(const Managed *that, Scope &scope, CallData *callData)
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
 {
     FunctionObject::init();
-    this->scope = scope->d();
+    this->scope.set(scope->engine(), scope->d());
 
     this->function = function;
     function->compilationUnit->addref();
@@ -433,7 +427,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, function->name());
     f->init(name, true);
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
-    *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
+    setProperty(s.engine, Index_Length, Primitive::fromInt32(f->formalParameterCount()));
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);
@@ -479,7 +473,7 @@ void OldBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callD
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
+    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);
@@ -526,7 +520,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
+    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);
@@ -543,12 +537,12 @@ DEFINE_OBJECT_VTABLE(BoundFunction);
 void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject *target,
                                const Value &boundThis, QV4::MemberData *boundArgs)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("__bound function__"));
-    this->target = target->d();
-    this->boundArgs = boundArgs ? boundArgs->d() : 0;
-    this->boundThis = boundThis;
-
     Scope s(scope);
+    Heap::FunctionObject::init(scope, QStringLiteral("__bound function__"));
+    this->target.set(s.engine, target->d());
+    this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : 0);
+    this->boundThis.set(scope->engine(), boundThis);
+
     ScopedObject f(s, this);
 
     ScopedValue l(s, target->get(s.engine->id_length()));
@@ -605,15 +599,4 @@ void BoundFunction::construct(const Managed *that, Scope &scope, CallData *dd)
     memcpy(argp, dd->args, dd->argc*sizeof(Value));
     ScopedFunctionObject t(scope, f->target());
     t->construct(scope, callData);
-}
-
-void BoundFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    BoundFunction::Data *o = static_cast<BoundFunction::Data *>(that);
-    if (o->target)
-        o->target->mark(e);
-    o->boundThis.mark(e);
-    if (o->boundArgs)
-        o->boundArgs->mark(e);
-    FunctionObject::markObjects(that, e);
 }

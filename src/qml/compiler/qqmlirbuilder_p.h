@@ -548,7 +548,7 @@ public:
 
 struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
-    QV4::CompiledData::Unit *generate(Document &output, QQmlEngine *engine, const QV4::CompiledData::ResolvedTypeReferenceMap &dependentTypes);
+    QV4::CompiledData::Unit *generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher = QV4::CompiledData::DependentTypesHasher());
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
@@ -622,7 +622,7 @@ private:
     int _importedScriptsTemp;
 };
 
-struct IRLoader {
+struct Q_QML_PRIVATE_EXPORT IRLoader {
     IRLoader(const QV4::CompiledData::Unit *unit, QmlIR::Document *output);
 
     void load();

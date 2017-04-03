@@ -73,7 +73,7 @@ void DataViewCtor::construct(const Managed *, Scope &scope, CallData *callData)
     }
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->allocObject<DataView>());
-    a->d()->buffer = buffer->d();
+    a->d()->buffer.set(scope.engine, buffer->d());
     a->d()->byteLength = byteLength;
     a->d()->byteOffset = byteOffset;
     scope.result = a.asReturnedValue();
@@ -82,13 +82,6 @@ void DataViewCtor::construct(const Managed *, Scope &scope, CallData *callData)
 void DataViewCtor::call(const Managed *that, Scope &scope, CallData *callData)
 {
     construct(that, scope, callData);
-}
-
-
-void DataView::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    DataView::Data *v = static_cast<DataView::Data *>(that);
-    v->buffer->mark(e);
 }
 
 void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)

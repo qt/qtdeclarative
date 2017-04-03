@@ -67,18 +67,23 @@ struct BuiltinFunction;
 
 namespace Heap {
 
-struct Object : Base {
+#define ObjectMembers(class, Member) \
+    Member(class, NoMark, InternalClass *, internalClass) \
+    Member(class, Pointer, Object *, prototype) \
+    Member(class, Pointer, MemberData *, memberData) \
+    Member(class, Pointer, ArrayData *, arrayData)
+
+DECLARE_HEAP_OBJECT(Object, Base) {
+    DECLARE_MARK_TABLE(Object);
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
-    const Value *propertyData(uint index) const { return memberData->data + index; }
-    Value *propertyData(uint index) { return memberData->data + index; }
-
-    InternalClass *internalClass;
-    Pointer<Object> prototype;
-    Pointer<MemberData> memberData;
-    Pointer<ArrayData> arrayData;
+    const Value *propertyData(uint index) const { return memberData->values.data() + index; }
+    void setProperty(ExecutionEngine *e, uint index, Value v) const { memberData->values.set(e, index, v); }
+    void setProperty(ExecutionEngine *e, uint index, Heap::Base *b) const { memberData->values.set(e, index, b); }
 };
+
+Q_STATIC_ASSERT(Object::markTable == ((2 << 4) | (2 << 6) | (2 << 8)));
 
 }
 
@@ -114,7 +119,8 @@ struct Object : Base {
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
+        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass); \
+        static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable;
 
 #define V4_INTERNALCLASS(c) \
     static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
@@ -190,13 +196,16 @@ struct Q_QML_EXPORT Object: Managed {
     void setInternalClass(InternalClass *ic);
 
     const Value *propertyData(uint index) const { return d()->propertyData(index); }
-    Value *propertyData(uint index) { return d()->propertyData(index); }
 
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
-    void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
+    void setArrayData(ArrayData *a) { d()->arrayData.set(engine(), a->d()); }
 
     void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
     void setProperty(uint index, const Property *p);
+    void setProperty(uint index, Value v) const { d()->setProperty(engine(), index, v); }
+    void setProperty(uint index, Heap::Base *b) const { d()->setProperty(engine(), index, b); }
+    void setProperty(ExecutionEngine *engine, uint index, Value v) const { d()->setProperty(engine, index, v); }
+    void setProperty(ExecutionEngine *engine, uint index, Heap::Base *b) const { d()->setProperty(engine, index, b); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
     Heap::Object *prototype() const { return d()->prototype; }
@@ -205,8 +214,8 @@ struct Q_QML_EXPORT Object: Managed {
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
     void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
 
-    Value *getValueOrSetter(String *name, PropertyAttributes *attrs);
-    Value *getValueOrSetter(uint index, PropertyAttributes *attrs);
+    MemberData::Index getValueOrSetter(String *name, PropertyAttributes *attrs);
+    ArrayData::Index getValueOrSetter(uint index, PropertyAttributes *attrs);
 
     bool hasProperty(String *name) const;
     bool hasProperty(uint index) const;
@@ -296,7 +305,7 @@ public:
     void push_back(const Value &v);
 
     ArrayData::Type arrayType() const {
-        return arrayData() ? d()->arrayData->type : Heap::ArrayData::Simple;
+        return arrayData() ? static_cast<ArrayData::Type>(d()->arrayData->type) : Heap::ArrayData::Simple;
     }
     // ### remove me
     void setArrayType(ArrayData::Type t) {
@@ -400,7 +409,6 @@ public:
     inline void call(Scope &scope, CallData *d) const
     { vtable()->call(this, scope, d); }
 protected:
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static void construct(const Managed *m, Scope &scope, CallData *);
     static void call(const Managed *m, Scope &scope, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
@@ -465,7 +473,7 @@ struct ArrayObject : Object {
 
 private:
     void commonInit()
-    { *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0); }
+    { setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0)); }
 };
 
 }
@@ -505,7 +513,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        *propertyData(Heap::ArrayObject::LengthPropertyIndex) = Primitive::fromUInt32(l);
+        setProperty(Heap::ArrayObject::LengthPropertyIndex, Primitive::fromUInt32(l));
 }
 
 inline void Object::push_back(const Value &v)
@@ -522,7 +530,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
 {
     // ### Clean up
     arrayCreate();
-    if (attributes.isAccessor() || (index > 0x1000 && index > 2*d()->arrayData->alloc)) {
+    if (attributes.isAccessor() || (index > 0x1000 && index > 2*d()->arrayData->values.alloc)) {
         initSparseArray();
     } else {
         arrayData()->vtable()->reallocate(this, index + 1, false);
@@ -537,7 +545,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
 inline void Object::arraySet(uint index, const Value &value)
 {
     arrayCreate();
-    if (index > 0x1000 && index > 2*d()->arrayData->alloc) {
+    if (index > 0x1000 && index > 2*d()->arrayData->values.alloc) {
         initSparseArray();
     }
     ArrayData::insert(this, index, &value);

@@ -39,7 +39,6 @@
 
 #include "qsgdefaultcontext_p.h"
 
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgdefaultinternalrectanglenode_p.h>
 #include <QtQuick/private/qsgdefaultinternalimagenode_p.h>
 #include <QtQuick/private/qsgdefaultpainternode_p.h>

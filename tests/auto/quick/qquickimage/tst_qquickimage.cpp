@@ -375,7 +375,7 @@ void tst_qquickimage::mirror()
         }
 
         QImage img = expected.toImage();
-        QCOMPARE(screenshots[fillMode], img);
+        QCOMPARE(screenshots[fillMode].convertToFormat(img.format()), img);
     }
 }
 

@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickBasePositionerPrivate;
 
-class QQuickPositionerAttached : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPositionerAttached : public QObject
 {
     Q_OBJECT
 

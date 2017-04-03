@@ -59,12 +59,11 @@ namespace QV4 {
 
 namespace Heap {
 
-struct MemberData : Base {
-    union {
-        uint size;
-        double _dummy;
-    };
-    Value data[1];
+#define MemberDataMembers(class, Member) \
+    Member(class, ValueArray, ValueArray, values)
+
+DECLARE_HEAP_OBJECT(MemberData, Base) {
+    DECLARE_MARK_TABLE(MemberData);
 };
 V4_ASSERT_IS_TRIVIAL(MemberData)
 
@@ -74,14 +73,26 @@ struct MemberData : Managed
 {
     V4_MANAGED(MemberData, Managed)
 
-    Value &operator[] (uint idx) { return d()->data[idx]; }
-    const Value *data() const { return d()->data; }
-    Value *data() { return d()->data; }
-    inline uint size() const { return d()->size; }
+    struct Index {
+        Heap::MemberData *memberData;
+        uint index;
+
+        void set(ExecutionEngine *e, Value newVal) {
+            memberData->values.set(e, index, newVal);
+        }
+        const Value *operator->() const { return &memberData->values[index]; }
+        const Value &operator*() const { return memberData->values[index]; }
+        bool isNull() const { return !memberData; }
+    };
+
+    const Value &operator[] (uint idx) const { return d()->values[idx]; }
+    const Value *data() const { return d()->values.data(); }
+    void set(ExecutionEngine *e, uint index, Value v) { d()->values.set(e, index, v); }
+    void set(ExecutionEngine *e, uint index, Heap::Base *b) { d()->values.set(e, index, b); }
+
+    inline uint size() const { return d()->values.size; }
 
     static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
-
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 }

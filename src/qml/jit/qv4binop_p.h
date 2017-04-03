@@ -88,8 +88,8 @@ struct Binop {
 
     struct OpInfo {
         const char *name;
-        int fallbackImplementation; // offsetOf(Runtime,...)
-        int contextImplementation; // offsetOf(Runtime,...)
+        Runtime::RuntimeMethods fallbackImplementation;
+        Runtime::RuntimeMethods contextImplementation;
         MemRegOp inlineMemRegOp;
         ImmRegOp inlineImmRegOp;
         bool needsExceptionCheck;

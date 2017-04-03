@@ -72,7 +72,15 @@ struct TypedArrayOperations {
 
 namespace Heap {
 
-struct TypedArray : Object {
+#define TypedArrayMembers(class, Member) \
+    Member(class, Pointer, ArrayBuffer *, buffer) \
+    Member(class, NoMark, const TypedArrayOperations *, type) \
+    Member(class, NoMark, uint, byteLength) \
+    Member(class, NoMark, uint, byteOffset) \
+    Member(class, NoMark, uint, arrayType)
+
+DECLARE_HEAP_OBJECT(TypedArray, Object) {
+    DECLARE_MARK_TABLE(TypedArray);
     enum Type {
         Int8Array,
         UInt8Array,
@@ -87,12 +95,6 @@ struct TypedArray : Object {
     };
 
     void init(Type t);
-
-    const TypedArrayOperations *type;
-    Pointer<ArrayBuffer> buffer;
-    uint byteLength;
-    uint byteOffset;
-    Type arrayType;
 };
 
 struct TypedArrayCtor : FunctionObject {
@@ -128,10 +130,9 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     }
 
     Heap::TypedArray::Type arrayType() const {
-        return d()->arrayType;
+        return static_cast<Heap::TypedArray::Type>(d()->arrayType);
     }
 
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool putIndexed(Managed *m, uint index, const Value &value);
 };

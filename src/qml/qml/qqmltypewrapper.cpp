@@ -129,15 +129,20 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, Q
     return w.asReturnedValue();
 }
 
-static int enumForSingleton(String *name, QObject *qobjectSingleton)
+static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, QObject *qobjectSingleton,
+                            QQmlType *type)
 {
+    bool ok;
+    int value = type->enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+    if (ok)
+        return value;
+
     // ### Optimize
     QByteArray enumName = name->toQString().toUtf8();
     const QMetaObject *metaObject = qobjectSingleton->metaObject();
     for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
         QMetaEnum e = metaObject->enumerator(ii);
-        bool ok;
-        int value = e.keyToValue(enumName.constData(), &ok);
+        value = e.keyToValue(enumName.constData(), &ok);
         if (ok)
             return value;
     }
@@ -183,7 +188,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
                 // check for enum value
                 const bool includeEnums = w->d()->mode == Heap::QmlTypeWrapper::IncludeEnums;
                 if (includeEnums && name->startsWithUpper()) {
-                    const int value = enumForSingleton(name, qobjectSingleton);
+                    const int value = enumForSingleton(v4, name, qobjectSingleton, type);
                     if (value != -1)
                         return QV4::Primitive::fromInt32(value).asReturnedValue();
                 }
@@ -196,7 +201,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
 
                 // Warn when attempting to access a lowercased enum value, singleton case
                 if (!ok && includeEnums && !name->startsWithUpper()) {
-                    const int value = enumForSingleton(name, qobjectSingleton);
+                    const int value = enumForSingleton(v4, name, qobjectSingleton, type);
                     if (value != -1)
                         return throwLowercaseEnumError(v4, name, type);
                 }
@@ -335,6 +340,46 @@ bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
         return qmlTypeWrapperA->toVariant().value<QObject*>() == qobjectWrapper->object();
 
     return false;
+}
+
+ReturnedValue QmlTypeWrapper::instanceOf(const Object *typeObject, const Value &var)
+{
+    Q_ASSERT(typeObject->as<QV4::QmlTypeWrapper>());
+    const QV4::QmlTypeWrapper *typeWrapper = static_cast<const QV4::QmlTypeWrapper *>(typeObject);
+    QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
+    QQmlEnginePrivate *qenginepriv = QQmlEnginePrivate::get(engine->qmlEngine());
+
+    // can only compare a QObject* against a QML type
+    const QObjectWrapper *wrapper = var.as<QObjectWrapper>();
+    if (!wrapper)
+        return engine->throwTypeError();
+
+    // in case the wrapper outlived the QObject*
+    const QObject *wrapperObject = wrapper->object();
+    if (!wrapperObject)
+        return engine->throwTypeError();
+
+    const int myTypeId = typeWrapper->d()->type->typeId();
+    QQmlMetaObject myQmlType;
+    if (myTypeId == 0) {
+        // we're a composite type; a composite type cannot be equal to a
+        // non-composite object instance (Rectangle{} is never an instance of
+        // CustomRectangle)
+        QQmlData *theirDData = QQmlData::get(wrapperObject, /*create=*/false);
+        Q_ASSERT(theirDData); // must exist, otherwise how do we have a QObjectWrapper for it?!
+        if (!theirDData->compilationUnit)
+            return Encode(false);
+
+        QQmlTypeData *td = qenginepriv->typeLoader.getType(typeWrapper->d()->type->sourceUrl());
+        CompiledData::CompilationUnit *cu = td->compilationUnit();
+        myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
+    } else {
+        myQmlType = qenginepriv->metaObjectForType(myTypeId);
+    }
+
+    const QMetaObject *theirType = wrapperObject->metaObject();
+
+    return QV4::Encode(QQmlMetaObject::canConvert(theirType, myQmlType));
 }
 
 QT_END_NAMESPACE

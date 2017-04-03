@@ -1971,7 +1971,9 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
         const int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
         if (lastSlash != -1)
             typeName = typeName.mid(lastSlash + 1);
-    } else {
+    }
+
+    if (typeName.isEmpty()) {
         typeName = QString::fromUtf8(object->metaObject()->className());
         int marker = typeName.indexOf(QLatin1String("_QMLTYPE_"));
         if (marker != -1)
@@ -1982,10 +1984,12 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
             typeName = typeName.leftRef(marker) + QLatin1Char('*');
             type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
             if (type) {
-                typeName = type->qmlTypeName();
-                const int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
+                QString qmlTypeName = type->qmlTypeName();
+                const int lastSlash = qmlTypeName.lastIndexOf(QLatin1Char('/'));
                 if (lastSlash != -1)
-                    typeName = typeName.mid(lastSlash + 1);
+                    qmlTypeName = qmlTypeName.mid(lastSlash + 1);
+                if (!qmlTypeName.isEmpty())
+                    typeName = qmlTypeName;
             }
         }
     }

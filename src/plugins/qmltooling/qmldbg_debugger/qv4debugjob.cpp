@@ -151,7 +151,7 @@ void BacktraceJob::run()
         result.insert(QStringLiteral("toFrame"), fromFrame + frameArray.size());
         result.insert(QStringLiteral("frames"), frameArray);
     }
-    collectedRefs = collector->flushCollectedRefs();
+    flushRedundantRefs();
 }
 
 FrameJob::FrameJob(QV4DataCollector *collector, int frameNr) :
@@ -166,7 +166,7 @@ void FrameJob::run()
         success = false;
     } else {
         result = collector->buildFrame(frames[frameNr], frameNr);
-        collectedRefs = collector->flushCollectedRefs();
+        flushRedundantRefs();
         success = true;
     }
 }
@@ -196,7 +196,7 @@ void ScopeJob::run()
     result[QLatin1String("index")] = scopeNr;
     result[QLatin1String("frameIndex")] = frameNr;
     result[QLatin1String("object")] = object;
-    collectedRefs = collector->flushCollectedRefs();
+    flushRedundantRefs();
 }
 
 bool ScopeJob::wasSuccessful() const
@@ -226,9 +226,9 @@ void ValueLookupJob::run()
             exception = QString::fromLatin1("Invalid Ref: %1").arg(ref);
             break;
         }
-        result[QString::number(ref)] = collector->lookupRef(ref);
+        result[QString::number(ref)] = collector->lookupRef(ref, true);
     }
-    collectedRefs = collector->flushCollectedRefs();
+    flushRedundantRefs();
     if (scopeObject)
         engine->popContext();
 }
@@ -249,8 +249,9 @@ void ExpressionEvalJob::handleResult(QV4::ScopedValue &value)
 {
     if (hasExeption())
         exception = value->toQStringNoThrow();
-    result = collector->lookupRef(collector->collect(value));
-    collectedRefs = collector->flushCollectedRefs();
+    result = collector->lookupRef(collector->collect(value), true);
+    if (collector->redundantRefs())
+        collectedRefs = collector->flushCollectedRefs();
 }
 
 const QString &ExpressionEvalJob::exceptionMessage() const
@@ -263,8 +264,10 @@ const QJsonObject &ExpressionEvalJob::returnValue() const
     return result;
 }
 
+// TODO: Drop this method once we don't need to support redundantRefs anymore
 const QJsonArray &ExpressionEvalJob::refs() const
 {
+    Q_ASSERT(collector->redundantRefs());
     return collectedRefs;
 }
 

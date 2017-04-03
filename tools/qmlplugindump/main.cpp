@@ -33,6 +33,10 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickpincharea_p.h>
 
+#ifdef QT_WIDGETS_LIB
+#include <QApplication>
+#endif // QT_WIDGETS_LIB
+
 #include <QtGui/QGuiApplication>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
@@ -741,8 +745,8 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     std::cerr << qPrintable(QString(
-                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] [-output <output-file.qmltypes>] [-noforceqtquick] module.uri version [module/import/path]\n"
-                                 "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
+                                 "Usage: %1 [-v] [-qapp] [-noinstantiate] [-defaultplatform] [-[non]relocatable] [-dependencies <dependencies.json>] [-merge <file-to-merge.qmltypes>] [-output <output-file.qmltypes>] [-noforceqtquick] module.uri version [module/import/path]\n"
+                                 "       %1 [-v] [-qapp] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
                                  appName)) << std::endl;
@@ -866,7 +870,7 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     QByteArray depencenciesData = importScanner.readAllStandardOutput();
     if (!readDependenciesData(QLatin1String("<outputOfQmlimportscanner>"), depencenciesData,
                              dependencies, QStringList(pluginImportUri), forceQtQuickDependency)) {
-        std::cerr << "failed to proecess output of qmlimportscanner" << std::endl;
+        std::cerr << "failed to process output of qmlimportscanner" << std::endl;
         if (importScanner.exitCode() != 0)
             std::cerr << importScanner.readAllStandardError().toStdString();
         return false;
@@ -992,10 +996,25 @@ int main(int argc, char *argv[])
     else
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
 
-    QGuiApplication app(argc, argv);
+    // Check which kind of application should be instantiated.
+    bool useQApplication = false;
+    for (int i = 0; i < argc; ++i) {
+        QString arg = QLatin1String(argv[1]);
+        if (arg == QLatin1String("--qapp") || arg == QLatin1String("-qapp"))
+            useQApplication = true;
+    }
+
+#ifdef QT_WIDGETS_LIB
+    QScopedPointer<QCoreApplication> app(useQApplication
+            ? new QApplication(argc, argv)
+            : new QGuiApplication(argc, argv));
+#else
+    QScopedPointer<QCoreApplication> app(new QGuiApplication(argc, argv));
+#endif // QT_WIDGETS_LIB
+
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
-    const QStringList args = app.arguments();
-    const QString appName = QFileInfo(app.applicationFilePath()).baseName();
+    const QStringList args = app->arguments();
+    const QString appName = QFileInfo(app->applicationFilePath()).baseName();
     if (args.size() < 2) {
         printUsage(appName);
         return EXIT_INVALIDARGUMENTS;
@@ -1064,6 +1083,9 @@ int main(int argc, char *argv[])
                 outputFilename = args.at(iArg);
             } else if (arg == QLatin1String("--defaultplatform")
                        || arg == QLatin1String("-defaultplatform")) {
+                continue;
+            } else if (arg == QLatin1String("--qapp")
+                       || arg == QLatin1String("-qapp")) {
                 continue;
             } else {
                 std::cerr << "Invalid argument: " << qPrintable(arg) << std::endl;
@@ -1331,8 +1353,8 @@ int main(int argc, char *argv[])
     QTimer timer;
     timer.setSingleShot(true);
     timer.setInterval(0);
-    QObject::connect(&timer, SIGNAL(timeout()), &app, SLOT(quit()));
+    QObject::connect(&timer, SIGNAL(timeout()), app.data(), SLOT(quit()));
     timer.start();
 
-    return app.exec();
+    return app->exec();
 }

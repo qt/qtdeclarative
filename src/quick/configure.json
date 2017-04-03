@@ -51,6 +51,7 @@
         "quick-canvas": {
             "label": "Canvas item",
             "purpose": "Provides the Qt Quick Canvas Item",
+            "condition": "features.quick-path",
             "output": [
                 "privateFeature"
             ]
@@ -93,6 +94,14 @@
         "quick-listview": {
             "label": "ListView item",
             "purpose": "Provides the Qt Quick ListView item",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-particles": {
+            "label": "Particle support",
+            "purpose": "Provides a particle system for Qt Quick",
+            "condition": "features.quick-shadereffect && features.quick-sprite && features.opengl",
             "output": [
                 "privateFeature"
             ]

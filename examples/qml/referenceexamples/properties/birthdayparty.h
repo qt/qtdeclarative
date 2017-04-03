@@ -41,6 +41,7 @@
 #define BIRTHDAYPARTY_H
 
 #include <QObject>
+#include <QVector>
 #include <QQmlListProperty>
 #include "person.h"
 
@@ -63,12 +64,19 @@ public:
     void setHost(Person *);
 
     QQmlListProperty<Person> guests();
+    void appendGuest(Person*);
     int guestCount() const;
     Person *guest(int) const;
+    void clearGuests();
 
 private:
+    static void appendGuest(QQmlListProperty<Person>*, Person*);
+    static int guestCount(QQmlListProperty<Person>*);
+    static Person* guest(QQmlListProperty<Person>*, int);
+    static void clearGuests(QQmlListProperty<Person>*);
+
     Person *m_host;
-    QList<Person *> m_guests;
+    QVector<Person *> m_guests;
 };
 // ![3]
 

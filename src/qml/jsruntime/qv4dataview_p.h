@@ -63,11 +63,14 @@ struct DataViewCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope);
 };
 
-struct DataView : Object {
+#define DataViewMembers(class, Member) \
+    Member(class, Pointer, ArrayBuffer *, buffer) \
+    Member(class, NoMark, uint, byteLength) \
+    Member(class, NoMark, uint, byteOffset)
+
+DECLARE_HEAP_OBJECT(DataView, Object) {
+    DECLARE_MARK_TABLE(DataView);
     void init() { Object::init(); }
-    Pointer<ArrayBuffer> buffer;
-    uint byteLength;
-    uint byteOffset;
 };
 
 }
@@ -84,8 +87,6 @@ struct DataView : Object
 {
     V4_OBJECT2(DataView, Object)
     V4_PROTOTYPE(dataViewPrototype)
-
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 struct DataViewPrototype: Object

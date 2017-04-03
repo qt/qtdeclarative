@@ -68,11 +68,11 @@ public:
     CompilationUnitMapper();
     ~CompilationUnitMapper();
 
-    CompiledData::Unit *open(const QString &cacheFilePath, const QString &sourcePath, QString *errorString);
+    CompiledData::Unit *open(const QString &cacheFilePath, const QDateTime &sourceTimeStamp, QString *errorString);
     void close();
 
 private:
-    static bool verifyHeader(const QV4::CompiledData::Unit *header, const QString &sourcePath, QString *errorString);
+    static bool verifyHeader(const QV4::CompiledData::Unit *header, QDateTime sourceTimeStamp, QString *errorString);
 
 #if defined(Q_OS_UNIX)
     size_t length;

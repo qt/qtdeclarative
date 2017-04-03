@@ -95,7 +95,15 @@ private:
     QQmlQPointer<QObject> qObj;
 };
 
-struct QObjectMethod : FunctionObject {
+#define QObjectMethodMembers(class, Member) \
+    Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper) \
+    Member(class, NoMark, QQmlQPointer<QObject>, qObj) \
+    Member(class, NoMark, QQmlPropertyCache *, _propertyCache) \
+    Member(class, NoMark, int, index)
+
+DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
+    DECLARE_MARK_TABLE(QObjectMethod);
+
     void init(QV4::ExecutionContext *scope);
     void destroy()
     {
@@ -113,18 +121,10 @@ struct QObjectMethod : FunctionObject {
         _propertyCache = c;
     }
 
-    Pointer<QQmlValueTypeWrapper> valueTypeWrapper;
-
     const QMetaObject *metaObject();
     QObject *object() const { return qObj.data(); }
     void setObject(QObject *o) { qObj = o; }
 
-private:
-    QQmlQPointer<QObject> qObj;
-    QQmlPropertyCache *_propertyCache;
-
-public:
-    int index;
 };
 
 struct QMetaObjectWrapper : FunctionObject {
@@ -242,8 +242,6 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     static void call(const Managed *, Scope &scope, CallData *callData);
 
     void callInternal(CallData *callData, Scope &scope) const;
-
-    static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };

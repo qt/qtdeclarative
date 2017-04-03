@@ -3581,16 +3581,43 @@ public:
         , _replacement(0)
     {}
 
-    void operator()(Temp *toReplace, Expr *replacement, StatementWorklist &W, QVector<Stmt *> *newUses = 0)
+    bool operator()(Temp *toReplace, Expr *replacement, StatementWorklist &W, QVector<Stmt *> *newUses = 0)
     {
         Q_ASSERT(replacement->asTemp() || replacement->asConst() || replacement->asName());
-
-//        qout << "Replacing ";toReplace->dump(qout);qout<<" by ";replacement->dump(qout);qout<<endl;
 
         qSwap(_toReplace, toReplace);
         qSwap(_replacement, replacement);
 
         const QVector<Stmt *> &uses = _defUses.uses(*_toReplace);
+
+        // Prevent the following:
+        //   L3:
+        //     %1 = phi L1: %2, L2: %3
+        //     %4 = phi L1: %5, L2: %6
+        //     %6 = %1
+        // From turning into:
+        //   L3:
+        //     %1 = phi L1: %2, L2: %3
+        //     %4 = phi L1: %5, L2: %1
+        //
+        // Because both phi nodes are "executed in parallel", we cannot replace %6 by %1 in the
+        // second phi node. So, if the defining statement for a temp is a phi node, and one of the
+        // uses of the to-be-replaced statement is a phi node in the same block as the defining
+        // statement, bail out.
+        if (Temp *r = _replacement->asTemp()) {
+            if (_defUses.defStmt(*r)->asPhi()) {
+                BasicBlock *replacementDefBlock = _defUses.defStmtBlock(*r);
+                for (Stmt *use : uses) {
+                    if (Phi *usePhi = use->asPhi()) {
+                        if (_defUses.defStmtBlock(*usePhi->targetTemp) == replacementDefBlock)
+                            return false;
+                    }
+                }
+            }
+        }
+
+//        qout << "Replacing ";toReplace->dump(qout);qout<<" by ";replacement->dump(qout);qout<<endl;
+
         if (newUses)
             newUses->reserve(uses.size());
 
@@ -3606,6 +3633,7 @@ public:
 
         qSwap(_replacement, replacement);
         qSwap(_toReplace, toReplace);
+        return true;
     }
 
 private:
@@ -4082,11 +4110,12 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                 // copy propagation:
                 if (Temp *sourceTemp = m->source->asTemp()) {
                     QVector<Stmt *> newT2Uses;
-                    replaceUses(targetTemp, sourceTemp, W, &newT2Uses);
-                    defUses.removeUse(s, *sourceTemp);
-                    defUses.addUses(*sourceTemp, newT2Uses);
-                    defUses.removeDef(*targetTemp);
-                    W.remove(s);
+                    if (replaceUses(targetTemp, sourceTemp, W, &newT2Uses)) {
+                        defUses.removeUse(s, *sourceTemp);
+                        defUses.addUses(*sourceTemp, newT2Uses);
+                        defUses.removeDef(*targetTemp);
+                        W.remove(s);
+                    }
                     continue;
                 }
 
@@ -5635,25 +5664,97 @@ void MoveMapping::add(Expr *from, Temp *to) {
     _moves.append(m);
 }
 
+// Order the moves that are generated when resolving edges during register allocation (see [Wimmer1]
+// section 6 for details). Now these moves form one or more graphs, so we have to output them in
+// such an order that values don't get overwritten:
+//   r1 <- r0
+//   r2 <- r1
+// That input has to be ordered as follows in order to prevent the value in r1 from being lost:
+//   r2 <- r1
+//   r1 <- r0
+//
+// So, the algorithm is to output the leaves first, and take them out of the input. This will result
+// in some moves to become leaves (in the above example: when leaf r2 <- r1 is generated and taken
+// away, the r1 <- r0 is now a leaf), so we can output those and take those out, and repeat until
+// there are no more leafs.
+//
+// The tricky part is that there might be cycles:
+//   r4 <- r5
+//   r5 <- r4
+// These have to be turned into a "register swap":
+//   r4 <=> r5
+//
+// So after running the above algorithm where we progressively remove the leaves, we are left with
+// zero or more cycles. To resolve those, we break one of the edges of the cycle, and for all other
+// edges we generate swaps. Note that the swaps will always occur as the last couple of moves,
+// because otherwise they might clobber sources for moves:
+//   r4 <=> r5
+//   r6 <- r5
+// Here, the value of r5 is already overwritten with the one in r4, so the correct order is:
+//   r6 <- r5
+//   r4 <=> r5
 void MoveMapping::order()
 {
-    QList<Move> todo = _moves;
-    QList<Move> output, swaps;
+    QList<Move> output;
     output.reserve(_moves.size());
-    QList<Move> delayed;
-    delayed.reserve(_moves.size());
 
-    while (!todo.isEmpty()) {
-        const Move m = todo.first();
-        todo.removeFirst();
-        schedule(m, todo, delayed, output, swaps);
+    while (!_moves.isEmpty()) {
+        // Take out all leaf edges, because we can output them without any problems.
+        int nextLeaf = findLeaf();
+        if (nextLeaf == -1)
+            break; // No more leafs left, we're done here.
+        output.append(_moves.takeAt(nextLeaf));
+        // Now there might be new leaf edges: any move that had the input of the previously found
+        // leaf as an output, so loop around.
     }
 
-    output += swaps;
+    while (!_moves.isEmpty()) {
+        // We're now left with one or more cycles.
+        // Step one: break the/a cycle.
+        _moves.removeFirst();
+        // Step two: find the other edges of the cycle, starting with the one of that is now a leaf.
+        while (!_moves.isEmpty()) {
+            int nextLeaf = findLeaf();
+            if (nextLeaf == -1)
+                break; // We're done with this cycle.
+            Move m = _moves.takeAt(nextLeaf);
+            // Step three: get the edges from the cycle and turn it into a swap
+            m.needsSwap = true;
+            output.append(m);
+            // Because we took out a leaf, find the next one.
+        }
+        // We're done with the cycle, let's see if there are more.
+    }
 
-    Q_ASSERT(todo.isEmpty());
-    Q_ASSERT(delayed.isEmpty());
-    qSwap(_moves, output);
+    _moves = output;
+}
+
+int MoveMapping::findLeaf() const
+{
+    for (int i = 0, e = _moves.size(); i != e; ++i) {
+        // Take an edge from the list...
+        const Temp *target = _moves.at(i).to;
+        // ... and see if its target is used as a source...
+        bool targetUsedAsSource = false;
+        for (int j = 0; j != e; ++j) {
+            if (i == j)
+                continue;
+
+            Expr *source = _moves.at(j).from;
+            if (const Temp *sourceTemp = source->asTemp()) {
+                if (overlappingStorage(*target, *sourceTemp)) {
+                    targetUsedAsSource = true;
+                    break;
+                }
+            }
+        }
+        // ... if not, we have a leaf edge ...
+        if (!targetUsedAsSource)
+            return i;
+        // .. otherwise we try the next one.
+    }
+
+    return -1; // No leaf found
 }
 
 QList<IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, IR::Function *function, bool atEnd) const
@@ -5695,60 +5796,12 @@ void MoveMapping::dump() const
     }
 }
 
-MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed,
-                                          QList<Move> &output, QList<Move> &swaps) const
-{
-    const Moves usages = sourceUsages(m.to, todo) + sourceUsages(m.to, delayed);
-    for (const Move &dependency : usages) {
-        if (!output.contains(dependency)) {
-            if (delayed.contains(dependency)) {
-                // We have a cycle! Break it by swapping instead of assigning.
-                if (DebugMoveMapping) {
-                    delayed += m;
-                    QBuffer buf;
-                    buf.open(QIODevice::WriteOnly);
-                    QTextStream out(&buf);
-                    IRPrinter printer(&out);
-                    out<<"we have a cycle! temps:" << endl;
-                    for (const Move &m : qAsConst(delayed)) {
-                        out<<"\t";
-                        printer.print(m.to);
-                        out<<" <- ";
-                        printer.print(m.from);
-                        out<<endl;
-                    }
-                    qDebug("%s", buf.data().constData());
-                    delayed.removeOne(m);
-                }
-
-                return NeedsSwap;
-            } else {
-                delayed.append(m);
-                todo.removeOne(dependency);
-                Action action = schedule(dependency, todo, delayed, output, swaps);
-                delayed.removeOne(m);
-                Move mm(m);
-                if (action == NeedsSwap) {
-                    mm.needsSwap = true;
-                    swaps.append(mm);
-                } else {
-                    output.append(mm);
-                }
-                return action;
-            }
-        }
-    }
-
-    output.append(m);
-    return NormalMove;
-}
-
 // References:
 //  [Wimmer1] C. Wimmer and M. Franz. Linear Scan Register Allocation on SSA Form. In Proceedings of
-//            CGO’10, ACM Press, 2010
+//            CGO'10, ACM Press, 2010
 //  [Wimmer2] C. Wimmer and H. Mossenbock. Optimized Interval Splitting in a Linear Scan Register
 //            Allocator. In Proceedings of the ACM/USENIX International Conference on Virtual
-//            Execution Environments, pages 132–141. ACM Press, 2005.
+//            Execution Environments, pages 132-141. ACM Press, 2005.
 //  [Briggs]  P. Briggs, K.D. Cooper, T.J. Harvey, and L.T. Simpson. Practical Improvements to the
 //            Construction and Destruction of Static Single Assignment Form.
 //  [Appel]   A.W. Appel. Modern Compiler Implementation in Java. Second edition, Cambridge

@@ -39,7 +39,6 @@
 
 #include "qsgdistancefieldglyphnode_p.h"
 #include "qsgdistancefieldglyphnode_p_p.h"
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -76,9 +75,6 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
         m_glyph_cache->unregisterGlyphNode(this);
         m_glyph_cache->unregisterOwnerElement(ownerElement());
     }
-
-    while (m_nodesToDelete.count())
-        delete m_nodesToDelete.takeLast();
 }
 
 void QSGDistanceFieldGlyphNode::setColor(const QColor &color)
@@ -158,9 +154,6 @@ void QSGDistanceFieldGlyphNode::preprocess()
 {
     Q_ASSERT(m_glyph_cache);
 
-    while (m_nodesToDelete.count())
-        delete m_nodesToDelete.takeLast();
-
     m_glyph_cache->processPendingGlyphs();
     m_glyph_cache->update();
 
@@ -188,13 +181,12 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     // Remove previously created sub glyph nodes
     // We assume all the children are sub glyph nodes
     QSGNode *subnode = firstChild();
+    QSGNode *nextNode = 0;
     while (subnode) {
-        // We can't delete the node now as it might be in the preprocess list
-        // It will be deleted in the next preprocess
-        m_nodesToDelete.append(subnode);
-        subnode = subnode->nextSibling();
+        nextNode = subnode->nextSibling();
+        delete subnode;
+        subnode = nextNode;
     }
-    removeAllChildNodes();
 
     QSGGeometry *g = geometry();
 

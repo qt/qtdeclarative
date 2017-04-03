@@ -5,12 +5,12 @@ QT_FOR_CONFIG += network quick-private
 SUBDIRS += \
     qml
 
-qtHaveModule(gui) {
+qtHaveModule(gui):qtConfig(animation) {
     SUBDIRS += \
         quick \
         qmltest
 
-    qtConfig(quick-sprite):qtConfig(opengl(es1|es2)?): \
+    qtConfig(quick-particles): \
         SUBDIRS += particles
     qtHaveModule(widgets): SUBDIRS += quickwidgets
 }

@@ -77,10 +77,13 @@ struct QmlContextWrapper : Object {
     QQmlQPointer<QObject> scopeObject;
 };
 
-struct QmlContext : ExecutionContext {
-    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
+#define QmlContextMembers(class, Member) \
+    Member(class, Pointer, QmlContextWrapper *, qml)
 
-    Pointer<QmlContextWrapper> qml;
+DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
+    DECLARE_MARK_TABLE(QmlContext);
+
+    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
 };
 
 }

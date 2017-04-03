@@ -130,10 +130,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 qint32 ExecutionEngine::maxCallDepth = -1;
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
-    : current(0)
-    , hasException(false)
-    , callDepth(0)
-    , memoryManager(new QV4::MemoryManager(this))
+    : callDepth(0)
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , currentContext(0)
@@ -151,6 +148,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_profiler(0)
 #endif
 {
+    writeBarrierActive = true;
+
+    memoryManager = new QV4::MemoryManager(this);
+
     if (maxCallDepth == -1) {
         bool ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
@@ -398,7 +399,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    rootContext()->d()->global = globalObject->d();
+    rootContext()->d()->global.set(scope.engine, globalObject->d());
     rootContext()->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->d()->vtable());
 
@@ -600,12 +601,14 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
         size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
         Heap::SimpleArrayData *d = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
         d->init();
-        d->alloc = length;
         d->type = Heap::ArrayData::Simple;
         d->offset = 0;
-        d->len = length;
-        memcpy(&d->arrayData, values, length*sizeof(Value));
-        a->d()->arrayData = d;
+        d->values.alloc = length;
+        d->values.size = length;
+        // this doesn't require a write barrier, things will be ok, when the new array data gets inserted into
+        // the parent object
+        memcpy(&d->values.values, values, length*sizeof(Value));
+        a->d()->arrayData.set(this, d);
         a->setArrayLengthUnchecked(length);
     }
     return a->d();
@@ -886,7 +889,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     QUrl base;
     ExecutionContext *c = currentContext;
     while (c) {
-        CallContext *callCtx = c->asCallContext();
+        SimpleCallContext *callCtx = c->asSimpleCallContext();
         if (callCtx && callCtx->d()->v4Function) {
             base.setUrl(callCtx->d()->v4Function->sourceFile());
             break;
@@ -929,23 +932,25 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     }
 }
 
-void ExecutionEngine::markObjects()
+void ExecutionEngine::markObjects(bool incremental)
 {
-    identifierTable->mark(this);
+    if (!incremental) {
+        identifierTable->mark(this);
 
-    for (int i = 0; i < nArgumentsAccessors; ++i) {
-        const Property &pd = argumentsAccessors[i];
-        if (Heap::FunctionObject *getter = pd.getter())
-            getter->mark(this);
-        if (Heap::FunctionObject *setter = pd.setter())
-            setter->mark(this);
+        for (int i = 0; i < nArgumentsAccessors; ++i) {
+            const Property &pd = argumentsAccessors[i];
+            if (Heap::FunctionObject *getter = pd.getter())
+                getter->mark(this);
+            if (Heap::FunctionObject *setter = pd.setter())
+                setter->mark(this);
+        }
+
+        classPool->markObjects(this);
+
+        for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
+             it != end; ++it)
+            (*it)->markObjects(this);
     }
-
-    classPool->markObjects(this);
-
-    for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
-         it != end; ++it)
-        (*it)->markObjects(this);
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)

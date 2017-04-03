@@ -1704,7 +1704,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueType
     Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->setPropertyCache(valueType->d()->propertyCache());
     method->d()->index = index;
-    method->d()->valueTypeWrapper = valueType->d();
+    method->d()->valueTypeWrapper.set(valueScope.engine, valueType->d());
     return method.asReturnedValue();
 }
 
@@ -1839,15 +1839,6 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
     } else {
         scope.result = CallOverloaded(object, method, v4, callData, d()->propertyCache());
     }
-}
-
-void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    QObjectMethod::Data *This = static_cast<QObjectMethod::Data*>(that);
-    if (This->valueTypeWrapper)
-        This->valueTypeWrapper->mark(e);
-
-    FunctionObject::markObjects(that, e);
 }
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);

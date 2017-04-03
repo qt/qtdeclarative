@@ -690,8 +690,8 @@ void ArrayPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallD
     } else {
         Q_ASSERT(instance->arrayType() == Heap::ArrayData::Simple || instance->arrayType() == Heap::ArrayData::Complex);
         Heap::SimpleArrayData *sa = instance->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (len > sa->len)
-            len = sa->len;
+        if (len > sa->values.size)
+            len = sa->values.size;
         uint idx = fromIndex;
         while (idx < len) {
             value = sa->data(idx);

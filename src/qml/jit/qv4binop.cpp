@@ -165,17 +165,17 @@ struct ArchitectureSpecificBinaryOperation<Assembler<AssemblerTargetConfiguratio
 #endif
 
 #define OP(op) \
-    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
+    { "Runtime::" isel_stringIfy(op), QV4::Runtime::op, QV4::Runtime::InvalidRuntimeMethod, 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 #define OPCONTEXT(op) \
-    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
+    { "Runtime::" isel_stringIfy(op), QV4::Runtime::InvalidRuntimeMethod, QV4::Runtime::op, 0, 0, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 
 #define INLINE_OP(op, memOp, immOp) \
-    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, memOp, immOp, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
+    { "Runtime::" isel_stringIfy(op), QV4::Runtime::op, QV4::Runtime::InvalidRuntimeMethod, memOp, immOp, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 #define INLINE_OPCONTEXT(op, memOp, immOp) \
-    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), memOp, immOp, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
+    { "Runtime::" isel_stringIfy(op), QV4::Runtime::InvalidRuntimeMethod, QV4::Runtime::op, memOp, immOp, QV4::Runtime::Method_##op##_NeedsExceptionCheck }
 
 #define NULL_OP \
-    { 0, 0, 0, 0, 0, false }
+    { 0, QV4::Runtime::InvalidRuntimeMethod, QV4::Runtime::InvalidRuntimeMethod, 0, 0, false }
 
 template <typename JITAssembler>
 const typename Binop<JITAssembler>::OpInfo Binop<JITAssembler>::operations[IR::LastAluOp + 1] = {
@@ -492,7 +492,7 @@ bool Binop<JITAssembler>::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource
             return false;
         }
     } else if (inplaceOpWithAddress) { // All cases of X = X op [address-of-Y]
-        Pointer rhsAddr = as->loadAddress(JITAssembler::ScratchRegister, rightSource);
+        Pointer rhsAddr = as->loadAddressForReading(JITAssembler::ScratchRegister, rightSource);
         switch (op) {
         case IR::OpBitAnd: as->and32(rhsAddr, targetReg); break;
         case IR::OpBitOr:  as->or32 (rhsAddr, targetReg); break;

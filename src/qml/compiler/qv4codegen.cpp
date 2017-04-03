@@ -1497,7 +1497,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     IR::Function *f = _function;
 
     while (f && e->parent) {
-        if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
+        if (f->insideWithOrCatch || (f->isNamedExpression && QStringRef(f->name) == name))
             return _block->NAME(name, line, col);
 
         int index = e->findMember(name);
@@ -1508,7 +1508,7 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
                 al->isArgumentsOrEval = true;
             return al;
         }
-        const int argIdx = f->indexOfArgument(&name);
+        const int argIdx = f->indexOfArgument(QStringRef(&name));
         if (argIdx != -1)
             return _block->ARG(argIdx, scope);
 
@@ -2269,7 +2269,7 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     _block = loopbody;
     statement(ast->statement);
-    _block->JUMP(loopcond);
+    setLocation(_block->JUMP(loopcond), ast->statement->lastSourceLocation());
 
     _block = loopcond;
     condition(ast->expression, loopbody, loopend);
@@ -2334,7 +2334,7 @@ bool Codegen::visit(ForEachStatement *ast)
         return false;
     move(*init, _block->TEMP(temp));
     statement(ast->statement);
-    _block->JUMP(foreachin);
+    setLocation(_block->JUMP(foreachin), ast->lastSourceLocation());
 
     _block = foreachin;
 
@@ -2373,7 +2373,7 @@ bool Codegen::visit(ForStatement *ast)
 
     _block = forbody;
     statement(ast->statement);
-    _block->JUMP(forstep);
+    setLocation(_block->JUMP(forstep), ast->lastSourceLocation());
 
     _block = forstep;
     statement(ast->expression);
@@ -2473,7 +2473,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     int temp = _block->newTemp();
     move(identifier(ast->declaration->name.toString()), _block->TEMP(temp));
     statement(ast->statement);
-    _block->JUMP(foreachin);
+    setLocation(_block->JUMP(foreachin), ast->lastSourceLocation());
 
     _block = foreachin;
 
@@ -2512,7 +2512,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
     _block = forbody;
     statement(ast->statement);
-    _block->JUMP(forstep);
+    setLocation(_block->JUMP(forstep), ast->lastSourceLocation());
 
     _block = forstep;
     statement(ast->expression);
@@ -2813,7 +2813,7 @@ bool Codegen::visit(WhileStatement *ast)
 
     _block = whilebody;
     statement(ast->statement);
-    _block->JUMP(whilecond);
+    setLocation(_block->JUMP(whilecond), ast->lastSourceLocation());
 
     _block = whileend;
     leaveLoop();

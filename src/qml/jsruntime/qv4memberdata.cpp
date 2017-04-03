@@ -45,24 +45,19 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(MemberData);
 
-void MemberData::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    Heap::MemberData *m = static_cast<Heap::MemberData *>(that);
-    for (uint i = 0; i < m->size; ++i)
-        m->data[i].mark(e);
-}
-
 Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberData *old)
 {
-    Q_ASSERT(!old || old->size < n);
+    Q_ASSERT(!old || old->values.size < n);
     Q_ASSERT(n);
 
     size_t alloc = MemoryManager::align(sizeof(Heap::MemberData) + (n - 1)*sizeof(Value));
     Heap::MemberData *m = e->memoryManager->allocManaged<MemberData>(alloc);
     if (old)
-        memcpy(m, old, sizeof(Heap::MemberData) + (old->size - 1)* sizeof(Value));
+        // no write barrier required here
+        memcpy(m, old, sizeof(Heap::MemberData) + (old->values.size - 1) * sizeof(Value));
     else
         m->init();
-    m->size = static_cast<uint>((alloc - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
+    m->values.alloc = static_cast<uint>((alloc - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
+    m->values.size = m->values.alloc;
     return m;
 }

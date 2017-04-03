@@ -77,15 +77,15 @@ void Heap::StringObject::init()
 {
     Object::init();
     Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
-    string = internalClass->engine->id_empty()->d();
-    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0);
+    string.set(internalClass->engine, internalClass->engine->id_empty()->d());
+    setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0));
 }
 
 void Heap::StringObject::init(const QV4::String *str)
 {
     Object::init();
-    string = str->d();
-    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(length());
+    string.set(internalClass->engine, str->d());
+    setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(length()));
 }
 
 Heap::String *Heap::StringObject::getIndex(uint index) const
@@ -143,13 +143,6 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
     }
 
     return Object::advanceIterator(m, it, name, index, p, attrs);
-}
-
-void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    StringObject::Data *o = static_cast<StringObject::Data *>(that);
-    o->string->mark(e);
-    Object::markObjects(that, e);
 }
 
 DEFINE_OBJECT_VTABLE(StringCtor);
@@ -563,7 +556,7 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global())
-            *regExp->lastIndexProperty() = Primitive::fromUInt32(0);
+            regExp->setLastIndex(0);
         numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
         numCaptures = regExp->value()->captureCount();
     } else {

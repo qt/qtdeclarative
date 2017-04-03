@@ -73,7 +73,6 @@ QT_BEGIN_NAMESPACE
 class QSGNode;
 class QImage;
 class TextureReference;
-class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 class QOpenGLContext;
 class QSGInternalImageNode;
@@ -409,7 +408,7 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
+    QSGDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font);
     virtual ~QSGDistanceFieldGlyphCache();
 
     struct Metrics {
@@ -442,8 +441,6 @@ public:
         Texture() : textureId(0), size(QSize()) { }
         bool operator == (const Texture &other) const { return textureId == other.textureId; }
     };
-
-    const QSGDistanceFieldGlyphCacheManager *manager() const { return m_manager; }
 
     const QRawFont &referenceFont() const { return m_referenceFont; }
 
@@ -514,8 +511,6 @@ protected:
     inline bool isCoreProfile() const { return m_coreProfile; }
 
 private:
-    QSGDistanceFieldGlyphCacheManager *m_manager;
-
     QRawFont m_referenceFont;
     int m_glyphCount;
 

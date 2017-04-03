@@ -55,70 +55,70 @@ using namespace QV4::Moth;
 
 namespace {
 
-inline uint aluOpFunction(IR::AluOp op)
+inline QV4::Runtime::RuntimeMethods aluOpFunction(IR::AluOp op)
 {
     switch (op) {
     case IR::OpInvalid:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpIfTrue:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpNot:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpUMinus:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpUPlus:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpCompl:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpBitAnd:
-        return offsetof(QV4::Runtime, bitAnd);
+        return QV4::Runtime::bitAnd;
     case IR::OpBitOr:
-        return offsetof(QV4::Runtime, bitOr);
+        return QV4::Runtime::bitOr;
     case IR::OpBitXor:
-        return offsetof(QV4::Runtime, bitXor);
+        return QV4::Runtime::bitXor;
     case IR::OpAdd:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpSub:
-        return offsetof(QV4::Runtime, sub);
+        return QV4::Runtime::sub;
     case IR::OpMul:
-        return offsetof(QV4::Runtime, mul);
+        return QV4::Runtime::mul;
     case IR::OpDiv:
-        return offsetof(QV4::Runtime, div);
+        return QV4::Runtime::div;
     case IR::OpMod:
-        return offsetof(QV4::Runtime, mod);
+        return QV4::Runtime::mod;
     case IR::OpLShift:
-        return offsetof(QV4::Runtime, shl);
+        return QV4::Runtime::shl;
     case IR::OpRShift:
-        return offsetof(QV4::Runtime, shr);
+        return QV4::Runtime::shr;
     case IR::OpURShift:
-        return offsetof(QV4::Runtime, ushr);
+        return QV4::Runtime::ushr;
     case IR::OpGt:
-        return offsetof(QV4::Runtime, greaterThan);
+        return QV4::Runtime::greaterThan;
     case IR::OpLt:
-        return offsetof(QV4::Runtime, lessThan);
+        return QV4::Runtime::lessThan;
     case IR::OpGe:
-        return offsetof(QV4::Runtime, greaterEqual);
+        return QV4::Runtime::greaterEqual;
     case IR::OpLe:
-        return offsetof(QV4::Runtime, lessEqual);
+        return QV4::Runtime::lessEqual;
     case IR::OpEqual:
-        return offsetof(QV4::Runtime, equal);
+        return QV4::Runtime::equal;
     case IR::OpNotEqual:
-        return offsetof(QV4::Runtime, notEqual);
+        return QV4::Runtime::notEqual;
     case IR::OpStrictEqual:
-        return offsetof(QV4::Runtime, strictEqual);
+        return QV4::Runtime::strictEqual;
     case IR::OpStrictNotEqual:
-        return offsetof(QV4::Runtime, strictNotEqual);
+        return QV4::Runtime::strictNotEqual;
     case IR::OpInstanceof:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpIn:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpAnd:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     case IR::OpOr:
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     default:
         Q_ASSERT(!"Unknown AluOp");
-        return 0;
+        return QV4::Runtime::InvalidRuntimeMethod;
     }
 };
 
@@ -889,24 +889,25 @@ Param InstructionSelection::binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR
     if (oper == IR::OpInstanceof || oper == IR::OpIn || oper == IR::OpAdd) {
         Instruction::BinopContext binop;
         if (oper == IR::OpInstanceof)
-            binop.alu = offsetof(QV4::Runtime, instanceof);
+            binop.alu = QV4::Runtime::instanceof;
         else if (oper == IR::OpIn)
-            binop.alu = offsetof(QV4::Runtime, in);
+            binop.alu = QV4::Runtime::in;
         else
-            binop.alu = offsetof(QV4::Runtime, add);
+            binop.alu = QV4::Runtime::add;
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
-        Q_ASSERT(binop.alu);
+        Q_ASSERT(binop.alu != QV4::Runtime::InvalidRuntimeMethod);
         addInstruction(binop);
         return binop.result;
     } else {
+        auto binopFunc = aluOpFunction(oper);
+        Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
         Instruction::Binop binop;
-        binop.alu = aluOpFunction(oper);
+        binop.alu = binopFunc;
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
-        Q_ASSERT(binop.alu);
         addInstruction(binop);
         return binop.result;
     }

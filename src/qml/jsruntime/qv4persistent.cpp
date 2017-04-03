@@ -215,15 +215,6 @@ void PersistentValueStorage::free(Value *v)
         freePage(p);
 }
 
-static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
-{
-    while (engine->jsStackTop > markBase) {
-        Heap::Base *h = engine->popForGC();
-        Q_ASSERT (h->vtable()->markObjects);
-        h->vtable()->markObjects(h, engine);
-    }
-}
-
 void PersistentValueStorage::mark(ExecutionEngine *e)
 {
     Value *markBase = e->jsStackTop;
@@ -234,7 +225,7 @@ void PersistentValueStorage::mark(ExecutionEngine *e)
             if (Managed *m = p->values[i].as<Managed>())
                 m->mark(e);
         }
-        drainMarkStack(e, markBase);
+        e->memoryManager->drainMarkStack(markBase);
 
         p = p->header.next;
     }

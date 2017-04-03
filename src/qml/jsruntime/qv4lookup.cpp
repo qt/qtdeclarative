@@ -59,7 +59,7 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : Object::getValue(thisObject, *v, *attrs);
         }
 
@@ -72,7 +72,7 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : Object::getValue(thisObject, *v, *attrs);
         }
 
@@ -94,7 +94,7 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : thisObject->getValue(*v, *attrs);
         }
 
@@ -107,7 +107,7 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            Value *v = obj->propertyData(index);
+            const Value *v = obj->propertyData(index);
             return !attrs->isAccessor() ? v->asReturnedValue() : thisObject->getValue(*v, *attrs);
         }
 
@@ -116,20 +116,20 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
     return Primitive::emptyValue().asReturnedValue();
 }
 
-ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, const Value &object, const Value &index)
+ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx;
     if (object.isObject() && index.asArrayIndex(idx)) {
         l->indexedGetter = indexedGetterObjectInt;
-        return indexedGetterObjectInt(l, object, index);
+        return indexedGetterObjectInt(l, engine, object, index);
     }
-    return indexedGetterFallback(l, object, index);
+    return indexedGetterFallback(l, engine, object, index);
 }
 
-ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, const Value &index)
+ReturnedValue Lookup::indexedGetterFallback(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index)
 {
     Q_UNUSED(l);
-    Scope scope(l->engine);
+    Scope scope(engine);
     uint idx = 0;
     bool isInt = index.asArrayIndex(idx);
 
@@ -147,7 +147,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 
         if (object.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index.toQStringNoThrow()).arg(object.toQStringNoThrow());
-            return l->engine->throwTypeError(message);
+            return engine->throwTypeError(message);
         }
 
         o = RuntimeHelpers::convertToObject(scope.engine, object);
@@ -173,7 +173,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
 }
 
 
-ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, const Value &index)
+ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -182,7 +182,7 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
                 Heap::Object *o = static_cast<Heap::Object *>(b);
                 if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
-                    if (idx < s->len)
+                    if (idx < s->values.size)
                         if (!s->data(idx).isEmpty())
                             return s->data(idx).asReturnedValue();
                 }
@@ -190,25 +190,25 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
         }
     }
 
-    return indexedGetterFallback(l, object, index);
+    return indexedGetterFallback(l, engine, object, index);
 }
 
-void Lookup::indexedSetterGeneric(Lookup *l, const Value &object, const Value &index, const Value &v)
+void Lookup::indexedSetterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v)
 {
     if (Object *o = object.objectValue()) {
         uint idx;
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple && index.asArrayIndex(idx)) {
             l->indexedSetter = indexedSetterObjectInt;
-            indexedSetterObjectInt(l, object, index, v);
+            indexedSetterObjectInt(l, engine, object, index, v);
             return;
         }
     }
-    indexedSetterFallback(l, object, index, v);
+    indexedSetterFallback(l, engine, object, index, v);
 }
 
-void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &index, const Value &value)
+void Lookup::indexedSetterFallback(Lookup *, ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
-    Scope scope(l->engine);
+    Scope scope(engine);
     ScopedObject o(scope, object.toObject(scope.engine));
     if (scope.engine->hasException)
         return;
@@ -217,8 +217,8 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
     if (index.asArrayIndex(idx)) {
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-            if (idx < s->len) {
-                s->data(idx) = value;
+            if (idx < s->values.size) {
+                s->setData(engine, idx, value);
                 return;
             }
         }
@@ -230,7 +230,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
     o->put(name, value);
 }
 
-void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value &index, const Value &v)
+void Lookup::indexedSetterObjectInt(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -239,15 +239,15 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value 
                 Heap::Object *o = static_cast<Heap::Object *>(b);
                 if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
-                    if (idx < s->len) {
-                        s->data(idx) = v;
+                    if (idx < s->values.size) {
+                        s->setData(engine, idx, v);
                         return;
                     }
                 }
             }
         }
     }
-    indexedSetterFallback(l, object, index, v);
+    indexedSetterFallback(l, engine, object, index, v);
 }
 
 ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object)
@@ -772,7 +772,7 @@ void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Va
 {
     Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
-        *o->propertyData(l->index) = value;
+        o->setProperty(engine, l->index, value);
         return;
     }
 
@@ -785,7 +785,7 @@ void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, co
     if (o && o->internalClass() == l->classList[0]) {
         if (!o->prototype()) {
             o->setInternalClass(l->classList[3]);
-            *o->propertyData(l->index) = value;
+            o->setProperty(l->index, value);
             return;
         }
     }
@@ -801,7 +801,7 @@ void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, co
         Heap::Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
             o->setInternalClass(l->classList[3]);
-            *o->propertyData(l->index) = value;
+            o->setProperty(l->index, value);
             return;
         }
     }
@@ -819,7 +819,7 @@ void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, co
             p = p->prototype;
             if (p && p->internalClass == l->classList[2]) {
                 o->setInternalClass(l->classList[3]);
-                *o->propertyData(l->index) = value;
+                o->setProperty(l->index, value);
                 return;
             }
         }
@@ -834,11 +834,11 @@ void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, c
     Object *o = object.as<Object>();
     if (o) {
         if (o->internalClass() == l->classList[0]) {
-            *o->propertyData(l->index) = value;
+            o->setProperty(l->index, value);
             return;
         }
         if (o->internalClass() == l->classList[1]) {
-            *o->propertyData(l->index2) = value;
+            o->setProperty(l->index2, value);
             return;
         }
     }

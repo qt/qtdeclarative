@@ -58,6 +58,7 @@ private slots:
     void localAliases();
     void cacheResources();
     void stableOrderOfDependentCompositeTypes();
+    void singletonDependency();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -174,7 +175,7 @@ struct TestCompiler
     {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
-        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), v4->iselFactory.data(), &lastErrorString);
+        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), QFileInfo(testFilePath).lastModified(), v4->iselFactory.data(), &lastErrorString);
     }
 
     void closeMapping()
@@ -728,6 +729,58 @@ void tst_qmldiskcache::stableOrderOfDependentCompositeTypes()
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("value").toInt(), 140);
+    }
+
+    {
+        QVERIFY(QFile::exists(testFileCachePath));
+        QDateTime newCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
+        QVERIFY2(newCacheTimeStamp > initialCacheTimeStamp, qPrintable(newCacheTimeStamp.toString()));
+    }
+}
+
+void tst_qmldiskcache::singletonDependency()
+{
+    QScopedPointer<QQmlEngine> engine(new QQmlEngine);
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    writeTempFile("MySingleton.qml", "import QtQml 2.0\npragma Singleton\nQtObject { property int value: 42 }");
+    writeTempFile("qmldir", "singleton MySingleton 1.0 MySingleton.qml");
+    const QString testFilePath = writeTempFile("main.qml", "import QtQml 2.0\nimport \".\"\nQtObject {\n"
+                                                           "    property int value: MySingleton.value\n"
+                                                           "}");
+
+    {
+        CleanlyLoadingComponent component(engine.data(), QUrl::fromLocalFile(testFilePath));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 42);
+    }
+
+    const QString testFileCachePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(testFileCachePath));
+    QDateTime initialCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
+
+    engine.reset(new QQmlEngine);
+    waitForFileSystem();
+
+    writeTempFile("MySingleton.qml", "import QtQml 2.0\npragma Singleton\nQtObject { property int value: 100 }");
+    waitForFileSystem();
+
+    {
+        CleanlyLoadingComponent component(engine.data(), QUrl::fromLocalFile(testFilePath));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 100);
     }
 
     {

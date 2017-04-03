@@ -62,7 +62,12 @@ struct SyntaxErrorObject;
 
 namespace Heap {
 
-struct ErrorObject : Object {
+
+#define ErrorObjectMembers(class, Member) \
+    Member(class, Pointer, String *, stack)
+
+DECLARE_HEAP_OBJECT(ErrorObject, Object) {
+    DECLARE_MARK_TABLE(ErrorObject);
     enum ErrorType {
         Error,
         EvalError,
@@ -72,6 +77,8 @@ struct ErrorObject : Object {
         TypeError,
         URIError
     };
+    StackTrace *stackTrace;
+    ErrorType errorType;
 
     void init();
     void init(const Value &message, ErrorType t = Error);
@@ -80,10 +87,6 @@ struct ErrorObject : Object {
         delete stackTrace;
         Object::destroy();
     }
-
-    ErrorType errorType;
-    StackTrace *stackTrace;
-    Pointer<String> stack;
 };
 
 struct EvalErrorObject : ErrorObject {
@@ -173,7 +176,6 @@ struct ErrorObject: Object {
     static const char *className(Heap::ErrorObject::ErrorType t);
 
     static void method_get_stack(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 template<>

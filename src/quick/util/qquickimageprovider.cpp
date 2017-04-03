@@ -151,6 +151,8 @@ QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage 
     If you are using QRunnable as base for your QQuickImageResponse
     ensure automatic deletion is disabled.
 
+    See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
+
     \sa QQuickImageProvider
 */
 
@@ -181,7 +183,12 @@ QString QQuickImageResponse::errorString() const
 
     It may be reimplemented to cancel a request in the provider side, however, it is not mandatory.
 
-    A cancelled QQuickImageResponse still needs to emit finished().
+    A cancelled QQuickImageResponse still needs to emit finished() so that the
+    engine may clean up the QQuickImageResponse.
+
+    \note finished() should not be emitted until the response is complete,
+    regardless of whether or not cancel() was called. If it is called prematurely,
+    the engine may destroy the response while it is still active, leading to a crash.
 */
 void QQuickImageResponse::cancel()
 {
@@ -190,7 +197,12 @@ void QQuickImageResponse::cancel()
 /*!
     \fn void QQuickImageResponse::finished()
 
-    Signals that the job execution has finished (be it successfully, because an error happened or because it was cancelled).
+    Signals that the job execution has finished (be it successfully, because an
+    error happened or because it was cancelled).
+
+    \note Emission of this signal must be the final action the response performs:
+    once the signal is received, the response will subsequently be destroyed by
+    the engine.
  */
 
 /*!
@@ -465,6 +477,8 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     \since 5.6
     \inmodule QtQuick
     \brief The QQuickAsyncImageProvider class provides an interface for for asynchronous control of QML image requests.
+
+    See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
 
     \sa QQuickImageProvider
 */

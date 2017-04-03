@@ -333,7 +333,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    d->m_v4Engine->memoryManager->runGC();
+    d->m_v4Engine->memoryManager->runGC(/* forceFullCollection = */ true);
 }
 
 #if QT_DEPRECATED_SINCE(5, 6)
@@ -525,7 +525,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
   \since 5.8
 
   Creates a JavaScript object that wraps the given QMetaObject
-  The metaObject must outlive the script engine. It is recommended to only
+  The \a metaObject must outlive the script engine. It is recommended to only
   use this method with static metaobjects.
 
 

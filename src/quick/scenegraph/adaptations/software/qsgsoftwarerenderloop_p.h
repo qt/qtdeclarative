@@ -69,7 +69,7 @@ public:
 
     void windowDestroyed(QQuickWindow *window) override;
 
-    void renderWindow(QQuickWindow *window);
+    void renderWindow(QQuickWindow *window, bool isNewExpose = false);
     void exposureChanged(QQuickWindow *window) override;
     QImage grab(QQuickWindow *window) override;
 

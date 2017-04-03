@@ -68,8 +68,6 @@ namespace Heap {
     struct Base;
 }
 
-typedef uint Bool;
-
 struct Q_QML_PRIVATE_EXPORT Value
 {
 private:
@@ -707,7 +705,6 @@ inline unsigned int Value::toUInt32() const
 {
     return (unsigned int)toInt32();
 }
-
 
 }
 

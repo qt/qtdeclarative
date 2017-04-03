@@ -89,8 +89,6 @@ inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
 inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
-#define qOffsetOf(s, m) ((size_t)((((char *)&(((s *)64)->m)) - 64)))
-
 // Decide whether to enable or disable the JIT
 
 // White list architectures
@@ -184,6 +182,7 @@ namespace Heap {
     struct DataView;
     struct TypedArray;
 
+    template <typename T, size_t> struct Pointer;
 }
 
 class MemoryManager;
@@ -198,9 +197,12 @@ struct ScriptFunction;
 struct InternalClass;
 struct Property;
 struct Value;
+template<size_t> struct HeapValue;
+template<size_t> struct ValueArray;
 struct Lookup;
 struct ArrayData;
 struct VTable;
+struct Function;
 
 struct BooleanObject;
 struct NumberObject;

@@ -94,6 +94,7 @@ public:
     using DataLabelCompact = typename MacroAssemblerBase::DataLabelCompact;
     using Jump = typename MacroAssemblerBase::Jump;
     using PatchableJump = typename MacroAssemblerBase::PatchableJump;
+    using MacroAssemblerBase::PointerSize;
 
     using MacroAssemblerBase::pop;
     using MacroAssemblerBase::jump;
@@ -200,19 +201,19 @@ public:
     // described in terms of other macro assembly methods.
     void pop()
     {
-        addPtr(TrustedImm32(sizeof(void*)), MacroAssemblerBase::stackPointerRegister);
+        addPtr(TrustedImm32(PointerSize), MacroAssemblerBase::stackPointerRegister);
     }
     
     void peek(RegisterID dest, int index = 0)
     {
-        loadPtr(Address(MacroAssemblerBase::stackPointerRegister, (index * sizeof(void*))), dest);
+        loadPtr(Address(MacroAssemblerBase::stackPointerRegister, (index * PointerSize)), dest);
     }
 
     Address addressForPoke(int index)
     {
-        return Address(MacroAssemblerBase::stackPointerRegister, (index * sizeof(void*)));
+        return Address(MacroAssemblerBase::stackPointerRegister, (index * PointerSize));
     }
-    
+
     void poke(RegisterID src, int index = 0)
     {
         storePtr(src, addressForPoke(index));
@@ -223,10 +224,12 @@ public:
         store32(value, addressForPoke(index));
     }
 
+#if !defined(V4_BOOTSTRAP)
     void poke(TrustedImmPtr imm, int index = 0)
     {
         storePtr(imm, addressForPoke(index));
     }
+#endif
 
 #if (CPU(X86_64) || CPU(ARM64)) && !defined(V4_BOOTSTRAP)
     void peek64(RegisterID dest, int index = 0)

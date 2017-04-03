@@ -47,6 +47,7 @@
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 # include <private/qquickopenglshadereffectnode_p.h>
 # include <private/qquickopenglshadereffect_p.h>
+# include <private/qquickshadereffect_p.h>
 #endif
 #include <private/qanimationgroupjob_p.h>
 
@@ -344,12 +345,13 @@ void QQuickTransformAnimatorJob::postSync()
     }
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated()
             && d->extra->layer
             && d->extra->layer->enabled()) {
         d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
     }
-
+#endif
     m_helper->node = d->itemNode();
 }
 
@@ -625,7 +627,8 @@ QQuickUniformAnimatorJob::QQuickUniformAnimatorJob()
 
 void QQuickUniformAnimatorJob::setTarget(QQuickItem *target)
 {
-    if (qobject_cast<QQuickOpenGLShaderEffect *>(target) != nullptr)
+    QQuickShaderEffect* effect = qobject_cast<QQuickShaderEffect*>(target);
+    if (effect && effect->isOpenGLShaderEffect())
         m_target = target;
 }
 

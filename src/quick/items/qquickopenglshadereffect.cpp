@@ -256,10 +256,14 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item,
                 qWarning("QQuickOpenGLShaderEffect: property '%s' does not have notification method!", d.name.constData());
             } else {
                 auto *mapper = signalMappers[shaderType].at(i);
-                mapper->setSignalIndex(pd->notifyIndex());
+                mapper->setSignalIndex(itemMetaObject->property(d.propertyIndex).notifySignal().methodIndex());
                 Q_ASSERT(item->metaObject() == itemMetaObject);
-                QObjectPrivate::connectImpl(item, mapper->signalIndex(), item, nullptr, mapper,
-                                            Qt::AutoConnection, nullptr, itemMetaObject);
+                bool ok = QObjectPrivate::connectImpl(item, pd->notifyIndex(), item, nullptr, mapper,
+                                                      Qt::AutoConnection, nullptr, itemMetaObject);
+                if (!ok)
+                    qWarning() << "Failed to connect to property" << itemMetaObject->property(d.propertyIndex).name()
+                               << "(" << d.propertyIndex << ", signal index" << pd->notifyIndex()
+                               << ") of item" << item;
             }
         } else {
             // If the source is set via a dynamic property, like the layer is, then we need this

@@ -59,8 +59,31 @@ QT_BEGIN_NAMESPACE
 class QSGDefaultGlyphNode : public QSGBasicGlyphNode
 {
 public:
+    QSGDefaultGlyphNode();
+    ~QSGDefaultGlyphNode();
     void setMaterialColor(const QColor &color) override;
+    void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
     void update() override;
+    void preprocess() override;
+    void updateGeometry();
+
+private:
+    enum DefaultGlyphNodeType {
+        RootGlyphNode,
+        SubGlyphNode
+    };
+
+    void setGlyphNodeType(DefaultGlyphNodeType type) { m_glyphNodeType = type; }
+
+    DefaultGlyphNodeType m_glyphNodeType;
+    QLinkedList<QSGNode *> m_nodesToDelete;
+
+    struct GlyphInfo {
+        QVector<quint32> indexes;
+        QVector<QPointF> positions;
+    };
+
+    uint m_dirtyGeometry: 1;
 };
 
 QT_END_NAMESPACE

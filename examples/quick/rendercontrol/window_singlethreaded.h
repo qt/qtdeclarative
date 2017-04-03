@@ -97,6 +97,8 @@ private:
     QTimer m_updateTimer;
     CubeRenderer *m_cubeRenderer;
     qreal m_dpr;
+    bool m_onscreen;
+    QSize m_onscreenSize;
 };
 
 #endif

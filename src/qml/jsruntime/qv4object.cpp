@@ -62,8 +62,8 @@ void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
     bool hasMD = d()->memberData != nullptr;
-    if ((!hasMD && ic->size) || (hasMD && d()->memberData->size < ic->size))
-        d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
+    if ((!hasMD && ic->size) || (hasMD && d()->memberData->values.size < ic->size))
+        d()->memberData.set(engine(), MemberData::allocate(ic->engine, ic->size, d()->memberData));
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -76,9 +76,9 @@ void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) con
 
 void Object::setProperty(uint index, const Property *p)
 {
-    *propertyData(index) = p->value;
+    setProperty(index, p->value);
     if (internalClass()->propertyData.at(index).isAccessor())
-        *propertyData(index + SetterOffset) = p->set;
+        setProperty(index + SetterOffset, p->set);
 }
 
 bool Object::setPrototype(Object *proto)
@@ -89,7 +89,7 @@ bool Object::setPrototype(Object *proto)
             return false;
         pp = pp->prototype;
     }
-    d()->prototype = proto ? proto->d() : 0;
+    d()->prototype.set(engine(), proto ? proto->d() : 0);
     return true;
 }
 
@@ -117,7 +117,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
     PropertyAttributes attrs = ic->propertyData[memberIndex];
 
     if (attrs.isAccessor()) {
-        FunctionObject *set = propertyData(memberIndex + SetterOffset)->as<FunctionObject>();
+        const FunctionObject *set = propertyData(memberIndex + SetterOffset)->as<FunctionObject>();
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
@@ -133,7 +133,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
     if (!attrs.isWritable())
         goto reject;
 
-    *propertyData(memberIndex) = value;
+    setProperty(memberIndex, value);
     return true;
 
   reject:
@@ -258,28 +258,16 @@ void Object::defineReadonlyConfigurableProperty(String *name, const Value &value
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
 
-void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    Heap::Object *o = static_cast<Heap::Object *>(that);
-
-    if (o->memberData)
-        o->memberData->mark(e);
-    if (o->arrayData)
-        o->arrayData->mark(e);
-    if (o->prototype)
-        o->prototype->mark(e);
-}
-
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
     InternalClass::addMember(this, s, attributes, &idx);
 
     if (attributes.isAccessor()) {
-        *propertyData(idx + GetterOffset) = p->value;
-        *propertyData(idx + SetterOffset) = p->set;
+        setProperty(idx + GetterOffset, p->value);
+        setProperty(idx + SetterOffset, p->set);
     } else {
-        *propertyData(idx) = p->value;
+        setProperty(idx, p->value);
     }
 }
 
@@ -308,12 +296,9 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
 
 void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 {
-    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
-    if (pd) {
-        *attrs = arrayData()->attributes(index);
-        if (p)
-            p->copy(pd, *attrs);
-        return;
+    if (arrayData()) {
+        if (arrayData()->getProperty(index, p, attrs))
+            return;
     }
     if (isStringObject()) {
         *attrs = Attr_NotConfigurable|Attr_NotWritable;
@@ -328,7 +313,7 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 }
 
 // Section 8.12.2
-Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
+MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
@@ -337,36 +322,38 @@ Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
         uint idx = o->internalClass->find(name);
         if (idx < UINT_MAX) {
             *attrs = o->internalClass->propertyData[idx];
-            return o->propertyData(attrs->isAccessor() ? idx + SetterOffset : idx);
+            return MemberData::Index{ o->memberData, attrs->isAccessor() ? idx + SetterOffset : idx };
         }
 
         o = o->prototype;
     }
     *attrs = Attr_Invalid;
-    return 0;
+    return { 0, 0 };
 }
 
-Value *Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
+ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
 {
     Heap::Object *o = d();
     while (o) {
-        Property *p = o->arrayData ? o->arrayData->getProperty(index) : 0;
-        if (p) {
-            *attrs = o->arrayData->attributes(index);
-            return attrs->isAccessor() ? &p->set : &p->value;
+        if (o->arrayData) {
+            uint idx = o->arrayData->mappedIndex(index);
+            if (idx != UINT_MAX) {
+                *attrs = o->arrayData->attributes(index);
+                return { o->arrayData , attrs->isAccessor() ? idx + SetterOffset : idx };
+            }
         }
         if (o->vtable()->type == Type_StringObject) {
             if (index < static_cast<const Heap::StringObject *>(o)->length()) {
                 // this is an evil hack, but it works, as the method is only ever called from putIndexed,
                 // where we don't use the returned pointer there for non writable attributes
                 *attrs = (Attr_NotWritable|Attr_NotConfigurable);
-                return reinterpret_cast<Value *>(0x1);
+                return { reinterpret_cast<Heap::ArrayData *>(0x1), 0 };
             }
         }
         o = o->prototype;
     }
     *attrs = Attr_Invalid;
-    return 0;
+    return { 0, 0 };
 }
 
 bool Object::hasProperty(String *name) const
@@ -539,7 +526,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
             l->classList[0] = o->internalClass();
             l->index = idx;
             l->setter = Lookup::setter0;
-            *o->propertyData(idx) = value;
+            o->setProperty(idx, value);
             return;
         }
 
@@ -594,7 +581,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
                 Heap::SparseArrayData *sa = o->d()->arrayData.cast<Heap::SparseArrayData>();
-                Property *p = reinterpret_cast<Property *>(sa->arrayData + pidx);
+                const Property *p = reinterpret_cast<const Property *>(sa->values.data() + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
                 PropertyAttributes a = sa->attrs ? sa->attrs[pidx] : Attr_Data;
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
@@ -609,9 +596,9 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
             it->arrayIndex = UINT_MAX;
         }
         // dense arrays
-        while (it->arrayIndex < o->d()->arrayData->len) {
+        while (it->arrayIndex < o->d()->arrayData->values.size) {
             Heap::SimpleArrayData *sa = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-            Value &val = sa->data(it->arrayIndex);
+            const Value &val = sa->data(it->arrayIndex);
             PropertyAttributes a = o->arrayData()->attributes(it->arrayIndex);
             ++it->arrayIndex;
             if (!val.isEmpty()
@@ -677,15 +664,14 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
 
 ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 {
-    Property *pd = 0;
     PropertyAttributes attrs;
     Scope scope(engine());
     ScopedObject o(scope, this);
+    ScopedProperty pd(scope);
+    bool exists = false;
     while (o) {
-        Property *p = o->arrayData() ? o->arrayData()->getProperty(index) : 0;
-        if (p) {
-            pd = p;
-            attrs = o->arrayData()->attributes(index);
+        if (o->arrayData() && o->arrayData()->getProperty(index, pd, &attrs)) {
+            exists = true;
             break;
         }
         if (o->isStringObject()) {
@@ -700,7 +686,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
         o = o->prototype();
     }
 
-    if (pd) {
+    if (exists) {
         if (hasProperty)
             *hasProperty = true;
         return getValue(pd->value, attrs);
@@ -715,43 +701,44 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 // Section 8.12.5
 bool Object::internalPut(String *name, const Value &value)
 {
-    if (internalClass()->engine->hasException)
+    ExecutionEngine *engine = this->engine();
+    if (engine->hasException)
         return false;
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier(engine);
 
+    MemberData::Index memberIndex{0, 0};
     uint member = internalClass()->find(name);
-    Value *v = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
         attrs = internalClass()->propertyData[member];
-        v = propertyData(attrs.isAccessor() ? member + SetterOffset : member);
+        memberIndex = { d()->memberData, (attrs.isAccessor() ? member + SetterOffset : member) };
     }
 
     // clause 1
-    if (v) {
+    if (!memberIndex.isNull()) {
         if (attrs.isAccessor()) {
-            if (v->as<FunctionObject>())
+            if (memberIndex->as<FunctionObject>())
                 goto cont;
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else if (isArrayObject() && name->equals(engine()->id_length())) {
+        else if (isArrayObject() && name->equals(engine->id_length())) {
             bool ok;
             uint l = value.asArrayLength(&ok);
             if (!ok) {
-                engine()->throwRangeError(value);
+                engine->throwRangeError(value);
                 return false;
             }
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
         } else {
-            *v = value;
+            memberIndex.set(engine, value);
         }
         return true;
     } else if (!prototype()) {
@@ -759,10 +746,11 @@ bool Object::internalPut(String *name, const Value &value)
             goto reject;
     } else {
         // clause 4
-        Scope scope(engine());
-        if ((v = ScopedObject(scope, prototype())->getValueOrSetter(name, &attrs))) {
+        Scope scope(engine);
+        memberIndex = ScopedObject(scope, prototype())->getValueOrSetter(name, &attrs);
+        if (!memberIndex.isNull()) {
             if (attrs.isAccessor()) {
-                if (!v->as<FunctionObject>())
+                if (!memberIndex->as<FunctionObject>())
                     goto reject;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
@@ -775,11 +763,11 @@ bool Object::internalPut(String *name, const Value &value)
     cont:
 
     // Clause 5
-    if (v && attrs.isAccessor()) {
-        Q_ASSERT(v->as<FunctionObject>());
+    if (!memberIndex.isNull() && attrs.isAccessor()) {
+        Q_ASSERT(memberIndex->as<FunctionObject>());
 
-        Scope scope(engine());
-        ScopedFunctionObject setter(scope, *v);
+        Scope scope(engine);
+        ScopedFunctionObject setter(scope, *memberIndex);
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
@@ -792,49 +780,51 @@ bool Object::internalPut(String *name, const Value &value)
 
   reject:
     // ### this should be removed once everything is ported to use Object::set()
-    if (engine()->current->strictMode) {
+    if (engine->current->strictMode) {
         QString message = QLatin1String("Cannot assign to read-only property \"") +
                 name->toQString() + QLatin1Char('\"');
-        engine()->throwTypeError(message);
+        engine->throwTypeError(message);
     }
     return false;
 }
 
 bool Object::internalPutIndexed(uint index, const Value &value)
 {
-    if (internalClass()->engine->hasException)
+    ExecutionEngine *engine = this->engine();
+    if (engine->hasException)
         return false;
 
     PropertyAttributes attrs;
 
-    Value *v = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : 0;
+    ArrayData::Index arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : ArrayData::Index{ 0, 0 };
 
-    if (!v && isStringObject()) {
+    if (arrayIndex.isNull() && isStringObject()) {
         if (index < static_cast<StringObject *>(this)->length())
             // not writable
             goto reject;
     }
 
     // clause 1
-    if (v) {
+    if (!arrayIndex.isNull()) {
         if (attrs.isAccessor()) {
-            if (v->as<FunctionObject>())
+            if (arrayIndex->as<FunctionObject>())
                 goto cont;
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else
-            *v = value;
+
+        arrayIndex.set(engine, value);
         return true;
     } else if (!prototype()) {
         if (!isExtensible())
             goto reject;
     } else {
         // clause 4
-        Scope scope(engine());
-        if ((v = ScopedObject(scope, prototype())->getValueOrSetter(index, &attrs))) {
+        Scope scope(engine);
+        arrayIndex = ScopedObject(scope, prototype())->getValueOrSetter(index, &attrs);
+        if (!arrayIndex.isNull()) {
             if (attrs.isAccessor()) {
-                if (!v->as<FunctionObject>())
+                if (!arrayIndex->as<FunctionObject>())
                     goto reject;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
@@ -847,11 +837,11 @@ bool Object::internalPutIndexed(uint index, const Value &value)
     cont:
 
     // Clause 5
-    if (v && attrs.isAccessor()) {
-        Q_ASSERT(v->as<FunctionObject>());
+    if (!arrayIndex.isNull() && attrs.isAccessor()) {
+        Q_ASSERT(arrayIndex->as<FunctionObject>());
 
-        Scope scope(engine());
-        ScopedFunctionObject setter(scope, *v);
+        Scope scope(engine);
+        ScopedFunctionObject setter(scope, *arrayIndex);
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
@@ -864,8 +854,8 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
   reject:
     // ### this should be removed once everything is ported to use Object::setIndexed()
-    if (engine()->current->strictMode)
-        engine()->throwTypeError();
+    if (engine->current->strictMode)
+        engine->throwTypeError();
     return false;
 }
 
@@ -995,8 +985,8 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
 
     // Clause 1
     if (arrayData()) {
-        hasProperty = arrayData()->getProperty(index);
-        if (!hasProperty  && isStringObject())
+        hasProperty = arrayData()->mappedIndex(index) != UINT_MAX;
+        if (!hasProperty && isStringObject())
             hasProperty = (index < static_cast<StringObject *>(this)->length());
     }
 
@@ -1108,7 +1098,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
         setProperty(index, current);
     } else {
         setArrayAttributes(index, cattrs);
-        arrayData()->setProperty(index, current);
+        arrayData()->setProperty(scope.engine, index, current);
     }
     return true;
   reject:
@@ -1144,7 +1134,8 @@ void Object::copyArrayData(Object *other)
         ;
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
-        ArrayData::realloc(this, other->d()->arrayData->type, other->d()->arrayData->alloc, false);
+        ArrayData::realloc(this, static_cast<ArrayData::Type>(other->d()->arrayData->type),
+                           other->d()->arrayData->values.alloc, false);
         if (other->arrayType() == Heap::ArrayData::Sparse) {
             Heap::ArrayData *od = other->d()->arrayData;
             Heap::ArrayData *dd = d()->arrayData;
@@ -1152,10 +1143,11 @@ void Object::copyArrayData(Object *other)
             dd->freeList = od->freeList;
         } else {
             Heap::ArrayData *dd = d()->arrayData;
-            dd->len = other->d()->arrayData->len;
+            dd->values.size = other->d()->arrayData->values.size;
             dd->offset = other->d()->arrayData->offset;
         }
-        memcpy(d()->arrayData->arrayData, other->d()->arrayData->arrayData, other->d()->arrayData->alloc*sizeof(Value));
+        // ### need a write barrier
+        memcpy(d()->arrayData->values.values, other->d()->arrayData->values.values, other->d()->arrayData->values.alloc*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }

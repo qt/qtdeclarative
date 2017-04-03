@@ -64,7 +64,7 @@
     In addition to the above features, GridLayout adds these features:
     \list
         \li \l{Layout::row}{Grid coordinates} can be specified with the \l{Layout::row}{Layout.row} and
-            \l{Layout::column}{Layout.column}.
+            \l{Layout::column}{Layout.column} properties.
         \li \l{GridLayout::flow}{Automatic grid coordinates} used together with the
             \l{GridLayout::flow}{flow}, \l{GridLayout::rows}{rows}, and
             \l{GridLayout::columns}{columns} properties.

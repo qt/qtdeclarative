@@ -333,7 +333,6 @@ QSGRendererInterface *QSGContext::rendererInterface(QSGRenderContext *renderCont
 
 QSGRenderContext::QSGRenderContext(QSGContext *context)
     : m_sg(context)
-    , m_distanceFieldCacheManager(0)
 {
 }
 

@@ -122,8 +122,8 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
     disconnect();
 
     Q_ASSERT(engine);
-    if (QObjectPrivate::get(source)->threadData->threadId !=
-        QObjectPrivate::get(engine)->threadData->threadId) {
+    if (QObjectPrivate::get(source)->threadData->threadId.load() !=
+        QObjectPrivate::get(engine)->threadData->threadId.load()) {
 
         QString sourceName;
         QDebug(&sourceName) << source;

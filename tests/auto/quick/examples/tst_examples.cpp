@@ -29,7 +29,6 @@
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
-#include <QProcess>
 #include <QDebug>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>

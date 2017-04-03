@@ -46,12 +46,109 @@
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
+// an abstract Slider which only handles touch events
+class TouchDragArea : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(QPointF pos READ pos NOTIFY posChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    Q_PROPERTY(bool keepMouseGrab READ keepMouseGrab WRITE setKeepMouseGrab NOTIFY keepMouseGrabChanged)
+    Q_PROPERTY(bool keepTouchGrab READ keepTouchGrab WRITE setKeepTouchGrab NOTIFY keepTouchGrabChanged)
+
+public:
+    TouchDragArea(QQuickItem *parent = 0)
+        : QQuickItem(parent)
+        , touchEvents(0)
+        , touchUpdates(0)
+        , touchReleases(0)
+        , ungrabs(0)
+        , m_active(false)
+    {
+        setFlags(ItemAcceptsDrops);
+    }
+
+    QPointF pos() const { return m_pos; }
+
+    bool active() const  { return m_active; }
+
+    void setKeepMouseGrab(bool keepMouseGrab)
+    {
+        QQuickItem::setKeepMouseGrab(keepMouseGrab);
+        emit keepMouseGrabChanged();
+    }
+
+    void setKeepTouchGrab(bool keepTouchGrab)
+    {
+        QQuickItem::setKeepTouchGrab(keepTouchGrab);
+        emit keepTouchGrabChanged();
+    }
+
+    int touchEvents;
+    int touchUpdates;
+    int touchReleases;
+    int ungrabs;
+    QVector<Qt::TouchPointState> touchPointStates;
+
+protected:
+    void touchEvent(QTouchEvent *ev) override
+    {
+        QCOMPARE(ev->touchPoints().count(), 1);
+        auto touchpoint = ev->touchPoints().first();
+        switch (touchpoint.state()) {
+        case Qt::TouchPointPressed:
+            QVERIFY(!m_active);
+            m_active = true;
+            emit activeChanged();
+            grabTouchPoints(QVector<int>() << touchpoint.id());
+            break;
+        case Qt::TouchPointMoved:
+            ++touchUpdates;
+            break;
+        case Qt::TouchPointReleased:
+            QVERIFY(m_active);
+            m_active = false;
+            ++touchReleases;
+            emit activeChanged();
+        case Qt::TouchPointStationary:
+            break;
+        }
+        touchPointStates << touchpoint.state();
+        ++touchEvents;
+        m_pos = touchpoint.pos();
+        emit posChanged();
+    }
+
+    void touchUngrabEvent() override
+    {
+        ++ungrabs;
+        QVERIFY(m_active);
+        emit ungrabbed();
+        m_active = false;
+        emit activeChanged();
+    }
+
+signals:
+    void ungrabbed();
+    void posChanged();
+    void keepMouseGrabChanged();
+    void keepTouchGrabChanged();
+    void activeChanged();
+
+private:
+    QPointF m_pos;
+    bool m_active;
+};
+
 class tst_qquickflickable : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_qquickflickable()
+      : touchDevice(QTest::createTouchDevice())
+    {}
 
 private slots:
+    void initTestCase() override;
     void create();
     void horizontalViewportSize();
     void verticalViewportSize();
@@ -80,6 +177,7 @@ private slots:
     void disabled();
     void flickVelocity();
     void margins();
+    void cancelOnHide();
     void cancelOnMouseGrab();
     void clickAndDragWhenTransformed();
     void flickTwiceUsingTouches();
@@ -88,6 +186,8 @@ private slots:
     void stopAtBounds();
     void stopAtBounds_data();
     void nestedMouseAreaUsingTouch();
+    void nestedSliderUsingTouch();
+    void nestedSliderUsingTouch_data();
     void pressDelayWithLoader();
     void movementFromProgrammaticFlick();
     void cleanup();
@@ -100,8 +200,15 @@ private slots:
     void overshoot_reentrant();
 
 private:
-    void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
+    void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
+    QTouchDevice *touchDevice;
 };
+
+void tst_qquickflickable::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    qmlRegisterType<TouchDragArea>("Test",1,0,"TouchDragArea");
+}
 
 void tst_qquickflickable::cleanup()
 {
@@ -1425,6 +1532,25 @@ void tst_qquickflickable::margins()
     delete root;
 }
 
+void tst_qquickflickable::cancelOnHide()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("hide.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(window->rootObject());
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+
+    QTest::mouseDClick(window.data(), Qt::LeftButton);
+    QVERIFY(!flickable->isVisible());
+    QVERIFY(!QQuickFlickablePrivate::get(flickable)->pressed);
+}
+
 void tst_qquickflickable::cancelOnMouseGrab()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
@@ -1510,12 +1636,6 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
 
 void tst_qquickflickable::flickTwiceUsingTouches()
 {
-    QTouchDevice *touchDevice = new QTouchDevice;
-    touchDevice->setName("Fake Touchscreen");
-    touchDevice->setType(QTouchDevice::TouchScreen);
-    touchDevice->setCapabilities(QTouchDevice::Position);
-    QWindowSystemInterface::registerTouchDevice(touchDevice);
-
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("longList.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
@@ -1528,7 +1648,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QVERIFY(flickable != 0);
 
     QCOMPARE(flickable->contentY(), 0.0f);
-    flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
+    flickWithTouch(window.data(), QPoint(100, 400), QPoint(100, 240));
 
     qreal contentYAfterFirstFlick = flickable->contentY();
     qDebug() << "contentYAfterFirstFlick " << contentYAfterFirstFlick;
@@ -1536,7 +1656,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     // Wait until view stops moving
     QTRY_VERIFY(!flickable->isMoving());
 
-    flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
+    flickWithTouch(window.data(), QPoint(100, 400), QPoint(100, 240));
 
     // In the original bug, that second flick would cause Flickable to halt immediately
     qreal contentYAfterSecondFlick = flickable->contentY();
@@ -1544,7 +1664,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QTRY_VERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
 }
 
-void tst_qquickflickable::flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to)
+void tst_qquickflickable::flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to)
 {
     QTest::touchEvent(window, touchDevice).press(0, from, window);
     QQuickTouchUtils::flush(window);
@@ -1849,12 +1969,6 @@ void tst_qquickflickable::stopAtBounds()
 
 void tst_qquickflickable::nestedMouseAreaUsingTouch()
 {
-    QTouchDevice *touchDevice = new QTouchDevice;
-    touchDevice->setName("Fake Touchscreen");
-    touchDevice->setType(QTouchDevice::TouchScreen);
-    touchDevice->setCapabilities(QTouchDevice::Position);
-    QWindowSystemInterface::registerTouchDevice(touchDevice);
-
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedmousearea.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
@@ -1867,7 +1981,7 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     QVERIFY(flickable != 0);
 
     QCOMPARE(flickable->contentY(), 50.0f);
-    flickWithTouch(window.data(), touchDevice, QPoint(100, 300), QPoint(100, 200));
+    flickWithTouch(window.data(), QPoint(100, 300), QPoint(100, 200));
 
     // flickable should not have moved
     QCOMPARE(flickable->contentY(), 50.0);
@@ -1875,6 +1989,65 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     // draggable item should have moved up
     QQuickItem *nested = window->rootObject()->findChild<QQuickItem*>("nested");
     QVERIFY(nested->y() < 100.0);
+}
+
+void tst_qquickflickable::nestedSliderUsingTouch_data()
+{
+    QTest::addColumn<bool>("keepMouseGrab");
+    QTest::addColumn<bool>("keepTouchGrab");
+    QTest::addColumn<int>("updates");
+    QTest::addColumn<int>("releases");
+    QTest::addColumn<int>("ungrabs");
+
+    QTest::newRow("keepBoth") << true << true << 8 << 1 << 0;
+    QTest::newRow("keepMouse") << true << false << 8 << 1 << 0;
+    QTest::newRow("keepTouch") << false << true << 8 << 1 << 0;
+    QTest::newRow("keepNeither") << false << false << 6 << 0 << 1;
+}
+
+void tst_qquickflickable::nestedSliderUsingTouch()
+{
+    QFETCH(bool, keepMouseGrab);
+    QFETCH(bool, keepTouchGrab);
+    QFETCH(int, updates);
+    QFETCH(int, releases);
+    QFETCH(int, ungrabs);
+
+    QQuickView *window = new QQuickView;
+    QScopedPointer<QQuickView> windowPtr(window);
+    windowPtr->setSource(testFileUrl("nestedSlider.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window);
+    QQuickViewTestUtil::moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+
+    TouchDragArea *tda = flickable->findChild<TouchDragArea*>("drag");
+    QVERIFY(tda);
+
+    // Drag down and a little to the right: flickable will steal the grab only if tda allows it
+    const int dragThreshold = qApp->styleHints()->startDragDistance();
+    tda->setKeepMouseGrab(keepMouseGrab);
+    tda->setKeepTouchGrab(keepTouchGrab);
+    QPoint p0 = tda->mapToScene(QPoint(20, 20)).toPoint();
+    QTest::touchEvent(window, touchDevice).press(0, p0, window);
+    QQuickTouchUtils::flush(window);
+    for (int i = 0; i < 8; ++i) {
+        p0 += QPoint(dragThreshold / 6, dragThreshold / 4);
+        QTest::touchEvent(window, touchDevice).move(0, p0, window);
+        QQuickTouchUtils::flush(window);
+    }
+    QCOMPARE(tda->active(), !ungrabs);
+    QTest::touchEvent(window, touchDevice).release(0, p0, window);
+    QQuickTouchUtils::flush(window);
+    QCOMPARE(tda->touchPointStates.first(), Qt::TouchPointPressed);
+    QCOMPARE(tda->touchUpdates, updates);
+    QCOMPARE(tda->touchReleases, releases);
+    QCOMPARE(tda->ungrabs, ungrabs);
 }
 
 // QTBUG-31328

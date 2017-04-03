@@ -59,7 +59,6 @@
 QT_BEGIN_NAMESPACE
 
 class QSGRenderContext;
-class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldTextMaterial;
 class QSGDistanceFieldGlyphNode: public QSGGlyphNode, public QSGDistanceFieldGlyphConsumer
 {
@@ -107,7 +106,6 @@ private:
     AntialiasingMode m_antialiasingMode;
     QRectF m_boundingRect;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
-    QLinkedList<QSGNode *> m_nodesToDelete;
 
     struct GlyphInfo {
         QVector<quint32> indexes;

@@ -642,8 +642,10 @@ is finished.
 
     \section1 Limitations
 
-    \note Due to an implementation detail, items placed inside a Flickable cannot anchor to it by
-    \c id. Use \c parent instead.
+    \note Due to an implementation detail, items placed inside a Flickable
+    cannot anchor to the Flickable. Instead, use \l {Item::}{parent}, which
+    refers to the Flickable's \l contentItem. The size of the content item is
+    determined by \l contentWidth and \l contentHeight.
 */
 
 /*!
@@ -2299,7 +2301,8 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 
     bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || contains(localPos)) && (!receiver || !receiver->keepMouseGrab() || receiverDisabled)) {
+    bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
+    if ((stealThisEvent || contains(localPos)) && (!receiver || !receiverKeepsGrab || receiverDisabled)) {
         QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
         mouseEvent->setAccepted(false);
 
@@ -2319,7 +2322,7 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
         default:
             break;
         }
-        if ((receiver && stealThisEvent && !receiver->keepMouseGrab() && receiver != this) || receiverDisabled) {
+        if ((receiver && stealThisEvent && !receiverKeepsGrab && receiver != this) || receiverDisabled) {
             d->clearDelayedPress();
             grabMouse();
         } else if (d->delayedPressEvent) {
@@ -2335,7 +2338,7 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
         d->lastPosTime = -1;
         returnToBounds();
     }
-    if (event->type() == QEvent::MouseButtonRelease || (receiver && receiver->keepMouseGrab() && !receiverDisabled)) {
+    if (event->type() == QEvent::MouseButtonRelease || (receiverKeepsGrab && !receiverDisabled)) {
         // mouse released, or another item has claimed the grab
         d->lastPosTime = -1;
         d->clearDelayedPress();
@@ -2349,8 +2352,11 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
-    if (!isVisible() || !isEnabled() || !isInteractive())
+    if (!isVisible() || !isEnabled() || !isInteractive()) {
+        d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
+    }
+
     switch (e->type()) {
     case QEvent::MouseButtonPress:
     case QEvent::MouseMove:

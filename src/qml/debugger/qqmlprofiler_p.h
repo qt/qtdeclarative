@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 #define Q_QML_PROFILE(feature, profiler, Method)
 #define Q_QML_OC_PROFILE(member, Code)
 
-struct QQmlProfiler {};
+class QQmlProfiler {};
 
 struct QQmlBindingProfiler
 {

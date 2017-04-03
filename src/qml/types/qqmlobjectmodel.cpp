@@ -178,8 +178,8 @@ public:
     \ingroup qtquick-models
     \brief Defines a set of items to be used as a model
 
-    A ObjectModel contains the visual items to be used in a view.
-    When a ObjectModel is used in a view, the view does not require
+    An ObjectModel contains the visual items to be used in a view.
+    When an ObjectModel is used in a view, the view does not require
     a delegate since the ObjectModel already contains the visual
     delegate (items).
 
