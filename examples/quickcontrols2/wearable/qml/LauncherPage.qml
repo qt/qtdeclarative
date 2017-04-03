@@ -68,12 +68,12 @@ PathView {
     model: ListModel {
         ListElement {
             title: qsTr("World Clock")
-            icon: "WorldClock/images/watch.png"
+            icon: "WorldClock/images/worldclock.png"
             page: "WorldClock/WorldClockPage.qml"
         }
         ListElement {
             title: qsTr("Navigation")
-            icon: "Navigation/images/route.png"
+            icon: "Navigation/images/navigation.png"
             page: "Navigation/NavigationPage.qml"
         }
         ListElement {
@@ -104,24 +104,24 @@ PathView {
     }
 
     delegate: QQC2.AbstractButton {
+        width: circularView.itemSize
+        height: circularView.itemSize
+
         text: model.title
         opacity: PathView.itemOpacity
+        padding: 12
 
         contentItem: Image {
             source: model.icon
             fillMode: Image.Pad
-            sourceSize.width: circularView.itemSize
-            sourceSize.height: circularView.itemSize
+            sourceSize.width: parent.availableWidth
+            sourceSize.height: parent.availableHeight
         }
 
         background: Rectangle {
             radius: width / 2
-            color: "transparent"
-
             border.width: 3
-            border.color: parent.PathView.isCurrentItem ?
-                            "transparent"
-                            : UIStyle.colorQtGray4
+            border.color: parent.PathView.isCurrentItem ? UIStyle.colorQtPrimGreen : UIStyle.colorQtGray4
         }
 
         onClicked: {

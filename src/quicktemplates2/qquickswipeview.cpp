@@ -182,6 +182,7 @@ void QQuickSwipeView::setInteractive(bool interactive)
 }
 
 /*!
+    \since QtQuick.Controls 2.2
     \qmlproperty enumeration QtQuick.Controls::SwipeView::orientation
 
     This property holds the orientation.

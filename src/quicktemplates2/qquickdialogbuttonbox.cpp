@@ -312,7 +312,7 @@ QQuickAbstractButton *QQuickDialogButtonBoxPrivate::createStandardButton(QPlatfo
     QQmlContext *creationContext = delegate->creationContext();
     if (!creationContext)
         creationContext = qmlContext(q);
-    QQmlContext *context = new QQmlContext(creationContext);
+    QQmlContext *context = new QQmlContext(creationContext, q);
     context->setContextObject(q);
 
     QObject *object = delegate->beginCreate(context);

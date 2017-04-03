@@ -20,8 +20,8 @@
         <file>qml/Navigation/images/end.png</file>
         <file>qml/Navigation/images/leftturn.png</file>
         <file>qml/Navigation/images/marker.png</file>
+        <file>qml/Navigation/images/navigation.png</file>
         <file>qml/Navigation/images/rightturn.png</file>
-        <file>qml/Navigation/images/route.png</file>
         <file>qml/Navigation/images/start.png</file>
         <file>qml/Navigation/images/straight.png</file>
         <file>qml/Navigation/images/uturn.png</file>
@@ -62,6 +62,6 @@
         <file>qml/WorldClock/images/swissnightdial.png</file>
         <file>qml/WorldClock/images/swissnighthour.png</file>
         <file>qml/WorldClock/images/swissnightminute.png</file>
-        <file>qml/WorldClock/images/watch.png</file>
+        <file>qml/WorldClock/images/worldclock.png</file>
     </qresource>
 </RCC>

@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
+    //! [style]
     QQuickStyle::setStyle(QStringLiteral("qrc:/qml/Style"));
+    //! [style]
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/wearable.qml")));

@@ -39,6 +39,7 @@
 #include "qquickstackelement_p_p.h"
 #include "qquickstacktransition_p_p.h"
 
+#include <QtCore/qscopedvaluerollback.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlinfo.h>
@@ -474,8 +475,9 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 void QQuickStackView::push(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("push"));
     if (args->length() <= 0) {
-        qmlWarning(this) << "push: missing arguments";
+        d->warn(QStringLiteral("missing arguments"));
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -488,7 +490,8 @@ void QQuickStackView::push(QQmlV4Function *args)
     if (lastArg->isInt32())
         operation = static_cast<Operation>(lastArg->toInt32());
 
-    QList<QQuickStackElement *> elements = d->parseElements(args);
+    QStringList errors;
+    QList<QQuickStackElement *> elements = d->parseElements(0, args, &errors);
     // Remove any items that are already in the stack, as they can't be in two places at once.
     for (int i = 0; i < elements.size(); ) {
         QQuickStackElement *element = elements.at(i);
@@ -498,8 +501,13 @@ void QQuickStackView::push(QQmlV4Function *args)
             ++i;
     }
 
-    if (elements.isEmpty()) {
-        qmlWarning(this) << "push: nothing to push";
+    if (!errors.isEmpty() || elements.isEmpty()) {
+        if (!errors.isEmpty()) {
+            for (const QString &error : qAsConst(errors))
+                d->warn(error);
+        } else {
+            d->warn(QStringLiteral("nothing to push"));
+        }
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -557,10 +565,11 @@ void QQuickStackView::push(QQmlV4Function *args)
 void QQuickStackView::pop(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("pop"));
     int argc = args->length();
     if (d->elements.count() <= 1 || argc > 2) {
         if (argc > 2)
-            qmlWarning(this) << "pop: too many arguments";
+            d->warn(QStringLiteral("too many arguments"));
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -580,7 +589,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
             enter = d->findElement(item);
             if (!enter) {
                 if (item != d->currentItem)
-                    qmlWarning(this) << "pop: unknown argument: " << value->toQString(); // TODO: safe?
+                    d->warn(QStringLiteral("unknown argument: ") + value->toQString()); // TODO: safe?
                 args->setReturnValue(QV4::Encode::null());
                 d->elements.push(exit); // restore
                 return;
@@ -708,8 +717,9 @@ void QQuickStackView::pop(QQmlV4Function *args)
 void QQuickStackView::replace(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("replace"));
     if (args->length() <= 0) {
-        qmlWarning(this) << "replace: missing arguments";
+        d->warn(QStringLiteral("missing arguments"));
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -729,9 +739,15 @@ void QQuickStackView::replace(QQmlV4Function *args)
     else if (!firstArg->isInt32())
         target = d->findElement(firstArg);
 
-    QList<QQuickStackElement *> elements = d->parseElements(args, target ? 1 : 0);
-    if (elements.isEmpty()) {
-        qmlWarning(this) << "replace: nothing to push";
+    QStringList errors;
+    QList<QQuickStackElement *> elements = d->parseElements(target ? 1 : 0, args, &errors);
+    if (!errors.isEmpty() || elements.isEmpty()) {
+        if (!errors.isEmpty()) {
+            for (const QString &error : qAsConst(errors))
+                d->warn(error);
+        } else {
+            d->warn(QStringLiteral("nothing to push"));
+        }
         args->setReturnValue(QV4::Encode::null());
         return;
     }
@@ -968,12 +984,16 @@ void QQuickStackView::componentComplete()
     QQuickControl::componentComplete();
 
     Q_D(QQuickStackView);
+    QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("initialItem"));
     QQuickStackElement *element = nullptr;
+    QString error;
     if (QObject *o = d->initialItem.value<QObject *>())
-        element = QQuickStackElement::fromObject(o, this);
+        element = QQuickStackElement::fromObject(o, this, &error);
     else if (d->initialItem.canConvert<QString>())
-        element = QQuickStackElement::fromString(d->initialItem.toString(), this);
-    if (d->pushElement(element)) {
+        element = QQuickStackElement::fromString(d->initialItem.toString(), this, &error);
+    if (!error.isEmpty()) {
+        d->warn(error);
+    } else if (d->pushElement(element)) {
         emit depthChanged();
         d->setCurrentItem(element);
         element->setStatus(QQuickStackView::Active);

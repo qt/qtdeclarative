@@ -633,9 +633,7 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
 
 QQuickComboBox::~QQuickComboBox()
 {
-    Q_D(QQuickComboBox);
-    delete d->popup;
-    d->popup = nullptr;
+    setPopup(nullptr);
 }
 
 /*!

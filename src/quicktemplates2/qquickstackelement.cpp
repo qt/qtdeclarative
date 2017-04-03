@@ -122,17 +122,30 @@ QQuickStackElement::~QQuickStackElement()
     delete context;
 }
 
-QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickStackView *view)
+QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickStackView *view, QString *error)
 {
+    QUrl url(str);
+    if (!url.isValid()) {
+        *error = QStringLiteral("invalid url: ") + str;
+        return nullptr;
+    }
+
     QQuickStackElement *element = new QQuickStackElement;
-    element->component = new QQmlComponent(qmlEngine(view), QUrl(str), view);
+    element->component = new QQmlComponent(qmlEngine(view), url, view);
     element->ownComponent = true;
     return element;
 }
 
-QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackView *view)
+QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackView *view, QString *error)
 {
     Q_UNUSED(view);
+    QQmlComponent *component = qobject_cast<QQmlComponent *>(object);
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (!component && !item) {
+        *error = QQmlMetaType::prettyTypeName(object) + QStringLiteral(" is not supported. Must be Item or Component.");
+        return nullptr;
+    }
+
     QQuickStackElement *element = new QQuickStackElement;
     element->component = qobject_cast<QQmlComponent *>(object);
     element->item = qobject_cast<QQuickItem *>(object);
@@ -152,7 +165,7 @@ bool QQuickStackElement::load(QQuickStackView *parent)
                 if (status == QQmlComponent::Ready)
                     load(view);
                 else if (status == QQmlComponent::Error)
-                    qWarning() << qPrintable(component->errorString().trimmed());
+                    QQuickStackViewPrivate::get(view)->warn(component->errorString().trimmed());
             });
             return true;
         }
@@ -160,13 +173,13 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         QQmlContext *creationContext = component->creationContext();
         if (!creationContext)
             creationContext = qmlContext(parent);
-        context = new QQmlContext(creationContext);
+        context = new QQmlContext(creationContext, parent);
         context->setContextObject(parent);
 
         QQuickStackIncubator incubator(this);
         component->create(incubator, context);
         if (component->isError())
-            qWarning() << qPrintable(component->errorString().trimmed());
+            QQuickStackViewPrivate::get(parent)->warn(component->errorString().trimmed());
     } else {
         initialize();
     }

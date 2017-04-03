@@ -237,7 +237,7 @@ QQuickItem *QQuickSwipePrivate::createDelegateItem(QQmlComponent *component)
     // the creation context will be null and we have to create it ourselves.
     if (!creationContext)
         creationContext = qmlContext(control);
-    QQmlContext *context = new QQmlContext(creationContext);
+    QQmlContext *context = new QQmlContext(creationContext, control);
     context->setContextObject(control);
     QQuickItem *item = qobject_cast<QQuickItem*>(component->beginCreate(context));
     if (item) {
