@@ -370,6 +370,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         Jump jump = as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), TargetPlatform::ScratchRegister);
         jump.linkTo(loop, as);
     }
+
+    static Jump checkIfTagRegisterIsDouble(JITAssembler *as, RegisterID tagRegister)
+    {
+        as->and32(TrustedImm32(Value::NotDouble_Mask), tagRegister);
+        Jump isNoDbl = as->branch32(RelationalCondition::Equal, tagRegister, TrustedImm32(Value::NotDouble_Mask));
+        return isNoDbl;
+    }
 };
 
 template <typename JITAssembler, typename MacroAssembler, typename TargetPlatform>
@@ -656,6 +663,13 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->add64(TrustedImm32(8), TargetPlatform::LocalsRegister);
         Jump jump = as->branchSub32(ResultCondition::NonZero, TrustedImm32(1), TargetPlatform::ScratchRegister);
         jump.linkTo(loop, as);
+    }
+
+    static Jump checkIfTagRegisterIsDouble(JITAssembler *as, RegisterID tagRegister)
+    {
+        as->rshift32(TrustedImm32(Value::IsDoubleTag_Shift), tagRegister);
+        Jump isNoDbl = as->branch32(RelationalCondition::Equal, tagRegister, TrustedImm32(0));
+        return isNoDbl;
     }
 };
 

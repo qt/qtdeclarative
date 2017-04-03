@@ -440,13 +440,7 @@ typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::ge
 
     // not an int, check if it's a double:
     isNoInt.link(this);
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    rshift32(TrustedImm32(Value::IsDoubleTag_Shift), ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(0));
-#else
-    and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(Value::NotDouble_Mask));
-#endif
+    Assembler::Jump isNoDbl = RegisterSizeDependentOps::checkIfTagRegisterIsDouble(this, ScratchRegister);
     toDoubleRegister(src, dest);
     intDone.link(this);
 
