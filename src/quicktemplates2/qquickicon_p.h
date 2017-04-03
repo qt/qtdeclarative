@@ -85,11 +85,11 @@ public:
     void resetColor();
 
 Q_SIGNALS:
-    void nameChanged();
-    void sourceChanged();
-    void widthChanged();
-    void heightChanged();
-    void colorChanged();
+    void nameChanged(const QString &name);
+    void sourceChanged(const QString &source);
+    void widthChanged(int width);
+    void heightChanged(int height);
+    void colorChanged(const QColor &color);
 
 private:
     Q_DISABLE_COPY(QQuickIcon)

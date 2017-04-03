@@ -76,7 +76,7 @@ void QQuickIcon::setName(const QString &name)
         return;
 
     d->name = name;
-    emit nameChanged();
+    emit nameChanged(name);
 }
 
 QString QQuickIcon::source() const
@@ -92,7 +92,7 @@ void QQuickIcon::setSource(const QString &source)
         return;
 
     d->source = source;
-    emit sourceChanged();
+    emit sourceChanged(source);
 }
 
 int QQuickIcon::width() const
@@ -108,7 +108,7 @@ void QQuickIcon::setWidth(int width)
         return;
 
     d->width = width;
-    emit widthChanged();
+    emit widthChanged(width);
 }
 
 int QQuickIcon::height() const
@@ -124,7 +124,7 @@ void QQuickIcon::setHeight(int height)
         return;
 
     d->height = height;
-    emit heightChanged();
+    emit heightChanged(height);
 }
 
 QColor QQuickIcon::color() const
@@ -140,7 +140,7 @@ void QQuickIcon::setColor(const QColor &color)
         return;
 
     d->color = color;
-    emit colorChanged();
+    emit colorChanged(color);
 }
 
 void QQuickIcon::resetColor()
