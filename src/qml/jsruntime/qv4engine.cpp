@@ -182,7 +182,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                      "solutions for your platform.");
         }
 #else
-        factory = new JIT::ISelFactory;
+        factory = new JIT::ISelFactory<>;
 #endif
     }
     iselFactory.reset(factory);
