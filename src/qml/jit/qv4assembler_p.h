@@ -189,18 +189,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->pop(TargetPlatform::EngineRegister);
     }
 
-#if WRITEBARRIER(steele)
-    static void emitWriteBarrier(JITAssembler *as, Address addr)
-    {
-//        RegisterID test = addr.base == TargetPlatform::ReturnValueRegister ? TargetPlatform::ScratchRegister : TargetPlatform::ReturnValueRegister;
-        // if (engine->writeBarrier)
-//        as->load8(Address(TargetPlatform::EngineRegister, offsetof(EngineBase, writeBarrierActive)), test);
-//        typename JITAssembler::Jump jump = as->branch32(JITAssembler::Equal, test, TrustedImm32(0));
-        // ### emit fence
-        emitSetGrayBit(as, addr.base);
-//        jump.link(as);
-    }
-#elif WRITEBARRIER(none)
+#if WRITEBARRIER(none)
     static Q_ALWAYS_INLINE void emitWriteBarrier(JITAssembler *, Address) {}
 #endif
 
@@ -487,18 +476,7 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
         as->pop(TargetPlatform::EngineRegister);
     }
 
-#if WRITEBARRIER(steele)
-    static void emitWriteBarrier(JITAssembler *as, Address addr)
-    {
-//        RegisterID test = addr.base == TargetPlatform::ReturnValueRegister ? TargetPlatform::ScratchRegister : TargetPlatform::ReturnValueRegister;
-        // if (engine->writeBarrier)
-//        as->load8(Address(TargetPlatform::EngineRegister, offsetof(EngineBase, writeBarrierActive)), test);
-//        typename JITAssembler::Jump jump = as->branch32(JITAssembler::Equal, test, TrustedImm32(0));
-        // ### emit fence
-        emitSetGrayBit(as, addr.base);
-//        jump.link(as);
-    }
-#elif WRITEBARRIER(none)
+#if WRITEBARRIER(none)
     static Q_ALWAYS_INLINE void emitWriteBarrier(JITAssembler *, Address) {}
 #endif
 

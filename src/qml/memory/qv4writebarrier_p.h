@@ -55,7 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#define WRITEBARRIER_steele -1
 #define WRITEBARRIER_none 1
 
 #define WRITEBARRIER(x) (1/WRITEBARRIER_##x == 1)
@@ -78,42 +77,7 @@ enum NewValueType {
 // ### this needs to be filled with a real memory fence once marking is concurrent
 Q_ALWAYS_INLINE void fence() {}
 
-#if WRITEBARRIER(steele)
-
-template <NewValueType type>
-static Q_CONSTEXPR inline bool isRequired() {
-    return type != Primitive;
-}
-
-inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Value value)
-{
-    Q_UNUSED(engine);
-    *slot = value;
-    if (isRequired<Unknown>()) {
-        fence();
-        base->setGrayBit();
-    }
-}
-
-inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Heap::Base *value)
-{
-    Q_UNUSED(engine);
-    *slot = value;
-    if (isRequired<Object>()) {
-        fence();
-        base->setGrayBit();
-    }
-}
-
-inline void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap::Base *value)
-{
-    Q_UNUSED(engine);
-    *slot = value;
-    fence();
-    base->setGrayBit();
-}
-
-#elif WRITEBARRIER(none)
+#if WRITEBARRIER(none)
 
 template <NewValueType type>
 static Q_CONSTEXPR inline bool isRequired() {

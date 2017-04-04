@@ -422,7 +422,7 @@ public:
         return t->d();
     }
 
-    void runGC(bool forceFullCollection = false);
+    void runGC();
 
     void dumpStats() const;
 
@@ -467,7 +467,6 @@ public:
     bool gcBlocked = false;
     bool aggressiveGC = false;
     bool gcStats = false;
-    bool nextGCIsIncremental = false;
 };
 
 }

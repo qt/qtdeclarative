@@ -931,8 +931,7 @@ void MarkStack::drain()
 
 void MemoryManager::collectRoots(MarkStack *markStack)
 {
-    if (!nextGCIsIncremental)
-        engine->markObjects(markStack);
+    engine->markObjects(markStack);
 
 //    qDebug() << "   mark stack after engine->mark" << (engine->jsStackTop - markBase);
 
@@ -982,23 +981,11 @@ void MemoryManager::mark()
     MarkStack markStack(engine);
     collectRoots(&markStack);
 
-    if (nextGCIsIncremental) {
-        // need to collect all gray items and push them onto the mark stack
-        blockAllocator.collectGrayItems(&markStack);
-        hugeItemAllocator.collectGrayItems(&markStack);
-    }
-
     markStack.drain();
 }
 
 void MemoryManager::sweep(bool lastSweep)
 {
-    if (lastSweep && nextGCIsIncremental) {
-        // ensure we properly clean up on destruction even if the GC is in incremental mode
-        blockAllocator.resetBlackBits();
-        hugeItemAllocator.resetBlackBits();
-    }
-
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         Managed *m = (*it).managed();
         if (!m || m->markBit())
@@ -1077,18 +1064,11 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
     return totalSlotMem*Chunk::SlotSize;
 }
 
-void MemoryManager::runGC(bool forceFullCollection)
+void MemoryManager::runGC()
 {
     if (gcBlocked) {
 //        qDebug() << "Not running GC.";
         return;
-    }
-
-    if (forceFullCollection) {
-        // do a full GC
-        blockAllocator.resetBlackBits();
-        hugeItemAllocator.resetBlackBits();
-        nextGCIsIncremental = false;
     }
 
     QScopedValueRollback<bool> gcBlocker(gcBlocked, true);
@@ -1112,7 +1092,6 @@ void MemoryManager::runGC(bool forceFullCollection)
         qDebug() << "    Allocations since last GC" << allocationCount;
         allocationCount = 0;
 #endif
-        qDebug() << "Incremental:" << nextGCIsIncremental;
         qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
         qDebug() << "Fragmented memory before GC" << (totalMem - usedBefore);
         dumpBins(&blockAllocator);
@@ -1138,10 +1117,6 @@ void MemoryManager::runGC(bool forceFullCollection)
             qDebug() << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
         }
         size_t memInBins = dumpBins(&blockAllocator);
-#ifdef MM_STATS
-        if (nextGCIsIncremental)
-            qDebug() << "  number of gray items:" << nGrayItems;
-#endif
         qDebug() << "Marked object in" << markTime << "us.";
         qDebug() << "   " << markStackSize << "objects marked";
         qDebug() << "Sweeped object in" << sweepTime << "us.";
@@ -1164,36 +1139,11 @@ void MemoryManager::runGC(bool forceFullCollection)
         Q_ASSERT(blockAllocator.allocatedMem() == getUsedMem() + dumpBins(&blockAllocator, false));
     }
 
-    if (!nextGCIsIncremental)
-        usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
+    usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
 
-#if WRITEBARRIER(steele)
-    static int count = 0;
-    ++count;
-    if (aggressiveGC) {
-        nextGCIsIncremental = (count % 256);
-    } else {
-        size_t total = blockAllocator.totalSlots();
-        size_t usedSlots = blockAllocator.usedSlotsAfterLastSweep;
-        if (!nextGCIsIncremental) {
-            // always try an incremental GC after a full one, unless there is anyway lots of memory pressure
-            nextGCIsIncremental = usedSlots * 4 < total * 3;
-            count = 0;
-        } else {
-            if (count > 16)
-                nextGCIsIncremental = false;
-            else
-                nextGCIsIncremental = usedSlots * 4 < total * 3; // less than 75% full
-        }
-    }
-#else
-    nextGCIsIncremental = false;
-#endif
-    if (!nextGCIsIncremental) {
-        // do a full GC
-        blockAllocator.resetBlackBits();
-        hugeItemAllocator.resetBlackBits();
-    }
+    // reset all black bits
+    blockAllocator.resetBlackBits();
+    hugeItemAllocator.resetBlackBits();
 }
 
 size_t MemoryManager::getUsedMem() const
