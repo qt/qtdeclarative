@@ -1277,13 +1277,7 @@ public:
         if (argumentNumber < RegisterArgumentCount)
             loadArgumentInRegister(value, registerForArgument(argumentNumber), argumentNumber);
         else
-#if OS(WINDOWS) && CPU(X86_64)
-            loadArgumentOnStack<argumentNumber>(value, argumentNumber);
-#elif CPU(MIPS) // Stack space for 4 arguments needs to be allocated for MIPS platforms.
-            loadArgumentOnStack<argumentNumber>(value, argumentNumber + 4);
-#else // Sanity:
-            loadArgumentOnStack<argumentNumber - RegisterArgumentCount>(value, argumentNumber);
-#endif
+            loadArgumentOnStack<argumentNumber - RegisterArgumentCount + (StackShadowSpace / RegisterSize)>(value, argumentNumber);
     }
 
     template <int argumentNumber>
