@@ -792,9 +792,7 @@ TestCase {
         control.first.value = 0
         control.second.value = data.to
 
-        function sliderCompare(left, right) {
-            return Math.abs(left - right) < 0.05
-        }
+        var fuzz = 0.05
 
         mousePress(control, control.first.handle.x, control.first.handle.y)
         compare(control.first.pressed, true)
@@ -803,13 +801,13 @@ TestCase {
 
         mouseMove(control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2))
         compare(control.first.pressed, true)
-        verify(sliderCompare(control.first.value, data.values[1]))
-        verify(sliderCompare(control.first.position, data.positions[1]))
+        fuzzyCompare(control.first.value, data.values[1], fuzz)
+        fuzzyCompare(control.first.position, data.positions[1], fuzz)
 
         mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2))
         compare(control.first.pressed, false)
-        verify(sliderCompare(control.first.value, data.values[2]))
-        verify(sliderCompare(control.first.position, data.positions[2]))
+        fuzzyCompare(control.first.value, data.values[2], fuzz)
+        fuzzyCompare(control.first.position, data.positions[2], fuzz)
     }
 
     function test_snapMode_touch_data() {
@@ -823,9 +821,7 @@ TestCase {
         control.first.value = 0
         control.second.value = data.to
 
-        function sliderCompare(left, right) {
-            return Math.abs(left - right) < 0.05
-        }
+        var fuzz = 0.05
 
         var touch = touchEvent(control)
         touch.press(0, control, control.first.handle.x, control.first.handle.y).commit()
@@ -835,13 +831,13 @@ TestCase {
 
         touch.move(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2)).commit()
         compare(control.first.pressed, true)
-        verify(sliderCompare(control.first.value, data.values[1]))
-        verify(sliderCompare(control.first.position, data.positions[1]))
+        fuzzyCompare(control.first.value, data.values[1], fuzz)
+        fuzzyCompare(control.first.position, data.positions[1], fuzz)
 
         touch.release(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.first.handle.width / 2)).commit()
         compare(control.first.pressed, false)
-        verify(sliderCompare(control.first.value, data.values[2]))
-        verify(sliderCompare(control.first.position, data.positions[2]))
+        fuzzyCompare(control.first.value, data.values[2], fuzz)
+        fuzzyCompare(control.first.position, data.positions[2], fuzz)
     }
 
     function test_focus() {
