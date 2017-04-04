@@ -454,6 +454,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 
     return true;
 #else
+    Q_UNUSED(outputFileName)
     *errorString = QStringLiteral("features.temporaryfile is disabled.");
     return false;
 #endif // QT_CONFIG(temporaryfile)
