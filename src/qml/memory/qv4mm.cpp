@@ -260,6 +260,62 @@ void ChunkAllocator::free(Chunk *chunk, size_t size)
 }
 
 
+void Heap::Base::markChildren(ExecutionEngine *engine)
+{
+    if (vtable()->markObjects)
+        vtable()->markObjects(this, engine);
+    if (quint64 m = vtable()->markTable) {
+//            qDebug() << "using mark table:" << hex << m << "for" << h;
+        void **mem = reinterpret_cast<void **>(this);
+        while (m) {
+            MarkFlags mark = static_cast<MarkFlags>(m & 3);
+            switch (mark) {
+            case Mark_NoMark:
+                break;
+            case Mark_Value:
+//                    qDebug() << "marking value at " << mem;
+                reinterpret_cast<Value *>(mem)->mark(engine);
+                break;
+            case Mark_Pointer: {
+//                    qDebug() << "marking pointer at " << mem;
+                Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
+                if (p)
+                    p->mark(engine);
+                break;
+            }
+            case Mark_ValueArray: {
+                Q_ASSERT(m == Mark_ValueArray);
+//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
+                ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
+                Value *v = a->values;
+                const Value *end = v + a->alloc;
+                if (a->alloc > 32*1024) {
+                    // drain from time to time to avoid overflows in the js stack
+                    Value *currentBase = engine->jsStackTop;
+                    while (v < end) {
+                        v->mark(engine);
+                        ++v;
+                        if (engine->jsStackTop >= currentBase + 32*1024)
+                            engine->memoryManager->drainMarkStack(currentBase);
+                    }
+
+                } else {
+                    while (v < end) {
+                        v->mark(engine);
+                        ++v;
+                    }
+                }
+                break;
+            }
+            }
+
+            m >>= 2;
+            ++mem;
+        }
+    }
+}
+
+
 void Chunk::sweep()
 {
     //    DEBUG << "sweeping chunk" << this << (*freeList);
@@ -858,57 +914,7 @@ void MemoryManager::drainMarkStack(Value *markBase)
         Heap::Base *h = engine->popForGC();
         ++markStackSize;
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
-        if (h->vtable()->markObjects)
-            h->vtable()->markObjects(h, engine);
-        if (quint64 m = h->vtable()->markTable) {
-//            qDebug() << "using mark table:" << hex << m << "for" << h;
-            void **mem = reinterpret_cast<void **>(h);
-            while (m) {
-                MarkFlags mark = static_cast<MarkFlags>(m & 3);
-                switch (mark) {
-                case Mark_NoMark:
-                    break;
-                case Mark_Value:
-//                    qDebug() << "marking value at " << mem;
-                    reinterpret_cast<Value *>(mem)->mark(engine);
-                    break;
-                case Mark_Pointer: {
-//                    qDebug() << "marking pointer at " << mem;
-                    Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
-                    if (p)
-                        p->mark(engine);
-                    break;
-                }
-                case Mark_ValueArray: {
-                    Q_ASSERT(m == Mark_ValueArray);
-//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
-                    ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
-                    Value *v = a->values;
-                    const Value *end = v + a->alloc;
-                    if (a->alloc > 32*1024) {
-                        // drain from time to time to avoid overflows in the js stack
-                        Value *currentBase = engine->jsStackTop;
-                        while (v < end) {
-                            v->mark(engine);
-                            ++v;
-                            if (engine->jsStackTop >= currentBase + 32*1024)
-                                drainMarkStack(currentBase);
-                        }
-
-                    } else {
-                        while (v < end) {
-                            v->mark(engine);
-                            ++v;
-                        }
-                    }
-                    break;
-                }
-                }
-
-                m >>= 2;
-                ++mem;
-            }
-        }
+        h->markChildren(engine);
     }
 }
 
@@ -918,16 +924,11 @@ void MemoryManager::mark()
 
     markStackSize = 0;
 
-    if (nextGCIsIncremental) {
-        // need to collect all gray items and push them onto the mark stack
-        blockAllocator.collectGrayItems(engine);
-        hugeItemAllocator.collectGrayItems(engine);
-    }
-
 //    qDebug() << ">>>> Mark phase:";
 //    qDebug() << "   mark stack after gray items" << (engine->jsStackTop - markBase);
 
-    engine->markObjects(nextGCIsIncremental);
+    if (!nextGCIsIncremental)
+        engine->markObjects();
 
 //    qDebug() << "   mark stack after engine->mark" << (engine->jsStackTop - markBase);
 
@@ -967,6 +968,12 @@ void MemoryManager::mark()
 
         if (engine->jsStackTop >= engine->jsStackLimit)
             drainMarkStack(markBase);
+    }
+
+    if (nextGCIsIncremental) {
+        // need to collect all gray items and push them onto the mark stack
+        blockAllocator.collectGrayItems(engine);
+        hugeItemAllocator.collectGrayItems(engine);
     }
 
     drainMarkStack(markBase);

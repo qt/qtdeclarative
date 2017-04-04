@@ -148,8 +148,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_profiler(0)
 #endif
 {
-    writeBarrierActive = true;
-
     memoryManager = new QV4::MemoryManager(this);
 
     if (maxCallDepth == -1) {
@@ -932,25 +930,23 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     }
 }
 
-void ExecutionEngine::markObjects(bool incremental)
+void ExecutionEngine::markObjects()
 {
-    if (!incremental) {
-        identifierTable->mark(this);
+    identifierTable->mark(this);
 
-        for (int i = 0; i < nArgumentsAccessors; ++i) {
-            const Property &pd = argumentsAccessors[i];
-            if (Heap::FunctionObject *getter = pd.getter())
-                getter->mark(this);
-            if (Heap::FunctionObject *setter = pd.setter())
-                setter->mark(this);
-        }
-
-        classPool->markObjects(this);
-
-        for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
-             it != end; ++it)
-            (*it)->markObjects(this);
+    for (int i = 0; i < nArgumentsAccessors; ++i) {
+        const Property &pd = argumentsAccessors[i];
+        if (Heap::FunctionObject *getter = pd.getter())
+            getter->mark(this);
+        if (Heap::FunctionObject *setter = pd.setter())
+            setter->mark(this);
     }
+
+    classPool->markObjects(this);
+
+    for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
+         it != end; ++it)
+        (*it)->markObjects(this);
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)

@@ -446,7 +446,7 @@ public:
 
     void requireArgumentsAccessors(int n);
 
-    void markObjects(bool incremental);
+    void markObjects();
 
     void initRootContext();
 

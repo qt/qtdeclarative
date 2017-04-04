@@ -127,6 +127,8 @@ struct Q_QML_EXPORT Base {
         return Chunk::testBit(c->objectBitmap, h - c->realBase());
     }
 
+    inline void markChildren(ExecutionEngine *engine);
+
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }
     void operator delete(void *, Heap::Base *) {}
