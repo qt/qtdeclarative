@@ -77,7 +77,7 @@ T.Button {
             sourceSize.height: control.icon.height
             color: control.icon.color
         }
-        text: Text {
+        label: Text {
             text: control.text
             font: control.font
             color: !control.enabled ? control.Material.hintTextColor :

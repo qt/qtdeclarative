@@ -126,7 +126,7 @@ void tst_qquickiconlabel::display()
     QQuickItem *icon = label->icon();
     QVERIFY(icon);
 
-    QQuickItem *text = label->text();
+    QQuickItem *text = label->label();
     QVERIFY(text);
 
     label->setMirrored(mirrored);
@@ -213,11 +213,11 @@ void tst_qquickiconlabel::spacingWithOneDelegate()
     QVERIFY(label);
     QQuickItem *delegate = nullptr;
     if (label->icon()) {
-        QVERIFY(!label->text());
+        QVERIFY(!label->label());
         delegate = label->icon();
     } else {
         QVERIFY(!label->icon());
-        delegate = label->text();
+        delegate = label->label();
     }
 
     QVERIFY(delegate);
@@ -244,7 +244,7 @@ void tst_qquickiconlabel::emptyIconSource()
     QQuickItem *icon = label->icon();
     QVERIFY(icon);
 
-    QQuickItem *text = label->text();
+    QQuickItem *text = label->label();
     QVERIFY(text);
     qreal horizontalCenter = label->width() / 2;
     const qreal combinedWidth = icon->width() + text->width();

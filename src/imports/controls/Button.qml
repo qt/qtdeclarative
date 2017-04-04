@@ -70,7 +70,7 @@ T.Button {
             sourceSize.height: control.icon.height
             color: control.icon.color
         }
-        text: Text {
+        label: Text {
             text: control.text
             font: control.font
             opacity: enabled || control.highlighted || control.checked ? 1 : 0.3

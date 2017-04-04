@@ -75,7 +75,7 @@ public:
     void itemDestroyed(QQuickItem *item) override;
 
     QQuickItem *icon;
-    QQuickItem *text;
+    QQuickItem *label;
     QQuickIconLabel::Display display;
     qreal spacing;
     bool mirrored;

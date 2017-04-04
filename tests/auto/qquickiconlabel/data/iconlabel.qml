@@ -60,7 +60,7 @@ Item {
         icon: Image {
             source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
         }
-        text: Text {
+        label: Text {
             text: "Some text"
         }
     }

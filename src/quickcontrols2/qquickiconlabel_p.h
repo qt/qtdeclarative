@@ -59,7 +59,7 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *icon READ icon WRITE setIcon FINAL)
-    Q_PROPERTY(QQuickItem *text READ text WRITE setText FINAL)
+    Q_PROPERTY(QQuickItem *label READ label WRITE setLabel FINAL)
     Q_PROPERTY(Display display READ display WRITE setDisplay FINAL)
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing)
     Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored)
@@ -83,8 +83,8 @@ public:
     QQuickItem *icon() const;
     void setIcon(QQuickItem *icon);
 
-    QQuickItem *text() const;
-    void setText(QQuickItem *text);
+    QQuickItem *label() const;
+    void setLabel(QQuickItem *label);
 
     Display display() const;
     void setDisplay(Display display);
