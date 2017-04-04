@@ -456,8 +456,6 @@ void QQuickRangeSliderPrivate::handlePress(const QPointF &point, int touchId)
 void QQuickRangeSliderPrivate::handleMove(const QPointF &point, int touchId)
 {
     Q_Q(QQuickRangeSlider);
-    if (!q->keepMouseGrab() && !q->keepTouchGrab())
-        return;
     QQuickRangeSliderNode *pressedNode = QQuickRangeSliderPrivate::pressedNode(touchId);
     if (pressedNode) {
         qreal pos = positionAt(q, pressedNode->handle(), point);
@@ -953,6 +951,7 @@ void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickRangeSlider);
     QQuickControl::mousePressEvent(event);
     d->handlePress(event->localPos());
+    d->handleMove(event->localPos());
 }
 
 void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
@@ -965,7 +964,8 @@ void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
         else
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->localPos().y() - d->pressPoint.y(), Qt::YAxis, event));
     }
-    d->handleMove(event->localPos());
+    if (keepMouseGrab())
+        d->handleMove(event->localPos());
 }
 
 void QQuickRangeSlider::mouseReleaseEvent(QMouseEvent *event)

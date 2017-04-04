@@ -287,7 +287,7 @@ TestCase {
         var secondPressedSpy = signalSpy.createObject(control, {target: control.second, signalName: "pressedChanged"})
         verify(secondPressedSpy.valid)
 
-        mousePress(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
+        mousePress(control, control.leftPadding, control.height - control.bottomPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 1)
         compare(secondPressedSpy.count, 0)
         compare(control.first.pressed, true)
@@ -297,7 +297,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
+        mouseRelease(control, control.leftPadding, control.height - control.bottomPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 2)
         compare(secondPressedSpy.count, 0)
         compare(control.first.pressed, false)
@@ -307,7 +307,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mousePress(control, control.width * 0.75, control.height * 0.25, Qt.LeftButton)
+        mousePress(control, control.width - control.rightPadding, control.topPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 2)
         compare(secondPressedSpy.count, 1)
         compare(control.first.pressed, false)
@@ -317,7 +317,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, control.width * 0.75, control.height * 0.25, Qt.LeftButton)
+        mouseRelease(control, control.width - control.rightPadding, control.topPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 2)
         compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, false)
@@ -347,7 +347,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)
+        mousePress(control, control.leftPadding, control.height - control.bottomPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 5)
         compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, true)
@@ -738,7 +738,8 @@ TestCase {
         control.first.value = 0
         control.locale = Qt.locale("ar_EG")
 
-        mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)
+        mousePress(control, control.first.handle.x + control.first.handle.width / 2,
+                            control.first.handle.y + control.first.handle.height / 2, Qt.LeftButton)
         compare(firstPressedSpy.count, 3)
         compare(control.first.pressed, true)
         compare(control.first.value, 0.0)
@@ -767,22 +768,22 @@ TestCase {
         compare(control.first.visualPosition, 0.5)
     }
 
-    function test_snapMode_data() {
+    function test_snapMode_data(immediate) {
         return [
             { tag: "NoSnap", snapMode: RangeSlider.NoSnap, from: 0, to: 2, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
             { tag: "SnapAlways (0..2)", snapMode: RangeSlider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
             { tag: "SnapAlways (1..3)", snapMode: RangeSlider.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
-            { tag: "SnapAlways (-1..1)", snapMode: RangeSlider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
-            { tag: "SnapAlways (1..-1)", snapMode: RangeSlider.SnapAlways, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapAlways (-1..1)", snapMode: RangeSlider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
+            { tag: "SnapAlways (1..-1)", snapMode: RangeSlider.SnapAlways, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
             { tag: "SnapOnRelease (0..2)", snapMode: RangeSlider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
             { tag: "SnapOnRelease (1..3)", snapMode: RangeSlider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
-            { tag: "SnapOnRelease (-1..1)", snapMode: RangeSlider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
-            { tag: "SnapOnRelease (1..-1)", snapMode: RangeSlider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] }
+            { tag: "SnapOnRelease (-1..1)", snapMode: RangeSlider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
+            { tag: "SnapOnRelease (1..-1)", snapMode: RangeSlider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] }
         ]
     }
 
     function test_snapMode_mouse_data() {
-        return test_snapMode_data()
+        return test_snapMode_data(true)
     }
 
     function test_snapMode_mouse(data) {
@@ -794,7 +795,7 @@ TestCase {
 
         var fuzz = 0.05
 
-        mousePress(control, control.first.handle.x, control.first.handle.y)
+        mousePress(control, control.leftPadding)
         compare(control.first.pressed, true)
         compare(control.first.value, data.values[0])
         compare(control.first.position, data.positions[0])
@@ -811,7 +812,7 @@ TestCase {
     }
 
     function test_snapMode_touch_data() {
-        return test_snapMode_data()
+        return test_snapMode_data(false)
     }
 
     function test_snapMode_touch(data) {
