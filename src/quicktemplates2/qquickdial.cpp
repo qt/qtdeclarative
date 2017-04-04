@@ -260,6 +260,9 @@ QQuickDial::QQuickDial(QQuickItem *parent)
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*!

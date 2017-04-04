@@ -97,6 +97,9 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item->setZ(popup->z());
         if (popup->isModal()) {
             item->setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+            item->setCursor(Qt::ArrowCursor);
+#endif
 #if QT_CONFIG(quicktemplates2_hover)
             // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
             item->setAcceptHoverEvents(true);

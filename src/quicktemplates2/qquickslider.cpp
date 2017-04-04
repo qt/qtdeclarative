@@ -243,6 +243,9 @@ QQuickSlider::QQuickSlider(QQuickItem *parent)
     setActiveFocusOnTab(true);
     setFocusPolicy(Qt::StrongFocus);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*!

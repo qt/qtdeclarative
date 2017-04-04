@@ -521,8 +521,11 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
     d->first = new QQuickRangeSliderNode(0.0, this);
     d->second = new QQuickRangeSliderNode(1.0, this);
 
-    setAcceptedMouseButtons(Qt::LeftButton);
     setFlag(QQuickItem::ItemIsFocusScope);
+    setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*!

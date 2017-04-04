@@ -628,6 +628,9 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
     setFocusPolicy(Qt::StrongFocus);
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
     setInputMethodHints(Qt::ImhNoPredictiveText);
 }
 
@@ -737,12 +740,18 @@ void QQuickComboBox::setEditable(bool editable)
                 QObjectPrivate::connect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
                 QObjectPrivate::connect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
             }
+#if QT_CONFIG(cursor)
+            d->contentItem->setCursor(Qt::IBeamCursor);
+#endif
         } else {
             d->contentItem->removeEventFilter(this);
             if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
                 QObjectPrivate::disconnect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
                 QObjectPrivate::disconnect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
             }
+#if QT_CONFIG(cursor)
+            d->contentItem->unsetCursor();
+#endif
         }
     }
 
@@ -1542,6 +1551,9 @@ void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickComboBox::inputMethodComposingChanged);
             connect(newInput, &QQuickTextInput::acceptableInputChanged, this, &QQuickComboBox::acceptableInputChanged);
         }
+#if QT_CONFIG(cursor)
+        newItem->setCursor(Qt::IBeamCursor);
+#endif
     }
 }
 

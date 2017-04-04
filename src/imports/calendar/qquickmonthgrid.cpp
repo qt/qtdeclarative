@@ -195,6 +195,9 @@ QQuickMonthGrid::QQuickMonthGrid(QQuickItem *parent) :
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 
     d->model = new QQuickMonthModel(this);
     d->source = QVariant::fromValue(d->model);
