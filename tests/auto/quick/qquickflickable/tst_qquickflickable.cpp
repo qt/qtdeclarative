@@ -2044,10 +2044,10 @@ void tst_qquickflickable::nestedSliderUsingTouch()
     QCOMPARE(tda->active(), !ungrabs);
     QTest::touchEvent(window, touchDevice).release(0, p0, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(tda->touchPointStates.first(), Qt::TouchPointPressed);
-    QCOMPARE(tda->touchUpdates, updates);
-    QCOMPARE(tda->touchReleases, releases);
-    QCOMPARE(tda->ungrabs, ungrabs);
+    QTRY_COMPARE(tda->touchPointStates.first(), Qt::TouchPointPressed);
+    QTRY_COMPARE(tda->touchUpdates, updates);
+    QTRY_COMPARE(tda->touchReleases, releases);
+    QTRY_COMPARE(tda->ungrabs, ungrabs);
 }
 
 // QTBUG-31328
