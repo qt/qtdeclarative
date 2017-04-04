@@ -29,7 +29,6 @@
 #include <QtCore/qvector.h>
 
 #include <qtest.h>
-#include <QtTest/qsignalspy.h>
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
@@ -130,17 +129,11 @@ void tst_qquickiconlabel::display()
     QQuickItem *text = label->text();
     QVERIFY(text);
 
-    QSignalSpy mirroredSpy(label, SIGNAL(mirroredChanged()));
-    bool expectChange = label->isMirrored() != mirrored;
     label->setMirrored(mirrored);
     QCOMPARE(label->isMirrored(), mirrored);
-    QCOMPARE(mirroredSpy.count(), expectChange ? 1 : 0);
 
-    QSignalSpy spacingSpy(label, SIGNAL(spacingChanged()));
-    expectChange = !qFuzzyCompare(label->spacing(), spacing);
     label->setSpacing(spacing);
     QCOMPARE(label->spacing(), spacing);
-    QCOMPARE(spacingSpy.count(), expectChange ? 1 : 0);
 
     const qreal horizontalPadding = label->leftPadding() + label->rightPadding();
     const qreal verticalPadding = label->topPadding() + label->bottomPadding();
@@ -148,11 +141,8 @@ void tst_qquickiconlabel::display()
     // Test that the icon and text are correctly positioned and sized after
     // setting several different display types in succession.
     for (QQuickIconLabel::Display displayType : qAsConst(displayTypes)) {
-        QSignalSpy displaySpy(label, SIGNAL(displayChanged()));
-        const bool expectChange = label->display() != displayType;
         label->setDisplay(displayType);
         QCOMPARE(label->display(), displayType);
-        QCOMPARE(displaySpy.count(), expectChange ? 1 : 0);
 
         const qreal horizontalCenter = label->width() / 2;
         const qreal verticalCenter = label->height() / 2;

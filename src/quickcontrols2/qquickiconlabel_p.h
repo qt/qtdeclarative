@@ -58,15 +58,15 @@ class QQuickIconLabelPrivate;
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *icon READ icon WRITE setIcon NOTIFY iconChanged FINAL)
-    Q_PROPERTY(QQuickItem *text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
-    Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored NOTIFY mirroredChanged)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged)
+    Q_PROPERTY(QQuickItem *icon READ icon WRITE setIcon FINAL)
+    Q_PROPERTY(QQuickItem *text READ text WRITE setText FINAL)
+    Q_PROPERTY(Display display READ display WRITE setDisplay FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing)
+    Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding)
 
 public:
     enum Display {
@@ -110,17 +110,6 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
-
-Q_SIGNALS:
-    void iconChanged();
-    void textChanged();
-    void displayChanged();
-    void spacingChanged();
-    void mirroredChanged();
-    void topPaddingChanged();
-    void leftPaddingChanged();
-    void rightPaddingChanged();
-    void bottomPaddingChanged();
 
 protected:
     void componentComplete() override;

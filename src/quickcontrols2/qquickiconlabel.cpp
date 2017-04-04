@@ -222,8 +222,6 @@ void QQuickIconLabel::setIcon(QQuickItem *icon)
 
     d->updateImplicitSize();
     d->layout();
-
-    emit iconChanged();
 }
 
 QQuickItem *QQuickIconLabel::text() const
@@ -249,8 +247,6 @@ void QQuickIconLabel::setText(QQuickItem *text)
 
     d->updateImplicitSize();
     d->layout();
-
-    emit textChanged();
 }
 
 QQuickIconLabel::Display QQuickIconLabel::display() const
@@ -268,7 +264,6 @@ void QQuickIconLabel::setDisplay(Display display)
     d->display = display;
     d->updateImplicitSize();
     d->layout();
-    emit displayChanged();
 }
 
 qreal QQuickIconLabel::spacing() const
@@ -286,7 +281,6 @@ void QQuickIconLabel::setSpacing(qreal spacing)
     d->spacing = spacing;
     d->updateImplicitSize();
     d->layout();
-    emit spacingChanged();
 }
 
 bool QQuickIconLabel::isMirrored() const
@@ -304,7 +298,6 @@ void QQuickIconLabel::setMirrored(bool mirrored)
     d->mirrored = mirrored;
     d->updateImplicitSize();
     d->layout();
-    emit mirroredChanged();
 }
 
 qreal QQuickIconLabel::topPadding() const
@@ -322,7 +315,6 @@ void QQuickIconLabel::setTopPadding(qreal padding)
     d->topPadding = padding;
     d->updateImplicitSize();
     d->layout();
-    emit topPaddingChanged();
 }
 
 void QQuickIconLabel::resetTopPadding()
@@ -345,7 +337,6 @@ void QQuickIconLabel::setLeftPadding(qreal padding)
     d->leftPadding = padding;
     d->updateImplicitSize();
     d->layout();
-    emit leftPaddingChanged();
 }
 
 void QQuickIconLabel::resetLeftPadding()
@@ -368,7 +359,6 @@ void QQuickIconLabel::setRightPadding(qreal padding)
     d->rightPadding = padding;
     d->updateImplicitSize();
     d->layout();
-    emit rightPaddingChanged();
 }
 
 void QQuickIconLabel::resetRightPadding()
@@ -391,7 +381,6 @@ void QQuickIconLabel::setBottomPadding(qreal padding)
     d->bottomPadding = padding;
     d->updateImplicitSize();
     d->layout();
-    emit bottomPaddingChanged();
 }
 
 void QQuickIconLabel::resetBottomPadding()
