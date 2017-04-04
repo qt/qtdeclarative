@@ -43,20 +43,20 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_scrollbar : public QQmlDataTest
+class tst_cursor : public QQmlDataTest
 {
     Q_OBJECT
 
 private slots:
-    void cursorShape();
+    void scrollBar();
 };
 
 // QTBUG-59629
-void tst_scrollbar::cursorShape()
+void tst_cursor::scrollBar()
 {
     // Ensure that the mouse cursor has the correct shape when over a scrollbar
     // which is itself over a text area with IBeamCursor.
-    QQuickApplicationHelper helper(this, QStringLiteral("cursor.qml"));
+    QQuickApplicationHelper helper(this, QStringLiteral("scrollbar.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -80,6 +80,6 @@ void tst_scrollbar::cursorShape()
     QCOMPARE(scrollBar->cursor().shape(), Qt::CursorShape::ArrowCursor);
 }
 
-QTEST_MAIN(tst_scrollbar)
+QTEST_MAIN(tst_cursor)
 
-#include "tst_scrollbar.moc"
+#include "tst_cursor.moc"

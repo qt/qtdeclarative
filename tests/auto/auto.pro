@@ -4,6 +4,7 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    cursor \
     drawer \
     menu \
     platform \
@@ -17,7 +18,6 @@ SUBDIRS += \
     qquickuniversalstyleconf \
     revisions \
     sanity \
-    scrollbar \
     snippets
 
 # QTBUG-50295

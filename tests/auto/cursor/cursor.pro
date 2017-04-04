@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_scrollbar
-SOURCES += tst_scrollbar.cpp
+TARGET = tst_cursor
+SOURCES += tst_cursor.cpp
 
 macos:CONFIG -= app_bundle
 

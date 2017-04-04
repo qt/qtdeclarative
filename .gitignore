@@ -32,6 +32,7 @@
 /tests/auto/controls/default/tst_default
 /tests/auto/controls/material/tst_material
 /tests/auto/controls/universal/tst_universal
+/tests/auto/cursor/tst_cursor
 /tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
 /tests/auto/menu/tst_menu
