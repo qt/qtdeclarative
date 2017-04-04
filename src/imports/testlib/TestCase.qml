@@ -444,6 +444,9 @@ Item {
         or \c{QVERIFY2(condition, message)} in C++.
     */
     function verify(cond, msg) {
+        if (arguments.length > 2)
+            qtest_fail("More than two arguments given to verify(). Did you mean tryVerify() or tryCompare()?", 1)
+
         if (msg === undefined)
             msg = "";
         if (!qtest_results.verify(cond, msg, util.callerFile(), util.callerLine()))
