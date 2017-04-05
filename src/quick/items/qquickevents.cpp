@@ -610,11 +610,8 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
         m_sceneGrabPos = m_scenePos;
         if (oldGrabberHandler)
             oldGrabberHandler->onGrabChanged(oldGrabberHandler, CancelGrabExclusive, this);
-        else if (oldGrabberItem && oldGrabberItem != grabber) {
-            auto pte = pointerEvent()->asPointerTouchEvent();
-            if (pte && pte->asTouchEvent() && pte->asTouchEvent()->touchPointStates() == Qt::TouchPointReleased)
-                oldGrabberItem->touchUngrabEvent();
-        }
+        else if (oldGrabberItem && oldGrabberItem != grabber && grabber && pointerEvent()->asPointerTouchEvent())
+            oldGrabberItem->touchUngrabEvent();
         for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
             passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
     }

@@ -748,7 +748,6 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 
     QQuickItem *oldGrabber = q->mouseGrabberItem();
     qCDebug(DBG_MOUSE_TARGET) << "grabber" << oldGrabber << "->" << grabber;
-    bool fromTouch = false;
 
     if (grabber && touchMouseId != -1 && touchMouseDevice) {
         // update the touch item for mouse touch id to the new grabber
@@ -759,7 +758,6 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
             for (auto handler : point->passiveGrabbers())
                 point->cancelPassiveGrab(handler);
         }
-        fromTouch = true;
     } else {
         QQuickPointerEvent *event = QQuickPointerDevice::genericMouseDevice()->pointerEvent();
         Q_ASSERT(event->pointCount() == 1);
@@ -773,11 +771,8 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     if (oldGrabber) {
         QEvent e(QEvent::UngrabMouse);
         QSet<QQuickItem *> hasFiltered;
-        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered)) {
+        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered))
             oldGrabber->mouseUngrabEvent();
-            if (fromTouch)
-                oldGrabber->touchUngrabEvent();
-        }
     }
 }
 
