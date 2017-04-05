@@ -310,7 +310,7 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
     loadPtr(Address(Assembler::ScratchRegister, targetStructureOffset(Heap::ExecutionContext::baseOffset + offsetof(Heap::ExecutionContextData, compilationUnit))), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, offsetof(CompiledData::CompilationUnitBase, runtimeStrings)), reg);
     const int id = _jsGenerator->registerString(string);
-    return Pointer(reg, id * sizeof(QV4::String*));
+    return Pointer(reg, id * RegisterSize);
 }
 
 template <typename TargetConfiguration>
