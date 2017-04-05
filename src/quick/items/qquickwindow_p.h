@@ -172,7 +172,7 @@ public:
     void deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event);
     void deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent);
 
-    QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointF &, bool checkMouseButtons) const;
+    QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointF &, bool checkMouseButtons, bool checkAcceptsTouch) const;
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
     void updateFilteringParentItems(const QVector<QQuickItem *> &targetItems);
 

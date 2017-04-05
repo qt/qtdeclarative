@@ -292,6 +292,8 @@ public:
     void setAcceptedMouseButtons(Qt::MouseButtons buttons);
     bool acceptHoverEvents() const;
     void setAcceptHoverEvents(bool enabled);
+    bool acceptTouchEvents() const;
+    void setAcceptTouchEvents(bool accept);
 
 #if QT_CONFIG(cursor)
     QCursor cursor() const;

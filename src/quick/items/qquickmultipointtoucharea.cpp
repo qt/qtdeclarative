@@ -420,6 +420,7 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
     if (qmlVisualTouchDebugging()) {
         setFlag(QQuickItem::ItemHasContents);
     }
+    setAcceptTouchEvents(true);
 #ifdef Q_OS_OSX
     setAcceptHoverEvents(true); // needed to enable touch events on mouse hover.
 #endif

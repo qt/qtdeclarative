@@ -442,6 +442,7 @@ public:
     // focus chain and prevents tabbing outside.
     bool isTabFence:1;
     bool replayingPressEvent:1;
+    bool touchEnabled:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,

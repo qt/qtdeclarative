@@ -3172,6 +3172,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , antialiasingValid(false)
     , isTabFence(false)
     , replayingPressEvent(false)
+    , touchEnabled(false)
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
@@ -7188,6 +7189,32 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
     Q_D(QQuickItem);
     d->hoverEnabled = enabled;
     d->setHasHoverInChild(enabled);
+}
+
+/*!
+    Returns whether touch events are accepted by this item.
+
+    The default value is false.
+
+    If this is false, then the item will not receive any touch events through
+    the touchEvent() function.
+*/
+bool QQuickItem::acceptTouchEvents() const
+{
+    Q_D(const QQuickItem);
+    return d->touchEnabled;
+}
+
+/*!
+    If \a enabled is true, this sets the item to accept touch events;
+    otherwise, touch events are not accepted by this item.
+
+    \sa acceptTouchEvents()
+*/
+void QQuickItem::setAcceptTouchEvents(bool accept)
+{
+    Q_D(QQuickItem);
+    d->touchEnabled = accept;
 }
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
