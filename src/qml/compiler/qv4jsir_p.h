@@ -946,6 +946,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QDateTime sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
     uint unitFlags; // flags merged into CompiledData::Unit::flags
+    QString targetABI; // fallback to QSysInfo::buildAbi() if empty
 #ifdef QT_NO_QML_DEBUGGER
     static const bool debugMode = false;
 #else

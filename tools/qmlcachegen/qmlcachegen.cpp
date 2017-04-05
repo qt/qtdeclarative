@@ -113,9 +113,10 @@ static void annotateListElements(QmlIR::Document *document)
     }
 }
 
-static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
+static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, const QString &targetABI, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
+    irDocument.jsModule.targetABI = targetABI;
 
     QString sourceCode;
     {
@@ -193,9 +194,10 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
     return true;
 }
 
-static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
+static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, const QString &targetABI, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
+    irDocument.jsModule.targetABI = targetABI;
 
     QString sourceCode;
     {
@@ -300,6 +302,9 @@ int main(int argc, char **argv)
     QCommandLineOption targetArchitectureOption(QStringLiteral("target-architecture"), QCoreApplication::translate("main", "Target architecture"), QCoreApplication::translate("main", "architecture"));
     parser.addOption(targetArchitectureOption);
 
+    QCommandLineOption targetABIOption(QStringLiteral("target-abi"), QCoreApplication::translate("main", "Target architecture binary interface"), QCoreApplication::translate("main", "abi"));
+    parser.addOption(targetABIOption);
+
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
@@ -347,13 +352,15 @@ int main(int argc, char **argv)
     if (parser.isSet(outputFileOption))
         outputFileName = parser.value(outputFileOption);
 
+    const QString targetABI = parser.value(targetABIOption);
+
     if (inputFile.endsWith(QLatin1String(".qml"))) {
-        if (!compileQmlFile(inputFile, outputFileName, isel.data(), &error)) {
+        if (!compileQmlFile(inputFile, outputFileName, isel.data(), targetABI, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
-        if (!compileJSFile(inputFile, outputFileName, isel.data(), &error)) {
+        if (!compileJSFile(inputFile, outputFileName, isel.data(), targetABI, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
