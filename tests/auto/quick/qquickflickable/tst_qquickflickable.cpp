@@ -63,9 +63,7 @@ public:
         , touchReleases(0)
         , ungrabs(0)
         , m_active(false)
-    {
-        setFlags(ItemAcceptsDrops);
-    }
+    { }
 
     QPointF pos() const { return m_pos; }
 
