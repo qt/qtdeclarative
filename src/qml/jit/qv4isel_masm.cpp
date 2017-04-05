@@ -1641,18 +1641,18 @@ Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &arch
     using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
     using ARM64CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;
 
-    if (architecture == QLatin1String("armv7"))
+    if (architecture == QLatin1String("arm"))
         return new ISelFactory<ARMv7CrossAssembler>;
-    else if (architecture == QLatin1String("armv8"))
+    else if (architecture == QLatin1String("arm64"))
         return new ISelFactory<ARM64CrossAssembler>;
 
     QString hostArch;
 #if CPU(ARM_THUMB2)
-    hostArch = QStringLiteral("armv7");
+    hostArch = QStringLiteral("arm");
 #elif CPU(MIPS)
     hostArch = QStringLiteral("mips");
 #elif CPU(X86)
-    hostArch = QStringLiteral("x86");
+    hostArch = QStringLiteral("i386");
 #elif CPU(X86_64)
     hostArch = QStringLiteral("x86_64");
 #endif
