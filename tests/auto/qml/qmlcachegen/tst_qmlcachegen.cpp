@@ -42,6 +42,7 @@ private slots:
     void initTestCase();
 
     void loadGeneratedFile();
+    void translationExpressionSupport();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -114,6 +115,47 @@ void tst_qmlcachegen::loadGeneratedFile()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("value").toInt(), 42);
+}
+
+void tst_qmlcachegen::translationExpressionSupport()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile("test.qml", "import QtQml.Models 2.2\n"
+                                                           "import QtQml 2.2\n"
+                                                           "QtObject {\n"
+                                                           "    property ListModel model: ListModel {\n"
+                                                           "        ListElement {\n"
+                                                           "            text: qsTr(\"All\")\n"
+                                                           "        }\n"
+                                                           "        ListElement {\n"
+                                                           "            text: QT_TR_NOOP(\"Ok\")\n"
+                                                           "        }\n"
+                                                           "    }\n"
+                                                           "    property string text: model.get(0).text + \" \" + model.get(1).text\n"
+                                                           "}");
+
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("text").toString(), QString("All Ok"));
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

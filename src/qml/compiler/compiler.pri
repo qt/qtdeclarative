@@ -10,7 +10,8 @@ HEADERS += \
     $$PWD/qv4isel_util_p.h \
     $$PWD/qv4ssa_p.h \
     $$PWD/qqmlirbuilder_p.h \
-    $$PWD/qqmltypecompiler_p.h
+    $$PWD/qqmltypecompiler_p.h \
+    $$PWD/qv4jssimplifier_p.h
 
 SOURCES += \
     $$PWD/qv4compileddata.cpp \
@@ -19,7 +20,8 @@ SOURCES += \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4jsir.cpp \
     $$PWD/qv4ssa.cpp \
-    $$PWD/qqmlirbuilder.cpp
+    $$PWD/qqmlirbuilder.cpp \
+    $$PWD/qv4jssimplifier.cpp
 
 !qmldevtools_build {
 

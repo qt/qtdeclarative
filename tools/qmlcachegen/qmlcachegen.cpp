@@ -37,6 +37,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qv4isel_moth_p.h>
 #include <private/qqmljsparser_p.h>
+#include <private/qv4jssimplifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -174,7 +175,10 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
 
         QmlIR::QmlUnitGenerator generator;
 
-        // ### translation binding simplification
+        {
+            QQmlJavaScriptBindingExpressionSimplificationPass pass(irDocument.objects, &irDocument.jsModule, &irDocument.jsGenerator);
+            pass.reduceTranslationBindings();
+        }
 
         QV4::ExecutableAllocator allocator;
         QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, &allocator, &irDocument.jsModule, &irDocument.jsGenerator));
@@ -263,8 +267,6 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
         }
 
         QmlIR::QmlUnitGenerator generator;
-
-        // ### translation binding simplification
 
         QV4::ExecutableAllocator allocator;
         QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, &allocator, &irDocument.jsModule, &irDocument.jsGenerator));
