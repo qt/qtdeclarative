@@ -45,9 +45,9 @@ T.DialogButtonBox {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             contentHeight + topPadding + bottomPadding)
 
     spacing: 6
     padding: 6
@@ -56,9 +56,6 @@ T.DialogButtonBox {
     delegate: Button { }
 
     contentItem: ListView {
-        implicitWidth: contentWidth
-        implicitHeight: 24
-
         model: control.contentModel
         spacing: control.spacing
         orientation: ListView.Horizontal

@@ -68,6 +68,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickCont
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     // 2.5 (Qt 5.12)
     Q_PROPERTY(ButtonLayout buttonLayout READ buttonLayout WRITE setButtonLayout RESET resetButtonLayout NOTIFY buttonLayoutChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION 5)
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
 
 public:
@@ -114,6 +116,14 @@ public:
     void setButtonLayout(ButtonLayout layout);
     void resetButtonLayout();
 
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
+    void resetContentWidth();
+
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
+    void resetContentHeight();
+
 Q_SIGNALS:
     void accepted();
     void rejected();
@@ -129,6 +139,8 @@ Q_SIGNALS:
     Q_REVISION(3) void discarded();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void buttonLayoutChanged();
+    Q_REVISION(5) void contentWidthChanged();
+    Q_REVISION(5) void contentHeightChanged();
 
 protected:
     void updatePolish() override;

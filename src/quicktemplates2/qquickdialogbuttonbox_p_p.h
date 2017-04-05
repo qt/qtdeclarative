@@ -69,12 +69,25 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
     void resizeContent() override;
+
     void updateLayout();
+
+    qreal getContentWidth() const;
+    qreal getContentHeight() const;
+
+    void updateContentWidth();
+    void updateContentHeight();
+    void updateContentSize();
+
     void handleClick();
 
     QQuickAbstractButton *createStandardButton(QPlatformDialogHelper::StandardButton button);
     void removeStandardButtons();
 
+    bool hasContentWidth;
+    bool hasContentHeight;
+    qreal contentWidth;
+    qreal contentHeight;
     Qt::Alignment alignment;
     QQuickDialogButtonBox::Position position;
     QPlatformDialogHelper::StandardButtons standardButtons;

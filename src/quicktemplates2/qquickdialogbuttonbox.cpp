@@ -198,7 +198,11 @@ static QQuickDialogButtonBox::ButtonLayout platformButtonLayout()
 }
 
 QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
-    : alignment(0),
+    : hasContentWidth(false),
+      hasContentHeight(false),
+      contentWidth(0),
+      contentHeight(0),
+      alignment(0),
       position(QQuickDialogButtonBox::Footer),
       standardButtons(QPlatformDialogHelper::NoButton),
       buttonLayout(platformButtonLayout()),
@@ -208,14 +212,18 @@ QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
 
 void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
-    Q_UNUSED(item);
-    resizeContent();
+    if (item == contentItem)
+        resizeContent();
+    else
+        updateContentWidth();
 }
 
 void QQuickDialogButtonBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
-    Q_UNUSED(item);
-    resizeContent();
+    if (item == contentItem)
+        resizeContent();
+    else
+        updateContentHeight();
 }
 
 // adapted from QStyle::alignedRect()
@@ -226,7 +234,7 @@ static QRectF alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment
     qreal y = rectangle.y();
     qreal w = size.width();
     qreal h = size.height();
-    if ((alignment & Qt::AlignVCenter) == Qt::AlignVCenter)
+    if ((alignment & Qt::AlignVCenter) == Qt::AlignVCenter || (alignment & Qt::AlignVertical_Mask) == 0)
         y += (rectangle.size().height() - h) / 2;
     else if ((alignment & Qt::AlignBottom) == Qt::AlignBottom)
         y += rectangle.size().height() - h;
@@ -244,11 +252,8 @@ void QQuickDialogButtonBoxPrivate::resizeContent()
         return;
 
     QRectF geometry = q->boundingRect().adjusted(q->leftPadding(), q->topPadding(), -q->rightPadding(), -q->bottomPadding());
-    if (alignment != 0) {
-        qreal cw = (alignment & Qt::AlignHorizontal_Mask) == 0 ? q->availableWidth() : contentItem->property("contentWidth").toReal();
-        qreal ch = (alignment & Qt::AlignVertical_Mask) == 0 ? q->availableHeight() : contentItem->property("contentHeight").toReal();
-        geometry = alignedRect(q->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight, alignment, QSizeF(cw, ch), geometry);
-    }
+    if (alignment != 0)
+        geometry = alignedRect(q->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight, alignment, QSizeF(contentWidth, contentHeight), geometry);
 
     contentItem->setPosition(geometry.topLeft());
     contentItem->setSize(geometry.size());
@@ -265,8 +270,7 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
     const int valign = alignment & Qt::AlignVertical_Mask;
 
     QVector<QQuickAbstractButton *> buttons;
-    const qreal maxItemWidth = ((contentItem ? contentItem->width() : q->availableWidth()) - qMax(0, count - 1) * spacing) / count;
-    const qreal maxItemHeight = contentItem ? contentItem->height() : q->availableHeight();
+    const qreal itemWidth = (contentWidth - qMax(0, count - 1) * spacing) / count;
 
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = q->itemAt(i);
@@ -274,11 +278,11 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
             if (!p->widthValid) {
                 if (!halign)
-                    item->setWidth(maxItemWidth);
+                    item->setWidth(itemWidth);
                 else
                     item->resetWidth();
                 if (!valign)
-                    item->setHeight(maxItemHeight);
+                    item->setHeight(contentHeight);
                 else
                     item->resetHeight();
                 p->widthValid = false;
@@ -322,6 +326,89 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
 
     for (int i = 0; i < buttons.count() - 1; ++i)
         q->insertItem(i, buttons.at(i));
+}
+
+qreal QQuickDialogButtonBoxPrivate::getContentWidth() const
+{
+    Q_Q(const QQuickDialogButtonBox);
+    const int count = contentModel->count();
+    const qreal totalSpacing = qMax(0, count - 1) * spacing;
+    qreal totalWidth = totalSpacing;
+    qreal maxWidth = 0;
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item) {
+            totalWidth += item->implicitWidth();
+            maxWidth = qMax(maxWidth, item->implicitWidth());
+        }
+    }
+    if ((alignment & Qt::AlignHorizontal_Mask) == 0)
+        totalWidth = qMax(totalWidth, count * maxWidth + totalSpacing);
+    return totalWidth;
+}
+
+qreal QQuickDialogButtonBoxPrivate::getContentHeight() const
+{
+    Q_Q(const QQuickDialogButtonBox);
+    const int count = contentModel->count();
+    qreal maxHeight = 0;
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item)
+            maxHeight = qMax(maxHeight, item->implicitHeight());
+    }
+    return maxHeight;
+}
+
+void QQuickDialogButtonBoxPrivate::updateContentWidth()
+{
+    Q_Q(QQuickDialogButtonBox);
+    if (hasContentWidth)
+        return;
+
+    const qreal oldContentWidth = contentWidth;
+    contentWidth = getContentWidth();
+    if (qFuzzyCompare(contentWidth, oldContentWidth))
+        return;
+
+    emit q->contentWidthChanged();
+}
+
+void QQuickDialogButtonBoxPrivate::updateContentHeight()
+{
+    Q_Q(QQuickDialogButtonBox);
+    if (hasContentHeight)
+        return;
+
+    const qreal oldContentHeight = contentHeight;
+    contentHeight = getContentHeight();
+    if (qFuzzyCompare(contentHeight, oldContentHeight))
+        return;
+
+    emit q->contentHeightChanged();
+}
+
+void QQuickDialogButtonBoxPrivate::updateContentSize()
+{
+    Q_Q(QQuickDialogButtonBox);
+    if (hasContentWidth && hasContentHeight)
+        return;
+
+    const qreal oldContentWidth = contentWidth;
+    if (!hasContentWidth)
+        contentWidth = getContentWidth();
+
+    const qreal oldContentHeight = contentHeight;
+    if (!hasContentHeight)
+        contentHeight = getContentHeight();
+
+    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
+    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
+
+    if (widthChanged)
+        emit q->contentWidthChanged();
+    if (heightChanged)
+        emit q->contentHeightChanged();
 }
 
 void QQuickDialogButtonBoxPrivate::handleClick()
@@ -647,6 +734,85 @@ void QQuickDialogButtonBox::resetButtonLayout()
     setButtonLayout(platformButtonLayout());
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::DialogButtonBox::contentWidth
+
+    This property holds the content width. It is used for calculating the total
+    implicit width of the button box.
+
+    Unless explicitly overridden, the content width is automatically calculated
+    based on the total implicit width of the buttons and the \l {Control::}{spacing}
+    of the button box.
+
+    \sa contentHeight
+*/
+qreal QQuickDialogButtonBox::contentWidth() const
+{
+    Q_D(const QQuickDialogButtonBox);
+    return d->contentWidth;
+}
+
+void QQuickDialogButtonBox::setContentWidth(qreal width)
+{
+    Q_D(QQuickDialogButtonBox);
+    d->hasContentWidth = true;
+    if (qFuzzyCompare(d->contentWidth, width))
+        return;
+
+    d->contentWidth = width;
+    emit contentWidthChanged();
+}
+
+void QQuickDialogButtonBox::resetContentWidth()
+{
+    Q_D(QQuickDialogButtonBox);
+    if (!d->hasContentWidth)
+        return;
+
+    d->hasContentWidth = false;
+    d->updateContentWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::DialogButtonBox::contentHeight
+
+    This property holds the content height. It is used for calculating the total
+    implicit height of the button box.
+
+    Unless explicitly overridden, the content height is automatically calculated
+    based on the maximum implicit height of the buttons.
+
+    \sa contentWidth
+*/
+qreal QQuickDialogButtonBox::contentHeight() const
+{
+    Q_D(const QQuickDialogButtonBox);
+    return d->contentHeight;
+}
+
+void QQuickDialogButtonBox::setContentHeight(qreal height)
+{
+    Q_D(QQuickDialogButtonBox);
+    d->hasContentHeight = true;
+    if (qFuzzyCompare(d->contentHeight, height))
+        return;
+
+    d->contentHeight = height;
+    emit contentHeightChanged();
+}
+
+void QQuickDialogButtonBox::resetContentHeight()
+{
+    Q_D(QQuickDialogButtonBox);
+    if (!d->hasContentHeight)
+        return;
+
+    d->hasContentHeight = false;
+    d->updateContentHeight();
+}
+
 void QQuickDialogButtonBox::updatePolish()
 {
     Q_D(QQuickDialogButtonBox);
@@ -691,6 +857,7 @@ void QQuickDialogButtonBox::itemAdded(int index, QQuickItem *item)
         QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, d, &QQuickDialogButtonBoxPrivate::handleClick);
     if (QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(item, false)))
         QQuickDialogButtonBoxAttachedPrivate::get(attached)->setButtonBox(this);
+    d->updateContentSize();
     if (isComponentComplete())
         polish();
 }
@@ -703,6 +870,7 @@ void QQuickDialogButtonBox::itemRemoved(int index, QQuickItem *item)
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, d, &QQuickDialogButtonBoxPrivate::handleClick);
     if (QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(item, false)))
         QQuickDialogButtonBoxAttachedPrivate::get(attached)->setButtonBox(nullptr);
+    d->updateContentSize();
     if (isComponentComplete())
         polish();
 }
