@@ -39,6 +39,7 @@ PRIVATETESTS += \
 
 !boot2qt {
 PRIVATETESTS += \
+    qmlcachegen \
     animation \
     qqmlecmascript \
     qqmlcontext \
