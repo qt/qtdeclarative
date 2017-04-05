@@ -36,10 +36,10 @@ PRIVATETESTS += \
     qqmlcpputils \
     qqmldirparser \
     v4misc \
+    qmlcachegen
 
 !boot2qt {
 PRIVATETESTS += \
-    qmlcachegen \
     animation \
     qqmlecmascript \
     qqmlcontext \
