@@ -331,6 +331,7 @@ private slots:
     void qtbug_54589();
     void qtbug_54687();
     void stringify_qtbug_50592();
+    void singleBlockLoops();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8117,6 +8118,15 @@ void tst_qqmlecmascript::stringify_qtbug_50592()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != 0);
     QCOMPARE(obj->property("source").toString(), QString::fromLatin1("http://example.org/some_nonexistant_image.png"));
+}
+
+void tst_qqmlecmascript::singleBlockLoops()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_59012.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+    QVERIFY(!component.isError());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
