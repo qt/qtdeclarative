@@ -76,6 +76,11 @@ ApplicationWindow {
         }
     }
 
+    Shortcut {
+        sequence: "Menu"
+        onActivated: optionsMenu.open()
+    }
+
     header: ToolBar {
         Material.foreground: "white"
 
