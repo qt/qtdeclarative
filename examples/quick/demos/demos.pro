@@ -7,5 +7,7 @@ SUBDIRS = samegame \
             photosurface \
             stocqt
 
-qtHaveModule(xmlpatterns): SUBDIRS += rssnews photoviewer
-
+qtHaveModule(xmlpatterns) {
+    SUBDIRS += rssnews
+    qtHaveModule(widgets): SUBDIRS += photoviewer
+}
