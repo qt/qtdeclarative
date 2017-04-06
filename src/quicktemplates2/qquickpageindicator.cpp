@@ -247,7 +247,17 @@ void QQuickPageIndicator::setInteractive(bool interactive)
         return;
 
     d->interactive = interactive;
-    setAcceptedMouseButtons(interactive ? Qt::LeftButton : Qt::NoButton);
+    if (interactive) {
+        setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+        setCursor(Qt::ArrowCursor);
+#endif
+    } else {
+        setAcceptedMouseButtons(Qt::NoButton);
+#if QT_CONFIG(cursor)
+        unsetCursor();
+#endif
+    }
     emit interactiveChanged();
 }
 

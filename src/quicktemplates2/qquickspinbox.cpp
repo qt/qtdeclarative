@@ -351,6 +351,9 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
     setFlag(ItemIsFocusScope);
     setFiltersChildMouseEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*!
@@ -469,6 +472,15 @@ void QQuickSpinBox::setEditable(bool editable)
     Q_D(QQuickSpinBox);
     if (d->editable == editable)
         return;
+
+#if QT_CONFIG(cursor)
+    if (d->contentItem) {
+        if (editable)
+            d->contentItem->setCursor(Qt::IBeamCursor);
+        else
+            d->contentItem->unsetCursor();
+    }
+#endif
 
     d->editable = editable;
     emit editableChanged();
@@ -905,11 +917,16 @@ void QQuickSpinBox::itemChange(ItemChange change, const ItemChangeData &value)
 
 void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
+    Q_D(QQuickSpinBox);
     if (QQuickTextInput *oldInput = qobject_cast<QQuickTextInput *>(oldItem))
         disconnect(oldInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);
 
     if (newItem) {
         newItem->setActiveFocusOnTab(true);
+#if QT_CONFIG(cursor)
+        if (d->editable)
+            newItem->setCursor(Qt::IBeamCursor);
+#endif
 
         if (QQuickTextInput *newInput = qobject_cast<QQuickTextInput *>(newItem))
             connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);

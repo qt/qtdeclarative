@@ -1101,4 +1101,13 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_resolve() {
+        var control = createTemporaryObject(stackView, testCase)
+        verify(control)
+
+        var item = control.push("TestItem.qml")
+        compare(control.depth, 1)
+        verify(item)
+    }
 }

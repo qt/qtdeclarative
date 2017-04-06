@@ -4,6 +4,7 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    cursor \
     drawer \
     menu \
     platform \

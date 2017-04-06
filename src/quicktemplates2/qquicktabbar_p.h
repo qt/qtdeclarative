@@ -83,8 +83,8 @@ public:
 
 Q_SIGNALS:
     void positionChanged();
-    void contentWidthChanged();
-    void contentHeightChanged();
+    Q_REVISION(2) void contentWidthChanged();
+    Q_REVISION(2) void contentHeightChanged();
 
 protected:
     void updatePolish() override;

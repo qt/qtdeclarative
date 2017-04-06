@@ -55,8 +55,8 @@ import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
-    width: 200
-    height: 200
+    width: 400
+    height: 400
     visible: true
     when: windowShown
     name: "ComboBox"
@@ -723,6 +723,8 @@ TestCase {
         compare(control.down, true)
         compare(downSpy.count, 3)
         compare(pressedSpy.count, 2)
+
+        compare(control.popup.y, control.height)
 
         control.down = false
         compare(control.down, false)

@@ -176,7 +176,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the popup is opened.
 
-    \sa closed
+    \sa aboutToShow()
 */
 
 /*!
@@ -184,7 +184,23 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the popup is closed.
 
-    \sa opened
+    \sa aboutToHide()
+*/
+
+/*!
+    \qmlsignal void QtQuick.Controls::Popup::aboutToShow()
+
+    This signal is emitted when the popup is about to show.
+
+    \sa opened()
+*/
+
+/*!
+    \qmlsignal void QtQuick.Controls::Popup::aboutToHide()
+
+    This signal is emitted when the popup is about to hide.
+
+    \sa closed()
 */
 
 QQuickPopupPrivate::QQuickPopupPrivate()
