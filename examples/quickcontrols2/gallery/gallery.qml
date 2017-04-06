@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.9
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2
 import QtQuick.Controls.Material 2.1
@@ -68,7 +68,7 @@ ApplicationWindow {
     }
 
     Shortcut {
-        sequence: "Esc"
+        sequences: ["Esc", "Back"]
         enabled: stackView.depth > 1
         onActivated: {
             stackView.pop()
