@@ -267,7 +267,7 @@ class MessageBoard : public QObject
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<Message> messages READ messages)
 public:
-    QQmlListProperty<Message> messages() const;
+    QQmlListProperty<Message> messages();
 
 private:
     static void append_message(QQmlListProperty<Message> *list, Message *msg);

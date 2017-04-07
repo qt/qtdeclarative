@@ -10,3 +10,7 @@ linux
 [ListView::test_listInteractiveCurrentIndexEnforce]
 linux
 macos-10.12
+[TextEdit::test_textentry]
+macos-10.12
+[TextEdit::test_textentry_char]
+macos-10.12

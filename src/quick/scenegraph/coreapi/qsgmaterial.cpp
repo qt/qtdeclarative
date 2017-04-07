@@ -419,6 +419,10 @@ void QSGMaterialShader::compile()
     \value DirtyMatrix Used to indicate that the matrix has changed and must be updated.
 
     \value DirtyOpacity Used to indicate that the opacity has changed and must be updated.
+
+    \value DirtyCachedMaterialData Used to indicate that the cached material data have changed and must be updated.
+
+    \value DirtyAll Used to indicate that everything needs to be updated.
  */
 
 

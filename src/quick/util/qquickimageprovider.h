@@ -88,7 +88,6 @@ Q_SIGNALS:
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
     friend class QQuickImageProviderWithOptions; // ### Qt 6 Remove
-    friend class QQuickPixmapReader; // ### Qt 6 Remove
 public:
     QQuickImageProvider(ImageType type, Flags flags = Flags());
     virtual ~QQuickImageProvider();

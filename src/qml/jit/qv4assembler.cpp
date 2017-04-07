@@ -156,9 +156,6 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 }
 
 template <typename TargetConfiguration>
-const typename Assembler<TargetConfiguration>::VoidType Assembler<TargetConfiguration>::Void;
-
-template <typename TargetConfiguration>
 Assembler<TargetConfiguration>::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
     : _function(function)
     , _nextBlock(0)
@@ -324,21 +321,21 @@ typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>:
     loadPtr(Address(Assembler::ScratchRegister, targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, compilationUnit))), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, offsetof(CompiledData::CompilationUnitBase, runtimeStrings)), reg);
     const int id = _jsGenerator->registerString(string);
-    return Pointer(reg, id * sizeof(QV4::String*));
+    return Pointer(reg, id * RegisterSize);
 }
 
 template <typename TargetConfiguration>
 typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(IR::Const *c, RegisterID baseReg)
 {
-    return loadConstant(convertToValue(c), baseReg);
+    return loadConstant(convertToValue<TargetPrimitive>(c), baseReg);
 }
 
 template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const Primitive &v, RegisterID baseReg)
+typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const TargetPrimitive &v, RegisterID baseReg)
 {
     loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), baseReg);
     loadPtr(Address(baseReg, targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, constantTable))), baseReg);
-    const int index = _jsGenerator->registerConstant(v.asReturnedValue());
+    const int index = _jsGenerator->registerConstant(v.rawValue());
     return Address(baseReg, index * sizeof(QV4::Value));
 }
 
@@ -350,7 +347,7 @@ void Assembler<TargetConfiguration>::loadStringRef(RegisterID reg, const QString
 }
 
 template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::storeValue(QV4::Primitive value, IR::Expr *destination)
+void Assembler<TargetConfiguration>::storeValue(TargetPrimitive value, IR::Expr *destination)
 {
     WriteBarrier::Type barrier;
     Address addr = loadAddressForWriting(ScratchRegister, destination, &barrier);
@@ -449,19 +446,13 @@ typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::ge
 
     // check if it's an int32:
     Assembler::Jump isNoInt = branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                            Assembler::TrustedImm32(Value::Integer_Type_Internal));
+                                       Assembler::TrustedImm32(quint32(ValueTypeInternal::Integer)));
     convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister), dest);
     Assembler::Jump intDone = jump();
 
     // not an int, check if it's a double:
     isNoInt.link(this);
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    rshift32(TrustedImm32(Value::IsDoubleTag_Shift), ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(0));
-#else
-    and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
-    Assembler::Jump isNoDbl = branch32(RelationalCondition::Equal, JITTargetPlatform::ScratchRegister, TrustedImm32(Value::NotDouble_Mask));
-#endif
+    Assembler::Jump isNoDbl = RegisterSizeDependentOps::checkIfTagRegisterIsDouble(this, ScratchRegister);
     toDoubleRegister(src, dest);
     intDone.link(this);
 
@@ -530,7 +521,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
     } else if (IR::Temp *t = s->expr->asTemp()) {
         RegisterSizeDependentOps::setFunctionReturnValueFromTemp(this, t);
     } else if (IR::Const *c = s->expr->asConst()) {
-        QV4::Primitive retVal = convertToValue(c);
+        auto retVal = convertToValue<TargetPrimitive>(c);
         RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
     } else {
         Q_UNREACHABLE();
@@ -547,7 +538,7 @@ void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInfo
     ret();
 
     exceptionReturnLabel = label();
-    QV4::Primitive retVal = Primitive::undefinedValue();
+    auto retVal = TargetPrimitive::undefinedValue();
     RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
     jump(leaveStackFrame);
 }

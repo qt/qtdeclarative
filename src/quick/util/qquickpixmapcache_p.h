@@ -204,6 +204,9 @@ public:
     virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize, const QQuickImageProviderOptions &options);
     virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize, const QQuickImageProviderOptions &options);
     virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize, const QQuickImageProviderOptions &options);
+
+    static QSize loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options);
+    static QQuickImageProviderWithOptions *checkedCast(QQuickImageProvider *provider);
 };
 
 QT_END_NAMESPACE
