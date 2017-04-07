@@ -57,6 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlContextData;
 class QQuickStackElement;
 struct QQuickStackTransition;
 
@@ -79,7 +80,7 @@ public:
     QList<QQuickStackElement *> parseElements(int from, QQmlV4Function *args, QStringList *errors);
     QQuickStackElement *findElement(QQuickItem *item) const;
     QQuickStackElement *findElement(const QV4::Value &value) const;
-    QQuickStackElement *createElement(const QV4::Value &value, QString *error);
+    QQuickStackElement *createElement(const QV4::Value &value, QQmlContextData *context, QString *error);
     bool pushElements(const QList<QQuickStackElement *> &elements);
     bool pushElement(QQuickStackElement *element);
     bool popElements(QQuickStackElement *element);

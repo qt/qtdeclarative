@@ -117,6 +117,9 @@ QQuickPage::QQuickPage(QQuickItem *parent)
     Q_D(QQuickPage);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
     d->layout.reset(new QQuickPageLayout(this));
 }
 

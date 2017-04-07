@@ -35,6 +35,36 @@
     to build complete interfaces in Qt Quick. The module was introduced
     in Qt 5.7.
 
+    Qt Quick Controls 2 comes with a selection customizable styles.
+    See \l {Styling Qt Quick Controls 2} for more details.
+
+    \raw HTML
+    <table style="background:transparent; border:0px" width="66%">
+      <tr>
+        <td style="border:0px; padding-right:25px;">
+          <a href="qtquickcontrols2-default.html">
+            <img src="images/qtquickcontrols2-default.png" alt="Default" width="100%"/>
+          </a>
+        </td>
+        <td style="border:0px; padding-right:25px;">
+          <a href="qtquickcontrols2-material.html">
+            <img src="images/qtquickcontrols2-material.png" alt="Material" width="100%"/>
+          </a>
+        </td>
+        <td style="border:0px;">
+          <a href="qtquickcontrols2-universal.html">
+            <img src="images/qtquickcontrols2-universal.png" alt="Universal" width="100%"/>
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td style="border:0px">Default</td>
+        <td style="border:0px">Material</td>
+        <td style="border:0px">Universal</td>
+      </tr>
+    </table>
+    \endraw
+
     \section1 Prerequisites
 
     The \l{Qt Quick Controls 2 QML Types}{QML types} can be imported into your
@@ -62,7 +92,7 @@
 
     \section1 Versions
 
-    Qt Quick Controls 2.0 was released in Qt 5.7. Subsequent minor Qt releases
+    Qt Quick Controls 2.0 was introduced in Qt 5.7. Subsequent minor Qt releases
     increment the import version of the Qt Quick Controls 2 modules by one. The
     experimental Qt Labs modules use import version 1.0.
 
@@ -71,31 +101,27 @@
         \li \c Qt
         \li \l {Qt Quick QML Types}{\c QtQuick}
         \li \l {Qt Quick Controls 2 QML Types}{\c QtQuick.Controls},\br
-            \l {Qt Quick Templates 2 QML Types}{\c QtQuick.Templates},
-        \li \l {Material Style}{\c QtQuick.Controls.Material},\br
-            \l {Universal Style}{\c QtQuick.Controls.Universal}
+            \l {Material Style}{\c QtQuick.Controls.Material},\br
+            \l {Universal Style}{\c QtQuick.Controls.Universal},\br
+            \l {Qt Quick Templates 2 QML Types}{\c QtQuick.Templates}
         \li \l {Qt Labs Calendar QML Types}{\c Qt.labs.calendar},\br
             \l {Qt Labs Platform QML Types}{\c Qt.labs.platform}
       \row
         \li 5.7
         \li 2.7
         \li 2.0
-        \li 2.0
         \li 1.0
       \row
         \li 5.8
         \li 2.8
-        \li 2.1
         \li 2.1
         \li 1.0
       \row
         \li 5.9
         \li 2.9
         \li 2.2
-        \li 2.2
         \li 1.0
       \row
-        \li ...
         \li ...
         \li ...
         \li ...
@@ -129,6 +155,7 @@
       \li \l{Qt Quick Controls 2 - Gallery}{Gallery}
       \li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat Tutorial}
       \li \l{Qt Quick Controls 2 - Text Editor}{Text Editor}
+      \li \l{Qt Quick Controls 2 - Wearable Demo}{Wearable Demo}
       \li \l{Qt Quick Controls 2 Examples}{All Examples}
     \endlist
 

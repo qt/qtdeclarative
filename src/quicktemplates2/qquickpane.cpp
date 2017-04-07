@@ -123,6 +123,9 @@ QQuickPane::QQuickPane(QQuickItem *parent)
 {
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent)
@@ -130,6 +133,9 @@ QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent)
 {
     setFlag(QQuickItem::ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*!

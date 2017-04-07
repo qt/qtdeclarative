@@ -236,7 +236,7 @@ TestCase {
         var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
-        mousePress(control, 0, 0, Qt.LeftButton)
+        mousePress(control, 0, control.height, Qt.LeftButton)
         compare(pressedSpy.count, ++pressedCount)
         compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
@@ -265,17 +265,17 @@ TestCase {
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
-        mousePress(control, control.width, control.height, Qt.LeftButton)
+        mousePress(control, control.width, 0, Qt.LeftButton)
         compare(pressedSpy.count, ++pressedCount)
-        compare(movedSpy.count, movedCount)
+        compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
-        compare(control.value, 0.5)
-        compare(control.position, 0.5)
+        compare(control.value, data.live ? 1.0 : 0.5)
+        compare(control.position, 1.0)
 
         // maximum on the right in horizontal vs. at the top in vertical
         mouseMove(control, control.width * 2, -control.height, 0)
         compare(pressedSpy.count, pressedCount)
-        compare(movedSpy.count, ++movedCount)
+        compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
         compare(control.value, data.live ? 1.0 : 0.5)
         compare(control.position, 1.0)
@@ -624,8 +624,8 @@ TestCase {
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.0)
-        compare(control.position, 0.0)
-        compare(control.visualPosition, 1.0)
+        compare(control.position, 1.0)
+        compare(control.visualPosition, 0.0)
 
         mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0)
         compare(pressedSpy.count, 3)
@@ -649,31 +649,29 @@ TestCase {
         compare(control.visualPosition, 0.5)
     }
 
-    function test_snapMode_data() {
+    function test_snapMode_data(immediate) {
         return [
             { tag: "NoSnap", snapMode: Slider.NoSnap, from: 0, to: 2, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
             { tag: "SnapAlways (0..2)", snapMode: Slider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
             { tag: "SnapAlways (1..3)", snapMode: Slider.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
-            { tag: "SnapAlways (-1..1)", snapMode: Slider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
-            { tag: "SnapAlways (1..-1)", snapMode: Slider.SnapAlways, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] },
+            { tag: "SnapAlways (-1..1)", snapMode: Slider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
+            { tag: "SnapAlways (1..-1)", snapMode: Slider.SnapAlways, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
             { tag: "SnapOnRelease (0..2)", snapMode: Slider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
             { tag: "SnapOnRelease (1..3)", snapMode: Slider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
-            { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [0.5, 0.1, 0.1] },
-            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [0.5, 0.1, 0.1] }
+            { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
+            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] }
         ]
     }
 
     function test_snapMode_mouse_data() {
-        return test_snapMode_data()
+        return test_snapMode_data(true)
     }
 
     function test_snapMode_mouse(data) {
         var control = createTemporaryObject(slider, testCase, {live: false, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
-        function sliderCompare(left, right) {
-            return Math.abs(left - right) < 0.05
-        }
+        var fuzz = 0.05
 
         mousePress(control, control.leftPadding)
         compare(control.value, data.values[0])
@@ -681,25 +679,23 @@ TestCase {
 
         mouseMove(control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2))
 
-        verify(sliderCompare(control.value, data.values[1]))
-        verify(sliderCompare(control.position, data.positions[1]))
+        fuzzyCompare(control.value, data.values[1], fuzz)
+        fuzzyCompare(control.position, data.positions[1], fuzz)
 
         mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2))
-        verify(sliderCompare(control.value, data.values[2]))
-        verify(sliderCompare(control.position, data.positions[2]))
+        fuzzyCompare(control.value, data.values[2], fuzz)
+        fuzzyCompare(control.position, data.positions[2], fuzz)
     }
 
     function test_snapMode_touch_data() {
-        return test_snapMode_data()
+        return test_snapMode_data(false)
     }
 
     function test_snapMode_touch(data) {
         var control = createTemporaryObject(slider, testCase, {live: false, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
         verify(control)
 
-        function sliderCompare(left, right) {
-            return Math.abs(left - right) < 0.05
-        }
+        var fuzz = 0.05
 
         var touch = touchEvent(control)
         touch.press(0, control, control.leftPadding).commit()
@@ -708,12 +704,12 @@ TestCase {
 
         touch.move(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2)).commit()
 
-        verify(sliderCompare(control.value, data.values[1]))
-        verify(sliderCompare(control.position, data.positions[1]))
+        fuzzyCompare(control.value, data.values[1], fuzz)
+        fuzzyCompare(control.position, data.positions[1], fuzz)
 
         touch.release(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2)).commit()
-        verify(sliderCompare(control.value, data.values[2]))
-        verify(sliderCompare(control.position, data.positions[2]))
+        fuzzyCompare(control.value, data.values[2], fuzz)
+        fuzzyCompare(control.position, data.positions[2], fuzz)
     }
 
     function test_wheel_data() {

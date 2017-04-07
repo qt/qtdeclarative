@@ -437,6 +437,8 @@ void QQuickDialogButtonBox::resetAlignment()
 
     \snippet qtquickcontrols2-dialogbuttonbox.qml 1
 
+    The buttons will be positioned in the appropriate order for the user's platform.
+
     Possible flags:
     \value DialogButtonBox.Ok An "OK" button defined with the \c AcceptRole.
     \value DialogButtonBox.Open An "Open" button defined with the \c AcceptRole.

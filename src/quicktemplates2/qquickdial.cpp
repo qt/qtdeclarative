@@ -207,8 +207,6 @@ void QQuickDialPrivate::handlePress(const QPointF &point)
 void QQuickDialPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickDial);
-    if (!q->keepMouseGrab() && !q->keepTouchGrab())
-        return;
     const qreal oldPos = position;
     qreal pos = positionAt(point);
     if (snapMode == QQuickDial::SnapAlways)
@@ -260,6 +258,9 @@ QQuickDial::QQuickDial(QQuickItem *parent)
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(cursor)
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*!
@@ -648,6 +649,7 @@ void QQuickDial::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickDial);
     QQuickControl::mousePressEvent(event);
     d->handlePress(event->localPos());
+    d->handleMove(event->localPos());
 }
 
 void QQuickDial::mouseMoveEvent(QMouseEvent *event)
@@ -708,7 +710,8 @@ void QQuickDial::touchEvent(QTouchEvent *event)
                     setKeepTouchGrab(overYDragThreshold);
                 }
             }
-            d->handleMove(point.pos());
+            if (keepTouchGrab())
+                d->handleMove(point.pos());
         }
         break;
 
