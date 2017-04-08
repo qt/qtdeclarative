@@ -6,9 +6,9 @@ SUBDIRS += \
     builtins \
     qtqml \
     folderlistmodel \
-    localstorage \
     models
 
+qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings
 qtConfig(statemachine): SUBDIRS += statemachine
 
@@ -17,9 +17,9 @@ qtHaveModule(quick) {
         layouts \
         qtquick2 \
         window \
-        sharedimage \
         testlib
 
+    qtConfig(systemsemaphore): SUBDIRS += sharedimage
     qtConfig(quick-particles): \
         SUBDIRS += particles
 }

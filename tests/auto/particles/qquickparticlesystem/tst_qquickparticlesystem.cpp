@@ -42,6 +42,7 @@ public:
 private slots:
     void initTestCase();
     void test_basic();
+    void test_affectorscrash();
 };
 
 void tst_qquickparticlesystem::initTestCase()
@@ -77,6 +78,12 @@ void tst_qquickparticlesystem::test_basic()
     }
     delete view;
     QVERIFY(extremelyFuzzyCompare(stillAlive, 500, 5));//Small simulation variance is permissible.
+}
+void tst_qquickparticlesystem::test_affectorscrash()
+{
+    QScopedPointer<QQuickView> view (createView(testFileUrl("crashaffectors.qml"), 600));
+
+    // This should have crashed by now
 }
 
 QTEST_MAIN(tst_qquickparticlesystem);

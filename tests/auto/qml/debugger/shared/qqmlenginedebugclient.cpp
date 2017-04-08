@@ -386,6 +386,7 @@ void QQmlEngineDebugClient::decode(QPacket &ds,
         {
             QmlDebugObjectReference obj;
             obj.debugId = prop.value.toInt();
+            obj.className = prop.valueTypeName;
             prop.value = qVariantFromValue(obj);
             break;
         }

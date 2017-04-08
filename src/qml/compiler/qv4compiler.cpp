@@ -376,7 +376,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.version = QV4_DATA_STRUCTURE_VERSION;
     unit.qtVersion = QT_VERSION;
     memset(unit.md5Checksum, 0, sizeof(unit.md5Checksum));
-    unit.architectureIndex = registerString(QSysInfo::buildAbi());
+    unit.architectureIndex = registerString(irModule->targetABI.isEmpty() ? QSysInfo::buildAbi() : irModule->targetABI);
     unit.codeGeneratorIndex = registerString(codeGeneratorName);
     memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
 

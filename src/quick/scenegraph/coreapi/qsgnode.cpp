@@ -112,6 +112,7 @@ static void qt_print_node_count()
     \value DirtyGeometry The geometry of a QSGGeometryNode has changed.
     \value DirtyMaterial The material of a QSGGeometryNode has changed.
     \value DirtyOpacity The opacity of a QSGOpacityNode has changed.
+    \value DirtySubtreeBlocked The subtree has been blocked.
 
     \sa QSGNode::markDirty()
  */
@@ -146,6 +147,7 @@ static void qt_print_node_count()
     \value TransformNodeType The type of QSGTransformNode
     \value ClipNodeType The type of QSGClipNode
     \value OpacityNodeType The type of QSGOpacityNode
+    \value RenderNodeType The type of QSGRenderNode
 
     \sa type()
  */

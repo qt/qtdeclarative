@@ -84,6 +84,8 @@ QT_BEGIN_NAMESPACE
     will delete the GL texture when the texture object is deleted.
 
     \value TextureCanUseAtlas The image can be uploaded into a texture atlas.
+
+    \value TextureIsOpaque The texture object is opaque.
  */
 
 QSGEnginePrivate::QSGEnginePrivate()

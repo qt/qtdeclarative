@@ -453,6 +453,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 
     return true;
 #else
+    Q_UNUSED(outputFileName)
     *errorString = QStringLiteral("features.temporaryfile is disabled.");
     return false;
 #endif // QT_CONFIG(temporaryfile)
@@ -737,7 +738,7 @@ static QByteArray ownLibraryChecksum()
     if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
         QFile library(QFile::decodeName(libInfo.dli_fname));
         if (library.open(QIODevice::ReadOnly)) {
-            QCryptographicHash hash(QCryptographicHash::Sha1);
+            QCryptographicHash hash(QCryptographicHash::Md5);
             hash.addData(&library);
             libraryChecksum = hash.result();
         }

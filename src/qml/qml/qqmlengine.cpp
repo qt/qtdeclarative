@@ -82,7 +82,9 @@
 #include <private/qqmllocale_p.h>
 #include <private/qqmlbind_p.h>
 #include <private/qqmlconnections_p.h>
+#if QT_CONFIG(animation)
 #include <private/qqmltimer_p.h>
+#endif
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
@@ -218,7 +220,9 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlBind,8>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "Binding"); //Only available in >=2.8
     qmlRegisterType<QQmlConnections,1>(uri, versionMajor, (versionMinor < 3 ? 3 : versionMinor), "Connections"); //Only available in >=2.3
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
+#if QT_CONFIG(animation)
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
+#endif
     qmlRegisterType<QQmlInstantiator>(uri, versionMajor, (versionMinor < 1 ? 1 : versionMinor), "Instantiator"); //Only available in >=2.1
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
     qmlRegisterType<QQmlInstanceModel>();

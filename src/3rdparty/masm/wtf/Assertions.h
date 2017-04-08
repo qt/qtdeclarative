@@ -233,7 +233,7 @@ WTF_EXPORT_PRIVATE void WTFInstallReportBacktraceOnCrashHook();
 #define ASSERT_NOT_REACHED() ((void)0)
 #define NO_RETURN_DUE_TO_ASSERT
 
-#if COMPILER(INTEL) && !OS(WINDOWS) || COMPILER(RVCT)
+#if COMPILER(RVCT)
 template<typename T>
 inline void assertUnused(T& x) { (void)x; }
 #define ASSERT_UNUSED(variable, assertion) (assertUnused(variable))
