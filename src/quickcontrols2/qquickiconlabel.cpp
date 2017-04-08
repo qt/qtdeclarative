@@ -57,7 +57,7 @@ QQuickIconLabelPrivate::QQuickIconLabelPrivate()
 void QQuickIconLabelPrivate::updateImplicitSize()
 {
     Q_Q(QQuickIconLabel);
-    if (!q->isComponentComplete())
+    if (!componentComplete)
         return;
 
     const bool showIcon = icon && display != QQuickIconLabel::TextOnly;
@@ -76,18 +76,15 @@ void QQuickIconLabelPrivate::updateImplicitSize()
 
 void QQuickIconLabelPrivate::layout()
 {
-    Q_Q(QQuickIconLabel);
-    if (!q->isComponentComplete())
+    if (!componentComplete)
         return;
 
     const qreal horizontalPadding = leftPadding + rightPadding;
     const qreal verticalPadding = topPadding + bottomPadding;
-    const qreal w = q->width();
-    const qreal h = q->height();
-    const qreal availableWidth = w - horizontalPadding;
-    const qreal availableHeight = h - verticalPadding;
-    const qreal horizontalCenter = w / 2;
-    const qreal verticalCenter = h / 2;
+    const qreal availableWidth = width - horizontalPadding;
+    const qreal availableHeight = height - verticalPadding;
+    const qreal horizontalCenter = width / 2;
+    const qreal verticalCenter = height / 2;
 
     switch (display) {
     case QQuickIconLabel::IconOnly:
@@ -215,9 +212,9 @@ void QQuickIconLabel::setIcon(QQuickItem *icon)
         d->unwatchChanges(d->icon);
 
     d->icon = icon;
-    if (d->icon) {
-        d->icon->setParentItem(this);
-        d->watchChanges(d->icon);
+    if (icon) {
+        icon->setParentItem(this);
+        d->watchChanges(icon);
     }
 
     d->updateImplicitSize();
@@ -240,9 +237,9 @@ void QQuickIconLabel::setLabel(QQuickItem *label)
         d->unwatchChanges(d->label);
 
     d->label = label;
-    if (d->label) {
-        d->label->setParentItem(this);
-        d->watchChanges(d->label);
+    if (label) {
+        label->setParentItem(this);
+        d->watchChanges(label);
     }
 
     d->updateImplicitSize();
