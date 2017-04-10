@@ -57,9 +57,6 @@ QQuickIconLabelPrivate::QQuickIconLabelPrivate()
 void QQuickIconLabelPrivate::updateImplicitSize()
 {
     Q_Q(QQuickIconLabel);
-    if (!componentComplete)
-        return;
-
     const bool showIcon = icon && display != QQuickIconLabel::TextOnly;
     const bool showText = label && display != QQuickIconLabel::IconOnly;
     const qreal horizontalPadding = leftPadding + rightPadding;
@@ -389,7 +386,6 @@ void QQuickIconLabel::componentComplete()
 {
     Q_D(QQuickIconLabel);
     QQuickItem::componentComplete();
-    d->updateImplicitSize();
     d->layout();
 }
 
