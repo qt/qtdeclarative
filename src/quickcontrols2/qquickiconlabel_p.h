@@ -63,6 +63,7 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
     Q_PROPERTY(Display display READ display WRITE setDisplay FINAL)
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored FINAL)
+    Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment FINAL)
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding FINAL)
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding FINAL)
@@ -94,6 +95,9 @@ public:
 
     bool isMirrored() const;
     void setMirrored(bool mirrored);
+
+    Qt::Alignment alignment() const;
+    void setAlignment(Qt::Alignment alignment);
 
     qreal topPadding() const;
     void setTopPadding(qreal padding);

@@ -77,6 +77,7 @@ public:
     QQuickItem *icon;
     QQuickItem *label;
     QQuickIconLabel::Display display;
+    Qt::Alignment alignment;
     qreal spacing;
     bool mirrored;
     qreal topPadding;
