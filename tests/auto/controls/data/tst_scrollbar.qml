@@ -223,7 +223,7 @@ TestCase {
         mousePress(control, control.width, control.height, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
-        compare(control.position, 0.5)
+        compare(control.position, 1.0)
 
         mouseMove(control, control.width * 2, control.height * 2, 0)
         compare(pressedSpy.count, 3)

@@ -596,6 +596,7 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
     d->handlePress(event->localPos());
+    d->handleMove(event->localPos());
 }
 
 void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
