@@ -66,7 +66,6 @@ T.Button {
         display: control.display
 
         icon: IconImage {
-            id: iconImage
             name: control.icon.name
             source: control.icon.source
             sourceSize.width: control.icon.width
