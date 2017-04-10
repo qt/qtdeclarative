@@ -63,7 +63,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAction : public QObject
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
     Q_PROPERTY(QQuickIcon *icon READ icon CONSTANT FINAL)
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged RESET resetEnabled FINAL)
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
     Q_PRIVATE_PROPERTY(QQuickAction::d_func(), QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
@@ -79,6 +79,7 @@ public:
 
     bool isEnabled() const;
     void setEnabled(bool enabled);
+    void resetEnabled();
 
     bool isChecked() const;
     void setChecked(bool checked);

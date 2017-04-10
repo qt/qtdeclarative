@@ -78,13 +78,16 @@ TestCase {
         var spy = createTemporaryObject(signalSpy, testCase, {target: action, signalName: "triggered"})
         verify(spy.valid)
 
-        action.enabled = false
-        action.trigger()
-        compare(spy.count, 0)
-
-        action.enabled = true
         action.trigger()
         compare(spy.count, 1)
+
+        action.enabled = false
+        action.trigger()
+        compare(spy.count, 1)
+
+        action.enabled = undefined // reset
+        action.trigger()
+        compare(spy.count, 2)
     }
 
     Component {

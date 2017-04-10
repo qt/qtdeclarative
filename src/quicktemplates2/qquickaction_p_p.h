@@ -74,6 +74,8 @@ public:
     QVariant shortcut() const;
     void setShortcut(const QVariant &shortcut);
 
+    void setEnabled(bool enable);
+
     bool watchItem(QQuickItem *item);
     bool unwatchItem(QQuickItem *item);
 
@@ -107,6 +109,7 @@ public:
     ShortcutEntry *findShortcutEntry(QObject *target) const;
     void updateDefaultShortcutEntry();
 
+    bool explicitEnabled;
     bool enabled;
     bool checked;
     bool checkable;

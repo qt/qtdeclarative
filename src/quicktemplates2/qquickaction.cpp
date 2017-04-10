@@ -171,7 +171,8 @@ void QQuickActionPrivate::ShortcutEntry::setEnabled(bool enabled)
 }
 
 QQuickActionPrivate::QQuickActionPrivate()
-    : enabled(true),
+    : explicitEnabled(false),
+      enabled(true),
       checked(false),
       checkable(false),
       icon(nullptr),
@@ -202,6 +203,21 @@ void QQuickActionPrivate::setShortcut(const QVariant &var)
         entry->grab(keySequence, enabled);
 
     emit q->shortcutChanged(keySequence);
+}
+
+void QQuickActionPrivate::setEnabled(bool enable)
+{
+    Q_Q(QQuickAction);
+    if (enabled == enable)
+        return;
+
+    enabled = enable;
+
+    defaultShortcutEntry->setEnabled(enable);
+    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
+        entry->setEnabled(enable);
+
+    emit q->enabledChanged(enable);
 }
 
 bool QQuickActionPrivate::watchItem(QQuickItem *item)
@@ -381,16 +397,18 @@ bool QQuickAction::isEnabled() const
 void QQuickAction::setEnabled(bool enabled)
 {
     Q_D(QQuickAction);
-    if (d->enabled == enabled)
+    d->explicitEnabled = true;
+    d->setEnabled(enabled);
+}
+
+void QQuickAction::resetEnabled()
+{
+    Q_D(QQuickAction);
+    if (!d->explicitEnabled)
         return;
 
-    d->enabled = enabled;
-
-    d->defaultShortcutEntry->setEnabled(enabled);
-    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(d->shortcutEntries))
-        entry->setEnabled(enabled);
-
-    emit enabledChanged(enabled);
+    d->explicitEnabled = false;
+    d->setEnabled(true);
 }
 
 /*!
