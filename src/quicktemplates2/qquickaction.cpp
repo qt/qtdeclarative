@@ -506,7 +506,7 @@ bool QQuickAction::event(QEvent *event)
 {
     Q_D(QQuickAction);
     if (event->type() != QEvent::Shortcut)
-        return false;
+        return QObject::event(event);
     return d->handleShortcutEvent(this, static_cast<QShortcutEvent *>(event));
 }
 
