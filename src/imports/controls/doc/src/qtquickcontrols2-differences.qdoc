@@ -203,15 +203,9 @@
         \li Remarks
     \row
         \li \l [QML QtQuickControls] {Action}
-        \li \mdash
+        \li \l [QML QtQuickControls2] {Action}
         \li \l [QML QtQuick] {Shortcut} \br\sup {(Qt Quick)}
-        \li \list
-                \li \b {Qt Quick Controls 1}: \c Action is an abstract user interface
-                    action that is bound to buttons and menu items, and can provide
-                    shortcuts.
-                \li \b {Qt Quick}: \c Shortcut provides the shortcut functionality that
-                    was previously only provided by \c Action.
-            \endlist
+        \li
     \row
         \li \l [QML QtQuickControls] {ApplicationWindow}
         \li \l [QML QtQuickControls2] {ApplicationWindow}
@@ -250,9 +244,10 @@
     \row
         \li \l [QML QtQuickControls] {ExclusiveGroup}
         \li \mdash
-        \li \l [QML QtQuickControls2] {ButtonGroup} \br\sup {(Qt Quick Controls 2)}
+        \li \l [QML QtQuickControls2] {ActionGroup},\br
+            \l [QML QtQuickControls2] {ButtonGroup} \br\sup {(Qt Quick Controls 2)}
         \li \list
-                \li \b {Qt Quick Controls 2}: \c ButtonGroup offers similar functionality.
+                \li \b {Qt Quick Controls 2}: \c ActionGroup and \c ButtonGroup offer similar functionality.
             \endlist
     \row
         \li \l [QML QtQuickControls] {GroupBox}
@@ -519,6 +514,13 @@
         \li \l [QML QtQuickControls2] {AbstractButton}
         \li
         \li
+    \row
+        \li \mdash
+        \li \l [QML QtQuickControls2] {ActionGroup}
+        \li \l [QML QtQuickControls] {ExclusiveGroup} \br\sup {(Qt Quick Controls 1)}
+        \li \list
+                \li \b {Qt Quick Controls 1}: \c ExclusiveGroup offers similar functionality.
+            \endlist
     \row
         \li \mdash
         \li \l [QML QtQuickControls2] {ButtonGroup}
