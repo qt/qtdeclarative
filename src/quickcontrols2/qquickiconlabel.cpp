@@ -68,9 +68,11 @@ void QQuickIconLabelPrivate::updateImplicitSize()
     const qreal textImplicitWidth = showText ? label->implicitWidth() : 0;
     const qreal textImplicitHeight = showText ? label->implicitHeight() : 0;
     const qreal effectiveSpacing = showText && showIcon && icon->implicitWidth() > 0 ? spacing : 0;
-    const qreal implicitWidth = iconImplicitWidth + textImplicitWidth + effectiveSpacing + horizontalPadding;
-    const qreal implicitHeight = qMax(iconImplicitHeight, textImplicitHeight) + verticalPadding;
-    q->setImplicitSize(implicitWidth, implicitHeight);
+    const qreal implicitWidth = display == QQuickIconLabel::TextBesideIcon ? iconImplicitWidth + textImplicitWidth + effectiveSpacing
+                                                                           : qMax(iconImplicitWidth, textImplicitWidth);
+    const qreal implicitHeight = display == QQuickIconLabel::TextUnderIcon ? iconImplicitHeight + textImplicitHeight + effectiveSpacing
+                                                                           : qMax(iconImplicitHeight, textImplicitHeight);
+    q->setImplicitSize(implicitWidth + horizontalPadding, implicitHeight + verticalPadding);
 }
 
 // adapted from QStyle::alignedRect()
@@ -127,6 +129,42 @@ void QQuickIconLabelPrivate::layout()
         if (icon)
             icon->setVisible(false);
         break;
+
+    case QQuickIconLabel::TextUnderIcon: {
+        // Work out the sizes first, as the positions depend on them.
+        QSizeF iconSize;
+        QSizeF textSize;
+        if (icon) {
+            iconSize.setWidth(qMin(icon->implicitWidth(), availableWidth));
+            iconSize.setHeight(qMin(icon->implicitHeight(), availableHeight));
+        }
+        qreal effectiveSpacing = 0;
+        if (label) {
+            if (!iconSize.isEmpty())
+                effectiveSpacing = spacing;
+            textSize.setWidth(qMin(label->implicitWidth(), availableWidth));
+            textSize.setHeight(qMin(label->implicitHeight(), availableHeight - iconSize.height() - effectiveSpacing));
+        }
+
+        QRectF combinedRect = alignedRect(mirrored, alignment,
+                                          QSizeF(qMax(iconSize.width(), textSize.width()),
+                                                 iconSize.height() + effectiveSpacing + textSize.height()),
+                                          QRectF(leftPadding, topPadding, availableWidth, availableHeight));
+        if (icon) {
+            QRectF iconRect = alignedRect(mirrored, Qt::AlignHCenter | Qt::AlignTop, iconSize, combinedRect);
+            icon->setSize(iconRect.size());
+            icon->setPosition(iconRect.topLeft());
+            icon->setVisible(true);
+        }
+        if (label) {
+            QRectF textRect = alignedRect(mirrored, Qt::AlignHCenter | Qt::AlignBottom, textSize, combinedRect);
+            label->setSize(textRect.size());
+            label->setPosition(textRect.topLeft());
+            label->setVisible(true);
+        }
+        break;
+    }
+
     case QQuickIconLabel::TextBesideIcon:
     default:
         // Work out the sizes first, as the positions depend on them.

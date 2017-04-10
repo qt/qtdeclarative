@@ -186,9 +186,11 @@ TestCase {
         return [
             { "tag": "IconOnly", display: ToolButton.IconOnly },
             { "tag": "TextOnly", display: ToolButton.TextOnly },
+            { "tag": "TextUnderIcon", display: ToolButton.TextUnderIcon },
             { "tag": "TextBesideIcon", display: ToolButton.TextBesideIcon },
             { "tag": "IconOnly, mirrored", display: ToolButton.IconOnly, mirrored: true },
             { "tag": "TextOnly, mirrored", display: ToolButton.TextOnly, mirrored: true },
+            { "tag": "TextUnderIcon, mirrored", display: ToolButton.TextUnderIcon, mirrored: true },
             { "tag": "TextBesideIcon, mirrored", display: ToolButton.TextBesideIcon, mirrored: true }
         ]
     }
@@ -215,11 +217,20 @@ TestCase {
             compare(iconImage.visible, true)
             compare(label.visible, false)
             compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
             break;
         case ToolButton.TextOnly:
             compare(iconImage.visible, false)
             compare(label.visible, true)
             compare(label.x, (control.availableWidth - label.width) / 2)
+            compare(label.y, (control.availableHeight - label.height) / 2)
+            break;
+        case ToolButton.TextUnderIcon:
+            compare(iconImage.visible, true)
+            compare(label.visible, true)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(label.x, (control.availableWidth - label.width) / 2)
+            verify(iconImage.y < label.y)
             break;
         case ToolButton.TextBesideIcon:
             compare(iconImage.visible, true)
@@ -228,6 +239,8 @@ TestCase {
                 verify(label.x < iconImage.x)
             else
                 verify(iconImage.x < label.x)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(label.y, (control.availableHeight - label.height) / 2)
             break;
         }
     }

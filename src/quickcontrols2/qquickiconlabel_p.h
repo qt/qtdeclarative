@@ -74,7 +74,7 @@ public:
         IconOnly,
         TextOnly,
         TextBesideIcon,
-        TextUnderIcon // unused, but reserved for future use
+        TextUnderIcon
     };
     Q_ENUM(Display)
 

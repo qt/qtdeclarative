@@ -69,13 +69,24 @@ void tst_qquickiconlabel::display_data()
     typedef QVector<QQuickIconLabel::Display> DisplayVector;
     QQuickIconLabel::Display IconOnly = QQuickIconLabel::IconOnly;
     QQuickIconLabel::Display TextOnly = QQuickIconLabel::TextOnly;
+    QQuickIconLabel::Display TextUnderIcon = QQuickIconLabel::TextUnderIcon;
     QQuickIconLabel::Display TextBesideIcon = QQuickIconLabel::TextBesideIcon;
 
     QTest::addRow("IconOnly") << (DisplayVector() << IconOnly) << false << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextOnly") << (DisplayVector() << TextOnly) << false << -1.0 << -1.0 << 0.0;
+    QTest::addRow("TextUnderIcon") << (DisplayVector() << TextUnderIcon) << false << -1.0 << -1.0 << 10.0;
     QTest::addRow("TextBesideIcon") << (DisplayVector() << TextBesideIcon) << false << -1.0 << -1.0 << 10.0;
     QTest::addRow("IconOnly, spacing=10") << (DisplayVector() << IconOnly) << false << -1.0 << -1.0 << 10.0;
     QTest::addRow("TextOnly, spacing=10") << (DisplayVector() << TextOnly) << false << -1.0 << -1.0 << 10.0;
+    QTest::addRow("TextUnderIcon, spacing=10") << (DisplayVector() << TextUnderIcon) << false << -1.0 << -1.0 << 0.0;
+    QTest::addRow("TextUnderIcon => IconOnly => TextUnderIcon")
+        << (DisplayVector() << TextUnderIcon << IconOnly << TextUnderIcon) << false << -1.0 << -1.0 << 0.0;
+    QTest::addRow("TextUnderIcon => IconOnly => TextUnderIcon, labelWidth=400")
+        << (DisplayVector() << TextUnderIcon << IconOnly << TextUnderIcon) << false << 400.0 << -1.0 << 0.0;
+    QTest::addRow("TextUnderIcon => TextOnly => TextUnderIcon")
+        << (DisplayVector() << TextUnderIcon << TextOnly << TextUnderIcon) << false << -1.0 << -1.0 << 0.0;
+    QTest::addRow("TextUnderIcon => TextOnly => TextUnderIcon, labelWidth=400")
+        << (DisplayVector() << TextUnderIcon << TextOnly << TextUnderIcon) << false << 400.0 << -1.0 << 0.0;
     QTest::addRow("TextBesideIcon, spacing=10") << (DisplayVector() << TextBesideIcon) << false << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextBesideIcon => IconOnly => TextBesideIcon")
         << (DisplayVector() << TextBesideIcon << IconOnly << TextBesideIcon) << false << -1.0 << -1.0 << 0.0;
@@ -87,6 +98,7 @@ void tst_qquickiconlabel::display_data()
         << (DisplayVector() << TextBesideIcon << TextOnly << TextBesideIcon) << false << 400.0 << -1.0 << 0.0;
     QTest::addRow("IconOnly, mirrored") << (DisplayVector() << IconOnly) << true << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextOnly, mirrored") << (DisplayVector() << TextOnly) << true << -1.0 << -1.0 << 0.0;
+    QTest::addRow("TextUnderIcon, mirrored") << (DisplayVector() << TextUnderIcon) << true << -1.0 << -1.0 << 0.0;
     QTest::addRow("TextBesideIcon, mirrored") << (DisplayVector() << TextBesideIcon) << true << -1.0 << -1.0 << 0.0;
 }
 
@@ -168,6 +180,23 @@ void tst_qquickiconlabel::display()
             QCOMPARE(label->implicitWidth(), text->implicitWidth() + horizontalPadding);
             QCOMPARE(label->implicitHeight(), text->implicitHeight() + verticalPadding);
             break;
+        case QQuickIconLabel::TextUnderIcon: {
+            const qreal combinedHeight = icon->height() + label->spacing() + text->height();
+            const qreal contentY = verticalCenter - combinedHeight / 2;
+            QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
+            QCOMPARE(icon->y(), contentY);
+            QCOMPARE(icon->width(), icon->implicitWidth());
+            QCOMPARE(icon->height(), icon->implicitHeight());
+            QCOMPARE(icon->isVisible(), true);
+            QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
+            QCOMPARE(text->y(), contentY + icon->height() + label->spacing());
+            QCOMPARE(text->width(), text->implicitWidth());
+            QCOMPARE(text->height(), text->implicitHeight());
+            QCOMPARE(text->isVisible(), true);
+            QCOMPARE(label->implicitWidth(), qMax(icon->implicitWidth(), text->implicitWidth()) + horizontalPadding);
+            QCOMPARE(label->implicitHeight(), combinedHeight + verticalPadding);
+            break;
+        }
         case QQuickIconLabel::TextBesideIcon:
         default:
             const qreal combinedWidth = icon->width() + label->spacing() + text->width();
