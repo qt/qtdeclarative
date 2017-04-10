@@ -241,6 +241,147 @@ TestCase {
         compare(control.position, 0.25)
     }
 
+    function test_touch_data() {
+        return [
+            { tag: "horizontal", properties: { visible: true, orientation: Qt.Horizontal, width: testCase.width } },
+            { tag: "vertical", properties: { visible: true, orientation: Qt.Vertical, height: testCase.height } }
+        ]
+    }
+
+    function test_touch(data) {
+        var control = createTemporaryObject(scrollBar, testCase, data.properties)
+        verify(control)
+
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        verify(pressedSpy.valid)
+
+        var touch = touchEvent(control)
+
+        touch.press(0, control, 0, 0).commit()
+        compare(pressedSpy.count, 1)
+        compare(control.pressed, true)
+        compare(control.position, 0.0)
+
+        touch.move(0, control, -control.width, -control.height).commit()
+        compare(pressedSpy.count, 1)
+        compare(control.pressed, true)
+        compare(control.position, 0.0)
+
+        touch.move(0, control, control.width * 0.5, control.height * 0.5).commit()
+        compare(pressedSpy.count, 1)
+        compare(control.pressed, true)
+        verify(control.position, 0.5)
+
+        touch.release(0, control, control.width * 0.5, control.height * 0.5).commit()
+        compare(pressedSpy.count, 2)
+        compare(control.pressed, false)
+        compare(control.position, 0.5)
+
+        touch.press(0, control, control.width, control.height).commit()
+        compare(pressedSpy.count, 3)
+        compare(control.pressed, true)
+        compare(control.position, 0.5)
+
+        touch.move(0, control, control.width * 2, control.height * 2).commit()
+        compare(pressedSpy.count, 3)
+        compare(control.pressed, true)
+        compare(control.position, 1.0)
+
+        touch.move(0, control, control.width * 0.75, control.height * 0.75).commit()
+        compare(pressedSpy.count, 3)
+        compare(control.pressed, true)
+        compare(control.position, 0.75)
+
+        touch.release(0, control, control.width * 0.25, control.height * 0.25).commit()
+        compare(pressedSpy.count, 4)
+        compare(control.pressed, false)
+        compare(control.position, 0.25)
+    }
+
+    function test_multiTouch() {
+        var control1 = createTemporaryObject(scrollBar, testCase)
+        verify(control1)
+
+        var pressedCount1 = 0
+        var movedCount1 = 0
+
+        var pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
+        verify(pressedSpy1.valid)
+
+        var positionSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "positionChanged"})
+        verify(positionSpy1.valid)
+
+        var touch = touchEvent(control1)
+        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width, control1.height).commit()
+
+        compare(pressedSpy1.count, ++pressedCount1)
+        compare(positionSpy1.count, ++movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 1.0)
+
+        // second touch point on the same control is ignored
+        touch.stationary(0).press(1, control1, 0, 0).commit()
+        touch.stationary(0).move(1, control1).commit()
+        touch.stationary(0).release(1).commit()
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(positionSpy1.count, movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 1.0)
+
+        var control2 = createTemporaryObject(scrollBar, testCase, {y: control1.height})
+        verify(control2)
+        waitForRendering(control2)
+
+        var pressedCount2 = 0
+        var movedCount2 = 0
+
+        var pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
+        verify(pressedSpy2.valid)
+
+        var positionSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "positionChanged"})
+        verify(positionSpy2.valid)
+
+        // press the second scrollbar
+        touch.stationary(0).press(2, control2, 0, 0).commit()
+
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(positionSpy2.count, movedCount2)
+        compare(control2.pressed, true)
+        compare(control2.position, 0.0)
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(positionSpy1.count, movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 1.0)
+
+        // move both scrollbars
+        touch.move(0, control1).move(2, control2).commit()
+
+        compare(pressedSpy2.count, pressedCount2)
+        compare(positionSpy2.count, ++movedCount2)
+        compare(control2.pressed, true)
+        compare(control2.position, 0.5)
+
+        compare(pressedSpy1.count, pressedCount1)
+        compare(positionSpy1.count, ++movedCount1)
+        compare(control1.pressed, true)
+        compare(control1.position, 0.5)
+
+        // release both scrollbars
+        touch.release(0, control1).release(2, control2).commit()
+
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(positionSpy2.count, movedCount2)
+        compare(control2.pressed, false)
+        compare(control2.position, 0.5)
+
+        compare(pressedSpy1.count, ++pressedCount1)
+        compare(positionSpy1.count, movedCount1)
+        compare(control1.pressed, false)
+        compare(control1.position, 0.5)
+    }
+
     function test_increase_decrease_data() {
         return [
             { tag: "increase:active", increase: true, active: true },
@@ -424,6 +565,66 @@ TestCase {
         compare(steps, data.steps)
 
         mouseRelease(control, control.width - 1, 0)
+    }
+
+    function test_snapMode_touch_data() {
+        return test_snapMode_data()
+    }
+
+    function test_snapMode_touch(data) {
+        var control = createTemporaryObject(scrollBar, testCase, {snapMode: data.snapMode, orientation: Qt.Horizontal, stepSize: data.stepSize, size: data.size, width: data.width})
+        verify(control)
+
+        function snappedPosition(pos) {
+            var effectiveStep = control.stepSize * (1.0 - control.size)
+            return Math.round(pos / effectiveStep) * effectiveStep
+        }
+
+        function boundPosition(pos) {
+            return Math.max(0, Math.min(pos, 1.0 - control.size))
+        }
+
+        var touch = touchEvent(control)
+
+        touch.press(0, control, 0, 0).commit()
+        compare(control.position, 0)
+
+        touch.move(0, control, control.width * 0.3, 0).commit()
+        var expectedMovePos = 0.3
+        if (control.snapMode === ScrollBar.SnapAlways) {
+            expectedMovePos = snappedPosition(expectedMovePos)
+            verify(expectedMovePos !== 0.3)
+        }
+        compare(control.position, expectedMovePos)
+
+        touch.release(0, control, control.width * 0.75, 0).commit()
+        var expectedReleasePos = 0.75
+        if (control.snapMode !== ScrollBar.NoSnap) {
+            expectedReleasePos = snappedPosition(expectedReleasePos)
+            verify(expectedReleasePos !== 0.75)
+        }
+        compare(control.position, expectedReleasePos)
+
+        control.position = 0
+        touch.press(0, control, 0, 0).commit()
+
+        var steps = 0
+        var prevPos = 0
+
+        for (var x = 0; x < control.width; ++x) {
+            touch.move(0, control, x, 0).commit()
+            expectedMovePos = boundPosition(x / control.width)
+            if (control.snapMode === ScrollBar.SnapAlways)
+                expectedMovePos = snappedPosition(expectedMovePos)
+            compare(control.position, expectedMovePos)
+
+            if (control.position !== prevPos)
+                ++steps
+            prevPos = control.position
+        }
+        compare(steps, data.steps)
+
+        touch.release(0, control, control.width - 1).commit()
     }
 
     function test_interactive_data() {
