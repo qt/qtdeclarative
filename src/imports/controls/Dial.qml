@@ -53,15 +53,14 @@ T.Dial {
         opacity: control.enabled ? 1 : 0.3
     }
 
-    handle: Image {
+    handle: ColorImage {
         id: handleItem
         x: background.x + background.width / 2 - handle.width / 2
         y: background.y + background.height / 2 - handle.height / 2
         width: 14
         height: 10
-        source: "image://default/dial-indicator/" + (control.visualFocus ? Default.focusColor : Default.textColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: control.visualFocus ? Default.focusColor : Default.textColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/dial-indicator.png"
         antialiasing: true
         opacity: control.enabled ? 1 : 0.3
         transform: [

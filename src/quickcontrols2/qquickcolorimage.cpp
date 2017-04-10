@@ -34,47 +34,44 @@
 **
 ****************************************************************************/
 
-#include "qquickcolorimageprovider_p.h"
+#include "qquickcolorimage_p.h"
 
-#include <QtCore/qdebug.h>
-#include <QtGui/qpainter.h>
-#include <QtGui/qguiapplication.h>
-#include <QtGui/qscreen.h>
-#include <QtGui/qicon.h>
+#include <QtQuick/private/qquickimagebase_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickColorImageProvider::QQuickColorImageProvider(const QString &path)
-    : QQuickImageProvider(Image), m_path(path)
+QQuickColorImage::QQuickColorImage(QQuickItem *parent)
+    : QQuickImage(parent), m_color(Qt::transparent)
 {
 }
 
-QImage QQuickColorImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
+QColor QQuickColorImage::color() const
 {
-    Q_UNUSED(requestedSize);
+    return m_color;
+}
 
-    int sep = id.indexOf(QLatin1Char('/'));
-    const QStringRef name = id.leftRef(sep);
-    qreal dpr = qApp->primaryScreen()->devicePixelRatio();
-    QString file = qt_findAtNxFile(m_path + QLatin1Char('/') + name + QLatin1String(".png"), dpr);
+void QQuickColorImage::setColor(const QColor &color)
+{
+    if (m_color == color)
+        return;
 
-    QImage image(file);
-    if (image.isNull()) {
-        qWarning() << "QQuickColorImageProvider: unknown id:" << id;
-        return QImage();
-    }
+    m_color = color;
+    if (isComponentComplete())
+        load();
+    emit colorChanged();
+}
 
-    if (size)
-        *size = image.size();
-
-    const QString color = id.mid(sep + 1);
-    if (!color.isEmpty()) {
+void QQuickColorImage::pixmapChange()
+{
+    QQuickImage::pixmapChange();
+    if (m_color.alpha() > 0) {
+        QQuickImageBasePrivate *d = static_cast<QQuickImageBasePrivate *>(QQuickItemPrivate::get(this));
+        QImage image = d->pix.image();
         QPainter painter(&image);
         painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        painter.fillRect(image.rect(), QColor(color));
+        painter.fillRect(image.rect(), m_color);
+        d->pix.setImage(image);
     }
-
-    return image;
 }
 
 QT_END_NAMESPACE

@@ -36,6 +36,7 @@
 
 import QtQuick 2.9
 import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Templates 2.3 as T
 import QtQuick.Controls.Material 2.3
 import QtQuick.Controls.Material.impl 2.3
@@ -66,12 +67,11 @@ T.ComboBox {
         hoverEnabled: control.hoverEnabled
     }
 
-    indicator: Image {
+    indicator: ColorImage {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://material/drop-indicator/" + (control.enabled ? control.Material.foreground : control.Material.hintTextColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
     }
 
     contentItem: T.TextField {

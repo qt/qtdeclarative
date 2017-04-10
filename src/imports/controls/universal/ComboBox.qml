@@ -36,6 +36,7 @@
 
 import QtQuick 2.9
 import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Templates 2.3 as T
 import QtQuick.Controls.Universal 2.3
 
@@ -61,12 +62,11 @@ T.ComboBox {
         hoverEnabled: control.hoverEnabled
     }
 
-    indicator: Image {
+    indicator: ColorImage {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://universal/downarrow/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/downarrow.png"
 
         Rectangle {
             z: -1

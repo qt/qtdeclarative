@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCOLORIMAGEPROVIDER_P_H
-#define QQUICKCOLORIMAGEPROVIDER_P_H
+#ifndef QQUICKCOLORIMAGE_P_H
+#define QQUICKCOLORIMAGE_P_H
 
 //
 //  W A R N I N G
@@ -48,22 +48,33 @@
 // We mean it.
 //
 
-#include <QtQuick/qquickimageprovider.h>
+#include <QtGui/qcolor.h>
+#include <QtQuick/private/qquickimage_p.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickColorImageProvider : public QQuickImageProvider
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickColorImage : public QQuickImage
 {
-public:
-    QQuickColorImageProvider(const QString &path);
+    Q_OBJECT
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
-    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
+public:
+    explicit QQuickColorImage(QQuickItem *parent = nullptr);
+
+    QColor color() const;
+    void setColor(const QColor &color);
+
+Q_SIGNALS:
+    void colorChanged();
+
+protected:
+    void pixmapChange() override;
 
 private:
-    QString m_path;
+    QColor m_color;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKOCOLORIMAGEPROVIDER_P_H
+#endif // QQUICKCOLORIMAGE_P_H

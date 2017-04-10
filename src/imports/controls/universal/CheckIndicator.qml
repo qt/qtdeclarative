@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Universal 2.3
 
 Rectangle {
@@ -53,14 +55,13 @@ Rectangle {
     property Item control
     readonly property bool partiallyChecked: control.checkState === Qt.PartiallyChecked
 
-    Image {
+    ColorImage {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
 
         visible: control.checkState === Qt.Checked
-        source: "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.Universal.chromeWhiteColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.chromeWhiteColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/checkmark.png"
     }
 
     Rectangle {

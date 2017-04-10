@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Universal 2.3
 
 T.MenuItem {
@@ -66,14 +68,13 @@ T.MenuItem {
         verticalAlignment: Text.AlignVCenter
     }
 
-    indicator: Image {
+    indicator: ColorImage {
         x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: !control.checkable ? "" : "image://universal/checkmark/" + (!control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: !control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor
+        source: !control.checkable ? "" : "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/checkmark.png"
     }
 
     background: Rectangle {

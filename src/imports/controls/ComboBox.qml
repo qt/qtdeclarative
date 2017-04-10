@@ -60,12 +60,11 @@ T.ComboBox {
         hoverEnabled: control.hoverEnabled
     }
 
-    indicator: Image {
+    indicator: ColorImage {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        source: "image://default/double-arrow/" + (!control.editable && control.visualFocus ? Default.focusColor : Default.textColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: !control.editable && control.visualFocus ? Default.focusColor : Default.textColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/double-arrow.png"
         opacity: enabled ? 1 : 0.3
     }
 

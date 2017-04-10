@@ -55,12 +55,11 @@ Rectangle {
         : (control.down ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : "transparent"
     opacity: enabled ? 1 : 0.3
 
-    Image {
+    ColorImage {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        source: "image://default/check/" + (control.visualFocus ? Default.focusColor : Default.textColor)
-        sourceSize.width: width
-        sourceSize.height: height
+        color: control.visualFocus ? Default.focusColor : Default.textColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
         visible: control.checkState === Qt.Checked
     }
 

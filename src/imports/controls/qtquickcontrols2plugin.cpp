@@ -37,13 +37,13 @@
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickcolor_p.h>
+#include <QtQuickControls2/private/qquickcolorimage_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
 #include <QtQuickControls2/private/qquickplaceholdertext_p.h>
 #include <QtQuickControls2/private/qquickiconlabel_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
-#include <QtQuickControls2/private/qquickcolorimageprovider_p.h>
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
@@ -175,9 +175,7 @@ static QObject *colorSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    Q_UNUSED(uri);
-
-    engine->addImageProvider(QStringLiteral("default"), new QQuickColorImageProvider(QStringLiteral(":/qt-project.org/imports/QtQuick/Controls.2/images")));
+    Q_UNUSED(engine);
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
@@ -194,6 +192,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
     qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 
+    qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
