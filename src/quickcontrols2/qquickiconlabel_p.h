@@ -61,12 +61,12 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
     Q_PROPERTY(QQuickItem *icon READ icon WRITE setIcon FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel FINAL)
     Q_PROPERTY(Display display READ display WRITE setDisplay FINAL)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing)
-    Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing FINAL)
+    Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored FINAL)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding FINAL)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding FINAL)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding FINAL)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding FINAL)
 
 public:
     enum Display {
