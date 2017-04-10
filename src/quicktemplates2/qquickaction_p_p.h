@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickIcon;
 class QShortcutEvent;
+class QQuickActionGroup;
 
 class QQuickActionPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
@@ -119,6 +120,7 @@ public:
     QKeySequence keySequence;
     ShortcutEntry *defaultShortcutEntry;
     QVector<ShortcutEntry *> shortcutEntries;
+    QQuickActionGroup *group;
 };
 
 QT_END_NAMESPACE

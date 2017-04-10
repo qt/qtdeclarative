@@ -48,6 +48,7 @@
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
 #include <QtQuickTemplates2/private/qquickaction_p.h>
+#include <QtQuickTemplates2/private/qquickactiongroup_p.h>
 #include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 
@@ -156,6 +157,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Controls 2.3 (new types in Qt 5.10)
     qmlRegisterType<QQuickAction>(uri, 2, 3, "Action");
+    qmlRegisterType<QQuickActionGroup>(uri, 2, 3, "ActionGroup");
     qmlRegisterType<QQuickIcon>();
 }
 

@@ -36,6 +36,7 @@
 
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
+#include "qquickactiongroup_p.h"
 #include "qquickshortcutcontext_p_p.h"
 #include "qquickicon_p.h"
 
@@ -176,7 +177,8 @@ QQuickActionPrivate::QQuickActionPrivate()
       checked(false),
       checkable(false),
       icon(nullptr),
-      defaultShortcutEntry(nullptr)
+      defaultShortcutEntry(nullptr),
+      group(nullptr)
 {
 }
 
@@ -338,6 +340,9 @@ QQuickAction::QQuickAction(QObject *parent)
 QQuickAction::~QQuickAction()
 {
     Q_D(QQuickAction);
+    if (d->group)
+        d->group->removeAction(this);
+
     for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(d->shortcutEntries))
         d->unwatchItem(qobject_cast<QQuickItem *>(entry->target()));
 
@@ -391,7 +396,7 @@ QQuickIcon *QQuickAction::icon() const
 bool QQuickAction::isEnabled() const
 {
     Q_D(const QQuickAction);
-    return d->enabled;
+    return d->enabled && (!d->group || d->group->isEnabled());
 }
 
 void QQuickAction::setEnabled(bool enabled)
