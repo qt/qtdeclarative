@@ -54,6 +54,10 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickText;
+class QQuickIcon;
+class QQuickIconImage;
+
 class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickIconLabel)
@@ -61,6 +65,22 @@ class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChange
 public:
     explicit QQuickIconLabelPrivate();
 
+    bool hasIcon() const;
+    bool hasText() const;
+
+    bool createImage();
+    bool destroyImage();
+    bool updateImage();
+    void syncImage();
+    void updateOrSyncImage();
+
+    bool createLabel();
+    bool destroyLabel();
+    bool updateLabel();
+    void syncLabel();
+    void updateOrSyncLabel();
+
+    void updateIcon();
     void updateImplicitSize();
     void layout();
 
@@ -74,16 +94,20 @@ public:
     void itemImplicitHeightChanged(QQuickItem *) override;
     void itemDestroyed(QQuickItem *item) override;
 
-    QQuickItem *icon;
-    QQuickItem *label;
+    bool mirrored;
     QQuickIconLabel::Display display;
     Qt::Alignment alignment;
     qreal spacing;
-    bool mirrored;
     qreal topPadding;
     qreal leftPadding;
     qreal rightPadding;
     qreal bottomPadding;
+    QFont font;
+    QColor color;
+    QString text;
+    QQuickIcon *icon;
+    QQuickIconImage *image;
+    QQuickText *label;
 };
 
 QT_END_NAMESPACE

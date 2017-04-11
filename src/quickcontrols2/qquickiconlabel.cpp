@@ -36,38 +36,184 @@
 
 #include "qquickiconlabel_p.h"
 #include "qquickiconlabel_p_p.h"
+#include "qquickiconimage_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 QT_BEGIN_NAMESPACE
 
+static void beginClass(QQuickItem *item)
+{
+    if (QQmlParserStatus *parserStatus = qobject_cast<QQmlParserStatus *>(item))
+        parserStatus->classBegin();
+}
+
+static void completeComponent(QQuickItem *item)
+{
+    if (QQmlParserStatus *parserStatus = qobject_cast<QQmlParserStatus *>(item))
+        parserStatus->componentComplete();
+}
+
 QQuickIconLabelPrivate::QQuickIconLabelPrivate()
-    : icon(nullptr),
-      label(nullptr),
+    : mirrored(false),
       display(QQuickIconLabel::TextBesideIcon),
       alignment(Qt::AlignCenter),
       spacing(0),
-      mirrored(false),
       topPadding(0),
       leftPadding(0),
       rightPadding(0),
-      bottomPadding(0)
+      bottomPadding(0),
+      icon(nullptr),
+      image(nullptr),
+      label(nullptr)
 {
+}
+
+bool QQuickIconLabelPrivate::hasIcon() const
+{
+    return display != QQuickIconLabel::TextOnly && icon && (!icon->name().isEmpty() || !icon->source().isEmpty());
+}
+
+bool QQuickIconLabelPrivate::hasText() const
+{
+    return display != QQuickIconLabel::IconOnly && !text.isEmpty();
+}
+
+bool QQuickIconLabelPrivate::createImage()
+{
+    Q_Q(QQuickIconLabel);
+    if (image)
+        return false;
+
+    image = new QQuickIconImage(q);
+    watchChanges(image);
+    beginClass(image);
+    image->setObjectName(QLatin1String("image"));
+    image->setName(icon->name());
+    image->setSource(icon->source());
+    image->setSourceSize(QSize(icon->width(), icon->height()));
+    image->setColor(icon->color());
+    if (componentComplete)
+        completeComponent(image);
+    return true;
+}
+
+bool QQuickIconLabelPrivate::destroyImage()
+{
+    if (!image)
+        return false;
+
+    unwatchChanges(image);
+    delete image;
+    image = nullptr;
+    return true;
+}
+
+bool QQuickIconLabelPrivate::updateImage()
+{
+    if (!hasIcon())
+        return destroyImage();
+    return createImage();
+}
+
+void QQuickIconLabelPrivate::syncImage()
+{
+    if (!image || !icon)
+        return;
+
+    image->setName(icon->name());
+    image->setSource(icon->source());
+}
+
+void QQuickIconLabelPrivate::updateOrSyncImage()
+{
+    if (updateImage()) {
+        updateImplicitSize();
+        layout();
+    } else {
+        syncImage();
+    }
+}
+
+bool QQuickIconLabelPrivate::createLabel()
+{
+    Q_Q(QQuickIconLabel);
+    if (label)
+        return false;
+
+    label = new QQuickText(q);
+    watchChanges(label);
+    beginClass(label);
+    label->setObjectName(QLatin1String("label"));
+    label->setFont(font);
+    label->setColor(color);
+    label->setElideMode(QQuickText::ElideRight);
+    label->setText(text);
+    if (componentComplete)
+        completeComponent(label);
+    return true;
+}
+
+bool QQuickIconLabelPrivate::destroyLabel()
+{
+    if (!label)
+        return false;
+
+    unwatchChanges(label);
+    delete label;
+    label = nullptr;
+    return true;
+}
+
+bool QQuickIconLabelPrivate::updateLabel()
+{
+    if (!hasText())
+        return destroyLabel();
+    return createLabel();
+}
+
+void QQuickIconLabelPrivate::syncLabel()
+{
+    if (!label)
+        return;
+
+    label->setText(text);
+}
+
+void QQuickIconLabelPrivate::updateOrSyncLabel()
+{
+    if (updateLabel()) {
+        updateImplicitSize();
+        layout();
+    } else {
+        syncLabel();
+    }
+}
+
+void QQuickIconLabelPrivate::updateIcon()
+{
+    if (!image || !icon)
+        return;
+
+    image->setColor(icon->color());
+    image->setSourceSize(QSize(icon->width(), icon->height()));
 }
 
 void QQuickIconLabelPrivate::updateImplicitSize()
 {
     Q_Q(QQuickIconLabel);
-    const bool showIcon = icon && display != QQuickIconLabel::TextOnly;
-    const bool showText = label && display != QQuickIconLabel::IconOnly;
+    const bool showIcon = image && hasIcon();
+    const bool showText = label && hasText();
     const qreal horizontalPadding = leftPadding + rightPadding;
     const qreal verticalPadding = topPadding + bottomPadding;
-    const qreal iconImplicitWidth = showIcon ? icon->implicitWidth() : 0;
-    const qreal iconImplicitHeight = showIcon ? icon->implicitHeight() : 0;
+    const qreal iconImplicitWidth = showIcon ? image->implicitWidth() : 0;
+    const qreal iconImplicitHeight = showIcon ? image->implicitHeight() : 0;
     const qreal textImplicitWidth = showText ? label->implicitWidth() : 0;
     const qreal textImplicitHeight = showText ? label->implicitHeight() : 0;
-    const qreal effectiveSpacing = showText && showIcon && icon->implicitWidth() > 0 ? spacing : 0;
+    const qreal effectiveSpacing = showText && showIcon && image->implicitWidth() > 0 ? spacing : 0;
     const qreal implicitWidth = display == QQuickIconLabel::TextBesideIcon ? iconImplicitWidth + textImplicitWidth + effectiveSpacing
                                                                            : qMax(iconImplicitWidth, textImplicitWidth);
     const qreal implicitHeight = display == QQuickIconLabel::TextUnderIcon ? iconImplicitHeight + textImplicitHeight + effectiveSpacing
@@ -104,17 +250,14 @@ void QQuickIconLabelPrivate::layout()
 
     switch (display) {
     case QQuickIconLabel::IconOnly:
-        if (icon) {
+        if (image) {
             const QRectF iconRect = alignedRect(mirrored, alignment,
-                                                QSizeF(qMin(icon->implicitWidth(), availableWidth),
-                                                       qMin(icon->implicitHeight(), availableHeight)),
+                                                QSizeF(qMin(image->implicitWidth(), availableWidth),
+                                                       qMin(image->implicitHeight(), availableHeight)),
                                                 QRectF(leftPadding, topPadding, availableWidth, availableHeight));
-            icon->setSize(iconRect.size());
-            icon->setPosition(iconRect.topLeft());
-            icon->setVisible(true);
+            image->setSize(iconRect.size());
+            image->setPosition(iconRect.topLeft());
         }
-        if (label)
-            label->setVisible(false);
         break;
     case QQuickIconLabel::TextOnly:
         if (label) {
@@ -124,19 +267,16 @@ void QQuickIconLabelPrivate::layout()
                                                 QRectF(leftPadding, topPadding, availableWidth, availableHeight));
             label->setSize(textRect.size());
             label->setPosition(textRect.topLeft());
-            label->setVisible(true);
         }
-        if (icon)
-            icon->setVisible(false);
         break;
 
     case QQuickIconLabel::TextUnderIcon: {
         // Work out the sizes first, as the positions depend on them.
         QSizeF iconSize;
         QSizeF textSize;
-        if (icon) {
-            iconSize.setWidth(qMin(icon->implicitWidth(), availableWidth));
-            iconSize.setHeight(qMin(icon->implicitHeight(), availableHeight));
+        if (image) {
+            iconSize.setWidth(qMin(image->implicitWidth(), availableWidth));
+            iconSize.setHeight(qMin(image->implicitHeight(), availableHeight));
         }
         qreal effectiveSpacing = 0;
         if (label) {
@@ -150,17 +290,15 @@ void QQuickIconLabelPrivate::layout()
                                           QSizeF(qMax(iconSize.width(), textSize.width()),
                                                  iconSize.height() + effectiveSpacing + textSize.height()),
                                           QRectF(leftPadding, topPadding, availableWidth, availableHeight));
-        if (icon) {
+        if (image) {
             QRectF iconRect = alignedRect(mirrored, Qt::AlignHCenter | Qt::AlignTop, iconSize, combinedRect);
-            icon->setSize(iconRect.size());
-            icon->setPosition(iconRect.topLeft());
-            icon->setVisible(true);
+            image->setSize(iconRect.size());
+            image->setPosition(iconRect.topLeft());
         }
         if (label) {
             QRectF textRect = alignedRect(mirrored, Qt::AlignHCenter | Qt::AlignBottom, textSize, combinedRect);
             label->setSize(textRect.size());
             label->setPosition(textRect.topLeft());
-            label->setVisible(true);
         }
         break;
     }
@@ -170,9 +308,9 @@ void QQuickIconLabelPrivate::layout()
         // Work out the sizes first, as the positions depend on them.
         QSizeF iconSize(0, 0);
         QSizeF textSize(0, 0);
-        if (icon) {
-            iconSize.setWidth(qMin(icon->implicitWidth(), availableWidth));
-            iconSize.setHeight(qMin(icon->implicitHeight(), availableHeight));
+        if (image) {
+            iconSize.setWidth(qMin(image->implicitWidth(), availableWidth));
+            iconSize.setHeight(qMin(image->implicitHeight(), availableHeight));
         }
         qreal effectiveSpacing = 0;
         if (label) {
@@ -186,17 +324,15 @@ void QQuickIconLabelPrivate::layout()
                                                 QSizeF(iconSize.width() + effectiveSpacing + textSize.width(),
                                                        qMax(iconSize.height(), textSize.height())),
                                                 QRectF(leftPadding, topPadding, availableWidth, availableHeight));
-        if (icon) {
+        if (image) {
             const QRectF iconRect = alignedRect(mirrored, Qt::AlignLeft | Qt::AlignVCenter, iconSize, combinedRect);
-            icon->setSize(iconRect.size());
-            icon->setPosition(iconRect.topLeft());
-            icon->setVisible(true);
+            image->setSize(iconRect.size());
+            image->setPosition(iconRect.topLeft());
         }
         if (label) {
             const QRectF textRect = alignedRect(mirrored, Qt::AlignRight | Qt::AlignVCenter, textSize, combinedRect);
             label->setSize(textRect.size());
             label->setPosition(textRect.topLeft());
-            label->setVisible(true);
         }
         break;
     }
@@ -234,8 +370,8 @@ void QQuickIconLabelPrivate::itemImplicitHeightChanged(QQuickItem *)
 void QQuickIconLabelPrivate::itemDestroyed(QQuickItem *item)
 {
     unwatchChanges(item);
-    if (item == icon)
-        icon = nullptr;
+    if (item == image)
+        image = nullptr;
     else if (item == label)
         label = nullptr;
 }
@@ -248,60 +384,92 @@ QQuickIconLabel::QQuickIconLabel(QQuickItem *parent)
 QQuickIconLabel::~QQuickIconLabel()
 {
     Q_D(QQuickIconLabel);
-    if (d->icon)
-        d->unwatchChanges(d->icon);
+    if (d->image)
+        d->unwatchChanges(d->image);
     if (d->label)
         d->unwatchChanges(d->label);
 }
 
-QQuickItem *QQuickIconLabel::icon() const
+QQuickIcon *QQuickIconLabel::icon() const
 {
     Q_D(const QQuickIconLabel);
     return d->icon;
 }
 
-void QQuickIconLabel::setIcon(QQuickItem *icon)
+void QQuickIconLabel::setIcon(QQuickIcon *icon)
 {
     Q_D(QQuickIconLabel);
     if (d->icon == icon)
         return;
 
-    if (d->icon)
-        d->unwatchChanges(d->icon);
+    if (QQuickIcon *oldIcon = d->icon) {
+        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::nameChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
+        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::sourceChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
+        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::colorChanged, d, &QQuickIconLabelPrivate::updateIcon);
+        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::widthChanged, d, &QQuickIconLabelPrivate::updateIcon);
+        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::heightChanged, d, &QQuickIconLabelPrivate::updateIcon);
+    }
 
     d->icon = icon;
     if (icon) {
-        icon->setParentItem(this);
-        d->watchChanges(icon);
+        QObjectPrivate::connect(icon, &QQuickIcon::nameChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
+        QObjectPrivate::connect(icon, &QQuickIcon::sourceChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
+        QObjectPrivate::connect(icon, &QQuickIcon::colorChanged, d, &QQuickIconLabelPrivate::updateIcon);
+        QObjectPrivate::connect(icon, &QQuickIcon::widthChanged, d, &QQuickIconLabelPrivate::updateIcon);
+        QObjectPrivate::connect(icon, &QQuickIcon::heightChanged, d, &QQuickIconLabelPrivate::updateIcon);
     }
 
-    d->updateImplicitSize();
-    d->layout();
+    d->updateOrSyncImage();
 }
 
-QQuickItem *QQuickIconLabel::label() const
+QString QQuickIconLabel::text() const
 {
     Q_D(const QQuickIconLabel);
-    return d->label;
+    return d->text;
 }
 
-void QQuickIconLabel::setLabel(QQuickItem *label)
+void QQuickIconLabel::setText(const QString text)
 {
     Q_D(QQuickIconLabel);
-    if (d->label == label)
+    if (d->text == text)
         return;
 
+    d->text = text;
+    d->updateOrSyncLabel();
+}
+
+QFont QQuickIconLabel::font() const
+{
+    Q_D(const QQuickIconLabel);
+    return d->font;
+}
+
+void QQuickIconLabel::setFont(const QFont &font)
+{
+    Q_D(QQuickIconLabel);
+    if (d->font == font)
+        return;
+
+    d->font = font;
     if (d->label)
-        d->unwatchChanges(d->label);
+        d->label->setFont(font);
+}
 
-    d->label = label;
-    if (label) {
-        label->setParentItem(this);
-        d->watchChanges(label);
-    }
+QColor QQuickIconLabel::color() const
+{
+    Q_D(const QQuickIconLabel);
+    return d->color;
+}
 
-    d->updateImplicitSize();
-    d->layout();
+void QQuickIconLabel::setColor(const QColor &color)
+{
+    Q_D(QQuickIconLabel);
+    if (d->color == color)
+        return;
+
+    d->color = color;
+    if (d->label)
+        d->label->setColor(color);
 }
 
 QQuickIconLabel::Display QQuickIconLabel::display() const
@@ -317,6 +485,8 @@ void QQuickIconLabel::setDisplay(Display display)
         return;
 
     d->display = display;
+    d->updateImage();
+    d->updateLabel();
     d->updateImplicitSize();
     d->layout();
 }
@@ -351,7 +521,6 @@ void QQuickIconLabel::setMirrored(bool mirrored)
         return;
 
     d->mirrored = mirrored;
-    d->updateImplicitSize();
     d->layout();
 }
 
@@ -466,6 +635,10 @@ void QQuickIconLabel::componentComplete()
 {
     Q_D(QQuickIconLabel);
     QQuickItem::componentComplete();
+    if (d->image)
+        completeComponent(d->image);
+    if (d->label)
+        completeComponent(d->label);
     d->layout();
 }
 

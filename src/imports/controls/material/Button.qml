@@ -69,21 +69,12 @@ T.Button {
         mirrored: control.mirrored
         display: control.display
 
-        icon: IconImage {
-            name: control.icon.name
-            source: control.icon.source
-            sourceSize.width: control.icon.width
-            sourceSize.height: control.icon.height
-            color: control.icon.color
-        }
-        label: Text {
-            text: control.text
-            font: control.font
-            color: !control.enabled ? control.Material.hintTextColor :
-                control.flat && control.highlighted ? control.Material.accentColor :
-                control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
-            elide: Text.ElideRight
-        }
+        icon: control.icon
+        text: control.text
+        font: control.font
+        color: !control.enabled ? control.Material.hintTextColor :
+            control.flat && control.highlighted ? control.Material.accentColor :
+            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
     }
 
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state

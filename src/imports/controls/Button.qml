@@ -62,22 +62,12 @@ T.Button {
         mirrored: control.mirrored
         display: control.display
 
-        icon: IconImage {
-            name: control.icon.name
-            source: control.icon.source
-            sourceSize.width: control.icon.width
-            sourceSize.height: control.icon.height
-            color: control.icon.color
-        }
-        label: Text {
-            text: control.text
-            font: control.font
-            opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
-            color: control.checked || control.highlighted ?
-                Default.textLightColor :
-                (control.visualFocus ? Default.focusColor : (control.down ? Default.textDarkColor : Default.textColor))
-            elide: Text.ElideRight
-        }
+        icon: control.icon
+        text: control.text
+        font: control.font
+        color: Color.transparent(control.checked || control.highlighted ? Default.textLightColor :
+                                 control.visualFocus ? Default.focusColor : control.down ? Default.textDarkColor : Default.textColor,
+                                 enabled || control.highlighted || control.checked ? 1 : 0.3)
     }
 
     background: Rectangle {

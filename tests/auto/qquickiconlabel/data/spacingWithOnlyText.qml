@@ -58,9 +58,6 @@ Item {
 
     IconLabel {
         spacing: 10
-
-        label: Text {
-            text: "Some text"
-        }
+        text: "Some text"
     }
 }

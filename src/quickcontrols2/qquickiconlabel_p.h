@@ -53,13 +53,16 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickIcon;
 class QQuickIconLabelPrivate;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *icon READ icon WRITE setIcon FINAL)
-    Q_PROPERTY(QQuickItem *label READ label WRITE setLabel FINAL)
+    Q_PROPERTY(QQuickIcon *icon READ icon WRITE setIcon FINAL)
+    Q_PROPERTY(QString text READ text WRITE setText FINAL)
+    Q_PROPERTY(QFont font READ font WRITE setFont FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
     Q_PROPERTY(Display display READ display WRITE setDisplay FINAL)
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored WRITE setMirrored FINAL)
@@ -81,11 +84,17 @@ public:
     explicit QQuickIconLabel(QQuickItem *parent = nullptr);
     ~QQuickIconLabel();
 
-    QQuickItem *icon() const;
-    void setIcon(QQuickItem *icon);
+    QQuickIcon *icon() const;
+    void setIcon(QQuickIcon *icon);
 
-    QQuickItem *label() const;
-    void setLabel(QQuickItem *label);
+    QString text() const;
+    void setText(const QString text);
+
+    QFont font() const;
+    void setFont(const QFont &font);
+
+    QColor color() const;
+    void setColor(const QColor &color);
 
     Display display() const;
     void setDisplay(Display display);

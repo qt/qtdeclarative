@@ -437,16 +437,19 @@ TestCase {
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
+        var textLabel = findChild(control.contentItem, "label")
+        verify(textLabel)
+
         // The implicitWidth of the IconLabel that all buttons use as their contentItem
         // should be equal to the implicitWidth of the Text while no icon is set.
-        compare(control.contentItem.implicitWidth, control.contentItem.label.implicitWidth)
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
 
         // That means that spacing shouldn't affect it.
         control.spacing += 100
-        compare(control.contentItem.implicitWidth, control.contentItem.label.implicitWidth)
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
 
         // The implicitWidth of the Button itself should, therefore, also never include spacing while no icon is set.
-        compare(control.implicitWidth, control.contentItem.label.implicitWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitWidth, textLabel.implicitWidth + control.leftPadding + control.rightPadding)
     }
 
     function test_display_data() {
@@ -472,42 +475,38 @@ TestCase {
         verify(control)
         verify(control.icon.source.length > 0)
 
-        var iconImage = control.contentItem.icon
-        verify(iconImage)
-        verify(iconImage.hasOwnProperty("name"))
-        var label = control.contentItem.label
-        verify(label)
-        verify(label.hasOwnProperty("text"))
+        var iconImage = findChild(control.contentItem, "image")
+        var textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case Button.IconOnly:
-            compare(iconImage.visible, true)
-            compare(label.visible, false)
+            verify(iconImage)
+            verify(!textLabel)
             compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
             compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
             break;
         case Button.TextOnly:
-            compare(iconImage.visible, false)
-            compare(label.visible, true)
-            compare(label.x, (control.availableWidth - label.width) / 2)
-            compare(label.y, (control.availableHeight - label.height) / 2)
+            verify(!iconImage)
+            verify(textLabel)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         case Button.TextUnderIcon:
-            compare(iconImage.visible, true)
-            compare(label.visible, true)
+            verify(iconImage)
+            verify(textLabel)
             compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
-            compare(label.x, (control.availableWidth - label.width) / 2)
-            verify(iconImage.y < label.y)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            verify(iconImage.y < textLabel.y)
             break;
         case Button.TextBesideIcon:
-            compare(iconImage.visible, true)
-            compare(label.visible, true)
+            verify(iconImage)
+            verify(textLabel)
             if (control.mirrored)
-                verify(label.x < iconImage.x)
+                verify(textLabel.x < iconImage.x)
             else
-                verify(iconImage.x < label.x)
+                verify(iconImage.x < textLabel.x)
             compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
-            compare(label.y, (control.availableHeight - label.height) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }
     }

@@ -52,16 +52,15 @@ import QtQuick 2.9
 import QtQuick.Controls 2.3
 import QtQuick.Controls.impl 2.3
 
-Item {
+AbstractButton {
+    id: button
     width: 200
     height: 200
+    text: "Some text"
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
 
     IconLabel {
-        icon: Image {
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
-        }
-        label: Text {
-            text: "Some text"
-        }
+        icon: button.icon
+        text: button.text
     }
 }

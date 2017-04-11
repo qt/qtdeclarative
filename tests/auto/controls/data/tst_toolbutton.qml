@@ -205,42 +205,38 @@ TestCase {
         verify(control)
         verify(control.icon.source.length > 0)
 
-        var iconImage = control.contentItem.icon
-        verify(iconImage)
-        verify(iconImage.hasOwnProperty("name"))
-        var label = control.contentItem.label
-        verify(label)
-        verify(label.hasOwnProperty("text"))
+        var iconImage = findChild(control.contentItem, "image")
+        var textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case ToolButton.IconOnly:
-            compare(iconImage.visible, true)
-            compare(label.visible, false)
+            verify(iconImage)
+            verify(!textLabel)
             compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
             compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
             break;
         case ToolButton.TextOnly:
-            compare(iconImage.visible, false)
-            compare(label.visible, true)
-            compare(label.x, (control.availableWidth - label.width) / 2)
-            compare(label.y, (control.availableHeight - label.height) / 2)
+            verify(!iconImage)
+            verify(textLabel)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         case ToolButton.TextUnderIcon:
-            compare(iconImage.visible, true)
-            compare(label.visible, true)
+            verify(iconImage)
+            verify(textLabel)
             compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
-            compare(label.x, (control.availableWidth - label.width) / 2)
-            verify(iconImage.y < label.y)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            verify(iconImage.y < textLabel.y)
             break;
         case ToolButton.TextBesideIcon:
-            compare(iconImage.visible, true)
-            compare(label.visible, true)
+            verify(iconImage)
+            verify(textLabel)
             if (control.mirrored)
-                verify(label.x < iconImage.x)
+                verify(textLabel.x < iconImage.x)
             else
-                verify(iconImage.x < label.x)
+                verify(iconImage.x < textLabel.x)
             compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
-            compare(label.y, (control.availableHeight - label.height) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }
     }

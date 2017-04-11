@@ -63,20 +63,10 @@ T.ToolButton {
         mirrored: control.mirrored
         display: control.display
 
-        icon: IconImage {
-            name: control.icon.name
-            source: control.icon.source
-            sourceSize.width: control.icon.width
-            sourceSize.height: control.icon.height
-            color: control.icon.color
-        }
-        label: Text {
-            text: control.text
-            font: control.font
-            elide: Text.ElideRight
-            opacity: enabled ? 1.0 : 0.2
-            color: control.Universal.foreground
-        }
+        icon: control.icon
+        text: control.text
+        font: control.font
+        color: Color.transparent(control.Universal.foreground, enabled ? 1.0 : 0.2)
     }
 
     background: Rectangle {

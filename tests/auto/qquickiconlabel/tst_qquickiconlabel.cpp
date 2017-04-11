@@ -32,7 +32,9 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
-
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
+#include <QtQuickControls2/private/qquickiconimage_p.h>
 #include <QtQuickControls2/private/qquickiconlabel_p.h>
 
 #include "../shared/util.h"
@@ -118,7 +120,7 @@ void tst_qquickiconlabel::display()
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
 
-    QQuickIconLabel *label = qobject_cast<QQuickIconLabel*>(rootItem->childItems().first());
+    QQuickIconLabel *label = rootItem->findChild<QQuickIconLabel *>();
     QVERIFY(label);
     QCOMPARE(label->spacing(), 0.0);
     QCOMPARE(label->display(), QQuickIconLabel::TextBesideIcon);
@@ -135,12 +137,6 @@ void tst_qquickiconlabel::display()
         QCOMPARE(label->height(), labelHeight);
     }
 
-    QQuickItem *icon = label->icon();
-    QVERIFY(icon);
-
-    QQuickItem *text = label->label();
-    QVERIFY(text);
-
     label->setMirrored(mirrored);
     QCOMPARE(label->isMirrored(), mirrored);
 
@@ -156,61 +152,64 @@ void tst_qquickiconlabel::display()
         label->setDisplay(displayType);
         QCOMPARE(label->display(), displayType);
 
+        QQuickIconImage *icon = label->findChild<QQuickIconImage *>();
+        QQuickText *text = label->findChild<QQuickText *>();
+
         const qreal horizontalCenter = label->width() / 2;
         const qreal verticalCenter = label->height() / 2;
 
         switch (displayType) {
         case QQuickIconLabel::IconOnly:
+            QVERIFY(icon);
+            QVERIFY(!text);
             QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
             QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
-            QCOMPARE(icon->isVisible(), true);
-            QCOMPARE(text->isVisible(), false);
             QCOMPARE(label->implicitWidth(), icon->implicitWidth() + horizontalPadding);
             QCOMPARE(label->implicitHeight(), icon->implicitHeight() + verticalPadding);
             break;
         case QQuickIconLabel::TextOnly:
-            QCOMPARE(icon->isVisible(), false);
+            QVERIFY(!icon);
+            QVERIFY(text);
             QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
             QCOMPARE(text->y(), verticalCenter - text->height() / 2);
             QCOMPARE(text->width(), text->implicitWidth());
             QCOMPARE(text->height(), text->implicitHeight());
-            QCOMPARE(text->isVisible(), true);
             QCOMPARE(label->implicitWidth(), text->implicitWidth() + horizontalPadding);
             QCOMPARE(label->implicitHeight(), text->implicitHeight() + verticalPadding);
             break;
         case QQuickIconLabel::TextUnderIcon: {
+            QVERIFY(icon);
+            QVERIFY(text);
             const qreal combinedHeight = icon->height() + label->spacing() + text->height();
             const qreal contentY = verticalCenter - combinedHeight / 2;
             QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
             QCOMPARE(icon->y(), contentY);
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
-            QCOMPARE(icon->isVisible(), true);
             QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
             QCOMPARE(text->y(), contentY + icon->height() + label->spacing());
             QCOMPARE(text->width(), text->implicitWidth());
             QCOMPARE(text->height(), text->implicitHeight());
-            QCOMPARE(text->isVisible(), true);
             QCOMPARE(label->implicitWidth(), qMax(icon->implicitWidth(), text->implicitWidth()) + horizontalPadding);
             QCOMPARE(label->implicitHeight(), combinedHeight + verticalPadding);
             break;
         }
         case QQuickIconLabel::TextBesideIcon:
         default:
+            QVERIFY(icon);
+            QVERIFY(text);
             const qreal combinedWidth = icon->width() + label->spacing() + text->width();
             const qreal contentX = horizontalCenter - combinedWidth / 2;
             QCOMPARE(icon->x(), contentX + (label->isMirrored() ? text->width() + label->spacing() : 0));
             QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
-            QCOMPARE(icon->isVisible(), true);
             QCOMPARE(text->x(), contentX + (label->isMirrored() ? 0 : icon->width() + label->spacing()));
             QCOMPARE(text->y(), verticalCenter - text->height() / 2);
             QCOMPARE(text->width(), text->implicitWidth());
             QCOMPARE(text->height(), text->implicitHeight());
-            QCOMPARE(text->isVisible(), true);
             QCOMPARE(label->implicitWidth(), combinedWidth + horizontalPadding);
             QCOMPARE(label->implicitHeight(), qMax(icon->implicitHeight(), text->implicitHeight()) + verticalPadding);
             break;
@@ -238,15 +237,15 @@ void tst_qquickiconlabel::spacingWithOneDelegate()
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
 
-    QQuickIconLabel *label = qobject_cast<QQuickIconLabel*>(rootItem->childItems().first());
+    QQuickIconLabel *label = rootItem->findChild<QQuickIconLabel *>();
     QVERIFY(label);
     QQuickItem *delegate = nullptr;
     if (label->icon()) {
-        QVERIFY(!label->label());
-        delegate = label->icon();
+        QVERIFY(!label->findChild<QQuickText *>());
+        delegate = label->findChild<QQuickIconImage *>();
     } else {
-        QVERIFY(!label->icon());
-        delegate = label->label();
+        QVERIFY(!label->findChild<QQuickIconImage *>());
+        delegate = label->findChild<QQuickText *>();
     }
 
     QVERIFY(delegate);
@@ -264,16 +263,16 @@ void tst_qquickiconlabel::emptyIconSource()
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
 
-    QQuickIconLabel *label = qobject_cast<QQuickIconLabel*>(rootItem->childItems().first());
+    QQuickIconLabel *label = rootItem->findChild<QQuickIconLabel *>();
     QVERIFY(label);
     QCOMPARE(label->spacing(), 0.0);
     QCOMPARE(label->display(), QQuickIconLabel::TextBesideIcon);
     QCOMPARE(label->isMirrored(), false);
 
-    QQuickItem *icon = label->icon();
+    QQuickItem *icon = label->findChild<QQuickIconImage *>();
     QVERIFY(icon);
 
-    QQuickItem *text = label->label();
+    QQuickItem *text = label->findChild<QQuickText *>();
     QVERIFY(text);
     qreal horizontalCenter = label->width() / 2;
     const qreal combinedWidth = icon->width() + text->width();
@@ -286,7 +285,8 @@ void tst_qquickiconlabel::emptyIconSource()
     label->setWidth(label->implicitWidth() + 200);
     label->setHeight(label->implicitWidth() + 100);
     QVERIFY(icon->property("source").isValid());
-    QVERIFY(icon->setProperty("source", QUrl()));
+    label->icon()->setSource(QString());
+    QVERIFY(!label->findChild<QQuickIconImage *>());
     horizontalCenter = label->width() / 2;
     QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
 }
