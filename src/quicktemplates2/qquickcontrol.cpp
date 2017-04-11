@@ -467,12 +467,24 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
 #endif
 
 /*
-    Cancels incubation to avoid "Object destroyed during incubation" (QTBUG-50992)
+    Cancels incubation recursively to avoid "Object destroyed during incubation" (QTBUG-50992)
 */
+static void cancelIncubation(QObject *object, QQmlContext *context)
+{
+    const auto children = object->children();
+    for (QObject *child : children)
+        cancelIncubation(child, context);
+    QQmlIncubatorPrivate::cancel(object, context);
+}
+
 void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
 {
-    if (delegate && parent)
-        QQmlIncubatorPrivate::cancel(delegate, qmlContext(parent));
+    if (!delegate)
+        return;
+
+    QQmlContext *context = parent ? qmlContext(parent) : nullptr;
+    if (context)
+        cancelIncubation(delegate, context);
     delete delegate;
 }
 

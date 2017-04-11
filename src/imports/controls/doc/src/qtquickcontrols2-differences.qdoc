@@ -246,9 +246,7 @@
         \li \l [QML QtQuickControls] {ComboBox}
         \li \l [QML QtQuickControls2] {ComboBox}
         \li
-        \li \list
-                \li \b {Qt Quick Controls 2}: \c ComboBox is not editable.
-            \endlist
+        \li
     \row
         \li \l [QML QtQuickControls] {ExclusiveGroup}
         \li \mdash

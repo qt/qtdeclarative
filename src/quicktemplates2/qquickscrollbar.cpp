@@ -165,6 +165,7 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       moving(false),
       interactive(true),
       explicitInteractive(false),
+      touchId(-1),
       orientation(Qt::Vertical),
       snapMode(QQuickScrollBar::NoSnap),
       policy(QQuickScrollBar::AsNeeded)
@@ -268,6 +269,7 @@ void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
         pos = snapPosition(pos);
     q->setPosition(pos);
     offset = 0.0;
+    touchId = -1;
     q->setPressed(false);
 }
 
@@ -275,6 +277,7 @@ void QQuickScrollBarPrivate::handleUngrab()
 {
     Q_Q(QQuickScrollBar);
     offset = 0.0;
+    touchId = -1;
     q->setPressed(false);
 }
 
@@ -625,6 +628,7 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
     d->handlePress(event->localPos());
+    d->handleMove(event->localPos());
 }
 
 void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
@@ -645,6 +649,55 @@ void QQuickScrollBar::mouseUngrabEvent()
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mouseUngrabEvent();
+    d->handleUngrab();
+}
+
+void QQuickScrollBar::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickScrollBar);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        if (d->touchId == -1) {
+            const QTouchEvent::TouchPoint point = event->touchPoints().first();
+            d->touchId = point.id();
+            d->handlePress(point.pos());
+        } else {
+            event->ignore();
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId)
+                continue;
+
+            d->handleMove(point.pos());
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId)
+                continue;
+
+            d->handleRelease(point.pos());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleUngrab();
+        break;
+
+    default:
+        QQuickControl::touchEvent(event);
+        break;
+    }
+}
+
+void QQuickScrollBar::touchUngrabEvent()
+{
+    Q_D(QQuickScrollBar);
+    QQuickControl::touchUngrabEvent();
     d->handleUngrab();
 }
 

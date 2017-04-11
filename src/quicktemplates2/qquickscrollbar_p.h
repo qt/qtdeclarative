@@ -139,6 +139,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseUngrabEvent() override;
+    void touchEvent(QTouchEvent *event) override;
+    void touchUngrabEvent() override;
 
 #if QT_CONFIG(quicktemplates2_hover)
     void hoverChange() override;
