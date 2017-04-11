@@ -12,6 +12,7 @@ SUBDIRS += \
     pressandhold \
     qquickcolor \
     qquickiconimage \
+    qquickiconlabel \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
     qquickstyle \
