@@ -385,6 +385,9 @@ QImage QQuickRenderControl::grab()
         cd->syncSceneGraph();
         render();
         grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
+        if (QQuickRenderControl::renderWindowFor(d->window)) {
+            grabContent.setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
+        }
 #endif
     } else if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);

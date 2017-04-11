@@ -325,6 +325,7 @@ QImage QSGWindowsRenderLoop::grab(QQuickWindow *window)
 
     bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
     QImage image = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
+    image.setDevicePixelRatio(window->effectiveDevicePixelRatio());
     return image;
 }
 
