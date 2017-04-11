@@ -17,5 +17,7 @@ SOURCES += \
 
 include(calendar.pri)
 
+!static: CONFIG += qmlcache
+
 CONFIG += no_cxx_module
 load(qml_plugin)

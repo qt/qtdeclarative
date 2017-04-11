@@ -26,6 +26,8 @@ qtquickcompiler {
     qmlfiles.prefix = /qt-project.org/imports/QtQuick/Controls.2
     qmlfiles.files += $$QML_CONTROLS
     RESOURCES += qmlfiles
+} else:!static {
+    CONFIG += qmlcache
 }
 
 CONFIG += no_cxx_module
