@@ -44,6 +44,7 @@
 #include <QtGui/qcursor.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qv4scopedvalue_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
@@ -705,8 +706,9 @@ void QQuickPlatformMenu::open(QQmlV4Function *args)
         targetRect.moveTo(pos);
 #endif
     }
-
-    m_handle->showPopup(window, targetRect, menuItem ? menuItem->handle() : nullptr);
+    m_handle->showPopup(window,
+                        QHighDpi::toNativePixels(targetRect, window),
+                        menuItem ? menuItem->handle() : nullptr);
 }
 
 /*!
