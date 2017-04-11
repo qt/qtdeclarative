@@ -76,8 +76,6 @@ T.Button {
             color: control.checked || control.highlighted ?
                 Default.textLightColor :
                 (control.visualFocus ? Default.focusColor : (control.down ? Default.textDarkColor : Default.textColor))
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
         }
     }

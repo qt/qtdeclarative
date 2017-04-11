@@ -75,8 +75,6 @@ T.ToolButton {
             color: !control.enabled ? control.Material.hintTextColor :
                     control.checked || control.highlighted ? control.Material.accent : control.Material.foreground
             elide: Text.ElideRight
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
         }
     }
 

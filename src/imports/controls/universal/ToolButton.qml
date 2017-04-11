@@ -74,8 +74,6 @@ T.ToolButton {
             text: control.text
             font: control.font
             elide: Text.ElideRight
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
             opacity: enabled ? 1.0 : 0.2
             color: control.Universal.foreground
         }
