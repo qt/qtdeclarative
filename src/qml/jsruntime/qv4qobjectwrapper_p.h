@@ -209,13 +209,10 @@ inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *obje
     if (Q_UNLIKELY(QQmlData::wasDeleted(object)))
         return QV4::Encode::null();
 
-    QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
-    if (Q_LIKELY(priv->declarativeData)) {
-        auto ddata = static_cast<QQmlData *>(priv->declarativeData);
-        if (Q_LIKELY(ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isUndefined())) {
-            // We own the JS object
-            return ddata->jsWrapper.value();
-        }
+    auto ddata = QQmlData::get(object);
+    if (Q_LIKELY(ddata && ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isUndefined())) {
+        // We own the JS object
+        return ddata->jsWrapper.value();
     }
 
     return wrap_slowPath(engine, object);
