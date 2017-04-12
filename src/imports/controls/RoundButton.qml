@@ -49,16 +49,25 @@ T.RoundButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
+    spacing: 6
+
+    icon.width: 24
+    icon.height: 24
+    icon.color: enabled ? undefined : Default.textDisabledLightColor
 
     //! [contentItem]
-    contentItem: Text {
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: control.icon
         text: control.text
         font: control.font
-        opacity: enabled || control.highlighted || control.checked ? 1 : 0.3
-        color: control.checked || control.highlighted ? Default.textLightColor : (control.visualFocus ? Default.focusColor : (control.down ? Default.textDarkColor : Default.textColor))
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+        color: Color.transparent(control.checked || control.highlighted ? Default.textLightColor
+                                                                        : control.visualFocus ? Default.focusColor
+                                                                        : control.down ? Default.textDarkColor : Default.textColor,
+                                 enabled || control.highlighted || control.checked ? 1 : 0.3)
     }
     //! [contentItem]
 

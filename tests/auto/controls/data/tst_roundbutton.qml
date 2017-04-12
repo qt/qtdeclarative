@@ -84,4 +84,83 @@ TestCase {
         control.width = 10;
         compare(control.radius, 5);
     }
+
+    function test_spacing() {
+        var control = createTemporaryObject(roundButton, testCase, { text: "Some long, long, long text" })
+        verify(control)
+        verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
+
+        var textLabel = findChild(control.contentItem, "label")
+        verify(textLabel)
+
+        // The implicitWidth of the IconLabel that all buttons use as their contentItem
+        // should be equal to the implicitWidth of the Text while no icon is set.
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
+
+        // That means that spacing shouldn't affect it.
+        control.spacing += 100
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
+
+        // The implicitWidth of the Button itself should, therefore, also never include spacing while no icon is set.
+        compare(control.implicitWidth, textLabel.implicitWidth + control.leftPadding + control.rightPadding)
+    }
+
+    function test_display_data() {
+        return [
+            { "tag": "IconOnly", display: RoundButton.IconOnly },
+            { "tag": "TextOnly", display: RoundButton.TextOnly },
+            { "tag": "TextUnderIcon", display: RoundButton.TextUnderIcon },
+            { "tag": "TextBesideIcon", display: RoundButton.TextBesideIcon },
+            { "tag": "IconOnly, mirrored", display: RoundButton.IconOnly, mirrored: true },
+            { "tag": "TextOnly, mirrored", display: RoundButton.TextOnly, mirrored: true },
+            { "tag": "TextUnderIcon, mirrored", display: RoundButton.TextUnderIcon, mirrored: true },
+            { "tag": "TextBesideIcon, mirrored", display: RoundButton.TextBesideIcon, mirrored: true }
+        ]
+    }
+
+    function test_display(data) {
+        var control = createTemporaryObject(roundButton, testCase, {
+            text: "RoundButton",
+            display: data.display,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "LayoutMirroring.enabled": !!data.mirrored
+        })
+        verify(control)
+        verify(control.icon.source.length > 0)
+
+        var iconImage = findChild(control.contentItem, "image")
+        var textLabel = findChild(control.contentItem, "label")
+
+        switch (control.display) {
+        case RoundButton.IconOnly:
+            verify(iconImage)
+            verify(!textLabel)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            break;
+        case RoundButton.TextOnly:
+            verify(!iconImage)
+            verify(textLabel)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        case RoundButton.TextUnderIcon:
+            verify(iconImage)
+            verify(textLabel)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            verify(iconImage.y < textLabel.y)
+            break;
+        case RoundButton.TextBesideIcon:
+            verify(iconImage)
+            verify(textLabel)
+            if (control.mirrored)
+                verify(textLabel.x < iconImage.x)
+            else
+                verify(iconImage.x < textLabel.x)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        }
+    }
 }

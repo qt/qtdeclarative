@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Universal 2.3
 
 T.RoundButton {
@@ -48,18 +50,23 @@ T.RoundButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 8
+    spacing: 8
+
+    icon.width: 20
+    icon.height: 20
+    icon.color: enabled ? undefined : Color.transparent(Universal.foreground, 0.2)
 
     property bool useSystemFocusVisuals: true
 
-    contentItem: Text {
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: control.icon
         text: control.text
         font: control.font
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-
-        opacity: enabled ? 1.0 : 0.2
-        color: control.Universal.foreground
+        color: Color.transparent(control.Universal.foreground, enabled ? 1.0 : 0.2)
     }
 
     background: Rectangle {
