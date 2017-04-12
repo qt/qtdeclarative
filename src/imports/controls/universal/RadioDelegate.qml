@@ -54,8 +54,6 @@ T.RadioDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    property Item control
-
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
