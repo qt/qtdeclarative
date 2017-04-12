@@ -49,11 +49,9 @@ T.ToolSeparator {
     topPadding: vertical ? 5 : 12
     bottomPadding: vertical ? 5 : 12
 
-    //! [contentItem]
     contentItem: Rectangle {
         implicitWidth: vertical ? 1 : 38
         implicitHeight: vertical ? 38 : 1
         color: control.Material.hintTextColor
     }
-    //! [contentItem]
 }

@@ -50,7 +50,6 @@ T.RoundButton {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -60,9 +59,7 @@ T.RoundButton {
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 40
         implicitHeight: 40
@@ -75,5 +72,4 @@ T.RoundButton {
         border.color: Default.focusColor
         border.width: control.visualFocus ? 2 : 0
     }
-    //! [background]
 }
