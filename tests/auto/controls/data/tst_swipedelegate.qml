@@ -1569,4 +1569,84 @@ TestCase {
         verify(control.behavior.enabled);
         verify(control.animation.running);
     }
+
+    function test_spacing() {
+        var control = createTemporaryObject(swipeDelegateComponent, testCase, { text: "Some long, long, long text" })
+        verify(control)
+        verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
+
+        var textLabel = findChild(control.contentItem, "label")
+        verify(textLabel)
+
+        // The implicitWidth of the IconLabel that all buttons use as their contentItem
+        // should be equal to the implicitWidth of the Text while no icon is set.
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
+
+        // That means that spacing shouldn't affect it.
+        control.spacing += 100
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
+
+        // The implicitWidth of the SwipeDelegate itself should, therefore, also never include spacing while no icon is set.
+        compare(control.implicitWidth, textLabel.implicitWidth + control.leftPadding + control.rightPadding)
+    }
+
+    function test_display_data() {
+        return [
+            { "tag": "IconOnly", display: SwipeDelegate.IconOnly },
+            { "tag": "TextOnly", display: SwipeDelegate.TextOnly },
+            { "tag": "TextUnderIcon", display: SwipeDelegate.TextUnderIcon },
+            { "tag": "TextBesideIcon", display: SwipeDelegate.TextBesideIcon },
+            { "tag": "IconOnly, mirrored", display: SwipeDelegate.IconOnly, mirrored: true },
+            { "tag": "TextOnly, mirrored", display: SwipeDelegate.TextOnly, mirrored: true },
+            { "tag": "TextUnderIcon, mirrored", display: SwipeDelegate.TextUnderIcon, mirrored: true },
+            { "tag": "TextBesideIcon, mirrored", display: SwipeDelegate.TextBesideIcon, mirrored: true }
+        ]
+    }
+
+    function test_display(data) {
+        var control = createTemporaryObject(swipeDelegateComponent, testCase, {
+            text: "SwipeDelegate",
+            display: data.display,
+            width: 400,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "LayoutMirroring.enabled": !!data.mirrored
+        })
+        verify(control)
+        verify(control.icon.source.length > 0)
+
+        var iconImage = findChild(control.contentItem, "image")
+        var textLabel = findChild(control.contentItem, "label")
+
+        switch (control.display) {
+        case SwipeDelegate.IconOnly:
+            verify(iconImage)
+            verify(!textLabel)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            break;
+        case SwipeDelegate.TextOnly:
+            verify(!iconImage)
+            verify(textLabel)
+            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width : 0)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        case SwipeDelegate.TextUnderIcon:
+            verify(iconImage)
+            verify(textLabel)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            verify(iconImage.y < textLabel.y)
+            break;
+        case SwipeDelegate.TextBesideIcon:
+            verify(iconImage)
+            verify(textLabel)
+            if (control.mirrored)
+                verify(textLabel.x < iconImage.x)
+            else
+                verify(iconImage.x < textLabel.x)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        }
+    }
 }
