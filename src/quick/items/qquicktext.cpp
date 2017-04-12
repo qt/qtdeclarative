@@ -359,8 +359,8 @@ void QQuickTextPrivate::updateSize()
     }
 
     if (!requireImplicitSize) {
-        emit q->implicitWidthChanged();
-        emit q->implicitHeightChanged();
+        implicitWidthChanged();
+        implicitHeightChanged();
         // if the implicitWidth is used, then updateSize() has already been called (recursively)
         if (requireImplicitSize)
             return;
