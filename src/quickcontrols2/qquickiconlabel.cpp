@@ -131,8 +131,10 @@ void QQuickIconLabelPrivate::syncImage()
 void QQuickIconLabelPrivate::updateOrSyncImage()
 {
     if (updateImage()) {
-        updateImplicitSize();
-        layout();
+        if (componentComplete) {
+            updateImplicitSize();
+            layout();
+        }
     } else {
         syncImage();
     }
@@ -186,8 +188,10 @@ void QQuickIconLabelPrivate::syncLabel()
 void QQuickIconLabelPrivate::updateOrSyncLabel()
 {
     if (updateLabel()) {
-        updateImplicitSize();
-        layout();
+        if (componentComplete) {
+            updateImplicitSize();
+            layout();
+        }
     } else {
         syncLabel();
     }
@@ -504,8 +508,10 @@ void QQuickIconLabel::setSpacing(qreal spacing)
         return;
 
     d->spacing = spacing;
-    d->updateImplicitSize();
-    d->layout();
+    if (d->image && d->label) {
+        d->updateImplicitSize();
+        d->layout();
+    }
 }
 
 bool QQuickIconLabel::isMirrored() const
@@ -634,11 +640,11 @@ void QQuickIconLabel::resetBottomPadding()
 void QQuickIconLabel::componentComplete()
 {
     Q_D(QQuickIconLabel);
-    QQuickItem::componentComplete();
     if (d->image)
         completeComponent(d->image);
     if (d->label)
         completeComponent(d->label);
+    QQuickItem::componentComplete();
     d->layout();
 }
 
