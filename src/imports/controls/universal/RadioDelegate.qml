@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Universal 2.3
 
 T.RadioDelegate {
@@ -54,6 +56,10 @@ T.RadioDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
+    icon.width: 20
+    icon.height: 20
+    icon.color: enabled ? undefined : Color.transparent(Universal.foreground, 0.2)
+
     property Item control
 
     indicator: RadioIndicator {
@@ -62,19 +68,19 @@ T.RadioDelegate {
         control: control
     }
 
-    contentItem: Text {
+    contentItem: IconLabel {
         leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
 
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon ? Qt.AlignCenter : Qt.AlignLeft
+
+        icon: control.icon
         text: control.text
         font: control.font
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-
-        opacity: enabled ? 1.0 : 0.2
-        color: control.Universal.foreground
+        color: Color.transparent(control.Universal.foreground, enabled ? 1.0 : 0.2)
     }
 
     background: Rectangle {
