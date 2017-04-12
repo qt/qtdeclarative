@@ -91,7 +91,7 @@ bool QQuickIconLabelPrivate::createImage()
     image = new QQuickIconImage(q);
     watchChanges(image);
     beginClass(image);
-    image->setObjectName(QLatin1String("image"));
+    image->setObjectName(QStringLiteral("image"));
     image->setName(icon->name());
     image->setSource(icon->source());
     image->setSourceSize(QSize(icon->width(), icon->height()));
@@ -147,7 +147,7 @@ bool QQuickIconLabelPrivate::createLabel()
     label = new QQuickText(q);
     watchChanges(label);
     beginClass(label);
-    label->setObjectName(QLatin1String("label"));
+    label->setObjectName(QStringLiteral("label"));
     label->setFont(font);
     label->setColor(color);
     label->setElideMode(QQuickText::ElideRight);
