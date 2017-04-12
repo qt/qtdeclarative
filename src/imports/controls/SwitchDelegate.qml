@@ -52,23 +52,29 @@ T.SwitchDelegate {
     padding: 12
     spacing: 12
 
+    icon.width: 24
+    icon.height: 24
+    icon.color: enabled ? undefined : Default.textDisabledLightColor
+
     indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
 
-    contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? 0 : control.indicator.width + control.spacing
-        rightPadding: control.indicator && control.mirrored ? 0 : control.indicator.width + control.spacing
+    contentItem: IconLabel {
+        leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
 
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon ? Qt.AlignCenter : Qt.AlignLeft
+
+        icon: control.icon
         text: control.text
         font: control.font
         color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
     }
 
     background: Rectangle {
