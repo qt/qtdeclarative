@@ -236,7 +236,7 @@ QQuickFontLoader::~QQuickFontLoader()
 
 /*!
     \qmlproperty url QtQuick::FontLoader::source
-    The url of the font to load.
+    The URL of the font to load.
 */
 QUrl QQuickFontLoader::source() const
 {
