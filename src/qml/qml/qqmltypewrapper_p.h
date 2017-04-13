@@ -81,6 +81,13 @@ struct QmlTypeWrapper : Object {
     const void *importNamespace;
 };
 
+struct QQmlScopedEnumWrapper : Object {
+    void init() { Object::init(); }
+    void destroy() { Object::destroy(); }
+    int scopeEnumIndex;
+    QQmlType *type;
+};
+
 }
 
 struct Q_QML_EXPORT QmlTypeWrapper : Object
@@ -104,6 +111,14 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
     static PropertyAttributes query(const Managed *, String *name);
     static bool isEqualTo(Managed *that, Managed *o);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
+};
+
+struct Q_QML_EXPORT QQmlScopedEnumWrapper : Object
+{
+    V4_OBJECT2(QQmlScopedEnumWrapper, Object)
+    V4_NEEDS_DESTROY
+
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
 };
 
 }

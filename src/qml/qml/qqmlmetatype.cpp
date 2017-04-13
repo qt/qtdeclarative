@@ -216,6 +216,8 @@ public:
     mutable bool haveSuperType:1;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
+    mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
+    mutable QList<QStringHash<int>*> scopedEnums;
 
     static QHash<const QMetaObject *, int> attachedPropertyIds;
 };
@@ -313,6 +315,7 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
 
 QQmlTypePrivate::~QQmlTypePrivate()
 {
+    qDeleteAll(scopedEnums);
     switch (regType) {
     case QQmlType::CppType:
         delete extraData.cd->customParser;
@@ -505,6 +508,67 @@ int QQmlType::resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString
     if (!type)
         return -1;
     return type->enumValue(engine, name, ok);
+}
+
+int QQmlType::resolveCompositeScopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    QQmlType *type = resolveCompositeBaseType(engine);
+    if (!type)
+        return -1;
+    return type->scopedEnumIndex(engine, name, ok);
+}
+
+int QQmlType::resolveCompositeScopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    QQmlType *type = resolveCompositeBaseType(engine);
+    if (!type)
+        return -1;
+    return type->scopedEnumIndex(engine, name, ok);
+}
+
+
+int QQmlType::resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    QQmlType *type = resolveCompositeBaseType(engine);
+    if (!type)
+        return -1;
+    return type->scopedEnumValue(engine, index, name, ok);
+}
+
+int QQmlType::resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    QQmlType *type = resolveCompositeBaseType(engine);
+    if (!type)
+        return -1;
+    return type->scopedEnumValue(engine, index, name, ok);
+}
+
+int QQmlType::resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scopedName, const QByteArray &name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    QQmlType *type = resolveCompositeBaseType(engine);
+    if (!type)
+        return -1;
+    return type->scopedEnumValue(engine, scopedName, name, ok);
+}
+
+int QQmlType::resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scopedName, const QStringRef &name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    QQmlType *type = resolveCompositeBaseType(engine);
+    if (!type)
+        return -1;
+    return type->scopedEnumValue(engine, scopedName, name, ok);
 }
 
 static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
@@ -702,8 +766,21 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
     // Add any enum values defined by this class, overwriting any inherited values
     for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
         QMetaEnum e = metaObject->enumerator(ii);
-        for (int jj = 0; jj < e.keyCount(); ++jj)
-            enums.insert(QString::fromUtf8(e.key(jj)), e.value(jj));
+        const bool isScoped = e.isScoped();
+        QStringHash<int> *scoped = isScoped ? new QStringHash<int>() : 0;
+
+        for (int jj = 0; jj < e.keyCount(); ++jj) {
+            const QString key = QString::fromUtf8(e.key(jj));
+            const int value = e.value(jj);
+            enums.insert(key, value);
+            if (isScoped)
+                scoped->insert(key, value);
+        }
+
+        if (isScoped) {
+            scopedEnums << scoped;
+            scopedEnumIndex.insert(QString::fromUtf8(e.name()), scopedEnums.count()-1);
+        }
     }
 }
 
@@ -999,6 +1076,116 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QV4::String *name, bool
     int *rv = d->enums.value(name);
     if (rv)
         return *rv;
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeScopedEnumIndex(engine, name, ok);
+    *ok = true;
+
+    d->initEnums();
+
+    int *rv = d->scopedEnumIndex.value(name);
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeScopedEnumIndex(engine, name, ok);
+    *ok = true;
+
+    d->initEnums();
+
+    int *rv = d->scopedEnumIndex.value(name);
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeScopedEnumValue(engine, index, name, ok);
+    *ok = true;
+
+    Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+    int *rv = d->scopedEnums.at(index)->value(name);
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeScopedEnumValue(engine, index, name, ok);
+    *ok = true;
+
+    Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+    int *rv = d->scopedEnums.at(index)->value(name);
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scopedEnumName, const QByteArray &name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeScopedEnumValue(engine, scopedEnumName, name, ok);
+    *ok = true;
+
+    d->initEnums();
+
+    int *rv = d->scopedEnumIndex.value(QHashedCStringRef(scopedEnumName.constData(), scopedEnumName.length()));
+    if (rv) {
+        int index = *rv;
+        Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+        rv = d->scopedEnums.at(index)->value(QHashedCStringRef(name.constData(), name.length()));
+        if (rv)
+            return *rv;
+    }
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scopedEnumName, const QStringRef &name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeScopedEnumValue(engine, scopedEnumName, name, ok);
+    *ok = true;
+
+    d->initEnums();
+
+    int *rv = d->scopedEnumIndex.value(QHashedStringRef(scopedEnumName));
+    if (rv) {
+        int index = *rv;
+        Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+        rv = d->scopedEnums.at(index)->value(QHashedStringRef(name));
+        if (rv)
+            return *rv;
+    }
 
     *ok = false;
     return -1;

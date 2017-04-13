@@ -208,6 +208,7 @@ private slots:
     void lowercaseEnumRuntime();
     void lowercaseEnumCompileTime_data();
     void lowercaseEnumCompileTime();
+    void scopedEnum();
     void literals_data();
     void literals();
 
@@ -540,6 +541,8 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("notAvailable") << "notAvailable.qml" << "notAvailable.errors.txt" << false;
     QTest::newRow("singularProperty") << "singularProperty.qml" << "singularProperty.errors.txt" << false;
     QTest::newRow("singularProperty.2") << "singularProperty.2.qml" << "singularProperty.2.errors.txt" << false;
+
+    QTest::newRow("scopedEnumList") << "scopedEnumList.qml" << "scopedEnumList.errors.txt" << false;
 
     const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
         QStringLiteral("incorrectCase.errors.sensitive.txt") :
@@ -1601,6 +1604,9 @@ void tst_qqmllanguage::cppnamespace()
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
+
+        QCOMPARE(object->property("intProperty").toInt(), (int)MyNamespace::MyOtherNSEnum::OtherKey2);
+
         delete object;
     }
 
@@ -3501,6 +3507,7 @@ void tst_qqmllanguage::registeredCompositeTypeWithEnum()
 
     QCOMPARE(o->property("enumValue0").toInt(), static_cast<int>(MyCompositeBaseType::EnumValue0));
     QCOMPARE(o->property("enumValue42").toInt(), static_cast<int>(MyCompositeBaseType::EnumValue42));
+    QCOMPARE(o->property("enumValue15").toInt(), static_cast<int>(MyCompositeBaseType::ScopedCompositeEnum::EnumValue15));
 
     delete o;
 }
@@ -3679,6 +3686,23 @@ void tst_qqmllanguage::lowercaseEnumCompileTime()
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(qPrintable(errorFile));
+}
+
+void tst_qqmllanguage::scopedEnum()
+{
+    QQmlComponent component(&engine, testFileUrl("scopedEnum.qml"));
+
+    MyTypeObject *o = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->scopedEnum(), MyTypeObject::MyScopedEnum::ScopedVal1);
+    QCOMPARE(o->intProperty(), (int)MyTypeObject::MyScopedEnum::ScopedVal2);
+    QCOMPARE(o->property("listValue").toInt(), (int)MyTypeObject::MyScopedEnum::ScopedVal3);
+    QCOMPARE(o->property("noScope").toInt(), (int)MyTypeObject::MyScopedEnum::ScopedVal1);
+
+    QMetaObject::invokeMethod(o, "assignNewValue");
+    QCOMPARE(o->scopedEnum(), MyTypeObject::MyScopedEnum::ScopedVal2);
+    QCOMPARE(o->property("noScope").toInt(), (int)MyTypeObject::MyScopedEnum::ScopedVal2);
 }
 
 void tst_qqmllanguage::literals_data()

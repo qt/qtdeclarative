@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
+DEFINE_OBJECT_VTABLE(QQmlScopedEnumWrapper);
 
 void Heap::QmlTypeWrapper::init()
 {
@@ -224,6 +225,14 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
                 if (ok)
                     return QV4::Primitive::fromInt32(value).asReturnedValue();
 
+                value = type->scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+                if (ok) {
+                    Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocObject<QQmlScopedEnumWrapper>());
+                    enumWrapper->d()->type = type;
+                    enumWrapper->d()->scopeEnumIndex = value;
+                    return enumWrapper.asReturnedValue();
+                }
+
                 // Fall through to base implementation
 
             } else if (w->d()->object) {
@@ -380,6 +389,26 @@ ReturnedValue QmlTypeWrapper::instanceOf(const Object *typeObject, const Value &
     const QMetaObject *theirType = wrapperObject->metaObject();
 
     return QV4::Encode(QQmlMetaObject::canConvert(theirType, myQmlType));
+}
+
+ReturnedValue QQmlScopedEnumWrapper::get(const Managed *m, String *name, bool *hasProperty)
+{
+    Q_ASSERT(m->as<QQmlScopedEnumWrapper>());
+    const QQmlScopedEnumWrapper *resource = static_cast<const QQmlScopedEnumWrapper *>(m);
+    QV4::ExecutionEngine *v4 = resource->engine();
+    QV4::Scope scope(v4);
+
+    QQmlType *type = resource->d()->type;
+    int index = resource->d()->scopeEnumIndex;
+
+    bool ok = false;
+    int value = type->scopedEnumValue(QQmlEnginePrivate::get(v4->qmlEngine()), index, name, &ok);
+    if (hasProperty)
+        *hasProperty = ok;
+    if (ok)
+        return QV4::Primitive::fromInt32(value).asReturnedValue();
+
+    return Encode::undefined();
 }
 
 QT_END_NAMESPACE

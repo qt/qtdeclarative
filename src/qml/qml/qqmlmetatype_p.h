@@ -216,10 +216,24 @@ public:
     int enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, bool *ok) const;
     int enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &, bool *ok) const;
     int enumValue(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
+
+    int scopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
+    int scopedEnumIndex(QQmlEnginePrivate *engine, const QString &, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &, const QStringRef &, bool *ok) const;
+
 private:
     QQmlType *superType() const;
     QQmlType *resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
     int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
+    int resolveCompositeScopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
+    int resolveCompositeScopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
+    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
+    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const;
+    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scopedName, const QByteArray &name, bool *ok) const;
+    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scopedName, const QStringRef &name, bool *ok) const;
     friend class QQmlTypePrivate;
     friend struct QQmlMetaTypeData;
 
