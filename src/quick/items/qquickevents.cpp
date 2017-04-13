@@ -195,8 +195,8 @@ Item {
 */
 
 /*!
-    \qmlproperty int QtQuick::MouseEvent::x
-    \qmlproperty int QtQuick::MouseEvent::y
+    \qmlproperty real QtQuick::MouseEvent::x
+    \qmlproperty real QtQuick::MouseEvent::y
 
     These properties hold the coordinates of the position supplied by the mouse event.
 */
@@ -342,8 +342,8 @@ Item {
 */
 
 /*!
-    \qmlproperty int QtQuick::WheelEvent::x
-    \qmlproperty int QtQuick::WheelEvent::y
+    \qmlproperty real QtQuick::WheelEvent::x
+    \qmlproperty real QtQuick::WheelEvent::y
 
     These properties hold the coordinates of the position supplied by the wheel event.
 */
@@ -1225,9 +1225,24 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         auto p = m_touchPoints.at(i);
         if (p->isAccepted())
             continue;
+        // include points where item is the grabber
         bool isGrabber = p->exclusiveGrabber() == item;
+        // include newly pressed points inside the bounds
         bool isPressInside = p->state() == QQuickEventPoint::Pressed && item->contains(item->mapFromScene(p->scenePos()));
-        if (!(isGrabber || isPressInside || isFiltering))
+
+        // filtering: (childMouseEventFilter) include points that are grabbed by children of the target item
+        bool grabberIsChild = false;
+        auto parent = p->grabberItem();
+        while (isFiltering && parent) {
+            if (parent == item) {
+                grabberIsChild = true;
+                break;
+            }
+            parent = parent->parentItem();
+        }
+        bool filterRelevant = isFiltering && grabberIsChild;
+
+        if (!(isGrabber || isPressInside || filterRelevant))
             continue;
 
         const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());

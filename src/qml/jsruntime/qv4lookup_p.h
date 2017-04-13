@@ -67,14 +67,13 @@ namespace QV4 {
 struct Lookup {
     enum { Size = 4 };
     union {
-        ReturnedValue (*indexedGetter)(Lookup *l, const Value &object, const Value &index);
-        void (*indexedSetter)(Lookup *l, const Value &object, const Value &index, const Value &v);
+        ReturnedValue (*indexedGetter)(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index);
+        void (*indexedSetter)(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v);
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
         void (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
     union {
-        ExecutionEngine *engine;
         InternalClass *classList[Size];
         struct {
             void *dummy0;
@@ -90,13 +89,13 @@ struct Lookup {
     uint index;
     uint nameIndex;
 
-    static ReturnedValue indexedGetterGeneric(Lookup *l, const Value &object, const Value &index);
-    static ReturnedValue indexedGetterFallback(Lookup *l, const Value &object, const Value &index);
-    static ReturnedValue indexedGetterObjectInt(Lookup *l, const Value &object, const Value &index);
+    static ReturnedValue indexedGetterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index);
+    static ReturnedValue indexedGetterFallback(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index);
+    static ReturnedValue indexedGetterObjectInt(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index);
 
-    static void indexedSetterGeneric(Lookup *l, const Value &object, const Value &index, const Value &v);
-    static void indexedSetterFallback(Lookup *l, const Value &object, const Value &index, const Value &value);
-    static void indexedSetterObjectInt(Lookup *l, const Value &object, const Value &index, const Value &v);
+    static void indexedSetterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v);
+    static void indexedSetterFallback(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &value);
+    static void indexedSetterObjectInt(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &index, const Value &v);
 
     static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -140,6 +139,12 @@ struct Lookup {
     ReturnedValue lookup(const Object *obj, PropertyAttributes *attrs);
 
 };
+
+Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
+// Ensure that these offsets are always at this point to keep generated code compatible
+// across 32-bit and 64-bit (matters when cross-compiling).
+Q_STATIC_ASSERT(offsetof(Lookup, indexedGetter) == 0);
+Q_STATIC_ASSERT(offsetof(Lookup, getter) == 0);
 
 }
 

@@ -253,6 +253,7 @@ public:
     {
     }
 
+#if defined(V4_BOOTSTRAP)
     template <typename LabelType>
     class Jump {
         template<class TemplateAssemblerType>
@@ -291,6 +292,7 @@ public:
     private:
         AssemblerLabel m_label;
     };
+#endif
 
     // Stack operations:
 
@@ -723,6 +725,21 @@ public:
         }
     }
 
+    void sarq_CLr(RegisterID dst)
+    {
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, GROUP2_OP_SAR, dst);
+    }
+
+    void sarq_i8r(int imm, RegisterID dst)
+    {
+        if (imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, GROUP2_OP_SAR, dst);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SAR, dst);
+            m_formatter.immediate8(imm);
+        }
+    }
+
     void shrq_i8r(int imm, RegisterID dst)
     {
         // ### doesn't work when removing the "0 &&"
@@ -732,6 +749,11 @@ public:
             m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SHR, dst);
             m_formatter.immediate8(imm);
         }
+    }
+
+    void shrq_CLr(RegisterID dst)
+    {
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, GROUP2_OP_SHR, dst);
     }
 
     void shlq_i8r(int imm, RegisterID dst)
@@ -745,7 +767,10 @@ public:
         }
     }
 
-
+    void shlq_CLr(RegisterID dst)
+    {
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, GROUP2_OP_SHL, dst);
+    }
 #endif
 
     void sarl_i8r(int imm, RegisterID dst)
@@ -792,23 +817,6 @@ public:
     {
         m_formatter.oneByteOp(OP_GROUP2_EvCL, GROUP2_OP_SHL, dst);
     }
-
-#if CPU(X86_64)
-    void sarq_CLr(RegisterID dst)
-    {
-        m_formatter.oneByteOp64(OP_GROUP2_EvCL, GROUP2_OP_SAR, dst);
-    }
-
-    void sarq_i8r(int imm, RegisterID dst)
-    {
-        if (imm == 1)
-            m_formatter.oneByteOp64(OP_GROUP2_Ev1, GROUP2_OP_SAR, dst);
-        else {
-            m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SAR, dst);
-            m_formatter.immediate8(imm);
-        }
-    }
-#endif
 
     void imull_rr(RegisterID src, RegisterID dst)
     {

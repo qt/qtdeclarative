@@ -837,10 +837,9 @@ void QQDMIncubationTask::statusChanged(Status status)
     } else if (isDoneIncubating(status)) {
         Q_ASSERT(incubating);
         // The model was deleted from under our feet, cleanup ourselves
-        if (incubating->object) {
-            delete incubating->object;
-
-            incubating->object = 0;
+        delete incubating->object;
+        incubating->object = 0;
+        if (incubating->contextData) {
             incubating->contextData->destroy();
             incubating->contextData = 0;
         }
@@ -1965,9 +1964,8 @@ void QQmlDelegateModelItem::destroyObject()
     Q_ASSERT(object);
     Q_ASSERT(contextData);
 
-    QObjectPrivate *p = QObjectPrivate::get(object);
-    Q_ASSERT(p->declarativeData);
-    QQmlData *data = static_cast<QQmlData*>(p->declarativeData);
+    QQmlData *data = QQmlData::get(object);
+    Q_ASSERT(data);
     if (data->ownContext && data->context)
         data->context->clearContext();
     object->deleteLater();
@@ -1984,10 +1982,8 @@ void QQmlDelegateModelItem::destroyObject()
 
 QQmlDelegateModelItem *QQmlDelegateModelItem::dataForObject(QObject *object)
 {
-    QObjectPrivate *p = QObjectPrivate::get(object);
-    QQmlContextData *context = p->declarativeData
-            ? static_cast<QQmlData *>(p->declarativeData)->context
-            : 0;
+    QQmlData *d = QQmlData::get(object);
+    QQmlContextData *context = d ? d->context : 0;
     for (context = context ? context->parent : 0; context; context = context->parent) {
         if (QQmlDelegateModelItem *cacheItem = qobject_cast<QQmlDelegateModelItem *>(
                 context->contextObject)) {

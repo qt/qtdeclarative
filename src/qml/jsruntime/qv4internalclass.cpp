@@ -126,26 +126,6 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     Q_ASSERT(extensible);
 }
 
-static void insertHoleIntoPropertyData(Object *object, int idx)
-{
-    int icSize = object->internalClass()->size;
-    int from = idx;
-    int to = from + 1;
-    if (from < icSize)
-        memmove(object->propertyData(to), object->propertyData(from),
-                (icSize - from - 1) * sizeof(Value));
-}
-
-static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
-{
-    int delta = (accessor ? 2 : 1);
-    int oldSize = object->internalClass()->size + delta;
-    int to = idx;
-    int from = to + delta;
-    if (from < oldSize)
-        memmove(object->propertyData(to), object->d()->propertyData(from), (oldSize - to)*sizeof(Value));
-}
-
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     uint idx;
@@ -157,10 +137,10 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
     object->setInternalClass(newClass);
     if (newClass->size > oldClass->size) {
         Q_ASSERT(newClass->size == oldClass->size + 1);
-        insertHoleIntoPropertyData(object, idx + 1);
+        object->d()->memberData->values.insertData(newClass->engine, idx + 1, Primitive::emptyValue());
     } else if (newClass->size < oldClass->size) {
         Q_ASSERT(newClass->size == oldClass->size - 1);
-        removeFromPropertyData(object, idx + 1);
+        object->d()->memberData->values.removeData(newClass->engine, idx + 1);
     }
 }
 
@@ -318,7 +298,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     Q_ASSERT(object->internalClass()->size == oldClass->size - (accessor ? 2 : 1));
 
     // remove the entry in the property data
-    removeFromPropertyData(object, propIdx, accessor);
+    object->d()->memberData->values.removeData(oldClass->engine, propIdx, accessor ? 2 : 1);
 
     t.lookup = object->internalClass();
     Q_ASSERT(t.lookup);
@@ -408,9 +388,9 @@ void InternalClass::destroy()
     }
 }
 
-void InternalClassPool::markObjects(ExecutionEngine *engine)
+void InternalClassPool::markObjects(MarkStack *markStack)
 {
-    Q_UNUSED(engine);
+    Q_UNUSED(markStack);
 }
 
 QT_END_NAMESPACE

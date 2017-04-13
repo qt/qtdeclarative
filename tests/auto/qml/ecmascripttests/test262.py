@@ -555,6 +555,7 @@ class TestSuite(object):
     print
     if update_expectations:
         self.expectations.update(progress)
+    return progress.failed == 0
 
   def Print(self, tests):
     cases = self.EnumerateTests(tests)
@@ -567,6 +568,7 @@ def Main():
   # Uncomment the next line for more logging info.
   #logging.basicConfig(level=logging.DEBUG)
   os.environ["TZ"] = "PST8PDT"
+  os.environ["LANG"] = "en_US.UTF-8"
   parser = BuildOptions()
   (options, args) = parser.parse_args()
   ValidateOptions(options)
@@ -578,18 +580,21 @@ def Main():
   test_suite.Validate()
   if options.cat:
     test_suite.Print(args)
+    return 0
   else:
-    test_suite.Run(options.command, args,
-                   options.summary or options.full_summary,
-                   options.full_summary,
-                   options.parallel,
-                   options.update_expectations)
+    if test_suite.Run(options.command, args,
+                      options.summary or options.full_summary,
+                      options.full_summary,
+                      options.parallel,
+                      options.update_expectations):
+      return 0
+    else:
+      return 1
 
 
 if __name__ == '__main__':
   try:
-    Main()
-    sys.exit(0)
+    sys.exit(Main())
   except Test262Error, e:
     print "Error: %s" % e.message
     sys.exit(1)

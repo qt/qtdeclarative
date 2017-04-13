@@ -82,27 +82,28 @@ ListModel {
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
                 var records = xhr.responseText.split('\n');
+                var unknown = "n/a";
+                set(index, {"value": unknown, "change": unknown, "changePercentage": unknown});
                 if (records.length > 0 && xhr.status == 200) {
                     var r = records[1].split(',');
                     var today = parseFloat(r[4]);
-                    setProperty(index, "value", today.toFixed(2));
+                    if (!isNaN(today))
+                        setProperty(index, "value", today.toFixed(2));
+                    if (records.length > 2) {
+                        r = records[2].split(',');
+                        var yesterday = parseFloat(r[4]);
+                        var change = today - yesterday;
+                        if (change >= 0.0)
+                            setProperty(index, "change", "+" + change.toFixed(2));
+                        else
+                            setProperty(index, "change", change.toFixed(2));
 
-                    r = records[2].split(',');
-                    var yesterday = parseFloat(r[4]);
-                    var change = today - yesterday;
-                    if (change >= 0.0)
-                        setProperty(index, "change", "+" + change.toFixed(2));
-                    else
-                        setProperty(index, "change", change.toFixed(2));
-
-                    var changePercentage = (change / yesterday) * 100.0;
-                    if (changePercentage >= 0.0)
-                        setProperty(index, "changePercentage", "+" + changePercentage.toFixed(2) + "%");
-                    else
-                        setProperty(index, "changePercentage", changePercentage.toFixed(2) + "%");
-                } else {
-                    var unknown = "n/a";
-                    set(index, {"value": unknown, "change": unknown, "changePercentage": unknown});
+                        var changePercentage = (change / yesterday) * 100.0;
+                        if (changePercentage >= 0.0)
+                            setProperty(index, "changePercentage", "+" + changePercentage.toFixed(2) + "%");
+                        else
+                            setProperty(index, "changePercentage", changePercentage.toFixed(2) + "%");
+                    }
                 }
             }
         }

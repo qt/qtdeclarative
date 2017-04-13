@@ -59,26 +59,35 @@ namespace QV4 {
 
 namespace Heap {
 
-struct ArgumentsGetterFunction : FunctionObject {
+#define ArgumentsGetterFunctionMembers(class, Member) \
+    Member(class, NoMark, uint, index)
+
+DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
+    DECLARE_MARK_TABLE(ArgumentsGetterFunction);
     inline void init(QV4::ExecutionContext *scope, uint index);
-    uint index;
 };
 
-struct ArgumentsSetterFunction : FunctionObject {
+#define ArgumentsSetterFunctionMembers(class, Member) \
+    Member(class, NoMark, uint, index)
+
+DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
+    DECLARE_MARK_TABLE(ArgumentsSetterFunction);
     inline void init(QV4::ExecutionContext *scope, uint index);
-    uint index;
 };
 
-struct ArgumentsObject : Object {
+#define ArgumentsObjectMembers(class, Member) \
+    Member(class, Pointer, CallContext *, context) \
+    Member(class, Pointer, MemberData *, mappedArguments) \
+    Member(class, NoMark, bool, fullyCreated)
+
+DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
+    DECLARE_MARK_TABLE(ArgumentsObject);
     enum {
         LengthPropertyIndex = 0,
         CalleePropertyIndex = 1,
         CallerPropertyIndex = 3
     };
     void init(QV4::CallContext *context);
-    Pointer<CallContext> context;
-    bool fullyCreated;
-    Pointer<MemberData> mappedArguments;
 };
 
 }
@@ -131,7 +140,6 @@ struct ArgumentsObject: Object {
     static bool putIndexed(Managed *m, uint index, const Value &value);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static uint getLength(const Managed *m);
 
     void fullyCreate();

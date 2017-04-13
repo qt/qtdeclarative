@@ -257,7 +257,7 @@ public:
         stringify = jsEngine.evaluate(QLatin1String("JSON.stringify"));
     }
 
-    void connect();
+    void connect(bool redundantRefs = false, bool namesAsObjects = false);
     void interrupt();
 
     void continueDebugging(StepAction stepAction);
@@ -304,9 +304,13 @@ public:
 
 };
 
-void QJSDebugClient::connect()
+void QJSDebugClient::connect(bool redundantRefs, bool namesAsObjects)
 {
-    sendMessage(packMessage(CONNECT));
+    QJSValue jsonVal = parser.call(QJSValueList() << QLatin1String("{}"));
+    jsonVal.setProperty("redundantRefs", QJSValue(redundantRefs));
+    jsonVal.setProperty("namesAsObjects", QJSValue(namesAsObjects));
+    sendMessage(packMessage(CONNECT,
+                            stringify.call(QJSValueList() << jsonVal).toString().toUtf8()));
 }
 
 void QJSDebugClient::interrupt()
@@ -870,8 +874,10 @@ void tst_QQmlDebugJS::interrupt()
     //void connect()
 
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     init(qmlscene);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
 
     client->interrupt();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(interruptRequested())));
@@ -882,8 +888,10 @@ void tst_QQmlDebugJS::getVersion()
     //void version()
 
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     init(qmlscene);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(connected())));
 
     client->version();
@@ -894,9 +902,11 @@ void tst_QQmlDebugJS::getVersionWhenAttaching()
 {
     //void version()
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     init(qmlscene, QLatin1String(TIMER_QMLFILE), false);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
 
     client->version();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
@@ -907,8 +917,10 @@ void tst_QQmlDebugJS::disconnect()
     //void disconnect()
 
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     init(qmlscene);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
 
     client->disconnect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
@@ -918,12 +930,14 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -939,12 +953,14 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 34;
     init(qmlscene, CREATECOMPONENT_QMLFILE);
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -959,10 +975,12 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
 {
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     int sourceLine = 35;
     init(qmlscene, TIMER_QMLFILE);
 
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     //We can set the breakpoint after connect() here because the timer is repeating and if we miss
     //its first iteration we can still catch the second one.
     client->setBreakpoint(QLatin1String(TIMER_QMLFILE), sourceLine, -1, true);
@@ -981,12 +999,14 @@ void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 31;
     init(qmlscene, LOADJSFILE_QMLFILE);
 
     client->setBreakpoint(QLatin1String(TEST_JSFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1002,13 +1022,15 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 34;
     int actualLine = 36;
     init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped()), 1));
 
@@ -1025,13 +1047,15 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 35;
     int actualLine = 36;
     init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped()), 1));
 
@@ -1048,12 +1072,14 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 39;
     init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1068,11 +1094,13 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 {
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     int out = 10;
     int sourceLine = 37;
     init(qmlscene, CONDITION_QMLFILE);
 
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     //The breakpoint is in a timer loop so we can set it after connect().
     client->setBreakpoint(QLatin1String(CONDITION_QMLFILE), sourceLine, 1, true, QLatin1String("a > 10"));
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1105,12 +1133,14 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
 {
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     init(qmlscene, QUIT_QMLFILE);
 
     int sourceLine = 36;
 
     client->setBreakpoint(QLatin1String(QUIT_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1147,12 +1177,14 @@ void tst_QQmlDebugJS::clearBreakpoint()
 {
     //void clearBreakpoint(int breakpoint);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine1 = 37;
     int sourceLine2 = 38;
     init(qmlscene, CHANGEBREAKPOINT_QMLFILE);
 
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     //The breakpoints are in a timer loop so we can set them after connect().
     //Furthermore the breakpoints should be hit in the right order because setting of breakpoints
     //can only occur in the QML event loop. (see QCOMPARE for sourceLine2 below)
@@ -1195,10 +1227,12 @@ void tst_QQmlDebugJS::setExceptionBreak()
 {
     //void setExceptionBreak(QString type, bool enabled = false);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     init(qmlscene, EXCEPTION_QMLFILE);
     client->setExceptionBreak(QJSDebugClient::All,true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 }
 
@@ -1206,12 +1240,14 @@ void tst_QQmlDebugJS::stepNext()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 37;
     init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Next);
@@ -1230,13 +1266,15 @@ void tst_QQmlDebugJS::stepIn()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 41;
     int actualLine = 37;
     init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::In);
@@ -1255,13 +1293,15 @@ void tst_QQmlDebugJS::stepOut()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 37;
     int actualLine = 41;
     init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Out);
@@ -1280,6 +1320,8 @@ void tst_QQmlDebugJS::continueDebugging()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine1 = 41;
     int sourceLine2 = 38;
@@ -1287,7 +1329,7 @@ void tst_QQmlDebugJS::continueDebugging()
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine1, -1, true);
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine2, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Continue);
@@ -1306,12 +1348,14 @@ void tst_QQmlDebugJS::backtrace()
 {
     //void backtrace(int fromFrame = -1, int toFrame = -1, bool bottom = false);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->backtrace();
@@ -1322,12 +1366,14 @@ void tst_QQmlDebugJS::getFrameDetails()
 {
     //void frame(int number = -1);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->frame();
@@ -1338,12 +1384,14 @@ void tst_QQmlDebugJS::getScopeDetails()
 {
     //void scope(int number = -1, int frameNumber = -1);
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->scope();
@@ -1374,11 +1422,13 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
     //void evaluate(QString expr, bool global = false, bool disableBreak = false, int frame = -1, const QVariantMap &addContext = QVariantMap());
 
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->frame();
@@ -1461,10 +1511,12 @@ void tst_QQmlDebugJS::getScripts()
     //void scripts(int types = -1, QList<int> ids = QList<int>(), bool includeSource = false, QVariant filter = QVariant());
 
     QFETCH(bool, qmlscene);
+    QFETCH(bool, redundantRefs);
+    QFETCH(bool, namesAsObjects);
     init(qmlscene);
 
     client->setBreakpoint(QString(TEST_QMLFILE), 35, -1, true);
-    client->connect();
+    client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->scripts();
@@ -1482,8 +1534,16 @@ void tst_QQmlDebugJS::getScripts()
 void tst_QQmlDebugJS::targetData()
 {
     QTest::addColumn<bool>("qmlscene");
-    QTest::newRow("custom") << false;
-    QTest::newRow("qmlscene") << true;
+    QTest::addColumn<bool>("redundantRefs");
+    QTest::addColumn<bool>("namesAsObjects");
+    QTest::newRow("custom / redundant / objects")   << false << true  << true;
+    QTest::newRow("qmlscene / redundant / objects") << true  << true  << true;
+    QTest::newRow("custom / redundant / strings")   << false << true  << false;
+    QTest::newRow("qmlscene / redundant / strings") << true  << true  << false;
+    QTest::newRow("custom / sparse / objects")      << false << false << true;
+    QTest::newRow("qmlscene / sparse / objects")    << true  << false << true;
+    QTest::newRow("custom / sparse / strings")      << false << false << false;
+    QTest::newRow("qmlscene / sparse / strings")    << true  << false << false;
 }
 
 QTEST_MAIN(tst_QQmlDebugJS)

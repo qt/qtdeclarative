@@ -73,21 +73,28 @@ namespace QV4 {
 
 namespace Heap {
 
-struct RegExpObject : Object {
+#define RegExpObjectMembers(class, Member) \
+    Member(class, Pointer, RegExp *, value) \
+    Member(class, NoMark, bool, global)
+
+DECLARE_HEAP_OBJECT(RegExpObject, Object) {
+    DECLARE_MARK_TABLE(RegExpObject);
+
     void init();
     void init(QV4::RegExp *value, bool global);
     void init(const QRegExp &re);
-
-    Pointer<RegExp> value;
-    bool global;
 };
 
-struct RegExpCtor : FunctionObject {
+#define RegExpCtorMembers(class, Member) \
+    Member(class, HeapValue, HeapValue, lastMatch) \
+    Member(class, Pointer, String *, lastInput) \
+    Member(class, NoMark, int, lastMatchStart) \
+    Member(class, NoMark, int, lastMatchEnd)
+
+DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
+    DECLARE_MARK_TABLE(RegExpCtor);
+
     void init(QV4::ExecutionContext *scope);
-    Value lastMatch;
-    Pointer<String> lastInput;
-    int lastMatchStart;
-    int lastMatchEnd;
     void clearLastMatch();
 };
 
@@ -121,14 +128,19 @@ struct RegExpObject: Object {
 
     void initProperties();
 
-    Value *lastIndexProperty();
+    int lastIndex() const {
+        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()));
+        return propertyData(Index_LastIndex)->toInt32();
+    }
+    void setLastIndex(int index) {
+        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()));
+        return setProperty(Index_LastIndex, Primitive::fromInt32(index));
+    }
+
     QRegExp toQRegExp() const;
     QString toString() const;
     QString source() const;
     uint flags() const;
-
-protected:
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 struct RegExpCtor: FunctionObject
@@ -142,7 +154,6 @@ struct RegExpCtor: FunctionObject
 
     static void construct(const Managed *m, Scope &scope, CallData *callData);
     static void call(const Managed *that, Scope &scope, CallData *callData);
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
 struct RegExpPrototype: RegExpObject

@@ -32,13 +32,14 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QHashFunctions>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qv4isel_moth_p.h>
 #include <private/qqmljsparser_p.h>
+#include <private/qv4jssimplifier_p.h>
 
 QT_BEGIN_NAMESPACE
-extern Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed;
 
 namespace QV4 { namespace JIT {
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture);
@@ -80,9 +81,43 @@ QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::Diagnostic
     return message;
 }
 
-static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
+// Ensure that ListElement objects keep all property assignments in their string form
+static void annotateListElements(QmlIR::Document *document)
+{
+    QStringList listElementNames;
+
+    foreach (const QV4::CompiledData::Import *import, document->imports) {
+        const QString uri = document->stringAt(import->uriIndex);
+        if (uri != QStringLiteral("QtQml.Models") && uri != QStringLiteral("QtQuick"))
+            continue;
+
+         QString listElementName = QStringLiteral("ListElement");
+         const QString qualifier = document->stringAt(import->qualifierIndex);
+         if (!qualifier.isEmpty()) {
+             listElementName.prepend(QLatin1Char('.'));
+             listElementName.prepend(qualifier);
+         }
+         listElementNames.append(listElementName);
+    }
+
+    if (listElementNames.isEmpty())
+        return;
+
+    foreach (QmlIR::Object *object, document->objects) {
+        if (!listElementNames.contains(document->stringAt(object->inheritedTypeNameIndex)))
+            continue;
+        for (QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
+            if (binding->type != QV4::CompiledData::Binding::Type_Script)
+                continue;
+            binding->stringIndex = document->registerString(object->bindingAsString(document, binding->value.compiledScriptIndex));
+        }
+    }
+}
+
+static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, const QString &targetABI, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
+    irDocument.jsModule.targetABI = targetABI;
 
     QString sourceCode;
     {
@@ -96,7 +131,6 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
             error->message = QLatin1String("Error reading from ") + inputFileName + QLatin1Char(':') + f.errorString();
             return false;
         }
-        irDocument.jsModule.sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
     }
 
     {
@@ -112,8 +146,10 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
         }
     }
 
+    annotateListElements(&irDocument);
+
     {
-        QmlIR::JSCodeGen v4CodeGen(inputFileName, irDocument.code, &irDocument.jsModule, &irDocument.jsParserEngine, irDocument.program, /*import cache*/0, &irDocument.jsGenerator.stringTable);
+        QmlIR::JSCodeGen v4CodeGen(/*empty input file name*/QString(), irDocument.code, &irDocument.jsModule, &irDocument.jsParserEngine, irDocument.program, /*import cache*/0, &irDocument.jsGenerator.stringTable);
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
@@ -139,21 +175,22 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
 
         QmlIR::QmlUnitGenerator generator;
 
-        // ### translation binding simplification
+        {
+            QQmlJavaScriptBindingExpressionSimplificationPass pass(irDocument.objects, &irDocument.jsModule, &irDocument.jsGenerator);
+            pass.reduceTranslationBindings();
+        }
 
         QV4::ExecutableAllocator allocator;
         QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, &allocator, &irDocument.jsModule, &irDocument.jsGenerator));
         // Disable lookups in non-standalone (aka QML) mode
         isel->setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = isel->compile(/*generate unit*/false);
-        // ###
-        QV4::CompiledData::ResolvedTypeReferenceMap dummyDependencies;
-        QV4::CompiledData::Unit *unit = generator.generate(irDocument, /*engine*/nullptr, dummyDependencies);
+        QV4::CompiledData::Unit *unit = generator.generate(irDocument);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!irDocument.javaScriptCompilationUnit->saveToDisk(inputFileName, &error->message))
+        if (!irDocument.javaScriptCompilationUnit->saveToDisk(outputFileName, &error->message))
             return false;
 
         free(unit);
@@ -161,9 +198,10 @@ static bool compileQmlFile(const QString &inputFileName, QV4::EvalISelFactory *i
     return true;
 }
 
-static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *iselFactory, Error *error)
+static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, const QString &targetABI, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
+    irDocument.jsModule.targetABI = targetABI;
 
     QString sourceCode;
     {
@@ -177,7 +215,6 @@ static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *is
             error->message = QLatin1String("Error reading from ") + inputFileName + QLatin1Char(':') + f.errorString();
             return false;
         }
-        irDocument.jsModule.sourceTimeStamp = QFileInfo(f).lastModified().toMSecsSinceEpoch();
     }
 
     QQmlJS::Engine *engine = &irDocument.jsParserEngine;
@@ -217,7 +254,7 @@ static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *is
 
     {
         QmlIR::JSCodeGen v4CodeGen(inputFileName, irDocument.code, &irDocument.jsModule, &irDocument.jsParserEngine, irDocument.program, /*import cache*/0, &irDocument.jsGenerator.stringTable);
-        v4CodeGen.generateFromProgram(inputFileName, sourceCode, program, &irDocument.jsModule, QQmlJS::Codegen::GlobalCode);
+        v4CodeGen.generateFromProgram(/*empty input file name*/QString(), sourceCode, program, &irDocument.jsModule, QQmlJS::Codegen::GlobalCode);
         QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
         if (!jsErrors.isEmpty()) {
             for (const QQmlJS::DiagnosticMessage &e: qAsConst(jsErrors)) {
@@ -231,19 +268,16 @@ static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *is
 
         QmlIR::QmlUnitGenerator generator;
 
-        // ### translation binding simplification
-
-        QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, /*executable allocator*/nullptr, &irDocument.jsModule, &irDocument.jsGenerator));
+        QV4::ExecutableAllocator allocator;
+        QScopedPointer<QV4::EvalInstructionSelection> isel(iselFactory->create(/*engine*/nullptr, &allocator, &irDocument.jsModule, &irDocument.jsGenerator));
         // Disable lookups in non-standalone (aka QML) mode
         isel->setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = isel->compile(/*generate unit*/false);
-        // ###
-        QV4::CompiledData::ResolvedTypeReferenceMap dummyDependencies;
-        QV4::CompiledData::Unit *unit = generator.generate(irDocument, /*engine*/nullptr, dummyDependencies);
+        QV4::CompiledData::Unit *unit = generator.generate(irDocument);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!irDocument.javaScriptCompilationUnit->saveToDisk(inputFileName, &error->message)) {
+        if (!irDocument.javaScriptCompilationUnit->saveToDisk(outputFileName, &error->message)) {
             engine->setDirectives(oldDirs);
             return false;
         }
@@ -257,7 +291,7 @@ static bool compileJSFile(const QString &inputFileName, QV4::EvalISelFactory *is
 int main(int argc, char **argv)
 {
     // Produce reliably the same output for the same input by disabling QHash's random seeding.
-    qt_qhash_seed.testAndSetRelaxed(-1, 0);
+    qSetGlobalQHashSeed(0);
 
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("qmlcachegen"));
@@ -270,10 +304,37 @@ int main(int argc, char **argv)
     QCommandLineOption targetArchitectureOption(QStringLiteral("target-architecture"), QCoreApplication::translate("main", "Target architecture"), QCoreApplication::translate("main", "architecture"));
     parser.addOption(targetArchitectureOption);
 
+    QCommandLineOption targetABIOption(QStringLiteral("target-abi"), QCoreApplication::translate("main", "Target architecture binary interface"), QCoreApplication::translate("main", "abi"));
+    parser.addOption(targetABIOption);
+
+    QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
+    parser.addOption(outputFileOption);
+
+    QCommandLineOption checkIfSupportedOption(QStringLiteral("check-if-supported"), QCoreApplication::translate("main", "Check if cache generate is supported on the specified target architecture"));
+    parser.addOption(checkIfSupportedOption);
+
     parser.addPositionalArgument(QStringLiteral("[qml file]"),
             QStringLiteral("QML source file to generate cache for."));
 
     parser.process(app);
+
+    if (!parser.isSet(targetArchitectureOption)) {
+        fprintf(stderr, "Target architecture not specified. Please specify with --target-architecture=<arch>\n");
+        parser.showHelp();
+        return EXIT_FAILURE;
+    }
+
+    QScopedPointer<QV4::EvalISelFactory> isel;
+    const QString targetArchitecture = parser.value(targetArchitectureOption);
+
+    isel.reset(QV4::JIT::createISelForArchitecture(targetArchitecture));
+
+    if (parser.isSet(checkIfSupportedOption)) {
+        if (isel.isNull())
+            return EXIT_FAILURE;
+        else
+            return EXIT_SUCCESS;
+    }
 
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
@@ -284,23 +345,24 @@ int main(int argc, char **argv)
     }
     const QString inputFile = sources.first();
 
-    QScopedPointer<QV4::EvalISelFactory> isel;
-    const QString targetArchitecture = parser.value(targetArchitectureOption);
-
-    isel.reset(QV4::JIT::createISelForArchitecture(targetArchitecture));
-
     if (!isel)
         isel.reset(new QV4::Moth::ISelFactory);
 
     Error error;
 
+    QString outputFileName = inputFile + QLatin1Char('c');
+    if (parser.isSet(outputFileOption))
+        outputFileName = parser.value(outputFileOption);
+
+    const QString targetABI = parser.value(targetABIOption);
+
     if (inputFile.endsWith(QLatin1String(".qml"))) {
-        if (!compileQmlFile(inputFile, isel.data(), &error)) {
+        if (!compileQmlFile(inputFile, outputFileName, isel.data(), targetABI, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
-        if (!compileJSFile(inputFile, isel.data(), &error)) {
+        if (!compileJSFile(inputFile, outputFileName, isel.data(), targetABI, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }

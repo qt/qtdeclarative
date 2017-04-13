@@ -58,6 +58,59 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct TargetPrimitive32 {
+    static TargetPrimitive32 emptyValue() { TargetPrimitive32 p; p._val = quint64(Value::ValueTypeInternal_32::Empty) << 32; return p; }
+    static TargetPrimitive32 nullValue() { TargetPrimitive32 p; p._val = quint64(Value::ValueTypeInternal_32::Null) << 32; return p; }
+    static TargetPrimitive32 undefinedValue() { TargetPrimitive32 p; p._val = quint64(Value::Managed_Type_Internal_32) << 32; return p; }
+    static TargetPrimitive32 fromBoolean(bool b) { TargetPrimitive32 p; p._val = quint64(Value::ValueTypeInternal_32::Boolean) << 32 | quint64(b); return p; }
+    static TargetPrimitive32 fromInt32(int v) { TargetPrimitive32 p; p._val = quint64(Value::ValueTypeInternal_32::Integer) << 32 | quint32(v); return p; }
+    static TargetPrimitive32 fromDouble(double v) {
+        TargetPrimitive32 p;
+        memcpy(&p._val, &v, 8);
+        return p;
+    }
+    static TargetPrimitive32 fromUInt32(uint v) {
+        if (v < INT_MAX)
+            return fromInt32(qint32(v));
+        return fromDouble(double(v));
+    }
+
+    quint32 value() const { return _val & quint64(~quint32(0)); }
+    quint32 tag() const { return _val >> 32; }
+
+    quint64 rawValue() const { return _val; }
+
+private:
+    quint64 _val;
+};
+
+struct TargetPrimitive64 {
+    static TargetPrimitive64 emptyValue() { TargetPrimitive64 p; p._val = quint64(Value::ValueTypeInternal_64::Empty) << 32; return p; }
+    static TargetPrimitive64 nullValue() { TargetPrimitive64 p; p._val = quint64(Value::ValueTypeInternal_64::Null) << 32; return p; }
+    static TargetPrimitive64 undefinedValue() { TargetPrimitive64 p; p._val = 0; return p; }
+    static TargetPrimitive64 fromBoolean(bool b) { TargetPrimitive64 p; p._val = quint64(Value::ValueTypeInternal_64::Boolean) << 32 | quint64(b); return p; }
+    static TargetPrimitive64 fromInt32(int v) { TargetPrimitive64 p; p._val = quint64(Value::ValueTypeInternal_64::Integer) << 32 | quint32(v); return p; }
+    static TargetPrimitive64 fromDouble(double v) {
+        TargetPrimitive64 p;
+        memcpy(&p._val, &v, 8);
+        p._val ^= Value::NaNEncodeMask;
+        return p;
+    }
+    static TargetPrimitive64 fromUInt32(uint v) {
+        if (v < INT_MAX)
+            return fromInt32(qint32(v));
+        return fromDouble(double(v));
+    }
+
+    quint32 value() const { return _val & quint64(~quint32(0)); }
+    quint32 tag() const { return _val >> 32; }
+
+    quint64 rawValue() const { return _val; }
+
+private:
+    quint64 _val;
+};
+
 inline bool canConvertToSignedInteger(double value)
 {
     int ival = (int) value;
@@ -72,36 +125,37 @@ inline bool canConvertToUnsignedInteger(double value)
     return uval == value && !(value == 0 && isNegative(value));
 }
 
-inline Primitive convertToValue(IR::Const *c)
+template <typename PrimitiveType = Primitive>
+inline PrimitiveType convertToValue(IR::Const *c)
 {
     switch (c->type) {
     case IR::MissingType:
-        return Primitive::emptyValue();
+        return PrimitiveType::emptyValue();
     case IR::NullType:
-        return Primitive::nullValue();
+        return PrimitiveType::nullValue();
     case IR::UndefinedType:
-        return Primitive::undefinedValue();
+        return PrimitiveType::undefinedValue();
     case IR::BoolType:
-        return Primitive::fromBoolean(c->value != 0);
+        return PrimitiveType::fromBoolean(c->value != 0);
     case IR::SInt32Type:
-        return Primitive::fromInt32(int(c->value));
+        return PrimitiveType::fromInt32(int(c->value));
     case IR::UInt32Type:
-        return Primitive::fromUInt32(unsigned(c->value));
+        return PrimitiveType::fromUInt32(unsigned(c->value));
     case IR::DoubleType:
-        return Primitive::fromDouble(c->value);
+        return PrimitiveType::fromDouble(c->value);
     case IR::NumberType: {
         int ival = (int)c->value;
         if (canConvertToSignedInteger(c->value)) {
-            return Primitive::fromInt32(ival);
+            return PrimitiveType::fromInt32(ival);
         } else {
-            return Primitive::fromDouble(c->value);
+            return PrimitiveType::fromDouble(c->value);
         }
     }
     default:
         Q_UNREACHABLE();
     }
     // unreachable, but the function must return something
-    return Primitive::undefinedValue();
+    return PrimitiveType::undefinedValue();
 }
 
 class ConvertTemps

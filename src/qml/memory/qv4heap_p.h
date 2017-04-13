@@ -72,6 +72,7 @@ namespace QV4 {
 struct VTable
 {
     const VTable * const parent;
+    const quint64 markTable;
     uint isExecutionContext : 1;
     uint isString : 1;
     uint isObject : 1;
@@ -82,7 +83,7 @@ struct VTable
     uint type : 8;
     const char *className;
     void (*destroy)(Heap::Base *);
-    void (*markObjects)(Heap::Base *, ExecutionEngine *e);
+    void (*markObjects)(Heap::Base *, MarkStack *markStack);
     bool (*isEqualTo)(Managed *m, Managed *other);
 };
 
@@ -91,10 +92,12 @@ namespace Heap {
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
 
+    static Q_CONSTEXPR quint64 markTable = 0;
+
     const VTable *vt;
 
     inline ReturnedValue asReturnedValue() const;
-    inline void mark(QV4::ExecutionEngine *engine);
+    inline void mark(QV4::MarkStack *markStack);
 
     void setVtable(const VTable *v) { vt = v; }
     const VTable *vtable() const { return vt; }
@@ -110,6 +113,12 @@ struct Q_QML_EXPORT Base {
         Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
         return Chunk::setBit(c->blackBitmap, h - c->realBase());
     }
+    inline void setGrayBit() {
+        const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+        Chunk *c = h->chunk();
+        Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
+        return Chunk::setBit(c->grayBitmap, h - c->realBase());
+    }
 
     inline bool inUse() const {
         const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
@@ -117,6 +126,8 @@ struct Q_QML_EXPORT Base {
         Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
         return Chunk::testBit(c->objectBitmap, h - c->realBase());
     }
+
+    inline void markChildren(MarkStack *markStack);
 
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }
@@ -133,7 +144,7 @@ struct Q_QML_EXPORT Base {
         else if (_livenessStatus == Destroyed)
             fprintf(stderr, "ERROR: use of object '%s' after call to destroy() !!\n",
                     vtable()->className);
-        Q_ASSERT(_livenessStatus = Initialized);
+        Q_ASSERT(_livenessStatus == Initialized);
     }
     void _checkIsDestroyed() {
         if (_livenessStatus == Initialized)
@@ -160,20 +171,12 @@ struct Q_QML_EXPORT Base {
 #endif
 };
 V4_ASSERT_IS_TRIVIAL(Base)
-
-template <typename T>
-struct Pointer {
-    T *operator->() const { return ptr; }
-    operator T *() const { return ptr; }
-
-    Pointer &operator =(T *t) { ptr = t; return *this; }
-
-    template <typename Type>
-    Type *cast() { return static_cast<Type *>(ptr); }
-
-    T *ptr;
-};
-V4_ASSERT_IS_TRIVIAL(Pointer<void>)
+// This class needs to consist only of pointer sized members to allow
+// for a size/offset translation when cross-compiling between 32- and
+// 64-bit.
+Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
+Q_STATIC_ASSERT(offsetof(Base, vt) == 0);
+Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
 
 }
 

@@ -296,6 +296,8 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *i
         function->flags |= CompiledData::Function::IsNamedExpression;
     if (irFunction->hasTry || irFunction->hasWith)
         function->flags |= CompiledData::Function::HasCatchOrWith;
+    if (irFunction->canUseSimpleCall())
+        function->flags |= CompiledData::Function::CanUseSimpleCall;
     function->nFormals = irFunction->formals.size();
     function->formalsOffset = currentOffset;
     currentOffset += function->nFormals * sizeof(quint32);
@@ -374,7 +376,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.version = QV4_DATA_STRUCTURE_VERSION;
     unit.qtVersion = QT_VERSION;
     memset(unit.md5Checksum, 0, sizeof(unit.md5Checksum));
-    unit.architectureIndex = registerString(QSysInfo::buildAbi());
+    unit.architectureIndex = registerString(irModule->targetABI.isEmpty() ? QSysInfo::buildAbi() : irModule->targetABI);
     unit.codeGeneratorIndex = registerString(codeGeneratorName);
     memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
 
@@ -425,7 +427,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     }
     unit.indexOfRootFunction = -1;
     unit.sourceFileIndex = getStringId(irModule->fileName);
-    unit.sourceTimeStamp = irModule->sourceTimeStamp;
+    unit.sourceTimeStamp = irModule->sourceTimeStamp.isValid() ? irModule->sourceTimeStamp.toMSecsSinceEpoch() : 0;
     unit.nImports = 0;
     unit.offsetToImports = 0;
     unit.nObjects = 0;

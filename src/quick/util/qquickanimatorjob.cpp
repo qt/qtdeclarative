@@ -345,12 +345,13 @@ void QQuickTransformAnimatorJob::postSync()
     }
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
+#if QT_CONFIG(quick_shadereffect)
     if (d->extra.isAllocated()
             && d->extra->layer
             && d->extra->layer->enabled()) {
         d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
     }
-
+#endif
     m_helper->node = d->itemNode();
 }
 

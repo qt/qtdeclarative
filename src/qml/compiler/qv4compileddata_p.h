@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x09
+#define QV4_DATA_STRUCTURE_VERSION 0x11
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -211,7 +211,8 @@ struct Function
         HasDirectEval       = 0x2,
         UsesArgumentsObject = 0x4,
         IsNamedExpression   = 0x8,
-        HasCatchOrWith      = 0x10
+        HasCatchOrWith      = 0x10,
+        CanUseSimpleCall    = 0x20
     };
 
     // Absolute offset into file where the code for this function is located. Only used when the function
@@ -786,8 +787,10 @@ struct ResolvedTypeReferenceMap: public QMap<int, ResolvedTypeReference*>
 {
     bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
 };
+
+using DependentTypesHasher = std::function<bool(QCryptographicHash *)>;
 #else
-struct ResolvedTypeReferenceMap {};
+struct DependentTypesHasher {};
 #endif
 
 // index is per-object binding index
@@ -795,11 +798,15 @@ typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
 // This is how this hooks into the existing structures:
 
-//VM::Function
-//    CompilationUnit * (for functions that need to clean up)
-//    CompiledData::Function *compiledFunction
+struct Q_QML_PRIVATE_EXPORT CompilationUnitBase
+{
+    QV4::Heap::String **runtimeStrings = 0; // Array
+};
 
-struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
+Q_STATIC_ASSERT(std::is_standard_layout<CompilationUnitBase>::value);
+Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeStrings) == 0);
+
+struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public QQmlRefCount
 {
 #ifdef V4_BOOTSTRAP
     CompilationUnit()
@@ -818,11 +825,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 
 #ifndef V4_BOOTSTRAP
     ExecutionEngine *engine;
-#endif
 
-    QV4::Heap::String **runtimeStrings; // Array
-
-#ifndef V4_BOOTSTRAP
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
 
@@ -860,8 +863,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QVector<QQmlScriptData *> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
 
-    bool verifyChecksum(QQmlEngine *engine,
-                        const ResolvedTypeReferenceMap &dependentTypes) const;
+    bool verifyChecksum(const DependentTypesHasher &dependencyHasher) const;
 
     int metaTypeId;
     int listMetaTypeId;
@@ -895,11 +897,11 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
 
-    void markObjects(QV4::ExecutionEngine *e);
+    void markObjects(MarkStack *markStack);
 
     void destroy() Q_DECL_OVERRIDE;
 
-    bool loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString);
+    bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, EvalISelFactory *iselFactory, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
@@ -908,7 +910,7 @@ protected:
 
 public:
 #if defined(V4_BOOTSTRAP)
-    bool saveToDisk(const QString &unitUrl, QString *errorString);
+    bool saveToDisk(const QString &outputFileName, QString *errorString);
 #else
     bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 #endif

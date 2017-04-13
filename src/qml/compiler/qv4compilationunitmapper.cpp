@@ -59,7 +59,7 @@ CompilationUnitMapper::~CompilationUnitMapper()
     close();
 }
 
-bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, const QString &sourcePath, QString *errorString)
+bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, QDateTime sourceTimeStamp, QString *errorString)
 {
     if (strncmp(header->magic, CompiledData::magic_str, sizeof(header->magic))) {
         *errorString = QStringLiteral("Magic bytes in the header do not match");
@@ -76,12 +76,7 @@ bool CompilationUnitMapper::verifyHeader(const CompiledData::Unit *header, const
         return false;
     }
 
-    {
-        QFileInfo sourceCode(sourcePath);
-        QDateTime sourceTimeStamp;
-        if (sourceCode.exists())
-            sourceTimeStamp = sourceCode.lastModified();
-
+    if (header->sourceTimeStamp) {
         // Files from the resource system do not have any time stamps, so fall back to the application
         // executable.
         if (!sourceTimeStamp.isValid())

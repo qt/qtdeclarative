@@ -50,6 +50,7 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
 
 const QV4::VTable QV4::ArrayData::static_vtbl = {
     0,
+    0,
     QV4::ArrayData::IsExecutionContext,
     QV4::ArrayData::IsString,
     QV4::ArrayData::IsObject,
@@ -128,7 +129,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
 
         if (d->type() < Heap::ArrayData::Sparse) {
             offset = d->d()->offset;
-            toCopy = d->d()->len;
+            toCopy = d->d()->values.size;
         } else {
             toCopy = d->alloc();
         }
@@ -149,7 +150,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         Heap::SimpleArrayData *n = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
         n->init();
         n->offset = 0;
-        n->len = d ? d->d()->len : 0;
+        n->values.size = d ? d->d()->values.size : 0;
         newData = n;
     } else {
         Heap::SparseArrayData *n = scope.engine->memoryManager->allocManaged<SparseArrayData>(size);
@@ -158,7 +159,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     }
     newData->setAlloc(alloc);
     newData->setType(newType);
-    newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->arrayData + alloc) : 0);
+    newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->values.values + alloc) : 0);
     o->setArrayData(newData);
 
     if (d) {
@@ -170,12 +171,14 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
                     newData->attrs()[i] = Attr_Data;
         }
 
-        if (toCopy > d->d()->alloc - offset) {
-            uint copyFromStart = toCopy - (d->d()->alloc - offset);
-            memcpy(newData->d()->arrayData + toCopy - copyFromStart, d->d()->arrayData, sizeof(Value)*copyFromStart);
+        if (toCopy > d->d()->values.alloc - offset) {
+            uint copyFromStart = toCopy - (d->d()->values.alloc - offset);
+            // no write barrier required here
+            memcpy(newData->d()->values.values + toCopy - copyFromStart, d->d()->values.values, sizeof(Value)*copyFromStart);
             toCopy -= copyFromStart;
         }
-        memcpy(newData->d()->arrayData, d->d()->arrayData + offset, sizeof(Value)*toCopy);
+        // no write barrier required here
+        memcpy(newData->d()->values.values, d->d()->values.values + offset, sizeof(Value)*toCopy);
     }
 
     if (newType != Heap::ArrayData::Sparse)
@@ -195,22 +198,22 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         lastFree = &sparse->freeList;
         storeValue(lastFree, 0);
         for (uint i = 0; i < toCopy; ++i) {
-            if (!sparse->arrayData[i].isEmpty()) {
+            if (!sparse->values[i].isEmpty()) {
                 SparseArrayNode *n = sparse->sparse->insert(i);
                 n->value = i;
             } else {
                 storeValue(lastFree, i);
-                sparse->arrayData[i].setEmpty();
-                lastFree = &sparse->arrayData[i].rawValueRef();
+                sparse->values.values[i].setEmpty();
+                lastFree = &sparse->values.values[i].rawValueRef();
             }
         }
     }
 
-    if (toCopy < sparse->alloc) {
-        for (uint i = toCopy; i < sparse->alloc; ++i) {
+    if (toCopy < sparse->values.alloc) {
+        for (uint i = toCopy; i < sparse->values.alloc; ++i) {
             storeValue(lastFree, i);
-            sparse->arrayData[i].setEmpty();
-            lastFree = &sparse->arrayData[i].rawValueRef();
+            sparse->values.values[i].setEmpty();
+            lastFree = &sparse->values.values[i].rawValueRef();
         }
         storeValue(lastFree, UINT_MAX);
     }
@@ -233,24 +236,10 @@ void ArrayData::ensureAttributes(Object *o)
     ArrayData::realloc(o, Heap::ArrayData::Simple, 0, true);
 }
 
-
-void SimpleArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
-{
-    Heap::SimpleArrayData *dd = static_cast<Heap::SimpleArrayData *>(d);
-    uint end = dd->offset + dd->len;
-    if (end > dd->alloc) {
-        for (uint i = 0; i < end - dd->alloc; ++i)
-            dd->arrayData[i].mark(e);
-        end = dd->alloc;
-    }
-    for (uint i = dd->offset; i < end; ++i)
-        dd->arrayData[i].mark(e);
-}
-
 ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
 {
     const Heap::SimpleArrayData *dd = static_cast<const Heap::SimpleArrayData *>(d);
-    if (index >= dd->len)
+    if (index >= dd->values.size)
         return Primitive::emptyValue().asReturnedValue();
     return dd->data(index).asReturnedValue();
 }
@@ -258,13 +247,13 @@ ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
 bool SimpleArrayData::put(Object *o, uint index, const Value &value)
 {
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-    Q_ASSERT(index >= dd->len || !dd->attrs || !dd->attrs[index].isAccessor());
+    Q_ASSERT(index >= dd->values.size || !dd->attrs || !dd->attrs[index].isAccessor());
     // ### honour attributes
-    dd->data(index) = value;
-    if (index >= dd->len) {
+    dd->setData(o->engine(), index, value);
+    if (index >= dd->values.size) {
         if (dd->attrs)
             dd->attrs[index] = Attr_Data;
-        dd->len = index + 1;
+        dd->values.size = index + 1;
     }
     return true;
 }
@@ -272,11 +261,11 @@ bool SimpleArrayData::put(Object *o, uint index, const Value &value)
 bool SimpleArrayData::del(Object *o, uint index)
 {
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-    if (index >= dd->len)
+    if (index >= dd->values.size)
         return true;
 
     if (!dd->attrs || dd->attrs[index].isConfigurable()) {
-        dd->data(index) = Primitive::emptyValue();
+        dd->setData(o->engine(), index, Primitive::emptyValue());
         if (dd->attrs)
             dd->attrs[index] = Attr_Data;
         return true;
@@ -295,8 +284,8 @@ void SimpleArrayData::push_front(Object *o, const Value *values, uint n)
 {
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     Q_ASSERT(!dd->attrs);
-    if (dd->len + n > dd->alloc) {
-        realloc(o, Heap::ArrayData::Simple, dd->len + n, false);
+    if (dd->values.size + n > dd->values.alloc) {
+        realloc(o, Heap::ArrayData::Simple, dd->values.size + n, false);
         Q_ASSERT(o->d()->arrayData->type == Heap::ArrayData::Simple);
         dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     }
@@ -304,70 +293,71 @@ void SimpleArrayData::push_front(Object *o, const Value *values, uint n)
         dd->offset -= n; // there is enough space left in front
     } else {
          // we need to wrap around, so:
-        dd->offset = dd->alloc - // start at the back, but subtract:
+        dd->offset = dd->values.alloc - // start at the back, but subtract:
                 (n - dd->offset); // the number of items we can put in the free space at the start of the allocated array
     }
-    dd->len += n;
+    dd->values.size += n;
     for (uint i = 0; i < n; ++i)
-        dd->data(i) = values[i].asReturnedValue();
+        dd->setData(o->engine(), i, values[i]);
 }
 
 ReturnedValue SimpleArrayData::pop_front(Object *o)
 {
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     Q_ASSERT(!dd->attrs);
-    if (!dd->len)
+    if (!dd->values.size)
         return Encode::undefined();
 
     ReturnedValue v = dd->data(0).isEmpty() ? Encode::undefined() : dd->data(0).asReturnedValue();
-    dd->offset = (dd->offset + 1) % dd->alloc;
-    --dd->len;
+    dd->offset = (dd->offset + 1) % dd->values.alloc;
+    --dd->values.size;
     return v;
 }
 
 uint SimpleArrayData::truncate(Object *o, uint newLen)
 {
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-    if (dd->len < newLen)
+    if (dd->values.size < newLen)
         return newLen;
 
     if (!dd->attrs) {
-        dd->len = newLen;
+        dd->values.size = newLen;
         return newLen;
     }
 
-    while (dd->len > newLen) {
-        if (!dd->data(dd->len - 1).isEmpty() && !dd->attrs[dd->len - 1].isConfigurable())
-            return dd->len;
-        --dd->len;
+    while (dd->values.size > newLen) {
+        if (!dd->data(dd->values.size - 1).isEmpty() && !dd->attrs[dd->values.size - 1].isConfigurable())
+            return dd->values.size;
+        --dd->values.size;
     }
-    return dd->len;
+    return dd->values.size;
 }
 
 uint SimpleArrayData::length(const Heap::ArrayData *d)
 {
-    return d->len;
+    return d->values.size;
 }
 
 bool SimpleArrayData::putArray(Object *o, uint index, const Value *values, uint n)
 {
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-    if (index + n > dd->alloc) {
+    if (index + n > dd->values.alloc) {
         reallocate(o, index + n + 1, false);
         dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     }
-    for (uint i = dd->len; i < index; ++i)
-        dd->data(i) = Primitive::emptyValue();
+    QV4::ExecutionEngine *e = o->engine();
+    for (uint i = dd->values.size; i < index; ++i)
+        dd->setData(e, i, Primitive::emptyValue());
     for (uint i = 0; i < n; ++i)
-        dd->data(index + i) = values[i];
-    dd->len = qMax(dd->len, index + n);
+        dd->setData(e, index + i, values[i]);
+    dd->values.size = qMax(dd->values.size, index + n);
     return true;
 }
 
 void SparseArrayData::free(Heap::ArrayData *d, uint idx)
 {
     Q_ASSERT(d && d->type == Heap::ArrayData::Sparse);
-    Value *v = d->arrayData + idx;
+    Value *v = d->values.values + idx;
     if (d->attrs && d->attrs[idx].isAccessor()) {
         // double slot, free both. Order is important, so we have a double slot for allocation again afterwards.
         v[1].setEmpty(Value::fromReturnedValue(d->freeList).emptyValue());
@@ -378,15 +368,6 @@ void SparseArrayData::free(Heap::ArrayData *d, uint idx)
     d->freeList = Primitive::emptyValue(idx).asReturnedValue();
     if (d->attrs)
         d->attrs[idx].clear();
-}
-
-
-void SparseArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
-{
-    Heap::SparseArrayData *dd = static_cast<Heap::SparseArrayData *>(d);
-    uint l = dd->alloc;
-    for (uint i = 0; i < l; ++i)
-        dd->arrayData[i].mark(e);
 }
 
 Heap::ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes)
@@ -404,32 +385,32 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
         ReturnedValue *last = &dd->freeList;
         while (1) {
             if (Value::fromReturnedValue(*last).value() == UINT_MAX) {
-                reallocate(o, dd->alloc + 2, true);
+                reallocate(o, dd->values.alloc + 2, true);
                 dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
                 last = &dd->freeList;
                 Q_ASSERT(Value::fromReturnedValue(*last).value() != UINT_MAX);
             }
 
-            Q_ASSERT(dd->arrayData[Value::fromReturnedValue(*last).value()].value() != Value::fromReturnedValue(*last).value());
-            if (dd->arrayData[Value::fromReturnedValue(*last).value()].value() == (Value::fromReturnedValue(*last).value() + 1)) {
+            Q_ASSERT(dd->values[Value::fromReturnedValue(*last).value()].value() != Value::fromReturnedValue(*last).value());
+            if (dd->values[Value::fromReturnedValue(*last).value()].value() == (Value::fromReturnedValue(*last).value() + 1)) {
                 // found two slots in a row
                 uint idx = Value::fromReturnedValue(*last).emptyValue();
                 Value lastV = Value::fromReturnedValue(*last);
-                lastV.setEmpty(dd->arrayData[lastV.emptyValue() + 1].value());
+                lastV.setEmpty(dd->values[lastV.emptyValue() + 1].value());
                 *last = lastV.rawValue();
                 dd->attrs[idx] = Attr_Accessor;
                 return idx;
             }
-            last = &dd->arrayData[Value::fromReturnedValue(*last).value()].rawValueRef();
+            last = &dd->values.values[Value::fromReturnedValue(*last).value()].rawValueRef();
         }
     } else {
         if (Value::fromReturnedValue(dd->freeList).value() == UINT_MAX) {
-            reallocate(o, dd->alloc + 1, false);
+            reallocate(o, dd->values.alloc + 1, false);
             dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
         }
         uint idx = Value::fromReturnedValue(dd->freeList).value();
         Q_ASSERT(idx != UINT_MAX);
-        dd->freeList = dd->arrayData[idx].asReturnedValue();
+        dd->freeList = dd->values[idx].asReturnedValue();
         Q_ASSERT(Value::fromReturnedValue(dd->freeList).isEmpty());
         if (dd->attrs)
             dd->attrs[idx] = Attr_Data;
@@ -443,7 +424,7 @@ ReturnedValue SparseArrayData::get(const Heap::ArrayData *d, uint index)
     index = s->mappedIndex(index);
     if (index == UINT_MAX)
         return Primitive::emptyValue().asReturnedValue();
-    return s->arrayData[index].asReturnedValue();
+    return s->values[index].asReturnedValue();
 }
 
 bool SparseArrayData::put(Object *o, uint index, const Value &value)
@@ -457,7 +438,7 @@ bool SparseArrayData::put(Object *o, uint index, const Value &value)
     if (n->value == UINT_MAX)
         n->value = allocate(o);
     s = o->d()->arrayData.cast<Heap::SparseArrayData>();
-    s->arrayData[n->value] = value;
+    s->setArrayData(o->engine(), n->value, value);
     if (s->attrs)
         s->attrs[n->value] = Attr_Data;
     return true;
@@ -472,7 +453,7 @@ bool SparseArrayData::del(Object *o, uint index)
         return true;
 
     uint pidx = n->value;
-    Q_ASSERT(!dd->arrayData[pidx].isEmpty());
+    Q_ASSERT(!dd->values[pidx].isEmpty());
 
     bool isAccessor = false;
     if (dd->attrs) {
@@ -485,11 +466,11 @@ bool SparseArrayData::del(Object *o, uint index)
 
     if (isAccessor) {
         // free up both indices
-        dd->arrayData[pidx + 1].setEmpty(Value::fromReturnedValue(dd->freeList).emptyValue());
-        dd->arrayData[pidx].setEmpty(pidx + 1);
+        dd->values.values[pidx + 1].setEmpty(Value::fromReturnedValue(dd->freeList).emptyValue());
+        dd->values.values[pidx].setEmpty(pidx + 1);
     } else {
         Q_ASSERT(dd->type == Heap::ArrayData::Sparse);
-        dd->arrayData[pidx].setEmpty(Value::fromReturnedValue(dd->freeList).emptyValue());
+        dd->values.values[pidx].setEmpty(Value::fromReturnedValue(dd->freeList).emptyValue());
     }
 
     dd->freeList = Primitive::emptyValue(pidx).asReturnedValue();
@@ -518,10 +499,10 @@ void SparseArrayData::push_front(Object *o, const Value *values, uint n)
 {
     Heap::SparseArrayData *d = o->d()->arrayData.cast<Heap::SparseArrayData>();
     Q_ASSERT(!d->attrs);
-    for (int i = n - 1; i >= 0; --i) {
+    for (int i = static_cast<int>(n) - 1; i >= 0; --i) {
         uint idx = allocate(o);
         d = o->d()->arrayData.cast<Heap::SparseArrayData>();
-        d->arrayData[idx] = values[i];
+        d->setArrayData(o->engine(), idx, values[i]);
         d->sparse->push_front(idx);
     }
 }
@@ -533,7 +514,7 @@ ReturnedValue SparseArrayData::pop_front(Object *o)
     uint idx = d->sparse->pop_front();
     ReturnedValue v;
     if (idx != UINT_MAX) {
-        v = d->arrayData[idx].asReturnedValue();
+        v = d->values[idx].asReturnedValue();
         free(o->arrayData(), idx);
     } else {
         v = Encode::undefined();
@@ -611,24 +592,24 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
             ScopedValue v(scope);
             for (const SparseArrayNode *it = os->sparse->begin();
                  it != os->sparse->end(); it = it->nextNode()) {
-                v = otherObj->getValue(os->arrayData[it->value], other->d()->attrs[it->value]);
+                v = otherObj->getValue(os->values[it->value], other->d()->attrs[it->value]);
                 obj->arraySet(oldSize + it->key(), v);
             }
         } else {
             for (const SparseArrayNode *it = other->d()->sparse->begin();
                  it != os->sparse->end(); it = it->nextNode())
-                obj->arraySet(oldSize + it->key(), os->arrayData[it->value]);
+                obj->arraySet(oldSize + it->key(), os->values[it->value]);
         }
     } else {
         Heap::SimpleArrayData *os = static_cast<Heap::SimpleArrayData *>(other->d());
         uint toCopy = n;
         uint chunk = toCopy;
-        if (chunk > os->alloc - os->offset)
-            chunk -= os->alloc - os->offset;
-        obj->arrayPut(oldSize, os->arrayData + os->offset, chunk);
+        if (chunk > os->values.alloc - os->offset)
+            chunk -= os->values.alloc - os->offset;
+        obj->arrayPut(oldSize, os->values.data() + os->offset, chunk);
         toCopy -= chunk;
         if (toCopy)
-            obj->arrayPut(oldSize + chunk, os->arrayData, toCopy);
+            obj->arrayPut(oldSize + chunk, os->values.data(), toCopy);
     }
 
     return oldSize + n;
@@ -638,18 +619,18 @@ void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
 {
     if (!isAccessor && o->d()->arrayData->type != Heap::ArrayData::Sparse) {
         Heap::SimpleArrayData *d = o->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (index < 0x1000 || index < d->len + (d->len >> 2)) {
-            if (index >= d->alloc) {
+        if (index < 0x1000 || index < d->values.size + (d->values.size >> 2)) {
+            if (index >= d->values.alloc) {
                 o->arrayReserve(index + 1);
                 d = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             }
-            if (index >= d->len) {
+            if (index >= d->values.size) {
                 // mark possible hole in the array
-                for (uint i = d->len; i < index; ++i)
-                    d->data(i) = Primitive::emptyValue();
-                d->len = index + 1;
+                for (uint i = d->values.size; i < index; ++i)
+                    d->setData(o->engine(), i, Primitive::emptyValue());
+                d->values.size = index + 1;
             }
-            d->arrayData[d->mappedIndex(index)] = *v;
+            d->setData(o->engine(), index, *v);
             return;
         }
     }
@@ -660,9 +641,9 @@ void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
     if (n->value == UINT_MAX)
         n->value = SparseArrayData::allocate(o, isAccessor);
     s = o->d()->arrayData.cast<Heap::SparseArrayData>();
-    s->arrayData[n->value] = *v;
+    s->setArrayData(o->engine(), n->value, *v);
     if (isAccessor)
-        s->arrayData[n->value + Object::SetterOffset] = v[Object::SetterOffset];
+        s->setArrayData(o->engine(), n->value + Object::SetterOffset, v[Object::SetterOffset]);
 }
 
 
@@ -697,7 +678,7 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
         callData->thisObject = Primitive::undefinedValue();
         callData->args[0] = v1;
         callData->args[1] = v2;
-        result = scope.engine->runtime.callValue(scope.engine, m_comparefn, callData);
+        result = QV4::Runtime::method_callValue(scope.engine, m_comparefn, callData);
 
         return result->toNumber() < 0;
     }
@@ -799,7 +780,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
                     break;
 
                 PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
-                d->data(i) = thisObject->getValue(sparse->arrayData()[n->value], a);
+                d->setData(engine, i, Value::fromReturnedValue(thisObject->getValue(sparse->arrayData()[n->value], a)));
                 d->attrs[i] = a.isAccessor() ? Attr_Data : a;
 
                 n = n->nextNode();
@@ -809,12 +790,12 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
             while (n != sparse->sparse()->end()) {
                 if (n->value >= len)
                     break;
-                d->data(i) = sparse->arrayData()[n->value];
+                d->setData(engine, i, sparse->arrayData()[n->value]);
                 n = n->nextNode();
                 ++i;
             }
         }
-        d->len = i;
+        d->values.size = i;
         if (len > i)
             len = i;
         if (n != sparse->sparse()->end()) {
@@ -822,7 +803,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
             thisObject->initSparseArray();
             while (n != sparse->sparse()->end()) {
                 PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
-                thisObject->arraySet(n->value, reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
+                thisObject->arraySet(n->value, reinterpret_cast<const Property *>(sparse->arrayData() + n->value), a);
 
                 n = n->nextNode();
             }
@@ -830,8 +811,8 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
         }
     } else {
         Heap::SimpleArrayData *d = thisObject->d()->arrayData.cast<Heap::SimpleArrayData>();
-        if (len > d->len)
-            len = d->len;
+        if (len > d->values.size)
+            len = d->values.size;
 
         // sort empty values to the end
         for (uint i = 0; i < len; i++) {
@@ -840,8 +821,8 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
                     if (!d->data(len).isEmpty())
                         break;
                 Q_ASSERT(!d->attrs || !d->attrs[len].isAccessor());
-                d->data(i) = d->data(len);
-                d->data(len) = Primitive::emptyValue();
+                d->setData(engine, i, d->data(len));
+                d->setData(engine, len, Primitive::emptyValue());
             }
         }
 
@@ -852,7 +833,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
 
     ArrayElementLessThan lessThan(engine, thisObject, comparefn);
 
-    Value *begin = thisObject->arrayData()->arrayData;
+    Value *begin = thisObject->arrayData()->values.values;
     sortHelper(begin, begin + len, *begin, lessThan);
 
 #ifdef CHECK_SPARSE_ARRAYS

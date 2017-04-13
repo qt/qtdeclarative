@@ -273,7 +273,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickAnchorSet>();
     qmlRegisterType<QQuickAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QQuickParentAnimation>(uri, major, minor,"ParentAnimation");
-#if QT_CONFIG(quick_canvas)
+#if QT_CONFIG(quick_path)
     qmlRegisterType<QQuickPathAnimation>("QtQuick",2,0,"PathAnimation");
     qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
 #endif
@@ -389,6 +389,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickShaderEffectSource, 2>(uri, 2, 9, "ShaderEffectSource");
 #endif
+
+    qmlRegisterType<QQuickFlickable, 10>(uri, 2, 10, "Flickable");
 }
 
 static void initResources()

@@ -8170,6 +8170,8 @@ void tst_qqmlecmascript::stringify_qtbug_50592()
     QCOMPARE(obj->property("source").toString(), QString::fromLatin1("http://example.org/some_nonexistant_image.png"));
 }
 
+// Tests for the JS-only instanceof. Tests for the QML extensions for
+// instanceof belong in tst_qqmllanguage!
 void tst_qqmlecmascript::instanceof_data()
 {
     QTest::addColumn<QString>("setupCode");

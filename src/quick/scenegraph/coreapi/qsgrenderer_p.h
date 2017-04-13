@@ -118,11 +118,13 @@ private:
     QSGNodeUpdater *m_node_updater;
 
     QSet<QSGNode *> m_nodes_to_preprocess;
+    QSet<QSGNode *> m_nodes_dont_preprocess;
 
     const QSGBindable *m_bindable;
 
     uint m_changed_emitted : 1;
     uint m_is_rendering : 1;
+    uint m_is_preprocessing : 1;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGBindable

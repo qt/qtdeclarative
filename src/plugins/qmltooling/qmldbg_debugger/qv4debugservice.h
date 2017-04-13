@@ -86,6 +86,9 @@ public:
     int selectedFrame() const;
     void selectFrame(int frameNr);
 
+    bool clientRequiresRedundantRefs() const { return redundantRefs; }
+    bool clientRequiresNamesAsObjects() const { return namesAsObjects; }
+
     QV4DebuggerAgent debuggerAgent;
 
 protected:
@@ -104,6 +107,9 @@ private:
     QStringList breakOnSignals;
     static int sequence;
     int theSelectedFrame;
+
+    bool redundantRefs;
+    bool namesAsObjects;
 
     void addHandler(V8CommandHandler* handler);
     QHash<QString, V8CommandHandler*> handlers;

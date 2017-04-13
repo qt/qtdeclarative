@@ -409,18 +409,7 @@ QQmlEngineDebugServiceImpl::objectData(QObject *object)
     rv.objectId = QQmlDebugService::idForObject(object);
     rv.contextId = QQmlDebugService::idForObject(qmlContext(object));
     rv.parentId = QQmlDebugService::idForObject(object->parent());
-    QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
-    if (type) {
-        QString typeName = type->qmlTypeName();
-        int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
-        rv.objectType = lastSlash < 0 ? typeName : typeName.mid(lastSlash+1);
-    } else {
-        rv.objectType = QString::fromUtf8(object->metaObject()->className());
-        int marker = rv.objectType.indexOf(QLatin1String("_QMLTYPE_"));
-        if (marker != -1)
-            rv.objectType = rv.objectType.left(marker);
-    }
-
+    rv.objectType = QQmlMetaType::prettyTypeName(object);
     return rv;
 }
 

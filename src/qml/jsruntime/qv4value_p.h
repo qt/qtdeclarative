@@ -68,8 +68,6 @@ namespace Heap {
     struct Base;
 }
 
-typedef uint Bool;
-
 struct Q_QML_PRIVATE_EXPORT Value
 {
 private:
@@ -209,23 +207,23 @@ public:
     }
     QML_NEARLY_ALWAYS_INLINE void setInt_32(int i)
     {
-        setTagValue(Integer_Type_Internal, quint32(i));
+        setTagValue(quint32(ValueTypeInternal::Integer), quint32(i));
     }
     QML_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
 
     QML_NEARLY_ALWAYS_INLINE void setEmpty()
     {
-        setTagValue(Empty_Type_Internal, value());
+        setTagValue(quint32(ValueTypeInternal::Empty), value());
     }
 
     QML_NEARLY_ALWAYS_INLINE void setEmpty(int i)
     {
-        setTagValue(Empty_Type_Internal, quint32(i));
+        setTagValue(quint32(ValueTypeInternal::Empty), quint32(i));
     }
 
     QML_NEARLY_ALWAYS_INLINE void setEmpty(quint32 i)
     {
-        setTagValue(Empty_Type_Internal, i);
+        setTagValue(quint32(ValueTypeInternal::Empty), i);
     }
 
     QML_NEARLY_ALWAYS_INLINE quint32 emptyValue()
@@ -268,7 +266,16 @@ public:
         IsDoubleTag_Shift = IsDouble_Shift - Tag_Shift,
         Managed_Type_Internal_64 = 0
     };
+
     static const quint64 Immediate_Mask_64 = 0x00020000u; // bit 49
+
+    enum class ValueTypeInternal_64 {
+        Empty            = Immediate_Mask_64| 0,
+        ConvertibleToInt = Immediate_Mask_64| 0x10000u, // bit 48
+        Null             = ConvertibleToInt | 0x08000u,
+        Boolean          = ConvertibleToInt | 0x04000u,
+        Integer          = ConvertibleToInt | 0x02000u
+    };
 
     // Used only by 32-bit encoding
     enum Masks {
@@ -276,6 +283,14 @@ public:
         NotDouble_Mask         =                  0x7ffa0000,
     };
     static const quint64 Immediate_Mask_32 = NotDouble_Mask | 0x00020000u | SilentNaNBit;
+
+    enum class ValueTypeInternal_32 {
+        Empty            = Immediate_Mask_32| 0,
+        ConvertibleToInt = Immediate_Mask_32| 0x10000u, // bit 48
+        Null             = ConvertibleToInt | 0x08000u,
+        Boolean          = ConvertibleToInt | 0x04000u,
+        Integer          = ConvertibleToInt | 0x02000u
+    };
 
     enum {
         Managed_Type_Internal_32  = NotDouble_Mask
@@ -286,28 +301,23 @@ public:
         Managed_Type_Internal  = Managed_Type_Internal_64
     };
     static const quint64 Immediate_Mask = Immediate_Mask_64;
+    using ValueTypeInternal = ValueTypeInternal_64;
 #else
     enum {
         Managed_Type_Internal  = Managed_Type_Internal_32
     };
     static const quint64 Immediate_Mask = Immediate_Mask_32;
+    using ValueTypeInternal = ValueTypeInternal_32;
 #endif
     enum {
         NaN_Mask = 0x7ff80000,
     };
-    enum ValueTypeInternal {
-        Empty_Type_Internal   = Immediate_Mask   | 0,
-        ConvertibleToInt      = Immediate_Mask   | 0x10000u, // bit 48
-        Null_Type_Internal    = ConvertibleToInt | 0x08000u,
-        Boolean_Type_Internal = ConvertibleToInt | 0x04000u,
-        Integer_Type_Internal = ConvertibleToInt | 0x02000u
-    };
 
     // used internally in property
-    inline bool isEmpty() const { return tag() == Empty_Type_Internal; }
-    inline bool isNull() const { return tag() == Null_Type_Internal; }
-    inline bool isBoolean() const { return tag() == Boolean_Type_Internal; }
-    inline bool isInteger() const { return tag() == Integer_Type_Internal; }
+    inline bool isEmpty() const { return tag() == quint32(ValueTypeInternal::Empty); }
+    inline bool isNull() const { return tag() == quint32(ValueTypeInternal::Null); }
+    inline bool isBoolean() const { return tag() == quint32(ValueTypeInternal::Boolean); }
+    inline bool isInteger() const { return tag() == quint32(ValueTypeInternal::Integer); }
     inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
     inline bool isNumber() const { return isDouble() || isInteger(); }
 
@@ -332,9 +342,9 @@ public:
     inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isManaged() const { return tag() == Managed_Type_Internal && !isUndefined(); }
     inline bool isManagedOrUndefined() const { return tag() == Managed_Type_Internal; }
-    inline bool integerCompatible() const { return (tag() & ConvertibleToInt) == ConvertibleToInt; }
+    inline bool integerCompatible() const { return (tag() & quint32(ValueTypeInternal::ConvertibleToInt)) == quint32(ValueTypeInternal::ConvertibleToInt); }
     static inline bool integerCompatible(Value a, Value b) {
-        return ((a.tag() & b.tag()) & ConvertibleToInt) == ConvertibleToInt;
+        return ((a.tag() & b.tag()) & quint32(ValueTypeInternal::ConvertibleToInt)) == quint32(ValueTypeInternal::ConvertibleToInt);
     }
     static inline bool bothDouble(Value a, Value b) {
         return ((a.tag() | b.tag()) & NotDouble_Mask) != NotDouble_Mask;
@@ -361,7 +371,7 @@ public:
     inline bool isString() const;
     inline bool isObject() const;
     inline bool isInt32() {
-        if (tag() == Integer_Type_Internal)
+        if (tag() == quint32(ValueTypeInternal::Integer))
             return true;
         if (isDouble()) {
             double d = doubleValue();
@@ -374,7 +384,7 @@ public:
         return false;
     }
     double asDouble() const {
-        if (tag() == Integer_Type_Internal)
+        if (tag() == quint32(ValueTypeInternal::Integer))
             return int_32();
         return doubleValue();
     }
@@ -429,7 +439,7 @@ public:
     inline bool tryIntegerConversion() {
         bool b = integerCompatible();
         if (b)
-            setTagValue(Integer_Type_Internal, value());
+            setTagValue(quint32(ValueTypeInternal::Integer), value());
         return b;
     }
 
@@ -477,7 +487,7 @@ public:
     // Section 9.12
     bool sameValue(Value other) const;
 
-    inline void mark(ExecutionEngine *e);
+    inline void mark(MarkStack *markStack);
 
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { _val = v; return *this; }
@@ -612,14 +622,14 @@ inline Primitive Primitive::emptyValue(uint e)
 inline Primitive Primitive::nullValue()
 {
     Primitive v;
-    v.setTagValue(Null_Type_Internal, 0);
+    v.setTagValue(quint32(ValueTypeInternal::Null), 0);
     return v;
 }
 
 inline Primitive Primitive::fromBoolean(bool b)
 {
     Primitive v;
-    v.setTagValue(Boolean_Type_Internal, b);
+    v.setTagValue(quint32(ValueTypeInternal::Boolean), b);
     return v;
 }
 
@@ -641,7 +651,7 @@ inline Primitive Primitive::fromUInt32(uint i)
 {
     Primitive v;
     if (i < INT_MAX) {
-        v.setTagValue(Integer_Type_Internal, i);
+        v.setTagValue(quint32(ValueTypeInternal::Integer), i);
     } else {
         v.setDouble(i);
     }
@@ -707,7 +717,6 @@ inline unsigned int Value::toUInt32() const
 {
     return (unsigned int)toInt32();
 }
-
 
 }
 

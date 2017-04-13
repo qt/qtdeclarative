@@ -183,7 +183,12 @@ QString QQuickImageResponse::errorString() const
 
     It may be reimplemented to cancel a request in the provider side, however, it is not mandatory.
 
-    A cancelled QQuickImageResponse still needs to emit finished().
+    A cancelled QQuickImageResponse still needs to emit finished() so that the
+    engine may clean up the QQuickImageResponse.
+
+    \note finished() should not be emitted until the response is complete,
+    regardless of whether or not cancel() was called. If it is called prematurely,
+    the engine may destroy the response while it is still active, leading to a crash.
 */
 void QQuickImageResponse::cancel()
 {
@@ -192,7 +197,12 @@ void QQuickImageResponse::cancel()
 /*!
     \fn void QQuickImageResponse::finished()
 
-    Signals that the job execution has finished (be it successfully, because an error happened or because it was cancelled).
+    Signals that the job execution has finished (be it successfully, because an
+    error happened or because it was cancelled).
+
+    \note Emission of this signal must be the final action the response performs:
+    once the signal is received, the response will subsequently be destroyed by
+    the engine.
  */
 
 /*!
@@ -603,7 +613,6 @@ void QQuickImageProviderOptions::setPreserveAspectRatioFit(bool preserveAspectRa
     d->preserveAspectRatioFit = preserveAspectRatioFit;
 }
 
-
 QQuickImageProviderWithOptions::QQuickImageProviderWithOptions(ImageType type, Flags flags)
  : QQuickAsyncImageProvider()
 {
@@ -658,6 +667,50 @@ QQuickImageResponse *QQuickImageProviderWithOptions::requestImageResponse(const 
 {
     Q_UNUSED(options);
     return requestImageResponse(id, requestedSize);
+}
+
+/*!
+    Returns the recommended scaled image size for loading and storage. This is
+    calculated according to the native pixel size of the image \a originalSize,
+    the requested sourceSize \a requestedSize, the image file format \a format,
+    and \a options. If the calculation otherwise concludes that scaled loading
+    is not recommended, an invalid size is returned.
+*/
+QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options)
+{
+    QSize res;
+    if ((requestedSize.width() <= 0 && requestedSize.height() <= 0) || originalSize.isEmpty())
+        return res;
+
+    const bool preserveAspectCropOrFit = options.preserveAspectRatioCrop() || options.preserveAspectRatioFit();
+    const bool force_scale = (format == "svg" || format == "svgz");
+
+    qreal ratio = 0.0;
+    if (requestedSize.width() && (preserveAspectCropOrFit || force_scale || requestedSize.width() < originalSize.width())) {
+        ratio = qreal(requestedSize.width()) / originalSize.width();
+    }
+    if (requestedSize.height() && (preserveAspectCropOrFit || force_scale || requestedSize.height() < originalSize.height())) {
+        qreal hr = qreal(requestedSize.height()) / originalSize.height();
+        if (ratio == 0.0)
+            ratio = hr;
+        else if (!preserveAspectCropOrFit && (hr < ratio))
+            ratio = hr;
+        else if (preserveAspectCropOrFit && (hr > ratio))
+            ratio = hr;
+    }
+    if (ratio > 0.0) {
+        res.setHeight(qRound(originalSize.height() * ratio));
+        res.setWidth(qRound(originalSize.width() * ratio));
+    }
+    return res;
+}
+
+QQuickImageProviderWithOptions *QQuickImageProviderWithOptions::checkedCast(QQuickImageProvider *provider)
+{
+    if (provider && provider->d && provider->d->isProviderWithOptions)
+        return static_cast<QQuickImageProviderWithOptions *>(provider);
+
+    return nullptr;
 }
 
 QT_END_NAMESPACE

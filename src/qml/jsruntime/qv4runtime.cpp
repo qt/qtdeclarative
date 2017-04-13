@@ -219,6 +219,14 @@ void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
 #endif // QV4_COUNT_RUNTIME_FUNCTIONS
 
 #ifndef V4_BOOTSTRAP
+
+Runtime::Runtime()
+{
+#define INIT_METHOD(returnvalue, name, args) runtimeMethods[name] = reinterpret_cast<void*>(&method_##name);
+FOR_EACH_RUNTIME_METHOD(INIT_METHOD)
+#undef INIT_METHOD
+}
+
 void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 {
     Q_ASSERT(result);
@@ -300,7 +308,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 
 ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
 {
-    QV4::Function *clos = engine->current->compilationUnit->runtimeFunctions[functionId];
+    QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeFunctions[functionId];
     Q_ASSERT(clos);
     return FunctionObject::createScriptFunction(engine->currentContext, clos)->asReturnedValue();
 }
@@ -643,8 +651,8 @@ void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, co
     if (idx < UINT_MAX) {
         if (o->arrayType() == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->arrayData());
-            if (s && idx < s->len && !s->data(idx).isEmpty()) {
-                s->data(idx) = value;
+            if (s && idx < s->values.size && !s->data(idx).isEmpty()) {
+                s->setData(engine, idx, value);
                 return;
             }
         }
@@ -1301,7 +1309,7 @@ ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *value
 ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
 {
     Scope scope(engine);
-    QV4::InternalClass *klass = engine->current->compilationUnit->runtimeClasses[classId];
+    QV4::InternalClass *klass = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeClasses[classId];
     ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype()));
 
     {
@@ -1311,7 +1319,7 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::
     }
 
     for (uint i = 0; i < klass->size; ++i)
-        *o->propertyData(i) = *args++;
+        o->setProperty(i, *args++);
 
     if (arrayValueCount > 0) {
         ScopedValue entry(scope);
@@ -1413,7 +1421,7 @@ ReturnedValue Runtime::method_getQmlContext(NoThrowEngine *engine)
 
 ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
 {
-    return engine->current->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
+    return static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
 }
 
 ReturnedValue Runtime::method_getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
@@ -1743,6 +1751,8 @@ Bool Runtime::method_compareEqual(const Value &left, const Value &right)
         return !left.isNaN();
 
     if (left.type() == right.type()) {
+        if (left.isDouble() && left.doubleValue() == 0 && right.doubleValue() == 0)
+            return true; // this takes care of -0 == +0 (which obviously have different raw values)
         if (!left.isManaged())
             return false;
         if (left.isString() == right.isString())

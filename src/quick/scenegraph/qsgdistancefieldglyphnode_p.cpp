@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qsgdistancefieldglyphnode_p_p.h"
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/qopenglfunctions.h>
 #include <QtGui/qsurface.h>
@@ -58,7 +57,7 @@ public:
 protected:
     void initialize() override;
 
-    void updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc);
+    void updateAlphaRange();
     void updateColor(const QVector4D &c);
     void updateTextureScale(const QVector2D &ts);
 
@@ -98,7 +97,31 @@ QSGDistanceFieldTextMaterialShader::QSGDistanceFieldTextMaterialShader()
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/distancefieldtext.frag"));
 }
 
-void QSGDistanceFieldTextMaterialShader::updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc)
+static float qt_sg_envFloat(const char *name, float defaultValue)
+{
+    if (Q_LIKELY(!qEnvironmentVariableIsSet(name)))
+        return defaultValue;
+    bool ok = false;
+    const float value = qgetenv(name).toFloat(&ok);
+    return ok ? value : defaultValue;
+}
+
+static float thresholdFunc(float glyphScale)
+{
+    static const float base = qt_sg_envFloat("QT_DF_BASE", 0.5f);
+    static const float baseDev = qt_sg_envFloat("QT_DF_BASEDEVIATION", 0.065f);
+    static const float devScaleMin = qt_sg_envFloat("QT_DF_SCALEFORMAXDEV", 0.15f);
+    static const float devScaleMax = qt_sg_envFloat("QT_DF_SCALEFORNODEV", 0.3f);
+    return base - ((qBound(devScaleMin, glyphScale, devScaleMax) - devScaleMin) / (devScaleMax - devScaleMin) * -baseDev + baseDev);
+}
+
+static float spreadFunc(float glyphScale)
+{
+    static const float range = qt_sg_envFloat("QT_DF_RANGE", 0.06f);
+    return range / glyphScale;
+}
+
+void QSGDistanceFieldTextMaterialShader::updateAlphaRange()
 {
     float combinedScale = m_fontScale * m_matrixScale;
     float base = thresholdFunc(combinedScale);
@@ -169,8 +192,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         updateRange = true;
     }
     if (updateRange) {
-        updateAlphaRange(material->glyphCache()->manager()->thresholdFunc(),
-                         material->glyphCache()->manager()->antialiasingSpreadFunc());
+        updateAlphaRange();
     }
 
     Q_ASSERT(material->glyphCache());
@@ -334,7 +356,7 @@ public:
 protected:
     void initialize() override;
 
-    void updateOutlineAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc, int dfRadius);
+    void updateOutlineAlphaRange(int dfRadius);
 
     int m_outlineAlphaMax0_id;
     int m_outlineAlphaMax1_id;
@@ -355,9 +377,7 @@ void DistanceFieldOutlineTextMaterialShader::initialize()
     m_outlineAlphaMax1_id = program()->uniformLocation("outlineAlphaMax1");
 }
 
-void DistanceFieldOutlineTextMaterialShader::updateOutlineAlphaRange(ThresholdFunc thresholdFunc,
-                                                                     AntialiasingSpreadFunc spreadFunc,
-                                                                     int dfRadius)
+void DistanceFieldOutlineTextMaterialShader::updateOutlineAlphaRange(int dfRadius)
 {
     float combinedScale = m_fontScale * m_matrixScale;
     float base = thresholdFunc(combinedScale);
@@ -381,9 +401,7 @@ void DistanceFieldOutlineTextMaterialShader::updateState(const RenderState &stat
     if (oldMaterial == 0
             || material->fontScale() != oldMaterial->fontScale()
             || state.isMatrixDirty())
-        updateOutlineAlphaRange(material->glyphCache()->manager()->thresholdFunc(),
-                                material->glyphCache()->manager()->antialiasingSpreadFunc(),
-                                material->glyphCache()->distanceFieldRadius());
+        updateOutlineAlphaRange(material->glyphCache()->distanceFieldRadius());
 }
 
 

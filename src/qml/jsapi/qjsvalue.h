@@ -133,9 +133,9 @@ public:
     bool deleteProperty(const QString &name);
 
     bool isCallable() const;
-    QJSValue call(const QJSValueList &args = QJSValueList());
-    QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &args = QJSValueList());
-    QJSValue callAsConstructor(const QJSValueList &args = QJSValueList());
+    QJSValue call(const QJSValueList &args = QJSValueList()); // ### Qt6: Make const
+    QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &args = QJSValueList()); // ### Qt6: Make const
+    QJSValue callAsConstructor(const QJSValueList &args = QJSValueList()); // ### Qt6: Make const
 
 #ifdef QT_DEPRECATED
     QT_DEPRECATED QJSEngine *engine() const;

@@ -64,6 +64,7 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlextensioninterface.h>
+#include <QtCore/qcryptographichash.h>
 
 #include <functional>
 
@@ -80,10 +81,6 @@
 #  define NAME_MAX _POSIX_SYMLINK_MAX
 #endif
 
-// LSB has a broken version of qOffsetOf that can't be used at compile time
-// https://lsbbugs.linuxfoundation.org/show_bug.cgi?id=3462
-#undef qOffsetOf
-#define qOffsetOf(TYPE, MEMBER) __builtin_qOffsetOf (TYPE, MEMBER)
 #endif
 
 // #define DATABLOB_DEBUG
@@ -1249,20 +1246,20 @@ void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface,
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlDataBlob::Data d;
-    d.d = &data;
+    QQmlDataBlob::SourceCodeData d;
+    d.inlineSourceCode = QString::fromUtf8(data);
     setData(blob, d);
 }
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlDataBlob::Data d;
-    d.d = &fileName;
+    QQmlDataBlob::SourceCodeData d;
+    d.fileInfo = QFileInfo(fileName);
     setData(blob, d);
 }
 
-void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
+void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob);
@@ -1529,7 +1526,8 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
                 return false;
             }
 
-            *it = priority;
+            if (it != m_unresolvedImports.end())
+                *it = priority;
             return true;
         }
     }
@@ -2009,6 +2007,16 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 {
 }
 
+QString QQmlTypeData::TypeReference::qualifiedName() const
+{
+    QString result;
+    if (!prefix.isEmpty()) {
+        result = prefix + QLatin1Char('.');
+    }
+    result.append(type->qmlTypeName());
+    return result;
+}
+
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_implicitImportLoaded(false)
@@ -2069,7 +2077,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
     {
         QString error;
-        if (!unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
+        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
             qCDebug(DBG_DISK_CACHE) << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
@@ -2154,6 +2162,23 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
     aliasCreator.appendAliasPropertiesToMetaObjects();
 }
 
+static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash, QQmlEngine *engine)
+{
+    for (const auto &typeRef: typeRefs) {
+        if (typeRef.typeData) {
+            const auto unit = typeRef.typeData->compilationUnit();
+            hash->addData(unit->data->md5Checksum, sizeof(unit->data->md5Checksum));
+        } else if (typeRef.type) {
+            const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type->metaObject());
+            bool ok = false;
+            hash->addData(propertyCache->checksum(&ok));
+            if (!ok)
+                return false;
+        }
+    }
+    return true;
+}
+
 void QQmlTypeData::done()
 {
     QDeferredCleanup cleanup([this]{
@@ -2234,18 +2259,24 @@ void QQmlTypeData::done()
 
     QQmlEngine *const engine = typeLoader()->engine();
 
+    const auto dependencyHasher = [engine, resolvedTypeCache, this](QCryptographicHash *hash) {
+        if (!resolvedTypeCache.addToHash(hash, engine))
+            return false;
+        return ::addTypeReferenceChecksumsToHash(m_compositeSingletons, hash, engine);
+    };
+
     // verify if any dependencies changed if we're using a cache
-    if (m_document.isNull() && !m_compiledData->verifyChecksum(engine, resolvedTypeCache)) {
+    if (m_document.isNull() && !m_compiledData->verifyChecksum(dependencyHasher)) {
         qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->url().toString();
         if (!loadFromSource())
             return;
-        m_backupSourceCode.clear();
+        m_backupSourceCode = SourceCodeData();
         m_compiledData = nullptr;
     }
 
     if (!m_document.isNull()) {
         // Compile component
-        compile(typeNameCache, resolvedTypeCache);
+        compile(typeNameCache, resolvedTypeCache, dependencyHasher);
     } else {
         createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
     }
@@ -2346,13 +2377,9 @@ bool QQmlTypeData::loadImplicitImport()
     return true;
 }
 
-void QQmlTypeData::dataReceived(const Data &data)
+void QQmlTypeData::dataReceived(const SourceCodeData &data)
 {
-    QString error;
-    m_backupSourceCode = data.readAll(&error, &m_sourceTimeStamp);
-    // if we failed to read the source code, process it _after_ we've tried
-    // to use the disk cache, in order to support scenarios where the source
-    // was removed deliberately.
+    m_backupSourceCode = data;
 
     if (tryLoadFromDiskCache())
         return;
@@ -2360,8 +2387,8 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (isError())
         return;
 
-    if (!error.isEmpty()) {
-        setError(error);
+    if (!m_backupSourceCode.exists()) {
+        setError(QQmlTypeLoader::tr("No such file or directory"));
         return;
     }
 
@@ -2380,12 +2407,19 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
 
 bool QQmlTypeData::loadFromSource()
 {
-    QString code = QString::fromUtf8(m_backupSourceCode);
     m_document.reset(new QmlIR::Document(isDebugging()));
-    m_document->jsModule.sourceTimeStamp = m_sourceTimeStamp;
+    m_document->jsModule.sourceTimeStamp = m_backupSourceCode.sourceTimeStamp();
     QQmlEngine *qmlEngine = typeLoader()->engine();
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
-    if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
+
+    QString sourceError;
+    const QString source = m_backupSourceCode.readAll(&sourceError);
+    if (!sourceError.isEmpty()) {
+        setError(sourceError);
+        return false;
+    }
+
+    if (!compiler.generateFromQml(source, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
         errors.reserve(compiler.errors.count());
         for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
@@ -2407,6 +2441,7 @@ void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> 
     m_document.reset(new QmlIR::Document(isDebugging()));
     QmlIR::IRLoader loader(unit->data, m_document.data());
     loader.load();
+    m_document->jsModule.setFileName(finalUrlString());
     m_document->javaScriptCompilationUnit = unit;
     continueLoadFromIR();
 }
@@ -2503,24 +2538,27 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
-void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache)
+void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache,
+                           const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     Q_ASSERT(m_compiledData.isNull());
 
+    const bool typeRecompilation = m_document && m_document->javaScriptCompilationUnit && m_document->javaScriptCompilationUnit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation;
+
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
-    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache);
+    QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
         setError(compiler.compilationErrors());
         return;
     }
 
-    const bool trySaveToDisk = (!disableDiskCache() || forceDiskCache()) && !m_document->jsModule.debugMode;
+    const bool trySaveToDisk = (!disableDiskCache() || forceDiskCache()) && !m_document->jsModule.debugMode && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {
             QString error;
-            if (!m_compiledData->loadFromDisk(url(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
+            if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
                 // ignore error, keep using the in-memory compilation unit.
             }
         } else {
@@ -2579,6 +2617,10 @@ void QQmlTypeData::resolveTypes()
             m_compositeSingletons << ref;
         }
     }
+
+    std::stable_sort(m_compositeSingletons.begin(), m_compositeSingletons.end(), [](const TypeReference &lhs, const TypeReference &rhs){
+        return lhs.qualifiedName() < rhs.qualifiedName();
+    });
 
     for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_typeReferences.constBegin(), end = m_typeReferences.constEnd();
          unresolvedRef != end; ++unresolvedRef) {
@@ -2873,14 +2915,14 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
     void linkBackendToEngine(QV4::ExecutionEngine *) override {}
 };
 
-void QQmlScriptBlob::dataReceived(const Data &data)
+void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
     if (!disableDiskCache() || forceDiskCache()) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
         QString error;
-        if (unit->loadFromDisk(url(), v4->iselFactory.data(), &error)) {
+        if (unit->loadFromDisk(url(), data.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
             initializeFromCompilationUnit(unit);
             return;
         } else {
@@ -2891,8 +2933,9 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 
     QmlIR::Document irUnit(isDebugging());
 
+    irUnit.jsModule.sourceTimeStamp = data.sourceTimeStamp();
     QString error;
-    QString source = QString::fromUtf8(data.readAll(&error, &irUnit.jsModule.sourceTimeStamp));
+    QString source = data.readAll(&error);
     if (!error.isEmpty()) {
         setError(error);
         return;
@@ -2917,8 +2960,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         irUnit.jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::ResolvedTypeReferenceMap emptyDependencies;
-    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit, m_typeLoader->engine(), emptyDependencies);
+    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
     Q_ASSERT(!unit->data);
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;
@@ -3056,10 +3098,10 @@ void QQmlQmldirData::setPriority(int priority)
     m_priority = priority;
 }
 
-void QQmlQmldirData::dataReceived(const Data &data)
+void QQmlQmldirData::dataReceived(const SourceCodeData &data)
 {
     QString error;
-    m_content = QString::fromUtf8(data.readAll(&error));
+    m_content = data.readAll(&error);
     if (!error.isEmpty()) {
         setError(error);
         return;
@@ -3071,34 +3113,54 @@ void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *
     Q_UNIMPLEMENTED();
 }
 
-QByteArray QQmlDataBlob::Data::readAll(QString *error, qint64 *sourceTimeStamp) const
+QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
 {
-    Q_ASSERT(!d.isNull());
     error->clear();
-    if (d.isT1()) {
-        if (sourceTimeStamp)
-            *sourceTimeStamp = 0;
-        return *d.asT1();
-    }
-    QFile f(*d.asT2());
+    if (!inlineSourceCode.isEmpty())
+        return inlineSourceCode;
+
+    QFile f(fileInfo.absoluteFilePath());
     if (!f.open(QIODevice::ReadOnly)) {
         *error = f.errorString();
-        return QByteArray();
+        return QString();
     }
-    if (sourceTimeStamp) {
-        QDateTime timeStamp = QFileInfo(f).lastModified();
-        // Files from the resource system do not have any time stamps, so fall back to the application
-        // executable.
-        if (!timeStamp.isValid())
-            timeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
-        *sourceTimeStamp = timeStamp.toMSecsSinceEpoch();
+
+    const qint64 fileSize = fileInfo.size();
+
+    if (uchar *mappedData = f.map(0, fileSize)) {
+        QString source = QString::fromUtf8(reinterpret_cast<const char *>(mappedData), fileSize);
+        f.unmap(mappedData);
+        return source;
     }
-    QByteArray data(f.size(), Qt::Uninitialized);
+
+    QByteArray data(fileSize, Qt::Uninitialized);
     if (f.read(data.data(), data.length()) != data.length()) {
         *error = f.errorString();
-        return QByteArray();
+        return QString();
     }
-    return data;
+    return QString::fromUtf8(data);
+}
+
+QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
+{
+    if (!inlineSourceCode.isEmpty())
+        return QDateTime();
+
+    QDateTime timeStamp = fileInfo.lastModified();
+    if (timeStamp.isValid())
+        return timeStamp;
+
+    static QDateTime appTimeStamp;
+    if (!appTimeStamp.isValid())
+        appTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+    return appTimeStamp;
+}
+
+bool QQmlDataBlob::SourceCodeData::exists() const
+{
+    if (!inlineSourceCode.isEmpty())
+        return true;
+    return fileInfo.exists();
 }
 
 QT_END_NAMESPACE

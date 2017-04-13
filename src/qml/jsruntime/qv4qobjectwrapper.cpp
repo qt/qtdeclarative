@@ -539,7 +539,7 @@ ReturnedValue QObjectWrapper::wrap_slowPath(ExecutionEngine *engine, QObject *ob
     }
 }
 
-void QObjectWrapper::markWrapper(QObject *object, ExecutionEngine *engine)
+void QObjectWrapper::markWrapper(QObject *object, MarkStack *markStack)
 {
     if (QQmlData::wasDeleted(object))
         return;
@@ -548,10 +548,10 @@ void QObjectWrapper::markWrapper(QObject *object, ExecutionEngine *engine)
     if (!ddata)
         return;
 
-    if (ddata->jsEngineId == engine->m_engineId)
-        ddata->jsWrapper.markOnce(engine);
-    else  if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
-        engine->m_multiplyWrappedQObjects->mark(object, engine);
+    if (ddata->jsEngineId == markStack->engine->m_engineId)
+        ddata->jsWrapper.markOnce(markStack);
+    else  if (markStack->engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
+        markStack->engine->m_multiplyWrappedQObjects->mark(object, markStack);
 }
 
 ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, bool captureRequired)
@@ -938,36 +938,36 @@ void QObjectWrapper::method_disconnect(const BuiltinFunction *, Scope &scope, Ca
     RETURN_UNDEFINED();
 }
 
-static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *e)
+static void markChildQObjectsRecursively(QObject *parent, QV4::MarkStack *markStack)
 {
     const QObjectList &children = parent->children();
     for (int i = 0; i < children.count(); ++i) {
         QObject *child = children.at(i);
         if (!child)
             continue;
-        QObjectWrapper::markWrapper(child, e);
-        markChildQObjectsRecursively(child, e);
+        QObjectWrapper::markWrapper(child, markStack);
+        markChildQObjectsRecursively(child, markStack);
     }
 }
 
-void QObjectWrapper::markObjects(Heap::Base *that, QV4::ExecutionEngine *e)
+void QObjectWrapper::markObjects(Heap::Base *that, QV4::MarkStack *markStack)
 {
     QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
 
     if (QObject *o = This->object()) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
         if (vme)
-            vme->mark(e);
+            vme->mark(markStack);
 
         // Children usually don't need to be marked, the gc keeps them alive.
         // But in the rare case of a "floating" QObject without a parent that
         // _gets_ marked (we've been called here!) then we also need to
         // propagate the marking down to the children recursively.
         if (!o->parent())
-            markChildQObjectsRecursively(o, e);
+            markChildQObjectsRecursively(o, markStack);
     }
 
-    QV4::Object::markObjects(that, e);
+    QV4::Object::markObjects(that, markStack);
 }
 
 void QObjectWrapper::destroyObject(bool lastCall)
@@ -1704,7 +1704,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueType
     Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->setPropertyCache(valueType->d()->propertyCache());
     method->d()->index = index;
-    method->d()->valueTypeWrapper = valueType->d();
+    method->d()->valueTypeWrapper.set(valueScope.engine, valueType->d());
     return method.asReturnedValue();
 }
 
@@ -1839,15 +1839,6 @@ void QObjectMethod::callInternal(CallData *callData, Scope &scope) const
     } else {
         scope.result = CallOverloaded(object, method, v4, callData, d()->propertyCache());
     }
-}
-
-void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    QObjectMethod::Data *This = static_cast<QObjectMethod::Data*>(that);
-    if (This->valueTypeWrapper)
-        This->valueTypeWrapper->mark(e);
-
-    FunctionObject::markObjects(that, e);
 }
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);
@@ -2075,12 +2066,12 @@ void MultiplyWrappedQObjectMap::remove(QObject *key)
     erase(it);
 }
 
-void MultiplyWrappedQObjectMap::mark(QObject *key, ExecutionEngine *engine)
+void MultiplyWrappedQObjectMap::mark(QObject *key, MarkStack *markStack)
 {
     Iterator it = find(key);
     if (it == end())
         return;
-    it->markOnce(engine);
+    it->markOnce(markStack);
 }
 
 void MultiplyWrappedQObjectMap::removeDestroyedObject(QObject *object)

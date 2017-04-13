@@ -84,7 +84,7 @@ bool VariantObject::isEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-void VariantObject::addVmePropertyReference()
+void VariantObject::addVmePropertyReference() const
 {
     if (d()->isScarce() && ++d()->vmePropertyReferenceCount == 1) {
         // remove from the ep->scarceResources list
@@ -94,7 +94,7 @@ void VariantObject::addVmePropertyReference()
     }
 }
 
-void VariantObject::removeVmePropertyReference()
+void VariantObject::removeVmePropertyReference() const
 {
     if (d()->isScarce() && --d()->vmePropertyReferenceCount == 0) {
         // and add to the ep->scarceResources list

@@ -94,7 +94,7 @@ void QSGOpenVGFontGlyphCache::populate(const QVector<quint32> &glyphs)
         referencedGlyphs.insert(glyphIndex);
 
 
-        if (!m_cachedGlyphs.contains(glyphIndex)) {
+        if (!m_glyphReferences.contains(glyphIndex)) {
             newGlyphs.insert(glyphIndex);
         }
     }
@@ -119,17 +119,9 @@ void QSGOpenVGFontGlyphCache::requestGlyphs(const QSet<quint32> &glyphs)
 {
     VGfloat origin[2];
     VGfloat escapement[2];
-    QRectF metrics;
     QRawFont rawFont = m_referenceFont;
 
-    // Before adding any new glyphs, remove any unused glyphs
-    for (auto glyph : qAsConst(m_unusedGlyphs)) {
-        vgClearGlyph(m_font, glyph);
-    }
-
     for (auto glyph : glyphs) {
-         m_cachedGlyphs.insert(glyph);
-
         // Calculate the path for the glyph and cache it.
         QPainterPath path = rawFont.pathForGlyph(glyph);
         VGPath vgPath;
@@ -151,12 +143,23 @@ void QSGOpenVGFontGlyphCache::requestGlyphs(const QSet<quint32> &glyphs)
 
 void QSGOpenVGFontGlyphCache::referenceGlyphs(const QSet<quint32> &glyphs)
 {
-    m_unusedGlyphs -= glyphs;
+    for (auto glyph : glyphs) {
+        if (m_glyphReferences.contains(glyph))
+            m_glyphReferences[glyph] += 1;
+        else
+            m_glyphReferences.insert(glyph, 1);
+    }
 }
 
 void QSGOpenVGFontGlyphCache::releaseGlyphs(const QSet<quint32> &glyphs)
 {
-    m_unusedGlyphs += glyphs;
+    for (auto glyph : glyphs) {
+        int references = m_glyphReferences[glyph] -= 1;
+        if (references == 0) {
+            vgClearGlyph(m_font, glyph);
+            m_glyphReferences.remove(glyph);
+        }
+    }
 }
 
 QT_END_NAMESPACE

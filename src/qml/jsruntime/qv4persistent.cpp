@@ -215,26 +215,15 @@ void PersistentValueStorage::free(Value *v)
         freePage(p);
 }
 
-static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
+void PersistentValueStorage::mark(MarkStack *markStack)
 {
-    while (engine->jsStackTop > markBase) {
-        Heap::Base *h = engine->popForGC();
-        Q_ASSERT (h->vtable()->markObjects);
-        h->vtable()->markObjects(h, engine);
-    }
-}
-
-void PersistentValueStorage::mark(ExecutionEngine *e)
-{
-    Value *markBase = e->jsStackTop;
-
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
             if (Managed *m = p->values[i].as<Managed>())
-                m->mark(e);
+                m->mark(markStack);
         }
-        drainMarkStack(e, markBase);
+        markStack->drain();
 
         p = p->header.next;
     }
@@ -393,11 +382,11 @@ void WeakValue::allocVal(ExecutionEngine *engine)
     val = engine->memoryManager->m_weakValues->allocate();
 }
 
-void WeakValue::markOnce(ExecutionEngine *e)
+void WeakValue::markOnce(MarkStack *markStack)
 {
     if (!val)
         return;
-    val->mark(e);
+    val->mark(markStack);
 }
 
 void WeakValue::free()

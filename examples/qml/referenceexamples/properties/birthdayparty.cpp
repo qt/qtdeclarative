@@ -57,8 +57,17 @@ void BirthdayParty::setHost(Person *c)
 
 QQmlListProperty<Person> BirthdayParty::guests()
 {
-    return QQmlListProperty<Person>(this, m_guests);
+    return QQmlListProperty<Person>(this, this,
+             &BirthdayParty::appendGuest,
+             &BirthdayParty::guestCount,
+             &BirthdayParty::guest,
+             &BirthdayParty::clearGuests);
 }
+
+void BirthdayParty::appendGuest(Person* p) {
+    m_guests.append(p);
+}
+
 
 int BirthdayParty::guestCount() const
 {
@@ -69,5 +78,25 @@ Person *BirthdayParty::guest(int index) const
 {
     return m_guests.at(index);
 }
+
+void BirthdayParty::clearGuests() {
+    return m_guests.clear();
+}
+
 // ![0]
 
+void BirthdayParty::appendGuest(QQmlListProperty<Person>* list, Person* p) {
+    reinterpret_cast< BirthdayParty* >(list->data)->appendGuest(p);
+}
+
+void BirthdayParty::clearGuests(QQmlListProperty<Person>* list) {
+    reinterpret_cast< BirthdayParty* >(list->data)->clearGuests();
+}
+
+Person* BirthdayParty::guest(QQmlListProperty<Person>* list, int i) {
+    return reinterpret_cast< BirthdayParty* >(list->data)->guest(i);
+}
+
+int BirthdayParty::guestCount(QQmlListProperty<Person>* list) {
+    return reinterpret_cast< BirthdayParty* >(list->data)->guestCount();
+}

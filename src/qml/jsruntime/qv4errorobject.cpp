@@ -78,10 +78,10 @@ void Heap::ErrorObject::init()
     if (internalClass == scope.engine->errorProtoClass)
         return;
 
-    *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
-    *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
-    *propertyData(QV4::ErrorObject::Index_FileName) = Encode::undefined();
-    *propertyData(QV4::ErrorObject::Index_LineNumber) = Encode::undefined();
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_FileName, Primitive::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::undefinedValue());
 }
 
 void Heap::ErrorObject::init(const Value &message, ErrorType t)
@@ -92,17 +92,17 @@ void Heap::ErrorObject::init(const Value &message, ErrorType t)
     Scope scope(internalClass->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
 
-    *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
-    *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     if (!e->d()->stackTrace->isEmpty()) {
-        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace->at(0).source);
-        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace->at(0).line);
+        setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
+        setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::fromInt32(e->d()->stackTrace->at(0).line));
     }
 
     if (!message.isUndefined())
-        *propertyData(QV4::ErrorObject::Index_Message) = message;
+        setProperty(scope.engine, QV4::ErrorObject::Index_Message, message);
 }
 
 void Heap::ErrorObject::init(const Value &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
@@ -113,8 +113,8 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
     Scope scope(internalClass->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
 
-    *propertyData(QV4::ErrorObject::Index_Stack) = scope.engine->getStackFunction();
-    *propertyData(QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset) = Encode::undefined();
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     StackFrame frame;
@@ -124,12 +124,12 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
     e->d()->stackTrace->prepend(frame);
 
     if (!e->d()->stackTrace->isEmpty()) {
-        *propertyData(QV4::ErrorObject::Index_FileName) = scope.engine->newString(e->d()->stackTrace->at(0).source);
-        *propertyData(QV4::ErrorObject::Index_LineNumber) = Primitive::fromInt32(e->d()->stackTrace->at(0).line);
+        setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
+        setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::fromInt32(e->d()->stackTrace->at(0).line));
     }
 
     if (!message.isUndefined())
-        *propertyData(QV4::ErrorObject::Index_Message) = message;
+        setProperty(scope.engine, QV4::ErrorObject::Index_Message, message);
 }
 
 const char *ErrorObject::className(Heap::ErrorObject::ErrorType t)
@@ -168,17 +168,9 @@ void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallDa
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);
         }
-        This->d()->stack = scope.engine->newString(trace);
+        This->d()->stack.set(scope.engine, scope.engine->newString(trace));
     }
     scope.result = This->d()->stack;
-}
-
-void ErrorObject::markObjects(Heap::Base *that, ExecutionEngine *e)
-{
-    ErrorObject::Data *This = static_cast<ErrorObject::Data *>(that);
-    if (This->stack)
-        This->stack->mark(e);
-    Object::markObjects(that, e);
 }
 
 DEFINE_OBJECT_VTABLE(ErrorObject);
@@ -327,9 +319,9 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = obj));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
-    *obj->propertyData(Index_Constructor) = ctor;
-    *obj->propertyData(Index_Message) = engine->id_empty();
-    *obj->propertyData(Index_Name) = engine->newString(QString::fromLatin1(ErrorObject::className(t)));
+    obj->setProperty(Index_Constructor, ctor->d());
+    obj->setProperty(Index_Message, engine->id_empty()->d());
+    obj->setProperty(Index_Name, engine->newString(QString::fromLatin1(ErrorObject::className(t))));
     if (t == Heap::ErrorObject::Error)
         obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
 }

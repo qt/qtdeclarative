@@ -80,6 +80,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(qreal verticalVelocity READ verticalVelocity NOTIFY verticalVelocityChanged)
 
     Q_PROPERTY(BoundsBehavior boundsBehavior READ boundsBehavior WRITE setBoundsBehavior NOTIFY boundsBehaviorChanged)
+    Q_PROPERTY(BoundsMovement boundsMovement READ boundsMovement WRITE setBoundsMovement NOTIFY boundsMovementChanged REVISION 10)
     Q_PROPERTY(QQuickTransition *rebound READ rebound WRITE setRebound NOTIFY reboundChanged)
     Q_PROPERTY(qreal maximumFlickVelocity READ maximumFlickVelocity WRITE setMaximumFlickVelocity NOTIFY maximumFlickVelocityChanged)
     Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration NOTIFY flickDecelerationChanged)
@@ -131,6 +132,15 @@ public:
 
     BoundsBehavior boundsBehavior() const;
     void setBoundsBehavior(BoundsBehavior);
+
+    enum BoundsMovement {
+        // StopAtBounds = 0x0,
+        FollowBoundsBehavior = 0x1
+    };
+    Q_ENUM(BoundsMovement)
+
+    BoundsMovement boundsMovement() const;
+    void setBoundsMovement(BoundsMovement movement);
 
     QQuickTransition *rebound() const;
     void setRebound(QQuickTransition *transition);
@@ -237,6 +247,7 @@ Q_SIGNALS:
     void flickableDirectionChanged();
     void interactiveChanged();
     void boundsBehaviorChanged();
+    Q_REVISION(10) void boundsMovementChanged();
     void reboundChanged();
     void maximumFlickVelocityChanged();
     void flickDecelerationChanged();

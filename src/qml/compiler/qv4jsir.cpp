@@ -348,11 +348,7 @@ Module::~Module()
 
 void Module::setFileName(const QString &name)
 {
-    if (fileName.isEmpty())
-        fileName = name;
-    else {
-        Q_ASSERT(fileName == name);
-    }
+    fileName = name;
 }
 
 Function::Function(Module *module, Function *outer, const QString &name)

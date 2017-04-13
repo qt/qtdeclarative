@@ -1627,7 +1627,7 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
 */
 static inline void flush_vme_signal(const QObject *object, int index, bool indexInSignalRange)
 {
-    QQmlData *data = static_cast<QQmlData *>(QObjectPrivate::get(const_cast<QObject *>(object))->declarativeData);
+    QQmlData *data = QQmlData::get(object);
     if (data && data->propertyCache) {
         QQmlPropertyData *property = indexInSignalRange ? data->propertyCache->signal(index)
                                                         : data->propertyCache->method(index);

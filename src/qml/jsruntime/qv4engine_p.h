@@ -54,7 +54,6 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
-#include "qv4runtimeapi_p.h"
 #include <private/qintrusivelist_p.h>
 
 #ifndef V4_BOOTSTRAP
@@ -88,7 +87,7 @@ struct CompilationUnit;
 struct InternalClass;
 struct InternalClassPool;
 
-struct Q_QML_EXPORT ExecutionEngine
+struct Q_QML_EXPORT ExecutionEngine : public EngineBase
 {
 private:
     static qint32 maxCallDepth;
@@ -97,13 +96,8 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    Heap::ExecutionContext *current;
-
-    Value *jsStackTop;
-    quint32 hasException;
     qint32 callDepth;
 
-    MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
@@ -112,22 +106,16 @@ public:
 
     Value *jsStackLimit;
 
-    Runtime runtime;
-
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
-    enum { JSStackLimit = 4*1024*1024 };
+    enum {
+        JSStackLimit = 4*1024*1024,
+        GCStackLimit = 2*1024*1024
+    };
     WTF::PageAllocation *jsStack;
     Value *jsStackBase;
 
-    void pushForGC(Heap::Base *m) {
-        *jsStackTop = m;
-        ++jsStackTop;
-    }
-    Heap::Base *popForGC() {
-        --jsStackTop;
-        return jsStackTop->heapObject();
-    }
+    WTF::PageAllocation *gcStack;
 
     QML_NEARLY_ALWAYS_INLINE Value *jsAlloca(int nValues) {
         Value *ptr = jsStackTop;
@@ -454,7 +442,7 @@ public:
 
     void requireArgumentsAccessors(int n);
 
-    void markObjects();
+    void markObjects(MarkStack *markStack);
 
     void initRootContext();
 
@@ -490,8 +478,6 @@ public:
 
     bool metaTypeFromJS(const Value *value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
-
-    void assertObjectBelongsToEngine(const Heap::Base &baseObject);
 
     bool checkStackLimits(Scope &scope);
 
@@ -551,23 +537,32 @@ inline ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *contex
 }
 
 inline
-void Heap::Base::mark(QV4::ExecutionEngine *engine)
+void Heap::Base::mark(QV4::MarkStack *markStack)
 {
     Q_ASSERT(inUse());
-    if (isMarked())
-        return;
-#ifndef QT_NO_DEBUG
-    engine->assertObjectBelongsToEngine(*this);
-#endif
-    setMarkBit();
-    engine->pushForGC(this);
+    const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+    Chunk *c = h->chunk();
+    size_t index = h - c->realBase();
+    Q_ASSERT(!Chunk::testBit(c->extendsBitmap, index));
+    quintptr *bitmap = c->blackBitmap + Chunk::bitmapIndex(index);
+    quintptr bit = Chunk::bitForIndex(index);
+    if (!(*bitmap & bit)) {
+        *bitmap |= bit;
+        markStack->push(this);
+    }
 }
 
-inline void Value::mark(ExecutionEngine *e)
+inline void Value::mark(MarkStack *markStack)
 {
     Heap::Base *o = heapObject();
     if (o)
-        o->mark(e);
+        o->mark(markStack);
+}
+
+inline void Managed::mark(MarkStack *markStack)
+{
+    Q_ASSERT(m());
+    m()->mark(markStack);
 }
 
 #define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return; \

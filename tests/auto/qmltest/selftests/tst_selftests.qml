@@ -167,6 +167,16 @@ TestCase {
             caught = true
         }
         verify(caught)
+
+        caught = false;
+        try {
+            testCase.verify(true, "foo", "bar")
+        } catch (e) {
+            compare(e.message, "QtQuickTest::fail")
+            compare(functions.failmsg, "More than two arguments given to verify(). Did you mean tryVerify() or tryCompare()?")
+            caught = true
+        }
+        verify(caught)
     }
 
     function test_compare() {

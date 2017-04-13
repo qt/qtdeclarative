@@ -29,7 +29,9 @@
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QDebug>
 #include <QQmlError>
 #include <cstdlib>
@@ -42,7 +44,7 @@ public:
 
 private slots:
     void initTestCase();
-#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void qmlMinify_data();
     void qmlMinify();
 #endif
@@ -82,6 +84,7 @@ void tst_qmlmin::initTestCase()
     excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
     excludedDirs << "doc/src/snippets/qtquick1/imports";
     excludedDirs << "tests/manual/v4";
+    excludedDirs << "tests/auto/qml/ecmascripttests";
     excludedDirs << "tests/auto/qml/qmllint";
 
     // Add invalid files (i.e. files with syntax errors)
@@ -166,7 +169,7 @@ Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
 
-#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qmlmin::qmlMinify_data()
 {
     QTest::addColumn<QString>("file");
@@ -183,7 +186,7 @@ void tst_qmlmin::qmlMinify_data()
 }
 #endif
 
-#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qmlmin::qmlMinify()
 {
     QFETCH(QString, file);

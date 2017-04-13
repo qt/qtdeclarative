@@ -89,7 +89,8 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
+    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document, const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache,
+                     const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
 
     // --- interface used by QQmlPropertyCacheCreator
     typedef QmlIR::Object CompiledObject;
@@ -139,6 +140,7 @@ private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
     QQmlTypeData *typeData;
+    const QV4::CompiledData::DependentTypesHasher &dependencyHasher;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
@@ -341,86 +343,6 @@ private:
 
     const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector * const propertyCaches;
-};
-
-class QQmlJavaScriptBindingExpressionSimplificationPass : public QQmlCompilePass
-{
-public:
-    QQmlJavaScriptBindingExpressionSimplificationPass(QQmlTypeCompiler *typeCompiler);
-
-    void reduceTranslationBindings();
-
-private:
-    void reduceTranslationBindings(int objectIndex);
-
-    void visit(QV4::IR::Stmt *s)
-    {
-        switch (s->stmtKind) {
-        case QV4::IR::Stmt::MoveStmt:
-            visitMove(s->asMove());
-            break;
-        case QV4::IR::Stmt::RetStmt:
-            visitRet(s->asRet());
-            break;
-        case QV4::IR::Stmt::CJumpStmt:
-            discard();
-            break;
-        case QV4::IR::Stmt::ExpStmt:
-            discard();
-            break;
-        case QV4::IR::Stmt::JumpStmt:
-            break;
-        case QV4::IR::Stmt::PhiStmt:
-            break;
-        }
-    }
-
-    void visitMove(QV4::IR::Move *move);
-    void visitRet(QV4::IR::Ret *ret);
-
-    void visitFunctionCall(const QString *name, QV4::IR::ExprList *args, QV4::IR::Temp *target);
-
-    void discard() { _canSimplify = false; }
-
-    bool simplifyBinding(QV4::IR::Function *function, QmlIR::Binding *binding);
-    bool detectTranslationCallAndConvertBinding(QmlIR::Binding *binding);
-
-    const QVector<QmlIR::Object*> &qmlObjects;
-    QV4::IR::Module *jsModule;
-
-    bool _canSimplify;
-    const QString *_nameOfFunctionCalled;
-    QVector<int> _functionParameters;
-    int _functionCallReturnValue;
-
-    QHash<int, QV4::IR::Expr*> _temps;
-    int _returnValueOfBindingExpression;
-    int _synthesizedConsts;
-
-    QVector<int> irFunctionsToRemove;
-};
-
-class QQmlIRFunctionCleanser : public QQmlCompilePass
-{
-public:
-    QQmlIRFunctionCleanser(QQmlTypeCompiler *typeCompiler, const QVector<int> &functionsToRemove);
-
-    void clean();
-
-private:
-    virtual void visitMove(QV4::IR::Move *s) {
-        visit(s->source);
-        visit(s->target);
-    }
-
-    void visit(QV4::IR::Stmt *s);
-    void visit(QV4::IR::Expr *e);
-
-private:
-    QV4::IR::Module *module;
-    const QVector<int> &functionsToRemove;
-
-    QVector<int> newFunctionIndices;
 };
 
 QT_END_NAMESPACE

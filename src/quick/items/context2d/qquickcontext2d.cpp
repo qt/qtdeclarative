@@ -42,13 +42,16 @@
 #include "qquickcanvasitem_p.h"
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qquickitem_p.h>
+#if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#endif
 #include <qsgrendererinterface.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquicksvgparser_p.h>
+#if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
-
+#endif
 #include <private/qquickimage_p_p.h>
 
 #include <qqmlinfo.h>
@@ -125,8 +128,6 @@ QT_BEGIN_NAMESPACE
 
 
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
-
-#define DEGREES(t) ((t) * 180.0 / M_PI)
 
 #define CHECK_CONTEXT(r)     if (!r || !r->d()->context || !r->d()->context->bufferValid()) \
                                 THROW_GENERIC_ERROR("Not a Context2D object");
@@ -567,9 +568,10 @@ struct QQuickJSContext2D : public QV4::Object
     static void method_set_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
     // should these two be on the proto?
+#if QT_CONFIG(quick_path)
     static void method_get_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_set_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-
+#endif
     static void method_get_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_set_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_get_textAlign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
@@ -925,9 +927,9 @@ struct QQuickJSContext2DImageData : public QV4::Object
     static void method_get_height(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
     static void method_get_data(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 
-    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *engine) {
-        static_cast<QQuickJSContext2DImageData::Data *>(that)->pixelData.mark(engine);
-        QV4::Object::markObjects(that, engine);
+    static void markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack) {
+        static_cast<QQuickJSContext2DImageData::Data *>(that)->pixelData.mark(markStack);
+        QV4::Object::markObjects(that, markStack);
     }
 };
 
@@ -958,7 +960,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
         *pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
         pixelData->d()->image->fill(0x00000000);
     } else {
-        Q_ASSERT(image.width() == qRound(w) && image.height() == qRound(h));
+        Q_ASSERT(image.width()== qRound(w * image.devicePixelRatio()) && image.height() == qRound(h * image.devicePixelRatio()));
         *pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
@@ -1639,7 +1641,7 @@ void QQuickJSContext2DPrototype::method_createConicalGradient(const QV4::Builtin
     if (callData->argc >= 3) {
         qreal x = callData->args[0].toNumber();
         qreal y = callData->args[1].toNumber();
-        qreal angle = DEGREES(callData->args[2].toNumber());
+        qreal angle = qRadiansToDegrees(callData->args[2].toNumber());
         if (!qt_is_finite(x) || !qt_is_finite(y)) {
             THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
         }
@@ -2032,6 +2034,7 @@ void QQuickJSContext2D::method_set_shadowOffsetY(const QV4::BuiltinFunction *, Q
     RETURN_UNDEFINED();
 }
 
+#if QT_CONFIG(quick_path)
 void QQuickJSContext2D::method_get_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
@@ -2058,6 +2061,7 @@ void QQuickJSContext2D::method_set_path(const QV4::BuiltinFunction *, QV4::Scope
     r->d()->context->m_v4path.set(scope.engine, value);
     RETURN_UNDEFINED();
 }
+#endif // QT_CONFIG(quick_path)
 
 //rects
 /*!
@@ -3364,7 +3368,7 @@ void QQuickContext2D::rotate(qreal angle)
         return;
 
     QTransform newTransform =state.matrix;
-    newTransform.rotate(DEGREES(angle));
+    newTransform.rotate(qRadiansToDegrees(angle));
 
     if (!newTransform.isInvertible()) {
         state.invertibleCTM = false;
@@ -3373,7 +3377,7 @@ void QQuickContext2D::rotate(qreal angle)
 
     state.matrix = newTransform;
     buffer()->updateMatrix(state.matrix);
-    m_path = QTransform().rotate(-DEGREES(angle)).map(m_path);
+    m_path = QTransform().rotate(-qRadiansToDegrees(angle)).map(m_path);
 }
 
 void QQuickContext2D::shear(qreal h, qreal v)
@@ -3770,8 +3774,8 @@ void QQuickContext2D::arc(qreal xc, qreal yc, qreal radius, qreal sar, qreal ear
     antiClockWise = !antiClockWise;
     //end hack
 
-    float sa = DEGREES(sar);
-    float ea = DEGREES(ear);
+    float sa = qRadiansToDegrees(sar);
+    float ea = qRadiansToDegrees(ear);
 
     double span = 0;
 
@@ -4208,7 +4212,9 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV4::ExecutionEngine *v4)
     proto->defineAccessorProperty(QStringLiteral("fillStyle"), QQuickJSContext2D::method_get_fillStyle, QQuickJSContext2D::method_set_fillStyle);
     proto->defineAccessorProperty(QStringLiteral("shadowColor"), QQuickJSContext2D::method_get_shadowColor, QQuickJSContext2D::method_set_shadowColor);
     proto->defineAccessorProperty(QStringLiteral("textBaseline"), QQuickJSContext2D::method_get_textBaseline, QQuickJSContext2D::method_set_textBaseline);
+#if QT_CONFIG(quick_path)
     proto->defineAccessorProperty(QStringLiteral("path"), QQuickJSContext2D::method_get_path, QQuickJSContext2D::method_set_path);
+#endif
     proto->defineAccessorProperty(QStringLiteral("lineJoin"), QQuickJSContext2D::method_get_lineJoin, QQuickJSContext2D::method_set_lineJoin);
     proto->defineAccessorProperty(QStringLiteral("lineWidth"), QQuickJSContext2D::method_get_lineWidth, QQuickJSContext2D::method_set_lineWidth);
     proto->defineAccessorProperty(QStringLiteral("textAlign"), QQuickJSContext2D::method_get_textAlign, QQuickJSContext2D::method_set_textAlign);

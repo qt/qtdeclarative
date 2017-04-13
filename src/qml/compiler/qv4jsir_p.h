@@ -61,6 +61,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/qurl.h>
 #include <QtCore/QVarLengthArray>
+#include <QtCore/QDateTime>
 #include <qglobal.h>
 
 #if defined(CONST) && defined(Q_OS_WIN)
@@ -942,9 +943,10 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
-    qint64 sourceTimeStamp;
+    QDateTime sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
     uint unitFlags; // flags merged into CompiledData::Unit::flags
+    QString targetABI; // fallback to QSysInfo::buildAbi() if empty
 #ifdef QT_NO_QML_DEBUGGER
     static const bool debugMode = false;
 #else
@@ -955,7 +957,6 @@ struct Q_QML_PRIVATE_EXPORT Module {
 
     Module(bool debugMode)
         : rootFunction(0)
-        , sourceTimeStamp(0)
         , isQmlModule(false)
         , unitFlags(0)
 #ifndef QT_NO_QML_DEBUGGER
@@ -1352,6 +1353,31 @@ struct Function {
     int getNewStatementId() { return _statementCount++; }
     int statementCount() const { return _statementCount; }
 
+    bool canUseSimpleCall() const {
+        return nestedFunctions.isEmpty() &&
+               locals.isEmpty() && formals.size() <= QV4::Global::ReservedArgumentCount &&
+               !hasTry && !hasWith && !isNamedExpression && !usesArgumentsObject && !hasDirectEval;
+    }
+
+    bool argLocalRequiresWriteBarrier(ArgLocal *al) const {
+        uint scope = al->scope;
+        const IR::Function *f = this;
+        while (scope) {
+            f = f->outer;
+            --scope;
+        }
+        return !f->canUseSimpleCall();
+    }
+    int localsCountForScope(ArgLocal *al) const {
+        uint scope = al->scope;
+        const IR::Function *f = this;
+        while (scope) {
+            f = f->outer;
+            --scope;
+        }
+        return f->locals.size();
+    }
+
 private:
     BasicBlock *getOrCreateBasicBlock(int index);
     void setStatementCount(int cnt);
@@ -1420,6 +1446,7 @@ public:
         ArgLocal *newArgLocal = f->New<ArgLocal>();
         newArgLocal->init(argLocal->kind, argLocal->index, argLocal->scope);
         newArgLocal->type = argLocal->type;
+        newArgLocal->isArgumentsOrEval = argLocal->isArgumentsOrEval;
         return newArgLocal;
     }
 

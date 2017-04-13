@@ -89,14 +89,10 @@ public:
     QLazilyAllocated<ExtraData> extra;
 
     QQuickBasePositionerPrivate()
-        : spacing(0)
-        , type(QQuickBasePositioner::None)
-        , transitioner(0)
-        , positioningDirty(false)
-        , doingPositioning(false)
-        , anchorConflict(false)
-        , useImplicitSize(false)
-        , layoutDirection(Qt::LeftToRight)
+        : spacing(0), type(QQuickBasePositioner::None)
+        , transitioner(0), positioningDirty(false)
+        , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
+
     {
     }
 
@@ -123,7 +119,6 @@ public:
     bool positioningDirty : 1;
     bool doingPositioning : 1;
     bool anchorConflict : 1;
-    bool useImplicitSize : 1;
 
     Qt::LayoutDirection layoutDirection;
 
@@ -177,34 +172,6 @@ public:
 
     virtual void effectiveLayoutDirectionChange()
     {
-    }
-
-    void itemImplicitWidthChanged(QQuickItem *) override
-    {
-        Q_ASSERT(useImplicitSize);
-        setPositioningDirty();
-    }
-
-    void itemImplicitHeightChanged(QQuickItem *) override
-    {
-        Q_ASSERT(useImplicitSize);
-        setPositioningDirty();
-    }
-
-    qreal itemWidth(QQuickItem *item) const
-    {
-        if (Q_LIKELY(!useImplicitSize))
-            return item->width();
-
-        return item->implicitWidth();
-    }
-
-    qreal itemHeight(QQuickItem *item) const
-    {
-        if (Q_LIKELY(!useImplicitSize))
-            return item->height();
-
-        return item->implicitHeight();
     }
 
     inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }

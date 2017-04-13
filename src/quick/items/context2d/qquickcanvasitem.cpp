@@ -44,8 +44,10 @@
 #include <private/qquickcontext2d_p.h>
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <qsgtextureprovider.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtGui/QGuiApplication>
+#include <qsgtextureprovider.h>
 
 #include <qqmlinfo.h>
 #include <private/qqmlengine_p.h>
@@ -1102,14 +1104,17 @@ bool QQuickCanvasItem::isImageLoaded(const QUrl& url) const
 QImage QQuickCanvasItem::toImage(const QRectF& rect) const
 {
     Q_D(const QQuickCanvasItem);
-    if (d->context) {
-        if (rect.isEmpty())
-            return d->context->toImage(canvasWindow());
-        else
-            return d->context->toImage(rect);
-    }
 
-    return QImage();
+    if (!d->context)
+        return QImage();
+
+    const QRectF &rectSource = rect.isEmpty() ? canvasWindow() : rect;
+    const qreal dpr = window() ? window()->effectiveDevicePixelRatio() : qreal(1);
+    const QRectF rectScaled(rectSource.topLeft() * dpr, rectSource.size() * dpr);
+
+    QImage image = d->context->toImage(rectScaled);
+    image.setDevicePixelRatio(dpr);
+    return image;
 }
 
 static const char* mimeToType(const QString &mime)

@@ -80,27 +80,28 @@ struct StackAllocator {
     StackAllocator(ChunkAllocator *chunkAlloc);
 
     T *allocate() {
-        T *m = nextFree->as<T>();
+        HeapItem *m = nextFree;
         if (Q_UNLIKELY(nextFree == lastInChunk)) {
             nextChunk();
         } else {
             nextFree += requiredSlots;
         }
-#if MM_DEBUG
+#if MM_DEBUG || !defined(QT_NO_DEBUG)
         Chunk *c = m->chunk();
         Chunk::setBit(c->objectBitmap, m - c->realBase());
 #endif
-        return m;
+        return m->as<T>();
     }
     void free() {
-#if MM_DEBUG
-        Chunk::clearBit(item->chunk()->objectBitmap, item - item->chunk()->realBase());
-#endif
         if (Q_UNLIKELY(nextFree == firstInChunk)) {
             prevChunk();
         } else {
             nextFree -= requiredSlots;
         }
+#if MM_DEBUG || !defined(QT_NO_DEBUG)
+        Chunk *c = nextFree->chunk();
+        Chunk::clearBit(c->objectBitmap, nextFree - c->realBase());
+#endif
     }
 
     void nextChunk();
@@ -154,6 +155,8 @@ struct BlockAllocator {
 
     void sweep();
     void freeAll();
+    void resetBlackBits();
+    void collectGrayItems(MarkStack *markStack);
 
     // bump allocations
     HeapItem *nextFree = 0;
@@ -175,6 +178,8 @@ struct HugeItemAllocator {
     HeapItem *allocate(size_t size);
     void sweep();
     void freeAll();
+    void resetBlackBits();
+    void collectGrayItems(MarkStack *markStack);
 
     size_t usedMem() const {
         size_t used = 0;
@@ -206,11 +211,11 @@ public:
     Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
-    QV4::Heap::CallContext *allocSimpleCallContext(QV4::ExecutionEngine *v4)
+    QV4::Heap::SimpleCallContext *allocSimpleCallContext(QV4::ExecutionEngine *v4)
     {
         Heap::CallContext *ctxt = stackAllocator.allocate();
-        memset(ctxt, 0, sizeof(Heap::CallContext));
-        ctxt->setVtable(QV4::CallContext::staticVTable());
+        memset(ctxt, 0, sizeof(Heap::SimpleCallContext));
+        ctxt->setVtable(QV4::SimpleCallContext::staticVTable());
         ctxt->init(v4);
         return ctxt;
 
@@ -245,7 +250,7 @@ public:
         o->setVtable(ObjectType::staticVTable());
         Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
-        o->prototype = prototype->d();
+        o->prototype.set(engine, prototype->d());
         return static_cast<typename ObjectType::Data *>(o);
     }
 
@@ -272,7 +277,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init();
         return t->d();
     }
@@ -282,7 +287,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1);
         return t->d();
     }
@@ -292,7 +297,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
@@ -302,7 +307,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
@@ -312,7 +317,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        t->d_unchecked()->prototype.set(engine, prototype->d());
         t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
@@ -428,7 +433,6 @@ public:
     // called when a JS object grows itself. Specifically: Heap::String::append
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
 
-
 protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
@@ -440,10 +444,11 @@ protected:
 #endif // DETAILED_MM_STATS
 
 private:
-    void collectFromJSStack() const;
+    void collectFromJSStack(MarkStack *markStack) const;
     void mark();
     void sweep(bool lastSweep = false);
     bool shouldRunGC() const;
+    void collectRoots(MarkStack *markStack);
 
 public:
     QV4::ExecutionEngine *engine;
@@ -457,6 +462,7 @@ public:
 
     std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;
+    std::size_t usedSlotsAfterLastFullSweep = 0;
 
     bool gcBlocked = false;
     bool aggressiveGC = false;

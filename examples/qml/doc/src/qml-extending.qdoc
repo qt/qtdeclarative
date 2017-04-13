@@ -73,24 +73,24 @@ This example builds on:
 \li \l {Extending QML - Adding Types Example}
 \endlist
 
-Shows how to use \l {QQmlEngine::}{qmlRegisterExtendedType()} to provide an \l {Registering
-Extension Objects}{extension object} to a \l QLineEdit without modifying or
-subclassing.
+Shows how to use \l {QQmlEngine::}{qmlRegisterExtendedType()} to provide an
+\l {Registering Extension Objects}{extension object} to a \l QLineEdit without modifying or
+subclassing it.
+
+Firstly, the LineEditExtension class is registered with the QML system as an extension of QLineEdit:
 
 \snippet referenceexamples/extended/main.cpp 0
 
-The QML engine instantiates a \l QLineEdit
+The QML engine then instantiates a \l QLineEdit:
 
 \snippet referenceexamples/extended/main.cpp 1
 
-and sets a property that oly exists on the extension type.
+In QML, a property is set on the line edit that only exists in the LineEditExtension class:
 
 \snippet referenceexamples/extended/example.qml 0
 
-The QML engine instantiates a \l QLineEdit and sets a property that
-only exists on the extension type. The extension type performs calls on the
-\l QLineEdit that otherwise will not be accessible to the QML engine.
-
+The extension type performs calls on the \l QLineEdit that otherwise will
+not be accessible to the QML engine.
 */
 
 /*!

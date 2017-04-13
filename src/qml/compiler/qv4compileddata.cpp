@@ -77,13 +77,7 @@ namespace QV4 {
 
 namespace CompiledData {
 
-#ifdef V4_BOOTSTRAP
-static QString cacheFilePath(const QString &localSourcePath)
-{
-    const QString localCachePath = localSourcePath + QLatin1Char('c');
-    return localCachePath;
-}
-#else
+#if !defined(V4_BOOTSTRAP)
 static QString cacheFilePath(const QUrl &url)
 {
     const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
@@ -102,7 +96,6 @@ static QString cacheFilePath(const QUrl &url)
 CompilationUnit::CompilationUnit()
     : data(0)
     , engine(0)
-    , runtimeStrings(0)
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
@@ -147,7 +140,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= IR::RegExp::RegExp_Multiline;
-        runtimeRegularExpressions[i] = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        QV4::Heap::RegExpObject *ro = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        runtimeRegularExpressions[i] = ro;
     }
 
     if (data->lookupTableSize) {
@@ -174,8 +168,6 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             l->level = -1;
             l->index = UINT_MAX;
             l->nameIndex = compiledLookups[i].nameIndex;
-            if (type == CompiledData::Lookup::Type_IndexedGetter || type == CompiledData::Lookup::Type_IndexedSetter)
-                l->engine = engine;
         }
     }
 
@@ -249,14 +241,14 @@ void CompilationUnit::unlink()
 #endif
 }
 
-void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
+void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 {
     for (uint i = 0; i < data->stringTableSize; ++i)
         if (runtimeStrings[i])
-            runtimeStrings[i]->mark(e);
+            runtimeStrings[i]->mark(markStack);
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
-            runtimeRegularExpressions[i].mark(e);
+            runtimeRegularExpressions[i].mark(markStack);
     }
 }
 
@@ -331,10 +323,9 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
     totalObjectCount = objectCount;
 }
 
-bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
-                                     const ResolvedTypeReferenceMap &dependentTypes) const
+bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHasher) const
 {
-    if (dependentTypes.isEmpty()) {
+    if (!dependencyHasher) {
         for (size_t i = 0; i < sizeof(data->dependencyMD5Checksum); ++i) {
             if (data->dependencyMD5Checksum[i] != 0)
                 return false;
@@ -342,7 +333,7 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
         return true;
     }
     QCryptographicHash hash(QCryptographicHash::Md5);
-    if (!dependentTypes.addToHash(&hash, engine))
+    if (!dependencyHasher(&hash))
         return false;
     QByteArray checksum = hash.result();
     Q_ASSERT(checksum.size() == sizeof(data->dependencyMD5Checksum));
@@ -350,7 +341,7 @@ bool CompilationUnit::verifyChecksum(QQmlEngine *engine,
                   sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
-bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory, QString *errorString)
+bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, EvalISelFactory *iselFactory, QString *errorString)
 {
     if (!QQmlFile::isLocalFile(url)) {
         *errorString = QStringLiteral("File has to be a local file.");
@@ -360,14 +351,14 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, EvalISelFactory *iselFactory
     const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourcePath, errorString);
+    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourceTimeStamp, errorString);
     if (!mappedUnit)
         return false;
 
     const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
     QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
-    if (sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+    if (data->sourceFileIndex != 0 && sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
         *errorString = QStringLiteral("QML source file has moved to a different location.");
         return false;
     }
@@ -408,28 +399,29 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
 #endif // V4_BOOTSTRAP
 
 #if defined(V4_BOOTSTRAP)
-bool CompilationUnit::saveToDisk(const QString &unitUrl, QString *errorString)
+bool CompilationUnit::saveToDisk(const QString &outputFileName, QString *errorString)
 #else
 bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 #endif
 {
     errorString->clear();
 
+#if !defined(V4_BOOTSTRAP)
     if (data->sourceTimeStamp == 0) {
         *errorString = QStringLiteral("Missing time stamp for source file");
         return false;
     }
 
-#if !defined(V4_BOOTSTRAP)
     if (!QQmlFile::isLocalFile(unitUrl)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
+    const QString outputFileName = cacheFilePath(unitUrl);
 #endif
 
 #if QT_CONFIG(temporaryfile)
     // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(cacheFilePath(unitUrl));
+    QSaveFile cacheFile(outputFileName);
     if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = cacheFile.errorString();
         return false;
@@ -461,6 +453,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 
     return true;
 #else
+    Q_UNUSED(outputFileName)
     *errorString = QStringLiteral("features.temporaryfile is disabled.");
     return false;
 #endif // QT_CONFIG(temporaryfile)
@@ -485,9 +478,21 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
         return irDocument->jsGenerator.generateUnit(QV4::Compiler::JSUnitGenerator::GenerateWithoutStringTable);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = irDocument->javaScriptCompilationUnit;
-    QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(irDocument->javaScriptCompilationUnit->data);
+    QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
+    auto ensureWritableUnit = [&jsUnit, &compilationUnit]() {
+        if (jsUnit == compilationUnit->data) {
+            char *unitCopy = (char*)malloc(jsUnit->unitSize);
+            memcpy(unitCopy, jsUnit, jsUnit->unitSize);
+            jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
+        }
+    };
 
     QV4::Compiler::StringTableGenerator &stringTable = irDocument->jsGenerator.stringTable;
+
+    if (jsUnit->sourceFileIndex == quint32(0) || jsUnit->stringAt(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
+        ensureWritableUnit();
+        jsUnit->sourceFileIndex = stringTable.registerString(irDocument->jsModule.fileName);
+    }
 
     // Collect signals that have had a change in signature (from onClicked to onClicked(mouse) for example)
     // and now need fixing in the QV4::CompiledData. Also register strings at the same time, to finalize
@@ -551,6 +556,7 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
     }
 
     if (!signalParameterNameTable.isEmpty()) {
+        ensureWritableUnit();
         Q_ASSERT(jsUnit != compilationUnit->data);
         const uint signalParameterTableSize = signalParameterNameTable.count() * sizeof(quint32);
         uint newSize = jsUnit->unitSize + signalParameterTableSize;
@@ -732,7 +738,7 @@ static QByteArray ownLibraryChecksum()
     if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
         QFile library(QFile::decodeName(libInfo.dli_fname));
         if (library.open(QIODevice::ReadOnly)) {
-            QCryptographicHash hash(QCryptographicHash::Sha1);
+            QCryptographicHash hash(QCryptographicHash::Md5);
             hash.addData(&library);
             libraryChecksum = hash.result();
         }
@@ -769,7 +775,7 @@ void Unit::generateChecksum()
 #ifndef V4_BOOTSTRAP
     QCryptographicHash hash(QCryptographicHash::Md5);
 
-    const int checksummableDataOffset = qOffsetOf(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
+    const int checksummableDataOffset = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
 
     const char *dataPtr = reinterpret_cast<const char *>(this) + checksummableDataOffset;
     hash.addData(dataPtr, unitSize - checksummableDataOffset);

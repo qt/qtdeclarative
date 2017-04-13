@@ -78,7 +78,6 @@ class QSGMaterial;
 class QSGRenderLoop;
 class QSGLayer;
 class QQuickTextureFactory;
-class QSGDistanceFieldGlyphCacheManager;
 class QSGContext;
 class QQuickPaintedItem;
 class QSGRendererInterface;
@@ -194,7 +193,7 @@ protected:
     QMutex m_mutex;
     QHash<QQuickTextureFactory *, QSGTexture *> m_textures;
     QSet<QSGTexture *> m_texturesToDelete;
-    QSGDistanceFieldGlyphCacheManager *m_distanceFieldCacheManager;
+    QHash<QRawFont, QSGDistanceFieldGlyphCache*> m_glyphCaches;
 
     QSet<QFontEngine *> m_fontEnginesToClean;
 };

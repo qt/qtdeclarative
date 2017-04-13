@@ -43,6 +43,7 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtCore/qregexp.h>
 
 class MyQmlAttachedObject : public QObject
 {

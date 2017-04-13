@@ -748,6 +748,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 
     QQuickItem *oldGrabber = q->mouseGrabberItem();
     qCDebug(DBG_MOUSE_TARGET) << "grabber" << oldGrabber << "->" << grabber;
+    bool fromTouch = false;
 
     if (grabber && touchMouseId != -1 && touchMouseDevice) {
         // update the touch item for mouse touch id to the new grabber
@@ -758,6 +759,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
             for (auto handler : point->passiveGrabbers())
                 point->cancelPassiveGrab(handler);
         }
+        fromTouch = true;
     } else {
         QQuickPointerEvent *event = QQuickPointerDevice::genericMouseDevice()->pointerEvent();
         Q_ASSERT(event->pointCount() == 1);
@@ -771,8 +773,11 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     if (oldGrabber) {
         QEvent e(QEvent::UngrabMouse);
         QSet<QQuickItem *> hasFiltered;
-        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered))
+        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered)) {
             oldGrabber->mouseUngrabEvent();
+            if (fromTouch)
+                oldGrabber->touchUngrabEvent();
+        }
     }
 }
 
@@ -2503,7 +2508,6 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
         } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
             QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
             if (deliverDragEvent(grabber, **grabItem, moveEvent)) {
-                moveEvent->setAccepted(true);
                 for (++grabItem; grabItem != grabber->end();) {
                     QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
                     if ((**grabItem)->contains(p)) {
@@ -2578,7 +2582,10 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
                     event->keyboardModifiers(),
                     event->type());
             QQuickDropEventEx::copyActions(&translatedEvent, *event);
+            translatedEvent.setAccepted(event->isAccepted());
             QCoreApplication::sendEvent(item, &translatedEvent);
+            event->setAccepted(translatedEvent.isAccepted());
+            event->setDropAction(translatedEvent.dropAction());
             if (event->type() == QEvent::DragEnter) {
                 if (translatedEvent.isAccepted()) {
                     grabber->grab(item);
@@ -2726,18 +2733,23 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
                     break;
                 }
 
+                bool touchMouseUnset = (touchMouseId == -1);
                 // Only deliver mouse event if it is the touchMouseId or it could become the touchMouseId
-                if (touchMouseId == -1 || touchMouseId == tp.id()) {
+                if (touchMouseUnset || touchMouseId == tp.id()) {
                     // convert filteringParentTouchEvent (which is already transformed wrt local position, velocity, etc.)
                     // into a synthetic mouse event, and let childMouseEventFilter() have another chance with that
                     QScopedPointer<QMouseEvent> mouseEvent(touchToMouseEvent(t, tp, filteringParentTouchEvent.data(), item, false));
+                    // If a filtering item calls QQuickWindow::mouseGrabberItem(), it should
+                    // report the touchpoint's grabber.  Whenever we send a synthetic mouse event,
+                    // touchMouseId and touchMouseDevice must be set, even if it's only temporarily and isn't grabbed.
+                    touchMouseId = tp.id();
+                    touchMouseDevice = event->device();
                     if (filteringParent->childMouseEventFilter(item, mouseEvent.data())) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted as synth mouse event by childMouseEventFilter of " << filteringParent;
                         if (t != QEvent::MouseButtonRelease) {
                             qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << tp.id() << "->" << filteringParent;
-                            touchMouseId = tp.id();
-                            touchMouseDevice = event->device();
                             touchMouseDevice->pointerEvent()->pointById(tp.id())->setGrabberItem(filteringParent);
+                            touchMouseUnset = false; // We want to leave touchMouseId and touchMouseDevice set
                             filteringParent->grabMouse();
                             auto pointerEventPoint = pte->pointById(tp.id());
                             for (auto handler : pointerEventPoint->passiveGrabbers()) {
@@ -2748,9 +2760,15 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
                         }
                         ret = true;
                     }
+                    if (touchMouseUnset) {
+                        // Now that we're done sending a synth mouse event, and it wasn't grabbed,
+                        // the touchpoint is no longer acting as a synthetic mouse.  Restore previous state.
+                        touchMouseId = -1;
+                        touchMouseDevice = nullptr;
+                    }
                     // Only one touchpoint can be treated as a synthetic mouse, so after childMouseEventFilter
                     // has been called once, we're done with this loop over the touchpoints.
-                    break;
+                     break;
                 }
             }
         }
@@ -3542,6 +3560,11 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
     The specified FBO must be created in the context of the window
     or one that shares with it.
 
+    \note \a fboId can also be set to 0. In this case rendering will target the
+    default framebuffer of whichever surface is current when the scenegraph
+    renders. \a size must still be valid, specifying the dimensions of the
+    surface.
+
     \note
     This function only has an effect when using the default OpenGL scene
     graph adaptation.
@@ -3648,6 +3671,7 @@ QImage QQuickWindow::grabWindow()
 
             bool alpha = format().alphaBufferSize() > 0 && color().alpha() < 255;
             QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), alpha, alpha);
+            image.setDevicePixelRatio(effectiveDevicePixelRatio());
             d->cleanupNodesOnShutdown();
             d->context->invalidate();
             context.doneCurrent();

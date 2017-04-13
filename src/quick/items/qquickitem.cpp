@@ -6780,8 +6780,27 @@ bool QQuickItem::heightValid() const
 }
 
 /*!
-    \internal
-  */
+    \since 5.10
+
+    Returns the size of the item.
+
+    \sa setSize, width, height
+ */
+
+QSizeF QQuickItem::size() const
+{
+    Q_D(const QQuickItem);
+    return QSizeF(d->width, d->height);
+}
+
+
+/*!
+    \since 5.10
+
+    Sets the size of the item to \a size.
+
+    \sa size, setWidth, setHeight
+ */
 void QQuickItem::setSize(const QSizeF &size)
 {
     Q_D(QQuickItem);
@@ -8456,19 +8475,19 @@ struct QQuickItemWrapper : public QObjectWrapper {
 
 struct QQuickItemWrapper : public QV4::QObjectWrapper {
     V4_OBJECT2(QQuickItemWrapper, QV4::QObjectWrapper)
-    static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
+    static void markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack);
 };
 
 DEFINE_OBJECT_VTABLE(QQuickItemWrapper);
 
-void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)
+void QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack)
 {
     QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
     if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
         for (QQuickItem *child : qAsConst(QQuickItemPrivate::get(item)->childItems))
-            QV4::QObjectWrapper::markWrapper(child, e);
+            QV4::QObjectWrapper::markWrapper(child, markStack);
     }
-    QV4::QObjectWrapper::markObjects(that, e);
+    QV4::QObjectWrapper::markObjects(that, markStack);
 }
 
 quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)

@@ -150,6 +150,25 @@ Module {
             }
         }
         Enum {
+            name: "TextFlag"
+            values: {
+                "TextSingleLine": 256,
+                "TextDontClip": 512,
+                "TextExpandTabs": 1024,
+                "TextShowMnemonic": 2048,
+                "TextWordWrap": 4096,
+                "TextWrapAnywhere": 8192,
+                "TextDontPrint": 16384,
+                "TextIncludeTrailingSpaces": 134217728,
+                "TextHideMnemonic": 32768,
+                "TextJustificationForced": 65536,
+                "TextForceLeftToRight": 131072,
+                "TextForceRightToLeft": 262144,
+                "TextLongestVariant": 524288,
+                "TextBypassShaping": 1048576
+            }
+        }
+        Enum {
             name: "TextElideMode"
             values: {
                 "ElideLeft": 0,
@@ -440,7 +459,8 @@ Module {
                 "AA_SynthesizeMouseForUnhandledTabletEvents": 24,
                 "AA_CompressHighFrequencyEvents": 25,
                 "AA_DontCheckOpenGLContextThreadAffinity": 26,
-                "AA_AttributeCount": 27
+                "AA_DisableShaderDiskCache": 27,
+                "AA_AttributeCount": 28
             }
         }
         Enum {
@@ -1096,7 +1116,8 @@ Module {
                 "SystemLocaleLongDate": 5,
                 "DefaultLocaleShortDate": 6,
                 "DefaultLocaleLongDate": 7,
-                "RFC2822Date": 8
+                "RFC2822Date": 8,
+                "ISODateWithMs": 9
             }
         }
         Enum {
@@ -1605,6 +1626,13 @@ Module {
             values: {
                 "MouseEventCreatedDoubleClick": 1,
                 "MouseEventFlagMask": 255
+            }
+        }
+        Enum {
+            name: "ChecksumType"
+            values: {
+                "ChecksumIso3309": 0,
+                "ChecksumItuV41": 1
             }
         }
     }

@@ -247,6 +247,7 @@ public:
     QQuickFlickableVisibleArea *visibleArea;
     QQuickFlickable::FlickableDirection flickableDirection;
     QQuickFlickable::BoundsBehavior boundsBehavior;
+    QQuickFlickable::BoundsMovement boundsMovement;
     QQuickTransition *rebound;
 
     void viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,

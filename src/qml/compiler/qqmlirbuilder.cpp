@@ -1361,7 +1361,7 @@ bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *prope
     return QQmlJS::AST::cast<QQmlJS::AST::NullExpression *>(expr);
 }
 
-QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine *engine, const QV4::CompiledData::ResolvedTypeReferenceMap &dependentTypes)
+QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
     QV4::CompiledData::Unit *jsUnit = compilationUnit->createUnitData(&output);
@@ -1404,17 +1404,16 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, QQmlEngine
     qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
 
 #ifndef V4_BOOTSTRAP
-    if (!dependentTypes.isEmpty()) {
+    if (dependencyHasher) {
         QCryptographicHash hash(QCryptographicHash::Md5);
-        if (dependentTypes.addToHash(&hash, engine)) {
+        if (dependencyHasher(&hash)) {
             QByteArray checksum = hash.result();
             Q_ASSERT(checksum.size() == sizeof(qmlUnit->dependencyMD5Checksum));
             memcpy(qmlUnit->dependencyMD5Checksum, checksum.constData(), sizeof(qmlUnit->dependencyMD5Checksum));
         }
     }
 #else
-    Q_UNUSED(dependentTypes);
-    Q_UNUSED(engine);
+    Q_UNUSED(dependencyHasher);
 #endif
 
     // write imports
@@ -2116,7 +2115,8 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
     object->indexOfDefaultPropertyOrAlias = serializedObject->indexOfDefaultPropertyOrAlias;
     object->defaultPropertyIsAlias = serializedObject->defaultPropertyIsAlias;
-
+    object->flags = serializedObject->flags;
+    object->id = serializedObject->id;
     object->location = serializedObject->location;
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 
@@ -2175,6 +2175,15 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         object->properties->append(p);
     }
 
+    {
+        const QV4::CompiledData::Alias *serializedAlias = serializedObject->aliasTable();
+        for (uint i = 0; i < serializedObject->nAliases; ++i, ++serializedAlias) {
+            QmlIR::Alias *a = pool->New<QmlIR::Alias>();
+            *static_cast<QV4::CompiledData::Alias*>(a) = *serializedAlias;
+            object->aliases->append(a);
+        }
+    }
+
     QQmlJS::Engine *jsParserEngine = &output->jsParserEngine;
 
     const QV4::CompiledData::LEUInt32 *functionIdx = serializedObject->functionOffsetTable();
@@ -2204,6 +2213,11 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
         const QString name = unit->stringAt(compiledFunction->nameIndex);
         f->functionDeclaration = new(pool) QQmlJS::AST::FunctionDeclaration(jsParserEngine->newStringRef(name), paramList, /*body*/0);
+
+        f->formals.allocate(pool, int(compiledFunction->nFormals));
+        formalNameIdx = compiledFunction->formalsTable();
+        for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx)
+            f->formals[i] = *formalNameIdx;
 
         object->functions->append(f);
     }

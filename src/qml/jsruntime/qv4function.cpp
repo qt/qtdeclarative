@@ -83,10 +83,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
-    activationRequired = compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject));
-
-    canUseSimpleCall = !needsActivation() && !(compiledFunction->flags & CompiledData::Function::HasCatchOrWith) &&
-                       !(compiledFunction->nFormals > QV4::Global::ReservedArgumentCount) && !isNamedExpression();
+    canUseSimpleCall = compiledFunction->flags & CompiledData::Function::CanUseSimpleCall;
 }
 
 Function::~Function()
@@ -118,7 +115,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
-    activationRequired = true;
+    canUseSimpleCall = false;
 }
 
 QT_END_NAMESPACE

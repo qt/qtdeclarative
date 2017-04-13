@@ -33,6 +33,7 @@
 #include <QHash>
 #include <QFile>
 #include <QXmlStreamReader>
+#include <QRegularExpression>
 
 #include <limits>
 
@@ -231,10 +232,10 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerDefinitions::RangeType type,
     if (!data.isEmpty()) {
         details = data.join(QLatin1Char(' ')).replace(
                     QLatin1Char('\n'), QLatin1Char(' ')).simplified();
-        QRegExp rewrite(QStringLiteral("\\(function \\$(\\w+)\\(\\) \\{ (return |)(.+) \\}\\)"));
-        bool match = rewrite.exactMatch(details);
-        if (match) {
-            details = rewrite.cap(1) +QLatin1String(": ") + rewrite.cap(3);
+        QRegularExpression rewrite(QStringLiteral("^\\(function \\$(\\w+)\\(\\) \\{ (return |)(.+) \\}\\)$"));
+        QRegularExpressionMatch match = rewrite.match(details);
+        if (match.hasMatch()) {
+            details = match.captured(1) +QLatin1String(": ") + match.captured(3);
         }
         if (details.startsWith(QLatin1String("file://")))
             details = details.mid(details.lastIndexOf(QLatin1Char('/')) + 1);

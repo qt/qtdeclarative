@@ -481,17 +481,20 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     QJsonArray output;
     QV4::Scope scope(engine);
 
-    if (QV4::CallContext *callContext = executionContext->asCallContext()) {
+    if (QV4::SimpleCallContext *callContext = executionContext->asSimpleCallContext()) {
         QV4::Value thisObject = callContext->thisObject();
         collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
         QV4::Identifier *const *variables = callContext->variables();
         QV4::Identifier *const *formals = callContext->formals();
-        for (unsigned i = 0, ei = callContext->variableCount(); i != ei; ++i) {
-            QString qName;
-            if (QV4::Identifier *name = variables[i])
-                qName = name->string;
-            QV4::Value val = callContext->d()->locals[i];
-            collector.collect(&output, QString(), qName, val);
+        if (callContext->d()->type == QV4::Heap::ExecutionContext::Type_CallContext) {
+            QV4::CallContext *ctx = static_cast<QV4::CallContext *>(callContext);
+            for (unsigned i = 0, ei = ctx->variableCount(); i != ei; ++i) {
+                QString qName;
+                if (QV4::Identifier *name = variables[i])
+                    qName = name->string;
+                QV4::Value val = ctx->d()->locals[i];
+                collector.collect(&output, QString(), qName, val);
+            }
         }
         for (unsigned i = 0, ei = callContext->formalCount(); i != ei; ++i) {
             QString qName;

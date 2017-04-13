@@ -53,6 +53,7 @@
 #include "qv4global_p.h"
 #include "qv4value_p.h"
 #include <private/qv4heap_p.h>
+#include <private/qv4writebarrier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,6 +92,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
+        static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable; \
         V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass)
 
 #define V4_MANAGED(DataClass, superClass) \
@@ -129,6 +131,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
 {     \
     parentVTable, \
+    markTable, \
     classname::IsExecutionContext,   \
     classname::IsString,   \
     classname::IsObject,   \
@@ -139,7 +142,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     classname::MyType,                          \
     #classname, \
     Q_VTABLE_FUNCTION(classname, destroy),                                    \
-    markObjects,                                \
+    Q_VTABLE_FUNCTION(classname, markObjects),                                    \
     isEqualTo                                  \
 }
 
@@ -204,8 +207,10 @@ public:
 
     bool inUse() const { return d()->inUse(); }
     bool markBit() const { return d()->isMarked(); }
+    inline void mark(MarkStack *markStack);
 
     static void destroy(Heap::Base *) {}
+    static void markObjects(Heap::Base *, MarkStack *) {}
 
     Q_ALWAYS_INLINE Heap::Base *heapObject() const {
         return m();

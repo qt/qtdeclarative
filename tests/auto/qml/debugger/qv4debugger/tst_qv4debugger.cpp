@@ -120,7 +120,6 @@ public:
     typedef QV4DataCollector::Refs Refs;
     typedef QV4DataCollector::Ref Ref;
     struct NamedRefs {
-        QJsonArray refs;
         QJsonObject scope;
 
         int size() const {
@@ -129,15 +128,6 @@ public:
 
         bool contains(const QString &name) const {
             return scope.contains(name);
-        }
-
-        QJsonObject resolveRef(int ref) const {
-            foreach (const QJsonValue &val, refs) {
-                QJsonObject obj = val.toObject();
-                if (obj.value(QLatin1String("handle")).toInt() == ref)
-                    return obj;
-            }
-            return QJsonObject();
         }
 
 #define DUMP_JSON(x) {\
@@ -176,6 +166,7 @@ public:
         , m_captureContextInfo(false)
         , m_thrownValue(-1)
         , collector(engine)
+        , m_resumeSpeed(QV4Debugger::FullThrottle)
         , m_debugger(0)
     {
     }
@@ -208,13 +199,12 @@ public slots:
                                   request.expression, &collector);
             debugger->runInEngine(&job);
             m_expressionResults << job.returnValue();
-            m_expressionRefs << job.refs();
         }
 
         if (m_captureContextInfo)
             captureContextInfo(debugger);
 
-        debugger->resume(QV4Debugger::FullThrottle);
+        debugger->resume(m_resumeSpeed);
     }
 
 public:
@@ -234,24 +224,17 @@ public:
             ScopeJob job(&collector, i, 0);
             debugger->runInEngine(&job);
             NamedRefs &refs = m_capturedScope.last();
-            refs.refs = job.refs();
             QJsonObject object = job.returnValue();
             object = object.value(QLatin1String("object")).toObject();
-            int ref = object.value(QLatin1String("ref")).toInt();
-            object = refs.resolveRef(ref);
+            if (object.contains("ref") && !object.contains("properties")) {
+                QVERIFY(collector.redundantRefs());
+                object = collector.lookupRef(object.value("ref").toInt(), true);
+                QVERIFY(object.contains("properties"));
+            }
             foreach (const QJsonValue &value, object.value(QLatin1String("properties")).toArray()) {
                 QJsonObject property = value.toObject();
                 QString name = property.value(QLatin1String("name")).toString();
                 property.remove(QLatin1String("name"));
-                if (property.contains(QLatin1String("ref"))) {
-                    int childRef = property.value(QLatin1String("ref")).toInt();
-                    if (childRef >= 0 && refs.refs.size() > childRef) {
-                        property.remove(QLatin1String("ref"));
-                        property.insert(QLatin1String("properties"),
-                                        refs.resolveRef(childRef).value(
-                                            QLatin1String("properties")).toArray());
-                    }
-                }
                 refs.scope.insert(name, property);
             }
         }
@@ -280,8 +263,8 @@ public:
         int context;
     };
     QVector<ExpressionRequest> m_expressionRequests;
+    QV4Debugger::Speed m_resumeSpeed;
     QList<QJsonObject> m_expressionResults;
-    QList<QJsonArray> m_expressionRefs;
     QV4Debugger *m_debugger;
 
     // Utility methods:
@@ -313,9 +296,13 @@ private slots:
     void conditionalBreakPointInQml();
 
     // context access:
+    void readArguments_data() { redundancy_data(); }
     void readArguments();
+    void readLocals_data() { redundancy_data(); }
     void readLocals();
+    void readObject_data() { redundancy_data(); }
     void readObject();
+    void readContextInAllFrames_data() { redundancy_data(); }
     void readContextInAllFrames();
 
     // exceptions:
@@ -323,8 +310,13 @@ private slots:
     void breakInCatch();
     void breakInWith();
 
+    void evaluateExpression_data() { redundancy_data(); }
     void evaluateExpression();
+    void stepToEndOfScript_data() { redundancy_data(); }
+    void stepToEndOfScript();
 
+    void lastLineOfConditional_data();
+    void lastLineOfConditional();
 private:
     QV4Debugger *debugger() const
     {
@@ -337,6 +329,8 @@ private:
                                   Q_ARG(int, lineNumber));
         waitForSignal(m_engine, SIGNAL(evaluateFinished()), /*timeout*/0);
     }
+
+    void redundancy_data();
 
     TestEngine *m_engine;
     QV4::ExecutionEngine *m_v4;
@@ -532,6 +526,9 @@ void tst_qv4debugger::conditionalBreakPointInQml()
 
 void tst_qv4debugger::readArguments()
 {
+    QFETCH(bool, redundantRefs);
+    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
+
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "function f(a, b, c, d) {\n"
@@ -555,6 +552,9 @@ void tst_qv4debugger::readArguments()
 
 void tst_qv4debugger::readLocals()
 {
+    QFETCH(bool, redundantRefs);
+    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
+
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "function f(a, b) {\n"
@@ -578,6 +578,9 @@ void tst_qv4debugger::readLocals()
 
 void tst_qv4debugger::readObject()
 {
+    QFETCH(bool, redundantRefs);
+    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
+
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "function f(a) {\n"
@@ -594,6 +597,12 @@ void tst_qv4debugger::readObject()
     QVERIFY(frame0.contains("b"));
     QCOMPARE(frame0.type("b"), QStringLiteral("object"));
     QJsonObject b = frame0.rawValue("b");
+    QVERIFY(b.contains(QStringLiteral("ref")));
+    QVERIFY(b.contains(QStringLiteral("value")));
+    QVERIFY(!b.contains(QStringLiteral("properties")));
+    QVERIFY(b.value("value").isDouble());
+    QCOMPARE(b.value("value").toInt(), 2);
+    b = m_debuggerAgent->collector.lookupRef(b.value("ref").toInt(), true);
     QVERIFY(b.contains(QStringLiteral("properties")));
     QVERIFY(b.value("properties").isArray());
     QJsonArray b_props = b.value("properties").toArray();
@@ -609,7 +618,8 @@ void tst_qv4debugger::readObject()
     QCOMPARE(b_tail.value("name").toString(), QStringLiteral("tail"));
     QVERIFY(b_tail.contains("ref"));
 
-    QJsonObject b_tail_value = m_debuggerAgent->collector.lookupRef(b_tail.value("ref").toInt());
+    QJsonObject b_tail_value = m_debuggerAgent->collector.lookupRef(b_tail.value("ref").toInt(),
+                                                                    true);
     QCOMPARE(b_tail_value.value("type").toString(), QStringLiteral("object"));
     QVERIFY(b_tail_value.contains("properties"));
     QJsonArray b_tail_props = b_tail_value.value("properties").toArray();
@@ -626,6 +636,9 @@ void tst_qv4debugger::readObject()
 
 void tst_qv4debugger::readContextInAllFrames()
 {
+    QFETCH(bool, redundantRefs);
+    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
+
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "function fact(n) {\n"
@@ -673,7 +686,8 @@ void tst_qv4debugger::pauseOnThrow()
     QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Throwing);
     QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 2);
     QVERIFY(m_debuggerAgent->m_thrownValue >= qint64(0));
-    QJsonObject exception = m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_thrownValue);
+    QJsonObject exception = m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_thrownValue,
+                                                                 true);
 //    DUMP_JSON(exception);
     QCOMPARE(exception.value("type").toString(), QStringLiteral("string"));
     QCOMPARE(exception.value("value").toString(), QStringLiteral("hard"));
@@ -717,6 +731,9 @@ void tst_qv4debugger::breakInWith()
 
 void tst_qv4debugger::evaluateExpression()
 {
+    QFETCH(bool, redundantRefs);
+    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
+
     QString script =
             "function testFunction() {\n"
             "    var x = 10\n"
@@ -745,17 +762,117 @@ void tst_qv4debugger::evaluateExpression()
 
     evaluateJavaScript(script, "evaluateExpression");
 
-    QCOMPARE(m_debuggerAgent->m_expressionRefs.count(), 4);
-    QCOMPARE(m_debuggerAgent->m_expressionRefs[0].size(), 1);
-    QJsonObject result0 = m_debuggerAgent->m_expressionRefs[0].first().toObject();
+    QCOMPARE(m_debuggerAgent->m_expressionResults.count(), 4);
+    QJsonObject result0 = m_debuggerAgent->m_expressionResults[0];
     QCOMPARE(result0.value("type").toString(), QStringLiteral("number"));
     QCOMPARE(result0.value("value").toInt(), 10);
     for (int i = 1; i < 4; ++i) {
-        QCOMPARE(m_debuggerAgent->m_expressionRefs[i].size(), 1);
-        QJsonObject result1 = m_debuggerAgent->m_expressionRefs[1].first().toObject();
+        QJsonObject result1 = m_debuggerAgent->m_expressionResults[i];
         QCOMPARE(result1.value("type").toString(), QStringLiteral("number"));
         QCOMPARE(result1.value("value").toInt(), 20);
     }
+}
+
+void tst_qv4debugger::stepToEndOfScript()
+{
+    QFETCH(bool, redundantRefs);
+    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
+
+    QString script =
+            "var ret = 0;\n"
+            "ret += 4;\n"
+            "ret += 1;\n"
+            "ret += 5;\n";
+
+    debugger()->addBreakPoint("toEnd", 1);
+    m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
+    evaluateJavaScript(script, "toEnd");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Step);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 5);
+    for (int i = 0; i < 4; ++i) {
+        QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(i);
+        QCOMPARE(state.fileName, QString("toEnd"));
+        QCOMPARE(state.lineNumber, i + 1);
+    }
+
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(4);
+    QCOMPARE(state.fileName, QString("toEnd"));
+    QCOMPARE(state.lineNumber, -4); // A return instruction without proper line number.
+}
+
+void tst_qv4debugger::lastLineOfConditional_data()
+{
+    QTest::addColumn<QString>("head");
+    QTest::addColumn<QString>("tail");
+    QTest::addColumn<int>("breakPoint");
+    QTest::addColumn<int>("lastLine");
+
+    QTest::newRow("for {block}")       << "for (var i = 0; i < 10; ++i) {\n"   << "}" << 4 << 7;
+    QTest::newRow("for..in {block}")   << "for (var i in [0, 1, 2, 3, 4]) {\n" << "}" << 4 << 7;
+    QTest::newRow("while {block}")     << "while (ret < 10) {\n"               << "}" << 4 << 7;
+    QTest::newRow("do..while {block}") << "do {\n"           << "} while (ret < 10);" << 4 << 7;
+
+    QTest::newRow("if true {block}")       << "if (true) {\n"  << "}"
+                                           << 4 << 7;
+    QTest::newRow("if false {block}")      << "if (false) {\n" << "}"
+                                           << 2 << 8;
+    QTest::newRow("if true else {block}")  << "if (true) {\n"  << "} else {\n    ret += 8;\n}"
+                                           << 4 << 7;
+    QTest::newRow("if false else {block}") << "if (false) {\n" << "} else {\n    ret += 8;\n}"
+                                           << 8 << 9;
+
+    QTest::newRow("for statement")       << "for (var i = 0; i < 10; ++i)\n"   << "" << 4 << 2;
+    QTest::newRow("for..in statement")   << "for (var i in [0, 1, 2, 3, 4])\n" << "" << 4 << 2;
+    QTest::newRow("while statement")     << "while (ret < 10)\n"               << "" << 4 << 2;
+    QTest::newRow("do..while statement") << "do\n"            << "while (ret < 10);" << 4 << 7;
+
+    // For two nested if statements without blocks, we need to map the jump from the inner to the
+    // outer one on the outer "if". There is just no better place.
+    QTest::newRow("if true statement")       << "if (true)\n"  << ""                    << 4 << 2;
+    QTest::newRow("if false statement")      << "if (false)\n" << ""                    << 2 << 8;
+
+    // Also two nested ifs without blocks.
+    QTest::newRow("if true else statement")  << "if (true)\n"  << "else\n    ret += 8;" << 4 << 2;
+    QTest::newRow("if false else statement") << "if (false)\n" << "else\n    ret += 8;" << 8 << 9;
+}
+
+void tst_qv4debugger::lastLineOfConditional()
+{
+    QFETCH(QString, head);
+    QFETCH(QString, tail);
+    QFETCH(int, breakPoint);
+    QFETCH(int, lastLine);
+
+    QString script =
+            "var ret = 2;\n"
+            + head +
+            "    if (ret == 2)\n"
+            "        ret += 4;\n" // breakpoint, then step over
+            "    else\n"
+            "        ret += 1;\n"
+            + tail + "\n" +
+            "ret -= 5;";
+
+    debugger()->addBreakPoint("trueBranch", breakPoint);
+    m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
+    evaluateJavaScript(script, "trueBranch");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Step);
+    QVERIFY(m_debuggerAgent->m_statesWhenPaused.count() > 1);
+    QV4Debugger::ExecutionState firstState = m_debuggerAgent->m_statesWhenPaused.first();
+    QCOMPARE(firstState.fileName, QString("trueBranch"));
+    QCOMPARE(firstState.lineNumber, breakPoint);
+    QV4Debugger::ExecutionState secondState = m_debuggerAgent->m_statesWhenPaused.at(1);
+    QCOMPARE(secondState.fileName, QString("trueBranch"));
+    QCOMPARE(secondState.lineNumber, lastLine);
+}
+
+void tst_qv4debugger::redundancy_data()
+{
+    QTest::addColumn<bool>("redundantRefs");
+    QTest::addRow("redundant") << true;
+    QTest::addRow("sparse")    << false;
 }
 
 QTEST_MAIN(tst_qv4debugger)

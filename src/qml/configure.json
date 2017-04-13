@@ -22,6 +22,19 @@
             "label": "QML network support",
             "purpose": "Provides network transparency for QML",
             "output": [ "publicFeature" ]
+        },
+        "qml-profiler": {
+            "label": "Command line QML Profiler",
+            "purpose": "The QML Profiler retrieves QML tracing data from an application.",
+            "condition": [
+                "features.commandlineparser",
+                "features.localserver",
+                "features.process",
+                "features.qml-debug",
+                "features.qml-network",
+                "features.xmlstreamwriter"
+            ],
+            "output": [ "privateFeature" ]
         }
     },
 

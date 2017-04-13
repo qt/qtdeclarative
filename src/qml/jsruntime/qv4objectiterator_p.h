@@ -129,7 +129,7 @@ struct ForEachIteratorObject: Object {
     ReturnedValue nextPropertyName() { return d()->it().nextPropertyNameAsString(); }
 
 protected:
-    static void markObjects(Heap::Base *that, ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
 };
 
 inline

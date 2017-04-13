@@ -55,7 +55,6 @@
 #include <QtQuick/private/qsgdefaultinternalrectanglenode_p.h>
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
-#include <QtQuick/private/qsgdistancefieldutil_p.h>
 #endif
 #include <QtQuick/private/qsggeometry_p.h>
 #include <QtQuick/private/qsgnode_p.h>

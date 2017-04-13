@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 
+#include <qhashfunctions.h>
 #include <qtest.h>
 
 #define V4_AUTOTEST
@@ -46,17 +47,12 @@ private slots:
     void moveMapping_2();
 };
 
-QT_BEGIN_NAMESPACE
-// Avoid QHash randomization so that the temp numbering is stable.
-extern Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed; // from qhash.cpp
-QT_END_NAMESPACE
-
 using namespace QT_PREPEND_NAMESPACE(QV4::IR);
 
 void tst_v4misc::initTestCase()
 {
-    qt_qhash_seed.store(0);
-    QCOMPARE(qt_qhash_seed.load(), 0);
+    qSetGlobalQHashSeed(0);
+    QCOMPARE(qGlobalQHashSeed(), 0);
 }
 
 // split between two ranges

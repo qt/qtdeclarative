@@ -95,7 +95,15 @@ private:
     QQmlQPointer<QObject> qObj;
 };
 
-struct QObjectMethod : FunctionObject {
+#define QObjectMethodMembers(class, Member) \
+    Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper) \
+    Member(class, NoMark, QQmlQPointer<QObject>, qObj) \
+    Member(class, NoMark, QQmlPropertyCache *, _propertyCache) \
+    Member(class, NoMark, int, index)
+
+DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
+    DECLARE_MARK_TABLE(QObjectMethod);
+
     void init(QV4::ExecutionContext *scope);
     void destroy()
     {
@@ -113,18 +121,10 @@ struct QObjectMethod : FunctionObject {
         _propertyCache = c;
     }
 
-    Pointer<QQmlValueTypeWrapper> valueTypeWrapper;
-
     const QMetaObject *metaObject();
     QObject *object() const { return qObj.data(); }
     void setObject(QObject *o) { qObj = o; }
 
-private:
-    QQmlQPointer<QObject> qObj;
-    QQmlPropertyCache *_propertyCache;
-
-public:
-    int index;
 };
 
 struct QMetaObjectWrapper : FunctionObject {
@@ -171,7 +171,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
-    static void markWrapper(QObject *object, ExecutionEngine *engine);
+    static void markWrapper(QObject *object, MarkStack *markStack);
 
     using Object::get;
 
@@ -195,7 +195,7 @@ protected:
     static bool put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
+    static void markObjects(Heap::Base *that, QV4::MarkStack *markStack);
 
     static void method_connect(const BuiltinFunction *, Scope &scope, CallData *callData);
     static void method_disconnect(const BuiltinFunction *, Scope &scope, CallData *callData);
@@ -209,13 +209,10 @@ inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *obje
     if (Q_UNLIKELY(QQmlData::wasDeleted(object)))
         return QV4::Encode::null();
 
-    QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
-    if (Q_LIKELY(priv->declarativeData)) {
-        auto ddata = static_cast<QQmlData *>(priv->declarativeData);
-        if (Q_LIKELY(ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isUndefined())) {
-            // We own the JS object
-            return ddata->jsWrapper.value();
-        }
+    auto ddata = QQmlData::get(object);
+    if (Q_LIKELY(ddata && ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isUndefined())) {
+        // We own the JS object
+        return ddata->jsWrapper.value();
     }
 
     return wrap_slowPath(engine, object);
@@ -242,8 +239,6 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     static void call(const Managed *, Scope &scope, CallData *callData);
 
     void callInternal(CallData *callData, Scope &scope) const;
-
-    static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };
@@ -297,7 +292,7 @@ public:
     ReturnedValue value(QObject *key) const { return QHash<QObject*, QV4::WeakValue>::value(key).value(); }
     Iterator erase(Iterator it);
     void remove(QObject *key);
-    void mark(QObject *key, ExecutionEngine *engine);
+    void mark(QObject *key, MarkStack *markStack);
 
 private Q_SLOTS:
     void removeDestroyedObject(QObject*);
