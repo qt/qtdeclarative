@@ -564,18 +564,6 @@ void QQuickFlickablePrivate::updateBeginningEnd()
         visibleArea->updateVisible();
 }
 
-/*
-XXXTODO add docs describing moving, dragging, flicking properties, e.g.
-
-When the user starts dragging the Flickable, the dragging and moving properties
-will be true.
-
-If the velocity is sufficient when the drag is ended, flicking may begin.
-
-The moving properties will remain true until all dragging and flicking
-is finished.
-*/
-
 /*!
     \qmlsignal QtQuick::Flickable::dragStarted()
 
