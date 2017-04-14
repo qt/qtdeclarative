@@ -163,7 +163,7 @@ void QQuickTransform::update()
 }
 
 QQuickContents::QQuickContents(QQuickItem *item)
-: m_item(item), m_x(0), m_y(0), m_width(0), m_height(0)
+: m_item(item)
 {
 }
 
@@ -176,8 +176,8 @@ QQuickContents::~QQuickContents()
 
 bool QQuickContents::calcHeight(QQuickItem *changed)
 {
-    qreal oldy = m_y;
-    qreal oldheight = m_height;
+    qreal oldy = m_contents.y();
+    qreal oldheight = m_contents.height();
 
     if (changed) {
         qreal top = oldy;
@@ -187,8 +187,8 @@ bool QQuickContents::calcHeight(QQuickItem *changed)
             bottom = y + changed->height();
         if (y < top)
             top = y;
-        m_y = top;
-        m_height = bottom - top;
+        m_contents.setY(top);
+        m_contents.setHeight(bottom - top);
     } else {
         qreal top = std::numeric_limits<qreal>::max();
         qreal bottom = -std::numeric_limits<qreal>::max();
@@ -201,17 +201,17 @@ bool QQuickContents::calcHeight(QQuickItem *changed)
                 top = y;
         }
         if (!children.isEmpty())
-            m_y = top;
-        m_height = qMax(bottom - top, qreal(0.0));
+            m_contents.setY(top);
+        m_contents.setHeight(qMax(bottom - top, qreal(0.0)));
     }
 
-    return (m_height != oldheight || m_y != oldy);
+    return (m_contents.height() != oldheight || m_contents.y() != oldy);
 }
 
 bool QQuickContents::calcWidth(QQuickItem *changed)
 {
-    qreal oldx = m_x;
-    qreal oldwidth = m_width;
+    qreal oldx = m_contents.x();
+    qreal oldwidth = m_contents.width();
 
     if (changed) {
         qreal left = oldx;
@@ -221,8 +221,8 @@ bool QQuickContents::calcWidth(QQuickItem *changed)
             right = x + changed->width();
         if (x < left)
             left = x;
-        m_x = left;
-        m_width = right - left;
+        m_contents.setX(left);
+        m_contents.setWidth(right - left);
     } else {
         qreal left = std::numeric_limits<qreal>::max();
         qreal right = -std::numeric_limits<qreal>::max();
@@ -235,11 +235,11 @@ bool QQuickContents::calcWidth(QQuickItem *changed)
                 left = x;
         }
         if (!children.isEmpty())
-            m_x = left;
-        m_width = qMax(right - left, qreal(0.0));
+            m_contents.setX(left);
+        m_contents.setWidth(qMax(right - left, qreal(0.0)));
     }
 
-    return (m_width != oldwidth || m_x != oldx);
+    return (m_contents.width() != oldwidth || m_contents.x() != oldx);
 }
 
 void QQuickContents::complete()
