@@ -73,6 +73,12 @@ bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
             || QQuickPointerSingleHandler::wantsEventPoint(point));
 }
 
+void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
+{
+    enforceConstraints();
+    QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
+}
+
 void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
 {
     point->setAccepted();

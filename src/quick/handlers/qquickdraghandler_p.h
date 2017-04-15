@@ -112,6 +112,7 @@ Q_SIGNALS:
 
 protected:
     bool wantsEventPoint(QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
 private:
     void ungrab();
