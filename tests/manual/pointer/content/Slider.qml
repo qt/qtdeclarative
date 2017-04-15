@@ -92,13 +92,14 @@ Item {
         function setValue(value) { knob.y = dragHandler.yAxis.maximum - value / knob.multiplier }
         DragHandler {
             id: dragHandler
+            objectName: label.text + " DragHandler"
             xAxis.enabled: false
             yAxis.minimum: slot.y
             yAxis.maximum: slot.height + slot.y - knob.height
         }
         TapHandler {
             id: tap
-            objectName: label.text
+            objectName: label.text + " TapHandler"
             gesturePolicy: TapHandler.DragThreshold
             onTapped: {
                 tapFlash.start()

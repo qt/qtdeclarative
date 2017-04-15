@@ -67,6 +67,7 @@ Rectangle {
 
             DragHandler {
                 id: dragHandler
+                objectName: "dragHandler" + index
                 onActiveChanged: {
                     if (!active)
                         anim.restart(velocity)
