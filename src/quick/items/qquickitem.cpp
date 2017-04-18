@@ -7160,6 +7160,8 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
         parentPrivate->setHasCursorInChild(hasCursor);
     }
+#else
+    Q_UNUSED(hasCursor);
 #endif
 }
 
