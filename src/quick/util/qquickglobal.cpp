@@ -810,6 +810,7 @@ public:
 #ifndef QT_NO_DESKTOPSERVICES
         return QDesktopServices::openUrl(url);
 #else
+        Q_UNUSED(url);
         return false;
 #endif
     }
