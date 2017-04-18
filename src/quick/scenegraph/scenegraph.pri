@@ -220,3 +220,18 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/shaders/visualization.frag \
         $$PWD/shaders/visualization.vert
 }
+
+# Compressed Texture API
+HEADERS += \
+    $$PWD/util/qsgtexturereader_p.h
+
+SOURCES += \
+    $$PWD/util/qsgtexturereader.cpp
+
+qtConfig(opengl(es1|es2)?) {
+    HEADERS += \
+        $$PWD/compressedtexture/qsgpkmhandler_p.h
+
+    SOURCES += \
+        $$PWD/compressedtexture/qsgpkmhandler.cpp
+}
