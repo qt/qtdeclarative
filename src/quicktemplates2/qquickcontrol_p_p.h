@@ -114,6 +114,18 @@ public:
     static QFont parentFont(const QQuickItem *item);
     static QFont themeFont(QPlatformTheme::Font type);
 
+    virtual void resolvePalette();
+    void inheritPalette(const QPalette &palette);
+    void updatePalette(const QPalette &palette);
+    static void updatePaletteRecur(QQuickItem *item, const QPalette &palette);
+    inline void setPalette_helper(const QPalette &palette) {
+        if (resolvedPalette.resolve() == palette.resolve() && resolvedPalette == palette)
+            return;
+        updatePalette(palette);
+    }
+    static QPalette parentPalette(const QQuickItem *item);
+    static QPalette themePalette(QPlatformTheme::Palette type);
+
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);
     static QLocale calcLocale(const QQuickItem *item);
@@ -129,6 +141,7 @@ public:
     struct ExtraData {
         ExtraData();
         QFont requestedFont;
+        QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -151,6 +164,7 @@ public:
     qreal spacing;
     QLocale locale;
     QFont resolvedFont;
+    QPalette resolvedPalette;
     Qt::FocusPolicy focusPolicy;
     Qt::FocusReason focusReason;
     QQuickItem *background;

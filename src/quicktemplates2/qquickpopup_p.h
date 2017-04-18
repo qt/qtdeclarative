@@ -53,6 +53,7 @@
 #include <QtGui/qevent.h>
 #include <QtCore/qlocale.h>
 #include <QtGui/qfont.h>
+#include <QtGui/qpalette.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmllist.h>
@@ -97,6 +98,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
@@ -207,6 +209,10 @@ public:
     void setFont(const QFont &font);
     void resetFont();
 
+    QPalette palette() const;
+    void setPalette(const QPalette &palette);
+    void resetPalette();
+
     QQuickWindow *window() const;
     QQuickItem *popupItem() const;
 
@@ -311,6 +317,7 @@ Q_SIGNALS:
     void bottomPaddingChanged();
     void fontChanged();
     void localeChanged();
+    Q_REVISION(3) void paletteChanged();
     void parentChanged();
     void backgroundChanged();
     void contentItemChanged();
@@ -364,9 +371,11 @@ protected:
     virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
+    virtual void paletteChange(const QPalette &newPalette, const QPalette &oldPalette);
     virtual void spacingChange(qreal newSpacing, qreal oldSpacing);
 
     virtual QFont defaultFont() const;
+    virtual QPalette defaultPalette() const;
 
 #if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;

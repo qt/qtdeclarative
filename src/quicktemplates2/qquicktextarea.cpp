@@ -217,6 +217,43 @@ void QQuickTextAreaPrivate::updateFont(const QFont &font)
         emit q->fontChanged();
 }
 
+/*!
+    \internal
+
+    Determine which palette is implicitly imposed on this control by its ancestors
+    and QGuiApplication::palette, resolve this against its own palette (attributes from
+    the implicit palette are copied over). Then propagate this palette to this
+    control's children.
+*/
+void QQuickTextAreaPrivate::resolvePalette()
+{
+    Q_Q(QQuickTextArea);
+    inheritPalette(QQuickControlPrivate::parentPalette(q));
+}
+
+void QQuickTextAreaPrivate::inheritPalette(const QPalette &palette)
+{
+    QPalette parentPalette = extra.isAllocated() ? extra->requestedPalette.resolve(palette) : palette;
+    parentPalette.resolve(extra.isAllocated() ? extra->requestedPalette.resolve() | palette.resolve() : palette.resolve());
+
+    const QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::TextEditPalette);
+    const QPalette resolvedPalette = parentPalette.resolve(defaultPalette);
+
+    setPalette_helper(resolvedPalette);
+}
+
+void QQuickTextAreaPrivate::updatePalette(const QPalette &palette)
+{
+    Q_Q(QQuickTextArea);
+    QPalette oldPalette = resolvedPalette;
+    resolvedPalette = palette;
+
+    QQuickControlPrivate::updatePaletteRecur(q, palette);
+
+    if (oldPalette != palette)
+        emit q->paletteChanged();
+}
+
 #if QT_CONFIG(quicktemplates2_hover)
 void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 {
@@ -417,6 +454,9 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::readOnlyChanged);
+
+    // ### TODO: ItemEnabledChanged?
+    connect(this, &QQuickItem::enabledChanged, this, &QQuickTextArea::paletteChanged);
 }
 
 QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
@@ -603,11 +643,44 @@ bool QQuickTextArea::contains(const QPointF &point) const
     return QQuickTextEdit::contains(point);
 }
 
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty palette QtQuick.Controls::TextArea::palette
+
+    This property holds the palette currently set for the text area.
+
+    \sa Control::palette
+*/
+QPalette QQuickTextArea::palette() const
+{
+    Q_D(const QQuickTextArea);
+    QPalette palette = d->resolvedPalette;
+    if (!isEnabled())
+        palette.setCurrentColorGroup(QPalette::Disabled);
+    return palette;
+}
+
+void QQuickTextArea::setPalette(const QPalette &palette)
+{
+    Q_D(QQuickTextArea);
+    if (d->extra.value().requestedPalette.resolve() == palette.resolve() && d->extra.value().requestedPalette == palette)
+        return;
+
+    d->extra.value().requestedPalette = palette;
+    d->resolvePalette();
+}
+
+void QQuickTextArea::resetPalette()
+{
+    setPalette(QPalette());
+}
+
 void QQuickTextArea::classBegin()
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::classBegin();
     d->resolveFont();
+    d->resolvePalette();
 }
 
 void QQuickTextArea::componentComplete()
@@ -630,6 +703,7 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
     QQuickTextEdit::itemChange(change, value);
     if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+        d->resolvePalette();
 #if QT_CONFIG(quicktemplates2_hover)
         if (!d->explicitHoverEnabled)
             d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false

@@ -136,6 +136,43 @@ void QQuickLabelPrivate::updateFont(const QFont &font)
         emit q->fontChanged();
 }
 
+/*!
+    \internal
+
+    Determine which palette is implicitly imposed on this control by its ancestors
+    and QGuiApplication::palette, resolve this against its own palette (attributes from
+    the implicit palette are copied over). Then propagate this palette to this
+    control's children.
+*/
+void QQuickLabelPrivate::resolvePalette()
+{
+    Q_Q(QQuickLabel);
+    inheritPalette(QQuickControlPrivate::parentPalette(q));
+}
+
+void QQuickLabelPrivate::inheritPalette(const QPalette &palette)
+{
+    QPalette parentPalette = extra.isAllocated() ? extra->requestedPalette.resolve(palette) : palette;
+    parentPalette.resolve(extra.isAllocated() ? extra->requestedPalette.resolve() | palette.resolve() : palette.resolve());
+
+    const QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::LabelPalette);
+    const QPalette resolvedPalette = parentPalette.resolve(defaultPalette);
+
+    setPalette_helper(resolvedPalette);
+}
+
+void QQuickLabelPrivate::updatePalette(const QPalette &palette)
+{
+    Q_Q(QQuickLabel);
+    QPalette oldPalette = resolvedPalette;
+    resolvedPalette = palette;
+
+    QQuickControlPrivate::updatePaletteRecur(q, palette);
+
+    if (oldPalette != palette)
+        emit q->paletteChanged();
+}
+
 void QQuickLabelPrivate::textChanged(const QString &text)
 {
 #if QT_CONFIG(accessibility)
@@ -173,6 +210,9 @@ QQuickLabel::QQuickLabel(QQuickItem *parent)
 {
     Q_D(QQuickLabel);
     QObjectPrivate::connect(this, &QQuickText::textChanged, d, &QQuickLabelPrivate::textChanged);
+
+    // ### TODO: ItemEnabledChanged?
+    connect(this, &QQuickItem::enabledChanged, this, &QQuickLabel::paletteChanged);
 }
 
 QFont QQuickLabel::font() const
@@ -223,11 +263,44 @@ void QQuickLabel::setBackground(QQuickItem *background)
     emit backgroundChanged();
 }
 
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty palette QtQuick.Controls::Label::palette
+
+    This property holds the palette currently set for the label.
+
+    \sa Control::palette
+*/
+QPalette QQuickLabel::palette() const
+{
+    Q_D(const QQuickLabel);
+    QPalette palette = d->resolvedPalette;
+    if (!isEnabled())
+        palette.setCurrentColorGroup(QPalette::Disabled);
+    return palette;
+}
+
+void QQuickLabel::setPalette(const QPalette &palette)
+{
+    Q_D(QQuickLabel);
+    if (d->extra.value().requestedPalette.resolve() == palette.resolve() && d->extra.value().requestedPalette == palette)
+        return;
+
+    d->extra.value().requestedPalette = palette;
+    d->resolvePalette();
+}
+
+void QQuickLabel::resetPalette()
+{
+    setPalette(QPalette());
+}
+
 void QQuickLabel::classBegin()
 {
     Q_D(QQuickLabel);
     QQuickText::classBegin();
     d->resolveFont();
+    d->resolvePalette();
 }
 
 void QQuickLabel::componentComplete()
@@ -244,8 +317,10 @@ void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
 {
     Q_D(QQuickLabel);
     QQuickText::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item)
+    if (change == ItemParentHasChanged && value.item) {
         d->resolveFont();
+        d->resolvePalette();
+    }
 }
 
 void QQuickLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

@@ -48,6 +48,7 @@
 // We mean it.
 //
 
+#include <QtGui/qpalette.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
@@ -68,6 +69,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION 1)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
+    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
 
 public:
     explicit QQuickTextField(QQuickItem *parent = nullptr);
@@ -91,6 +93,10 @@ public:
     void setHoverEnabled(bool enabled);
     void resetHoverEnabled();
 
+    QPalette palette() const;
+    void setPalette(const QPalette &palette);
+    void resetPalette();
+
 Q_SIGNALS:
     void fontChanged();
     void implicitWidthChanged3();
@@ -103,6 +109,7 @@ Q_SIGNALS:
     void pressAndHold(QQuickMouseEvent *event);
     Q_REVISION(1) void pressed(QQuickMouseEvent *event);
     Q_REVISION(1) void released(QQuickMouseEvent *event);
+    Q_REVISION(3) void paletteChanged();
 
 protected:
     void classBegin() override;

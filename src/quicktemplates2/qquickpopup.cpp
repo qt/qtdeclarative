@@ -1347,6 +1347,53 @@ void QQuickPopup::resetFont()
     d->popupItem->resetFont();
 }
 
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty palette QtQuick.Controls::Popup::palette
+
+    This property holds the palette currently set for the popup.
+
+    Popup propagates explicit palette properties to its children. If you change a specific
+    property on a popup's palette, that property propagates to all of the popup's children,
+    overriding any system defaults for that property.
+
+    \code
+    Popup {
+        palette.text: "red"
+
+        Column {
+            Label {
+                text: qsTr("This will use red color...")
+            }
+
+            Switch {
+                text: qsTr("... and so will this")
+            }
+        }
+    }
+    \endcode
+
+    \sa Control::palette, ApplicationWindow::palette
+*/
+QPalette QQuickPopup::palette() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->palette();
+}
+
+void QQuickPopup::setPalette(const QPalette &palette)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setPalette(palette);
+}
+
+void QQuickPopup::resetPalette()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetPalette();
+}
+
 QQuickWindow *QQuickPopup::window() const
 {
     Q_D(const QQuickPopup);
@@ -1389,6 +1436,7 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
 
         QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
         p->resolveFont();
+        p->resolvePalette();
         if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
             p->updateLocale(window->locale(), false); // explicit=false
     } else {
@@ -2104,6 +2152,13 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
         emit availableHeightChanged();
 }
 
+void QQuickPopup::paletteChange(const QPalette &newPalette, const QPalette &oldPalette)
+{
+    Q_UNUSED(newPalette);
+    Q_UNUSED(oldPalette);
+    emit paletteChanged();
+}
+
 void QQuickPopup::spacingChange(qreal newSpacing, qreal oldSpacing)
 {
     Q_UNUSED(newSpacing);
@@ -2114,6 +2169,11 @@ void QQuickPopup::spacingChange(qreal newSpacing, qreal oldSpacing)
 QFont QQuickPopup::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+}
+
+QPalette QQuickPopup::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
 }
 
 #if QT_CONFIG(accessibility)

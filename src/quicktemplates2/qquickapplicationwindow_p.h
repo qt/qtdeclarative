@@ -51,6 +51,7 @@
 #include <QtQuick/private/qquickwindowmodule_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtGui/qfont.h>
+#include <QtGui/qpalette.h>
 #include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
@@ -72,6 +73,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -102,6 +104,10 @@ public:
     void setLocale(const QLocale &locale);
     void resetLocale();
 
+    QPalette palette() const;
+    void setPalette(const QPalette &palette);
+    void resetPalette();
+
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
@@ -111,6 +117,7 @@ Q_SIGNALS:
     void footerChanged();
     void fontChanged();
     void localeChanged();
+    Q_REVISION(3) void paletteChanged();
 
 protected:
     bool isComponentComplete() const;

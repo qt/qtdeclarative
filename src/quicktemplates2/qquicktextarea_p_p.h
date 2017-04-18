@@ -91,6 +91,15 @@ public:
         updateFont(font);
     }
 
+    void resolvePalette();
+    void inheritPalette(const QPalette &palette);
+    void updatePalette(const QPalette &palette);
+    inline void setPalette_helper(const QPalette &palette) {
+        if (resolvedPalette.resolve() == palette.resolve() && resolvedPalette == palette)
+            return;
+        updatePalette(palette);
+    }
+
 #if QT_CONFIG(quicktemplates2_hover)
     void updateHoverEnabled(bool h, bool e);
 #endif
@@ -123,9 +132,11 @@ public:
 
     struct ExtraData {
         QFont requestedFont;
+        QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
+    QPalette resolvedPalette;
     QQuickItem *background;
     QString placeholder;
     Qt::FocusReason focusReason;

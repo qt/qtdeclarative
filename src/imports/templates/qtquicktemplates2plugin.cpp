@@ -292,10 +292,13 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
     qmlRegisterType<QQuickAction>(uri, 2, 3, "Action");
     qmlRegisterType<QQuickActionGroup>(uri, 2, 3, "ActionGroup");
+    qmlRegisterType<QQuickApplicationWindow, 3>(uri, 2, 3, "ApplicationWindow");
     qmlRegisterType<QQuickButtonGroup, 3>(uri, 2, 3, "ButtonGroup");
+    qmlRegisterType<QQuickControl, 3>(uri, 2, 3, "Control");
     qmlRegisterType<QQuickDialog, 3>(uri, 2, 3, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 3, "DialogButtonBox");
     qRegisterMetaType<QQuickIcon>();
+    qmlRegisterType<QQuickPopup, 3>(uri, 2, 3, "Popup");
     qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
     qmlRegisterType<QQuickScrollBar, 3>(uri, 2, 3, "ScrollBar");
     qmlRegisterType<QQuickScrollIndicator, 3>(uri, 2, 3, "ScrollIndicator");

@@ -84,6 +84,15 @@ public:
         updateFont(font);
     }
 
+    void resolvePalette();
+    void inheritPalette(const QPalette &palette);
+    void updatePalette(const QPalette &palette);
+    inline void setPalette_helper(const QPalette &palette) {
+        if (resolvedPalette.resolve() == palette.resolve() && resolvedPalette == palette)
+            return;
+        updatePalette(palette);
+    }
+
     void textChanged(const QString &text);
 
 #if QT_CONFIG(accessibility)
@@ -93,9 +102,11 @@ public:
 
     struct ExtraData {
         QFont requestedFont;
+        QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
+    QPalette resolvedPalette;
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
 };

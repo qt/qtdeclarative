@@ -49,6 +49,7 @@
 //
 
 #include <QtCore/qlocale.h>
+#include <QtGui/qpalette.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
@@ -78,6 +79,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
 
 public:
     explicit QQuickControl(QQuickItem *parent = nullptr);
@@ -143,6 +145,10 @@ public:
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);
 
+    QPalette palette() const;
+    void setPalette(const QPalette &palette);
+    void resetPalette();
+
 Q_SIGNALS:
     void fontChanged();
     void availableWidthChanged();
@@ -163,9 +169,11 @@ Q_SIGNALS:
     void wheelEnabledChanged();
     void backgroundChanged();
     void contentItemChanged();
+    Q_REVISION(3) void paletteChanged();
 
 protected:
     virtual QFont defaultFont() const;
+    virtual QPalette defaultPalette() const;
 
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
@@ -202,6 +210,7 @@ protected:
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
+    virtual void paletteChange(const QPalette &newPalette, const QPalette &oldPalette);
 
 #if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;

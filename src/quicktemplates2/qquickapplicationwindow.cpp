@@ -168,6 +168,14 @@ public:
     }
     void resolveFont();
 
+    void updatePalette(const QPalette &p);
+    inline void setPalette_helper(const QPalette &p) {
+        if (palette.resolve() == p.resolve() && palette == p)
+            return;
+        updatePalette(p);
+    }
+    void resolvePalette();
+
     void _q_updateActiveFocus();
     void setActiveFocusControl(QQuickItem *item);
 
@@ -179,6 +187,7 @@ public:
     QQuickOverlay *overlay;
     QFont font;
     QLocale locale;
+    QPalette palette;
     QQuickItem *activeFocusControl;
     QQuickApplicationWindow *q_ptr;
 };
@@ -272,6 +281,30 @@ void QQuickApplicationWindowPrivate::resolveFont()
 {
     QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
     setFont_helper(resolvedFont);
+}
+
+void QQuickApplicationWindowPrivate::updatePalette(const QPalette &p)
+{
+    Q_Q(QQuickApplicationWindow);
+    const bool changed = palette != p;
+    palette = p;
+
+    QQuickItem *rootItem = q->QQuickWindow::contentItem();
+    QQuickControlPrivate::updatePaletteRecur(rootItem, p);
+
+    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
+    const QList<QQuickPopup *> popups = rootItem->findChildren<QQuickPopup *>();
+    for (QQuickPopup *popup : popups)
+        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritPalette(p);
+
+    if (changed)
+        emit q->paletteChanged();
+}
+
+void QQuickApplicationWindowPrivate::resolvePalette()
+{
+    QPalette resolvedPalette = palette.resolve(QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette));
+    setPalette_helper(resolvedPalette);
 }
 
 void QQuickApplicationWindowPrivate::_q_updateActiveFocus()
@@ -680,6 +713,43 @@ void QQuickApplicationWindow::resetLocale()
     setLocale(QLocale());
 }
 
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty palette QtQuick.Controls::ApplicationWindow::palette
+
+    This property holds the palette currently set for the window.
+
+    The default palette depends on the system environment. QGuiApplication maintains a system/theme
+    palette which serves as a default for all application windows. You can also set the default palette
+    for windows by passing a custom palette to QGuiApplication::setPalette(), before loading any QML.
+
+    ApplicationWindow propagates explicit palette properties to child controls. If you change a specific
+    property on the window's palette, that property propagates to all child controls in the window,
+    overriding any system defaults for that property.
+
+    \sa Control::palette
+*/
+QPalette QQuickApplicationWindow::palette() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->palette;
+}
+
+void QQuickApplicationWindow::setPalette(const QPalette &palette)
+{
+    Q_D(QQuickApplicationWindow);
+    if (d->palette.resolve() == palette.resolve() && d->palette == palette)
+        return;
+
+    QPalette resolvedPalette = palette.resolve(QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette));
+    d->setPalette_helper(resolvedPalette);
+}
+
+void QQuickApplicationWindow::resetPalette()
+{
+    setPalette(QPalette());
+}
+
 QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
 {
     return new QQuickApplicationWindowAttached(object);
@@ -697,6 +767,7 @@ void QQuickApplicationWindow::classBegin()
     d->complete = false;
     QQuickWindowQmlImpl::classBegin();
     d->resolveFont();
+    d->resolvePalette();
 }
 
 void QQuickApplicationWindow::componentComplete()
