@@ -138,7 +138,7 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
     // so onGrabChanged(this, CancelGrabExclusive, point) and setPressed(false) will be called.
     // But when m_gesturePolicy is DragThreshold, we don't get an exclusive grab, but
     // we still don't want to be pressed anymore.
-    if (!ret)
+    if (!ret && point->pointId() == pointId())
         setPressed(false, true, point);
     return ret;
 }
