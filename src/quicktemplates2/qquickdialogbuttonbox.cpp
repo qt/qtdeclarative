@@ -258,7 +258,12 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
 
             return firstRole != QPlatformDialogHelper::InvalidRole;
         }
-        const int *m_layout = QPlatformDialogHelper::buttonLayout();
+        static const int *themeButtonLayout()
+        {
+            const int hint = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::DialogButtonBoxLayout).toInt();
+            return QPlatformDialogHelper::buttonLayout(Qt::Horizontal, static_cast<QPlatformDialogHelper::ButtonLayout>(hint));
+        }
+        const int *m_layout = themeButtonLayout();
     };
 
     std::sort(buttons.begin(), buttons.end(), ButtonLayout());
