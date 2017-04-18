@@ -48,14 +48,14 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QTranslator>
 #include <QDebug>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     QTranslator qtTranslator;
     qtTranslator.load("qml_" + QLocale::system().name(), ":/i18n/");
