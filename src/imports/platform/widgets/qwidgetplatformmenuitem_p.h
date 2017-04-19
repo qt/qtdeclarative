@@ -64,9 +64,6 @@ public:
 
     QAction *action() const;
 
-    quintptr tag()const override;
-    void setTag(quintptr tag) override;
-
     void setText(const QString &text) override;
     void setIcon(const QIcon &icon) override;
     void setMenu(QPlatformMenu *menu) override;
@@ -83,7 +80,6 @@ public:
     void setIconSize(int size) override;
 
 private:
-    quintptr m_tag;
     QScopedPointer<QAction> m_action;
 };
 

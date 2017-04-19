@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformMenu::QWidgetPlatformMenu(QObject *parent)
-    : m_tag(reinterpret_cast<quintptr>(this)), m_menu(new QMenu)
+    : m_menu(new QMenu)
 {
     setParent(parent);
 
@@ -93,16 +93,6 @@ void QWidgetPlatformMenu::syncMenuItem(QPlatformMenuItem *item)
 void QWidgetPlatformMenu::syncSeparatorsCollapsible(bool enable)
 {
     m_menu->setSeparatorsCollapsible(enable);
-}
-
-quintptr QWidgetPlatformMenu::tag() const
-{
-    return m_tag;
-}
-
-void QWidgetPlatformMenu::setTag(quintptr tag)
-{
-    m_tag = tag;
 }
 
 void QWidgetPlatformMenu::setText(const QString &text)

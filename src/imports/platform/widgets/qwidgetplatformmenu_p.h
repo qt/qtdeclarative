@@ -70,9 +70,6 @@ public:
     void syncMenuItem(QPlatformMenuItem *item) override;
     void syncSeparatorsCollapsible(bool enable) override;
 
-    quintptr tag()const override;
-    void setTag(quintptr tag) override;
-
     void setText(const QString &text) override;
     void setIcon(const QIcon &icon) override;
     void setEnabled(bool enabled) override;
@@ -92,7 +89,6 @@ public:
     QPlatformMenu *createSubMenu() const override;
 
 private:
-    quintptr m_tag;
     QScopedPointer<QMenu> m_menu;
     QVector<QWidgetPlatformMenuItem *> m_items;
 };

@@ -43,7 +43,7 @@
 QT_BEGIN_NAMESPACE
 
 QWidgetPlatformMenuItem::QWidgetPlatformMenuItem(QObject *parent)
-    : m_tag(reinterpret_cast<quintptr>(this)), m_action(new QAction)
+    : m_action(new QAction)
 {
     setParent(parent);
     connect(m_action.data(), &QAction::hovered, this, &QPlatformMenuItem::hovered);
@@ -57,16 +57,6 @@ QWidgetPlatformMenuItem::~QWidgetPlatformMenuItem()
 QAction *QWidgetPlatformMenuItem::action() const
 {
     return m_action.data();
-}
-
-quintptr QWidgetPlatformMenuItem::tag() const
-{
-    return m_tag;
-}
-
-void QWidgetPlatformMenuItem::setTag(quintptr tag)
-{
-    m_tag = tag;
 }
 
 void QWidgetPlatformMenuItem::setText(const QString &text)
