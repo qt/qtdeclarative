@@ -137,10 +137,10 @@ public:
     void startPressRepeat();
     void stopPressRepeat();
 
-    bool handlePress(const QPointF &point);
-    bool handleMove(const QPointF &point);
-    bool handleRelease(const QPointF &point);
-    bool handleUngrab();
+    void handlePress(const QPointF &point);
+    void handleMove(const QPointF &point);
+    void handleRelease(const QPointF &point);
+    void handleUngrab();
 
     bool editable;
     int from;
@@ -271,7 +271,7 @@ void QQuickSpinBoxPrivate::stopPressRepeat()
     }
 }
 
-bool QQuickSpinBoxPrivate::handlePress(const QPointF &point)
+void QQuickSpinBoxPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
@@ -283,10 +283,9 @@ bool QQuickSpinBoxPrivate::handlePress(const QPointF &point)
     q->setAccessibleProperty("pressed", pressed);
     if (pressed)
         startRepeatDelay();
-    return pressed;
 }
 
-bool QQuickSpinBoxPrivate::handleMove(const QPointF &point)
+void QQuickSpinBoxPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
@@ -298,17 +297,15 @@ bool QQuickSpinBoxPrivate::handleMove(const QPointF &point)
     q->setAccessibleProperty("pressed", pressed);
     if (!pressed)
         stopPressRepeat();
-    return pressed;
 }
 
-bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
+void QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickSpinBox);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
 
     int oldValue = value;
-    bool wasPressed = up->isPressed() || down->isPressed();
     if (up->isPressed()) {
         up->setPressed(false);
         if (repeatTimer <= 0 && ui && ui->contains(ui->mapFromItem(q, point)))
@@ -323,10 +320,9 @@ bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-    return wasPressed;
 }
 
-bool QQuickSpinBoxPrivate::handleUngrab()
+void QQuickSpinBoxPrivate::handleUngrab()
 {
     Q_Q(QQuickSpinBox);
     up->setPressed(false);
@@ -334,7 +330,6 @@ bool QQuickSpinBoxPrivate::handleUngrab()
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-    return false;
 }
 
 QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
