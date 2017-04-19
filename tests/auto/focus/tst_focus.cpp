@@ -221,7 +221,6 @@ void tst_focus::policy()
     QCOMPARE(control->focusPolicy(), Qt::ClickFocus);
     QTest::touchEvent(window.data(), device.data()).press(0, QPoint(control->width() / 2, control->height() / 2));
     QTest::touchEvent(window.data(), device.data()).release(0, QPoint(control->width() / 2, control->height() / 2));
-    QEXPECT_FAIL("Control", "TODO: Control::touchEvent should set the touchId", Continue);
     QVERIFY(control->hasActiveFocus());
     QVERIFY(!control->hasVisualFocus());
 

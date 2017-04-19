@@ -107,10 +107,10 @@ public:
     void setPosition(qreal position);
     void updatePosition();
 
-    void handlePress(const QPointF &point);
-    void handleMove(const QPointF &point);
-    void handleRelease(const QPointF &point);
-    void handleUngrab();
+    void handlePress(const QPointF &point) override;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+    void handleUngrab() override;
 
     qreal from;
     qreal to;
@@ -185,6 +185,7 @@ void QQuickSliderPrivate::updatePosition()
 void QQuickSliderPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickSlider);
+    QQuickControlPrivate::handlePress(point);
     pressPoint = point;
     q->setPressed(true);
 }
@@ -192,6 +193,7 @@ void QQuickSliderPrivate::handlePress(const QPointF &point)
 void QQuickSliderPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickSlider);
+    QQuickControlPrivate::handleMove(point);
     const qreal oldPos = position;
     qreal pos = positionAt(point);
     if (snapMode == QQuickSlider::SnapAlways)
@@ -207,6 +209,7 @@ void QQuickSliderPrivate::handleMove(const QPointF &point)
 void QQuickSliderPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickSlider);
+    QQuickControlPrivate::handleRelease(point);
     pressPoint = QPointF();
     const qreal oldPos = position;
     qreal pos = positionAt(point);
@@ -227,6 +230,7 @@ void QQuickSliderPrivate::handleRelease(const QPointF &point)
 void QQuickSliderPrivate::handleUngrab()
 {
     Q_Q(QQuickSlider);
+    QQuickControlPrivate::handleUngrab();
     pressPoint = QPointF();
     q->setPressed(false);
 }
@@ -614,92 +618,57 @@ void QQuickSlider::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickSlider);
     QQuickControl::mousePressEvent(event);
-    d->handlePress(event->localPos());
     d->handleMove(event->localPos());
 }
 
 void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickSlider);
-    QQuickControl::mouseMoveEvent(event);
     if (!keepMouseGrab()) {
         if (d->orientation == Qt::Horizontal)
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->localPos().x() - d->pressPoint.x(), Qt::XAxis, event));
         else
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->localPos().y() - d->pressPoint.y(), Qt::YAxis, event));
     }
-    d->handleMove(event->localPos());
-}
-
-void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickSlider);
-    QQuickControl::mouseReleaseEvent(event);
-    d->handleRelease(event->localPos());
-}
-
-void QQuickSlider::mouseUngrabEvent()
-{
-    Q_D(QQuickSlider);
-    QQuickControl::mouseUngrabEvent();
-    d->handleUngrab();
+    QQuickControl::mouseMoveEvent(event);
 }
 
 void QQuickSlider::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickSlider);
     switch (event->type()) {
-    case QEvent::TouchBegin:
-        if (d->touchId == -1) {
-            const QTouchEvent::TouchPoint point = event->touchPoints().first();
-            d->touchId = point.id();
-            d->handlePress(point.pos());
-        } else {
-            event->ignore();
-        }
-        break;
-
     case QEvent::TouchUpdate:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
+            if (!d->acceptTouch(point))
                 continue;
 
-            if (!keepTouchGrab()) {
-                if (d->orientation == Qt::Horizontal)
-                    setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
-                else
-                    setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point));
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                d->handlePress(point.pos());
+                break;
+            case Qt::TouchPointMoved:
+                if (!keepTouchGrab()) {
+                    if (d->orientation == Qt::Horizontal)
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
+                    else
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point));
+                }
+                if (keepTouchGrab())
+                    d->handleMove(point.pos());
+                break;
+            case Qt::TouchPointReleased:
+                d->handleRelease(point.pos());
+                break;
+            default:
+                break;
             }
-            if (keepTouchGrab())
-                d->handleMove(point.pos());
         }
-        break;
-
-    case QEvent::TouchEnd:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
-                continue;
-
-            d->handleRelease(point.pos());
-        }
-        break;
-
-    case QEvent::TouchCancel:
-        d->handleUngrab();
         break;
 
     default:
+        QQuickControl::touchEvent(event);
         break;
     }
-
-    QQuickControl::touchEvent(event);
-}
-
-void QQuickSlider::touchUngrabEvent()
-{
-    Q_D(QQuickSlider);
-    QQuickControl::touchUngrabEvent();
-    d->handleUngrab();
 }
 
 #if QT_CONFIG(wheelevent)

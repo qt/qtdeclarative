@@ -74,10 +74,10 @@ public:
     void updateActive();
     void resizeContent() override;
 
-    void handlePress(const QPointF &point);
-    void handleMove(const QPointF &point);
-    void handleRelease(const QPointF &point);
-    void handleUngrab();
+    void handlePress(const QPointF &point) override;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+    void handleUngrab() override;
 
     qreal size;
     qreal position;

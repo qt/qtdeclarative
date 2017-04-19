@@ -145,6 +145,19 @@ QQuickControlPrivate::~QQuickControlPrivate()
 #endif
 }
 
+bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
+{
+    if (point.id() == touchId)
+        return true;
+
+    if (touchId == -1 && point.state() == Qt::TouchPointPressed) {
+        touchId = point.id();
+        return true;
+    }
+
+    return false;
+}
+
 void QQuickControlPrivate::handlePress(const QPointF &)
 {
     Q_Q(QQuickControl);
@@ -1348,14 +1361,14 @@ void QQuickControl::touchEvent(QTouchEvent *event)
     switch (event->type()) {
     case QEvent::TouchBegin:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() == d->touchId)
+            if (d->acceptTouch(point))
                 d->handlePress(point.pos());
         }
         break;
 
     case QEvent::TouchUpdate:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
+            if (!d->acceptTouch(point))
                 continue;
 
             switch (point.state()) {
@@ -1376,7 +1389,7 @@ void QQuickControl::touchEvent(QTouchEvent *event)
 
     case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() == d->touchId)
+            if (d->acceptTouch(point))
                 d->handleRelease(point.pos());
         }
         break;

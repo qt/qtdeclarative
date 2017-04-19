@@ -78,10 +78,11 @@ public:
         return control->d_func();
     }
 
-    void handlePress(const QPointF &point);
-    void handleMove(const QPointF &point);
-    void handleRelease(const QPointF &point);
-    void handleUngrab();
+    virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
+    virtual void handlePress(const QPointF &point);
+    virtual void handleMove(const QPointF &point);
+    virtual void handleRelease(const QPointF &point);
+    virtual void handleUngrab();
 
     void mirrorChange() override;
 

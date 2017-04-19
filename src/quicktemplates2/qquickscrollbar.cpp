@@ -245,6 +245,7 @@ void QQuickScrollBarPrivate::resizeContent()
 void QQuickScrollBarPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
+    QQuickControlPrivate::handlePress(point);
     offset = positionAt(point) - position;
     if (offset < 0 || offset > size)
         offset = size / 2;
@@ -254,6 +255,7 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point)
 void QQuickScrollBarPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
+    QQuickControlPrivate::handleMove(point);
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode == QQuickScrollBar::SnapAlways)
         pos = snapPosition(pos);
@@ -263,6 +265,7 @@ void QQuickScrollBarPrivate::handleMove(const QPointF &point)
 void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
+    QQuickControlPrivate::handleRelease(point);
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode != QQuickScrollBar::NoSnap)
         pos = snapPosition(pos);
@@ -274,6 +277,7 @@ void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
 void QQuickScrollBarPrivate::handleUngrab()
 {
     Q_Q(QQuickScrollBar);
+    QQuickControlPrivate::handleUngrab();
     offset = 0.0;
     q->setPressed(false);
 }
@@ -592,79 +596,7 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
-    d->handlePress(event->localPos());
     d->handleMove(event->localPos());
-}
-
-void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickScrollBar);
-    QQuickControl::mouseMoveEvent(event);
-    d->handleMove(event->localPos());
-}
-
-void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickScrollBar);
-    QQuickControl::mouseReleaseEvent(event);
-    d->handleRelease(event->localPos());
-}
-
-void QQuickScrollBar::mouseUngrabEvent()
-{
-    Q_D(QQuickScrollBar);
-    QQuickControl::mouseUngrabEvent();
-    d->handleUngrab();
-}
-
-void QQuickScrollBar::touchEvent(QTouchEvent *event)
-{
-    Q_D(QQuickScrollBar);
-    switch (event->type()) {
-    case QEvent::TouchBegin:
-        if (d->touchId == -1) {
-            const QTouchEvent::TouchPoint point = event->touchPoints().first();
-            d->touchId = point.id();
-            d->handlePress(point.pos());
-        } else {
-            event->ignore();
-        }
-        break;
-
-    case QEvent::TouchUpdate:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
-                continue;
-
-            d->handleMove(point.pos());
-        }
-        break;
-
-    case QEvent::TouchEnd:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
-                continue;
-
-            d->handleRelease(point.pos());
-        }
-        break;
-
-    case QEvent::TouchCancel:
-        d->handleUngrab();
-        break;
-
-    default:
-        break;
-    }
-
-    QQuickControl::touchEvent(event);
-}
-
-void QQuickScrollBar::touchUngrabEvent()
-{
-    Q_D(QQuickScrollBar);
-    QQuickControl::touchUngrabEvent();
-    d->handleUngrab();
 }
 
 #if QT_CONFIG(quicktemplates2_hover)
