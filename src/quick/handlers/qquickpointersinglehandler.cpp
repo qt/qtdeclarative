@@ -76,11 +76,10 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
         int c = event->pointCount();
         for (int i = 0; i < c; ++i) {
             QQuickEventPoint *p = event->point(i);
-            if (p->pointId() == m_pointId) {
-                point = p;
+            if (wantsEventPoint(p)) {
                 ++candidatePointCount;
-            } else if (wantsEventPoint(p)) {
-                ++candidatePointCount;
+                if (p->pointId() == m_pointId)
+                    point = p;
             }
         }
         if (point) {
