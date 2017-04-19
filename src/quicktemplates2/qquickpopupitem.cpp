@@ -229,6 +229,18 @@ void QQuickPopupItem::mouseUngrabEvent()
     d->popup->mouseUngrabEvent();
 }
 
+void QQuickPopupItem::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    d->popup->touchEvent(event);
+}
+
+void QQuickPopupItem::touchUngrabEvent()
+{
+    Q_D(QQuickPopupItem);
+    d->popup->touchUngrabEvent();
+}
+
 #if QT_CONFIG(wheelevent)
 void QQuickPopupItem::wheelEvent(QWheelEvent *event)
 {
