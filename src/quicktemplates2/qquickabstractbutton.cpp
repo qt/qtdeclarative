@@ -121,7 +121,6 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       autoExclusive(false),
       autoRepeat(false),
       wasHeld(false),
-      touchId(-1),
       holdTimer(0),
       delayTimer(0),
       repeatTimer(0),
@@ -165,7 +164,6 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
     Q_Q(QQuickAbstractButton);
     bool wasPressed = pressed;
     q->setPressed(false);
-    touchId = -1;
 
     if (!wasHeld && (keepPressed || q->contains(point)))
         q->nextCheckState();
@@ -191,7 +189,6 @@ void QQuickAbstractButtonPrivate::handleCancel()
         return;
 
     q->setPressed(false);
-    touchId = -1;
     stopPressRepeat();
     stopPressAndHold();
     emit q->canceled();
@@ -579,7 +576,8 @@ void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::focusOutEvent(event);
-    d->handleCancel();
+    if (d->touchId == -1) // don't ungrab on multi-touch if another control gets focused
+        d->handleCancel();
 }
 
 void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
@@ -713,9 +711,10 @@ void QQuickAbstractButton::touchEvent(QTouchEvent *event)
         break;
 
     default:
-        QQuickControl::touchEvent(event);
         break;
     }
+
+    QQuickControl::touchEvent(event);
 }
 
 void QQuickAbstractButton::touchUngrabEvent()

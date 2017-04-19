@@ -114,7 +114,6 @@ public:
           stepSize(1),
           delayTimer(0),
           repeatTimer(0),
-          touchId(-1),
           up(nullptr),
           down(nullptr),
           validator(nullptr),
@@ -150,7 +149,6 @@ public:
     int stepSize;
     int delayTimer;
     int repeatTimer;
-    int touchId;
     QQuickSpinButton *up;
     QQuickSpinButton *down;
     QValidator *validator;
@@ -323,7 +321,6 @@ bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
     if (value != oldValue)
         emit q->valueModified();
 
-    touchId = -1;
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
     return wasPressed;
@@ -335,7 +332,6 @@ bool QQuickSpinBoxPrivate::handleUngrab()
     up->setPressed(false);
     down->setPressed(false);
 
-    touchId = -1;
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
     return false;
@@ -870,9 +866,10 @@ void QQuickSpinBox::touchEvent(QTouchEvent *event)
         break;
 
     default:
-        QQuickControl::touchEvent(event);
         break;
     }
+
+    QQuickControl::touchEvent(event);
 }
 
 void QQuickSpinBox::touchUngrabEvent()

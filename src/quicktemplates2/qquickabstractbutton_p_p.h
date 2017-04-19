@@ -95,7 +95,6 @@ public:
     bool autoExclusive;
     bool autoRepeat;
     bool wasHeld;
-    int touchId;
     int holdTimer;
     int delayTimer;
     int repeatTimer;

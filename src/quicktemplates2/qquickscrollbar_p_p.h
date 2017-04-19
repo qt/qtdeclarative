@@ -88,7 +88,6 @@ public:
     bool moving;
     bool interactive;
     bool explicitInteractive;
-    int touchId;
     Qt::Orientation orientation;
     QQuickScrollBar::SnapMode snapMode;
     QQuickScrollBar::Policy policy;

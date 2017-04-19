@@ -257,7 +257,6 @@ public:
     bool hasCurrentIndex;
     int highlightedIndex;
     int currentIndex;
-    int touchId;
     QVariant model;
     QString textRole;
     QString currentText;
@@ -296,7 +295,6 @@ QQuickComboBoxPrivate::QQuickComboBoxPrivate()
       hasCurrentIndex(false),
       highlightedIndex(-1),
       currentIndex(-1),
-      touchId(-1),
       delegateModel(nullptr),
       delegate(nullptr),
       indicator(nullptr),
@@ -648,14 +646,12 @@ void QQuickComboBoxPrivate::handleRelease(const QPointF &)
         q->setPressed(false);
         togglePopup(false);
     }
-    touchId = -1;
 }
 
 void QQuickComboBoxPrivate::handleUngrab()
 {
     Q_Q(QQuickComboBox);
     q->setPressed(false);
-    touchId = -1;
 }
 
 QQuickComboBox::QQuickComboBox(QQuickItem *parent)
@@ -1580,9 +1576,10 @@ void QQuickComboBox::touchEvent(QTouchEvent *event)
         break;
 
     default:
-        QQuickControl::touchEvent(event);
         break;
     }
+
+    QQuickControl::touchEvent(event);
 }
 
 void QQuickComboBox::touchUngrabEvent()

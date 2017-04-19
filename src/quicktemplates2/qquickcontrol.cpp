@@ -120,6 +120,7 @@ QQuickControlPrivate::QQuickControlPrivate()
       hovered(false),
       explicitHoverEnabled(false),
 #endif
+      touchId(-1),
       padding(0),
       topPadding(0),
       leftPadding(0),
@@ -142,6 +143,36 @@ QQuickControlPrivate::~QQuickControlPrivate()
 #if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
+}
+
+void QQuickControlPrivate::handlePress(const QPointF &)
+{
+    Q_Q(QQuickControl);
+    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        q->forceActiveFocus(Qt::MouseFocusReason);
+}
+
+void QQuickControlPrivate::handleMove(const QPointF &point)
+{
+#if QT_CONFIG(quicktemplates2_hover)
+    Q_Q(QQuickControl);
+    q->setHovered(hoverEnabled && q->contains(point));
+#else
+    Q_UNUSED(point);
+#endif
+}
+
+void QQuickControlPrivate::handleRelease(const QPointF &)
+{
+    Q_Q(QQuickControl);
+    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
+        q->forceActiveFocus(Qt::MouseFocusReason);
+    touchId = -1;
+}
+
+void QQuickControlPrivate::handleUngrab()
+{
+    touchId = -1;
 }
 
 void QQuickControlPrivate::mirrorChange()
@@ -1287,28 +1318,83 @@ void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    if ((d->focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
-        forceActiveFocus(Qt::MouseFocusReason);
-
+    d->handlePress(event->localPos());
     event->accept();
 }
 
 void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 {
-#if QT_CONFIG(quicktemplates2_hover)
     Q_D(QQuickControl);
-    setHovered(d->hoverEnabled && contains(event->pos()));
-#endif
+    d->handleMove(event->localPos());
     event->accept();
 }
 
 void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    if ((d->focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
-        forceActiveFocus(Qt::MouseFocusReason);
-
+    d->handleRelease(event->localPos());
     event->accept();
+}
+
+void QQuickControl::mouseUngrabEvent()
+{
+    Q_D(QQuickControl);
+    d->handleUngrab();
+}
+
+void QQuickControl::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickControl);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() == d->touchId)
+                d->handlePress(point.pos());
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() != d->touchId)
+                continue;
+
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                d->handlePress(point.pos());
+                break;
+            case Qt::TouchPointMoved:
+                d->handleMove(point.pos());
+                break;
+            case Qt::TouchPointReleased:
+                d->handleRelease(point.pos());
+                break;
+            default:
+                break;
+            }
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (point.id() == d->touchId)
+                d->handleRelease(point.pos());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleUngrab();
+        break;
+
+    default:
+        QQuickItem::touchEvent(event);
+        break;
+    }
+}
+
+void QQuickControl::touchUngrabEvent()
+{
+    Q_D(QQuickControl);
+    d->handleUngrab();
 }
 
 #if QT_CONFIG(wheelevent)

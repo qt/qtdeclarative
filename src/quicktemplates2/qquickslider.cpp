@@ -96,7 +96,6 @@ public:
           stepSize(0),
           live(true),
           pressed(false),
-          touchId(-1),
           orientation(Qt::Horizontal),
           snapMode(QQuickSlider::NoSnap),
           handle(nullptr)
@@ -120,7 +119,6 @@ public:
     qreal stepSize;
     bool live;
     bool pressed;
-    int touchId;
     QPointF pressPoint;
     Qt::Orientation orientation;
     QQuickSlider::SnapMode snapMode;
@@ -209,7 +207,6 @@ void QQuickSliderPrivate::handleMove(const QPointF &point)
 void QQuickSliderPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickSlider);
-    touchId = -1;
     pressPoint = QPointF();
     const qreal oldPos = position;
     qreal pos = positionAt(point);
@@ -230,7 +227,6 @@ void QQuickSliderPrivate::handleRelease(const QPointF &point)
 void QQuickSliderPrivate::handleUngrab()
 {
     Q_Q(QQuickSlider);
-    touchId = -1;
     pressPoint = QPointF();
     q->setPressed(false);
 }
@@ -693,9 +689,10 @@ void QQuickSlider::touchEvent(QTouchEvent *event)
         break;
 
     default:
-        QQuickControl::touchEvent(event);
         break;
     }
+
+    QQuickControl::touchEvent(event);
 }
 
 void QQuickSlider::touchUngrabEvent()

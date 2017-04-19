@@ -165,7 +165,6 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       moving(false),
       interactive(true),
       explicitInteractive(false),
-      touchId(-1),
       orientation(Qt::Vertical),
       snapMode(QQuickScrollBar::NoSnap),
       policy(QQuickScrollBar::AsNeeded)
@@ -269,7 +268,6 @@ void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
         pos = snapPosition(pos);
     q->setPosition(pos);
     offset = 0.0;
-    touchId = -1;
     q->setPressed(false);
 }
 
@@ -277,7 +275,6 @@ void QQuickScrollBarPrivate::handleUngrab()
 {
     Q_Q(QQuickScrollBar);
     offset = 0.0;
-    touchId = -1;
     q->setPressed(false);
 }
 
@@ -657,9 +654,10 @@ void QQuickScrollBar::touchEvent(QTouchEvent *event)
         break;
 
     default:
-        QQuickControl::touchEvent(event);
         break;
     }
+
+    QQuickControl::touchEvent(event);
 }
 
 void QQuickScrollBar::touchUngrabEvent()

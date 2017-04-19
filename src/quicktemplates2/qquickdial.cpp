@@ -96,8 +96,7 @@ class QQuickDialPrivate : public QQuickControlPrivate
 
 public:
     QQuickDialPrivate()
-        : touchId(-1),
-          from(0),
+        : from(0),
           to(1),
           value(0),
           position(0),
@@ -123,7 +122,6 @@ public:
     void handleRelease(const QPointF &point);
     void handleUngrab();
 
-    int touchId;
     qreal from;
     qreal to;
     qreal value;
@@ -242,14 +240,12 @@ void QQuickDialPrivate::handleRelease(const QPointF &point)
 
     q->setPressed(false);
     pressPoint = QPointF();
-    touchId = -1;
 }
 
 void QQuickDialPrivate::handleUngrab()
 {
     Q_Q(QQuickDial);
     pressPoint = QPointF();
-    touchId = -1;
     q->setPressed(false);
 }
 
@@ -729,9 +725,10 @@ void QQuickDial::touchEvent(QTouchEvent *event)
         break;
 
     default:
-        QQuickControl::touchEvent(event);
         break;
     }
+
+    QQuickControl::touchEvent(event);
 }
 
 void QQuickDial::touchUngrabEvent()
