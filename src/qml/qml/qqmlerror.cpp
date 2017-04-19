@@ -37,6 +37,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qpointer.h>
 
 #include <private/qv4errorobject_p.h>
 
@@ -78,7 +79,7 @@ public:
     QString description;
     quint16 line;
     quint16 column;
-    QObject *object;
+    QPointer<QObject> object;
 };
 
 QQmlErrorPrivate::QQmlErrorPrivate()
