@@ -201,10 +201,12 @@ void QQuickIconImage::pixmapChange()
 
     if (d->color.alpha() > 0) {
         QImage image = d->pix.image();
-        QPainter painter(&image);
-        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        painter.fillRect(image.rect(), d->color);
-        d->pix.setImage(image);
+        if (!image.isNull()) {
+            QPainter painter(&image);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            painter.fillRect(image.rect(), d->color);
+            d->pix.setImage(image);
+        }
     }
 }
 
