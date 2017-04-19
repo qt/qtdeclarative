@@ -472,6 +472,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
     switch (value.type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
+        Q_UNREACHABLE();
     case Value::Undefined_Type:
         return engine->id_undefined()->d();
     case Value::Null_Type:
@@ -504,6 +505,7 @@ static Heap::String *convert_to_string_add(ExecutionEngine *engine, const Value 
     switch (value.type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
+        Q_UNREACHABLE();
     case Value::Undefined_Type:
         return engine->id_undefined()->d();
     case Value::Null_Type:

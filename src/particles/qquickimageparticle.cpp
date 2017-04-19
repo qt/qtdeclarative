@@ -1323,6 +1323,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size());
         if (m_spriteEngine)
             m_spriteEngine->setCount(m_count);
+        Q_FALLTHROUGH();
     case Tabled:
         if (!m_material)
             m_material = TabledMaterial::createMaterial();
@@ -1355,12 +1356,15 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         getState<ImageMaterialData>(m_material)->colorTable = QSGPlainTexture::fromImage(colortable);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->opacityTable, opacitytable, UNIFORM_ARRAY_SIZE);
+        Q_FALLTHROUGH();
     case Deformable:
         if (!m_material)
             m_material = DeformableMaterial::createMaterial();
+        Q_FALLTHROUGH();
     case Colored:
         if (!m_material)
             m_material = ColoredMaterial::createMaterial();
+        Q_FALLTHROUGH();
     default://Also Simple
         if (!m_material)
             m_material = SimpleMaterial::createMaterial();
@@ -1530,6 +1534,7 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
         if (m_spriteEngine)
             m_spriteEngine->updateSprites(timeStamp);//fires signals if anim changed
         spritesUpdate(time);
+        Q_FALLTHROUGH();
     case Tabled:
     case Deformable:
     case Colored:
@@ -1691,6 +1696,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 writeTo->animWidth = getState<ImageMaterialData>(m_material)->animSheetSize.width();
                 writeTo->animHeight = getState<ImageMaterialData>(m_material)->animSheetSize.height();
             }
+            Q_FALLTHROUGH();
         case Tabled:
         case Deformable:
             //Initial Rotation
@@ -1737,6 +1743,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     getShadowDatum(datum)->autoRotate = autoRotate;
                 }
             }
+            Q_FALLTHROUGH();
         case Colored:
             //Color initialization
             // Particle color

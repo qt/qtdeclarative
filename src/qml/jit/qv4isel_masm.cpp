@@ -994,6 +994,7 @@ void InstructionSelection<JITAssembler>::convertTypeToBool(IR::Expr *source, IR:
         generateRuntimeCall(_as, JITTargetPlatform::ReturnValueRegister, toBoolean,
                             PointerToValue(source));
         _as->storeBool(JITTargetPlatform::ReturnValueRegister, target);
+        Q_FALLTHROUGH();
     case IR::VarType:
     default:
         Pointer addr = _as->loadAddress(JITTargetPlatform::ScratchRegister, source);

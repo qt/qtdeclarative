@@ -122,6 +122,7 @@ Tokenizer::Token Tokenizer::next()
         case '*':
             if (*pos == '/')
                 return Token_MultiLineCommentEnd;
+            Q_FALLTHROUGH();
 
         case '\n':
             return Token_NewLine;
@@ -129,6 +130,7 @@ Tokenizer::Token Tokenizer::next()
         case '\r':
             if (*pos == '\n')
                 return Token_NewLine;
+            Q_FALLTHROUGH();
 
         case '#': {
             if (*pos == 'v' && pos[1] == 'e' && pos[2] == 'r' && pos[3] == 's'
@@ -177,7 +179,7 @@ Tokenizer::Token Tokenizer::next()
                 pos += 3;
                 return Token_Void;
             }
-            // Fall-thru
+            Q_FALLTHROUGH();
         }
         default:
             // Identifier...

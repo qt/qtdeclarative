@@ -133,6 +133,7 @@ Tokenizer::Token Tokenizer::next()
                 pos += 3;
                 return Token_Void;
             }
+            Q_FALLTHROUGH();
         }
 
         case ';': return Token_SemiColon;
