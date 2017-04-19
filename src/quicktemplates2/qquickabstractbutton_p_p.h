@@ -67,10 +67,10 @@ public:
         return button->d_func();
     }
 
-    virtual void handlePress(const QPointF &point, Qt::MouseButton button = Qt::LeftButton, Qt::MouseButtons buttons = Qt::LeftButton);
+    virtual void handlePress(const QPointF &point);
     virtual void handleMove(const QPointF &point);
     virtual void handleRelease(const QPointF &point);
-    virtual void handleCancel();
+    virtual void handleUngrab();
 
     bool isPressAndHoldConnected();
     void startPressAndHold();
@@ -99,7 +99,7 @@ public:
     int delayTimer;
     int repeatTimer;
     QPointF pressPoint;
-    Qt::MouseButton repeatButton;
+    Qt::MouseButtons pressButtons;
     QQuickItem *indicator;
     QQuickButtonGroup *group;
 };

@@ -124,13 +124,13 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       holdTimer(0),
       delayTimer(0),
       repeatTimer(0),
-      repeatButton(Qt::NoButton),
+      pressButtons(Qt::NoButton),
       indicator(nullptr),
       group(nullptr)
 {
 }
 
-void QQuickAbstractButtonPrivate::handlePress(const QPointF &point, Qt::MouseButton button, Qt::MouseButtons buttons)
+void QQuickAbstractButtonPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickAbstractButton);
     pressPoint = point;
@@ -138,14 +138,12 @@ void QQuickAbstractButtonPrivate::handlePress(const QPointF &point, Qt::MouseBut
 
     emit q->pressed();
 
-    if (autoRepeat) {
+    if (autoRepeat)
         startRepeatDelay();
-        repeatButton = button;
-    } else if (Qt::LeftButton == (buttons & Qt::LeftButton)) {
+    else if (touchId != -1 || Qt::LeftButton == (pressButtons & Qt::LeftButton))
         startPressAndHold();
-    } else {
+    else
         stopPressAndHold();
-    }
 }
 
 void QQuickAbstractButtonPrivate::handleMove(const QPointF &point)
@@ -164,6 +162,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
     Q_Q(QQuickAbstractButton);
     bool wasPressed = pressed;
     q->setPressed(false);
+    pressButtons = Qt::NoButton;
 
     if (!wasHeld && (keepPressed || q->contains(point)))
         q->nextCheckState();
@@ -182,9 +181,10 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
         stopPressAndHold();
 }
 
-void QQuickAbstractButtonPrivate::handleCancel()
+void QQuickAbstractButtonPrivate::handleUngrab()
 {
     Q_Q(QQuickAbstractButton);
+    pressButtons = Qt::NoButton;
     if (!pressed)
         return;
 
@@ -577,7 +577,7 @@ void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
     Q_D(QQuickAbstractButton);
     QQuickControl::focusOutEvent(event);
     if (d->touchId == -1) // don't ungrab on multi-touch if another control gets focused
-        d->handleCancel();
+        d->handleUngrab();
 }
 
 void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
@@ -588,10 +588,8 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
         d->pressPoint = QPoint(qRound(width() / 2), qRound(height() / 2));
         setPressed(true);
 
-        if (d->autoRepeat) {
+        if (d->autoRepeat)
             d->startRepeatDelay();
-            d->repeatButton = Qt::NoButton;
-        }
 
         emit pressed();
         event->accept();
@@ -619,7 +617,8 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mousePressEvent(event);
-    d->handlePress(event->localPos(), event->button(), event->buttons());
+    d->pressButtons = event->buttons();
+    d->handlePress(event->localPos());
 }
 
 void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
@@ -646,7 +645,7 @@ void QQuickAbstractButton::mouseUngrabEvent()
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::mouseUngrabEvent();
-    d->handleCancel();
+    d->handleUngrab();
 }
 
 void QQuickAbstractButton::timerEvent(QTimerEvent *event)
@@ -707,7 +706,7 @@ void QQuickAbstractButton::touchEvent(QTouchEvent *event)
         break;
 
     case QEvent::TouchCancel:
-        d->handleCancel();
+        d->handleUngrab();
         break;
 
     default:
@@ -721,7 +720,7 @@ void QQuickAbstractButton::touchUngrabEvent()
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::touchUngrabEvent();
-    d->handleCancel();
+    d->handleUngrab();
 }
 
 void QQuickAbstractButton::buttonChange(ButtonChange change)
