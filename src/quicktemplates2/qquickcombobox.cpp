@@ -243,6 +243,11 @@ public:
 
     void createDelegateModel();
 
+    void handlePress(const QPointF &point);
+    void handleMove(const QPointF &point);
+    void handleRelease(const QPointF &point);
+    void handleUngrab();
+
     bool flat;
     bool down;
     bool hasDown;
@@ -620,6 +625,33 @@ void QQuickComboBoxPrivate::createDelegateModel()
 
     if (ownedOldModel)
         delete oldModel;
+}
+
+void QQuickComboBoxPrivate::handlePress(const QPointF &)
+{
+    Q_Q(QQuickComboBox);
+    q->setPressed(true);
+}
+
+void QQuickComboBoxPrivate::handleMove(const QPointF &point)
+{
+    Q_Q(QQuickComboBox);
+    q->setPressed(q->contains(point));
+}
+
+void QQuickComboBoxPrivate::handleRelease(const QPointF &)
+{
+    Q_Q(QQuickComboBox);
+    if (pressed) {
+        q->setPressed(false);
+        togglePopup(false);
+    }
+}
+
+void QQuickComboBoxPrivate::handleUngrab()
+{
+    Q_Q(QQuickComboBox);
+    q->setPressed(false);
 }
 
 QQuickComboBox::QQuickComboBox(QQuickItem *parent)
@@ -1473,30 +1505,30 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
 
 void QQuickComboBox::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickComboBox);
     QQuickControl::mousePressEvent(event);
-    setPressed(true);
+    d->handlePress(event->localPos());
 }
 
 void QQuickComboBox::mouseMoveEvent(QMouseEvent* event)
 {
+    Q_D(QQuickComboBox);
     QQuickControl::mouseMoveEvent(event);
-    setPressed(contains(event->pos()));
+    d->handleMove(event->localPos());
 }
 
 void QQuickComboBox::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::mouseReleaseEvent(event);
-    if (d->pressed) {
-        setPressed(false);
-        d->togglePopup(false);
-    }
+    d->handleRelease(event->localPos());
 }
 
 void QQuickComboBox::mouseUngrabEvent()
 {
+    Q_D(QQuickComboBox);
     QQuickControl::mouseUngrabEvent();
-    setPressed(false);
+    d->handleUngrab();
 }
 
 #if QT_CONFIG(wheelevent)
