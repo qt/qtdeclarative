@@ -111,6 +111,7 @@ protected:
     bool event(QEvent *event) Q_DECL_OVERRIDE;
 
     struct Shortcut {
+        Shortcut() : id(0) { }
         bool matches(QShortcutEvent *event) const;
         int id;
         QVariant userValue;
