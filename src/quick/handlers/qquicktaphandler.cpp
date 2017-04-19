@@ -129,7 +129,7 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
             ret = parentContains(point);
             break;
         case ReleaseWithinBounds:
-            ret = true;
+            ret = point->pointId() == pointId();
             break;
         }
         break;
