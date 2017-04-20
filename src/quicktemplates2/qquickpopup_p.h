@@ -384,6 +384,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickPopup)
     friend class QQuickPopupItem;
     friend class QQuickOverlay;
+    friend class QQuickOverlayPrivate;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPopup::ClosePolicy)
