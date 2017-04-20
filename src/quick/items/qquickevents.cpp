@@ -920,36 +920,51 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
     for (int i = m_touchPoints.size(); i < newPointCount; ++i)
         m_touchPoints.insert(i, new QQuickEventTouchPoint(this));
 
-    // Make sure the grabbers are right from one event to the next
-    QVector<QObject*> grabbers;
-    QVector<QVector <QPointer <QQuickPointerHandler> > > passiveGrabberses;
-    passiveGrabberses.reserve(newPointCount);
-    // Copy all grabbers, because the order of points might have changed in the event.
+    // Make sure the grabbers and on-pressed values are right from one event to the next
+    struct ToPreserve {
+        int pointId; // just for double-checking
+        ulong pressTimestamp;
+        QPointF scenePressPos;
+        QPointF sceneGrabPos;
+        QObject * grabber;
+        QVector <QPointer <QQuickPointerHandler> > passiveGrabbers;
+
+        ToPreserve() : pointId(0), pressTimestamp(0), grabber(nullptr) {}
+    };
+    QVector<ToPreserve> preserves(newPointCount); // jar of pickled touchpoints, in order of points in the _new_ event
+
+    // Copy stuff we need to preserve, because the order of points might have changed in the event.
     // The ID is all that we can rely on (release might remove the first point etc).
     for (int i = 0; i < newPointCount; ++i) {
-        QObject *grabber = nullptr;
-        QVector <QPointer <QQuickPointerHandler> > passiveGrabbers;
-        if (auto point = pointById(tps.at(i).id())) {
-            grabber = point->exclusiveGrabber();
-            passiveGrabbers = point->passiveGrabbers();
+        int pid = tps.at(i).id();
+        if (auto point = pointById(pid)) {
+            preserves[i].pointId = pid;
+            preserves[i].pressTimestamp = point->m_pressTimestamp;
+            preserves[i].scenePressPos = point->scenePressPos();
+            preserves[i].sceneGrabPos = point->sceneGrabPos();
+            preserves[i].grabber = point->exclusiveGrabber();
+            preserves[i].passiveGrabbers = point->passiveGrabbers();
         }
-        grabbers.append(grabber);
-        passiveGrabberses.append(passiveGrabbers);
     }
 
     for (int i = 0; i < newPointCount; ++i) {
         auto point = m_touchPoints.at(i);
         point->reset(tps.at(i), ev->timestamp());
+        const auto &preserved = preserves.at(i);
         if (point->state() == QQuickEventPoint::Pressed) {
-            if (grabbers.at(i))
+            if (preserved.grabber)
                 qWarning() << "TouchPointPressed without previous release event" << point;
             point->setGrabberItem(nullptr);
             point->clearPassiveGrabbers();
         } else {
             // Restore the grabbers without notifying (don't call onGrabChanged)
-            point->m_exclusiveGrabber = grabbers.at(i);
+            Q_ASSERT(preserved.pointId == 0 || preserved.pointId == point->pointId());
+            point->m_pressTimestamp = preserved.pressTimestamp;
+            point->m_scenePressPos = preserved.scenePressPos;
+            point->m_sceneGrabPos = preserved.sceneGrabPos;
+            point->m_exclusiveGrabber = preserved.grabber;
             point->m_grabberIsHandler = (qmlobject_cast<QQuickPointerHandler *>(point->m_exclusiveGrabber) != nullptr);
-            point->m_passiveGrabbers = passiveGrabberses.at(i);
+            point->m_passiveGrabbers = preserved.passiveGrabbers;
         }
     }
     m_pointCount = newPointCount;

@@ -341,6 +341,7 @@ protected:
     bool m_grabberIsHandler : 1;
     int m_reserved : 29;
 
+    friend class QQuickPointerTouchEvent;
     friend class QQuickWindowPrivate;
 
     Q_DISABLE_COPY(QQuickEventPoint)
