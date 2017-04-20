@@ -419,7 +419,6 @@ TestCase {
 
         var control2 = createTemporaryObject(slider, testCase, {y: control1.height, live: false})
         verify(control2)
-        waitForRendering(control2)
 
         var pressedCount2 = 0
         var movedCount2 = 0

@@ -350,7 +350,6 @@ TestCase {
 
         var dial2 = createTemporaryObject(dialComponent, testCase, {y: dial1.height});
         verify(dial2);
-        waitForRendering(dial2);
 
         // press the second dial
         touch.stationary(0).press(2, dial2, 0, 0).commit();
