@@ -205,7 +205,7 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
         int pCount = event->pointCount();
         for (int i = 0; i < pCount; ++i) {
             QQuickEventPoint *pt = event->point(i);
-            if (pt->grabberPointerHandler() == this)
+            if (pt->grabberPointerHandler() == this && pt->state() != QQuickEventPoint::Stationary)
                 pt->cancelExclusiveGrab();
         }
     }

@@ -120,7 +120,7 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
     case QQuickEventPoint::Released:
         ret = parentContains(point);
         break;
-    default: // update or stationary
+    case QQuickEventPoint::Updated:
         switch (m_gesturePolicy) {
         case DragThreshold:
             ret = !dragOverThreshold(point);
@@ -133,12 +133,18 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
             break;
         }
         break;
+    case QQuickEventPoint::Stationary:
+        // Never react in any way when the point hasn't moved.
+        // In autotests, the point's position may not even be correct, because
+        // QTest::touchEvent(window, touchDevice).stationary(1)
+        // provides no opportunity to give a position, so it ends up being random.
+        break;
     }
     // If this is the grabber, returning false from this function will cancel the grab,
     // so onGrabChanged(this, CancelGrabExclusive, point) and setPressed(false) will be called.
     // But when m_gesturePolicy is DragThreshold, we don't get an exclusive grab, but
     // we still don't want to be pressed anymore.
-    if (!ret && point->pointId() == pointId())
+    if (!ret && point->pointId() == pointId() && point->state() != QQuickEventPoint::Stationary)
         setPressed(false, true, point);
     return ret;
 }
