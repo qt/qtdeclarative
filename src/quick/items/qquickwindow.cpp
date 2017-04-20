@@ -751,7 +751,7 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 
     if (grabber && touchMouseId != -1 && touchMouseDevice) {
         // update the touch item for mouse touch id to the new grabber
-        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << touchMouseId << "->" << q->mouseGrabberItem();
+        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << touchMouseId << "->" << q->mouseGrabberItem();
         auto point = touchMouseDevice->pointerEvent()->pointById(touchMouseId);
         if (point) {
             point->setGrabberItem(grabber);
@@ -2273,7 +2273,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
         QQuickEventPoint *point = event->point(i);
         if (point->state() == QQuickEventPoint::Released) {
             int id = point->pointId();
-            qCDebug(DBG_TOUCH_TARGET) << "TP" << id << "released";
+            qCDebug(DBG_TOUCH_TARGET) << "TP" << hex << id << "released";
             point->setGrabberItem(nullptr);
             if (id == touchMouseId) {
                 touchMouseId = -1;
