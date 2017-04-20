@@ -44,6 +44,7 @@
 #include "qquickdialog_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/private/qqmlnullablevalue_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -272,17 +273,46 @@ void QQuickPopupPrivate::closeOrReject()
         q->close();
 }
 
-bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
+bool QQuickPopupPrivate::tryClose(QQuickItem *item, QEvent *event)
 {
     if (!interactive)
         return false;
 
-    const bool isPress = event->type() == QEvent::MouseButtonPress;
+    bool isPress = false;
+    QQmlNullableValue<QPointF> pos;
+
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        pos = static_cast<QMouseEvent *>(event)->pos();
+        isPress = event->type() == QEvent::MouseButtonPress;
+        break;
+
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
+            if (point.state() == Qt::TouchPointMoved)
+                continue;
+
+            pos = point.pos();
+            isPress = point.state() == Qt::TouchPointPressed;
+            break; // TODO: multiple touch points
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (pos.isNull) // ignore touch moves
+        return false;
+
     const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutside : QQuickPopup::CloseOnReleaseOutside);
     const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutsideParent : QQuickPopup::CloseOnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
-        if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
-            if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
+        if (!popupItem->contains(item->mapToItem(popupItem, pos))) {
+            if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, pos))) {
                 closeOrReject();
                 return true;
             }
@@ -1881,11 +1911,14 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
             event->accept();
         return d->modal;
 
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
         if (d->modal)
             event->accept();
-        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        d->tryClose(item, event);
         return d->modal;
 
     default:

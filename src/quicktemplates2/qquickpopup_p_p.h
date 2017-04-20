@@ -95,7 +95,7 @@ public:
 
     void init();
     void closeOrReject();
-    bool tryClose(QQuickItem *item, QMouseEvent *event);
+    bool tryClose(QQuickItem *item, QEvent *event);
 
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
     virtual void handlePress(const QPointF &point);

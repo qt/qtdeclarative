@@ -653,12 +653,12 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         return false;
 
     case QEvent::MouseButtonPress:
-        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        d->tryClose(item, event);
         return d->handleMousePressEvent(item, static_cast<QMouseEvent *>(event));
     case QEvent::MouseMove:
         return d->handleMouseMoveEvent(item, static_cast<QMouseEvent *>(event));
     case QEvent::MouseButtonRelease:
-        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        d->tryClose(item, event);
         return d->handleMouseReleaseEvent(item, static_cast<QMouseEvent *>(event));
     default:
         return QQuickPopup::overlayEvent(item, event);
