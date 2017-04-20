@@ -6,6 +6,7 @@ SUBDIRS += \
     controls \
     cursor \
     drawer \
+    focus \
     menu \
     platform \
     popup \
@@ -19,7 +20,3 @@ SUBDIRS += \
     revisions \
     sanity \
     snippets
-
-# QTBUG-50295
-!linux: SUBDIRS += \
-    focus
