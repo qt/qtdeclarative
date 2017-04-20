@@ -321,8 +321,10 @@ void QQuickTransformAnimatorJob::preSync()
         m_helper = nullptr;
     }
 
-    if (!m_target)
+    if (!m_target) {
+        invalidate();
         return;
+    }
 
     if (!m_helper) {
         m_helper = qquick_transform_animatorjob_helper_store()->acquire(m_target);
@@ -340,27 +342,6 @@ void QQuickTransformAnimatorJob::preSync()
     }
 
     m_helper->sync();
-}
-
-void QQuickTransformAnimatorJob::postSync()
-{
-    Q_ASSERT((m_helper != nullptr) == (m_target != nullptr)); // If there is a target, there should also be a helper, ref: preSync
-    Q_ASSERT(!m_helper || m_helper->item == m_target); // If there is a helper, it should point to our target
-
-    if (!m_target || !m_helper) {
-        invalidate();
-        return;
-    }
-
-    QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
-#if QT_CONFIG(quick_shadereffect)
-    if (d->extra.isAllocated()
-            && d->extra->layer
-            && d->extra->layer->enabled()) {
-        d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
-    }
-#endif
-    m_helper->node = d->itemNode();
 }
 
 void QQuickTransformAnimatorJob::invalidate()
