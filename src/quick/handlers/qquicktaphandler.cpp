@@ -44,6 +44,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcTapHandler, "qt.quick.handler.tap")
+
 qreal QQuickTapHandler::m_multiTapInterval(0.0);
 // single tap distance is the same as the drag threshold
 int QQuickTapHandler::m_mouseMultiClickDistanceSquared(-1);
@@ -189,6 +191,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == m_longPressTimer.timerId()) {
         m_longPressTimer.stop();
+        qCDebug(lcTapHandler) << objectName() << "longPressed";
         emit longPressed();
     }
 }
@@ -244,6 +247,7 @@ void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gestureP
 void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *point)
 {
     if (m_pressed != press) {
+        qCDebug(lcTapHandler) << objectName() << "pressed" << m_pressed << "->" << press << (cancel ? "CANCEL" : "") << point;
         m_pressed = press;
         connectPreRenderSignal(press);
         updateTimeHeld();
@@ -261,20 +265,25 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             else
                 setExclusiveGrab(point, press);
         }
-        if (!cancel && !press && point->timeHeld() < longPressThreshold()) {
-            // Assuming here that pointerEvent()->timestamp() is in ms.
-            qreal ts = point->pointerEvent()->timestamp() / 1000.0;
-            if (ts - m_lastTapTimestamp < m_multiTapInterval &&
-                    QVector2D(point->scenePos() - m_lastTapPos).lengthSquared() <
-                    (point->pointerEvent()->device()->type() == QQuickPointerDevice::Mouse ?
-                     m_mouseMultiClickDistanceSquared : m_touchMultiTapDistanceSquared))
-                ++m_tapCount;
-            else
-                m_tapCount = 1;
-            emit tapped(point);
-            emit tapCountChanged();
-            m_lastTapTimestamp = ts;
-            m_lastTapPos = point->scenePos();
+        if (!cancel && !press) {
+            if (point->timeHeld() < longPressThreshold()) {
+                // Assuming here that pointerEvent()->timestamp() is in ms.
+                qreal ts = point->pointerEvent()->timestamp() / 1000.0;
+                if (ts - m_lastTapTimestamp < m_multiTapInterval &&
+                        QVector2D(point->scenePos() - m_lastTapPos).lengthSquared() <
+                        (point->pointerEvent()->device()->type() == QQuickPointerDevice::Mouse ?
+                         m_mouseMultiClickDistanceSquared : m_touchMultiTapDistanceSquared))
+                    ++m_tapCount;
+                else
+                    m_tapCount = 1;
+                qCDebug(lcTapHandler) << objectName() << "tapped" << m_tapCount << "times";
+                emit tapped(point);
+                emit tapCountChanged();
+                m_lastTapTimestamp = ts;
+                m_lastTapPos = point->scenePos();
+            } else {
+                qCDebug(lcTapHandler) << objectName() << "tap threshold" << longPressThreshold() << "exceeded:" << point->timeHeld();
+            }
         }
         emit pressedChanged();
         if (!press) {
