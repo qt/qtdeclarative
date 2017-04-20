@@ -84,6 +84,8 @@ public:
     virtual bool visit(UiArrayMemberList *) { return true; }
     virtual bool visit(UiQualifiedId *) { return true; }
     virtual bool visit(UiQualifiedPragmaId *) { return true; }
+    virtual bool visit(UiEnumDeclaration *) { return true; }
+    virtual bool visit(UiEnumMemberList *) { return true; }
 
     virtual void endVisit(UiProgram *) {}
     virtual void endVisit(UiImport *) {}
@@ -101,6 +103,8 @@ public:
     virtual void endVisit(UiArrayMemberList *) {}
     virtual void endVisit(UiQualifiedId *) {}
     virtual void endVisit(UiQualifiedPragmaId *) {}
+    virtual void endVisit(UiEnumDeclaration *) {}
+    virtual void endVisit(UiEnumMemberList *) { }
 
     // QQmlJS
     virtual bool visit(ThisExpression *) { return true; }

@@ -181,6 +181,8 @@ class UiArrayMemberList;
 class UiQualifiedId;
 class UiQualifiedPragmaId;
 class UiHeaderItemList;
+class UiEnumDeclaration;
+class UiEnumMemberList;
 
 } } // namespace AST
 

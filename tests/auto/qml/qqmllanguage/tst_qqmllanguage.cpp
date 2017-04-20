@@ -178,6 +178,7 @@ private slots:
     void importIncorrectCase();
     void importJs_data();
     void importJs();
+    void explicitSelfImport();
 
     void qmlAttachedPropertiesObjectMethod();
     void customOnProperty();
@@ -209,6 +210,7 @@ private slots:
     void lowercaseEnumCompileTime_data();
     void lowercaseEnumCompileTime();
     void scopedEnum();
+    void qmlEnums();
     void literals_data();
     void literals();
 
@@ -545,6 +547,8 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("singularProperty.2") << "singularProperty.2.qml" << "singularProperty.2.errors.txt" << false;
 
     QTest::newRow("scopedEnumList") << "scopedEnumList.qml" << "scopedEnumList.errors.txt" << false;
+    QTest::newRow("lowercase enum value") << "lowercaseQmlEnum.1.qml" << "lowercaseQmlEnum.1.errors.txt" << false;
+    QTest::newRow("lowercase enum type") << "lowercaseQmlEnum.2.qml" << "lowercaseQmlEnum.2.errors.txt" << false;
 
     const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
         QStringLiteral("incorrectCase.errors.sensitive.txt") :
@@ -3067,6 +3071,16 @@ void tst_qqmllanguage::importJs()
     engine.setImportPathList(defaultImportPathList);
 }
 
+void tst_qqmllanguage::explicitSelfImport()
+{
+    engine.setImportPathList(QStringList(defaultImportPathList) << testFile("lib"));
+
+    QQmlComponent component(&engine, testFileUrl("mixedModuleWithSelfImport.qml"));
+    QVERIFY(component.errors().count() == 0);
+
+    engine.setImportPathList(defaultImportPathList);
+}
+
 void tst_qqmllanguage::qmlAttachedPropertiesObjectMethod()
 {
     QObject object;
@@ -3705,6 +3719,27 @@ void tst_qqmllanguage::scopedEnum()
     QMetaObject::invokeMethod(o, "assignNewValue");
     QCOMPARE(o->scopedEnum(), MyTypeObject::MyScopedEnum::ScopedVal2);
     QCOMPARE(o->property("noScope").toInt(), (int)MyTypeObject::MyScopedEnum::ScopedVal2);
+}
+
+void tst_qqmllanguage::qmlEnums()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("TypeWithEnum.qml"));
+        QObject *o = component.create();
+        QVERIFY(o);
+        QCOMPARE(o->property("enumValue").toInt(), 1);
+        QCOMPARE(o->property("enumValue2").toInt(), 2);
+        QCOMPARE(o->property("scopedEnumValue").toInt(), 1);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("usingTypeWithEnum.qml"));
+        QObject *o = component.create();
+        QVERIFY(o);
+        QCOMPARE(o->property("enumValue").toInt(), 1);
+        QCOMPARE(o->property("enumValue2").toInt(), 0);
+        QCOMPARE(o->property("scopedEnumValue").toInt(), 2);
+    }
 }
 
 void tst_qqmllanguage::literals_data()

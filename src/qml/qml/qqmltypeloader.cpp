@@ -2651,6 +2651,10 @@ void QQmlTypeData::resolveTypes()
 
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
+
+    // ### this allows enums to work without explicit import or instantiation of the type
+    if (!m_implicitImportLoaded)
+        loadImplicitImport();
 }
 
 QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(

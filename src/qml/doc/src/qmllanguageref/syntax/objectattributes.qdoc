@@ -50,6 +50,7 @@ The set of QML object-type attribute types is as follows:
 \li signal handler attributes
 \li method attributes
 \li attached properties and attached signal handler attributes
+\li enumeration attributes
 \endlist
 
 These attributes are discussed in detail below.
@@ -974,5 +975,42 @@ ListView {
 
 Now \c delegateItem.ListView.isCurrentItem correctly refers to the
 \c isCurrentItem attached property of the delegate.
+
+\section2 Enumeration Attributes
+
+Enumerations provide a fixed set of named choices. They can be declared in QML using the \c enum keyword:
+
+\qml
+// MyText.qml
+Text {
+    enum TextType {
+        Normal,
+        Heading
+    }
+}
+\endqml
+
+As shown above, enumeration types (e.g. \c TextType) and values (e.g. \c Normal) must begin with an uppercase letter.
+
+Values are referred to via \c {<Type>.<EnumerationType>.<Value>} or \c {<Type>.<Value>}.
+
+\qml
+// MyText.qml
+Text {
+    enum TextType {
+        Normal,
+        Heading
+    }
+
+    property int textType: MyText.TextType.Normal
+
+    font.bold: textType == MyText.TextType.Heading
+    font.pixelSize: textType == MyText.TextType.Heading ? 24 : 12
+}
+\endqml
+
+More information on enumeration usage in QML can be found in the \l {QML Basic Types} \l enumeration documentation.
+
+The ability to declare enumerations in QML was introduced in Qt 5.10.
 
 */

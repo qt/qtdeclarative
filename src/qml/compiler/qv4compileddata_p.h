@@ -390,6 +390,36 @@ struct Q_QML_PRIVATE_EXPORT Binding
 
 };
 
+struct EnumValue
+{
+    quint32_le nameIndex;
+    qint32_le value;
+    Location location;
+};
+
+struct Enum
+{
+    quint32_le nameIndex;
+    quint32_le nEnumValues;
+    Location location;
+
+    const EnumValue *enumValueAt(int idx) const {
+        return reinterpret_cast<const EnumValue*>(this + 1) + idx;
+    }
+
+    static int calculateSize(int nEnumValues) {
+        return (sizeof(Enum)
+                + nEnumValues * sizeof(EnumValue)
+                + 7) & ~0x7;
+    }
+
+    // --- QQmlPropertyCacheCreatorInterface
+    const EnumValue *enumValuesBegin() const { return enumValueAt(0); }
+    const EnumValue *enumValuesEnd() const { return enumValueAt(nEnumValues); }
+    int enumValueCount() const { return nEnumValues; }
+    // ---
+};
+
 struct Parameter
 {
     quint32_le nameIndex;
@@ -497,6 +527,8 @@ struct Object
     quint32_le offsetToProperties;
     quint32_le nAliases;
     quint32_le offsetToAliases;
+    quint32_le nEnums;
+    quint32_le offsetToEnums; // which in turn will be a table with offsets to variable-sized Enum objects
     quint32_le nSignals;
     quint32_le offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
     quint32_le nBindings;
@@ -510,12 +542,13 @@ struct Object
 //    Signal[]
 //    Binding[]
 
-    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nAliases, int nSignals, int nBindings, int nNamedObjectsInComponent)
+    static int calculateSizeExcludingSignalsAndEnums(int nFunctions, int nProperties, int nAliases, int nEnums, int nSignals, int nBindings, int nNamedObjectsInComponent)
     {
         return ( sizeof(Object)
                  + nFunctions * sizeof(quint32)
                  + nProperties * sizeof(Property)
                  + nAliases * sizeof(Alias)
+                 + nEnums * sizeof(quint32)
                  + nSignals * sizeof(quint32)
                  + nBindings * sizeof(Binding)
                  + nNamedObjectsInComponent * sizeof(int)
@@ -543,6 +576,13 @@ struct Object
         return reinterpret_cast<const Binding*>(reinterpret_cast<const char *>(this) + offsetToBindings);
     }
 
+    const Enum *enumAt(int idx) const
+    {
+        const quint32_le *offsetTable = reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this)) + offsetToEnums);
+        const quint32_le offset = offsetTable[idx];
+        return reinterpret_cast<const Enum*>(reinterpret_cast<const char*>(this) + offset);
+    }
+
     const Signal *signalAt(int idx) const
     {
         const quint32_le *offsetTable = reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this)) + offsetToSignals);
@@ -558,6 +598,7 @@ struct Object
     // --- QQmlPropertyCacheCreator interface
     int propertyCount() const { return nProperties; }
     int aliasCount() const { return nAliases; }
+    int enumCount() const { return nEnums; }
     int signalCount() const { return nSignals; }
     int functionCount() const { return nFunctions; }
 
@@ -569,6 +610,10 @@ struct Object
 
     const Alias *aliasesBegin() const { return aliasTable(); }
     const Alias *aliasesEnd() const { return aliasTable() + nAliases; }
+
+    typedef TableIterator<Enum, Object, &Object::enumAt> EnumIterator;
+    EnumIterator enumsBegin() const { return EnumIterator(this, 0); }
+    EnumIterator enumsEnd() const { return EnumIterator(this, nEnums); }
 
     typedef TableIterator<Signal, Object, &Object::signalAt> SignalIterator;
     SignalIterator signalsBegin() const { return SignalIterator(this, 0); }

@@ -321,12 +321,13 @@ QQmlPropertyCache *QQmlPropertyCache::copy()
 }
 
 QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int methodCount,
-                                                     int signalCount)
+                                                     int signalCount, int enumCount)
 {
     QQmlPropertyCache *rv = copy(propertyCount + methodCount + signalCount);
     rv->propertyIndexCache.reserve(propertyCount);
     rv->methodIndexCache.reserve(methodCount);
     rv->signalHandlerIndexCache.reserve(signalCount);
+    rv->enumCache.reserve(enumCount);
     rv->_metaObject = 0;
 
     return rv;
@@ -419,6 +420,14 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
     methodIndexCache.append(data);
 
     setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
+}
+
+void QQmlPropertyCache::appendEnum(const QString &name, const QVector<QQmlEnumValue> &values)
+{
+    QQmlEnumData data;
+    data.name = name;
+    data.values = values;
+    enumCache.append(data);
 }
 
 // Returns this property cache's metaObject, creating it if necessary.
@@ -1243,6 +1252,16 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
 
         if (!returnType.isEmpty())
             method.setReturnType(returnType);
+    }
+
+    for (int ii = 0; ii < enumCache.count(); ++ii) {
+        const QQmlEnumData &enumData = enumCache.at(ii);
+        QMetaEnumBuilder enumeration = builder.addEnumerator(enumData.name.toUtf8());
+        enumeration.setIsScoped(true);
+        for (int jj = 0; jj < enumData.values.count(); ++jj) {
+            const QQmlEnumValue &value = enumData.values.at(jj);
+            enumeration.addKey(value.namedValue.toUtf8(), value.value);
+        }
     }
 
     if (!_defaultPropertyName.isEmpty()) {

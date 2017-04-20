@@ -140,7 +140,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) const
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, QQmlImport::RecursionRestriction recursionRestriction) const
 {
     Result result = query(m_namedImports, name);
 
@@ -156,7 +156,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) cons
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
         QQmlType *t = 0;
-        bool typeFound = m_imports.resolveType(typeName, &t, 0, 0, &typeNamespace, &errors);
+        bool typeFound = m_imports.resolveType(typeName, &t, 0, 0, &typeNamespace, &errors, recursionRestriction);
         if (typeFound) {
             return Result(t);
         }

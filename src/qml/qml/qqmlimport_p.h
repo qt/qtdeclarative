@@ -70,6 +70,10 @@ class QQmlImportDatabase;
 class QQmlTypeLoader;
 class QQmlTypeLoaderQmldirContent;
 
+namespace QQmlImport {
+    enum RecursionRestriction { PreventRecursion, AllowRecursion };
+}
+
 struct QQmlImportInstance
 {
     QString uri; // e.g. QtQuick
@@ -87,7 +91,8 @@ struct QQmlImportInstance
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
                      int *vmajor, int *vminor, QQmlType** type_return,
-                     QString *base = 0, bool *typeRecursionDetected = 0) const;
+                     QString *base = 0, bool *typeRecursionDetected = 0,
+                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
 };
 
 class QQmlImportNamespace
@@ -102,7 +107,8 @@ public:
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
                      int *vmajor, int *vminor, QQmlType** type_return,
-                     QString *base = 0, QList<QQmlError> *errors = 0);
+                     QString *base = 0, QList<QQmlError> *errors = 0,
+                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
 
     // Prefix when used as a qualified import.  Otherwise empty.
     QHashedString prefix;
@@ -128,7 +134,8 @@ public:
                      QQmlType** type_return,
                      int *version_major, int *version_minor,
                      QQmlImportNamespace** ns_return,
-                     QList<QQmlError> *errors = 0) const;
+                     QList<QQmlError> *errors = 0,
+                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
     bool resolveType(QQmlImportNamespace*,
                      const QHashedStringRef& type,
                      QQmlType** type_return, int *version_major, int *version_minor) const;

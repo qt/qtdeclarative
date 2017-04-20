@@ -135,6 +135,7 @@ public:
 
 struct QQmlMetaTypeData;
 class QHashedCStringRef;
+class QQmlPropertyCache;
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
 public:
@@ -227,13 +228,7 @@ public:
 private:
     QQmlType *superType() const;
     QQmlType *resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
-    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
-    int resolveCompositeScopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
-    int resolveCompositeScopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
-    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
-    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const;
-    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scopedName, const QByteArray &name, bool *ok) const;
-    int resolveCompositeScopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scopedName, const QStringRef &name, bool *ok) const;
+    QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
     friend class QQmlTypePrivate;
     friend struct QQmlMetaTypeData;
 

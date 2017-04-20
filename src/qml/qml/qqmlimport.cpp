@@ -295,7 +295,8 @@ public:
                              QList<QQmlError> *errors);
 
     bool resolveType(const QHashedStringRef &type, int *vmajor, int *vminor,
-                     QQmlType** type_return, QList<QQmlError> *errors);
+                     QQmlType** type_return, QList<QQmlError> *errors,
+                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
 
     QUrl baseUrl;
     QString base;
@@ -620,7 +621,8 @@ QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
 */
 bool QQmlImports::resolveType(const QHashedStringRef &type,
                               QQmlType** type_return, int *vmaj, int *vmin,
-                              QQmlImportNamespace** ns_return, QList<QQmlError> *errors) const
+                              QQmlImportNamespace** ns_return, QList<QQmlError> *errors,
+                              QQmlImport::RecursionRestriction recursionRestriction) const
 {
     QQmlImportNamespace* ns = d->findQualifiedNamespace(type);
     if (ns) {
@@ -629,7 +631,7 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
         return true;
     }
     if (type_return) {
-        if (d->resolveType(type,vmaj,vmin,type_return, errors)) {
+        if (d->resolveType(type,vmaj,vmin,type_return, errors, recursionRestriction)) {
             if (qmlImportTrace()) {
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
                                               << ')' << "::resolveType: " << type.toString() << " => "
@@ -712,7 +714,8 @@ bool QQmlImports::resolveType(QQmlImportNamespace* ns, const QHashedStringRef &t
 
 bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
                                               const QHashedStringRef& type, int *vmajor, int *vminor,
-                                              QQmlType** type_return, QString *base, bool *typeRecursionDetected) const
+                                              QQmlType** type_return, QString *base, bool *typeRecursionDetected,
+                                              QQmlImport::RecursionRestriction recursionRestriction) const
 {
     if (majversion >= 0 && minversion >= 0) {
         QQmlType *t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
@@ -747,7 +750,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
                             if (resolveLocalUrl(*base, c.fileName) != componentUrl)
                                 continue; // failed attempt to access an internal type
                         }
-                        if (*base == componentUrl) {
+                        if (recursionRestriction == QQmlImport::PreventRecursion && *base == componentUrl) {
                             if (typeRecursionDetected)
                                 *typeRecursionDetected = true;
                             continue; // no recursion
@@ -790,7 +793,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
         }
 
         if (exists) {
-            if (base && (*base == qmlUrl)) { // no recursion
+            if (recursionRestriction == QQmlImport::PreventRecursion && base && (*base == qmlUrl)) { // no recursion
                 if (typeRecursionDetected)
                     *typeRecursionDetected = true;
             } else {
@@ -806,7 +809,8 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
 }
 
 bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, int *vminor,
-                                     QQmlType** type_return, QList<QQmlError> *errors)
+                                     QQmlType** type_return, QList<QQmlError> *errors,
+                                     QQmlImport::RecursionRestriction recursionRestriction)
 {
     QQmlImportNamespace *s = 0;
     int dot = type.indexOf(Dot);
@@ -835,7 +839,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
     }
     QHashedStringRef unqualifiedtype = dot < 0 ? type : QHashedStringRef(type.constData()+dot+1, type.length()-dot-1);
     if (s) {
-        if (s->resolveType(typeLoader,unqualifiedtype,vmajor,vminor,type_return, &base, errors))
+        if (s->resolveType(typeLoader,unqualifiedtype,vmajor,vminor,type_return, &base, errors, recursionRestriction))
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0)->isLibrary && type_return && s != &unqualifiedset) {
             // qualified, and only 1 url
@@ -858,13 +862,14 @@ QQmlImportInstance *QQmlImportNamespace::findImport(const QString &uri) const
 
 bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
                                       int *vmajor, int *vminor, QQmlType** type_return,
-                                      QString *base, QList<QQmlError> *errors)
+                                      QString *base, QList<QQmlError> *errors,
+                                      QQmlImport::RecursionRestriction recursionRestriction)
 {
     bool typeRecursionDetected = false;
     for (int i=0; i<imports.count(); ++i) {
         const QQmlImportInstance *import = imports.at(i);
         if (import->resolveType(typeLoader, type, vmajor, vminor, type_return,
-                               base, &typeRecursionDetected)) {
+                               base, &typeRecursionDetected, recursionRestriction)) {
             if (qmlCheckTypes()) {
                 // check for type clashes
                 for (int j = i+1; j<imports.count(); ++j) {
@@ -1488,6 +1493,17 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     QString url = resolveLocalUrl(base, uri);
     if (!url.endsWith(Slash) && !url.endsWith(Backslash))
         url += Slash;
+
+    // ### For enum support, we are now adding the implicit import always (and earlier). Bail early
+    //     if the implicit import has already been explicitly added, otherwise we can run into issues
+    //     with duplicate imports
+    if (isImplicitImport) {
+        for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
+             it != nameSpace->imports.constEnd(); ++it) {
+            if ((*it)->uri == importUri)
+                return true;
+        }
+    }
 
     QQmlImportInstance *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QV4::CompiledData::Import::ImportFile, errors, isImplicitImport);
     Q_ASSERT(inserted);
