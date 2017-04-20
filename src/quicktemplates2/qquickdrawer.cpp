@@ -239,7 +239,7 @@ static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int th
     return QQuickWindowPrivate::dragOverThreshold(d, axis, event, threshold);
 }
 
-bool QQuickDrawerPrivate::startDrag(QQuickWindow *window, QMouseEvent *event)
+bool QQuickDrawerPrivate::startDrag(QMouseEvent *event)
 {
     if (!window || !interactive || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
         return false;

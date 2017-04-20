@@ -338,7 +338,7 @@ void QQuickOverlay::mousePressEvent(QMouseEvent *event)
         const QVector<QQuickDrawer *> drawers = d->stackingOrderDrawers();
         for (QQuickDrawer *drawer : drawers) {
             QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
-            if (p->startDrag(window(), event)) {
+            if (p->startDrag(event)) {
                 d->setMouseGrabberPopup(drawer);
                 return;
             }

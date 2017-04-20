@@ -70,7 +70,7 @@ public:
     void reposition() override;
     void resizeOverlay() override;
 
-    bool startDrag(QQuickWindow *window, QMouseEvent *event);
+    bool startDrag(QMouseEvent *event);
     bool grabMouse(QMouseEvent *event);
     bool ungrabMouse(QMouseEvent *event);
 
