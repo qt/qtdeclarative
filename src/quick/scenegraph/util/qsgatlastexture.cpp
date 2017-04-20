@@ -140,7 +140,7 @@ Atlas::Atlas(const QSize &size)
     if (QOpenGLContext::currentContext()->isOpenGLES()) {
 #endif
 
-#if defined(Q_OS_ANDROID)
+#if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)
     QString *deviceName =
             static_cast<QString *>(QGuiApplication::platformNativeInterface()->nativeResourceForIntegration("AndroidDeviceName"));
     static bool wrongfullyReportsBgra8888Support = deviceName != 0
