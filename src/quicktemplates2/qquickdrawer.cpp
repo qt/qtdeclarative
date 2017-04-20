@@ -644,6 +644,14 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickDrawer);
     switch (event->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
+        // TODO: QQuickDrawer still relies on synthesized mouse events
+        event->ignore();
+        return false;
+
     case QEvent::MouseButtonPress:
         d->tryClose(item, static_cast<QMouseEvent *>(event));
         return d->handleMousePressEvent(item, static_cast<QMouseEvent *>(event));

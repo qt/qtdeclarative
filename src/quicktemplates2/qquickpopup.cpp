@@ -225,6 +225,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       allowHorizontalResize(true),
       hadActiveFocusBeforeExitTransition(false),
       interactive(true),
+      touchId(-1),
       x(0),
       y(0),
       effectiveX(0),
@@ -288,6 +289,44 @@ bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
         }
     }
     return false;
+}
+
+bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
+{
+    if (point.id() == touchId)
+        return true;
+
+    if (touchId == -1 && point.state() == Qt::TouchPointPressed) {
+        touchId = point.id();
+        return true;
+    }
+
+    return false;
+}
+
+void QQuickPopupPrivate::handlePress(const QPointF &)
+{
+}
+
+void QQuickPopupPrivate::handleMove(const QPointF &)
+{
+}
+
+void QQuickPopupPrivate::handleRelease(const QPointF &)
+{
+    touchId = -1;
+}
+
+void QQuickPopupPrivate::handleUngrab()
+{
+    Q_Q(QQuickPopup);
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    if (overlay) {
+        QQuickOverlayPrivate *p = QQuickOverlayPrivate::get(overlay);
+        if (p->mouseGrabberPopup == q)
+            p->mouseGrabberPopup = nullptr;
+    }
+    touchId = -1;
 }
 
 bool QQuickPopupPrivate::prepareEnterTransition()
@@ -1800,16 +1839,22 @@ void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
 
 void QQuickPopup::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickPopup);
+    d->handlePress(event->localPos());
     event->accept();
 }
 
 void QQuickPopup::mouseMoveEvent(QMouseEvent *event)
 {
+    Q_D(QQuickPopup);
+    d->handleMove(event->localPos());
     event->accept();
 }
 
 void QQuickPopup::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_D(QQuickPopup);
+    d->handleRelease(event->localPos());
     event->accept();
 }
 
@@ -1820,12 +1865,8 @@ void QQuickPopup::mouseDoubleClickEvent(QMouseEvent *event)
 
 void QQuickPopup::mouseUngrabEvent()
 {
-    QQuickOverlay *overlay = QQuickOverlay::overlay(window());
-    if (overlay) {
-        QQuickOverlayPrivate *p = QQuickOverlayPrivate::get(overlay);
-        if (p->mouseGrabberPopup == this)
-            p->mouseGrabberPopup = nullptr;
-    }
+    Q_D(QQuickPopup);
+    d->handleUngrab();
 }
 
 bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
@@ -1854,12 +1895,59 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
 
 void QQuickPopup::touchEvent(QTouchEvent *event)
 {
-    // TODO: QQuickPopup and QQuickDrawer still rely on synthesized mouse events
+    Q_D(QQuickPopup);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (d->acceptTouch(point))
+                d->handlePress(point.pos());
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (!d->acceptTouch(point))
+                continue;
+
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                d->handlePress(point.pos());
+                break;
+            case Qt::TouchPointMoved:
+                d->handleMove(point.pos());
+                break;
+            case Qt::TouchPointReleased:
+                d->handleRelease(point.pos());
+                break;
+            default:
+                break;
+            }
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (d->acceptTouch(point))
+                d->handleRelease(point.pos());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleUngrab();
+        break;
+
+    default:
+        break;
+    }
+
+    // TODO: QQuickPopup still relies on synthesized mouse events
     event->ignore();
 }
 
 void QQuickPopup::touchUngrabEvent()
 {
+    Q_D(QQuickPopup);
+    d->handleUngrab();
 }
 
 #if QT_CONFIG(wheelevent)
