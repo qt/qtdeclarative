@@ -7,16 +7,17 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
+include(material.pri)
+
 OTHER_FILES += \
-    qmldir
+    qmldir \
+    $$QML_FILES
 
 SOURCES += \
     $$PWD/qtquickcontrols2materialstyleplugin.cpp
 
 RESOURCES += \
     $$PWD/qtquickcontrols2materialstyleplugin.qrc
-
-include(material.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)
