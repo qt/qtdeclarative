@@ -98,15 +98,18 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
         // We have not yet chosen a point; choose the first one for which wantsEventPoint() returns true.
         int candidatePointCount = 0;
         int c = event->pointCount();
-        QQuickEventPoint *p = nullptr;
+        QQuickEventPoint *chosen = nullptr;
         for (int i = 0; i < c; ++i) {
-            p = event->point(i);
-            if (!p->exclusiveGrabber() && wantsEventPoint(p))
+            QQuickEventPoint *p = event->point(i);
+            if (!p->exclusiveGrabber() && wantsEventPoint(p)) {
+                if (!chosen)
+                    chosen = p;
                 ++candidatePointCount;
+            }
         }
-        if (p && candidatePointCount == 1) {
-            m_pointId = p->pointId();
-            p->setAccepted();
+        if (chosen && candidatePointCount == 1) {
+            m_pointId = chosen->pointId();
+            chosen->setAccepted();
         }
     }
     return m_pointId;
