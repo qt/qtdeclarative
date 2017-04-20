@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_focus
-osx:CONFIG -= app_bundle
+macos:CONFIG -= app_bundle
 
 SOURCES += tst_focus.cpp
 

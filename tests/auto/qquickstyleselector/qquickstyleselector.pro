@@ -2,7 +2,7 @@ CONFIG += testcase
 TARGET = tst_qquickstyleselector
 SOURCES += tst_qquickstyleselector.cpp
 
-osx:CONFIG -= app_bundle
+macos:CONFIG -= app_bundle
 
 QT += core-private gui-private qml-private quick-private quickcontrols2-private testlib
 
