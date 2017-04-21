@@ -73,6 +73,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
+    Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 3)
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = nullptr);
@@ -109,6 +110,9 @@ public:
 
     bool isInputMethodComposing() const;
 
+    bool wrap() const;
+    void setWrap(bool wrap);
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -125,6 +129,7 @@ Q_SIGNALS:
     Q_REVISION(2) void valueModified();
     Q_REVISION(2) void inputMethodHintsChanged();
     Q_REVISION(2) void inputMethodComposingChanged();
+    Q_REVISION(3) void wrapChanged();
 
 protected:
     void hoverEnterEvent(QHoverEvent *event) override;

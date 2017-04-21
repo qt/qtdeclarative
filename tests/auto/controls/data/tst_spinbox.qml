@@ -115,14 +115,22 @@ TestCase {
         compare(control.up.indicator.enabled, false)
         compare(control.down.indicator.enabled, true)
 
+        control.wrap = true
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
+
         control.value = -1
         compare(control.value, 0)
         compare(control.up.indicator.enabled, true)
-        compare(control.down.indicator.enabled, false)
+        compare(control.down.indicator.enabled, true)
 
         control.from = 25
         compare(control.from, 25)
         compare(control.value, 25)
+        compare(control.up.indicator.enabled, true)
+        compare(control.down.indicator.enabled, true)
+
+        control.wrap = false
         compare(control.up.indicator.enabled, true)
         compare(control.down.indicator.enabled, false)
 
@@ -279,12 +287,15 @@ TestCase {
         return [
             { tag: "1", from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3,4], downSteps: [3,2,1,1] },
             { tag: "2", from: 1, to: 10, value: 10, stepSize: 2, upSteps: [10,10], downSteps: [8,6,4] },
-            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] }
+            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] },
+            { tag: "wrap1", wrap: true, from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3], downSteps: [2,1,10,9] },
+            { tag: "wrap2", wrap: true, from: 1, to: 10, value: 10, stepSize: 2, upSteps: [1,3,5], downSteps: [3,1,10,8,6] },
+            { tag: "wrap25", wrap: true, from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,0,25], downSteps: [0,100,75] }
         ]
     }
 
     function test_keys(data) {
-        var control = createTemporaryObject(spinBox, testCase, {from: data.from, to: data.to, value: data.value, stepSize: data.stepSize})
+        var control = createTemporaryObject(spinBox, testCase, {wrap: data.wrap, from: data.from, to: data.to, value: data.value, stepSize: data.stepSize})
         verify(control)
 
         var upPressedCount = 0
@@ -304,7 +315,7 @@ TestCase {
         verify(control.activeFocus)
 
         for (var u = 0; u < data.upSteps.length; ++u) {
-            var wasUpEnabled = control.value < control.to
+            var wasUpEnabled = control.wrap || control.value < control.to
             keyPress(Qt.Key_Up)
             compare(control.up.pressed, wasUpEnabled)
             compare(control.down.pressed, false)
@@ -327,7 +338,7 @@ TestCase {
         }
 
         for (var d = 0; d < data.downSteps.length; ++d) {
-            var wasDownEnabled = control.value > control.from
+            var wasDownEnabled = control.wrap || control.value > control.from
             keyPress(Qt.Key_Down)
             compare(control.down.pressed, wasDownEnabled)
             compare(control.up.pressed, false)
@@ -413,12 +424,15 @@ TestCase {
         return [
             { tag: "1", from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3,4], downSteps: [3,2,1,1] },
             { tag: "2", from: 1, to: 10, value: 10, stepSize: 2, upSteps: [10,10], downSteps: [8,6,4] },
-            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] }
+            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] },
+            { tag: "wrap1", wrap: true, from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3], downSteps: [2,1,10,9] },
+            { tag: "wrap2", wrap: true, from: 1, to: 10, value: 10, stepSize: 2, upSteps: [1,3,5], downSteps: [3,1,10,8,6] },
+            { tag: "wrap25", wrap: true, from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,0,25], downSteps: [0,100,75] }
         ]
     }
 
     function test_wheel(data) {
-        var control = createTemporaryObject(spinBox, testCase, {from: data.from, to: data.to, value: data.value, stepSize: data.stepSize, wheelEnabled: true})
+        var control = createTemporaryObject(spinBox, testCase, {wrap: data.wrap, from: data.from, to: data.to, value: data.value, stepSize: data.stepSize, wheelEnabled: true})
         verify(control)
 
         var valueModifiedCount = 0
@@ -428,7 +442,7 @@ TestCase {
         var delta = 120
 
         for (var u = 0; u < data.upSteps.length; ++u) {
-            var wasUpEnabled = control.value < control.to
+            var wasUpEnabled = control.wrap || control.value < control.to
             mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
             if (wasUpEnabled)
                 ++valueModifiedCount
@@ -438,7 +452,7 @@ TestCase {
         }
 
         for (var d = 0; d < data.downSteps.length; ++d) {
-            var wasDownEnabled = control.value > control.from
+            var wasDownEnabled = control.wrap || control.value > control.from
             mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
             if (wasDownEnabled)
                 ++valueModifiedCount

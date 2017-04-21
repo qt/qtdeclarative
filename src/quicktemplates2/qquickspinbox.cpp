@@ -108,6 +108,7 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
 public:
     QQuickSpinBoxPrivate()
         : editable(false),
+          wrap(false),
           from(0),
           to(99),
           value(0),
@@ -121,9 +122,10 @@ public:
     {
     }
 
-    int boundValue(int value) const;
+    int boundValue(int value, bool wrap) const;
     void updateValue();
-    bool setValue(int value);
+    bool setValue(int value, bool wrap);
+    bool stepBy(int steps);
 
     int effectiveStepSize() const;
 
@@ -143,6 +145,7 @@ public:
     void handleUngrab() override;
 
     bool editable;
+    bool wrap;
     int from;
     int to;
     int value;
@@ -157,9 +160,20 @@ public:
     Qt::InputMethodHints inputMethodHints;
 };
 
-int QQuickSpinBoxPrivate::boundValue(int value) const
+int QQuickSpinBoxPrivate::boundValue(int value, bool wrap) const
 {
-    return from > to ? qBound(to, value, from) : qBound(from, value, to);
+    bool inverted = from > to;
+    if (!wrap)
+        return inverted ? qBound(to, value, from) : qBound(from, value, to);
+
+    int f = inverted ? to : from;
+    int t = inverted ? from : to;
+    if (value < f)
+        value = t;
+    else if (value > t)
+        value = f;
+
+    return value;
 }
 
 void QQuickSpinBoxPrivate::updateValue()
@@ -174,7 +188,7 @@ void QQuickSpinBoxPrivate::updateValue()
                 QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
                 QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
                 const int oldValue = value;
-                q->setValue(val.toInt());
+                setValue(val.toInt(), /* allowWrap = */ false);
                 if (oldValue != value)
                     emit q->valueModified();
             }
@@ -182,11 +196,11 @@ void QQuickSpinBoxPrivate::updateValue()
     }
 }
 
-bool QQuickSpinBoxPrivate::setValue(int newValue)
+bool QQuickSpinBoxPrivate::setValue(int newValue, bool allowWrap)
 {
     Q_Q(QQuickSpinBox);
     if (q->isComponentComplete())
-        newValue = boundValue(newValue);
+        newValue = boundValue(newValue, allowWrap);
 
     if (value == newValue)
         return false;
@@ -198,6 +212,11 @@ bool QQuickSpinBoxPrivate::setValue(int newValue)
 
     emit q->valueChanged();
     return true;
+}
+
+bool QQuickSpinBoxPrivate::stepBy(int steps)
+{
+    return setValue(value + steps, wrap);
 }
 
 int QQuickSpinBoxPrivate::effectiveStepSize() const
@@ -217,7 +236,7 @@ void QQuickSpinBoxPrivate::updateUpEnabled()
     if (!upIndicator)
         return;
 
-    upIndicator->setEnabled(from < to ? value < to : value > to);
+    upIndicator->setEnabled(wrap || (from < to ? value < to : value > to));
 }
 
 bool QQuickSpinBoxPrivate::downEnabled() const
@@ -232,7 +251,7 @@ void QQuickSpinBoxPrivate::updateDownEnabled()
     if (!downIndicator)
         return;
 
-    downIndicator->setEnabled(from < to ? value > from : value < from);
+    downIndicator->setEnabled(wrap || (from < to ? value > from : value < from));
 }
 
 void QQuickSpinBoxPrivate::updateHover(const QPointF &pos)
@@ -373,7 +392,7 @@ void QQuickSpinBox::setFrom(int from)
     d->from = from;
     emit fromChanged();
     if (isComponentComplete()) {
-        if (!d->setValue(d->value)) {
+        if (!d->setValue(d->value, /* allowWrap = */ false)) {
             d->updateUpEnabled();
             d->updateDownEnabled();
         }
@@ -402,7 +421,7 @@ void QQuickSpinBox::setTo(int to)
     d->to = to;
     emit toChanged();
     if (isComponentComplete()) {
-        if (!d->setValue(d->value)) {
+        if (!d->setValue(d->value, /* allowWrap = */false)) {
             d->updateUpEnabled();
             d->updateDownEnabled();
         }
@@ -423,7 +442,7 @@ int QQuickSpinBox::value() const
 void QQuickSpinBox::setValue(int value)
 {
     Q_D(QQuickSpinBox);
-    d->setValue(value);
+    d->setValue(value, /* allowWrap = */ false);
 }
 
 /*!
@@ -694,6 +713,34 @@ bool QQuickSpinBox::isInputMethodComposing() const
 }
 
 /*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::SpinBox::wrap
+
+    This property holds whether the spinbox wraps. The default value is \c false.
+
+    If wrap is \c true, stepping past \l to changes the value to \l from and vice versa.
+*/
+bool QQuickSpinBox::wrap() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->wrap;
+}
+
+void QQuickSpinBox::setWrap(bool wrap)
+{
+    Q_D(QQuickSpinBox);
+    if (d->wrap == wrap)
+        return;
+
+    d->wrap = wrap;
+    if (d->value == d->from || d->value == d->to) {
+        d->updateUpEnabled();
+        d->updateDownEnabled();
+    }
+    emit wrapChanged();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::SpinBox::increase()
 
     Increases the value by \l stepSize, or \c 1 if stepSize is not defined.
@@ -703,7 +750,7 @@ bool QQuickSpinBox::isInputMethodComposing() const
 void QQuickSpinBox::increase()
 {
     Q_D(QQuickSpinBox);
-    setValue(d->value + d->effectiveStepSize());
+    d->stepBy(d->effectiveStepSize());
 }
 
 /*!
@@ -716,7 +763,7 @@ void QQuickSpinBox::increase()
 void QQuickSpinBox::decrease()
 {
     Q_D(QQuickSpinBox);
-    setValue(d->value - d->effectiveStepSize());
+    d->stepBy(-d->effectiveStepSize());
 }
 
 void QQuickSpinBox::hoverEnterEvent(QHoverEvent *event)
@@ -809,7 +856,7 @@ void QQuickSpinBox::wheelEvent(QWheelEvent *event)
         const int oldValue = d->value;
         const QPointF angle = event->angleDelta();
         const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
-        setValue(oldValue + qRound(d->effectiveStepSize() * delta));
+        d->stepBy(qRound(d->effectiveStepSize() * delta));
         if (d->value != oldValue)
             emit valueModified();
         event->setAccepted(d->value != oldValue);
