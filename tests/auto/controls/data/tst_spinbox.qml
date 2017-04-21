@@ -275,8 +275,16 @@ TestCase {
         compare(valueModifiedSpy.count, 2)
     }
 
-    function test_keys() {
-        var control = createTemporaryObject(spinBox, testCase)
+    function test_keys_data() {
+        return [
+            { tag: "1", from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3,4], downSteps: [3,2,1,1] },
+            { tag: "2", from: 1, to: 10, value: 10, stepSize: 2, upSteps: [10,10], downSteps: [8,6,4] },
+            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] }
+        ]
+    }
+
+    function test_keys(data) {
+        var control = createTemporaryObject(spinBox, testCase, {from: data.from, to: data.to, value: data.value, stepSize: data.stepSize})
         verify(control)
 
         var upPressedCount = 0
@@ -295,71 +303,7 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        control.value = 50
-        compare(control.value, 50)
-
-        for (var d1 = 1; d1 <= 10; ++d1) {
-            keyPress(Qt.Key_Down)
-            compare(control.down.pressed, true)
-            compare(control.up.pressed, false)
-            compare(downPressedSpy.count, ++downPressedCount)
-            compare(valueModifiedSpy.count, ++valueModifiedCount)
-
-            compare(control.value, 50 - d1)
-
-            keyRelease(Qt.Key_Down)
-            compare(control.down.pressed, false)
-            compare(control.up.pressed, false)
-            compare(downPressedSpy.count, ++downPressedCount)
-            compare(valueModifiedSpy.count, valueModifiedCount)
-        }
-        compare(control.value, 40)
-
-        for (var i1 = 1; i1 <= 10; ++i1) {
-            keyPress(Qt.Key_Up)
-            compare(control.up.pressed, true)
-            compare(control.down.pressed, false)
-            compare(upPressedSpy.count, ++upPressedCount)
-            compare(valueModifiedSpy.count, ++valueModifiedCount)
-
-            compare(control.value, 40 + i1)
-
-            keyRelease(Qt.Key_Up)
-            compare(control.down.pressed, false)
-            compare(control.up.pressed, false)
-            compare(upPressedSpy.count, ++upPressedCount)
-            compare(valueModifiedSpy.count, valueModifiedCount)
-        }
-        compare(control.value, 50)
-
-        control.stepSize = 25
-        compare(control.stepSize, 25)
-
-        for (var d2 = 1; d2 <= 10; ++d2) {
-            var wasDownEnabled = control.value > control.from
-            keyPress(Qt.Key_Down)
-            compare(control.down.pressed, wasDownEnabled)
-            compare(control.up.pressed, false)
-            if (wasDownEnabled) {
-                ++downPressedCount
-                ++valueModifiedCount
-            }
-            compare(downPressedSpy.count, downPressedCount)
-            compare(valueModifiedSpy.count, valueModifiedCount)
-
-            compare(control.value, Math.max(0, 50 - d2 * 25))
-
-            keyRelease(Qt.Key_Down)
-            compare(control.down.pressed, false)
-            compare(control.up.pressed, false)
-            if (wasDownEnabled)
-                ++downPressedCount
-            compare(downPressedSpy.count, downPressedCount)
-            compare(valueModifiedSpy.count, valueModifiedCount)
-        }
-        compare(control.value, 0)
-
-        for (var i2 = 1; i2 <= 10; ++i2) {
+        for (var u = 0; u < data.upSteps.length; ++u) {
             var wasUpEnabled = control.value < control.to
             keyPress(Qt.Key_Up)
             compare(control.up.pressed, wasUpEnabled)
@@ -371,7 +315,7 @@ TestCase {
             compare(upPressedSpy.count, upPressedCount)
             compare(valueModifiedSpy.count, valueModifiedCount)
 
-            compare(control.value, Math.min(99, i2 * 25))
+            compare(control.value, data.upSteps[u])
 
             keyRelease(Qt.Key_Up)
             compare(control.down.pressed, false)
@@ -381,7 +325,29 @@ TestCase {
             compare(upPressedSpy.count, upPressedCount)
             compare(valueModifiedSpy.count, valueModifiedCount)
         }
-        compare(control.value, 99)
+
+        for (var d = 0; d < data.downSteps.length; ++d) {
+            var wasDownEnabled = control.value > control.from
+            keyPress(Qt.Key_Down)
+            compare(control.down.pressed, wasDownEnabled)
+            compare(control.up.pressed, false)
+            if (wasDownEnabled) {
+                ++downPressedCount
+                ++valueModifiedCount
+            }
+            compare(downPressedSpy.count, downPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
+
+            compare(control.value, data.downSteps[d])
+
+            keyRelease(Qt.Key_Down)
+            compare(control.down.pressed, false)
+            compare(control.up.pressed, false)
+            if (wasDownEnabled)
+                ++downPressedCount
+            compare(downPressedSpy.count, downPressedCount)
+            compare(valueModifiedSpy.count, valueModifiedCount)
+        }
     }
 
     function test_locale() {
@@ -443,46 +409,43 @@ TestCase {
         compare(control.value, 5)
     }
 
+    function test_wheel_data() {
+        return [
+            { tag: "1", from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3,4], downSteps: [3,2,1,1] },
+            { tag: "2", from: 1, to: 10, value: 10, stepSize: 2, upSteps: [10,10], downSteps: [8,6,4] },
+            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] }
+        ]
+    }
+
     function test_wheel(data) {
-        var control = createTemporaryObject(spinBox, testCase, {wheelEnabled: true})
+        var control = createTemporaryObject(spinBox, testCase, {from: data.from, to: data.to, value: data.value, stepSize: data.stepSize, wheelEnabled: true})
         verify(control)
 
+        var valueModifiedCount = 0
         var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
         var delta = 120
 
-        compare(control.value, 0)
+        for (var u = 0; u < data.upSteps.length; ++u) {
+            var wasUpEnabled = control.value < control.to
+            mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+            if (wasUpEnabled)
+                ++valueModifiedCount
+            compare(valueModifiedSpy.count, valueModifiedCount)
 
-        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
-        compare(control.value, 1)
-        compare(valueModifiedSpy.count, 1)
+            compare(control.value, data.upSteps[u])
+        }
 
-        control.stepSize = 2
+        for (var d = 0; d < data.downSteps.length; ++d) {
+            var wasDownEnabled = control.value > control.from
+            mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+            if (wasDownEnabled)
+                ++valueModifiedCount
+            compare(valueModifiedSpy.count, valueModifiedCount)
 
-        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
-        compare(control.value, 3)
-        compare(valueModifiedSpy.count, 2)
-
-        control.stepSize = 10
-
-        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
-        compare(control.value, 0)
-        compare(valueModifiedSpy.count, 3)
-
-        control.stepSize = 5
-
-        mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
-        compare(control.value, 5)
-        compare(valueModifiedSpy.count, 4)
-
-        mouseWheel(control, control.width / 2, control.height / 2, 0.5 * delta, 0.5 * delta)
-        compare(control.value, 8)
-        compare(valueModifiedSpy.count, 5)
-
-        mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
-        compare(control.value, 3)
-        compare(valueModifiedSpy.count, 6)
+            compare(control.value, data.downSteps[d])
+        }
     }
 
     function test_initiallyDisabledIndicators_data() {
