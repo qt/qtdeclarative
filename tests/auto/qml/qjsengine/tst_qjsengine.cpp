@@ -29,6 +29,7 @@
 
 #include <QtTest/QtTest>
 
+#include <private/qqmldata_p.h>
 #include <qjsengine.h>
 #include <qjsvalueiterator.h>
 #include <qgraphicsitem.h>
@@ -73,6 +74,7 @@ private slots:
     void newQObject();
     void newQObject_ownership();
     void newQObject_deletedEngine();
+    void newQObjectPropertyCache();
     void newQMetaObject();
     void exceptionInSlot();
     void globalObjectProperties();
@@ -748,6 +750,19 @@ public:
 private:
     int m_called;
 };
+
+void tst_QJSEngine::newQObjectPropertyCache()
+{
+    QScopedPointer<QObject> obj(new QObject);
+    QQmlEngine::setObjectOwnership(obj.data(), QQmlEngine::CppOwnership);
+
+    {
+        QJSEngine engine;
+        engine.newQObject(obj.data());
+        QVERIFY(QQmlData::get(obj.data())->propertyCache);
+    }
+    QVERIFY(!QQmlData::get(obj.data())->propertyCache);
+}
 
 void tst_QJSEngine::newQMetaObject() {
     {

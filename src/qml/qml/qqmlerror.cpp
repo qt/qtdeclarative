@@ -44,6 +44,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qpointer.h>
 
 #include <private/qv4errorobject_p.h>
 
@@ -86,7 +87,7 @@ public:
     quint16 line;
     quint16 column;
     QtMsgType messageType;
-    QObject *object;
+    QPointer<QObject> object;
 };
 
 QQmlErrorPrivate::QQmlErrorPrivate()

@@ -71,7 +71,9 @@
 
 static Config *conf = 0;
 static QQmlApplicationEngine *qae = 0;
+#if defined(Q_OS_DARWIN) || defined(QT_GUI_LIB)
 static int exitTimerId = -1;
+#endif
 bool verboseMode = false;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
@@ -388,6 +390,9 @@ void getAppFlags(int &argc, char **argv)
             argc -= 2;
         }
     }
+#else
+    Q_UNUSED(argc)
+    Q_UNUSED(argv)
 #endif // QT_GUI_LIB
 }
 
@@ -552,7 +557,7 @@ int main(int argc, char *argv[])
         qInstallMessageHandler(quietMessageHandler);
 
     if (files.count() <= 0) {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_DARWIN)
         if (applicationType == QmlApplicationTypeGui)
             exitTimerId = static_cast<LoaderApplication *>(app)->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
         else

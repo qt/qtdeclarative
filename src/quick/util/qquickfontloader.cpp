@@ -236,7 +236,7 @@ QQuickFontLoader::~QQuickFontLoader()
 
 /*!
     \qmlproperty url QtQuick::FontLoader::source
-    The url of the font to load.
+    The URL of the font to load.
 */
 QUrl QQuickFontLoader::source() const
 {
@@ -317,7 +317,7 @@ void QQuickFontLoader::updateFontInfo(const QString& name, QQuickFontLoader::Sta
     \qmlproperty string QtQuick::FontLoader::name
 
     This property holds the name of the font family.
-    It is set automatically when a font is loaded using the \c url property.
+    It is set automatically when a font is loaded using the \l source property.
 
     Use this to set the \c font.family property of a \c Text item.
 
