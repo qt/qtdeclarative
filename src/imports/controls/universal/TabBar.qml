@@ -46,8 +46,6 @@ T.TabBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentHeight + topPadding + bottomPadding)
 
-    contentHeight: 48
-
     contentItem: PathView {
         model: control.contentModel
         currentIndex: control.currentIndex
