@@ -374,7 +374,7 @@ void QQuickAction::setText(const QString &text)
 /*!
     \qmlpropertygroup QtQuick.Controls::Action::icon
     \qmlproperty string QtQuick.Controls::Action::icon.name
-    \qmlproperty string QtQuick.Controls::Action::icon.source
+    \qmlproperty url QtQuick.Controls::Action::icon.source
     \qmlproperty int QtQuick.Controls::Action::icon.width
     \qmlproperty int QtQuick.Controls::Action::icon.height
     \qmlproperty color QtQuick.Controls::Action::icon.color

@@ -1612,7 +1612,7 @@ TestCase {
             "LayoutMirroring.enabled": !!data.mirrored
         })
         verify(control)
-        verify(control.icon.source.length > 0)
+        compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png")
 
         var iconImage = findChild(control.contentItem, "image")
         var textLabel = findChild(control.contentItem, "label")

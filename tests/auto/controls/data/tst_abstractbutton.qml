@@ -184,8 +184,8 @@ TestCase {
         var iconSourceSpy = signalSpy.createObject(control, { target: control.icon, signalName: "sourceChanged"} )
         verify(iconSourceSpy.valid)
 
-        control.icon.source = "test-source"
-        compare(control.icon.source, "test-source")
+        control.icon.source = "qrc:/test-source"
+        compare(control.icon.source, "qrc:/test-source")
         compare(iconSourceSpy.count, 1)
 
         var iconWidthSpy = signalSpy.createObject(control, { target: control.icon, signalName: "widthChanged"} )

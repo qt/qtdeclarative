@@ -48,6 +48,7 @@
 // We mean it.
 //
 
+#include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtGui/qcolor.h>
@@ -60,7 +61,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
-    Q_PROPERTY(QString source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(int width READ width WRITE setWidth NOTIFY widthChanged FINAL)
     Q_PROPERTY(int height READ height WRITE setHeight NOTIFY heightChanged FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged FINAL)
@@ -71,8 +72,8 @@ public:
     QString name() const;
     void setName(const QString &name);
 
-    QString source() const;
-    void setSource(const QString &source);
+    QUrl source() const;
+    void setSource(const QUrl &source);
 
     int width() const;
     void setWidth(int width);
@@ -86,7 +87,7 @@ public:
 
 Q_SIGNALS:
     void nameChanged(const QString &name);
-    void sourceChanged(const QString &source);
+    void sourceChanged(const QUrl &source);
     void widthChanged(int width);
     void heightChanged(int height);
     void colorChanged(const QColor &color);

@@ -625,7 +625,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 /*!
     \qmlpropertygroup QtQuick.Controls::AbstractButton::icon
     \qmlproperty string QtQuick.Controls::AbstractButton::icon.name
-    \qmlproperty string QtQuick.Controls::AbstractButton::icon.source
+    \qmlproperty url QtQuick.Controls::AbstractButton::icon.source
     \qmlproperty int QtQuick.Controls::AbstractButton::icon.width
     \qmlproperty int QtQuick.Controls::AbstractButton::icon.height
     \qmlproperty color QtQuick.Controls::AbstractButton::icon.color
@@ -738,7 +738,7 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
             if (!name.isEmpty())
                 buttonIcon->setName(name);
 
-            QString source = actionIcon->source();
+            QUrl source = actionIcon->source();
             if (!source.isEmpty())
                 buttonIcon->setSource(source);
 

@@ -52,7 +52,7 @@ public:
     }
 
     QString name;
-    QString source;
+    QUrl source;
     int width;
     int height;
     QColor color;
@@ -79,13 +79,13 @@ void QQuickIcon::setName(const QString &name)
     emit nameChanged(name);
 }
 
-QString QQuickIcon::source() const
+QUrl QQuickIcon::source() const
 {
     Q_D(const QQuickIcon);
     return d->source;
 }
 
-void QQuickIcon::setSource(const QString &source)
+void QQuickIcon::setSource(const QUrl &source)
 {
     Q_D(QQuickIcon);
     if (source == d->source)
