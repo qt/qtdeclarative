@@ -44,6 +44,7 @@
 #include "qquickdialog_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/private/qqmlnullablevalue_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -209,7 +210,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       dim(false),
       hasDim(false),
       visible(false),
-      complete(false),
+      complete(true),
       positioning(false),
       hasWidth(false),
       hasHeight(false),
@@ -225,6 +226,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       allowHorizontalResize(true),
       hadActiveFocusBeforeExitTransition(false),
       interactive(true),
+      touchId(-1),
       x(0),
       y(0),
       effectiveX(0),
@@ -257,6 +259,7 @@ void QQuickPopupPrivate::init()
 {
     Q_Q(QQuickPopup);
     popupItem = new QQuickPopupItem(q);
+    popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     positioner = new QQuickPopupPositioner(q);
@@ -271,23 +274,90 @@ void QQuickPopupPrivate::closeOrReject()
         q->close();
 }
 
-bool QQuickPopupPrivate::tryClose(QQuickItem *item, QMouseEvent *event)
+bool QQuickPopupPrivate::tryClose(QQuickItem *item, QEvent *event)
 {
     if (!interactive)
         return false;
 
-    const bool isPress = event->type() == QEvent::MouseButtonPress;
+    bool isPress = false;
+    QQmlNullableValue<QPointF> pos;
+
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        pos = static_cast<QMouseEvent *>(event)->pos();
+        isPress = event->type() == QEvent::MouseButtonPress;
+        break;
+
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
+            if (point.state() == Qt::TouchPointMoved)
+                continue;
+
+            pos = point.pos();
+            isPress = point.state() == Qt::TouchPointPressed;
+            break; // TODO: multiple touch points
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (pos.isNull) // ignore touch moves
+        return false;
+
     const bool onOutside = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutside : QQuickPopup::CloseOnReleaseOutside);
     const bool onOutsideParent = closePolicy.testFlag(isPress ? QQuickPopup::CloseOnPressOutsideParent : QQuickPopup::CloseOnReleaseOutsideParent);
     if (onOutside || onOutsideParent) {
-        if (!popupItem->contains(item->mapToItem(popupItem, event->pos()))) {
-            if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, event->pos()))) {
+        if (!popupItem->contains(item->mapToItem(popupItem, pos))) {
+            if (!onOutsideParent || !parentItem || !parentItem->contains(item->mapToItem(parentItem, pos))) {
                 closeOrReject();
                 return true;
             }
         }
     }
     return false;
+}
+
+bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
+{
+    if (point.id() == touchId)
+        return true;
+
+    if (touchId == -1 && point.state() == Qt::TouchPointPressed) {
+        touchId = point.id();
+        return true;
+    }
+
+    return false;
+}
+
+void QQuickPopupPrivate::handlePress(const QPointF &)
+{
+}
+
+void QQuickPopupPrivate::handleMove(const QPointF &)
+{
+}
+
+void QQuickPopupPrivate::handleRelease(const QPointF &)
+{
+    touchId = -1;
+}
+
+void QQuickPopupPrivate::handleUngrab()
+{
+    Q_Q(QQuickPopup);
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    if (overlay) {
+        QQuickOverlayPrivate *p = QQuickOverlayPrivate::get(overlay);
+        if (p->mouseGrabberPopup == q)
+            p->mouseGrabberPopup = nullptr;
+    }
+    touchId = -1;
 }
 
 bool QQuickPopupPrivate::prepareEnterTransition()
@@ -1742,6 +1812,7 @@ void QQuickPopup::forceActiveFocus(Qt::FocusReason reason)
 void QQuickPopup::classBegin()
 {
     Q_D(QQuickPopup);
+    d->complete = false;
     d->popupItem->classBegin();
 }
 
@@ -1801,16 +1872,22 @@ void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
 
 void QQuickPopup::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickPopup);
+    d->handlePress(event->localPos());
     event->accept();
 }
 
 void QQuickPopup::mouseMoveEvent(QMouseEvent *event)
 {
+    Q_D(QQuickPopup);
+    d->handleMove(event->localPos());
     event->accept();
 }
 
 void QQuickPopup::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_D(QQuickPopup);
+    d->handleRelease(event->localPos());
     event->accept();
 }
 
@@ -1821,12 +1898,8 @@ void QQuickPopup::mouseDoubleClickEvent(QMouseEvent *event)
 
 void QQuickPopup::mouseUngrabEvent()
 {
-    QQuickOverlay *overlay = QQuickOverlay::overlay(window());
-    if (overlay) {
-        QQuickOverlayPrivate *p = QQuickOverlayPrivate::get(overlay);
-        if (p->mouseGrabberPopup == this)
-            p->mouseGrabberPopup = nullptr;
-    }
+    Q_D(QQuickPopup);
+    d->handleUngrab();
 }
 
 bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
@@ -1841,11 +1914,14 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
             event->accept();
         return d->modal;
 
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
         if (d->modal)
             event->accept();
-        d->tryClose(item, static_cast<QMouseEvent *>(event));
+        d->tryClose(item, event);
         return d->modal;
 
     default:
@@ -1855,12 +1931,59 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
 
 void QQuickPopup::touchEvent(QTouchEvent *event)
 {
-    // TODO: QQuickPopup and QQuickDrawer still rely on synthesized mouse events
+    Q_D(QQuickPopup);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (d->acceptTouch(point))
+                d->handlePress(point.pos());
+        }
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (!d->acceptTouch(point))
+                continue;
+
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                d->handlePress(point.pos());
+                break;
+            case Qt::TouchPointMoved:
+                d->handleMove(point.pos());
+                break;
+            case Qt::TouchPointReleased:
+                d->handleRelease(point.pos());
+                break;
+            default:
+                break;
+            }
+        }
+        break;
+
+    case QEvent::TouchEnd:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            if (d->acceptTouch(point))
+                d->handleRelease(point.pos());
+        }
+        break;
+
+    case QEvent::TouchCancel:
+        d->handleUngrab();
+        break;
+
+    default:
+        break;
+    }
+
+    // TODO: QQuickPopup still relies on synthesized mouse events
     event->ignore();
 }
 
 void QQuickPopup::touchUngrabEvent()
 {
+    Q_D(QQuickPopup);
+    d->handleUngrab();
 }
 
 #if QT_CONFIG(wheelevent)

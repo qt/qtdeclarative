@@ -102,7 +102,6 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     : QQuickControl(*(new QQuickPopupItemPrivate(popup)), nullptr)
 {
     setParent(popup);
-    setVisible(false);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
 #if QT_CONFIG(cursor)

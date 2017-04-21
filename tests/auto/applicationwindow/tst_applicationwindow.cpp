@@ -74,6 +74,7 @@ private slots:
     void focusAfterPopupClosed();
     void clearFocusOnDestruction();
     void layout();
+    void componentComplete();
 };
 
 void tst_applicationwindow::qmlCreation()
@@ -772,6 +773,28 @@ void tst_applicationwindow::layout()
     QCOMPARE(content->y(), 0.0);
     QCOMPARE(content->width(), qreal(window->width()));
     QCOMPARE(content->height(), qreal(window->height()));
+}
+
+class FriendlyApplicationWindow : public QQuickApplicationWindow
+{
+    friend class tst_applicationwindow;
+};
+
+void tst_applicationwindow::componentComplete()
+{
+    FriendlyApplicationWindow cppWindow;
+    QVERIFY(cppWindow.isComponentComplete());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls 2.2; ApplicationWindow { }", QUrl());
+
+    FriendlyApplicationWindow *qmlWindow = static_cast<FriendlyApplicationWindow *>(component.beginCreate(engine.rootContext()));
+    QVERIFY(qmlWindow);
+    QVERIFY(!qmlWindow->isComponentComplete());
+
+    component.completeCreate();
+    QVERIFY(qmlWindow->isComponentComplete());
 }
 
 QTEST_MAIN(tst_applicationwindow)

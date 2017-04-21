@@ -95,7 +95,14 @@ public:
 
     void init();
     void closeOrReject();
-    bool tryClose(QQuickItem *item, QMouseEvent *event);
+    bool tryClose(QQuickItem *item, QEvent *event);
+
+    virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
+    virtual void handlePress(const QPointF &point);
+    virtual void handleMove(const QPointF &point);
+    virtual void handleRelease(const QPointF &point);
+    virtual void handleUngrab();
+
     virtual void reposition();
     virtual void resizeOverlay();
 
@@ -139,6 +146,7 @@ public:
     bool allowHorizontalResize;
     bool hadActiveFocusBeforeExitTransition;
     bool interactive;
+    int touchId;
     qreal x;
     qreal y;
     qreal effectiveX;

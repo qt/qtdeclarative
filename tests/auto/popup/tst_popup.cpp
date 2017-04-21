@@ -73,6 +73,7 @@ private slots:
     void nested();
     void grabber();
     void cursorShape();
+    void componentComplete();
 };
 
 void tst_popup::visible_data()
@@ -752,6 +753,28 @@ void tst_popup::cursorShape()
 
     popup->close();
     QTRY_VERIFY(!popup->isVisible());
+}
+
+class FriendlyPopup : public QQuickPopup
+{
+    friend class tst_popup;
+};
+
+void tst_popup::componentComplete()
+{
+    FriendlyPopup cppPopup;
+    QVERIFY(cppPopup.isComponentComplete());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls 2.2; Popup { }", QUrl());
+
+    FriendlyPopup *qmlPopup = static_cast<FriendlyPopup *>(component.beginCreate(engine.rootContext()));
+    QVERIFY(qmlPopup);
+    QVERIFY(!qmlPopup->isComponentComplete());
+
+    component.completeCreate();
+    QVERIFY(qmlPopup->isComponentComplete());
 }
 
 QTEST_MAIN(tst_popup)

@@ -181,6 +181,59 @@ QQuickOverlayPrivate::QQuickOverlayPrivate()
 {
 }
 
+void QQuickOverlayPrivate::handlePress(QEvent *event)
+{
+    Q_Q(QQuickOverlay);
+    emit q->pressed();
+
+    if (!allDrawers.isEmpty()) {
+        // the overlay background was pressed, so there are no modal popups open.
+        // test if the press point lands on any drawer's drag margin
+
+        const QVector<QQuickDrawer *> drawers = stackingOrderDrawers();
+        for (QQuickDrawer *drawer : drawers) {
+            QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
+            if (p->startDrag(event)) {
+                setMouseGrabberPopup(drawer);
+                return;
+            }
+        }
+    }
+
+    if (!mouseGrabberPopup) {
+        // allow non-modal popups to close themselves
+        const auto popups = stackingOrderPopups();
+        for (QQuickPopup *popup : popups)
+            popup->overlayEvent(q, event);
+    }
+
+    event->ignore();
+}
+
+void QQuickOverlayPrivate::handleMove(QEvent *event)
+{
+    Q_Q(QQuickOverlay);
+    if (mouseGrabberPopup)
+        mouseGrabberPopup->overlayEvent(q, event);
+}
+
+void QQuickOverlayPrivate::handleRelease(QEvent *event)
+{
+    Q_Q(QQuickOverlay);
+    emit q->released();
+
+    if (mouseGrabberPopup) {
+        mouseGrabberPopup->overlayEvent(q, event);
+        setMouseGrabberPopup(nullptr);
+    } else {
+        const auto popups = stackingOrderPopups();
+        for (QQuickPopup *popup : popups) {
+            if (popup->overlayEvent(q, event))
+                break;
+        }
+    }
+}
+
 void QQuickOverlayPrivate::addPopup(QQuickPopup *popup)
 {
     Q_Q(QQuickOverlay);
@@ -329,56 +382,54 @@ void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &old
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickOverlay);
-    emit pressed();
-
-    if (!d->allDrawers.isEmpty()) {
-        // the overlay background was pressed, so there are no modal popups open.
-        // test if the press point lands on any drawer's drag margin
-
-        const QVector<QQuickDrawer *> drawers = d->stackingOrderDrawers();
-        for (QQuickDrawer *drawer : drawers) {
-            QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
-            if (p->startDrag(window(), event)) {
-                d->setMouseGrabberPopup(drawer);
-                return;
-            }
-        }
-    }
-
-    if (!d->mouseGrabberPopup) {
-        const auto popups = d->stackingOrderPopups();
-        for (QQuickPopup *popup : popups) {
-            if (popup->overlayEvent(this, event)) {
-                d->setMouseGrabberPopup(popup);
-                return;
-            }
-        }
-    }
-
-    event->ignore();
+    d->handlePress(event);
 }
 
 void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickOverlay);
-    if (d->mouseGrabberPopup)
-        d->mouseGrabberPopup->overlayEvent(this, event);
+    d->handleMove(event);
 }
 
 void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickOverlay);
-    emit released();
+    d->handleRelease(event);
+}
 
-    if (d->mouseGrabberPopup) {
-        d->mouseGrabberPopup->overlayEvent(this, event);
-        d->setMouseGrabberPopup(nullptr);
-    } else {
-        const auto popups = d->stackingOrderPopups();
-        for (QQuickPopup *popup : popups) {
-            if (popup->overlayEvent(this, event))
+void QQuickOverlay::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickOverlay);
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+        d->handlePress(event);
+        break;
+
+    case QEvent::TouchUpdate:
+        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+            switch (point.state()) {
+            case Qt::TouchPointPressed:
+                d->handlePress(event);
                 break;
+            case Qt::TouchPointMoved:
+                d->handleMove(event);
+                break;
+            case Qt::TouchPointReleased:
+                d->handleRelease(event);
+                break;
+            default:
+                break;
+            }
         }
+        break;
+
+    case QEvent::TouchEnd:
+        d->handleRelease(event);
+        break;
+
+    default:
+        QQuickItem::touchEvent(event);
+        break;
     }
 }
 
