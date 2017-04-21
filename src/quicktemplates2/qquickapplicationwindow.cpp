@@ -138,7 +138,7 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
 
 public:
     QQuickApplicationWindowPrivate()
-        : complete(false),
+        : complete(true),
           background(nullptr),
           contentItem(nullptr),
           header(nullptr),
@@ -693,6 +693,7 @@ bool QQuickApplicationWindow::isComponentComplete() const
 void QQuickApplicationWindow::classBegin()
 {
     Q_D(QQuickApplicationWindow);
+    d->complete = false;
     QQuickWindowQmlImpl::classBegin();
     d->resolveFont();
 }
