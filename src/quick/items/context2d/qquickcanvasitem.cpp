@@ -889,7 +889,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod long QtQuick::Canvas::requestAnimationFrame(callback)
+    \qmlmethod int QtQuick::Canvas::requestAnimationFrame(callback)
 
     This function schedules callback to be invoked before composing the Qt Quick
     scene.
@@ -919,7 +919,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick::Canvas::cancelRequestAnimationFrame(long handle)
+    \qmlmethod QtQuick::Canvas::cancelRequestAnimationFrame(int handle)
 
     This function will cancel the animation callback referenced by \a handle.
 */
