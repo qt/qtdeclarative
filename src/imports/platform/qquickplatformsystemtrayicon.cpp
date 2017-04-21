@@ -93,7 +93,7 @@ QT_BEGIN_NAMESPACE
         menu: Menu {
             MenuItem {
                 text: qsTr("Quit")
-                onActivated: Qt.quit()
+                onTriggered: Qt.quit()
             }
         }
     }

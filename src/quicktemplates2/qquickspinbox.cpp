@@ -114,7 +114,6 @@ public:
           stepSize(1),
           delayTimer(0),
           repeatTimer(0),
-          touchId(-1),
           up(nullptr),
           down(nullptr),
           validator(nullptr),
@@ -138,10 +137,10 @@ public:
     void startPressRepeat();
     void stopPressRepeat();
 
-    bool handlePress(const QPointF &point);
-    bool handleMove(const QPointF &point);
-    bool handleRelease(const QPointF &point);
-    bool handleUngrab();
+    void handlePress(const QPointF &point) override;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+    void handleUngrab() override;
 
     bool editable;
     int from;
@@ -150,7 +149,6 @@ public:
     int stepSize;
     int delayTimer;
     int repeatTimer;
-    int touchId;
     QQuickSpinButton *up;
     QQuickSpinButton *down;
     QValidator *validator;
@@ -273,9 +271,10 @@ void QQuickSpinBoxPrivate::stopPressRepeat()
     }
 }
 
-bool QQuickSpinBoxPrivate::handlePress(const QPointF &point)
+void QQuickSpinBoxPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickSpinBox);
+    QQuickControlPrivate::handlePress(point);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
     up->setPressed(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(q, point)));
@@ -285,12 +284,12 @@ bool QQuickSpinBoxPrivate::handlePress(const QPointF &point)
     q->setAccessibleProperty("pressed", pressed);
     if (pressed)
         startRepeatDelay();
-    return pressed;
 }
 
-bool QQuickSpinBoxPrivate::handleMove(const QPointF &point)
+void QQuickSpinBoxPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickSpinBox);
+    QQuickControlPrivate::handleMove(point);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
     up->setPressed(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(q, point)));
@@ -300,17 +299,16 @@ bool QQuickSpinBoxPrivate::handleMove(const QPointF &point)
     q->setAccessibleProperty("pressed", pressed);
     if (!pressed)
         stopPressRepeat();
-    return pressed;
 }
 
-bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
+void QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickSpinBox);
+    QQuickControlPrivate::handleRelease(point);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
 
     int oldValue = value;
-    bool wasPressed = up->isPressed() || down->isPressed();
     if (up->isPressed()) {
         up->setPressed(false);
         if (repeatTimer <= 0 && ui && ui->contains(ui->mapFromItem(q, point)))
@@ -323,22 +321,19 @@ bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
     if (value != oldValue)
         emit q->valueModified();
 
-    touchId = -1;
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-    return wasPressed;
 }
 
-bool QQuickSpinBoxPrivate::handleUngrab()
+void QQuickSpinBoxPrivate::handleUngrab()
 {
     Q_Q(QQuickSpinBox);
+    QQuickControlPrivate::handleUngrab();
     up->setPressed(false);
     down->setPressed(false);
 
-    touchId = -1;
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-    return false;
 }
 
 QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
@@ -791,34 +786,6 @@ void QQuickSpinBox::keyReleaseEvent(QKeyEvent *event)
     setAccessibleProperty("pressed", false);
 }
 
-void QQuickSpinBox::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickSpinBox);
-    QQuickControl::mousePressEvent(event);
-    d->handlePress(event->localPos());
-}
-
-void QQuickSpinBox::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickSpinBox);
-    QQuickControl::mouseMoveEvent(event);
-    d->handleMove(event->localPos());
-}
-
-void QQuickSpinBox::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickSpinBox);
-    QQuickControl::mouseReleaseEvent(event);
-    d->handleRelease(event->localPos());
-}
-
-void QQuickSpinBox::mouseUngrabEvent()
-{
-    Q_D(QQuickSpinBox);
-    QQuickControl::mouseUngrabEvent();
-    d->handleUngrab();
-}
-
 void QQuickSpinBox::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickSpinBox);
@@ -831,55 +798,6 @@ void QQuickSpinBox::timerEvent(QTimerEvent *event)
         else if (d->down->isPressed())
             decrease();
     }
-}
-
-void QQuickSpinBox::touchEvent(QTouchEvent *event)
-{
-    Q_D(QQuickSpinBox);
-    switch (event->type()) {
-    case QEvent::TouchBegin:
-        if (d->touchId == -1) {
-            const QTouchEvent::TouchPoint point = event->touchPoints().first();
-            d->touchId = point.id();
-            d->handlePress(point.pos());
-        } else {
-            event->ignore();
-        }
-        break;
-
-    case QEvent::TouchUpdate:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
-                continue;
-
-            d->handleMove(point.pos());
-        }
-        break;
-
-    case QEvent::TouchEnd:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId)
-                continue;
-
-            d->handleRelease(point.pos());
-        }
-        break;
-
-    case QEvent::TouchCancel:
-        d->handleUngrab();
-        break;
-
-    default:
-        QQuickControl::touchEvent(event);
-        break;
-    }
-}
-
-void QQuickSpinBox::touchUngrabEvent()
-{
-    Q_D(QQuickSpinBox);
-    QQuickControl::touchUngrabEvent();
-    d->handleUngrab();
 }
 
 #if QT_CONFIG(wheelevent)

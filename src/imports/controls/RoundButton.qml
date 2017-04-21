@@ -55,7 +55,6 @@ T.RoundButton {
     icon.height: 24
     icon.color: enabled ? undefined : Default.textDisabledLightColor
 
-    //! [contentItem]
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
@@ -69,9 +68,7 @@ T.RoundButton {
                                                                         : control.down ? Default.textDarkColor : Default.textColor,
                                  enabled || control.highlighted || control.checked ? 1 : 0.3)
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 40
         implicitHeight: 40
@@ -84,5 +81,4 @@ T.RoundButton {
         border.color: Default.focusColor
         border.width: control.visualFocus ? 2 : 0
     }
-    //! [background]
 }

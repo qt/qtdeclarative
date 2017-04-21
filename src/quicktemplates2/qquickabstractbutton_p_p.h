@@ -69,10 +69,10 @@ public:
         return button->d_func();
     }
 
-    virtual void handlePress(const QPointF &point, Qt::MouseButton button = Qt::LeftButton, Qt::MouseButtons buttons = Qt::LeftButton);
-    virtual void handleMove(const QPointF &point);
-    virtual void handleRelease(const QPointF &point);
-    virtual void handleCancel();
+    void handlePress(const QPointF &point) override;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+    void handleUngrab() override;
 
     bool isPressAndHoldConnected();
     void startPressAndHold();
@@ -99,12 +99,11 @@ public:
     bool autoExclusive;
     bool autoRepeat;
     bool wasHeld;
-    int touchId;
     int holdTimer;
     int delayTimer;
     int repeatTimer;
     QPointF pressPoint;
-    Qt::MouseButton repeatButton;
+    Qt::MouseButtons pressButtons;
     QQuickItem *indicator;
     QQuickButtonGroup *group;
     QQuickIcon *icon;

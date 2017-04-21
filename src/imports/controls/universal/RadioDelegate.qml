@@ -60,8 +60,6 @@ T.RadioDelegate {
     icon.height: 20
     icon.color: enabled ? undefined : Color.transparent(Universal.foreground, 0.2)
 
-    property Item control
-
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

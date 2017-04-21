@@ -48,6 +48,7 @@
 // We mean it.
 //
 
+#include <QtCore/qvariant.h>
 #include <QtGui/qfont.h>
 #include <QtQuickControls2/private/qquickproxytheme_p.h>
 
@@ -59,6 +60,8 @@ public:
     explicit QQuickMaterialTheme(QPlatformTheme *theme = nullptr);
 
     const QFont *font(Font type = SystemFont) const override;
+
+    QVariant themeHint(ThemeHint hint) const override;
 
 private:
     QFont systemFont;

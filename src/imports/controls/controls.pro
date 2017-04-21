@@ -7,8 +7,11 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
+include(controls.pri)
+
 OTHER_FILES += \
-    qmldir
+    qmldir \
+    $$QML_CONTROLS
 
 SOURCES += \
     $$PWD/qtquickcontrols2plugin.cpp
@@ -16,7 +19,6 @@ SOURCES += \
 RESOURCES += \
     $$PWD/qtquickcontrols2plugin.qrc
 
-include(controls.pri)
 !static: qtConfig(quick-designer): include(designer/designer.pri)
 include(doc/doc.pri)
 

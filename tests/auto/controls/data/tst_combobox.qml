@@ -695,6 +695,50 @@ TestCase {
         tryCompare(control.popup, "visible", false)
     }
 
+    function test_touch() {
+        var control = createTemporaryObject(comboBox, testCase, {model: 3})
+        verify(control)
+
+        var touch = touchEvent(control)
+
+        var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
+        verify(activatedSpy.valid)
+
+        var highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
+        verify(highlightedSpy.valid)
+
+        touch.press(0, control).commit()
+        touch.release(0, control).commit()
+        compare(control.popup.visible, true)
+
+        var content = control.popup.contentItem
+        waitForRendering(content)
+
+        // press - move - release outside - not activated - not closed
+        touch.press(0, control).commit()
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        touch.move(0, control, control.width * 2, control.height / 2).commit()
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        touch.release(0, control, control.width * 2, control.height / 2).commit()
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        compare(control.popup.visible, true)
+
+        // press - move - release inside - activated - closed
+        touch.press(0, content).commit()
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        touch.move(0, content, content.width / 2 + 1, content.height / 2 + 1).commit()
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        touch.release(0, content).commit()
+        compare(activatedSpy.count, 1)
+        compare(highlightedSpy.count, 1)
+        tryCompare(control.popup, "visible", false)
+    }
+
     function test_down() {
         var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)

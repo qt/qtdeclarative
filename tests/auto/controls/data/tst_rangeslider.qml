@@ -852,7 +852,6 @@ TestCase {
         var control = createTemporaryObject(sliderComponent, testCase)
         verify(control)
 
-        waitForRendering(control)
         compare(control.activeFocus, false)
 
         // focus is forwarded to the first handle

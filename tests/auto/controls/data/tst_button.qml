@@ -226,7 +226,6 @@ TestCase {
 
         var control2 = createTemporaryObject(button, testCase, {y: control1.height})
         verify(control2)
-        waitForRendering(control2)
 
         var pressedCount2 = 0
 

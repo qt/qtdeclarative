@@ -78,6 +78,12 @@ public:
         return control->d_func();
     }
 
+    virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
+    virtual void handlePress(const QPointF &point);
+    virtual void handleMove(const QPointF &point);
+    virtual void handleRelease(const QPointF &point);
+    virtual void handleUngrab();
+
     void mirrorChange() override;
 
     void setTopPadding(qreal value, bool reset = false);
@@ -136,6 +142,7 @@ public:
     bool hovered;
     bool explicitHoverEnabled;
 #endif
+    int touchId;
     qreal padding;
     qreal topPadding;
     qreal leftPadding;

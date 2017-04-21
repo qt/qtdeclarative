@@ -7,16 +7,17 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
+include(universal.pri)
+
 OTHER_FILES += \
-    qmldir
+    qmldir \
+    $$QML_FILES
 
 SOURCES += \
     $$PWD/qtquickcontrols2universalstyleplugin.cpp
 
 RESOURCES += \
     $$PWD/qtquickcontrols2universalstyleplugin.qrc
-
-include(universal.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)

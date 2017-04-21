@@ -3,7 +3,7 @@ TARGET = tst_creationtime
 
 QT += qml testlib
 CONFIG += testcase
-osx:CONFIG -= app_bundle
+macos:CONFIG -= app_bundle
 
 DEFINES += QQC2_IMPORT_PATH=\\\"$$QQC2_SOURCE_TREE/src/imports\\\"
 

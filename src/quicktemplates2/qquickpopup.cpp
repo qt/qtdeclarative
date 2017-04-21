@@ -1853,6 +1853,16 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
     }
 }
 
+void QQuickPopup::touchEvent(QTouchEvent *event)
+{
+    // TODO: QQuickPopup and QQuickDrawer still rely on synthesized mouse events
+    event->ignore();
+}
+
+void QQuickPopup::touchUngrabEvent()
+{
+}
+
 #if QT_CONFIG(wheelevent)
 void QQuickPopup::wheelEvent(QWheelEvent *event)
 {

@@ -44,6 +44,7 @@
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
+#include <QtGui/qtouchdevice.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -59,6 +60,7 @@ private slots:
     void navigation_data();
     void navigation();
 
+    void policy_data();
     void policy();
 
     void reason_data();
@@ -122,11 +124,24 @@ void tst_focus::navigation()
     QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
 }
 
+void tst_focus::policy_data()
+{
+    QTest::addColumn<QString>("name");
+
+    QTest::newRow("Control") << "Control";
+    QTest::newRow("ComboBox") << "ComboBox";
+    QTest::newRow("Button") << "Button";
+    QTest::newRow("Slider") << "Slider";
+    QTest::newRow("ScrollBar") << "ScrollBar";
+}
+
 void tst_focus::policy()
 {
+    QFETCH(QString, name);
+
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.1; ApplicationWindow { width: 100; height: 100; Control { anchors.fill: parent } }", QUrl());
+    component.setData(QString("import QtQuick.Controls 2.1; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(window);
@@ -140,6 +155,22 @@ void tst_focus::policy()
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    struct TouchDeviceDeleter
+    {
+        static inline void cleanup(QTouchDevice *device)
+        {
+            QWindowSystemInterface::unregisterTouchDevice(device);
+            delete device;
+        }
+    };
+
+    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device.data());
+
+    control->setFocusPolicy(Qt::NoFocus);
+    QCOMPARE(control->focusPolicy(), Qt::NoFocus);
 
     // Qt::TabFocus vs. QQuickItem::activeFocusOnTab
     control->setActiveFocusOnTab(true);
@@ -162,7 +193,8 @@ void tst_focus::policy()
     control->setFocus(false);
     QVERIFY(!control->hasActiveFocus());
 
-    // Qt::ClickFocus
+    // Qt::ClickFocus (mouse)
+    control->setFocusPolicy(Qt::NoFocus);
     control->setAcceptedMouseButtons(Qt::LeftButton);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
     QVERIFY(!control->hasActiveFocus());
@@ -171,6 +203,24 @@ void tst_focus::policy()
     control->setFocusPolicy(Qt::ClickFocus);
     QCOMPARE(control->focusPolicy(), Qt::ClickFocus);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
+    QVERIFY(control->hasActiveFocus());
+    QVERIFY(!control->hasVisualFocus());
+
+    // reset
+    control->setFocus(false);
+    QVERIFY(!control->hasActiveFocus());
+
+    // Qt::ClickFocus (touch)
+    control->setFocusPolicy(Qt::NoFocus);
+    QTest::touchEvent(window.data(), device.data()).press(0, QPoint(control->width() / 2, control->height() / 2));
+    QTest::touchEvent(window.data(), device.data()).release(0, QPoint(control->width() / 2, control->height() / 2));
+    QVERIFY(!control->hasActiveFocus());
+    QVERIFY(!control->hasVisualFocus());
+
+    control->setFocusPolicy(Qt::ClickFocus);
+    QCOMPARE(control->focusPolicy(), Qt::ClickFocus);
+    QTest::touchEvent(window.data(), device.data()).press(0, QPoint(control->width() / 2, control->height() / 2));
+    QTest::touchEvent(window.data(), device.data()).release(0, QPoint(control->width() / 2, control->height() / 2));
     QVERIFY(control->hasActiveFocus());
     QVERIFY(!control->hasVisualFocus());
 

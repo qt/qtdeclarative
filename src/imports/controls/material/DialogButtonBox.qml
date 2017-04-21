@@ -50,8 +50,8 @@ T.DialogButtonBox {
 
     spacing: 8
     padding: 8
-    topPadding: padding - 4
-    bottomPadding: padding - 4
+    topPadding: 2
+    bottomPadding: 2
     alignment: Qt.AlignRight
 
     Material.foreground: Material.accent
@@ -73,6 +73,7 @@ T.DialogButtonBox {
         implicitHeight: 52
         radius: 2
         color: control.Material.dialogColor
+        // Rounded corners should be only at the top or at the bottom
         topPadding: control.position === T.DialogButtonBox.Footer ? -2 : 0
         bottomPadding: control.position === T.DialogButtonBox.Header ? -2 : 0
         clip: true
