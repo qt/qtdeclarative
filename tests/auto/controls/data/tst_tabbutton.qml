@@ -95,4 +95,84 @@ TestCase {
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
+
+    function test_spacing() {
+        var control = createTemporaryObject(tabButton, testCase, { text: "Some long, long, long text" })
+        verify(control)
+        if (control.background)
+            verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
+
+        var textLabel = findChild(control.contentItem, "label")
+        verify(textLabel)
+
+        // The implicitWidth of the IconLabel that all buttons use as their contentItem
+        // should be equal to the implicitWidth of the Text while no icon is set.
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
+
+        // That means that spacing shouldn't affect it.
+        control.spacing += 100
+        compare(control.contentItem.implicitWidth, textLabel.implicitWidth)
+
+        // The implicitWidth of the TabButton itself should, therefore, also never include spacing while no icon is set.
+        compare(control.implicitWidth, textLabel.implicitWidth + control.leftPadding + control.rightPadding)
+    }
+
+    function test_display_data() {
+        return [
+            { "tag": "IconOnly", display: TabButton.IconOnly },
+            { "tag": "TextOnly", display: TabButton.TextOnly },
+            { "tag": "TextUnderIcon", display: TabButton.TextUnderIcon },
+            { "tag": "TextBesideIcon", display: TabButton.TextBesideIcon },
+            { "tag": "IconOnly, mirrored", display: TabButton.IconOnly, mirrored: true },
+            { "tag": "TextOnly, mirrored", display: TabButton.TextOnly, mirrored: true },
+            { "tag": "TextUnderIcon, mirrored", display: TabButton.TextUnderIcon, mirrored: true },
+            { "tag": "TextBesideIcon, mirrored", display: TabButton.TextBesideIcon, mirrored: true }
+        ]
+    }
+
+    function test_display(data) {
+        var control = createTemporaryObject(tabButton, testCase, {
+            text: "TabButton",
+            display: data.display,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "LayoutMirroring.enabled": !!data.mirrored
+        })
+        verify(control)
+        verify(control.icon.source.length > 0)
+
+        var iconImage = findChild(control.contentItem, "image")
+        var textLabel = findChild(control.contentItem, "label")
+
+        switch (control.display) {
+        case TabButton.IconOnly:
+            verify(iconImage)
+            verify(!textLabel)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            break;
+        case TabButton.TextOnly:
+            verify(!iconImage)
+            verify(textLabel)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        case TabButton.TextUnderIcon:
+            verify(iconImage)
+            verify(textLabel)
+            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
+            verify(iconImage.y < textLabel.y)
+            break;
+        case TabButton.TextBesideIcon:
+            verify(iconImage)
+            verify(textLabel)
+            if (control.mirrored)
+                verify(textLabel.x < iconImage.x)
+            else
+                verify(iconImage.x < textLabel.x)
+            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
+            break;
+        }
+    }
 }

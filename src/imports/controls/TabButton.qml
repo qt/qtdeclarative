@@ -49,15 +49,22 @@ T.TabButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
+    spacing: 6
 
-    contentItem: Text {
+    icon.width: 24
+    icon.height: 24
+    icon.color: !enabled ? Default.textDisabledLightColor : !checked ? Default.textLightColor : Default.textColor
+
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: control.icon
         text: control.text
         font: control.font
-        elide: Text.ElideRight
-        opacity: enabled ? 1 : 0.3
-        color: !control.checked ? Default.textLightColor : control.down ? Default.textDarkColor : Default.textColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        color: Color.transparent(!control.checked ? Default.textLightColor : control.down ? Default.textDarkColor : Default.textColor,
+                                 enabled ? 1 : 0.3)
     }
 
     background: Rectangle {

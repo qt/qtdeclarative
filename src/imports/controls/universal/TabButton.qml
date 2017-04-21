@@ -36,6 +36,8 @@
 
 import QtQuick 2.9
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.3
+import QtQuick.Controls.impl 2.3
 import QtQuick.Controls.Universal 2.3
 
 T.TabButton {
@@ -48,15 +50,22 @@ T.TabButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 12 // PivotItemMargin
+    spacing: 8
 
-    contentItem: Text {
+    icon.width: 20
+    icon.height: 20
+    icon.color: Color.transparent(control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground,
+                                                    control.checked || control.down || control.hovered ? 1.0 : 0.2)
+
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: control.icon
         text: control.text
         font: control.font
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-
-        opacity: control.checked || control.down || control.hovered ? 1.0 : 0.2
-        color: control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground
+        color: Color.transparent(control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground,
+                                 control.checked || control.down || control.hovered ? 1.0 : 0.2)
     }
 }
