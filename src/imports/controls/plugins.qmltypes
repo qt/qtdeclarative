@@ -115,7 +115,7 @@ Module {
         exports: ["QtQuick.Controls/ApplicationWindow 2.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
-        defaultProperty: "data"
+        defaultProperty: "contentData"
     }
     Component {
         prototype: "QQuickBusyIndicator"
@@ -525,8 +525,11 @@ Module {
         name: "QQuickAbstractButton"
         defaultProperty: "data"
         prototype: "QQuickControl"
-        exports: ["QtQuick.Templates/AbstractButton 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/AbstractButton 2.0",
+            "QtQuick.Templates/AbstractButton 2.2"
+        ]
+        exportMetaObjectRevisions: [0, 2]
         Property { name: "text"; type: "string" }
         Property { name: "down"; type: "bool" }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
@@ -545,14 +548,14 @@ Module {
     }
     Component {
         name: "QQuickApplicationWindow"
-        defaultProperty: "data"
+        defaultProperty: "contentData"
         prototype: "QQuickWindowQmlImpl"
         exports: ["QtQuick.Templates/ApplicationWindow 2.0"]
         exportMetaObjectRevisions: [0]
         attachedType: "QQuickApplicationWindowAttached"
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
-        Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "activeFocusControl"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
@@ -1558,6 +1561,8 @@ Module {
         Property { name: "position"; type: "Position" }
         Property { name: "contentWidth"; revision: 2; type: "double" }
         Property { name: "contentHeight"; revision: 2; type: "double" }
+        Signal { name: "contentWidthChanged"; revision: 2 }
+        Signal { name: "contentHeightChanged"; revision: 2 }
     }
     Component {
         name: "QQuickTabButton"
