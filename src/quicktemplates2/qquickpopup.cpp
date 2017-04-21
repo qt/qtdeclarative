@@ -210,7 +210,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       dim(false),
       hasDim(false),
       visible(false),
-      complete(false),
+      complete(true),
       positioning(false),
       hasWidth(false),
       hasHeight(false),
@@ -259,6 +259,7 @@ void QQuickPopupPrivate::init()
 {
     Q_Q(QQuickPopup);
     popupItem = new QQuickPopupItem(q);
+    popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     positioner = new QQuickPopupPositioner(q);
@@ -1810,6 +1811,7 @@ void QQuickPopup::forceActiveFocus(Qt::FocusReason reason)
 void QQuickPopup::classBegin()
 {
     Q_D(QQuickPopup);
+    d->complete = false;
     d->popupItem->classBegin();
 }
 
