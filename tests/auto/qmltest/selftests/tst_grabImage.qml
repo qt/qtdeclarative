@@ -46,7 +46,14 @@ TestCase {
         oldImage = grabImage(rect);
         // Don't change anything...
         newImage = grabImage(rect);
-        verify(newImage.equals(oldImage));
+        try {
+            compare(newImage.size, oldImage.size);
+            verify(newImage.equals(oldImage));
+        } catch (ex) {
+            oldImage.save("tst_grabImage_test_equals_oldImage.png")
+            newImage.save("tst_grabImage_test_equals_newImage.png")
+            throw ex;
+        }
 
         verify(!newImage.equals(null));
         verify(!newImage.equals(undefined));
