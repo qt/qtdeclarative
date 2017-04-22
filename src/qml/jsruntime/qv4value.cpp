@@ -113,6 +113,7 @@ double Value::toNumberImpl() const
     case QV4::Value::Managed_Type:
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
+        Q_FALLTHROUGH();
 #else
         if (String *s = stringValue())
             return RuntimeHelpers::stringToNumber(s->toQString());
@@ -140,6 +141,7 @@ QString Value::toQStringNoThrow() const
     switch (type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
+        Q_UNREACHABLE();
     case Value::Undefined_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
@@ -193,6 +195,7 @@ QString Value::toQString() const
     switch (type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
+        Q_UNREACHABLE();
     case Value::Undefined_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
