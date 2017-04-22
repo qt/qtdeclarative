@@ -837,7 +837,14 @@ Item {
 
         Returns a snapshot image object of the given \a item.
 
-        The returned image object has the following methods:
+        The returned image object has the following properties:
+        \list
+        \li width Returns the width of the underlying image (since 5.10)
+        \li height Returns the height of the underlying image (since 5.10)
+        \li size Returns the size of the underlying image (since 5.10)
+        \endlist
+
+        Additionally, the returned image object has the following methods:
         \list
         \li red(x, y) Returns the red channel value of the pixel at \a x, \a y position
         \li green(x, y) Returns the green channel value of the pixel at \a x, \a y position
@@ -857,6 +864,21 @@ Item {
         rect.width += 10;
         var newImage = grabImage(rect);
         verify(!newImage.equals(image));
+        \endcode
+        \li save(path) Saves the image to the given \a path. If the image cannot
+        be saved, an exception will be thrown. (since 5.10)
+
+        This can be useful to perform postmortem analysis on failing tests, for
+        example:
+
+        \code
+        var image = grabImage(rect);
+        try {
+            compare(image.width, 100);
+        } catch (ex) {
+            image.save("debug.png");
+            throw ex;
+        }
         \endcode
 
         \endlist
