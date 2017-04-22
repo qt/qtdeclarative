@@ -2345,6 +2345,7 @@ private:
         case OpIncrement:
         case OpDecrement:
             Q_ASSERT(!"Inplace operators should have been removed!");
+            Q_UNREACHABLE();
         default:
             Q_UNIMPLEMENTED();
             Q_UNREACHABLE();
@@ -2645,6 +2646,7 @@ private:
                     case OpMul:
                         if (!targetTemp || !knownOk.contains(*targetTemp))
                             return false;
+                        Q_FALLTHROUGH();
                     case OpBitAnd:
                     case OpBitOr:
                     case OpBitXor:
