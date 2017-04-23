@@ -3025,14 +3025,19 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
 
             // add newBB to the correct loop group
             if (toBB->isGroupStart()) {
-                BasicBlock *container;
-                for (container = fromBB->containingGroup(); container; container = container->containingGroup())
-                     if (container == toBB)
-                         break;
-                if (container == toBB) // if we were already inside the toBB loop
+                if (fromBB == toBB) {
+                    // special case: the loop header points back to itself (so it's a small loop).
                     newBB->setContainingGroup(toBB);
-                else
-                    newBB->setContainingGroup(toBB->containingGroup());
+                } else {
+                    BasicBlock *container;
+                    for (container = fromBB->containingGroup(); container; container = container->containingGroup())
+                        if (container == toBB)
+                            break;
+                    if (container == toBB) // if we were already inside the toBB loop
+                        newBB->setContainingGroup(toBB);
+                    else
+                        newBB->setContainingGroup(toBB->containingGroup());
+                }
             } else {
                 newBB->setContainingGroup(toBB->containingGroup());
             }
@@ -3063,7 +3068,7 @@ void splitCriticalEdges(IR::Function *f, DominatorTree &df, StatementWorklist &w
 
             bool toNeedsNewIdom = true;
             for (BasicBlock *bb : toBB->in) {
-                if (bb != newBB && !df.dominates(toBB, bb)) {
+                if (bb != newBB && bb != toBB && !df.dominates(toBB, bb)) {
                     toNeedsNewIdom = false;
                     break;
                 }
@@ -3174,7 +3179,7 @@ public:
             backedges.clear();
 
             for (BasicBlock *in : bb->in)
-                if (dt.dominates(bb, in))
+                if (bb == in || dt.dominates(bb, in))
                     backedges.push_back(in);
 
             if (!backedges.empty()) {
@@ -3191,6 +3196,7 @@ public:
         if (!DebugLoopDetection)
             return;
 
+        qDebug() << "Found" << loopInfos.size() << "loops";
         for (const LoopInfo *info : loopInfos) {
             qDebug() << "Loop header:" << info->loopHeader->index()
                      << "for loop" << quint64(info);
@@ -3224,6 +3230,9 @@ private:
     void subLoop(BasicBlock *loopHead, const std::vector<BasicBlock *> &backedges)
     {
         loopHead->markAsGroupStart();
+        LoopInfo *info = new LoopInfo;
+        info->loopHeader = loopHead;
+        loopInfos.append(info);
 
         std::vector<BasicBlock *> worklist;
         worklist.reserve(backedges.size() + 8);
@@ -3293,10 +3302,8 @@ private:
                 return info;
         }
 
-        LoopInfo *info = new LoopInfo;
-        info->loopHeader = loopHeader;
-        loopInfos.append(info);
-        return info;
+        Q_UNREACHABLE();
+        return nullptr;
     }
 };
 
@@ -3326,6 +3333,8 @@ private:
 // the same reason.
 class BlockScheduler
 {
+    enum { DebugBlockScheduler = 0 };
+
     IR::Function *function;
     const DominatorTree &dominatorTree;
 
@@ -3441,6 +3450,14 @@ class BlockScheduler
         Q_UNREACHABLE();
     }
 
+    void dumpLoopStartsEnds() const
+    {
+        qDebug() << "Found" << loopsStartEnd.size() << "loops:";
+        for (auto key : loopsStartEnd.keys())
+            qDebug("Loop starting at L%d ends at L%d.", key->index(),
+                   loopsStartEnd.value(key)->index());
+    }
+
 public:
     BlockScheduler(IR::Function *function, const DominatorTree &dominatorTree)
         : function(function)
@@ -3452,11 +3469,15 @@ public:
     QHash<BasicBlock *, BasicBlock *> go()
     {
         showMeTheCode(function, "Before block scheduling");
+        if (DebugBlockScheduler)
+            dominatorTree.dumpImmediateDominators();
+
         schedule(function->basicBlock(0));
 
         Q_ASSERT(function->liveBasicBlocksCount() == sequence.size());
         function->setScheduledBlocks(sequence);
-        function->renumberBasicBlocks();
+        if (DebugBlockScheduler)
+            dumpLoopStartsEnds();
         return loopsStartEnd;
     }
 };
@@ -4592,7 +4613,6 @@ void removeUnreachleBlocks(IR::Function *function)
         if (!bb->isRemoved())
             newSchedule.append(bb);
     function->setScheduledBlocks(newSchedule);
-    function->renumberBasicBlocks();
 }
 
 class ConvertArgLocals
@@ -4766,153 +4786,6 @@ private:
     IR::Stmt *clonedStmt;
 };
 
-// Loop-peeling is done by unfolding the loop once. The "original" loop basic blocks stay where they
-// are, and a copy of the loop is placed after it. Special care is taken while copying the loop body:
-// by having the copies of the basic-blocks point to the same nodes as the "original" basic blocks,
-// updating the immediate dominators is easy: if the edge of a copied basic-block B points to a
-// block C that has also been copied, set the immediate dominator of B to the corresponding
-// immediate dominator of C. Finally, for any node outside the loop that gets a new edge attached,
-// the immediate dominator has to be re-calculated.
-class LoopPeeling
-{
-    DominatorTree &dt;
-
-public:
-    LoopPeeling(DominatorTree &dt)
-        : dt(dt)
-    {}
-
-    void run(const QVector<LoopDetection::LoopInfo *> &loops)
-    {
-        for (LoopDetection::LoopInfo *loopInfo : loops)
-            peelLoop(loopInfo);
-    }
-
-private:
-    // All copies have their outgoing edges pointing to the same successor block as the originals.
-    // For each copied block, check where the outgoing edges point to. If it's a block inside the
-    // (original) loop, rewire it to the corresponding copy. Otherwise, which is when it points
-    // out of the loop, leave it alone.
-    // As an extra, collect all edges that point out of the copied loop, because the targets need
-    // to have their immediate dominator rechecked.
-    void rewire(BasicBlock *newLoopBlock, const QVector<BasicBlock *> &from, const QVector<BasicBlock *> &to, QVector<BasicBlock *> &loopExits)
-    {
-        for (int i = 0, ei = newLoopBlock->out.size(); i != ei; ++i) {
-            BasicBlock *&out = newLoopBlock->out[i];
-            const int idx = from.indexOf(out);
-            if (idx == -1) {
-                if (!loopExits.contains(out))
-                    loopExits.append(out);
-            } else {
-                out->in.removeOne(newLoopBlock);
-                BasicBlock *newTo = to.at(idx);
-                newTo->in.append(newLoopBlock);
-                out = newTo;
-
-                Stmt *terminator = newLoopBlock->terminator();
-                if (Jump *jump = terminator->asJump()) {
-                    Q_ASSERT(i == 0);
-                    jump->target = newTo;
-                } else if (CJump *cjump = terminator->asCJump()) {
-                    Q_ASSERT(i == 0 || i == 1);
-                    if (i == 0)
-                        cjump->iftrue = newTo;
-                    else
-                        cjump->iffalse = newTo;
-                }
-            }
-        }
-    }
-
-    void peelLoop(LoopDetection::LoopInfo *loop)
-    {
-        CloneBasicBlock clone;
-
-        LoopDetection::LoopInfo unpeeled(*loop);
-        unpeeled.loopHeader = clone(unpeeled.loopHeader);
-        unpeeled.loopHeader->setContainingGroup(loop->loopHeader->containingGroup());
-        unpeeled.loopHeader->markAsGroupStart(true);
-        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
-            BasicBlock *&bodyBlock = unpeeled.loopBody[i];
-            bodyBlock = clone(bodyBlock);
-            bodyBlock->setContainingGroup(unpeeled.loopHeader);
-            Q_ASSERT(bodyBlock->statementCount() == loop->loopBody[i]->statementCount());
-        }
-
-        // The cloned blocks will have no incoming edges, but they do have outgoing ones (copying
-        // the terminators will automatically insert that edge). The blocks where the originals
-        // pointed to will have an extra incoming edge from the copied blocks.
-
-        BasicBlock::IncomingEdges inCopy = loop->loopHeader->in;
-        for (BasicBlock *in : inCopy) {
-            if (unpeeled.loopHeader != in // this can happen for really tight loops (where there are no body blocks). This is a back-edge in that case.
-                    && !unpeeled.loopBody.contains(in) // if the edge is not coming from within the copied set, leave it alone
-                    && !dt.dominates(loop->loopHeader, in)) // an edge coming from within the loop (so a back-edge): this is handled when rewiring all outgoing edges
-                continue;
-
-            unpeeled.loopHeader->in.append(in);
-            loop->loopHeader->in.removeOne(in);
-
-            Stmt *terminator = in->terminator();
-            if (Jump *jump = terminator->asJump()) {
-                jump->target = unpeeled.loopHeader;
-                in->out[0] = unpeeled.loopHeader;
-            } else if (CJump *cjump = terminator->asCJump()) {
-                if (cjump->iftrue == loop->loopHeader) {
-                    cjump->iftrue = unpeeled.loopHeader;
-                    Q_ASSERT(in->out[0] == loop->loopHeader);
-                    in->out[0] = unpeeled.loopHeader;
-                } else if (cjump->iffalse == loop->loopHeader) {
-                    cjump->iffalse = unpeeled.loopHeader;
-                    Q_ASSERT(in->out[1] == loop->loopHeader);
-                    in->out[1] = unpeeled.loopHeader;
-                } else {
-                    Q_UNREACHABLE();
-                }
-            }
-        }
-
-        QVector<BasicBlock *> loopExits;
-        loopExits.reserve(8);
-        loopExits.append(unpeeled.loopHeader);
-
-        IR::Function *f = unpeeled.loopHeader->function;
-        rewire(unpeeled.loopHeader, loop->loopBody, unpeeled.loopBody, loopExits);
-        f->addBasicBlock(unpeeled.loopHeader);
-        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
-            BasicBlock *bodyBlock = unpeeled.loopBody.at(i);
-            rewire(bodyBlock, loop->loopBody, unpeeled.loopBody, loopExits);
-            f->addBasicBlock(bodyBlock);
-        }
-
-        // The original loop is now peeled off, and won't jump back to the loop header. Meaning, it
-        // is not a loop anymore, so unmark it.
-        loop->loopHeader->markAsGroupStart(false);
-        for (BasicBlock *bb : qAsConst(loop->loopBody))
-            bb->setContainingGroup(loop->loopHeader->containingGroup());
-
-        // calculate the idoms in a separate loop, because addBasicBlock in the previous loop will
-        // set the block index, which in turn is used by the dominator tree.
-        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
-            BasicBlock *bodyBlock = unpeeled.loopBody.at(i);
-            BasicBlock *idom = dt.immediateDominator(loop->loopBody.at(i));
-            const int idx = loop->loopBody.indexOf(idom);
-            if (idom == loop->loopHeader)
-                idom = unpeeled.loopHeader;
-            else if (idx != -1)
-                idom = unpeeled.loopBody.at(idx);
-            Q_ASSERT(idom);
-            dt.setImmediateDominator(bodyBlock, idom);
-        }
-
-        BasicBlockSet siblings(f);
-        for (BasicBlock *bb : qAsConst(loopExits))
-            dt.collectSiblings(bb, siblings);
-
-        dt.recalculateIDoms(siblings, loop->loopHeader);
-    }
-};
-
 static void verifyCFG(IR::Function *function)
 {
     if (!DoVerification)
@@ -5043,6 +4916,159 @@ static void verifyNoPointerSharing(IR::Function *function)
     } V;
     V(function);
 }
+
+// Loop-peeling is done by unfolding the loop once. The "original" loop basic blocks stay where they
+// are, and a copy of the loop is placed after it. Special care is taken while copying the loop body:
+// by having the copies of the basic-blocks point to the same nodes as the "original" basic blocks,
+// updating the immediate dominators is easy: if the edge of a copied basic-block B points to a
+// block C that has also been copied, set the immediate dominator of B to the corresponding
+// immediate dominator of C. Finally, for any node outside the loop that gets a new edge attached,
+// the immediate dominator has to be re-calculated.
+class LoopPeeling
+{
+    DominatorTree &dt;
+
+public:
+    LoopPeeling(DominatorTree &dt)
+        : dt(dt)
+    {}
+
+    void run(const QVector<LoopDetection::LoopInfo *> &loops)
+    {
+        for (LoopDetection::LoopInfo *loopInfo : loops)
+            peelLoop(loopInfo);
+    }
+
+private:
+    // All copies have their outgoing edges pointing to the same successor block as the originals.
+    // For each copied block, check where the outgoing edges point to. If it's a block inside the
+    // (original) loop, rewire it to the corresponding copy. Otherwise, which is when it points
+    // out of the loop, leave it alone.
+    // As an extra, collect all edges that point out of the copied loop, because the targets need
+    // to have their immediate dominator rechecked.
+    void rewire(BasicBlock *newLoopBlock, const QVector<BasicBlock *> &from, const QVector<BasicBlock *> &to, QVector<BasicBlock *> &loopExits)
+    {
+        for (int i = 0, ei = newLoopBlock->out.size(); i != ei; ++i) {
+            BasicBlock *&out = newLoopBlock->out[i];
+            const int idx = from.indexOf(out);
+            if (idx == -1) {
+                if (!loopExits.contains(out))
+                    loopExits.append(out);
+            } else {
+                out->in.removeOne(newLoopBlock);
+                BasicBlock *newTo = to.at(idx);
+                newTo->in.append(newLoopBlock);
+                out = newTo;
+
+                Stmt *terminator = newLoopBlock->terminator();
+                if (Jump *jump = terminator->asJump()) {
+                    Q_ASSERT(i == 0);
+                    jump->target = newTo;
+                } else if (CJump *cjump = terminator->asCJump()) {
+                    Q_ASSERT(i == 0 || i == 1);
+                    if (i == 0)
+                        cjump->iftrue = newTo;
+                    else
+                        cjump->iffalse = newTo;
+                }
+            }
+        }
+    }
+
+    void peelLoop(LoopDetection::LoopInfo *loop)
+    {
+        IR::Function *f = loop->loopHeader->function;
+        CloneBasicBlock clone;
+
+        LoopDetection::LoopInfo unpeeled(*loop);
+        unpeeled.loopHeader = clone(unpeeled.loopHeader);
+        unpeeled.loopHeader->setContainingGroup(loop->loopHeader->containingGroup());
+        unpeeled.loopHeader->markAsGroupStart(true);
+        f->addBasicBlock(unpeeled.loopHeader);
+        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
+            BasicBlock *&bodyBlock = unpeeled.loopBody[i];
+            bodyBlock = clone(bodyBlock);
+            bodyBlock->setContainingGroup(unpeeled.loopHeader);
+            Q_ASSERT(bodyBlock->statementCount() == loop->loopBody[i]->statementCount());
+        }
+
+        // The cloned blocks will have no incoming edges, but they do have outgoing ones (copying
+        // the terminators will automatically insert that edge). The blocks where the originals
+        // pointed to will have an extra incoming edge from the copied blocks.
+
+        BasicBlock::IncomingEdges inCopy = loop->loopHeader->in;
+        for (BasicBlock *in : inCopy) {
+            if (loop->loopHeader != in // this can happen for really tight loops (where there are no body blocks). This is a back-edge in that case.
+                    && unpeeled.loopHeader != in && !unpeeled.loopBody.contains(in) // if the edge is not coming from within the copied set, leave it alone
+                    && !dt.dominates(loop->loopHeader, in)) // an edge coming from within the loop (so a back-edge): this is handled when rewiring all outgoing edges
+                continue;
+
+            unpeeled.loopHeader->in.append(in);
+            loop->loopHeader->in.removeOne(in);
+
+            Stmt *terminator = in->terminator();
+            if (Jump *jump = terminator->asJump()) {
+                jump->target = unpeeled.loopHeader;
+                in->out[0] = unpeeled.loopHeader;
+            } else if (CJump *cjump = terminator->asCJump()) {
+                if (cjump->iftrue == loop->loopHeader) {
+                    cjump->iftrue = unpeeled.loopHeader;
+                    Q_ASSERT(in->out[0] == loop->loopHeader);
+                    in->out[0] = unpeeled.loopHeader;
+                } else if (cjump->iffalse == loop->loopHeader) {
+                    cjump->iffalse = unpeeled.loopHeader;
+                    Q_ASSERT(in->out[1] == loop->loopHeader);
+                    in->out[1] = unpeeled.loopHeader;
+                } else {
+                    Q_UNREACHABLE();
+                }
+            }
+        }
+
+        QVector<BasicBlock *> loopExits;
+        loopExits.reserve(8);
+        loopExits.append(unpeeled.loopHeader);
+
+        rewire(unpeeled.loopHeader, loop->loopBody, unpeeled.loopBody, loopExits);
+        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
+            BasicBlock *bodyBlock = unpeeled.loopBody.at(i);
+            rewire(bodyBlock, loop->loopBody, unpeeled.loopBody, loopExits);
+            f->addBasicBlock(bodyBlock);
+        }
+
+        // The original loop is now peeled off, and won't jump back to the loop header. Meaning, it
+        // is not a loop anymore, so unmark it.
+        loop->loopHeader->markAsGroupStart(false);
+        for (BasicBlock *bb : qAsConst(loop->loopBody))
+            bb->setContainingGroup(loop->loopHeader->containingGroup());
+
+        // Set the immediate dominator of the new loop header to the old one. The real immediate
+        // dominator will be calculated later.
+        dt.setImmediateDominator(unpeeled.loopHeader, loop->loopHeader);
+        // calculate the idoms in a separate loop, because addBasicBlock in the previous loop will
+        // set the block index, which in turn is used by the dominator tree.
+        for (int i = 0, ei = unpeeled.loopBody.size(); i != ei; ++i) {
+            BasicBlock *bodyBlock = unpeeled.loopBody.at(i);
+            BasicBlock *idom = dt.immediateDominator(loop->loopBody.at(i));
+            const int idx = loop->loopBody.indexOf(idom);
+            if (idom == loop->loopHeader)
+                idom = unpeeled.loopHeader;
+            else if (idx != -1)
+                idom = unpeeled.loopBody.at(idx);
+            Q_ASSERT(idom);
+            dt.setImmediateDominator(bodyBlock, idom);
+        }
+
+        BasicBlockSet siblings(f);
+        for (BasicBlock *bb : qAsConst(loopExits))
+            dt.collectSiblings(bb, siblings);
+
+        siblings.insert(unpeeled.loopHeader);
+        dt.recalculateIDoms(siblings, loop->loopHeader);
+        dt.dumpImmediateDominators();
+        verifyImmediateDominators(dt, f);
+    }
+};
 
 class RemoveLineNumbers: private SideEffectsChecker
 {
@@ -5452,6 +5478,9 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
         verifyNoPointerSharing(function);
         mergeBasicBlocks(function, &defUses, &df);
 
+        verifyImmediateDominators(df, function);
+        verifyCFG(function);
+
         // Basic-block cycles that are unreachable (i.e. for loops in a then-part where the
         // condition is calculated to be always false) are not yet removed. This will choke the
         // block scheduling, so remove those now.
@@ -5459,10 +5488,13 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
         cleanupBasicBlocks(function);
 //        showMeTheCode(function);
 
+        verifyImmediateDominators(df, function);
+        verifyCFG(function);
+
         // Transform the CFG into edge-split SSA.
-//        qout << "Starting edge splitting..." << endl;
+        showMeTheCode(function, "Before edge splitting");
         splitCriticalEdges(function, df, worklist, defUses);
-//        showMeTheCode(function);
+        showMeTheCode(function, "After edge splitting");
 
         verifyImmediateDominators(df, function);
         verifyCFG(function);

@@ -51,10 +51,6 @@
 // We mean it.
 //
 
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-#define V4_BOOTSTRAP
-#endif
-
 #include <QtCore/qglobal.h>
 #include <QString>
 
@@ -64,11 +60,11 @@
 #define QML_NEARLY_ALWAYS_INLINE inline
 #endif
 
-#ifdef V4_BOOTSTRAP
-#include <private/qtqmldevtoolsglobal_p.h>
-#else
 #include <qtqmlglobal.h>
 #include <private/qtqmlglobal_p.h>
+
+#ifdef QT_QML_BOOTSTRAPPED
+#define V4_BOOTSTRAP
 #endif
 
 #if defined(Q_CC_MSVC)
