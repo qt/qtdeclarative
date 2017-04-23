@@ -2029,6 +2029,15 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
     GLuint vbo = 0;
     int vboSize = 0;
 
+    bool useVBO = false;
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
+
+    if (!ctx->isOpenGLES() && profile == QSurfaceFormat::CoreProfile) {
+        // VBO are more expensive, so only use them if we must.
+        useVBO = true;
+    }
+
     glDisable(GL_SCISSOR_TEST);
 
     m_currentStencilValue = 0;
@@ -2113,20 +2122,27 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
             Q_ASSERT(g->attributeCount() > 0);
             const QSGGeometry::Attribute *a = g->attributes();
 
-            if (!vbo)
-                glGenBuffers(1, &vbo);
-
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-            const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
-            if (vboSize < vertexByteSize) {
-                vboSize = vertexByteSize;
-                glBufferData(GL_ARRAY_BUFFER, vertexByteSize, g->vertexData(), GL_STATIC_DRAW);
+            const GLvoid *pointer;
+            if (!useVBO) {
+                pointer = g->vertexData();
             } else {
-                glBufferSubData(GL_ARRAY_BUFFER, 0, vertexByteSize, g->vertexData());
+                if (!vbo)
+                    glGenBuffers(1, &vbo);
+
+                glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+                const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
+                if (vboSize < vertexByteSize) {
+                    vboSize = vertexByteSize;
+                    glBufferData(GL_ARRAY_BUFFER, vertexByteSize, g->vertexData(), GL_STATIC_DRAW);
+                } else {
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, vertexByteSize, g->vertexData());
+                }
+
+                pointer = 0;
             }
 
-            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), 0);
+            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), pointer);
 
             m_clipProgram.setUniformValue(m_clipMatrixId, m);
             if (g->indexCount()) {
@@ -2135,7 +2151,8 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
                 glDrawArrays(g->drawingMode(), 0, g->vertexCount());
             }
 
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            if (useVBO)
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             ++m_currentStencilValue;
         }
