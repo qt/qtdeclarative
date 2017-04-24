@@ -2177,7 +2177,7 @@ QString QQmlEngine::offlineStoragePath() const
   Returns the file path where a \l{QtQuick.LocalStorage}{Local Storage}
   database with the identifier \a databaseName is (or would be) located.
 
-  \sa LocalStorage.openDatabaseSync()
+  \sa {openDatabaseSync}{LocalStorage.openDatabaseSync()}
   \since 5.9
 */
 QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) const
