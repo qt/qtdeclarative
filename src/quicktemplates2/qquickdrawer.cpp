@@ -276,7 +276,7 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
     prepareEnterTransition();
     reposition();
     if (mouse) {
-        handleMousePressEvent(window->contentItem(), static_cast<QMouseEvent *>(event));
+        handleMouseEvent(window->contentItem(), static_cast<QMouseEvent *>(event));
         return true;
     }
     return false;
@@ -401,18 +401,6 @@ void QQuickDrawerPrivate::handleUngrab()
 
     pressPoint = QPoint();
     velocityCalculator.reset();
-}
-
-bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
-{
-    handlePress(item->mapToScene(event->localPos()), event->timestamp());
-
-    // don't block press events
-    // a) outside a non-modal drawer,
-    // b) to drawer children, or
-    // c) outside a modal drawer's background dimming
-    event->setAccepted(modal && !popupItem->isAncestorOf(item) && (!dimmer || dimmer->contains(dimmer->mapFromScene(pressPoint))));
-    return event->isAccepted();
 }
 
 bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
@@ -632,10 +620,9 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 {
     Q_D(QQuickDrawer);
     switch (event->type()) {
-    case QEvent::MouseButtonPress:
-        return d->handleMousePressEvent(child, static_cast<QMouseEvent *>(event));
     case QEvent::MouseMove:
         return d->handleMouseMoveEvent(child, static_cast<QMouseEvent *>(event));
+    case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
         d->handleMouseEvent(child, static_cast<QMouseEvent *>(event));
         break;
@@ -643,12 +630,6 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
         break;
     }
     return false;
-}
-
-void QQuickDrawer::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickDrawer);
-    d->handleMousePressEvent(d->popupItem, event);
 }
 
 void QQuickDrawer::mouseMoveEvent(QMouseEvent *event)
@@ -669,8 +650,6 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         event->ignore();
         return false;
 
-    case QEvent::MouseButtonPress:
-        return d->handleMousePressEvent(item, static_cast<QMouseEvent *>(event));
     case QEvent::MouseMove:
         return d->handleMouseMoveEvent(item, static_cast<QMouseEvent *>(event));
     default:

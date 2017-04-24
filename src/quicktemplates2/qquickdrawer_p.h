@@ -86,7 +86,6 @@ Q_SIGNALS:
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     bool overlayEvent(QQuickItem *item, QEvent *event) override;
 

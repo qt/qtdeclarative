@@ -78,7 +78,6 @@ public:
     void handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
-    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
 
     bool prepareEnterTransition() override;
