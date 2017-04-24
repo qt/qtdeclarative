@@ -425,9 +425,17 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
         if (!grabber || !grabber->keepMouseGrab()) {
             popupItem->grabMouse();
             popupItem->setKeepMouseGrab(true);
-            offset = qMin<qreal>(0.0, positionAt(movePoint) - position);
+            offset = positionAt(movePoint) - position;
+
+            // don't jump when dragged open
+            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+                offset = 0;
         }
     }
+
+    // limit/reset the offset to the edge of the drawer when pushed from the outside
+    if (qFuzzyCompare(position, 1.0) && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+        offset = 0;
 
     if (popupItem->keepMouseGrab())
         q->setPosition(positionAt(movePoint) - offset);
