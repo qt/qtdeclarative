@@ -234,35 +234,17 @@ void QQuickDrawerPrivate::resizeOverlay()
     dimmer->setSize(geometry.size());
 }
 
-static bool mouseDragOverThreshold(QQuickDrawer *drawer, QMouseEvent *event)
+static bool isWithinDragMargin(QQuickDrawer *drawer, const QPointF &pos)
 {
     switch (drawer->edge()) {
     case Qt::LeftEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(event->windowPos().x(), Qt::XAxis, event, drawer->dragMargin());
+        return pos.x() <= drawer->dragMargin();
     case Qt::RightEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(drawer->window()->width() - event->windowPos().x(), Qt::XAxis, event, drawer->dragMargin());
+        return pos.x() >= drawer->window()->width() - drawer->dragMargin();
     case Qt::TopEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(event->windowPos().y(), Qt::YAxis, event, drawer->dragMargin());
+        return pos.y() <= drawer->dragMargin();
     case Qt::BottomEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(drawer->window()->height() - event->windowPos().y(), Qt::YAxis, event, drawer->dragMargin());
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-    return false;
-}
-
-static bool touchDragOverThreshold(QQuickDrawer *drawer, const QTouchEvent::TouchPoint &point)
-{
-    switch (drawer->edge()) {
-    case Qt::LeftEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(point.scenePos().x(), Qt::XAxis, &point, drawer->dragMargin());
-    case Qt::RightEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(drawer->window()->width() - point.scenePos().x(), Qt::XAxis, &point, drawer->dragMargin());
-    case Qt::TopEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(point.scenePos().y(), Qt::YAxis, &point, drawer->dragMargin());
-    case Qt::BottomEdge:
-        return !QQuickWindowPrivate::dragOverThreshold(drawer->window()->height() - point.scenePos().y(), Qt::YAxis, &point, drawer->dragMargin());
+        return pos.y() >= drawer->window()->height() - drawer->dragMargin();
     default:
         Q_UNREACHABLE();
         break;
@@ -276,19 +258,19 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
     if (!window || !interactive || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
         return false;
 
-    bool overThreshold = false;
+    bool withinMargin = false;
     bool mouse = event->type() == QEvent::MouseButtonPress;
     if (mouse) {
-        overThreshold = mouseDragOverThreshold(q, static_cast<QMouseEvent *>(event));
+        withinMargin = isWithinDragMargin(q, static_cast<QMouseEvent *>(event)->windowPos());
     } else {
         for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
-            if (touchDragOverThreshold(q, point)) {
-                overThreshold = true;
+            if (isWithinDragMargin(q, point.scenePos())) {
+                withinMargin = true;
                 break;
             }
         }
     }
-    if (!overThreshold)
+    if (!withinMargin)
         return false;
 
     prepareEnterTransition();
