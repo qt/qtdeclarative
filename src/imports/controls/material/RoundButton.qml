@@ -52,7 +52,7 @@ T.RoundButton {
     padding: 12
 
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
-                             : control.down ? 8 : 2
+                             : control.down ? 12 : 6
     Material.background: flat ? "transparent" : undefined
 
     contentItem: Text {
