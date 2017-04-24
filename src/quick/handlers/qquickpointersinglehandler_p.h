@@ -108,6 +108,8 @@ protected:
 
     void setIgnoreAdditionalPoints(bool v = true);
 
+    void moveTarget(QPointF pos, QQuickEventPoint *point);
+
 private:
     void setPressedButtons(Qt::MouseButtons buttons);
     void reset();

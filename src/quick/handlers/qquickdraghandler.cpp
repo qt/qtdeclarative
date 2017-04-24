@@ -107,7 +107,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
             if (target() && target()->parentItem()) {
                 QPointF pos = target()->parentItem()->mapFromScene(m_targetStartPos + delta);
                 enforceAxisConstraints(&pos);
-                target()->setPosition(pos);
+                moveTarget(pos, point);
             }
         } else if (!point->exclusiveGrabber() &&
                    ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||

@@ -199,6 +199,12 @@ void QQuickPointerSingleHandler::setIgnoreAdditionalPoints(bool v)
     m_ignoreAdditionalPoints = v;
 }
 
+void QQuickPointerSingleHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
+{
+    target()->setPosition(pos);
+    m_pos = target()->mapFromScene(point->scenePos());
+}
+
 void QQuickPointerSingleHandler::setPressedButtons(Qt::MouseButtons buttons)
 {
     if (buttons != m_pressedButtons) {
