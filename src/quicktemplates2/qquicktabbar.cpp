@@ -152,38 +152,47 @@ void QQuickTabBarPrivate::updateLayout()
     qreal maxHeight = 0;
     qreal totalWidth = 0;
     qreal reservedWidth = 0;
+    int resizableCount = 0;
 
-    QVector<QQuickItem *> resizableItems;
-    resizableItems.reserve(count);
+    QVector<QQuickItem *> allItems;
+    allItems.reserve(count);
 
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
             if (!p->widthValid) {
-                resizableItems += item;
+                ++resizableCount;
                 totalWidth += item->implicitWidth();
             } else {
                 reservedWidth += item->width();
                 totalWidth += item->width();
             }
             maxHeight = qMax(maxHeight, item->implicitHeight());
+            allItems += item;
         }
     }
 
     const qreal totalSpacing = qMax(0, count - 1) * spacing;
     totalWidth += totalSpacing;
 
-    if (!resizableItems.isEmpty()) {
-        const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / resizableItems.count();
+    const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / resizableCount;
 
-        updatingLayout = true;
-        for (QQuickItem *item : qAsConst(resizableItems)) {
+    updatingLayout = true;
+    for (QQuickItem *item : qAsConst(allItems)) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+        if (!p->widthValid) {
             item->setWidth(itemWidth);
-            QQuickItemPrivate::get(item)->widthValid = false;
+            p->widthValid = false;
         }
-        updatingLayout = false;
+        if (!p->heightValid) {
+            item->setHeight(hasContentHeight ? contentHeight : maxHeight);
+            p->heightValid = false;
+        } else {
+            item->setY((maxHeight - item->height()) / 2);
+        }
     }
+    updatingLayout = false;
 
     bool contentWidthChange = false;
     if (!hasContentWidth && !qFuzzyCompare(contentWidth, totalWidth)) {

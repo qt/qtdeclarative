@@ -514,39 +514,66 @@ TestCase {
         var tab1 = tabButton.createObject(control, {text: "First"})
         control.addItem(tab1)
         tryCompare(tab1, "width", control.width)
+        compare(tab1.height, control.height)
         compare(control.contentWidth, tab1.implicitWidth)
+        compare(control.contentHeight, tab1.implicitHeight)
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
-        var tab2 = tabButton.createObject(control, {text: "Second"})
+        var tab2 = tabButton.createObject(control, {implicitHeight: tab1.implicitHeight + 10, text: "Second"})
         control.addItem(tab2)
         tryCompare(tab1, "width", (control.width - data.spacing) / 2)
+        compare(tab1.height, control.height)
         compare(tab2.width, (control.width - data.spacing) / 2)
+        compare(tab2.height, control.height)
         compare(control.contentWidth, tab1.implicitWidth + tab2.implicitWidth + data.spacing)
+        compare(control.contentHeight, tab2.implicitHeight)
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
-        var tab3 = tabButton.createObject(control, {width: 50, text: "Third"})
+        var tab3 = tabButton.createObject(control, {width: 50, height: tab1.implicitHeight - 10, text: "Third"})
         control.addItem(tab3)
         tryCompare(tab1, "width", (control.width - 2 * data.spacing - 50) / 2)
+        compare(tab1.y, 0)
+        compare(tab1.height, control.height)
+        compare(tab2.y, 0)
         compare(tab2.width, (control.width - 2 * data.spacing - 50) / 2)
+        compare(tab2.height, control.height)
+        verify(tab3.y > 0)
+        compare(tab3.y, (control.height - tab3.height) / 2)
         compare(tab3.width, 50)
+        compare(tab3.height, tab1.implicitHeight - 10)
         compare(control.contentWidth, tab1.implicitWidth + tab2.implicitWidth + tab3.width + 2 * data.spacing)
+        compare(control.contentHeight, tab2.implicitHeight)
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
         var expectedWidth = tab3.contentItem.implicitWidth + tab3.leftPadding + tab3.rightPadding
         tab3.width = tab3.implicitWidth
+        tab3.height = tab3.implicitHeight
         tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
-        tryCompare(tab2, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
+        compare(tab1.height, control.height)
+        compare(tab2.width, (control.width - 2 * data.spacing - expectedWidth) / 2)
+        compare(tab2.height, control.height)
         compare(tab3.width, expectedWidth)
+        compare(tab3.height, tab3.implicitHeight)
         compare(control.contentWidth, tab1.implicitWidth + tab2.implicitWidth + tab3.implicitWidth + 2 * data.spacing)
+        compare(control.contentHeight, tab2.implicitHeight)
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
         tab3.width = undefined
+        tab3.height = undefined
         control.width = undefined
 
         control.contentWidth = 300
+        control.contentHeight = 50
         expectedWidth = (control.contentWidth - 2 * data.spacing) / 3
         tryCompare(tab1, "width", expectedWidth)
-        tryCompare(tab2, "width", expectedWidth)
-        tryCompare(tab3, "width", expectedWidth)
+        compare(tab2.width, expectedWidth)
+        compare(tab3.width, expectedWidth)
+        compare(tab1.height, control.contentHeight)
+        compare(tab2.height, control.contentHeight)
+        compare(tab3.height, control.contentHeight)
     }
 }
