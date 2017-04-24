@@ -90,6 +90,7 @@ void QQuickPen::setWidth(qreal w)
 
     m_width = w;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    static_cast<QQuickItem*>(parent())->update();
     emit penChanged();
 }
 
@@ -102,6 +103,7 @@ void QQuickPen::setColor(const QColor &c)
 {
     m_color = c;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    static_cast<QQuickItem*>(parent())->update();
     emit penChanged();
 }
 
@@ -116,6 +118,7 @@ void QQuickPen::setPixelAligned(bool aligned)
         return;
     m_aligned = aligned;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    static_cast<QQuickItem*>(parent())->update();
     emit penChanged();
 }
 
@@ -358,12 +361,7 @@ QQuickPen *QQuickRectangle::border()
     Q_D(QQuickRectangle);
     if (!d->pen) {
         d->pen = new QQuickPen;
-        static int penChangedSignalIdx = -1;
-        if (penChangedSignalIdx < 0)
-            penChangedSignalIdx = QMetaMethod::fromSignal(&QQuickPen::penChanged).methodIndex();
-        if (d->doUpdateSlotIdx < 0)
-            d->doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
-        QMetaObject::connect(d->pen, penChangedSignalIdx, this, d->doUpdateSlotIdx);
+        QQml_setParent_noEvent(d->pen, this);
     }
     return d->pen;
 }

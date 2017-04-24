@@ -70,7 +70,6 @@ public:
 
     ~QQuickRectanglePrivate()
     {
-        delete pen;
     }
 
     QColor color;
