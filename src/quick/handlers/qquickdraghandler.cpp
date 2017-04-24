@@ -75,8 +75,17 @@ bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
 
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
+    if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive)
+        // In case the grab got handled over from another grabber, we might not get the Press
+        initializeTargetStartPos(point);
     enforceConstraints();
     QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
+}
+
+void QQuickDragHandler::onActiveChanged()
+{
+    if (!active())
+        m_targetStartPos = QPointF();
 }
 
 void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
@@ -84,8 +93,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
     point->setAccepted();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
-        if (target() && target()->parentItem())
-            m_startPos = target()->parentItem()->mapToScene(target()->position());
+        initializeTargetStartPos(point);
         setPassiveGrab(point);
         break;
     case QQuickEventPoint::Updated: {
@@ -97,7 +105,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         if (active()) {
             setTranslation(delta);
             if (target() && target()->parentItem()) {
-                QPointF pos = target()->parentItem()->mapFromScene(m_startPos + delta);
+                QPointF pos = target()->parentItem()->mapFromScene(m_targetStartPos + delta);
                 enforceAxisConstraints(&pos);
                 target()->setPosition(pos);
             }
@@ -105,13 +113,13 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
                    ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
                     (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point)))) {
             setExclusiveGrab(point);
-            if (target()) {
+            if (auto parent = parentItem()) {
                 if (point->pointerEvent()->asPointerTouchEvent())
-                    target()->setKeepTouchGrab(true);
+                    parent->setKeepTouchGrab(true);
                 // tablet and mouse are treated the same by Item's legacy event handling, and
                 // touch becomes synth-mouse for Flickable, so we need to prevent stealing
                 // mouse grab too, whenever dragging occurs in an enabled direction
-                target()->setKeepMouseGrab(true);
+                parent->setKeepMouseGrab(true);
             }
         }
     } break;
@@ -137,6 +145,23 @@ void QQuickDragHandler::enforceAxisConstraints(QPointF *localPos)
         localPos->setX(qBound(m_xAxis.minimum(), localPos->x(), m_xAxis.maximum()));
     if (m_yAxis.enabled())
         localPos->setY(qBound(m_yAxis.minimum(), localPos->y(), m_yAxis.maximum()));
+}
+
+void QQuickDragHandler::initializeTargetStartPos(QQuickEventPoint *point)
+{
+    if (target() && target()->parentItem() && m_targetStartPos.isNull()) {    // prefer the m_targetStartPos we got when it got Pressed.
+        m_targetStartPos = target()->parentItem()->mapToScene(target()->position());
+        if (!target()->contains(point->pos())) {
+            // If pressed outside of target item, move the target item so that the touchpoint is in its center,
+            // while still respecting the axis constraints.
+            const QPointF center = target()->parentItem()->mapFromScene(point->scenePos());
+            const QPointF pointCenteredInItemPos = target()->parentItem()->mapToScene(center - QPointF(target()->width(), target()->height())/2);
+            if (m_xAxis.enabled())
+                m_targetStartPos.setX(pointCenteredInItemPos.x());
+            if (m_yAxis.enabled())
+                m_targetStartPos.setY(pointCenteredInItemPos.y());
+        }
+    }
 }
 
 void QQuickDragHandler::setTranslation(const QPointF &trans)

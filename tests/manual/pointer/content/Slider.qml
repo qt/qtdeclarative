@@ -50,6 +50,15 @@ Item {
     property alias pressed: tap.isPressed
     signal tapped
 
+    DragHandler {
+        id: dragHandler
+        objectName: label.text + " DragHandler"
+        target: knob
+        xAxis.enabled: false
+        yAxis.minimum: slot.y
+        yAxis.maximum: slot.height + slot.y - knob.height
+    }
+
     Rectangle {
         id: slot
         anchors.top: parent.top
@@ -90,13 +99,6 @@ Item {
         onYChanged: if (!programmatic) root.value = root.maximumValue - (knob.y - dragHandler.yAxis.minimum) * multiplier
         transformOrigin: Item.Center
         function setValue(value) { knob.y = dragHandler.yAxis.maximum - value / knob.multiplier }
-        DragHandler {
-            id: dragHandler
-            objectName: label.text + " DragHandler"
-            xAxis.enabled: false
-            yAxis.minimum: slot.y
-            yAxis.maximum: slot.height + slot.y - knob.height
-        }
         TapHandler {
             id: tap
             objectName: label.text + " TapHandler"

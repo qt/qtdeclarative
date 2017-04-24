@@ -112,14 +112,16 @@ Q_SIGNALS:
 
 protected:
     bool wantsEventPoint(QQuickEventPoint *point) override;
+    void onActiveChanged() override;
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
 private:
     void ungrab();
     void enforceAxisConstraints(QPointF *localPos);
+    void initializeTargetStartPos(QQuickEventPoint *point);
 
 private:
-    QPointF m_startPos;
+    QPointF m_targetStartPos;
     QPointF m_translation;
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;
