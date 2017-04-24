@@ -896,4 +896,31 @@ TestCase {
         mouseMove(control, node.handle.x - 1, node.handle.y - 1)
         compare(node.hovered, false)
     }
+
+    function test_nullHandles() {
+        var control = createTemporaryObject(sliderComponent, testCase, {"second.value": 1})
+        verify(control)
+
+        verify(control.first.handle)
+        verify(control.second.handle)
+
+        control.first.handle = null
+        control.second.handle = null
+
+        mousePress(control, control.leftPadding, control.height / 2)
+        verify(control.first.pressed, true)
+        compare(control.second.pressed, false)
+
+        mouseRelease(control, control.leftPadding, control.height / 2)
+        compare(control.first.pressed, false)
+        compare(control.second.pressed, false)
+
+        mousePress(control, control.width - control.rightPadding, control.height / 2)
+        compare(control.first.pressed, false)
+        compare(control.second.pressed, true)
+
+        mouseRelease(control, control.width - control.rightPadding, control.height / 2)
+        compare(control.first.pressed, false)
+        compare(control.second.pressed, false)
+    }
 }
