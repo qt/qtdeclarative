@@ -58,6 +58,8 @@ class tst_Drawer : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+
     void visible_data();
     void visible();
 
@@ -88,6 +90,13 @@ private slots:
     void interactive_data();
     void interactive();
 };
+
+
+void tst_Drawer::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+}
 
 void tst_Drawer::visible_data()
 {
@@ -755,10 +764,8 @@ void tst_Drawer::touch()
     // drag to close
     QTest::touchEvent(window, device.data()).press(0, QPoint(300, 100));
     QTest::touchEvent(window, device.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
-    for (int x = 300; x > 100; x -= 10) {
+    for (int x = 300; x > 100; x -= 10)
         QTest::touchEvent(window, device.data()).move(0, QPoint(x, 100));
-        QQuickWindowPrivate::get(window)->flushFrameSynchronousEvents();
-    }
     QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
