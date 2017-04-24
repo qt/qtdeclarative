@@ -55,7 +55,7 @@ QQuickPointerSingleHandler::QQuickPointerSingleHandler(QObject *parent)
   , m_pointId(0)
   , m_rotation(0)
   , m_pressure(0)
-  , m_acceptedButtons(Qt::AllButtons)
+  , m_acceptedButtons(Qt::LeftButton)
   , m_ignoreAdditionalPoints(false)
 {
 }

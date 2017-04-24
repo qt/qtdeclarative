@@ -85,7 +85,6 @@ QQuickTapHandler::QQuickTapHandler(QObject *parent)
     , m_longPressThreshold(-1)
     , m_lastTapTimestamp(0.0)
 {
-    setAcceptedButtons(Qt::LeftButton);
     if (m_mouseMultiClickDistanceSquared < 0) {
         m_multiTapInterval = qApp->styleHints()->mouseDoubleClickInterval() / 1000.0;
         m_mouseMultiClickDistanceSquared = QGuiApplicationPrivate::platformTheme()->
