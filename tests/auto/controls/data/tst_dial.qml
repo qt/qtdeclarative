@@ -579,4 +579,17 @@ TestCase {
         compare(control.value, 2.5)
         compare(control.position, 0.25)
     }
+
+    function test_nullHandle() {
+        var control = createTemporaryObject(dialComponent, testCase)
+        verify(control)
+
+        control.handle = null
+
+        mousePress(control)
+        verify(control.pressed, true)
+
+        mouseRelease(control)
+        compare(control.pressed, false)
+    }
 }
