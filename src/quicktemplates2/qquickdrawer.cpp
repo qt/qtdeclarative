@@ -393,13 +393,36 @@ bool QQuickDrawerPrivate::ungrabMouse(QMouseEvent *event)
     return wasGrabbed;
 }
 
+void QQuickDrawerPrivate::handlePress(const QPointF &point, ulong timestamp)
+{
+    QQuickPopupPrivate::handlePress(point, timestamp);
+
+    offset = 0;
+    pressPoint = point;
+    velocityCalculator.startMeasuring(point, timestamp);
+}
+
+void QQuickDrawerPrivate::handleMove(const QPointF &point, ulong timestamp)
+{
+    QQuickPopupPrivate::handleMove(point, timestamp);
+}
+
+void QQuickDrawerPrivate::handleRelease(const QPointF &point, ulong timestamp)
+{
+    QQuickPopupPrivate::handleRelease(point, timestamp);
+}
+
+void QQuickDrawerPrivate::handleUngrab()
+{
+    QQuickPopupPrivate::handleUngrab();
+
+    pressPoint = QPoint();
+    velocityCalculator.reset();
+}
+
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     handlePress(item->mapToScene(event->localPos()), event->timestamp());
-
-    offset = 0;
-    pressPoint = event->windowPos();
-    velocityCalculator.startMeasuring(pressPoint, event->timestamp());
 
     // don't block press events
     // a) outside a non-modal drawer,
@@ -666,14 +689,6 @@ void QQuickDrawer::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
     d->handleMouseReleaseEvent(d->popupItem, event);
-}
-
-void QQuickDrawer::mouseUngrabEvent()
-{
-    Q_D(QQuickDrawer);
-    QQuickPopup::mouseUngrabEvent();
-    d->pressPoint = QPoint();
-    d->velocityCalculator.reset();
 }
 
 bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
