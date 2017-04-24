@@ -282,9 +282,11 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
     return false;
 }
 
-bool QQuickDrawerPrivate::grabMouse(QMouseEvent *event)
+bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
+    handleMouseEvent(item, event);
+
     if (!window || !interactive || popupItem->keepMouseGrab())
         return false;
 
@@ -310,6 +312,19 @@ bool QQuickDrawerPrivate::grabMouse(QMouseEvent *event)
             overThreshold = qAbs(movePoint.y() - q->height()) < dragMargin;
     }
 
+    if (overThreshold) {
+        QQuickItem *grabber = window->mouseGrabberItem();
+        if (!grabber || !grabber->keepMouseGrab()) {
+            popupItem->grabMouse();
+            popupItem->setKeepMouseGrab(true);
+            offset = positionAt(movePoint) - position;
+
+            // don't jump when dragged open
+            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+                offset = 0;
+        }
+    }
+
     return overThreshold;
 }
 
@@ -326,7 +341,15 @@ void QQuickDrawerPrivate::handlePress(const QPointF &point, ulong timestamp)
 
 void QQuickDrawerPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
+    Q_Q(QQuickDrawer);
     QQuickPopupPrivate::handleMove(point, timestamp);
+
+    // limit/reset the offset to the edge of the drawer when pushed from the outside
+    if (qFuzzyCompare(position, 1.0) && !popupItem->contains(popupItem->mapFromScene(point)))
+        offset = 0;
+
+    if (popupItem->keepMouseGrab() || popupItem->keepTouchGrab())
+        q->setPosition(positionAt(point) - offset);
 }
 
 void QQuickDrawerPrivate::handleRelease(const QPointF &point, ulong timestamp)
@@ -401,43 +424,6 @@ void QQuickDrawerPrivate::handleUngrab()
 
     pressPoint = QPoint();
     velocityCalculator.reset();
-}
-
-bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
-{
-    Q_Q(QQuickDrawer);
-    handleMove(item->mapToScene(event->localPos()), event->timestamp());
-
-    // Don't react to synthesized mouse move events at INF,INF coordinates.
-    // QQuickWindowPrivate::translateTouchToMouse() uses them to clear hover
-    // on touch release (QTBUG-55995).
-    if (qIsInf(event->screenPos().x()) || qIsInf(event->screenPos().y()))
-        return true;
-
-    const QPointF movePoint = event->windowPos();
-
-    if (grabMouse(event)) {
-        QQuickItem *grabber = window->mouseGrabberItem();
-        if (!grabber || !grabber->keepMouseGrab()) {
-            popupItem->grabMouse();
-            popupItem->setKeepMouseGrab(true);
-            offset = positionAt(movePoint) - position;
-
-            // don't jump when dragged open
-            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
-                offset = 0;
-        }
-    }
-
-    // limit/reset the offset to the edge of the drawer when pushed from the outside
-    if (qFuzzyCompare(position, 1.0) && !popupItem->contains(popupItem->mapFromScene(movePoint)))
-        offset = 0;
-
-    if (popupItem->keepMouseGrab())
-        q->setPosition(positionAt(movePoint) - offset);
-    event->accept();
-
-    return popupItem->keepMouseGrab();
 }
 
 static QList<QQuickStateAction> prepareTransition(QQuickDrawer *drawer, QQuickTransition *transition, qreal to)
@@ -621,7 +607,7 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
     Q_D(QQuickDrawer);
     switch (event->type()) {
     case QEvent::MouseMove:
-        return d->handleMouseMoveEvent(child, static_cast<QMouseEvent *>(event));
+        return d->grabMouse(child, static_cast<QMouseEvent *>(event));
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
         d->handleMouseEvent(child, static_cast<QMouseEvent *>(event));
@@ -635,7 +621,7 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 void QQuickDrawer::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    d->handleMouseMoveEvent(d->popupItem, event);
+    d->grabMouse(d->popupItem, event);
 }
 
 bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
@@ -651,10 +637,13 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         return false;
 
     case QEvent::MouseMove:
-        return d->handleMouseMoveEvent(item, static_cast<QMouseEvent *>(event));
+        return d->grabMouse(item, static_cast<QMouseEvent *>(event));
+
     default:
-        return QQuickPopup::overlayEvent(item, event);
+        break;
     }
+
+    return QQuickPopup::overlayEvent(item, event);
 }
 
 void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
