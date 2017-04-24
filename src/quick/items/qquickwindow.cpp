@@ -4214,7 +4214,7 @@ void QQuickWindow::resetOpenGLState()
 
     \since 5.9
 
-    \sa QWindow::setScreen(), QWindow::screen(), QScreen, Qt.application
+    \sa QWindow::setScreen(), QWindow::screen(), QScreen, {QtQml::Qt::application}{Qt.application}
  */
 
 /*!
