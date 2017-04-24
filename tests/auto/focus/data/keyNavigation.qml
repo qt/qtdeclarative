@@ -191,7 +191,6 @@ Item {
         SpinBox {
             id: spinbox
             objectName: "spinbox"
-            editable: true
             value: 50
             KeyNavigation.left: radiobutton2
             KeyNavigation.right: swtich

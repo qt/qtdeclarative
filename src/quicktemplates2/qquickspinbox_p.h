@@ -127,6 +127,7 @@ Q_SIGNALS:
     Q_REVISION(2) void inputMethodComposingChanged();
 
 protected:
+    void focusInEvent(QFocusEvent *event) override;
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverMoveEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;

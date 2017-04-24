@@ -51,6 +51,7 @@
 import QtQuick 2.2
 import QtTest 1.0
 import QtQuick.Controls 2.2
+import QtQuick.Window 2.3
 
 TestCase {
     id: testCase
@@ -420,6 +421,16 @@ TestCase {
         compare(control.from, 10)
         compare(control.to, 1000)
         compare(control.value, 100)
+    }
+
+    function test_initialFocus() {
+        var window = testCase.Window.window
+        verify(window)
+        compare(window.activeFocusItem, window.contentItem)
+
+        var control = createTemporaryObject(spinBox, testCase, { editable: true, focus: true })
+        verify(control)
+        tryCompare(control.contentItem, "activeFocus", true)
     }
 
     function test_editable() {

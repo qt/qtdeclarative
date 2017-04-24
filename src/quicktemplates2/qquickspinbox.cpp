@@ -719,6 +719,16 @@ void QQuickSpinBox::decrease()
     setValue(d->value - d->effectiveStepSize());
 }
 
+void QQuickSpinBox::focusInEvent(QFocusEvent *event)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::focusInEvent(event);
+
+    // When an editable SpinBox gets focus, it must pass on the focus to its editor.
+    if (d->editable && d->contentItem && !d->contentItem->hasActiveFocus())
+        d->contentItem->forceActiveFocus(event->reason());
+}
+
 void QQuickSpinBox::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickSpinBox);
