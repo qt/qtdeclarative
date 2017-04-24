@@ -395,7 +395,7 @@ bool QQuickDrawerPrivate::ungrabMouse(QMouseEvent *event)
 
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
-    handlePress(item->mapToScene(event->localPos()));
+    handlePress(item->mapToScene(event->localPos()), event->timestamp());
 
     offset = 0;
     pressPoint = event->windowPos();
@@ -412,7 +412,7 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
 bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    handleMove(item->mapToScene(event->localPos()));
+    handleMove(item->mapToScene(event->localPos()), event->timestamp());
 
     // Don't react to synthesized mouse move events at INF,INF coordinates.
     // QQuickWindowPrivate::translateTouchToMouse() uses them to clear hover
@@ -450,7 +450,7 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
 {
     const bool wasGrabbed = ungrabMouse(event);
     if (!wasGrabbed)
-        handleRelease(item->mapToScene(event->localPos()));
+        handleRelease(item->mapToScene(event->localPos()), event->timestamp());
 
     popupItem->setKeepMouseGrab(false);
     pressPoint = QPoint();
