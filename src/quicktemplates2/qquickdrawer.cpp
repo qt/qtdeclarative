@@ -328,6 +328,53 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     return overThreshold;
 }
 
+bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
+{
+    Q_Q(QQuickDrawer);
+    handleTouchEvent(item, event);
+
+    if (!window || !interactive || popupItem->keepTouchGrab() || !event->touchPointStates().testFlag(Qt::TouchPointMoved))
+        return false;
+
+    bool overThreshold = false;
+    for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+        if (!acceptTouch(point) || point.state() != Qt::TouchPointMoved)
+            continue;
+
+        const QPointF movePoint = point.scenePos();
+
+        // Flickable uses a hard-coded threshold of 15 for flicking, and
+        // QStyleHints::startDragDistance for dragging. Drawer uses a bit
+        // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
+        const int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
+        if (position > 0 || dragMargin > 0) {
+            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+                overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, &point, threshold);
+            else
+                overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, &point, threshold);
+        }
+
+        // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
+        if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
+            if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
+                overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
+            else
+                overThreshold = qAbs(movePoint.y() - q->height()) < dragMargin;
+        }
+
+        if (overThreshold) {
+            popupItem->setKeepTouchGrab(true);
+            offset = positionAt(movePoint) - position;
+
+            // don't jump when dragged open
+            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+                offset = 0;
+        }
+    }
+
+    return overThreshold;
+}
+
 static const qreal openCloseVelocityThreshold = 300;
 
 bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
@@ -615,6 +662,8 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 {
     Q_D(QQuickDrawer);
     switch (event->type()) {
+    case QEvent::TouchUpdate:
+        return d->grabTouch(child, static_cast<QTouchEvent *>(event));
     case QEvent::MouseMove:
         return d->grabMouse(child, static_cast<QMouseEvent *>(event));
     case QEvent::MouseButtonPress:
@@ -636,22 +685,20 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickDrawer);
     switch (event->type()) {
-    case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
-    case QEvent::TouchEnd:
-    case QEvent::TouchCancel:
-        // TODO: QQuickDrawer still relies on synthesized mouse events
-        event->ignore();
-        return false;
-
+        return d->grabTouch(item, static_cast<QTouchEvent *>(event));
     case QEvent::MouseMove:
         return d->grabMouse(item, static_cast<QMouseEvent *>(event));
-
     default:
         break;
     }
-
     return QQuickPopup::overlayEvent(item, event);
+}
+
+void QQuickDrawer::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickDrawer);
+    d->grabTouch(d->popupItem, event);
 }
 
 void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

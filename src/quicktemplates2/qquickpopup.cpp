@@ -1982,9 +1982,6 @@ void QQuickPopup::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPopup);
     d->handleTouchEvent(d->popupItem, event);
-
-    // TODO: QQuickPopup still relies on synthesized mouse events
-    event->ignore();
 }
 
 void QQuickPopup::touchUngrabEvent()
