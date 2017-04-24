@@ -95,13 +95,16 @@ public:
 
     void init();
     void closeOrReject();
-    bool tryClose(QQuickItem *item, QEvent *event);
+    bool tryClose(const QPointF &pos, QQuickPopup::ClosePolicy flags);
 
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
     virtual void handlePress(const QPointF &point);
     virtual void handleMove(const QPointF &point);
     virtual void handleRelease(const QPointF &point);
     virtual void handleUngrab();
+
+    void handleMouseEvent(QQuickItem *item, QMouseEvent *event);
+    void handleTouchEvent(QQuickItem *item, QTouchEvent *event);
 
     virtual void reposition();
     virtual void resizeOverlay();

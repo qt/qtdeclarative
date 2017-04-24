@@ -395,6 +395,8 @@ bool QQuickDrawerPrivate::ungrabMouse(QMouseEvent *event)
 
 bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
+    handlePress(item->mapToScene(event->localPos()));
+
     offset = 0;
     pressPoint = event->windowPos();
     velocityCalculator.startMeasuring(pressPoint, event->timestamp());
@@ -410,7 +412,7 @@ bool QQuickDrawerPrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *e
 bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
-    Q_UNUSED(item);
+    handleMove(item->mapToScene(event->localPos()));
 
     // Don't react to synthesized mouse move events at INF,INF coordinates.
     // QQuickWindowPrivate::translateTouchToMouse() uses them to clear hover
@@ -446,9 +448,9 @@ bool QQuickDrawerPrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *ev
 
 bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event)
 {
-    Q_UNUSED(item);
-
     const bool wasGrabbed = ungrabMouse(event);
+    if (!wasGrabbed)
+        handleRelease(item->mapToScene(event->localPos()));
 
     popupItem->setKeepMouseGrab(false);
     pressPoint = QPoint();
@@ -651,21 +653,18 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 void QQuickDrawer::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickPopup::mousePressEvent(event);
     d->handleMousePressEvent(d->popupItem, event);
 }
 
 void QQuickDrawer::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickPopup::mouseMoveEvent(event);
     d->handleMouseMoveEvent(d->popupItem, event);
 }
 
 void QQuickDrawer::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickDrawer);
-    QQuickPopup::mouseReleaseEvent(event);
     d->handleMouseReleaseEvent(d->popupItem, event);
 }
 
@@ -690,12 +689,10 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
         return false;
 
     case QEvent::MouseButtonPress:
-        d->tryClose(item, event);
         return d->handleMousePressEvent(item, static_cast<QMouseEvent *>(event));
     case QEvent::MouseMove:
         return d->handleMouseMoveEvent(item, static_cast<QMouseEvent *>(event));
     case QEvent::MouseButtonRelease:
-        d->tryClose(item, event);
         return d->handleMouseReleaseEvent(item, static_cast<QMouseEvent *>(event));
     default:
         return QQuickPopup::overlayEvent(item, event);
