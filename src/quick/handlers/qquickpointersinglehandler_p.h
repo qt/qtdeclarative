@@ -80,7 +80,7 @@ public:
     Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
     void setAcceptedButtons(Qt::MouseButtons buttons);
     QPointF pressPos() const { return m_pressPos; }
-    QPointF scenePressPos() const { return parentItem()->mapToScene(m_pressPos); }
+    QPointF scenePressPos() const { return m_scenePressPos; }
     QPointF sceneGrabPos() const { return m_sceneGrabPos; }
     QPointF pos() const { return m_pos; }
     QPointF scenePos() const { return parentItem()->mapToScene(m_pos); }
@@ -118,6 +118,7 @@ private:
     Qt::MouseButtons m_pressedButtons;
     QPointF m_pos;
     QPointF m_pressPos;
+    QPointF m_scenePressPos;
     QPointF m_sceneGrabPos;
     QVector2D m_velocity;
     qreal m_rotation;

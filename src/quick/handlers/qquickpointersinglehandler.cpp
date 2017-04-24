@@ -145,6 +145,7 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
         switch (currentPoint->state()) {
         case QQuickEventPoint::Pressed:
             m_pressPos = currentPoint->pos();
+            m_scenePressPos = currentPoint->scenePos();
             setPressedButtons(event->buttons());
             emit pointIdChanged();
             break;
@@ -223,6 +224,7 @@ void QQuickPointerSingleHandler::reset()
     m_uniquePointId = QPointingDeviceUniqueId();
     m_pos = QPointF();
     m_pressPos = QPointF();
+    m_scenePressPos = QPointF();
     m_sceneGrabPos = QPointF();
     m_velocity = QVector2D();
     m_rotation = 0;
