@@ -356,7 +356,16 @@ void QQuickRectangle::doUpdate()
 QQuickPen *QQuickRectangle::border()
 {
     Q_D(QQuickRectangle);
-    return d->getPen();
+    if (!d->pen) {
+        d->pen = new QQuickPen;
+        static int penChangedSignalIdx = -1;
+        if (penChangedSignalIdx < 0)
+            penChangedSignalIdx = QMetaMethod::fromSignal(&QQuickPen::penChanged).methodIndex();
+        if (d->doUpdateSlotIdx < 0)
+            d->doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
+        QMetaObject::connect(d->pen, penChangedSignalIdx, this, d->doUpdateSlotIdx);
+    }
+    return d->pen;
 }
 
 /*!

@@ -78,20 +78,6 @@ public:
     QQuickPen *pen;
     qreal radius;
     static int doUpdateSlotIdx;
-
-    QQuickPen *getPen() {
-        if (!pen) {
-            Q_Q(QQuickRectangle);
-            pen = new QQuickPen;
-            static int penChangedSignalIdx = -1;
-            if (penChangedSignalIdx < 0)
-                penChangedSignalIdx = QMetaMethod::fromSignal(&QQuickPen::penChanged).methodIndex();
-            if (doUpdateSlotIdx < 0)
-                doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
-            QMetaObject::connect(pen, penChangedSignalIdx, q, doUpdateSlotIdx);
-        }
-        return pen;
-    }
 };
 
 QT_END_NAMESPACE
