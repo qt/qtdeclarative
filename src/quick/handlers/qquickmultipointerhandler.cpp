@@ -69,12 +69,18 @@ bool QQuickMultiPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
     const int pCount = event->pointCount();
     int pointCandidateCount = 0;
 
-    // points that are grabbed by other handlers are not candidates for this handler
-    for (int i = 0; i < pCount; ++i) {
-        QQuickEventPoint *pt = event->point(i);
-        QObject *exclusiveGrabber = pt->exclusiveGrabber();
-        if (!exclusiveGrabber || exclusiveGrabber == this)
-            ++pointCandidateCount;
+    // If one or more points are newly pressed, all points are candidates for this handler.
+    // In other cases however, do not steal the grab: that is, if a point has a grabber,
+    // it's not a candidate for this handler.
+    if (event->isPressEvent()) {
+        pointCandidateCount = pCount;
+    } else {
+        for (int i = 0; i < pCount; ++i) {
+            QQuickEventPoint *pt = event->point(i);
+            QObject *exclusiveGrabber = pt->exclusiveGrabber();
+            if (!exclusiveGrabber || exclusiveGrabber == this)
+                ++pointCandidateCount;
+        }
     }
 
     if (pointCandidateCount < m_requiredPointCount)
