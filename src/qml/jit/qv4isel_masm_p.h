@@ -160,7 +160,7 @@ protected:
         // FramePointerRegister points to its old value on the stack, and above
         // it we have the return address, hence the need to step over two
         // values before reaching the first argument.
-        return Address(JITTargetPlatform::FramePointerRegister, (index + 2) * sizeof(void*));
+        return Address(JITTargetPlatform::FramePointerRegister, (index + 2) * JITTargetPlatform::RegisterSize);
     }
 
     Pointer baseAddressForCallArguments()

@@ -62,9 +62,8 @@ DEFINE_MANAGED_VTABLE(GlobalContext);
 
 Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData *callData)
 {
-    uint localsAndFormals = function->compiledFunction->nLocals + qMax(static_cast<uint>(callData->argc), function->nFormals);
-    size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + \
-            sizeof(Value) * (localsAndFormals) + sizeof(CallData) - sizeof(Value);
+    uint localsAndFormals = function->compiledFunction->nLocals + sizeof(CallData)/sizeof(Value) - 1 + qMax(static_cast<uint>(callData->argc), function->nFormals);
+    size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
     Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(requiredMemory);
     c->init(d()->engine, Heap::ExecutionContext::Type_CallContext);

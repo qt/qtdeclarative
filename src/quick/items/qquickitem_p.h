@@ -94,7 +94,7 @@ public:
     QQuickContents(QQuickItem *item);
     ~QQuickContents();
 
-    QRectF rectF() const { return QRectF(m_x, m_y, m_width, m_height); }
+    QRectF rectF() const { return m_contents; }
 
     inline void calcGeometry(QQuickItem *changed = 0);
     void complete();
@@ -112,10 +112,7 @@ private:
     void updateRect();
 
     QQuickItem *m_item;
-    qreal m_x;
-    qreal m_y;
-    qreal m_width;
-    qreal m_height;
+    QRectF m_contents;
 };
 
 void QQuickContents::calcGeometry(QQuickItem *changed)

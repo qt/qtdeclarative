@@ -297,6 +297,8 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     \value Anisotropy8x 8x anisotropic filtering.
 
     \value Anisotropy16x 16x anisotropic filtering.
+
+    \since 5.9
 */
 
 /*!

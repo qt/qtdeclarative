@@ -1,14 +1,30 @@
-TEMPLATE=app
-TARGET=tst_qmltest
-CONFIG += qmltestcase
-CONFIG += console
-SOURCES += tst_qmltest.cpp
-
-
-importFiles.files = borderimage  buttonclick  createbenchmark  events  qqmlbinding selftests
-
-importFiles.path = .
-DEPLOYMENT += importFiles
-
-# Please do not make this test insignificant again, thanks.
-# Just skip those unstable ones. See also QTBUG-33723.
+TEMPLATE = subdirs
+SUBDIRS += \
+    animatedimage \
+    animations \
+    borderimage \
+    buttonclick \
+    createbenchmark \
+    events \
+    fontloader \
+    gradient \
+    image \
+    itemgrabber \
+    layout \
+    listmodel \
+    listview \
+    objectmodel \
+    pathview \
+    pixel \
+    positioners \
+    qqmlbinding \
+    qtbug46798 \
+    rectangle \
+    selftests \
+    shadersource \
+    stability \
+    statemachine \
+    text \
+    textedit \
+    textinput \
+    window

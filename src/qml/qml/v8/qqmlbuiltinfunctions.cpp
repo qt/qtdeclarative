@@ -2019,7 +2019,7 @@ void GlobalExtensions::method_qsTrIdNoOp(const BuiltinFunction *, Scope &scope, 
 
 void GlobalExtensions::method_gc(const BuiltinFunction *, Scope &scope, CallData *)
 {
-    scope.engine->memoryManager->runGC(/* forceFullCollection = */ true);
+    scope.engine->memoryManager->runGC();
 
     scope.result = QV4::Encode::undefined();
 }

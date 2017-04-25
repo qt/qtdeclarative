@@ -273,10 +273,17 @@ In particular, QML currently supports:
   \li \c {QList<qreal>}
   \li \c {QList<bool>}
   \li \c {QList<QString>} and \c{QStringList}
+  \li \c {QVector<QString>}
+  \li \c {std::vector<QString>}
   \li \c {QList<QUrl>}
+  \li \c {QVector<QUrl>}
+  \li \c {std::vector<QUrl>}
   \li \c {QVector<int>}
   \li \c {QVector<qreal>}
   \li \c {QVector<bool>}
+  \li \c {std::vector<int>}
+  \li \c {std::vector<qreal>}
+  \li \c {std::vector<bool>}
 \endlist
 
 These sequence types are implemented directly in terms of the underlying C++
@@ -295,6 +302,10 @@ QObject's property.
 If the sequence is returned from a Q_INVOKABLE function, access and mutation
 is much cheaper, as no QObject property read or write occurs; instead, the
 C++ sequence data is accessed and modified directly.
+
+In both the Q_PROPERTY and return from Q_INVOKABLE cases, the elements
+of a std::vector are copied. This copying may be an expensive operation,
+so std::vector should be used judiciously.
 
 Other sequence types are not supported transparently, and instead an
 instance of any other sequence type will be passed between QML and C++ as an
@@ -318,10 +329,17 @@ The default-constructed values for each sequence type are as follows:
 \row \li QList<qreal> \li real value 0.0
 \row \li QList<bool> \li boolean value \c {false}
 \row \li QList<QString> and QStringList \li empty QString
+\row \li QVector<QString> \li empty QString
+\row \li std::vector<QString> \li empty QString
 \row \li QList<QUrl> \li empty QUrl
+\row \li QVector<QUrl> \li empty QUrl
+\row \li std::vector<QUrl> \li empty QUrl
 \row \li QVector<int> \li integer value 0
 \row \li QVector<qreal> \li real value 0.0
 \row \li QVector<bool> \li boolean value \c {false}
+\row \li std::vector<int> \li integer value 0
+\row \li std::vector<qreal> \li real value 0.0
+\row \li std::vector<bool> \li boolean value \c {false}
 \endtable
 
 If you wish to remove elements from a sequence rather than simply replace

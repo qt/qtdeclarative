@@ -165,6 +165,13 @@ struct MemorySegment {
 
         size_t pageSize = WTF::pageSize();
         size = (size + pageSize - 1) & ~(pageSize - 1);
+#if !defined(Q_OS_LINUX) && !defined(Q_OS_WIN)
+        // Linux and Windows zero out pages that have been decommitted and get committed again.
+        // unfortunately that's not true on other OSes (e.g. BSD based ones), so zero out the
+        // memory before decommit, so that we can be sure that all chunks we allocate will be
+        // zero initialized.
+        memset(chunk, 0, size);
+#endif
         pageReservation.decommit(chunk, size);
     }
 
@@ -260,7 +267,76 @@ void ChunkAllocator::free(Chunk *chunk, size_t size)
 }
 
 
-void Chunk::sweep()
+void Heap::Base::markChildren(MarkStack *markStack)
+{
+    if (vtable()->markObjects)
+        vtable()->markObjects(this, markStack);
+    if (quint64 m = vtable()->markTable) {
+//            qDebug() << "using mark table:" << hex << m << "for" << h;
+        void **mem = reinterpret_cast<void **>(this);
+        while (m) {
+            MarkFlags mark = static_cast<MarkFlags>(m & 3);
+            switch (mark) {
+            case Mark_NoMark:
+                break;
+            case Mark_Value:
+//                    qDebug() << "marking value at " << mem;
+                reinterpret_cast<Value *>(mem)->mark(markStack);
+                break;
+            case Mark_Pointer: {
+//                    qDebug() << "marking pointer at " << mem;
+                Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
+                if (p)
+                    p->mark(markStack);
+                break;
+            }
+            case Mark_ValueArray: {
+                Q_ASSERT(m == Mark_ValueArray);
+//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
+                ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
+                Value *v = a->values;
+                const Value *end = v + a->alloc;
+                if (a->alloc > 32*1024) {
+                    // drain from time to time to avoid overflows in the js stack
+                    Heap::Base **currentBase = markStack->top;
+                    while (v < end) {
+                        v->mark(markStack);
+                        ++v;
+                        if (markStack->top >= currentBase + 32*1024) {
+                            Heap::Base **oldBase = markStack->base;
+                            markStack->base = currentBase;
+                            markStack->drain();
+                            markStack->base = oldBase;
+                        }
+                    }
+                } else {
+                    while (v < end) {
+                        v->mark(markStack);
+                        ++v;
+                    }
+                }
+                break;
+            }
+            }
+
+            m >>= 2;
+            ++mem;
+        }
+    }
+}
+
+// Stores a classname -> freed count mapping.
+typedef QHash<const char*, int> MMStatsHash;
+Q_GLOBAL_STATIC(MMStatsHash, freedObjectStatsGlobal)
+
+// This indirection avoids sticking QHash code in each of the call sites, which
+// shaves off some instructions in the case that it's unused.
+static void increaseFreedCountForClass(const char *className)
+{
+    (*freedObjectStatsGlobal())[className]++;
+}
+
+void Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
 {
     //    DEBUG << "sweeping chunk" << this << (*freeList);
     HeapItem *o = realBase();
@@ -290,8 +366,11 @@ void Chunk::sweep()
 
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
-            if (b->vtable()->destroy) {
-                b->vtable()->destroy(b);
+            const VTable *v = b->vtable();
+            if (Q_UNLIKELY(classCountPtr))
+                classCountPtr(v->className);
+            if (v->destroy) {
+                v->destroy(b);
                 b->_checkIsDestroyed();
             }
         }
@@ -351,7 +430,7 @@ void Chunk::resetBlackBits()
 static uint nGrayItems = 0;
 #endif
 
-void Chunk::collectGrayItems(ExecutionEngine *engine)
+void Chunk::collectGrayItems(MarkStack *markStack)
 {
     //    DEBUG << "sweeping chunk" << this << (*freeList);
     HeapItem *o = realBase();
@@ -372,7 +451,7 @@ void Chunk::collectGrayItems(ExecutionEngine *engine)
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
             Q_ASSERT(b->inUse());
-            engine->pushForGC(b);
+            markStack->push(b);
 #ifdef MM_STATS
             ++nGrayItems;
 //            qDebug() << "adding gray item" << b << "to mark stack";
@@ -590,7 +669,7 @@ done:
     return m;
 }
 
-void BlockAllocator::sweep()
+void BlockAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
 {
     nextFree = 0;
     nFree = 0;
@@ -599,7 +678,7 @@ void BlockAllocator::sweep()
 //    qDebug() << "BlockAlloc: sweep";
     usedSlotsAfterLastSweep = 0;
     for (auto c : chunks) {
-        c->sweep();
+        c->sweep(classCountPtr);
         c->sortIntoBins(freeBins, NumBins);
 //        qDebug() << "used slots in chunk" << c << ":" << c->nUsedSlots();
         usedSlotsAfterLastSweep += c->nUsedSlots();
@@ -620,10 +699,10 @@ void BlockAllocator::resetBlackBits()
         c->resetBlackBits();
 }
 
-void BlockAllocator::collectGrayItems(ExecutionEngine *engine)
+void BlockAllocator::collectGrayItems(MarkStack *markStack)
 {
     for (auto c : chunks)
-        c->collectGrayItems(engine);
+        c->collectGrayItems(markStack);
 
 }
 
@@ -665,22 +744,27 @@ HeapItem *HugeItemAllocator::allocate(size_t size) {
     return c->first();
 }
 
-static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocator::HugeChunk &c)
+static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocator::HugeChunk &c, ClassDestroyStatsCallback classCountPtr)
 {
     HeapItem *itemToFree = c.chunk->first();
     Heap::Base *b = *itemToFree;
-    if (b->vtable()->destroy) {
-        b->vtable()->destroy(b);
+    const VTable *v = b->vtable();
+    if (Q_UNLIKELY(classCountPtr))
+        classCountPtr(v->className);
+
+    if (v->destroy) {
+        v->destroy(b);
         b->_checkIsDestroyed();
     }
     chunkAllocator->free(c.chunk, c.size);
 }
 
-void HugeItemAllocator::sweep() {
-    auto isBlack = [this] (const HugeChunk &c) {
+void HugeItemAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
+{
+    auto isBlack = [this, classCountPtr] (const HugeChunk &c) {
         bool b = c.chunk->first()->isBlack();
         if (!b)
-            freeHugeChunk(chunkAllocator, c);
+            freeHugeChunk(chunkAllocator, c, classCountPtr);
         return !b;
     };
 
@@ -694,7 +778,7 @@ void HugeItemAllocator::resetBlackBits()
         Chunk::clearBit(c.chunk->blackBitmap, c.chunk->first() - c.chunk->realBase());
 }
 
-void HugeItemAllocator::collectGrayItems(ExecutionEngine *engine)
+void HugeItemAllocator::collectGrayItems(MarkStack *markStack)
 {
     for (auto c : chunks)
         // Correct for a Steele type barrier
@@ -702,14 +786,14 @@ void HugeItemAllocator::collectGrayItems(ExecutionEngine *engine)
             Chunk::testBit(c.chunk->grayBitmap, c.chunk->first() - c.chunk->realBase())) {
             HeapItem *i = c.chunk->first();
             Heap::Base *b = *i;
-            b->mark(engine);
+            b->mark(markStack);
         }
 }
 
 void HugeItemAllocator::freeAll()
 {
     for (auto &c : chunks) {
-        freeHugeChunk(chunkAllocator, c);
+        freeHugeChunk(chunkAllocator, c, nullptr);
     }
 }
 
@@ -852,77 +936,34 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
 
 static uint markStackSize = 0;
 
-void MemoryManager::drainMarkStack(Value *markBase)
+MarkStack::MarkStack(ExecutionEngine *engine)
+    : engine(engine)
 {
-    while (engine->jsStackTop > markBase) {
-        Heap::Base *h = engine->popForGC();
+    base = (Heap::Base **)engine->gcStack->base();
+    top = base;
+    limit = base + ExecutionEngine::GCStackLimit/sizeof(Heap::Base)*3/4;
+}
+
+void MarkStack::drain()
+{
+    while (top > base) {
+        Heap::Base *h = pop();
         ++markStackSize;
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
-        if (h->vtable()->markObjects)
-            h->vtable()->markObjects(h, engine);
-        if (quint64 m = h->vtable()->markTable) {
-//            qDebug() << "using mark table:" << hex << m << "for" << h;
-            void **mem = reinterpret_cast<void **>(h);
-            while (m) {
-                MarkFlags mark = static_cast<MarkFlags>(m & 3);
-                switch (mark) {
-                case Mark_NoMark:
-                    break;
-                case Mark_Value:
-//                    qDebug() << "marking value at " << mem;
-                    reinterpret_cast<Value *>(mem)->mark(engine);
-                    break;
-                case Mark_Pointer: {
-//                    qDebug() << "marking pointer at " << mem;
-                    Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
-                    if (p)
-                        p->mark(engine);
-                    break;
-                }
-                case Mark_ValueArray: {
-                    Q_ASSERT(m == Mark_ValueArray);
-//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
-                    ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
-                    Value *v = a->values;
-                    const Value *end = v + a->alloc;
-                    while (v < end) {
-                        v->mark(engine);
-                        ++v;
-                    }
-                    break;
-                }
-                }
-
-                m >>= 2;
-                ++mem;
-            }
-        }
+        h->markChildren(this);
     }
 }
 
-void MemoryManager::mark()
+void MemoryManager::collectRoots(MarkStack *markStack)
 {
-    Value *markBase = engine->jsStackTop;
-
-    markStackSize = 0;
-
-    if (nextGCIsIncremental) {
-        // need to collect all gray items and push them onto the mark stack
-        blockAllocator.collectGrayItems(engine);
-        hugeItemAllocator.collectGrayItems(engine);
-    }
-
-//    qDebug() << ">>>> Mark phase:";
-//    qDebug() << "   mark stack after gray items" << (engine->jsStackTop - markBase);
-
-    engine->markObjects(nextGCIsIncremental);
+    engine->markObjects(markStack);
 
 //    qDebug() << "   mark stack after engine->mark" << (engine->jsStackTop - markBase);
 
-    collectFromJSStack();
+    collectFromJSStack(markStack);
 
 //    qDebug() << "   mark stack after js stack collect" << (engine->jsStackTop - markBase);
-    m_persistentValues->mark(engine);
+    m_persistentValues->mark(markStack);
 
 //    qDebug() << "   mark stack after persistants" << (engine->jsStackTop - markBase);
 
@@ -951,23 +992,25 @@ void MemoryManager::mark()
         }
 
         if (keepAlive)
-            qobjectWrapper->mark(engine);
+            qobjectWrapper->mark(markStack);
 
-        if (engine->jsStackTop >= engine->jsStackLimit)
-            drainMarkStack(markBase);
+        if (markStack->top >= markStack->limit)
+            markStack->drain();
     }
-
-    drainMarkStack(markBase);
 }
 
-void MemoryManager::sweep(bool lastSweep)
+void MemoryManager::mark()
 {
-    if (lastSweep && nextGCIsIncremental) {
-        // ensure we properly clean up on destruction even if the GC is in incremental mode
-        blockAllocator.resetBlackBits();
-        hugeItemAllocator.resetBlackBits();
-    }
+    markStackSize = 0;
 
+    MarkStack markStack(engine);
+    collectRoots(&markStack);
+
+    markStack.drain();
+}
+
+void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPtr)
+{
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         Managed *m = (*it).managed();
         if (!m || m->markBit())
@@ -1013,8 +1056,8 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    blockAllocator.sweep();
-    hugeItemAllocator.sweep();
+    blockAllocator.sweep(classCountPtr);
+    hugeItemAllocator.sweep(classCountPtr);
 }
 
 bool MemoryManager::shouldRunGC() const
@@ -1046,18 +1089,11 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
     return totalSlotMem*Chunk::SlotSize;
 }
 
-void MemoryManager::runGC(bool forceFullCollection)
+void MemoryManager::runGC()
 {
     if (gcBlocked) {
 //        qDebug() << "Not running GC.";
         return;
-    }
-
-    if (forceFullCollection) {
-        // do a full GC
-        blockAllocator.resetBlackBits();
-        hugeItemAllocator.resetBlackBits();
-        nextGCIsIncremental = false;
     }
 
     QScopedValueRollback<bool> gcBlocker(gcBlocked, true);
@@ -1081,7 +1117,6 @@ void MemoryManager::runGC(bool forceFullCollection)
         qDebug() << "    Allocations since last GC" << allocationCount;
         allocationCount = 0;
 #endif
-        qDebug() << "Incremental:" << nextGCIsIncremental;
         qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
         qDebug() << "Fragmented memory before GC" << (totalMem - usedBefore);
         dumpBins(&blockAllocator);
@@ -1095,7 +1130,7 @@ void MemoryManager::runGC(bool forceFullCollection)
         mark();
         qint64 markTime = t.nsecsElapsed()/1000;
         t.restart();
-        sweep();
+        sweep(false, increaseFreedCountForClass);
         const size_t usedAfter = getUsedMem();
         const size_t largeItemsAfter = getLargeItemsMem();
         qint64 sweepTime = t.nsecsElapsed()/1000;
@@ -1107,13 +1142,23 @@ void MemoryManager::runGC(bool forceFullCollection)
             qDebug() << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
         }
         size_t memInBins = dumpBins(&blockAllocator);
-#ifdef MM_STATS
-        if (nextGCIsIncremental)
-            qDebug() << "  number of gray items:" << nGrayItems;
-#endif
         qDebug() << "Marked object in" << markTime << "us.";
         qDebug() << "   " << markStackSize << "objects marked";
         qDebug() << "Sweeped object in" << sweepTime << "us.";
+
+        // sort our object types by number of freed instances
+        MMStatsHash freedObjectStats;
+        std::swap(freedObjectStats, *freedObjectStatsGlobal());
+        typedef std::pair<const char*, int> ObjectStatInfo;
+        std::vector<ObjectStatInfo> freedObjectsSorted;
+        freedObjectsSorted.reserve(freedObjectStats.count());
+        for (auto it = freedObjectStats.constBegin(); it != freedObjectStats.constEnd(); ++it) {
+            freedObjectsSorted.push_back(std::make_pair(it.key(), it.value()));
+        }
+        std::sort(freedObjectsSorted.begin(), freedObjectsSorted.end(), [](const ObjectStatInfo &a, const ObjectStatInfo &b) {
+            return a.second > b.second && strcmp(a.first, b.first) < 0;
+        });
+
         qDebug() << "Used memory before GC:" << usedBefore;
         qDebug() << "Used memory after GC :" << usedAfter;
         qDebug() << "Freed up bytes       :" << (usedBefore - usedAfter);
@@ -1125,6 +1170,11 @@ void MemoryManager::runGC(bool forceFullCollection)
             qDebug() << "Large item memory after GC:" << largeItemsAfter;
             qDebug() << "Large item memory freed up:" << (largeItemsBefore - largeItemsAfter);
         }
+
+        for (auto it = freedObjectsSorted.cbegin(); it != freedObjectsSorted.cend(); ++it) {
+            qDebug().noquote() << QString::fromLatin1("Freed JS type: %1 (%2 instances)").arg(QString::fromLatin1(it->first), QString::number(it->second));
+        }
+
         qDebug() << "======== End GC ========";
     }
 
@@ -1133,36 +1183,11 @@ void MemoryManager::runGC(bool forceFullCollection)
         Q_ASSERT(blockAllocator.allocatedMem() == getUsedMem() + dumpBins(&blockAllocator, false));
     }
 
-    if (!nextGCIsIncremental)
-        usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
+    usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
 
-#if WRITEBARRIER(steele)
-    static int count = 0;
-    ++count;
-    if (aggressiveGC) {
-        nextGCIsIncremental = (count % 256);
-    } else {
-        size_t total = blockAllocator.totalSlots();
-        size_t usedSlots = blockAllocator.usedSlotsAfterLastSweep;
-        if (!nextGCIsIncremental) {
-            // always try an incremental GC after a full one, unless there is anyway lots of memory pressure
-            nextGCIsIncremental = usedSlots * 4 < total * 3;
-            count = 0;
-        } else {
-            if (count > 16)
-                nextGCIsIncremental = false;
-            else
-                nextGCIsIncremental = usedSlots * 4 < total * 3; // less than 75% full
-        }
-    }
-#else
-    nextGCIsIncremental = false;
-#endif
-    if (!nextGCIsIncremental) {
-        // do a full GC
-        blockAllocator.resetBlackBits();
-        hugeItemAllocator.resetBlackBits();
-    }
+    // reset all black bits
+    blockAllocator.resetBlackBits();
+    hugeItemAllocator.resetBlackBits();
 }
 
 size_t MemoryManager::getUsedMem() const
@@ -1223,7 +1248,7 @@ void MemoryManager::willAllocate(std::size_t size)
 
 #endif // DETAILED_MM_STATS
 
-void MemoryManager::collectFromJSStack() const
+void MemoryManager::collectFromJSStack(MarkStack *markStack) const
 {
     Value *v = engine->jsStackBase;
     Value *top = engine->jsStackTop;
@@ -1231,7 +1256,7 @@ void MemoryManager::collectFromJSStack() const
         Managed *m = v->managed();
         if (m && m->inUse())
             // Skip pointers to already freed objects, they are bogus as well
-            m->mark(engine);
+            m->mark(markStack);
         ++v;
     }
 }

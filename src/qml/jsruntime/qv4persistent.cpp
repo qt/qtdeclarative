@@ -215,17 +215,15 @@ void PersistentValueStorage::free(Value *v)
         freePage(p);
 }
 
-void PersistentValueStorage::mark(ExecutionEngine *e)
+void PersistentValueStorage::mark(MarkStack *markStack)
 {
-    Value *markBase = e->jsStackTop;
-
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
             if (Managed *m = p->values[i].as<Managed>())
-                m->mark(e);
+                m->mark(markStack);
         }
-        e->memoryManager->drainMarkStack(markBase);
+        markStack->drain();
 
         p = p->header.next;
     }
@@ -384,11 +382,11 @@ void WeakValue::allocVal(ExecutionEngine *engine)
     val = engine->memoryManager->m_weakValues->allocate();
 }
 
-void WeakValue::markOnce(ExecutionEngine *e)
+void WeakValue::markOnce(MarkStack *markStack)
 {
     if (!val)
         return;
-    val->mark(e);
+    val->mark(markStack);
 }
 
 void WeakValue::free()

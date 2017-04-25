@@ -125,10 +125,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeStrings = (QV4::Heap::String **)malloc(data->stringTableSize * sizeof(QV4::Heap::String*));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::Heap::String*));
-    for (uint i = 0; i < data->stringTableSize; ++i) {
+    for (uint i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
-        runtimeStrings[i]->setMarkBit();
-    }
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below
@@ -144,12 +142,6 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= IR::RegExp::RegExp_Multiline;
         QV4::Heap::RegExpObject *ro = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
         runtimeRegularExpressions[i] = ro;
-#if WRITEBARRIER(steele)
-        if (engine->memoryManager->nextGCIsIncremental) {
-            ro->setMarkBit();
-            ro->setGrayBit();
-        }
-#endif
     }
 
     if (data->lookupTableSize) {
@@ -249,14 +241,14 @@ void CompilationUnit::unlink()
 #endif
 }
 
-void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
+void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 {
     for (uint i = 0; i < data->stringTableSize; ++i)
         if (runtimeStrings[i])
-            runtimeStrings[i]->mark(e);
+            runtimeStrings[i]->mark(markStack);
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
-            runtimeRegularExpressions[i].mark(e);
+            runtimeRegularExpressions[i].mark(markStack);
     }
 }
 
@@ -461,6 +453,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 
     return true;
 #else
+    Q_UNUSED(outputFileName)
     *errorString = QStringLiteral("features.temporaryfile is disabled.");
     return false;
 #endif // QT_CONFIG(temporaryfile)
@@ -745,7 +738,7 @@ static QByteArray ownLibraryChecksum()
     if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
         QFile library(QFile::decodeName(libInfo.dli_fname));
         if (library.open(QIODevice::ReadOnly)) {
-            QCryptographicHash hash(QCryptographicHash::Sha1);
+            QCryptographicHash hash(QCryptographicHash::Md5);
             hash.addData(&library);
             libraryChecksum = hash.result();
         }

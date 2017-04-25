@@ -235,7 +235,6 @@ public:
 
 protected:
     QQuickTransformAnimatorJob();
-    void postSync() override;
     void invalidate() override;
 
     Helper *m_helper;

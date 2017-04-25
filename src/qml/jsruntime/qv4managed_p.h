@@ -207,9 +207,10 @@ public:
 
     bool inUse() const { return d()->inUse(); }
     bool markBit() const { return d()->isMarked(); }
+    inline void mark(MarkStack *markStack);
 
     static void destroy(Heap::Base *) {}
-    static void markObjects(Heap::Base *, ExecutionEngine *) {}
+    static void markObjects(Heap::Base *, MarkStack *) {}
 
     Q_ALWAYS_INLINE Heap::Base *heapObject() const {
         return m();

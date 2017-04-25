@@ -35,7 +35,7 @@ TestCase {
     when: windowShown
 
     function test_equals() {
-        var rect = Qt.createQmlObject("import QtQuick 2.0; Rectangle { color: 'red'; width: 10; height: 10; }", testCase);
+        var rect = createTemporaryQmlObject("import QtQuick 2.0; Rectangle { color: 'red'; width: 10; height: 10; }", testCase);
         verify(rect);
         var oldImage = grabImage(rect);
         rect.width += 10;

@@ -55,7 +55,9 @@
 #include <QLibraryInfo>
 #include <qqml.h>
 #include <qqmldebug.h>
+#if QT_CONFIG(animation)
 #include <private/qabstractanimation_p.h>
+#endif
 
 #include <cstdio>
 #include <cstring>
@@ -69,7 +71,9 @@
 
 static Config *conf = 0;
 static QQmlApplicationEngine *qae = 0;
+#if defined(Q_OS_DARWIN) || defined(QT_GUI_LIB)
 static int exitTimerId = -1;
+#endif
 bool verboseMode = false;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
@@ -386,6 +390,9 @@ void getAppFlags(int &argc, char **argv)
             argc -= 2;
         }
     }
+#else
+    Q_UNUSED(argc)
+    Q_UNUSED(argv)
 #endif // QT_GUI_LIB
 }
 
@@ -476,10 +483,12 @@ int main(int argc, char *argv[])
             break;
         else if (arg == QLatin1String("-verbose"))
             verboseMode = true;
+#if QT_CONFIG(animation)
         else if (arg == QLatin1String("-slow-animations"))
             QUnifiedTimer::instance()->setSlowModeEnabled(true);
         else if (arg == QLatin1String("-fixed-animations"))
             QUnifiedTimer::instance()->setConsistentTiming(true);
+#endif
         else if (arg == QLatin1String("-I")) {
             if (i+1 == argList.count())
                 continue;//Invalid usage, but just ignore it
@@ -548,7 +557,7 @@ int main(int argc, char *argv[])
         qInstallMessageHandler(quietMessageHandler);
 
     if (files.count() <= 0) {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_DARWIN)
         if (applicationType == QmlApplicationTypeGui)
             exitTimerId = static_cast<LoaderApplication *>(app)->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
         else

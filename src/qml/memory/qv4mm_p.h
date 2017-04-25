@@ -153,10 +153,10 @@ struct BlockAllocator {
         return used;
     }
 
-    void sweep();
+    void sweep(ClassDestroyStatsCallback classCountPtr);
     void freeAll();
     void resetBlackBits();
-    void collectGrayItems(ExecutionEngine *engine);
+    void collectGrayItems(MarkStack *markStack);
 
     // bump allocations
     HeapItem *nextFree = 0;
@@ -176,10 +176,10 @@ struct HugeItemAllocator {
     {}
 
     HeapItem *allocate(size_t size);
-    void sweep();
+    void sweep(ClassDestroyStatsCallback classCountPtr);
     void freeAll();
     void resetBlackBits();
-    void collectGrayItems(ExecutionEngine *engine);
+    void collectGrayItems(MarkStack *markStack);
 
     size_t usedMem() const {
         size_t used = 0;
@@ -422,7 +422,7 @@ public:
         return t->d();
     }
 
-    void runGC(bool forceFullCollection = false);
+    void runGC();
 
     void dumpStats() const;
 
@@ -432,8 +432,6 @@ public:
 
     // called when a JS object grows itself. Specifically: Heap::String::append
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
-    void drainMarkStack(Value *markBase);
-
 
 protected:
     /// expects size to be aligned
@@ -446,10 +444,11 @@ protected:
 #endif // DETAILED_MM_STATS
 
 private:
-    void collectFromJSStack() const;
+    void collectFromJSStack(MarkStack *markStack) const;
     void mark();
-    void sweep(bool lastSweep = false);
+    void sweep(bool lastSweep = false, ClassDestroyStatsCallback classCountPtr = nullptr);
     bool shouldRunGC() const;
+    void collectRoots(MarkStack *markStack);
 
 public:
     QV4::ExecutionEngine *engine;
@@ -468,7 +467,6 @@ public:
     bool gcBlocked = false;
     bool aggressiveGC = false;
     bool gcStats = false;
-    bool nextGCIsIncremental = false;
 };
 
 }

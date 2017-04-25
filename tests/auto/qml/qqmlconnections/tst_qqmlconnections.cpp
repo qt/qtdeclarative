@@ -53,6 +53,7 @@ private slots:
     void singletonTypeTarget();
     void enableDisable_QTBUG_36350();
     void clearImplicitTarget();
+    void onWithoutASignal();
 
 private:
     QQmlEngine engine;
@@ -377,6 +378,15 @@ void tst_qqmlconnections::clearImplicitTarget()
     QCOMPARE(item->property("tested").toBool(), false);
 
     delete item;
+}
+
+void tst_qqmlconnections::onWithoutASignal()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("connection-no-signal-name.qml"));
+    QVERIFY(c.isError()); // Cannot assign to non-existent property "on" expected
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
+    QVERIFY(item == nullptr); // should parse error, and not give us an item (or crash).
 }
 
 QTEST_MAIN(tst_qqmlconnections)

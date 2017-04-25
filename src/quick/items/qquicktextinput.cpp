@@ -3885,6 +3885,7 @@ void QQuickTextInputPrivate::parseInputMask(const QString &maskFields)
                 break;
             case '\\':
                 escape = true;
+                Q_FALLTHROUGH();
             default:
                 s = true;
                 break;
@@ -4403,7 +4404,9 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     }
 
     bool unknown = false;
+#if QT_CONFIG(shortcut)
     bool visual = cursorMoveStyle() == Qt::VisualMoveStyle;
+#endif
 
     if (false) {
     }

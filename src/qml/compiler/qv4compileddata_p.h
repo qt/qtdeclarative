@@ -897,7 +897,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
 
-    void markObjects(QV4::ExecutionEngine *e);
+    void markObjects(MarkStack *markStack);
 
     void destroy() Q_DECL_OVERRIDE;
 

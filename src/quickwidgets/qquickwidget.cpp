@@ -76,10 +76,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_CONFIG(opengl)
-extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-#endif
-
 class QQuickWidgetRenderControl : public QQuickRenderControl
 {
 public:
@@ -157,6 +153,16 @@ void QQuickWidgetPrivate::invalidateRenderControl()
 #endif
 
     renderControl->invalidate();
+
+    // Many things can happen inside the above invalidate() call, including a
+    // change of current context. Restore if needed since some code will rely
+    // on the fact that this function makes and leaves the context current.
+#if QT_CONFIG(opengl)
+    if (!useSoftwareRenderer && context) {
+        if (QOpenGLContext::currentContext() != context)
+            context->makeCurrent(offscreenSurface);
+    }
+#endif
 }
 
 void QQuickWidgetPrivate::handleWindowChange()

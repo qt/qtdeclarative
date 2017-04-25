@@ -1,0 +1,3 @@
+# Blacklist for testing
+[shadersource-dynamic-sourceobject::test_endresult]
+linux

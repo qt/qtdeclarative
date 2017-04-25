@@ -82,7 +82,9 @@
 #include <private/qqmllocale_p.h>
 #include <private/qqmlbind_p.h>
 #include <private/qqmlconnections_p.h>
+#if QT_CONFIG(animation)
 #include <private/qqmltimer_p.h>
+#endif
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
@@ -218,7 +220,9 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlBind,8>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "Binding"); //Only available in >=2.8
     qmlRegisterType<QQmlConnections,1>(uri, versionMajor, (versionMinor < 3 ? 3 : versionMinor), "Connections"); //Only available in >=2.3
     qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
+#if QT_CONFIG(animation)
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
+#endif
     qmlRegisterType<QQmlInstantiator>(uri, versionMajor, (versionMinor < 1 ? 1 : versionMinor), "Instantiator"); //Only available in >=2.1
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
     qmlRegisterType<QQmlInstanceModel>();
@@ -709,9 +713,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
-    QObjectPrivate *p = QObjectPrivate::get(o);
-    if (p->declarativeData) {
-        QQmlData *d = static_cast<QQmlData*>(p->declarativeData);
+    if (QQmlData *d = QQmlData::get(o)) {
         if (d->ownContext && d->context) {
             d->context->destroy();
             d->context = 0;
@@ -881,13 +883,10 @@ void QQmlData::markAsDeleted(QObject *o)
 void QQmlData::setQueuedForDeletion(QObject *object)
 {
     if (object) {
-        if (QObjectPrivate *priv = QObjectPrivate::get(object)) {
-            if (!priv->wasDeleted && priv->declarativeData) {
-                QQmlData *ddata = QQmlData::get(object, false);
-                if (ddata->ownContext && ddata->context)
-                    ddata->context->emitDestruction();
-                ddata->isQueuedForDeletion = true;
-            }
+        if (QQmlData *ddata = QQmlData::get(object)) {
+            if (ddata->ownContext && ddata->context)
+                ddata->context->emitDestruction();
+            ddata->isQueuedForDeletion = true;
         }
     }
 }
@@ -1336,17 +1335,11 @@ QQmlContext *QQmlEngine::contextForObject(const QObject *object)
     if(!object)
         return 0;
 
-    QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
-
-    QQmlData *data =
-        static_cast<QQmlData *>(priv->declarativeData);
-
-    if (!data)
-        return 0;
-    else if (data->outerContext)
+    QQmlData *data = QQmlData::get(object);
+    if (data && data->outerContext)
         return data->outerContext->asQQmlContext();
-    else
-        return 0;
+
+    return 0;
 }
 
 /*!
@@ -1881,6 +1874,7 @@ void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
 QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
 {
     Q_ASSERT(priv);
+    Q_ASSERT(!priv->isDeletingChildren);
     priv->declarativeData = new QQmlData;
     return static_cast<QQmlData *>(priv->declarativeData);
 }

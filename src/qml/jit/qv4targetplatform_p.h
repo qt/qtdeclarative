@@ -405,7 +405,7 @@ public:
                 << RI(JSC::ARMRegisters::r9,  QStringLiteral("r9"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
 #endif
                 << RI(JSC::ARMRegisters::r10, QStringLiteral("r10"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
-#if CPU(ARM_THUMB2) && !defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
                 << RI(JSC::ARMRegisters::r11, QStringLiteral("r11"), RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
 #endif
                 << RI(JSC::ARMRegisters::d2,  QStringLiteral("d2"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)

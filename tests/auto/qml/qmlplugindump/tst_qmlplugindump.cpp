@@ -105,12 +105,12 @@ void tst_qmlplugindump::singleton()
     args << QLatin1String("tests.dumper.CompositeSingleton") << QLatin1String("1.0")
          << QLatin1String(".");
     dumper.start(qmlplugindumpPath, args);
-    dumper.waitForFinished();
+    QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
+    QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));
 
     const QString &result = dumper.readAllStandardOutput();
-    qDebug() << "result: " << result;
-    QVERIFY(result.contains(QLatin1String("exports: [\"Singleton 1.0\"]")));
-    QVERIFY(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")));
+    QVERIFY2(result.contains(QLatin1String("exports: [\"Singleton 1.0\"]")), qPrintable(result));
+    QVERIFY2(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")), qPrintable(result));
 }
 
 QTEST_MAIN(tst_qmlplugindump)

@@ -668,8 +668,11 @@ void QQuickParticleSystem::setPaused(bool arg) {
         if (m_animation && m_animation->state() != QAbstractAnimation::Stopped)
             m_paused ? m_animation->pause() : m_animation->resume();
         if (!m_paused) {
-            foreach (QQuickParticlePainter *p, m_painters)
-                p->update();
+            foreach (QQuickParticlePainter *p, m_painters) {
+                if (p) {
+                    p->update();
+                }
+            }
         }
         emit pausedChanged(arg);
     }
@@ -873,8 +876,11 @@ void QQuickParticleSystem::emittersChanged()
     if (particleCount > bySysIdx.size())//New datum requests haven't updated it
         bySysIdx.resize(particleCount);
 
-    foreach (QQuickParticleAffector *a, m_affectors)//Groups may have changed
-        a->m_updateIntSet = true;
+    foreach (QQuickParticleAffector *a, m_affectors) {//Groups may have changed
+        if (a) {
+            a->m_updateIntSet = true;
+        }
+    }
 
     foreach (QQuickParticlePainter *p, m_painters)
         loadPainter(p);

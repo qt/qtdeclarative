@@ -338,7 +338,7 @@ void Updater::visitNode(Node *n)
     case QSGNode::RenderNodeType:
         if (m_added)
             n->renderNodeElement()->root = m_roots.last();
-        // Fall through to visit children.
+        Q_FALLTHROUGH();    // to visit children
     default:
         SHADOWNODE_TRAVERSE(n) visitNode(child);
         break;

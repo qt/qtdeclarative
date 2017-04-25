@@ -140,6 +140,14 @@ QObject *QQuickAnimatorProxyJob::findAnimationContext(QQuickAbstractAnimation *a
 
 void QQuickAnimatorProxyJob::updateCurrentTime(int)
 {
+    if (m_internalState != State_Running)
+        return;
+
+    // A proxy which is being ticked should be associated with a window, (see
+    // setWindow() below). If we get here when there is no more controller we
+    // have a problem.
+    Q_ASSERT(m_controller);
+
     // We do a simple check here to see if the animator has run and stopped on
     // the render thread. isPendingStart() will perform a check against jobs
     // that have been scheduled for start, but that will not yet have entered
@@ -150,8 +158,7 @@ void QQuickAnimatorProxyJob::updateCurrentTime(int)
     // we might get the wrong value for this update,  but then we'll simply
     // pick it up on the next iterationm when the job is stopped and render
     // thread is no longer using it.
-    if (m_internalState == State_Running
-        && !m_controller->isPendingStart(m_job)
+    if (!m_controller->isPendingStart(m_job)
         && !m_job->isRunning()) {
         stop();
     }
@@ -167,9 +174,9 @@ void QQuickAnimatorProxyJob::updateState(QAbstractAnimationJob::State newState, 
         }
 
     } else if (newState == Stopped) {
-        syncBackCurrentValues();
         m_internalState = State_Stopped;
         if (m_controller) {
+            syncBackCurrentValues();
             m_controller->cancel(m_job);
         }
     }
@@ -193,6 +200,7 @@ void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
         if (m_job && m_controller)
             m_controller->cancel(m_job);
         m_controller = nullptr;
+        stop();
 
     } else if (!m_controller && m_job) {
         m_controller = QQuickWindowPrivate::get(window)->animationController;
@@ -313,8 +321,10 @@ void QQuickTransformAnimatorJob::preSync()
         m_helper = nullptr;
     }
 
-    if (!m_target)
+    if (!m_target) {
+        invalidate();
         return;
+    }
 
     if (!m_helper) {
         m_helper = qquick_transform_animatorjob_helper_store()->acquire(m_target);
@@ -332,27 +342,6 @@ void QQuickTransformAnimatorJob::preSync()
     }
 
     m_helper->sync();
-}
-
-void QQuickTransformAnimatorJob::postSync()
-{
-    Q_ASSERT((m_helper != nullptr) == (m_target != nullptr)); // If there is a target, there should also be a helper, ref: preSync
-    Q_ASSERT(!m_helper || m_helper->item == m_target); // If there is a helper, it should point to our target
-
-    if (!m_target || !m_helper) {
-        invalidate();
-        return;
-    }
-
-    QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
-#if QT_CONFIG(quick_shadereffect)
-    if (d->extra.isAllocated()
-            && d->extra->layer
-            && d->extra->layer->enabled()) {
-        d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
-    }
-#endif
-    m_helper->node = d->itemNode();
 }
 
 void QQuickTransformAnimatorJob::invalidate()

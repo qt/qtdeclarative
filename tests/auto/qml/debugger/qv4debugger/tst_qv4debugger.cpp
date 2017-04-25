@@ -315,8 +315,8 @@ private slots:
     void stepToEndOfScript_data() { redundancy_data(); }
     void stepToEndOfScript();
 
-    void lastLineOfLoop_data();
-    void lastLineOfLoop();
+    void lastLineOfConditional_data();
+    void lastLineOfConditional();
 private:
     QV4Debugger *debugger() const
     {
@@ -801,32 +801,60 @@ void tst_qv4debugger::stepToEndOfScript()
     QCOMPARE(state.lineNumber, -4); // A return instruction without proper line number.
 }
 
-void tst_qv4debugger::lastLineOfLoop_data()
+void tst_qv4debugger::lastLineOfConditional_data()
 {
-    QTest::addColumn<QString>("loopHead");
-    QTest::addColumn<QString>("loopTail");
+    QTest::addColumn<QString>("head");
+    QTest::addColumn<QString>("tail");
+    QTest::addColumn<int>("breakPoint");
+    QTest::addColumn<int>("lastLine");
 
-    QTest::newRow("for")       << "for (var i = 0; i < 10; ++i) {\n"   << "}\n";
-    QTest::newRow("for..in")   << "for (var i in [0, 1, 2, 3, 4]) {\n" << "}\n";
-    QTest::newRow("while")     << "while (ret < 10) {\n"               << "}\n";
-    QTest::newRow("do..while") << "do {\n"                             << "} while (ret < 10);\n";
+    QTest::newRow("for {block}")       << "for (var i = 0; i < 10; ++i) {\n"   << "}" << 4 << 7;
+    QTest::newRow("for..in {block}")   << "for (var i in [0, 1, 2, 3, 4]) {\n" << "}" << 4 << 7;
+    QTest::newRow("while {block}")     << "while (ret < 10) {\n"               << "}" << 4 << 7;
+    QTest::newRow("do..while {block}") << "do {\n"           << "} while (ret < 10);" << 4 << 7;
+
+    QTest::newRow("if true {block}")       << "if (true) {\n"  << "}"
+                                           << 4 << 7;
+    QTest::newRow("if false {block}")      << "if (false) {\n" << "}"
+                                           << 2 << 8;
+    QTest::newRow("if true else {block}")  << "if (true) {\n"  << "} else {\n    ret += 8;\n}"
+                                           << 4 << 7;
+    QTest::newRow("if false else {block}") << "if (false) {\n" << "} else {\n    ret += 8;\n}"
+                                           << 8 << 9;
+
+    QTest::newRow("for statement")       << "for (var i = 0; i < 10; ++i)\n"   << "" << 4 << 2;
+    QTest::newRow("for..in statement")   << "for (var i in [0, 1, 2, 3, 4])\n" << "" << 4 << 2;
+    QTest::newRow("while statement")     << "while (ret < 10)\n"               << "" << 4 << 2;
+    QTest::newRow("do..while statement") << "do\n"            << "while (ret < 10);" << 4 << 7;
+
+    // For two nested if statements without blocks, we need to map the jump from the inner to the
+    // outer one on the outer "if". There is just no better place.
+    QTest::newRow("if true statement")       << "if (true)\n"  << ""                    << 4 << 2;
+    QTest::newRow("if false statement")      << "if (false)\n" << ""                    << 2 << 8;
+
+    // Also two nested ifs without blocks.
+    QTest::newRow("if true else statement")  << "if (true)\n"  << "else\n    ret += 8;" << 4 << 2;
+    QTest::newRow("if false else statement") << "if (false)\n" << "else\n    ret += 8;" << 8 << 9;
 }
 
-void tst_qv4debugger::lastLineOfLoop()
+void tst_qv4debugger::lastLineOfConditional()
 {
-    QFETCH(QString, loopHead);
-    QFETCH(QString, loopTail);
+    QFETCH(QString, head);
+    QFETCH(QString, tail);
+    QFETCH(int, breakPoint);
+    QFETCH(int, lastLine);
 
     QString script =
-            "var ret = 0;\n"
-            + loopHead +
+            "var ret = 2;\n"
+            + head +
             "    if (ret == 2)\n"
             "        ret += 4;\n" // breakpoint, then step over
-            "    else \n"
+            "    else\n"
             "        ret += 1;\n"
-            + loopTail;
+            + tail + "\n" +
+            "ret -= 5;";
 
-    debugger()->addBreakPoint("trueBranch", 4);
+    debugger()->addBreakPoint("trueBranch", breakPoint);
     m_debuggerAgent->m_resumeSpeed = QV4Debugger::StepOver;
     evaluateJavaScript(script, "trueBranch");
     QVERIFY(m_debuggerAgent->m_wasPaused);
@@ -834,10 +862,10 @@ void tst_qv4debugger::lastLineOfLoop()
     QVERIFY(m_debuggerAgent->m_statesWhenPaused.count() > 1);
     QV4Debugger::ExecutionState firstState = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(firstState.fileName, QString("trueBranch"));
-    QCOMPARE(firstState.lineNumber, 4);
+    QCOMPARE(firstState.lineNumber, breakPoint);
     QV4Debugger::ExecutionState secondState = m_debuggerAgent->m_statesWhenPaused.at(1);
     QCOMPARE(secondState.fileName, QString("trueBranch"));
-    QCOMPARE(secondState.lineNumber, 7);
+    QCOMPARE(secondState.lineNumber, lastLine);
 }
 
 void tst_qv4debugger::redundancy_data()

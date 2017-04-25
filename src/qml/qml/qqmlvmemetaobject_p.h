@@ -203,7 +203,7 @@ public:
 
     void ensureQObjectWrapper();
 
-    void mark(QV4::ExecutionEngine *e);
+    void mark(QV4::MarkStack *markStack);
 
     void connectAlias(int aliasId);
 

@@ -2762,6 +2762,8 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
 #endif // !Q_OS_WIN32
 }
 
+#if QT_DEPRECATED_SINCE(5, 8)
+
 /*!
     Propagates an event \a e to a QQuickItem \a item on the window.
 
@@ -2813,6 +2815,8 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
 
     return false;
 }
+
+#endif
 
 void QQuickWindowPrivate::cleanupNodes()
 {
@@ -3526,6 +3530,7 @@ QImage QQuickWindow::grabWindow()
 
             bool alpha = format().alphaBufferSize() > 0 && color().alpha() < 255;
             QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), alpha, alpha);
+            image.setDevicePixelRatio(effectiveDevicePixelRatio());
             d->cleanupNodesOnShutdown();
             d->context->invalidate();
             context.doneCurrent();

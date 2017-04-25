@@ -1,0 +1,4 @@
+# Blacklist for testing
+[ListView::test_listInteractiveCurrentIndexEnforce]
+linux
+macos-10.12

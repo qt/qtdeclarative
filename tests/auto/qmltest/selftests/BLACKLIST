@@ -3,10 +3,6 @@
 *
 [SelfTests::test_blacklistWithData:test2]
 *
-[shadersource-dynamic-sourceobject::test_endresult]
-linux
+# QTBUG-53793: seems to be failing on Linux a little too often...
 [tst_grabImage::test_equals]
 linux
-[ListView::test_listInteractiveCurrentIndexEnforce]
-linux
-macos-10.12

@@ -889,7 +889,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod long QtQuick::Canvas::requestAnimationFrame(callback)
+    \qmlmethod int QtQuick::Canvas::requestAnimationFrame(callback)
 
     This function schedules callback to be invoked before composing the Qt Quick
     scene.
@@ -919,7 +919,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick::Canvas::cancelRequestAnimationFrame(long handle)
+    \qmlmethod QtQuick::Canvas::cancelRequestAnimationFrame(int handle)
 
     This function will cancel the animation callback referenced by \a handle.
 */
@@ -1104,14 +1104,17 @@ bool QQuickCanvasItem::isImageLoaded(const QUrl& url) const
 QImage QQuickCanvasItem::toImage(const QRectF& rect) const
 {
     Q_D(const QQuickCanvasItem);
-    if (d->context) {
-        if (rect.isEmpty())
-            return d->context->toImage(canvasWindow());
-        else
-            return d->context->toImage(rect);
-    }
 
-    return QImage();
+    if (!d->context)
+        return QImage();
+
+    const QRectF &rectSource = rect.isEmpty() ? canvasWindow() : rect;
+    const qreal dpr = window() ? window()->effectiveDevicePixelRatio() : qreal(1);
+    const QRectF rectScaled(rectSource.topLeft() * dpr, rectSource.size() * dpr);
+
+    QImage image = d->context->toImage(rectScaled);
+    image.setDevicePixelRatio(dpr);
+    return image;
 }
 
 static const char* mimeToType(const QString &mime)

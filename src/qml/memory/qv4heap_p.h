@@ -83,7 +83,7 @@ struct VTable
     uint type : 8;
     const char *className;
     void (*destroy)(Heap::Base *);
-    void (*markObjects)(Heap::Base *, ExecutionEngine *e);
+    void (*markObjects)(Heap::Base *, MarkStack *markStack);
     bool (*isEqualTo)(Managed *m, Managed *other);
 };
 
@@ -97,7 +97,7 @@ struct Q_QML_EXPORT Base {
     const VTable *vt;
 
     inline ReturnedValue asReturnedValue() const;
-    inline void mark(QV4::ExecutionEngine *engine);
+    inline void mark(QV4::MarkStack *markStack);
 
     void setVtable(const VTable *v) { vt = v; }
     const VTable *vtable() const { return vt; }
@@ -126,6 +126,8 @@ struct Q_QML_EXPORT Base {
         Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
         return Chunk::testBit(c->objectBitmap, h - c->realBase());
     }
+
+    inline void markChildren(MarkStack *markStack);
 
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }

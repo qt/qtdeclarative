@@ -10,7 +10,10 @@ isEmpty(TARGETPATH): error("Must set TARGETPATH (QML import name) for ahead-of-t
 !isEmpty(QT_TARGET_ARCH):QML_CACHEGEN_ARCH=$$QT_TARGET_ARCH
 else:QML_CACHEGEN_ARCH=$$QT_ARCH
 
-QML_CACHEGEN_ARGS=--target-architecture=$$QML_CACHEGEN_ARCH
+!isEmpty(QT_TARGET_BUILDABI):QML_CACHEGEN_ABI=$$QT_TARGET_BUILDABI
+else:QML_CACHEGEN_ABI=$$QT_BUILDABI
+
+QML_CACHEGEN_ARGS=--target-architecture=$$QML_CACHEGEN_ARCH --target-abi=$$QML_CACHEGEN_ABI
 
 !system($$QML_CACHEGEN_ARCH_CHECK $$QML_CACHEGEN_ARGS --check-if-supported) {
     message("QML cache generation requested but target architecture $$QML_CACHEGEN_ARCH is not supported.")

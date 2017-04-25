@@ -291,7 +291,7 @@ inline uint InternalClass::find(const String *string)
 
 struct InternalClassPool : public QQmlJS::MemoryPool
 {
-    void markObjects(ExecutionEngine *engine);
+    void markObjects(MarkStack *markStack);
 };
 
 }
