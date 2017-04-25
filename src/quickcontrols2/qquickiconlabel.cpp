@@ -96,6 +96,7 @@ bool QQuickIconLabelPrivate::createImage()
     image->setSource(icon->source());
     image->setSourceSize(QSize(icon->width(), icon->height()));
     image->setColor(icon->color());
+    QQmlEngine::setContextForObject(image, qmlContext(q));
     if (componentComplete)
         completeComponent(image);
     return true;

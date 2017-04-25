@@ -80,8 +80,16 @@ void QQuickIconImagePrivate::updateIcon()
 
     const qreal dpr = calculateDevicePixelRatio();
     const QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(icon, size * dpr, qCeil(dpr));
-    url = entry ? QUrl::fromLocalFile(entry->filename) : source;
-    isThemeIcon = entry != nullptr;
+
+    if (entry) {
+        QQmlContext *context = qmlContext(q);
+        const QUrl entryUrl = QUrl::fromLocalFile(entry->filename);
+        url = context ? context->resolvedUrl(entryUrl) : entryUrl;
+        isThemeIcon = true;
+    } else {
+        url = source;
+        isThemeIcon = false;
+    }
     q->load();
 
     updatingIcon = false;

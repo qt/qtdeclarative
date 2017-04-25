@@ -32,6 +32,7 @@
 #include <QtCore/qmath.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlfileselector.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitemgrabresult.h>
@@ -65,6 +66,7 @@ private slots:
     void svgNoSizes();
     void svgSourceBindingSourceSize();
     void color();
+    void fileSelectors();
 
 private:
     void setTheme();
@@ -450,6 +452,32 @@ void tst_qquickiconimage::changeSourceSize()
     QSize sourceSize = iconImage->sourceSize();
     sourceSize.setWidth(sourceSize.width() - 1);
     iconImage->setSourceSize(sourceSize);
+}
+
+
+void tst_qquickiconimage::fileSelectors()
+{
+    SKIP_IF_DPR_TOO_HIGH();
+
+    QQuickView view;
+    QQmlFileSelector* fileSelector = new QQmlFileSelector(view.engine());
+    fileSelector->setExtraSelectors(QStringList() << "testselector");
+    view.setSource(testFileUrl("fileSelectors.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
+    QVERIFY(iconImage);
+
+    QQuickItem *image = view.rootObject()->childItems().at(1);
+    QVERIFY(image);
+
+    QImage iconImageWindowGrab = grabItemToImage(iconImage);
+    QCOMPARE(iconImageWindowGrab, grabItemToImage(image));
+
+    QCOMPARE(iconImageWindowGrab.pixelColor(iconImageWindowGrab.width() / 2, iconImageWindowGrab.height() / 2), QColor(Qt::blue));
 }
 
 int main(int argc, char *argv[])
