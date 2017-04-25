@@ -57,6 +57,10 @@ QQmlApplicationEnginePrivate::~QQmlApplicationEnginePrivate()
 
 void QQmlApplicationEnginePrivate::cleanUp()
 {
+    Q_Q(QQmlApplicationEngine);
+    for (auto obj : qAsConst(objects))
+        obj->disconnect(q);
+
     qDeleteAll(objects);
 #if QT_CONFIG(translation)
     qDeleteAll(translators);
@@ -126,9 +130,12 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
         qWarning() << qPrintable(c->errorString());
         q->objectCreated(0, c->url());
         break;
-    case QQmlComponent::Ready:
-        objects << c->create();
+    case QQmlComponent::Ready: {
+        auto newObj = c->create();
+        objects << newObj;
+        QObject::connect(newObj, &QObject::destroyed, q, [&](QObject *obj) { objects.removeAll(obj); });
         q->objectCreated(objects.constLast(), c->url());
+        }
         break;
     case QQmlComponent::Loading:
     case QQmlComponent::Null:
