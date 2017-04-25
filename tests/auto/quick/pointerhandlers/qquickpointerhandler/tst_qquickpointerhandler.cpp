@@ -225,6 +225,8 @@ private slots:
 
     void touchEventDelivery();
     void mouseEventDelivery();
+    void touchReleaseOutside_data();
+    void touchReleaseOutside();
 
 protected:
     bool eventFilter(QObject *, QEvent *event)
@@ -514,6 +516,61 @@ void tst_PointerHandlers::mouseEventDelivery()
     QCOMPARE_EVENT(3, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointReleased, QQuickEventPoint::GrabExclusive);
     QCOMPARE_EVENT(4, Event::HandlerDestination, QEvent::None, Qt::TouchPointReleased, QQuickEventPoint::UngrabExclusive);
     eventItem1->eventList.clear();
+}
+
+void tst_PointerHandlers::touchReleaseOutside_data()
+{
+    QTest::addColumn<bool>("acceptPointer");
+    QTest::addColumn<bool>("grabPointer");
+    QTest::addColumn<int>("eventCount");
+    QTest::addColumn<int>("endIndexToTest");
+    QTest::addColumn<int>("endDestination");    // Event::Destination
+    QTest::addColumn<int>("endType");           // QEvent::Type
+    QTest::addColumn<int>("endState");          // Qt::TouchPointState
+    QTest::addColumn<int>("endGrabState");      // Qt::TouchPointState
+
+    QTest::newRow("reject and ignore") << false << false << 6 << 5 << (int)Event::TouchDestination
+        << (int)QEvent::TouchEnd << (int)Qt::TouchPointReleased << (int)NoGrab;
+    QTest::newRow("reject and grab") << false << true << 5 << 4 << (int)Event::HandlerDestination
+        << (int)QEvent::None << (int)Qt::TouchPointReleased << (int)QQuickEventPoint::UngrabExclusive;
+    QTest::newRow("accept and ignore") << true << false << 1 << 0 << (int)Event::HandlerDestination
+        << (int)QEvent::Pointer << (int)Qt::TouchPointPressed << (int)NoGrab;
+    QTest::newRow("accept and grab") << true << true << 5 << 4 << (int)Event::HandlerDestination
+        << (int)QEvent::None << (int)Qt::TouchPointReleased << (int)QQuickEventPoint::UngrabExclusive;
+}
+
+void tst_PointerHandlers::touchReleaseOutside()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "singleitem.qml");
+    QQuickView * window = windowPtr.data();
+
+    QFETCH(bool, acceptPointer);
+    QFETCH(bool, grabPointer);
+    QFETCH(int, eventCount);
+    QFETCH(int, endIndexToTest);
+    QFETCH(int, endDestination);
+    QFETCH(int, endType);
+    QFETCH(int, endState);
+    QFETCH(int, endGrabState);
+
+    EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
+    QVERIFY(eventItem1);
+
+    eventItem1->acceptTouch = true;
+    eventItem1->acceptPointer = acceptPointer;
+    eventItem1->grabPointer = grabPointer;
+
+    QPoint p1 = QPoint(20, 20);
+    QTest::touchEvent(window, touchDevice).press(0, p1, window);
+    QQuickTouchUtils::flush(window);
+    p1.setX(eventItem1->mapToScene(eventItem1->clipRect().bottomRight()).x() + 10);
+    QTest::touchEvent(window, touchDevice).move(0, p1, window);
+    QTest::touchEvent(window, touchDevice).release(0, p1, window);
+    QQuickTouchUtils::flush(window);
+    qCDebug(lcPointerTests) << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), eventCount);
+    QCOMPARE_EVENT(endIndexToTest, endDestination, endType, endState, endGrabState);
 }
 
 QTEST_MAIN(tst_PointerHandlers)
