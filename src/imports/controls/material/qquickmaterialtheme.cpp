@@ -110,14 +110,7 @@ QVariant QQuickMaterialTheme::themeHint(ThemeHint hint) const
 {
     switch (hint) {
     case QPlatformTheme::DialogButtonBoxLayout:
-        // https://material.io/guidelines/components/dialogs.html#dialogs-specs
-        // As per spec, affirmative actions are placed to the right, dismissive
-        // actions are placed directly to the left of affirmative actions.
-        // In the Android sources, there are additional type of actions -
-        // neutral, which are placed to the left.
-        // Rules for macOS seems to be the most suitable here and are also used
-        // in the Android QPA plugin.
-        return QVariant(QPlatformDialogHelper::MacLayout);
+        return QVariant(QPlatformDialogHelper::AndroidLayout);
     default:
         return QQuickProxyTheme::themeHint(hint);
     }
