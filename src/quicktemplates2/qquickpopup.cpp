@@ -1574,7 +1574,17 @@ bool QQuickPopup::hasActiveFocus() const
 /*!
     \qmlproperty bool QtQuick.Controls::Popup::modal
 
-    This property holds whether the popup is modal. The default value is \c false.
+    This property holds whether the popup is modal.
+
+    Modal popups often have a distinctive background dimming effect defined
+    in \l {ApplicationWindow::overlay}{overlay.modal}, and do not allow press
+    or release events through to items beneath them.
+
+    On desktop platforms, it is common for modal popups to be closed only when
+    the escape key is pressed. To achieve this behavior, set
+    \l closePolicy to \c Popup.CloseOnEscape.
+
+    The default value is \c false.
 */
 bool QQuickPopup::isModal() const
 {
