@@ -198,7 +198,11 @@ QQuickItem *QQuickPointerHandler::target() const
 
 void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
 {
-    if (wantsPointerEvent(event)) {
+    bool wants = wantsPointerEvent(event);
+    qCDebug(lcPointerHandlerDispatch) << metaObject()->className() << objectName()
+                                      << "on" << parentItem()->metaObject()->className() << parentItem()->objectName()
+                                      << (wants ? "WANTS" : "DECLINES") << event;
+    if (wants) {
         handlePointerEventImpl(event);
     } else {
         setActive(false);

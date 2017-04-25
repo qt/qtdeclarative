@@ -87,7 +87,6 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
 Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
-Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
 {
@@ -5103,12 +5102,10 @@ void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
 */
 bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoidExclusiveGrabber)
 {
-    Q_Q(QQuickItem);
     bool delivered = false;
     QVector<QQuickPointerHandler *> &eventDeliveryTargets = event->device()->eventDeliveryTargets();
     if (extra.isAllocated()) {
         for (QQuickPointerHandler *handler : extra->pointerHandlers) {
-            qCDebug(lcPointerHandlerDispatch) << "   delivering" << event << "to" << handler << "on" << q;
             if ((!avoidExclusiveGrabber || !event->hasExclusiveGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
                 handler->handlePointerEvent(event);
                 delivered = true;
