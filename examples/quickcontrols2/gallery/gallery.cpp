@@ -53,6 +53,7 @@
 #include <QQmlContext>
 #include <QSettings>
 #include <QQuickStyle>
+#include <QIcon>
 
 int main(int argc, char *argv[])
 {
@@ -61,6 +62,8 @@ int main(int argc, char *argv[])
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
+
+    QIcon::setThemeName("gallery");
 
     QSettings settings;
     QString style = QQuickStyle::name();
