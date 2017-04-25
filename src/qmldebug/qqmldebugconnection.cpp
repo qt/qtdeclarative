@@ -467,3 +467,5 @@ void QQmlDebugConnectionPrivate::createProtocol()
 QT_END_NAMESPACE
 
 #include <qqmldebugconnection.moc>
+
+#include "moc_qqmldebugconnection_p.cpp"

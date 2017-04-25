@@ -759,5 +759,6 @@ int QuickTestResult::exitCode()
 }
 
 #include "quicktestresult.moc"
+#include "moc_quicktestresult_p.cpp"
 
 QT_END_NAMESPACE

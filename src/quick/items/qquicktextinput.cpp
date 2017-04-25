@@ -4779,3 +4779,4 @@ void QQuickTextInput::resetBottomPadding()
 
 QT_END_NAMESPACE
 
+#include "moc_qquicktextinput_p.cpp"

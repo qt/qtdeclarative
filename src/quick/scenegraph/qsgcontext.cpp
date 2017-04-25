@@ -414,5 +414,6 @@ void QSGRenderContext::textureFactoryDestroyed(QObject *o)
 }
 
 #include "qsgcontext.moc"
+#include "moc_qsgcontext_p.cpp"
 
 QT_END_NAMESPACE

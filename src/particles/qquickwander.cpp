@@ -179,3 +179,5 @@ bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
     return true;
 }
 QT_END_NAMESPACE
+
+#include "moc_qquickwander_p.cpp"

@@ -1309,5 +1309,6 @@ void QSGThreadedRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 }
 
 #include "qsgthreadedrenderloop.moc"
+#include "moc_qsgthreadedrenderloop_p.cpp"
 
 QT_END_NAMESPACE

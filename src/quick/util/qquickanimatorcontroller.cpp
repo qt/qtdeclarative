@@ -219,3 +219,5 @@ void QQuickAnimatorController::cancel(const QSharedPointer<QAbstractAnimationJob
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimatorcontroller_p.cpp"

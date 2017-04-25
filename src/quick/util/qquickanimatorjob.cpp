@@ -702,3 +702,5 @@ void QQuickUniformAnimatorJob::writeBack()
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimatorjob_p.cpp"

@@ -397,3 +397,5 @@ QQuickFontLoader::Status QQuickFontLoader::status() const
 QT_END_NAMESPACE
 
 #include <qquickfontloader.moc>
+
+#include "moc_qquickfontloader_p.cpp"

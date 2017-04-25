@@ -501,5 +501,6 @@ void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)
 #endif
 
 #include "qsgrenderloop.moc"
+#include "moc_qsgrenderloop_p.cpp"
 
 QT_END_NAMESPACE

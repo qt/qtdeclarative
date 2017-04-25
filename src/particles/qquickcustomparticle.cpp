@@ -460,3 +460,5 @@ void QQuickCustomParticle::itemChange(ItemChange change, const ItemChangeData &v
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcustomparticle_p.cpp"

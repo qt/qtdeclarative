@@ -314,3 +314,5 @@ QSGAbstractRenderer::ClearMode QSGAbstractRenderer::clearMode() const
  */
 
 QT_END_NAMESPACE
+
+#include "moc_qsgabstractrenderer.cpp"

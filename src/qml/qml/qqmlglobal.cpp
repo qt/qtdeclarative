@@ -450,3 +450,5 @@ void QQmlApplication::setDomain(const QString &arg)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlglobal_p.cpp"

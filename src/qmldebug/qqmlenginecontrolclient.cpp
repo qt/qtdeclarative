@@ -151,3 +151,5 @@ void QQmlEngineControlClientPrivate::sendCommand(
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlenginecontrolclient_p.cpp"

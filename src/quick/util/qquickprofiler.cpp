@@ -79,6 +79,7 @@ public:
 };
 
 #include "qquickprofiler.moc"
+#include "moc_qquickprofiler_p.cpp"
 
 QQuickProfiler::QQuickProfiler(QObject *parent) : QObject(parent)
 {

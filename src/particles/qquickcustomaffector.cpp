@@ -238,3 +238,5 @@ void QQuickCustomAffector::affectProperties(const QList<QQuickParticleData*> par
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcustomaffector_p.cpp"

@@ -343,3 +343,5 @@ void SignalTransitionParser::applyBindings(QObject *object, QV4::CompiledData::C
 
     \sa signal
 */
+
+#include "moc_signaltransition.cpp"

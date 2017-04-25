@@ -449,3 +449,5 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscreen_p.cpp"

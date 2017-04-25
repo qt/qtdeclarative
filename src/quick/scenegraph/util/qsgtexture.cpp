@@ -902,3 +902,6 @@ void QSGPlainTexture::bind()
 
 
 QT_END_NAMESPACE
+
+#include "moc_qsgtexture.cpp"
+#include "moc_qsgtexture_p.cpp"

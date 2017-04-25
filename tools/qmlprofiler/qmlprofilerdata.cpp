@@ -683,3 +683,4 @@ void QmlProfilerData::setState(QmlProfilerData::State state)
     return;
 }
 
+#include "moc_qmlprofilerdata.cpp"

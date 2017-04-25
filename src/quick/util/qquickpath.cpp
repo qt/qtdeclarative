@@ -1886,3 +1886,5 @@ void QQuickPathPercent::setValue(qreal value)
     }
 }
 QT_END_NAMESPACE
+
+#include "moc_qquickpath_p.cpp"

@@ -63,3 +63,5 @@ QPointF QQuickDirection::sample(const QPointF &from)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdirection_p.cpp"

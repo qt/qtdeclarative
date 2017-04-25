@@ -285,3 +285,5 @@ void QQuickSystemPalette::setColorGroup(QQuickSystemPalette::ColorGroup colorGro
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicksystempalette_p.cpp"

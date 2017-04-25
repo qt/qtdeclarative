@@ -942,3 +942,5 @@ QQuickViewTransitionAttached *QQuickViewTransitionAttached::qmlAttachedPropertie
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemviewtransition_p.cpp"

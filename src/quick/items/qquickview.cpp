@@ -615,3 +615,5 @@ void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickview.cpp"

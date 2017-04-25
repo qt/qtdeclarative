@@ -258,3 +258,5 @@ void QQuickBehavior::componentFinalized()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickbehavior_p.cpp"

@@ -397,3 +397,5 @@ void QQuickImageBase::setAutoTransform(bool transform)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimagebase_p.cpp"

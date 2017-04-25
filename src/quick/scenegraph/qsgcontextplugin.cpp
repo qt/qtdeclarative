@@ -233,3 +233,5 @@ void QSGContext::setBackend(const QString &backend)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgcontextplugin_p.cpp"

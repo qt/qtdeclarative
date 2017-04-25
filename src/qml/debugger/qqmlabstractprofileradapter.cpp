@@ -179,3 +179,5 @@ void QQmlAbstractProfilerAdapter::stopProfiling() {
  */
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlabstractprofileradapter_p.cpp"

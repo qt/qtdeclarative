@@ -3346,3 +3346,5 @@ QV4::ReturnedValue QQmlDelegateModelEngineData::array(QV8Engine *engine, const Q
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldelegatemodel_p.cpp"

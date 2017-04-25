@@ -1429,3 +1429,5 @@ QSGNode *QQuickMouseArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmousearea_p.cpp"

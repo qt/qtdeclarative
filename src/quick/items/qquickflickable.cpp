@@ -2721,3 +2721,5 @@ qreal QQuickFlickable::verticalOvershoot() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickflickable_p.cpp"

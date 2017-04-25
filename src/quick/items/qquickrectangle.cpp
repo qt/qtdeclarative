@@ -511,3 +511,5 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickrectangle_p.cpp"

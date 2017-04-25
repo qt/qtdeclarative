@@ -2605,3 +2605,5 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qqmllistmodel_p.cpp"

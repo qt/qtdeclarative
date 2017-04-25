@@ -110,3 +110,5 @@ void TimeoutTransition::componentComplete()
 
     \brief The timeout interval in milliseconds.
 */
+
+#include "moc_timeouttransition.cpp"

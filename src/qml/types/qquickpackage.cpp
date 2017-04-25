@@ -194,3 +194,5 @@ QQuickPackageAttached *QQuickPackage::qmlAttachedProperties(QObject *o)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpackage_p.cpp"

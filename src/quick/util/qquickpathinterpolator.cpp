@@ -169,3 +169,5 @@ void QQuickPathInterpolator::_q_pathUpdated()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpathinterpolator_p.cpp"

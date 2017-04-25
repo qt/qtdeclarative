@@ -491,3 +491,5 @@ void QQuickAnimatedImage::componentComplete()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimatedimage_p.cpp"

@@ -169,6 +169,7 @@ private:
 };
 
 #include "qquickwindow.moc"
+#include "moc_qquickwindow_p.cpp"
 
 
 #if QT_CONFIG(accessibility)

@@ -240,3 +240,6 @@ void QQuickTextDocumentWithImageResources::setText(const QString &text)
 QSet<QUrl> QQuickTextDocumentWithImageResources::errors;
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktextdocument.cpp"
+#include "moc_qquicktextdocument_p.cpp"

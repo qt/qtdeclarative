@@ -253,3 +253,4 @@ bool QQmlListModelWorkerAgent::event(QEvent *e)
 
 QT_END_NAMESPACE
 
+#include "moc_qqmllistmodelworkeragent_p.cpp"

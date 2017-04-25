@@ -3056,3 +3056,5 @@ QJSValue QQuickText::fontInfo() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktext_p.cpp"

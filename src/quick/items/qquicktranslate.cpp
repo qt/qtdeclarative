@@ -530,3 +530,5 @@ void QQuickMatrix4x4::applyTo(QMatrix4x4 *matrix) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktranslate_p.cpp"

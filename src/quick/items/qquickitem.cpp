@@ -8407,3 +8407,5 @@ quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
 QT_END_NAMESPACE
 
 #include <moc_qquickitem.cpp>
+
+#include "moc_qquickitem_p.cpp"

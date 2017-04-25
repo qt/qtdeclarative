@@ -597,3 +597,5 @@ QAbstractAnimationJob* QQuickSpringAnimation::transition(QQuickStateActions &act
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickspringanimation_p.cpp"

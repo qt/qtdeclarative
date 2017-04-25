@@ -1092,3 +1092,5 @@ int QQuickParticleSystem::systemSync(QQuickParticlePainter* p)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickparticlesystem_p.cpp"

@@ -3221,3 +3221,5 @@ void Renderer::visualize()
 QT_END_NAMESPACE
 
 }
+
+#include "moc_qsgbatchrenderer_p.cpp"

@@ -819,3 +819,5 @@ void QQmlEngineDebugServiceImpl::setStatesDelegate(QQmlDebugStatesDelegate *dele
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlenginedebugservice.cpp"

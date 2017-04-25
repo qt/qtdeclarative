@@ -87,6 +87,7 @@ public:
 };
 
 #include "qquickimage.moc"
+#include "moc_qquickimage_p.cpp"
 
 QQuickImagePrivate::QQuickImagePrivate()
     : fillMode(QQuickImage::Stretch)

@@ -1252,3 +1252,5 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcanvasitem_p.cpp"

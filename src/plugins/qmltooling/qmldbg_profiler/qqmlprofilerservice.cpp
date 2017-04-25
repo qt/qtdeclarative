@@ -468,3 +468,5 @@ void QQmlProfilerServiceImpl::flush()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlprofilerservice.cpp"

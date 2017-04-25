@@ -270,3 +270,5 @@ void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4include_p.cpp"

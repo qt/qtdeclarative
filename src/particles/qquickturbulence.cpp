@@ -203,3 +203,5 @@ void QQuickTurbulenceAffector::affectSystem(qreal dt)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickturbulence_p.cpp"

@@ -1006,3 +1006,5 @@ QSGNode *QQuickMultiPointTouchArea::updatePaintNode(QSGNode *oldNode, UpdatePain
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmultipointtoucharea_p.cpp"

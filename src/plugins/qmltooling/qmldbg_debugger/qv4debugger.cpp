@@ -332,3 +332,5 @@ void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4debugger.cpp"

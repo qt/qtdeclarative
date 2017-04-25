@@ -86,3 +86,5 @@ bool QQuickEllipseExtruder::contains(const QRectF &bounds, const QPointF &point)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickellipseextruder_p.cpp"

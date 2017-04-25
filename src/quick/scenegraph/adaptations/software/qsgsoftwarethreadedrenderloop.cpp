@@ -1000,5 +1000,6 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
 }
 
 #include "qsgsoftwarethreadedrenderloop.moc"
+#include "moc_qsgsoftwarethreadedrenderloop_p.cpp"
 
 QT_END_NAMESPACE
