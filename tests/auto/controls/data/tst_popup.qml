@@ -936,8 +936,13 @@ TestCase {
         var control = createTemporaryObject(popupControl, testCase)
         verify(control)
 
+        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        verify(openedSpy.valid)
+
         control.open()
-        waitForRendering(control.contentItem)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
+        verify(control.visible)
 
         // implicit size of the content
         control.contentItem.implicitWidth = 10
