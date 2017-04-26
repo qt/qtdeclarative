@@ -74,7 +74,9 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qabstractitemmodel.h>
 
+#include <vector>
 QT_BEGIN_NAMESPACE
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
@@ -1076,12 +1078,21 @@ private:
 
     inline void cleanup();
 
+    template <class T, class M>
+    void fromContainerValue(const QV4::Object *object, int type, M CallArgument::*member, bool &queryEngine);
+
     union {
         float floatValue;
         double doubleValue;
         quint32 intValue;
         bool boolValue;
         QObject *qobjectPtr;
+        std::vector<int> *stdVectorIntPtr;
+        std::vector<qreal> *stdVectorRealPtr;
+        std::vector<bool> *stdVectorBoolPtr;
+        std::vector<QString> *stdVectorQStringPtr;
+        std::vector<QUrl> *stdVectorQUrlPtr;
+        std::vector<QModelIndex> *stdVectorQModelIndexPtr;
 
         char allocData[MaxSizeOf8<QVariant,
                                 QString,
@@ -1511,6 +1522,18 @@ void *CallArgument::dataPtr()
 {
     if (type == -1)
         return qvariantPtr->data();
+    else if (type == qMetaTypeId<std::vector<int>>())
+        return stdVectorIntPtr;
+    else if (type == qMetaTypeId<std::vector<qreal>>())
+        return stdVectorRealPtr;
+    else if (type == qMetaTypeId<std::vector<bool>>())
+        return stdVectorBoolPtr;
+    else if (type == qMetaTypeId<std::vector<QString>>())
+        return stdVectorQStringPtr;
+    else if (type == qMetaTypeId<std::vector<QUrl>>())
+        return stdVectorQUrlPtr;
+    else if (type == qMetaTypeId<std::vector<QModelIndex>>())
+        return stdVectorQModelIndexPtr;
     else if (type != 0)
         return (void *)&allocData;
     return 0;
@@ -1558,6 +1581,19 @@ void CallArgument::initAsType(int callType)
         type = -1;
         qvariantPtr = new (&allocData) QVariant(callType, (void *)0);
     }
+}
+
+template <class T, class M>
+void CallArgument::fromContainerValue(const QV4::Object *object, int callType, M CallArgument::*member, bool &queryEngine)
+{
+  if (object && object->isListType()) {
+    T* ptr = static_cast<T*>(QV4::SequencePrototype::getRawContainerPtr(object, callType));
+    if (ptr) {
+      (this->*member) = ptr;
+      type = callType;
+      queryEngine = false;
+    }
+  }
 }
 
 void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const QV4::Value &value)
@@ -1641,6 +1677,33 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         type = callType;
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
+    } else if (callType == qMetaTypeId<std::vector<int>>()
+               || callType == qMetaTypeId<std::vector<qreal>>()
+               || callType == qMetaTypeId<std::vector<bool>>()
+               || callType == qMetaTypeId<std::vector<QString>>()
+               || callType == qMetaTypeId<std::vector<QUrl>>()
+               || callType == qMetaTypeId<std::vector<QModelIndex>>()) {
+        queryEngine = true;
+        const QV4::Object* object = value.as<Object>();
+        if (callType == qMetaTypeId<std::vector<int>>()) {
+            stdVectorIntPtr = nullptr;
+            fromContainerValue<std::vector<int>>(object, callType, &CallArgument::stdVectorIntPtr, queryEngine);
+        } else if (callType == qMetaTypeId<std::vector<qreal>>()) {
+            stdVectorRealPtr = nullptr;
+            fromContainerValue<std::vector<qreal>>(object, callType, &CallArgument::stdVectorRealPtr, queryEngine);
+        } else if (callType == qMetaTypeId<std::vector<bool>>()) {
+            stdVectorBoolPtr = nullptr;
+            fromContainerValue<std::vector<bool>>(object, callType, &CallArgument::stdVectorBoolPtr, queryEngine);
+        } else if (callType == qMetaTypeId<std::vector<QString>>()) {
+            stdVectorQStringPtr = nullptr;
+            fromContainerValue<std::vector<QString>>(object, callType, &CallArgument::stdVectorQStringPtr, queryEngine);
+        } else if (callType == qMetaTypeId<std::vector<QUrl>>()) {
+            stdVectorQUrlPtr = nullptr;
+            fromContainerValue<std::vector<QUrl>>(object, callType, &CallArgument::stdVectorQUrlPtr, queryEngine);
+        } else if (callType == qMetaTypeId<std::vector<QModelIndex>>()) {
+            stdVectorQModelIndexPtr = nullptr;
+            fromContainerValue<std::vector<QModelIndex>>(object, callType, &CallArgument::stdVectorQModelIndexPtr, queryEngine);
+        }
     } else {
         queryEngine = true;
     }
