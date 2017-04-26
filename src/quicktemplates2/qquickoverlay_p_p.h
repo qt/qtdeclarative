@@ -70,9 +70,9 @@ public:
         return overlay->d_func();
     }
 
-    void handlePress(QEvent *event);
-    void handleMove(QEvent *event);
-    void handleRelease(QEvent *event);
+    bool handlePress(QEvent *event);
+    bool handleMove(QEvent *event);
+    bool handleRelease(QEvent *event);
 
     void addPopup(QQuickPopup *popup);
     void removePopup(QQuickPopup *popup);

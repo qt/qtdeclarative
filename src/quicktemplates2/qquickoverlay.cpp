@@ -181,7 +181,7 @@ QQuickOverlayPrivate::QQuickOverlayPrivate()
 {
 }
 
-void QQuickOverlayPrivate::handlePress(QEvent *event)
+bool QQuickOverlayPrivate::handlePress(QEvent *event)
 {
     Q_Q(QQuickOverlay);
     emit q->pressed();
@@ -195,7 +195,7 @@ void QQuickOverlayPrivate::handlePress(QEvent *event)
             QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
             if (p->startDrag(event)) {
                 setMouseGrabberPopup(drawer);
-                return;
+                return true;
             }
         }
     }
@@ -207,36 +207,41 @@ void QQuickOverlayPrivate::handlePress(QEvent *event)
         for (QQuickPopup *popup : popups) {
             if (popup->overlayEvent(q, event)) {
                 setMouseGrabberPopup(popup);
-                return;
+                return true;
             }
         }
     }
 
     event->ignore();
+    return false;
 }
 
-void QQuickOverlayPrivate::handleMove(QEvent *event)
+bool QQuickOverlayPrivate::handleMove(QEvent *event)
 {
     Q_Q(QQuickOverlay);
     if (mouseGrabberPopup)
-        mouseGrabberPopup->overlayEvent(q, event);
+        return mouseGrabberPopup->overlayEvent(q, event);
+    return false;
 }
 
-void QQuickOverlayPrivate::handleRelease(QEvent *event)
+bool QQuickOverlayPrivate::handleRelease(QEvent *event)
 {
     Q_Q(QQuickOverlay);
     emit q->released();
 
     if (mouseGrabberPopup) {
-        mouseGrabberPopup->overlayEvent(q, event);
-        setMouseGrabberPopup(nullptr);
+        if (mouseGrabberPopup->overlayEvent(q, event)) {
+            setMouseGrabberPopup(nullptr);
+            return true;
+        }
     } else {
         const auto popups = stackingOrderPopups();
         for (QQuickPopup *popup : popups) {
             if (popup->overlayEvent(q, event))
-                break;
+                return true;
         }
     }
+    return false;
 }
 
 void QQuickOverlayPrivate::addPopup(QQuickPopup *popup)
