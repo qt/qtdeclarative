@@ -330,36 +330,42 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
 
 static const qreal openCloseVelocityThreshold = 300;
 
-void QQuickDrawerPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
-    QQuickPopupPrivate::handlePress(point, timestamp);
+    if (!QQuickPopupPrivate::handlePress(item, point, timestamp))
+        return false;
 
     offset = 0;
     pressPoint = point;
     velocityCalculator.startMeasuring(point, timestamp);
+
+    return true;
 }
 
-void QQuickDrawerPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDrawer);
-    QQuickPopupPrivate::handleMove(point, timestamp);
+    if (!QQuickPopupPrivate::handleMove(item, point, timestamp))
+        return false;
 
     // limit/reset the offset to the edge of the drawer when pushed from the outside
     if (qFuzzyCompare(position, 1.0) && !popupItem->contains(popupItem->mapFromScene(point)))
         offset = 0;
 
-    if (popupItem->keepMouseGrab() || popupItem->keepTouchGrab())
+    bool isGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
+    if (isGrabbed)
         q->setPosition(positionAt(point) - offset);
+
+    return isGrabbed;
 }
 
-void QQuickDrawerPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     pressPoint = QPointF();
 
     if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab()) {
         velocityCalculator.reset();
-        QQuickPopupPrivate::handleRelease(point, timestamp);
-        return;
+        return QQuickPopupPrivate::handleRelease(item, point, timestamp);
     }
 
     velocityCalculator.stopMeasuring(point, timestamp);
@@ -414,8 +420,11 @@ void QQuickDrawerPrivate::handleRelease(const QPointF &point, ulong timestamp)
         }
     }
 
+    bool wasGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
     popupItem->setKeepMouseGrab(false);
     popupItem->setKeepTouchGrab(false);
+
+    return wasGrabbed;
 }
 
 void QQuickDrawerPrivate::handleUngrab()
@@ -610,8 +619,7 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
         return d->grabMouse(child, static_cast<QMouseEvent *>(event));
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
-        d->handleMouseEvent(child, static_cast<QMouseEvent *>(event));
-        break;
+        return d->handleMouseEvent(child, static_cast<QMouseEvent *>(event));
     default:
         break;
     }

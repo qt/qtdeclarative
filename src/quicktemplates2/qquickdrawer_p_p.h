@@ -73,9 +73,9 @@ public:
     bool startDrag(QEvent *event);
     bool grabMouse(QQuickItem *item, QMouseEvent *event);
 
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp) override;
+    bool handleMove(QQuickItem* item, const QPointF &point, ulong timestamp) override;
+    bool handleRelease(QQuickItem* item, const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     bool prepareEnterTransition() override;
