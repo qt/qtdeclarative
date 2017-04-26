@@ -1,13 +1,20 @@
 import QtQuick 2.8
 import Qt.test 1.0
 
-Rectangle {
+Item {
     id: root
+    objectName: "root Item"
     width: 320
     height: 480
-    color: "green"
+
+    Rectangle {
+        objectName: "eventItem's bounds"
+        anchors.fill: eventItem
+        color: "lightsteelblue"
+    }
 
     EventItem {
+        id: eventItem
         objectName: "eventItem1"
         x: 5
         y: 5
@@ -15,8 +22,7 @@ Rectangle {
         width: 30
 
         EventHandler {
-
+            objectName: "eventHandler"
         }
     }
 }
-
