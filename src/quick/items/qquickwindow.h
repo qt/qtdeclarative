@@ -162,6 +162,7 @@ public:
 
     static void setSceneGraphBackend(QSGRendererInterface::GraphicsApi api);
     static void setSceneGraphBackend(const QString &backend);
+    static QString sceneGraphBackend();
 
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;

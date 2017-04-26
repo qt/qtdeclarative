@@ -4564,6 +4564,20 @@ void QQuickWindow::setSceneGraphBackend(const QString &backend)
 }
 
 /*!
+    Returns the requested Qt Quick scenegraph \a backend.
+
+    \note The return value of this function may still be outdated by
+    subsequent calls to setSceneGraphBackend() until the first QQuickWindow in the
+    application has been constructed.
+
+    \since 5.9
+ */
+QString QQuickWindow::sceneGraphBackend()
+{
+    return QSGContext::backend();
+}
+
+/*!
     Creates a simple rectangle node. When the scenegraph is not initialized, the return value is null.
 
     This is cross-backend alternative to constructing a QSGSimpleRectNode directly.
