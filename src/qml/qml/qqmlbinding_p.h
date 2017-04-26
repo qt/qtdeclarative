@@ -102,6 +102,15 @@ public:
     QString expressionIdentifier() const override;
     void expressionChanged() override;
 
+    /**
+     * This method returns a snapshot of the currently tracked dependencies of
+     * this binding. The dependencies can change upon reevaluation. This method is
+     * used in GammaRay to visualize binding hierarchies.
+     *
+     * Call this method from the UI thread.
+     */
+    QVector<QQmlProperty> dependencies() const;
+
 protected:
     virtual void doUpdate(const DeleteWatcher &watcher,
                           QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) = 0;

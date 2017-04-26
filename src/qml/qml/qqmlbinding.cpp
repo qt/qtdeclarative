@@ -54,6 +54,7 @@
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
+#include <QVector>
 
 QT_BEGIN_NAMESPACE
 
@@ -577,6 +578,37 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
         valueTypeData->setPropType(vtProp.userType());
         valueTypeData->setCoreIndex(m_targetIndex.valueTypeIndex());
     }
+}
+
+QVector<QQmlProperty> QQmlBinding::dependencies() const
+{
+    QVector<QQmlProperty> dependencies;
+    if (!m_target.data())
+        return dependencies;
+
+    for (const auto &guardList : { permanentGuards, activeGuards }) {
+        for (QQmlJavaScriptExpressionGuard *guard = guardList.first(); guard; guard = guardList.next(guard)) {
+            if (guard->signalIndex() == -1) // guard's sender is a QQmlNotifier, not a QObject*.
+                continue;
+
+            QObject *senderObject = guard->senderAsObject();
+            if (!senderObject)
+                continue;
+
+            const QMetaObject *senderMeta = senderObject->metaObject();
+            if (!senderMeta)
+                continue;
+
+            for (int i = 0; i < senderMeta->propertyCount(); i++) {
+                QMetaProperty property = senderMeta->property(i);
+                if (property.notifySignalIndex() == QMetaObjectPrivate::signal(senderMeta, guard->signalIndex()).methodIndex()) {
+                    dependencies.push_back(QQmlProperty(senderObject, QString::fromUtf8(senderObject->metaObject()->property(i).name())));
+                }
+            }
+        }
+    }
+
+    return dependencies;
 }
 
 class QObjectPointerBinding: public QQmlNonbindingBinding

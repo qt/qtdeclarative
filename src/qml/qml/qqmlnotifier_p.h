@@ -109,6 +109,9 @@ public:
 
     inline int signalIndex() const { return sourceSignal; }
 
+    inline QObject *senderAsObject() const;
+    inline QQmlNotifier *senderAsNotifier() const;
+
 private:
     friend class QQmlData;
     friend class QQmlNotifier;
@@ -117,8 +120,6 @@ private:
     // endpoint is connected to.  While the endpoint is notifying, the
     // senderPtr points to another qintptr that contains this value.
     qintptr senderPtr;
-    inline QObject *senderAsObject() const;
-    inline QQmlNotifier *senderAsNotifier() const;
 
     Callback callback:4;
     int needsConnectNotify:1;
