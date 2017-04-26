@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QtCore/QByteArray>
+#include <QtCore/QString>
 #include <QtGui/QSurfaceFormat>
 
 // Duct Tape tokenizer for the purpose of parsing and rewriting
