@@ -201,10 +201,15 @@ void QQuickOverlayPrivate::handlePress(QEvent *event)
     }
 
     if (!mouseGrabberPopup) {
-        // allow non-modal popups to close themselves
+        // allow non-modal popups to close themselves,
+        // and non-dimming modal popups to block the event
         const auto popups = stackingOrderPopups();
-        for (QQuickPopup *popup : popups)
-            popup->overlayEvent(q, event);
+        for (QQuickPopup *popup : popups) {
+            if (popup->overlayEvent(q, event)) {
+                setMouseGrabberPopup(popup);
+                return;
+            }
+        }
     }
 
     event->ignore();
