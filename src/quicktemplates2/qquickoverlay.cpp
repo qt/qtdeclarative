@@ -181,24 +181,30 @@ QQuickOverlayPrivate::QQuickOverlayPrivate()
 {
 }
 
+bool QQuickOverlayPrivate::startDrag(QEvent *event)
+{
+    if (allDrawers.isEmpty())
+        return false;
+
+    const QVector<QQuickDrawer *> drawers = stackingOrderDrawers();
+    for (QQuickDrawer *drawer : drawers) {
+        QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
+        if (p->startDrag(event)) {
+            setMouseGrabberPopup(drawer);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool QQuickOverlayPrivate::handlePress(QEvent *event)
 {
     Q_Q(QQuickOverlay);
     emit q->pressed();
 
-    if (!allDrawers.isEmpty()) {
-        // the overlay background was pressed, so there are no modal popups open.
-        // test if the press point lands on any drawer's drag margin
-
-        const QVector<QQuickDrawer *> drawers = stackingOrderDrawers();
-        for (QQuickDrawer *drawer : drawers) {
-            QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
-            if (p->startDrag(event)) {
-                setMouseGrabberPopup(drawer);
-                return true;
-            }
-        }
-    }
+    if (startDrag(event))
+        return true;
 
     if (!mouseGrabberPopup) {
         // allow non-modal popups to close themselves,

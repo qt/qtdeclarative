@@ -70,6 +70,7 @@ public:
         return overlay->d_func();
     }
 
+    bool startDrag(QEvent *event);
     bool handlePress(QEvent *event);
     bool handleMove(QEvent *event);
     bool handleRelease(QEvent *event);
