@@ -71,9 +71,12 @@ public:
     }
 
     bool startDrag(QEvent *event);
-    bool handlePress(QEvent *event);
-    bool handleMove(QEvent *event);
-    bool handleRelease(QEvent *event);
+    bool handlePress(QQuickItem *source, QEvent *event, QQuickPopup *target);
+    bool handleMove(QQuickItem *source, QEvent *event, QQuickPopup *target);
+    bool handleRelease(QQuickItem *source, QEvent *event, QQuickPopup *target);
+
+    bool handleMouseEvent(QQuickItem *source, QMouseEvent *event, QQuickPopup *target = nullptr);
+    bool handleTouchEvent(QQuickItem *source, QTouchEvent *event, QQuickPopup *target = nullptr);
 
     void addPopup(QQuickPopup *popup);
     void removePopup(QQuickPopup *popup);
