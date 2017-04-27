@@ -96,6 +96,54 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \section2 Managing the Current Index
+
+    When using multiple containers, such as \l TabBar and \l SwipeView, together,
+    their \l currentIndex properties can be bound to each other to keep them in
+    sync. When the user interacts with either container, its current index changes
+    automatically propagate to the other container.
+
+    Notice, however, that assigning a \c currentIndex value in JavaScript removes
+    the respective binding. In order to retain the bindings, use the following
+    methods to alter the current index:
+
+    \list
+        \li \l incrementCurrentIndex()
+        \li \l decrementCurrentIndex()
+        \li \l setCurrentIndex(int index)
+    \endlist
+
+    \code
+    TabBar {
+        id: tabBar
+        currentIndex: swipeView.currentIndex
+    }
+
+    SwipeView {
+        id: swipeView
+        currentIndex: tabBar.currentIndex
+    }
+
+    Button {
+        text: qsTr("Home")
+        onClicked: swipeView.setCurrentIndex(0)
+        enabled: swipeView.currentIndex != 0
+    }
+
+    Button {
+        text: qsTr("Previous")
+        onClicked: swipeView.decrementCurrentIndex()
+        enabled: swipeView.currentIndex > 0
+    }
+
+    Button {
+        text: qsTr("Next")
+        onClicked: swipeView.incrementCurrentIndex()
+        enabled: swipeView.currentIndex < swipeView.count - 1
+    }
+    \endcode
+
+
     \section2 Implementing Containers
 
     Container does not provide any default visualization. It is used to implement
@@ -551,7 +599,7 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 
     This property holds the index of the current item.
 
-    \sa currentItem, incrementCurrentIndex(), decrementCurrentIndex()
+    \sa currentItem, {Managing the Current Index}
 */
 int QQuickContainer::currentIndex() const
 {
@@ -559,6 +607,16 @@ int QQuickContainer::currentIndex() const
     return d->currentIndex;
 }
 
+/*!
+    \qmlmethod void QtQuick.Controls::Container::setCurrentIndex(int index)
+
+    Sets the current index of the container.
+
+    This method can be called to set a specific current index without breaking
+    existing \c currentIndex bindings.
+
+    \sa currentIndex, {Managing the Current Index}
+*/
 void QQuickContainer::setCurrentIndex(int index)
 {
     Q_D(QQuickContainer);
@@ -576,7 +634,10 @@ void QQuickContainer::setCurrentIndex(int index)
 
     Increments the current index of the container.
 
-    \sa currentIndex
+    This method can be called to alter the current index without breaking
+    existing \c currentIndex bindings.
+
+    \sa currentIndex, {Managing the Current Index}
 */
 void QQuickContainer::incrementCurrentIndex()
 {
@@ -591,7 +652,10 @@ void QQuickContainer::incrementCurrentIndex()
 
     Decrements the current index of the container.
 
-    \sa currentIndex
+    This method can be called to alter the current index without breaking
+    existing \c currentIndex bindings.
+
+    \sa currentIndex, {Managing the Current Index}
 */
 void QQuickContainer::decrementCurrentIndex()
 {
