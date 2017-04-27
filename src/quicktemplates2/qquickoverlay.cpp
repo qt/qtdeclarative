@@ -200,9 +200,6 @@ bool QQuickOverlayPrivate::startDrag(QEvent *event)
 
 bool QQuickOverlayPrivate::handlePress(QQuickItem *source, QEvent *event, QQuickPopup *target)
 {
-    Q_Q(QQuickOverlay);
-    emit q->pressed();
-
     if (target) {
         if (target->overlayEvent(source, event)) {
             setMouseGrabberPopup(target);
@@ -234,9 +231,6 @@ bool QQuickOverlayPrivate::handleMove(QQuickItem *source, QEvent *event, QQuickP
 
 bool QQuickOverlayPrivate::handleRelease(QQuickItem *source, QEvent *event, QQuickPopup *target)
 {
-    Q_Q(QQuickOverlay);
-    emit q->released();
-
     if (target) {
         setMouseGrabberPopup(nullptr);
         if (target->overlayEvent(source, event)) {
@@ -350,6 +344,10 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     if (parent) {
         setSize(QSizeF(parent->width(), parent->height()));
         QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Geometry);
+        parent->setAcceptedMouseButtons(Qt::AllButtons);
+        parent->installEventFilter(this);
+        if (QQuickWindow *window = parent->window())
+            window->installEventFilter(this);
     }
 }
 
@@ -532,6 +530,72 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             }
         }
     }
+    return false;
+}
+
+bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
+{
+    Q_D(QQuickOverlay);
+    if (!isVisible() || !d->window)
+        return false;
+
+    if (object == d->window) {
+        switch (event->type()) {
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::TouchEnd:
+            if (static_cast<QTouchEvent *>(event)->touchPointStates() & Qt::TouchPointPressed)
+                emit pressed();
+            if (static_cast<QTouchEvent *>(event)->touchPointStates() & Qt::TouchPointReleased)
+                emit released();
+
+            // allow non-modal popups to close on touch release outside
+            if (!d->mouseGrabberPopup) {
+                for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
+                    if (point.state() == Qt::TouchPointReleased) {
+                        if (d->handleRelease(d->window->contentItem(), event, nullptr))
+                            break;
+                    }
+                }
+            }
+            break;
+
+        case QEvent::MouseButtonPress:
+            // do not emit pressed() twice when mouse events have been synthesized from touch events
+            if (static_cast<QMouseEvent *>(event)->source() == Qt::MouseEventNotSynthesized)
+                emit pressed();
+            break;
+
+        case QEvent::MouseButtonRelease:
+            // do not emit released() twice when mouse events have been synthesized from touch events
+            if (static_cast<QMouseEvent *>(event)->source() == Qt::MouseEventNotSynthesized)
+                emit released();
+
+            // allow non-modal popups to close on mouse release outside
+            if (!d->mouseGrabberPopup)
+                d->handleRelease(d->window->contentItem(), event, nullptr);
+            break;
+
+        default:
+            break;
+        }
+    } else if (object == d->window->contentItem()) {
+        // A touch or mouse press has reached the content item of the window,
+        // meaning that nothing at the press point was interested in touch or
+        // mouse events. Make sure to accept the press in order to receive the
+        // consequent move and release events to be able to close non-modal
+        // popups on release outside.
+        switch (event->type()) {
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::MouseButtonPress:
+            event->accept();
+            break;
+        default:
+            break;
+        }
+    }
+
     return false;
 }
 
