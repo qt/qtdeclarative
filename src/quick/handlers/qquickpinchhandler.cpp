@@ -232,8 +232,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         // Verify that least one of the points have moved beyond threshold needed to activate the handler
         for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
             if (QQuickWindowPrivate::dragOverThreshold(point)) {
-                grabPoints(m_currentPoints);
-                setActive(true);
+                if (grabPoints(m_currentPoints))
+                    setActive(true);
                 break;
             }
         }
