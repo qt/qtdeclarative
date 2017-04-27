@@ -258,27 +258,30 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
     if (!window || !interactive || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
         return false;
 
-    bool withinMargin = false;
-    bool mouse = event->type() == QEvent::MouseButtonPress;
-    if (mouse) {
-        withinMargin = isWithinDragMargin(q, static_cast<QMouseEvent *>(event)->windowPos());
-    } else {
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+        if (isWithinDragMargin(q, static_cast<QMouseEvent *>(event)->windowPos())) {
+            prepareEnterTransition();
+            reposition();
+            return handleMouseEvent(window->contentItem(), static_cast<QMouseEvent *>(event));
+        }
+        break;
+
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
         for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
-            if (isWithinDragMargin(q, point.scenePos())) {
-                withinMargin = true;
-                break;
+            if (point.state() == Qt::TouchPointPressed && isWithinDragMargin(q, point.scenePos())) {
+                prepareEnterTransition();
+                reposition();
+                return handleTouchEvent(window->contentItem(), static_cast<QTouchEvent *>(event));
             }
         }
-    }
-    if (!withinMargin)
-        return false;
+        break;
 
-    prepareEnterTransition();
-    reposition();
-    if (mouse) {
-        handleMouseEvent(window->contentItem(), static_cast<QMouseEvent *>(event));
-        return true;
+    default:
+        break;
     }
+
     return false;
 }
 
