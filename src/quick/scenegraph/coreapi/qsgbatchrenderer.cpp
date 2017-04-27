@@ -299,7 +299,7 @@ void Updater::updateStates(QSGNode *n)
             qDebug() << " - transforms have changed";
         if (sn->dirtyState & (QSGNode::DirtyOpacity << 16))
             qDebug() << " - opacity has changed";
-        if (sn->dirtyState & (QSGNode::DirtyForceUpdate << 16))
+        if (uint(sn->dirtyState) & uint(QSGNode::DirtyForceUpdate << 16))
             qDebug() << " - forceupdate";
     }
 
