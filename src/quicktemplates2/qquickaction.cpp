@@ -384,8 +384,10 @@ void QQuickAction::setText(const QString &text)
 QQuickIcon *QQuickAction::icon() const
 {
     QQuickActionPrivate *d = const_cast<QQuickActionPrivate *>(d_func());
-    if (!d->icon)
-        d->icon = new QQuickIcon(const_cast<QQuickAction *>(this));
+    if (!d->icon) {
+        d->icon = new QQuickIcon;
+        QQml_setParent_noEvent(d->icon, const_cast<QQuickAction *>(this));
+    }
     return d->icon;
 }
 

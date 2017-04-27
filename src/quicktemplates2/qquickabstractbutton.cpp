@@ -640,8 +640,10 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 QQuickIcon *QQuickAbstractButton::icon() const
 {
     QQuickAbstractButtonPrivate *d = const_cast<QQuickAbstractButtonPrivate*>(d_func());
-    if (!d->icon)
-        d->icon = new QQuickIcon(const_cast<QQuickAbstractButton*>(this));
+    if (!d->icon) {
+        d->icon = new QQuickIcon;
+        QQml_setParent_noEvent(d->icon, const_cast<QQuickAbstractButton*>(this));
+    }
     return d->icon;
 }
 
