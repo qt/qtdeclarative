@@ -62,14 +62,23 @@ Item {
         property real ylimit: root.height - __contentItem.height
 
         function returnToBounds() {
-            if (x > 0)
-                x = 0
-            else if (x < xlimit)
-                x = xlimit
-            if (y > 0)
-                y = 0
-            else if (y < ylimit)
-                y = ylimit
+            var startAnim = false
+            if (x > 0) {
+                returnToBoundsAnim.x = 0
+                startAnim = true
+            } else if (x < xlimit) {
+                returnToBoundsAnim.x = xlimit
+                startAnim = true
+            }
+            if (y > 0) {
+                returnToBoundsAnim.y = 0
+                startAnim = true
+            } else if (y < ylimit) {
+                returnToBoundsAnim.y = ylimit
+                startAnim = true
+            }
+            if (startAnim)
+                returnToBoundsAnim.start()
         }
 
         DragHandler {
@@ -83,6 +92,30 @@ Item {
             onStopped: {
                 __contentItem.returnToBounds()
                 root.flickEnded()
+            }
+        }
+        ParallelAnimation {
+            id: returnToBoundsAnim
+            property Item target: __contentItem
+            property int duration: 200
+            property real x: 0
+            property real y: 0
+
+            NumberAnimation {
+                id: xAnim
+                target: returnToBoundsAnim.target
+                property: "x"
+                to: returnToBoundsAnim.x
+                duration: returnToBoundsAnim.duration
+                easing.type: Easing.OutQuad
+            }
+            NumberAnimation {
+                id: yAnim
+                target: returnToBoundsAnim.target
+                property: "y"
+                to: returnToBoundsAnim.y
+                duration: returnToBoundsAnim.duration
+                easing.type: Easing.OutQuad
             }
         }
     }
