@@ -87,8 +87,12 @@ TestCase {
     function test_accept() {
         var control = createTemporaryObject(dialog, testCase)
 
+        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        verify(openedSpy.valid)
+
         control.open()
-        waitForRendering(control.contentItem)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
         verify(control.visible)
 
         var acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
@@ -102,8 +106,12 @@ TestCase {
     function test_reject() {
         var control = createTemporaryObject(dialog, testCase)
 
+        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        verify(openedSpy.valid)
+
         control.open()
-        waitForRendering(control.contentItem)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
         verify(control.visible)
 
         var rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
@@ -226,8 +234,12 @@ TestCase {
         var control = createTemporaryObject(dialog, testCase, {width: 100, height: 100})
         verify(control)
 
+        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        verify(openedSpy.valid)
+
         control.open()
-        waitForRendering(control.contentItem)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
         verify(control.visible)
 
         compare(control.width, 100)
@@ -315,8 +327,12 @@ TestCase {
         var control = createTemporaryObject(dialog, testCase, {spacing: 20, width: 100, height: 100})
         verify(control)
 
+        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        verify(openedSpy.valid)
+
         control.open()
-        waitForRendering(control.contentItem)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
         verify(control.visible)
 
         control.contentItem.visible = data.content

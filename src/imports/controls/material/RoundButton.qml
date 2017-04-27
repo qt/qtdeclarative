@@ -59,7 +59,7 @@ T.RoundButton {
     icon.color: enabled ? undefined : Material.hintTextColor
 
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
-                             : control.down ? 8 : 2
+                             : control.down ? 12 : 6
     Material.background: flat ? "transparent" : undefined
 
     contentItem: IconLabel {

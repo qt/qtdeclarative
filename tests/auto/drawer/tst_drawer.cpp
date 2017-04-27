@@ -58,6 +58,8 @@ class tst_Drawer : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+
     void visible_data();
     void visible();
 
@@ -88,6 +90,13 @@ private slots:
     void interactive_data();
     void interactive();
 };
+
+
+void tst_Drawer::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+}
 
 void tst_Drawer::visible_data()
 {
@@ -240,19 +249,21 @@ void tst_Drawer::state()
 void tst_Drawer::position_data()
 {
     QTest::addColumn<Qt::Edge>("edge");
+    QTest::addColumn<QPoint>("press");
     QTest::addColumn<QPoint>("from");
     QTest::addColumn<QPoint>("to");
     QTest::addColumn<qreal>("position");
 
-    QTest::newRow("top") << Qt::TopEdge << QPoint(100, 0) << QPoint(100, 100) << qreal(0.5);
-    QTest::newRow("left") << Qt::LeftEdge << QPoint(0, 100) << QPoint(100, 100) << qreal(0.5);
-    QTest::newRow("right") << Qt::RightEdge << QPoint(399, 100) << QPoint(300, 100) << qreal(0.5);
-    QTest::newRow("bottom") << Qt::BottomEdge << QPoint(100, 399) << QPoint(100, 300) << qreal(0.5);
+    QTest::newRow("top") << Qt::TopEdge << QPoint(100, 0) << QPoint(100, 50) << QPoint(100, 150) << qreal(0.5);
+    QTest::newRow("left") << Qt::LeftEdge << QPoint(0, 100) << QPoint(50, 100) << QPoint(150, 100) << qreal(0.5);
+    QTest::newRow("right") << Qt::RightEdge << QPoint(399, 100) << QPoint(350, 100) << QPoint(250, 100) << qreal(0.5);
+    QTest::newRow("bottom") << Qt::BottomEdge << QPoint(100, 399) << QPoint(100, 350) << QPoint(150, 250) << qreal(0.5);
 }
 
 void tst_Drawer::position()
 {
     QFETCH(Qt::Edge, edge);
+    QFETCH(QPoint, press);
     QFETCH(QPoint, from);
     QFETCH(QPoint, to);
     QFETCH(qreal, position);
@@ -268,7 +279,8 @@ void tst_Drawer::position()
     QVERIFY(drawer);
     drawer->setEdge(edge);
 
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, press);
+    QTest::mouseMove(window, from);
     QTest::mouseMove(window, to);
     QCOMPARE(drawer->position(), position);
 
@@ -314,26 +326,30 @@ void tst_Drawer::dragMargin()
     drawer->setEdge(edge);
     drawer->setDragMargin(dragMargin);
 
+    const int startDragDistance = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5) + 1;
+
     // drag from the left
     int leftX = qMax<int>(0, dragMargin);
-    int leftDistance = drawer->width() * 0.45;
+    int leftDistance = startDragDistance + drawer->width() * 0.45;
     QVERIFY(leftDistance > QGuiApplication::styleHints()->startDragDistance());
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftX, drawer->height() / 2));
-    QTest::mouseMove(window, QPoint(leftDistance, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(leftX + startDragDistance, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(leftX + leftDistance, drawer->height() / 2));
     QCOMPARE(drawer->position(), dragFromLeft);
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftDistance, drawer->height() / 2));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftX + leftDistance, drawer->height() / 2));
 
     drawer->close();
     QTRY_COMPARE(drawer->position(), qreal(0.0));
 
     // drag from the right
     int rightX = qMin<int>(window->width() - 1, window->width() - dragMargin);
-    int rightDistance = drawer->width() * 0.75;
+    int rightDistance = startDragDistance + drawer->width() * 0.75;
     QVERIFY(rightDistance > QGuiApplication::styleHints()->startDragDistance());
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(rightX, drawer->height() / 2));
-    QTest::mouseMove(window, QPoint(window->width() - rightDistance, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(rightX - startDragDistance, drawer->height() / 2));
+    QTest::mouseMove(window, QPoint(rightX - rightDistance, drawer->height() / 2));
     QCOMPARE(drawer->position(), dragFromRight);
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDistance, drawer->height() / 2));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(rightX - rightDistance, drawer->height() / 2));
 }
 
 static QRectF geometry(const QQuickItem *item)
@@ -620,7 +636,8 @@ void tst_Drawer::multiple()
 
     // drag the left drawer open
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(0, window->height() / 2));
-    QTest::mouseMove(window, QPoint(leftDrawer->width() / 2, window->height() / 2));
+    QTest::mouseMove(window, QPoint(leftDrawer->width() / 4, window->height() / 2));
+    QTest::mouseMove(window, QPoint(leftDrawer->width() / 4 * 3, window->height() / 2));
     QCOMPARE(leftDrawer->position(), 0.5);
     QCOMPARE(rightDrawer->position(), 0.0);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftDrawer->width() / 2, window->height() / 2));
@@ -699,7 +716,8 @@ void tst_Drawer::multiple()
 
     // drag the right drawer open
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - 1, window->height() / 2));
-    QTest::mouseMove(window, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
+    QTest::mouseMove(window, QPoint(window->width() - rightDrawer->width() / 4, window->height() / 2));
+    QTest::mouseMove(window, QPoint(window->width() - rightDrawer->width() / 4 * 3, window->height() / 2));
     QCOMPARE(rightDrawer->position(), 0.5);
     QCOMPARE(leftDrawer->position(), 0.0);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() - rightDrawer->width() / 2, window->height() / 2));
@@ -746,19 +764,18 @@ void tst_Drawer::touch()
 
     // drag to open
     QTest::touchEvent(window, device.data()).press(0, QPoint(0, 100));
-    QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
+    QTest::touchEvent(window, device.data()).move(0, QPoint(50, 100));
+    QTest::touchEvent(window, device.data()).move(0, QPoint(150, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
-    QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
+    QTest::touchEvent(window, device.data()).release(0, QPoint(150, 100));
     QVERIFY(drawerOpenedSpy.wait());
     QCOMPARE(drawer->position(), 1.0);
 
     // drag to close
     QTest::touchEvent(window, device.data()).press(0, QPoint(300, 100));
     QTest::touchEvent(window, device.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
-    for (int x = 300; x > 100; x -= 10) {
+    for (int x = 300; x > 100; x -= 10)
         QTest::touchEvent(window, device.data()).move(0, QPoint(x, 100));
-        QQuickWindowPrivate::get(window)->flushFrameSynchronousEvents();
-    }
     QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));

@@ -71,12 +71,13 @@ public:
     void resizeOverlay() override;
 
     bool startDrag(QEvent *event);
-    bool grabMouse(QMouseEvent *event);
-    bool ungrabMouse(QMouseEvent *event);
+    bool grabMouse(QQuickItem *item, QMouseEvent *event);
+    bool grabTouch(QQuickItem *item, QTouchEvent *event);
 
-    bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
-    bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
+    bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp) override;
+    bool handleMove(QQuickItem* item, const QPointF &point, ulong timestamp) override;
+    bool handleRelease(QQuickItem* item, const QPointF &point, ulong timestamp) override;
+    void handleUngrab() override;
 
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;

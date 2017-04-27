@@ -160,13 +160,26 @@ void tst_popup::state()
 void tst_popup::overlay_data()
 {
     QTest::addColumn<QString>("source");
-    QTest::newRow("Window") << "window.qml";
-    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+    QTest::addColumn<bool>("modal");
+    QTest::addColumn<bool>("dim");
+
+    QTest::newRow("Window") << "window.qml" << false << false;
+    QTest::newRow("Window,dim") << "window.qml" << false << true;
+    QTest::newRow("Window,modal") << "window.qml" << true << false;
+    QTest::newRow("Window,modal,dim") << "window.qml" << true << true;
+
+    QTest::newRow("ApplicationWindow") << "applicationwindow.qml" << false << false;
+    QTest::newRow("ApplicationWindow,dim") << "applicationwindow.qml" << false << true;
+    QTest::newRow("ApplicationWindow,modal") << "applicationwindow.qml" << true << false;
+    QTest::newRow("ApplicationWindow,modal,dim") << "applicationwindow.qml" << true << true;
 }
 
 void tst_popup::overlay()
 {
     QFETCH(QString, source);
+    QFETCH(bool, modal);
+    QFETCH(bool, dim);
+
     QQuickApplicationHelper helper(this, source);
 
     QQuickWindow *window = helper.window;
@@ -210,7 +223,8 @@ void tst_popup::overlay()
     QVERIFY(!popup->isVisible());
     QVERIFY(!overlay->isVisible());
 
-    popup->setModal(true);
+    popup->setDim(dim);
+    popup->setModal(modal);
     popup->setClosePolicy(QQuickPopup::CloseOnReleaseOutside);
 
     popup->open();
@@ -223,10 +237,20 @@ void tst_popup::overlay()
 
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
     QCOMPARE(overlayPressedSignal.count(), 2);
+
+    #define comment "Non-modal popups do not yet support CloseOnReleaseXxx"
+    #define QEXPECT_NON_MODAL_POPUP_FAILS() \
+        QEXPECT_FAIL("Window", comment, Continue); \
+        QEXPECT_FAIL("Window,dim", comment, Continue); \
+        QEXPECT_FAIL("ApplicationWindow", comment, Continue); \
+        QEXPECT_FAIL("ApplicationWindow,dim", comment, Continue);
+
+    QEXPECT_NON_MODAL_POPUP_FAILS()
     QCOMPARE(overlayReleasedSignal.count(), 1);
 
+    QEXPECT_NON_MODAL_POPUP_FAILS()
     QVERIFY(!popup->isVisible());
-    QVERIFY(!overlay->isVisible());
+    QCOMPARE(overlay->isVisible(), popup->isVisible());
 }
 
 void tst_popup::zOrder_data()

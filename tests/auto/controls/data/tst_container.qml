@@ -90,4 +90,40 @@ TestCase {
         compare(control.implicitWidth, 210)
         compare(control.implicitHeight, 220)
     }
+
+    function test_currentIndex() {
+        var control1 = createTemporaryObject(container, testCase)
+        verify(control1)
+
+        var control2 = createTemporaryObject(container, testCase)
+        verify(control2)
+
+        compare(control1.currentIndex, -1)
+        compare(control2.currentIndex, -1)
+
+        for (var i = 0; i < 3; ++i) {
+            control1.addItem(rectangle.createObject(control1))
+            control2.addItem(rectangle.createObject(control2))
+        }
+
+        compare(control1.count, 3)
+        compare(control2.count, 3)
+        compare(control1.currentIndex, 0)
+        compare(control2.currentIndex, 0)
+
+        control1.currentIndex = Qt.binding(function() { return control2.currentIndex })
+        control2.currentIndex = Qt.binding(function() { return control1.currentIndex })
+
+        control1.setCurrentIndex(1)
+        compare(control1.currentIndex, 1)
+        compare(control2.currentIndex, 1)
+
+        control1.incrementCurrentIndex()
+        compare(control1.currentIndex, 2)
+        compare(control2.currentIndex, 2)
+
+        control2.decrementCurrentIndex()
+        compare(control1.currentIndex, 1)
+        compare(control2.currentIndex, 1)
+    }
 }

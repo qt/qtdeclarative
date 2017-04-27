@@ -789,4 +789,17 @@ TestCase {
         compare(control.valueAt(0.5), data.values[2])
         compare(control.valueAt(1.0), data.values[3])
     }
+
+    function test_nullHandle() {
+        var control = createTemporaryObject(slider, testCase)
+        verify(control)
+
+        control.handle = null
+
+        mousePress(control)
+        verify(control.pressed, true)
+
+        mouseRelease(control)
+        compare(control.pressed, false)
+    }
 }

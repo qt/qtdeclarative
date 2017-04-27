@@ -435,16 +435,15 @@ void QQuickRangeSliderPrivate::handlePress(const QPointF &point)
         otherNode = first;
     } else {
         // find the nearest
-        const qreal firstDistance = QLineF(firstHandle->boundingRect().center(),
-                                           q->mapToItem(firstHandle, point)).length();
-        const qreal secondDistance = QLineF(secondHandle->boundingRect().center(),
-                                            q->mapToItem(secondHandle, point)).length();
+        const qreal firstPos = positionAt(q, firstHandle, point);
+        const qreal secondPos = positionAt(q, secondHandle, point);
+        const qreal firstDistance = qAbs(firstPos - first->position());
+        const qreal secondDistance = qAbs(secondPos - second->position());
 
         if (qFuzzyCompare(firstDistance, secondDistance)) {
             // same distance => choose the one that can be moved towards the press position
             const bool inverted = from > to;
-            const qreal pos = positionAt(q, firstHandle, point);
-            if ((!inverted && pos < first->position()) || (inverted && pos > first->position())) {
+            if ((!inverted && firstPos < first->position()) || (inverted && firstPos > first->position())) {
                 hitNode = first;
                 otherNode = second;
             } else {
@@ -462,11 +461,14 @@ void QQuickRangeSliderPrivate::handlePress(const QPointF &point)
 
     if (hitNode) {
         hitNode->setPressed(true);
-        hitNode->handle()->setZ(1);
+        if (QQuickItem *handle = hitNode->handle())
+            handle->setZ(1);
         QQuickRangeSliderNodePrivate::get(hitNode)->touchId = touchId;
     }
-    if (otherNode)
-        otherNode->handle()->setZ(0);
+    if (otherNode) {
+        if (QQuickItem *handle = otherNode->handle())
+            handle->setZ(0);
+    }
 }
 
 void QQuickRangeSliderPrivate::handleMove(const QPointF &point)
