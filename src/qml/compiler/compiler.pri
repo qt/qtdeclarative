@@ -41,7 +41,7 @@ SOURCES += \
 unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
 else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
-qtConfig(private_tests): LIBS_PRIVATE += $$QMAKE_LIBS_DYNLOAD
+qtConfig(private_tests):unix: QMAKE_USE_PRIVATE += libdl
 }
 
 qmldevtools_build|qtConfig(qml-interpreter) {
@@ -52,4 +52,3 @@ qmldevtools_build|qtConfig(qml-interpreter) {
         $$PWD/qv4instr_moth.cpp \
         $$PWD/qv4isel_moth.cpp
 }
-

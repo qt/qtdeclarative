@@ -63,7 +63,7 @@
     Q_ALLOCA_DECLARE(type, name); \
     Q_ALLOCA_ASSIGN(type, name, size)
 
-#if QT_CONFIG(alloca)
+#if defined(QT_BOOTSTRAPPED) || QT_CONFIG(alloca)
 
 #define Q_ALLOCA_DECLARE(type, name) \
     type *name = 0
@@ -95,10 +95,6 @@ QT_END_NAMESPACE
 
 #endif
 
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-#    define Q_QML_PRIVATE_EXPORT
-#else
-#    define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
-#endif
+#define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
 
 #endif // QTQMLGLOBAL_P_H
