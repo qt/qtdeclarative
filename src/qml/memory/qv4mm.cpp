@@ -262,17 +262,36 @@ void ChunkAllocator::free(Chunk *chunk, size_t size)
     Q_ASSERT(false);
 }
 
+#ifdef DUMP_SWEEP
+QString binary(quintptr n) {
+    QString s = QString::number(n, 2);
+    while (s.length() < 64)
+        s.prepend(QChar::fromLatin1('0'));
+    return s;
+}
+#define SDUMP qDebug
+#else
+QString binary(quintptr) { return QString(); }
+#define SDUMP if (1) ; else qDebug
+#endif
 
 void Chunk::sweep()
 {
-    //    DEBUG << "sweeping chunk" << this << (*freeList);
+    SDUMP() << "sweeping chunk" << this;
     HeapItem *o = realBase();
+    bool lastSlotFree = false;
     for (uint i = 0; i < Chunk::EntriesInBitmap; ++i) {
         Q_ASSERT((grayBitmap[i] | blackBitmap[i]) == blackBitmap[i]); // check that we don't have gray only objects
         quintptr toFree = objectBitmap[i] ^ blackBitmap[i];
         Q_ASSERT((toFree & objectBitmap[i]) == toFree); // check all black objects are marked as being used
         quintptr e = extendsBitmap[i];
-        //        DEBUG << hex << "   index=" << i << toFree;
+        SDUMP() << "   index=" << i;
+        SDUMP() << "        toFree      =" << binary(toFree);
+        SDUMP() << "        black       =" << binary(blackBitmap[i]);
+        SDUMP() << "        object      =" << binary(objectBitmap[i]);
+        SDUMP() << "        extends     =" << binary(e);
+        if (lastSlotFree)
+            e &= (e + 1); // clear all lowest extent bits
         while (toFree) {
             uint index = qCountTrailingZeroBits(toFree);
             quintptr bit = (static_cast<quintptr>(1) << index);
@@ -299,6 +318,10 @@ void Chunk::sweep()
         objectBitmap[i] = blackBitmap[i];
         blackBitmap[i] = 0;
         extendsBitmap[i] = e;
+        lastSlotFree = !((objectBitmap[i]|extendsBitmap[i]) >> (sizeof(quintptr)*8 - 1));
+        SDUMP() << "        new extends =" << binary(e);
+        SDUMP() << "        lastSlotFree" << lastSlotFree;
+        Q_ASSERT((objectBitmap[i] & extendsBitmap[i]) == 0);
         o += Chunk::Bits;
     }
     //    DEBUG << "swept chunk" << this << "freed" << slotsFreed << "slots.";
@@ -887,6 +910,13 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
         if (printOutput)
             qDebug() << "    number of entries in slot" << i << ":" << nEntries;
     }
+    SDUMP() << "    large slot map";
+    HeapItem *h = b->freeBins[BlockAllocator::NumBins - 1];
+    while (h) {
+        SDUMP() << "        " << hex << (quintptr(h)/32) << h->freeData.availableSlots;
+        h = h->freeData.next;
+    }
+
     if (printOutput)
         qDebug() << "  total mem in bins" << totalFragmentedSlots*Chunk::SlotSize;
     return totalFragmentedSlots*Chunk::SlotSize;
