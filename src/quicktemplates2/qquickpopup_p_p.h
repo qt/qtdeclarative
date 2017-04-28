@@ -97,6 +97,8 @@ public:
     void closeOrReject();
     bool tryClose(const QPointF &pos, QQuickPopup::ClosePolicy flags);
 
+    bool contains(const QPointF &scenePos) const;
+
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
     virtual bool blockInput(QQuickItem *item, const QPointF &point) const;
 

@@ -284,7 +284,7 @@ bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy f
     const bool onOutside = closePolicy & (flags & outsideFlags);
     const bool onOutsideParent = closePolicy & (flags & outsideParentFlags);
     if (onOutside || onOutsideParent) {
-        if (!popupItem->contains(popupItem->mapFromScene(pos))) {
+        if (!contains(pos)) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(parentItem->mapFromScene(pos))) {
                 closeOrReject();
                 return true;
@@ -292,6 +292,11 @@ bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy f
         }
     }
     return false;
+}
+
+bool QQuickPopupPrivate::contains(const QPointF &scenePos) const
+{
+    return popupItem->contains(popupItem->mapFromScene(scenePos));
 }
 
 bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)

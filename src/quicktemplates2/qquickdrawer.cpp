@@ -308,7 +308,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     }
 
     // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
-    if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
+    if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !contains(movePoint)) {
         if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
             overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
         else
@@ -323,7 +323,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
             offset = positionAt(movePoint) - position;
 
             // don't jump when dragged open
-            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+            if (offset > 0 && position > 0 && !contains(movePoint))
                 offset = 0;
         }
     }
@@ -358,7 +358,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         }
 
         // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
-        if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
+        if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !contains(movePoint)) {
             if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
                 overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
             else
@@ -370,7 +370,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
             offset = positionAt(movePoint) - position;
 
             // don't jump when dragged open
-            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+            if (offset > 0 && position > 0 && !contains(movePoint))
                 offset = 0;
         }
     }
@@ -399,7 +399,7 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
         return false;
 
     // limit/reset the offset to the edge of the drawer when pushed from the outside
-    if (qFuzzyCompare(position, 1.0) && !popupItem->contains(popupItem->mapFromScene(point)))
+    if (qFuzzyCompare(position, 1.0) && !contains(point))
         offset = 0;
 
     bool isGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
