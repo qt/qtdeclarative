@@ -338,7 +338,8 @@ bool QQuickPopupPrivate::handleMove(QQuickItem *item, const QPointF &point, ulon
 bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     Q_UNUSED(timestamp);
-    tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+    if (item != popupItem && !contains(pressPoint))
+        tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
     pressPoint = QPointF();
     touchId = -1;
     return blockInput(item, point);

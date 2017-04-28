@@ -434,6 +434,12 @@ void tst_popup::closePolicy()
     popup->open();
     QVERIFY(popup->isVisible());
 
+    // press inside and release outside
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + popup->x(), button->y() + popup->y()));
+    QVERIFY(popup->isVisible());
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(popup->isVisible());
+
     // escape
     QTest::keyClick(window, Qt::Key_Escape);
     if (closePolicy.testFlag(QQuickPopup::CloseOnEscape))
