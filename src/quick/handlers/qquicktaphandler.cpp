@@ -305,7 +305,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
 void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
     QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
-    if (grabber == this && stateChange == QQuickEventPoint::CancelGrabExclusive)
+    if (grabber == this && (stateChange == QQuickEventPoint::CancelGrabExclusive || stateChange == QQuickEventPoint::CancelGrabPassive))
         setPressed(false, true, point);
 }
 
