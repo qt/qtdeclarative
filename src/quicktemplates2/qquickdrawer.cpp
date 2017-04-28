@@ -382,12 +382,12 @@ static const qreal openCloseVelocityThreshold = 300;
 
 bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
-    if (!QQuickPopupPrivate::handlePress(item, point, timestamp))
-        return false;
-
     offset = 0;
     pressPoint = point;
     velocityCalculator.startMeasuring(point, timestamp);
+
+    if (!QQuickPopupPrivate::handlePress(item, point, timestamp))
+        return false;
 
     return true;
 }
