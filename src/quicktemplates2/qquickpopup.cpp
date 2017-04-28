@@ -324,6 +324,7 @@ bool QQuickPopupPrivate::blockInput(QQuickItem *item, const QPointF &point) cons
 bool QQuickPopupPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     Q_UNUSED(timestamp);
+    pressPoint = point;
     tryClose(point, QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
     return blockInput(item, point);
 }
@@ -338,6 +339,7 @@ bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QPointF &point, u
 {
     Q_UNUSED(timestamp);
     tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+    pressPoint = QPointF();
     touchId = -1;
     return blockInput(item, point);
 }
@@ -351,6 +353,7 @@ void QQuickPopupPrivate::handleUngrab()
         if (p->mouseGrabberPopup == q)
             p->mouseGrabberPopup = nullptr;
     }
+    pressPoint = QPointF();
     touchId = -1;
 }
 

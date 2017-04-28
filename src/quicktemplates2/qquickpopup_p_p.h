@@ -165,6 +165,7 @@ public:
     qreal bottomMargin;
     qreal contentWidth;
     qreal contentHeight;
+    QPointF pressPoint;
     TransitionState transitionState;
     QQuickPopup::ClosePolicy closePolicy;
     QQuickItem *parentItem;

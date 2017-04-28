@@ -383,7 +383,6 @@ static const qreal openCloseVelocityThreshold = 300;
 bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     offset = 0;
-    pressPoint = point;
     velocityCalculator.startMeasuring(point, timestamp);
 
     if (!QQuickPopupPrivate::handlePress(item, point, timestamp))
@@ -411,13 +410,12 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
 
 bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
-    pressPoint = QPointF();
-
     if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab()) {
         velocityCalculator.reset();
         return QQuickPopupPrivate::handleRelease(item, point, timestamp);
     }
 
+    pressPoint = QPointF();
     velocityCalculator.stopMeasuring(point, timestamp);
 
     qreal velocity = 0;
@@ -481,7 +479,6 @@ void QQuickDrawerPrivate::handleUngrab()
 {
     QQuickPopupPrivate::handleUngrab();
 
-    pressPoint = QPoint();
     velocityCalculator.reset();
 }
 
