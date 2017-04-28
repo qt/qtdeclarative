@@ -72,7 +72,7 @@ Item {
         anchors.horizontalCenterOffset: 1
         radius: 5
         color: "#4400FFFF"
-        opacity: dragHandler.active || tapFlash.running ? 1 : 0
+        opacity: tap.isPressed || tapFlash.running ? 1 : 0
         FlashAnimation on visible {
             id: tapFlash
         }

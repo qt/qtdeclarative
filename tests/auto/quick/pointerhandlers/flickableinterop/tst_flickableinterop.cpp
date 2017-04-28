@@ -59,9 +59,13 @@ public:
 private slots:
     void initTestCase();
 
+    void touchTapButton_data();
     void touchTapButton();
+    void touchDragFlickableBehindButton_data();
     void touchDragFlickableBehindButton();
+    void mouseClickButton_data();
     void mouseClickButton();
+    void mouseDragFlickableBehindButton_data();
     void mouseDragFlickableBehindButton();
     void touchDragSlider();
     void touchDragFlickableBehindSlider();
@@ -94,6 +98,14 @@ void tst_FlickableInterop::initTestCase()
     QQmlDataTest::initTestCase();
 }
 
+void tst_FlickableInterop::touchTapButton_data()
+{
+    QTest::addColumn<QString>("buttonName");
+    QTest::newRow("DragThreshold") << QStringLiteral("DragThreshold");
+    QTest::newRow("WithinBounds") << QStringLiteral("WithinBounds");
+    QTest::newRow("ReleaseWithinBounds") << QStringLiteral("ReleaseWithinBounds");
+}
+
 void tst_FlickableInterop::touchTapButton()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
@@ -101,7 +113,9 @@ void tst_FlickableInterop::touchTapButton()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("Button 1");
+    QFETCH(QString, buttonName);
+
+    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>(buttonName);
     QVERIFY(button);
     QSignalSpy tappedSpy(button, SIGNAL(tapped()));
 
@@ -130,6 +144,14 @@ void tst_FlickableInterop::touchTapButton()
     QCOMPARE(tappedSpy.count(), 2);
 }
 
+void tst_FlickableInterop::touchDragFlickableBehindButton_data()
+{
+    QTest::addColumn<QString>("buttonName");
+    QTest::newRow("DragThreshold") << QStringLiteral("DragThreshold");
+    QTest::newRow("WithinBounds") << QStringLiteral("WithinBounds");
+    QTest::newRow("ReleaseWithinBounds") << QStringLiteral("ReleaseWithinBounds");
+}
+
 void tst_FlickableInterop::touchDragFlickableBehindButton()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
@@ -137,14 +159,14 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("Button 1");
+    QFETCH(QString, buttonName);
+
+    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>(buttonName);
     QVERIFY(button);
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
     QSignalSpy tappedSpy(button, SIGNAL(tapped()));
 
-    // Button is no longer pressed if touchpoint goes beyond dragThreshold,
-    // because Flickable steals the grab
     tappedSpy.clear();
     QPoint p1 = button->mapToScene(QPointF(20, 20)).toPoint();
     QTest::touchEvent(window, touchDevice).press(1, p1, window);
@@ -155,6 +177,8 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
     QQuickTouchUtils::flush(window);
     QVERIFY(button->property("pressed").toBool());
     int i = 0;
+    // Start dragging; eventually when the touchpoint goes beyond dragThreshold,
+    // Button is no longer pressed because Flickable steals the grab
     for (; i < 100 && !flickable->isMoving(); ++i) {
         p1 += QPoint(1, 0);
         QTest::touchEvent(window, touchDevice).move(1, p1, window);
@@ -170,6 +194,14 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
     QCOMPARE(tappedSpy.count(), 0);
 }
 
+void tst_FlickableInterop::mouseClickButton_data()
+{
+    QTest::addColumn<QString>("buttonName");
+    QTest::newRow("DragThreshold") << QStringLiteral("DragThreshold");
+    QTest::newRow("WithinBounds") << QStringLiteral("WithinBounds");
+    QTest::newRow("ReleaseWithinBounds") << QStringLiteral("ReleaseWithinBounds");
+}
+
 void tst_FlickableInterop::mouseClickButton()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
@@ -177,7 +209,9 @@ void tst_FlickableInterop::mouseClickButton()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("Button 1");
+    QFETCH(QString, buttonName);
+
+    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>(buttonName);
     QVERIFY(button);
     QSignalSpy tappedSpy(button, SIGNAL(tapped()));
 
@@ -201,6 +235,14 @@ void tst_FlickableInterop::mouseClickButton()
     QCOMPARE(tappedSpy.count(), 2);
 }
 
+void tst_FlickableInterop::mouseDragFlickableBehindButton_data()
+{
+    QTest::addColumn<QString>("buttonName");
+    QTest::newRow("DragThreshold") << QStringLiteral("DragThreshold");
+    QTest::newRow("WithinBounds") << QStringLiteral("WithinBounds");
+    QTest::newRow("ReleaseWithinBounds") << QStringLiteral("ReleaseWithinBounds");
+}
+
 void tst_FlickableInterop::mouseDragFlickableBehindButton()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
@@ -208,7 +250,9 @@ void tst_FlickableInterop::mouseDragFlickableBehindButton()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("Button 1");
+    QFETCH(QString, buttonName);
+
+    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>(buttonName);
     QVERIFY(button);
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);

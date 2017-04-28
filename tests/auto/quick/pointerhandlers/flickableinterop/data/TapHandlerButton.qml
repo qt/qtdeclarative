@@ -95,6 +95,12 @@ Rectangle {
         x: tap.scenePressPos.x - radius
         y: tap.scenePressPos.y - radius
         opacity: 0.25
-        Component.onCompleted: parent = root.parent
+        Component.onCompleted: {
+            // get on top of all the buttons
+            var par = root.parent;
+            while (par.parent)
+                par = par.parent;
+            parent = par;
+        }
     }
 }

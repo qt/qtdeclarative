@@ -66,14 +66,22 @@ Rectangle {
             Column {
                 spacing: 6
                 TapHandlerButton {
-                    label: "TapHandler"
-                    objectName: "Button 1"
+                    objectName: "DragThreshold"
+                    label: "DragThreshold"
+                    gesturePolicy: TapHandler.DragThreshold
                 }
                 TapHandlerButton {
-                    label: "TapHandler"
-                    objectName: "Button 2"
+                    objectName: "WithinBounds"
+                    label: "WithinBounds"
+                    gesturePolicy: TapHandler.WithinBounds
+                }
+                TapHandlerButton {
+                    objectName: "ReleaseWithinBounds"
+                    label: "ReleaseWithinBounds"
+                    gesturePolicy: TapHandler.ReleaseWithinBounds // the default
                 }
             }
         }
     }
 }
+
