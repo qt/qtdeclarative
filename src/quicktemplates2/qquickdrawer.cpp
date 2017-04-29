@@ -169,6 +169,17 @@ QQuickDrawerPrivate::QQuickDrawerPrivate()
     setEdge(Qt::LeftEdge);
 }
 
+qreal QQuickDrawerPrivate::offsetAt(const QPointF &point) const
+{
+    qreal offset = positionAt(point) - position;
+
+    // don't jump when dragged open
+    if (offset > 0 && position > 0 && !contains(point))
+        offset = 0;
+
+    return offset;
+}
+
 qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
 {
     Q_Q(const QQuickDrawer);
@@ -322,11 +333,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
         if (!grabber || !grabber->keepMouseGrab()) {
             popupItem->grabMouse();
             popupItem->setKeepMouseGrab(true);
-            offset = positionAt(movePoint) - position;
-
-            // don't jump when dragged open
-            if (offset > 0 && position > 0 && !contains(movePoint))
-                offset = 0;
+            offset = offsetAt(movePoint);
         }
     }
 
@@ -371,11 +378,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 
         if (overThreshold) {
             popupItem->setKeepTouchGrab(true);
-            offset = positionAt(movePoint) - position;
-
-            // don't jump when dragged open
-            if (offset > 0 && position > 0 && !contains(movePoint))
-                offset = 0;
+            offset = offsetAt(movePoint);
         }
     }
 
