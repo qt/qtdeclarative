@@ -308,7 +308,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     }
 
     // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
-    if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
+    if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !contains(movePoint)) {
         if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
             overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
         else
@@ -323,7 +323,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
             offset = positionAt(movePoint) - position;
 
             // don't jump when dragged open
-            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+            if (offset > 0 && position > 0 && !contains(movePoint))
                 offset = 0;
         }
     }
@@ -358,7 +358,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         }
 
         // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
-        if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !popupItem->contains(popupItem->mapFromScene(movePoint))) {
+        if (overThreshold && qFuzzyCompare(position, qreal(1.0)) && !contains(movePoint)) {
             if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
                 overThreshold = qAbs(movePoint.x() - q->width()) < dragMargin;
             else
@@ -370,7 +370,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
             offset = positionAt(movePoint) - position;
 
             // don't jump when dragged open
-            if (offset > 0 && position > 0 && !popupItem->contains(popupItem->mapFromScene(movePoint)))
+            if (offset > 0 && position > 0 && !contains(movePoint))
                 offset = 0;
         }
     }
@@ -382,12 +382,11 @@ static const qreal openCloseVelocityThreshold = 300;
 
 bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
+    offset = 0;
+    velocityCalculator.startMeasuring(point, timestamp);
+
     if (!QQuickPopupPrivate::handlePress(item, point, timestamp))
         return false;
-
-    offset = 0;
-    pressPoint = point;
-    velocityCalculator.startMeasuring(point, timestamp);
 
     return true;
 }
@@ -399,7 +398,7 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
         return false;
 
     // limit/reset the offset to the edge of the drawer when pushed from the outside
-    if (qFuzzyCompare(position, 1.0) && !popupItem->contains(popupItem->mapFromScene(point)))
+    if (qFuzzyCompare(position, 1.0) && !contains(point))
         offset = 0;
 
     bool isGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
@@ -411,13 +410,12 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
 
 bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
-    pressPoint = QPointF();
-
     if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab()) {
         velocityCalculator.reset();
         return QQuickPopupPrivate::handleRelease(item, point, timestamp);
     }
 
+    pressPoint = QPointF();
     velocityCalculator.stopMeasuring(point, timestamp);
 
     qreal velocity = 0;
@@ -481,7 +479,6 @@ void QQuickDrawerPrivate::handleUngrab()
 {
     QQuickPopupPrivate::handleUngrab();
 
-    pressPoint = QPoint();
     velocityCalculator.reset();
 }
 

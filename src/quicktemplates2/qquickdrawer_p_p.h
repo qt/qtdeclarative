@@ -88,7 +88,6 @@ public:
     qreal offset;
     qreal position;
     qreal dragMargin;
-    QPointF pressPoint;
     QQuickVelocityCalculator velocityCalculator;
 };
 

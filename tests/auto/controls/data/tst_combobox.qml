@@ -307,7 +307,11 @@ TestCase {
         var highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
         verify(highlightedSpy.valid)
 
-        waitForRendering(control)
+        var openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
+        verify(openedSpy.valid)
+
+        var closedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "closed"})
+        verify(closedSpy.valid)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
@@ -361,6 +365,8 @@ TestCase {
 
         // show popup
         keyClick(Qt.Key_Space)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
 
         compare(control.currentIndex, 0)
         compare(control.highlightedIndex, 0)
@@ -419,9 +425,11 @@ TestCase {
 
         // hide popup
         keyClick(Qt.Key_Space)
+        closedSpy.wait()
+        compare(closedSpy.count, 1)
 
         compare(control.currentIndex, 1)
-        tryCompare(control, "highlightedIndex", -1)
+        compare(control.highlightedIndex, -1)
     }
 
     function test_keys_space_enter_escape_data() {
@@ -441,7 +449,8 @@ TestCase {
         var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
-        waitForRendering(control)
+        var openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
+        verify(openedSpy.valid)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
@@ -456,6 +465,8 @@ TestCase {
         keyRelease(data.key1)
         compare(control.pressed, false)
         compare(control.popup.visible, data.showPopup)
+        if (data.showPopup)
+            openedSpy.wait()
 
         // hide popup
         keyPress(data.key2)
@@ -811,17 +822,25 @@ TestCase {
         var control = createTemporaryObject(comboBox, testCase, {model: 3})
         verify(control)
 
-        waitForRendering(control)
+        var openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
+        verify(openedSpy.valid)
+
+        var closedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "closed"})
+        verify(openedSpy.valid)
 
         // click - gain focus - show popup
         mouseClick(control)
         verify(control.activeFocus)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
         compare(control.popup.visible, true)
 
         // lose focus - hide popup
         control.focus = false
         verify(!control.activeFocus)
-        tryCompare(control.popup, "visible", false)
+        closedSpy.wait()
+        compare(closedSpy.count, 1)
+        compare(control.popup.visible, false)
     }
 
     function test_baseline() {
@@ -906,8 +925,6 @@ TestCase {
         verify(control.button)
         verify(control.combobox)
 
-        waitForRendering(control)
-
         compare(control.font.pixelSize, 30)
         compare(control.button.font.pixelSize, 20)
         compare(control.combobox.font.pixelSize, 30)
@@ -981,12 +998,17 @@ TestCase {
         var control = createTemporaryObject(comboBox, testCase, {currentIndex: 1, model: ["Apple", "Orange", "Banana"]})
         verify(control)
 
-        waitForRendering(control)
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        if (data.open)
+        if (data.open) {
+            var openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
+            verify(openedSpy.valid)
+
             keyClick(Qt.Key_Space)
+            openedSpy.wait()
+            compare(openedSpy.count, 1)
+        }
         compare(control.popup.visible, data.open)
 
         compare(control.currentIndex, 1)

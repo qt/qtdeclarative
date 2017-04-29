@@ -44,6 +44,7 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
@@ -89,6 +90,20 @@ private slots:
 
     void interactive_data();
     void interactive();
+
+    void flicking();
+
+private:
+    struct TouchDeviceDeleter
+    {
+        static inline void cleanup(QTouchDevice *device)
+        {
+            QWindowSystemInterface::unregisterTouchDevice(device);
+            delete device;
+        }
+    };
+
+    QScopedPointer<QTouchDevice, TouchDeviceDeleter> touchDevice;
 };
 
 
@@ -96,6 +111,10 @@ void tst_Drawer::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+
+    touchDevice.reset(new QTouchDevice);
+    touchDevice->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(touchDevice.data());
 }
 
 void tst_Drawer::visible_data()
@@ -749,36 +768,23 @@ void tst_Drawer::touch()
     QVERIFY(drawerOpenedSpy.isValid());
     QVERIFY(drawerClosedSpy.isValid());
 
-    struct TouchDeviceDeleter
-    {
-        static inline void cleanup(QTouchDevice *device)
-        {
-            QWindowSystemInterface::unregisterTouchDevice(device);
-            delete device;
-        }
-    };
-
-    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device.data());
-
     // drag to open
-    QTest::touchEvent(window, device.data()).press(0, QPoint(0, 100));
-    QTest::touchEvent(window, device.data()).move(0, QPoint(50, 100));
-    QTest::touchEvent(window, device.data()).move(0, QPoint(150, 100));
+    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(0, 100));
+    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(50, 100));
+    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(150, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
-    QTest::touchEvent(window, device.data()).release(0, QPoint(150, 100));
+    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(150, 100));
     QVERIFY(drawerOpenedSpy.wait());
     QCOMPARE(drawer->position(), 1.0);
 
     // drag to close
-    QTest::touchEvent(window, device.data()).press(0, QPoint(300, 100));
-    QTest::touchEvent(window, device.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
+    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(300, 100));
+    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
     for (int x = 300; x > 100; x -= 10)
-        QTest::touchEvent(window, device.data()).move(0, QPoint(x, 100));
-    QTest::touchEvent(window, device.data()).move(0, QPoint(100, 100));
+        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, 100));
+    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(100, 100));
     QTRY_COMPARE(drawer->position(), 0.5);
-    QTest::touchEvent(window, device.data()).release(0, QPoint(100, 100));
+    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(100, 100));
     QVERIFY(drawerClosedSpy.wait());
     QCOMPARE(drawer->position(), 0.0);
 }
@@ -871,6 +877,44 @@ void tst_Drawer::interactive()
     // close on escape
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(aboutToHideSpy.count(), 0);
+}
+
+void tst_Drawer::flicking()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("flicking.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QQuickFlickable *flickable = window->property("flickable").value<QQuickFlickable *>();
+    QVERIFY(flickable);
+
+    QSignalSpy drawerOpenedSpy(drawer, SIGNAL(opened()));
+    QVERIFY(drawerOpenedSpy.isValid());
+
+    drawer->open();
+    QVERIFY(drawerOpenedSpy.wait());
+
+    // mouse
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
+    for (int y = 200; y > 100; y -= 10)
+        QTest::mouseMove(window, QPoint(200, y), 1);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(200, 100));
+    QVERIFY(flickable->isFlicking());
+
+    // reset
+    flickable->setContentY(0);
+    QVERIFY(!flickable->isFlicking());
+
+    // touch
+    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(200, 200));
+    for (int y = 200; y > 100; y -= 10)
+        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(200, y));
+    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(200, 100));
+    QVERIFY(flickable->isFlicking());
 }
 
 QTEST_MAIN(tst_Drawer)

@@ -39,6 +39,7 @@
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
+#include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
@@ -207,17 +208,20 @@ void tst_popup::overlay()
     QQuickButton *button = window->property("button").value<QQuickButton*>();
     QVERIFY(button);
 
+    int overlayPressCount = 0;
+    int overlayReleaseCount = 0;
+
     popup->open();
     QVERIFY(popup->isVisible());
     QVERIFY(overlay->isVisible());
 
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
-    QCOMPARE(overlayPressedSignal.count(), 1);
-    QCOMPARE(overlayReleasedSignal.count(), 0);
+    QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
 
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
-    QCOMPARE(overlayPressedSignal.count(), 1);
-    QCOMPARE(overlayReleasedSignal.count(), 0); // no modal-popups open
+    QCOMPARE(overlayPressedSignal.count(), overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount); // no modal-popups open
 
     popup->close();
     QVERIFY(!popup->isVisible());
@@ -227,28 +231,48 @@ void tst_popup::overlay()
     popup->setModal(modal);
     popup->setClosePolicy(QQuickPopup::CloseOnReleaseOutside);
 
+    // mouse
     popup->open();
     QVERIFY(popup->isVisible());
     QVERIFY(overlay->isVisible());
 
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
-    QCOMPARE(overlayPressedSignal.count(), 2);
-    QCOMPARE(overlayReleasedSignal.count(), 0);
+    QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
 
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
-    QCOMPARE(overlayPressedSignal.count(), 2);
+    QCOMPARE(overlayPressedSignal.count(), overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), ++overlayReleaseCount);
 
-    #define comment "Non-modal popups do not yet support CloseOnReleaseXxx"
-    #define QEXPECT_NON_MODAL_POPUP_FAILS() \
-        QEXPECT_FAIL("Window", comment, Continue); \
-        QEXPECT_FAIL("Window,dim", comment, Continue); \
-        QEXPECT_FAIL("ApplicationWindow", comment, Continue); \
-        QEXPECT_FAIL("ApplicationWindow,dim", comment, Continue);
+    QVERIFY(!popup->isVisible());
+    QCOMPARE(overlay->isVisible(), popup->isVisible());
 
-    QEXPECT_NON_MODAL_POPUP_FAILS()
-    QCOMPARE(overlayReleasedSignal.count(), 1);
+    // touch
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QVERIFY(overlay->isVisible());
 
-    QEXPECT_NON_MODAL_POPUP_FAILS()
+    struct TouchDeviceDeleter
+    {
+        static inline void cleanup(QTouchDevice *device)
+        {
+            QWindowSystemInterface::unregisterTouchDevice(device);
+            delete device;
+        }
+    };
+
+    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device.data());
+
+    QTest::touchEvent(window, device.data()).press(0, QPoint(1, 1));
+    QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
+
+    QTest::touchEvent(window, device.data()).release(0, QPoint(1, 1));
+    QCOMPARE(overlayPressedSignal.count(), overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), ++overlayReleaseCount);
+
     QVERIFY(!popup->isVisible());
     QCOMPARE(overlay->isVisible(), popup->isVisible());
 }

@@ -284,7 +284,7 @@ bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy f
     const bool onOutside = closePolicy & (flags & outsideFlags);
     const bool onOutsideParent = closePolicy & (flags & outsideParentFlags);
     if (onOutside || onOutsideParent) {
-        if (!popupItem->contains(popupItem->mapFromScene(pos))) {
+        if (!contains(pos)) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(parentItem->mapFromScene(pos))) {
                 closeOrReject();
                 return true;
@@ -292,6 +292,11 @@ bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy f
         }
     }
     return false;
+}
+
+bool QQuickPopupPrivate::contains(const QPointF &scenePos) const
+{
+    return popupItem->contains(popupItem->mapFromScene(scenePos));
 }
 
 bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
@@ -319,6 +324,7 @@ bool QQuickPopupPrivate::blockInput(QQuickItem *item, const QPointF &point) cons
 bool QQuickPopupPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     Q_UNUSED(timestamp);
+    pressPoint = point;
     tryClose(point, QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
     return blockInput(item, point);
 }
@@ -333,6 +339,7 @@ bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QPointF &point, u
 {
     Q_UNUSED(timestamp);
     tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+    pressPoint = QPointF();
     touchId = -1;
     return blockInput(item, point);
 }
@@ -346,6 +353,7 @@ void QQuickPopupPrivate::handleUngrab()
         if (p->mouseGrabberPopup == q)
             p->mouseGrabberPopup = nullptr;
     }
+    pressPoint = QPointF();
     touchId = -1;
 }
 

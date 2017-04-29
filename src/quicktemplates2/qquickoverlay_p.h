@@ -92,6 +92,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
 #endif
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
+    bool eventFilter(QObject *object, QEvent *event) override;
 
 private:
     Q_DISABLE_COPY(QQuickOverlay)

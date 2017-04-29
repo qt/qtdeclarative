@@ -532,7 +532,6 @@ TestCase {
 
         var control2 = createTemporaryObject(sliderComponent, testCase, {y: control1.height})
         verify(control2)
-        waitForRendering(control2)
 
         // press and move the first handle of the second slider
         touch.stationary(0).stationary(1).press(2, control2, 0, 0).commit()
