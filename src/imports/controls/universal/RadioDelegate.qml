@@ -37,6 +37,7 @@
 import QtQuick 2.9
 import QtQuick.Templates 2.2 as T
 import QtQuick.Controls.Universal 2.2
+import QtQuick.Controls.Universal.impl 2.2
 
 T.RadioDelegate {
     id: control
