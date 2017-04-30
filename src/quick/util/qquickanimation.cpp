@@ -2718,3 +2718,5 @@ QQuickAnimationPropertyUpdater::~QQuickAnimationPropertyUpdater()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimation_p.cpp"

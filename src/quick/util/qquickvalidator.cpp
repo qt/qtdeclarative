@@ -225,3 +225,4 @@ void QQuickDoubleValidator::resetLocaleName()
 
 QT_END_NAMESPACE
 
+#include "moc_qquickvalidator_p.cpp"

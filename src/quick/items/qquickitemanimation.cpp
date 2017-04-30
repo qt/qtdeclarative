@@ -1051,3 +1051,5 @@ QQuickPathAnimationAnimator::~QQuickPathAnimationAnimator()
 #endif // quick_path
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemanimation_p.cpp"

@@ -536,5 +536,6 @@ void QQuickFramebufferObject::Renderer::update()
 
 
 #include "qquickframebufferobject.moc"
+#include "moc_qquickframebufferobject.cpp"
 
 QT_END_NAMESPACE

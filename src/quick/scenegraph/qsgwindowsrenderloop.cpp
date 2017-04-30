@@ -494,3 +494,5 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgwindowsrenderloop_p.cpp"

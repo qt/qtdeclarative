@@ -340,6 +340,7 @@ private slots:
     void constkw();
     void redefineGlobalProp();
     void freeze_empty_object();
+    void singleBlockLoops();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8348,6 +8349,14 @@ void tst_qqmlecmascript::freeze_empty_object()
     QCOMPARE(v.toBool(), true);
 }
 
+void tst_qqmlecmascript::singleBlockLoops()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_59012.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+    QVERIFY(!component.isError());
+}
 
 QTEST_MAIN(tst_qqmlecmascript)
 

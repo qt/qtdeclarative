@@ -567,3 +567,5 @@ QDebug operator<<(QDebug debug, const QSGShaderEffectNode::VariableData &vd)
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qsgadaptationlayer_p.cpp"

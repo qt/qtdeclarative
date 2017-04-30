@@ -313,3 +313,5 @@ void QQmlConnections::componentComplete()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlconnections_p.cpp"

@@ -230,3 +230,5 @@ void QV4DebuggerAgent::clearAllPauseRequests()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4debuggeragent.cpp"

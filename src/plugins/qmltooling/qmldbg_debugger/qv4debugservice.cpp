@@ -873,3 +873,5 @@ int QV4DebugServiceImpl::selectedFrame() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4debugservice.cpp"

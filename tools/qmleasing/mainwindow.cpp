@@ -155,3 +155,5 @@ void MainWindow::importData(int result)
         .arg(ii*is,0,'f',3).arg(1-oi, 0, 'f', 3).arg(1-(oi*os), 0, 'f', 3);
     ui_properties.plainTextEdit->setPlainText(generatedString);
 }
+
+#include "moc_mainwindow.cpp"

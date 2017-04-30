@@ -684,3 +684,5 @@ void QQuickBorderImage::pixmapChange()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickborderimage_p.cpp"

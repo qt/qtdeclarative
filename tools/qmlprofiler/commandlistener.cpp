@@ -34,3 +34,5 @@ void CommandListener::readCommand()
 {
     emit command(QTextStream(stdin).readLine());
 }
+
+#include "moc_commandlistener.cpp"

@@ -2190,3 +2190,4 @@ void MultiplyWrappedQObjectMap::removeDestroyedObject(QObject *object)
 
 QT_END_NAMESPACE
 
+#include "moc_qv4qobjectwrapper_p.cpp"

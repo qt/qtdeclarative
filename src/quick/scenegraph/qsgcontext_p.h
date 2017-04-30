@@ -144,6 +144,7 @@ public:
     static QSGRenderLoop *createWindowManager();
 
     static void setBackend(const QString &backend);
+    static QString backend();
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGRenderContext : public QObject

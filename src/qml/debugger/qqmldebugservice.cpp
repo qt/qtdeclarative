@@ -178,3 +178,4 @@ const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
 QT_END_NAMESPACE
 
 #include "qqmldebugservice.moc"
+#include "moc_qqmldebugservice_p.cpp"

@@ -151,3 +151,5 @@ bool QQuickSpriteGoalAffector::affectParticle(QQuickParticleData *d, qreal dt)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickspritegoal_p.cpp"

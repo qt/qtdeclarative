@@ -566,3 +566,5 @@ QVariantList QQmlEasingValueType::bezierCurve() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlvaluetype_p.cpp"

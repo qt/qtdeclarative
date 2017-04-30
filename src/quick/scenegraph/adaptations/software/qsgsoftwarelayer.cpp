@@ -259,3 +259,5 @@ void QSGSoftwareLayer::grab()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgsoftwarelayer_p.cpp"

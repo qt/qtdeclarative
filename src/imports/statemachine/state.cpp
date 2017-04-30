@@ -242,3 +242,4 @@ QQmlListProperty<QObject> State::children()
     \endlist
 */
 
+#include "moc_state.cpp"

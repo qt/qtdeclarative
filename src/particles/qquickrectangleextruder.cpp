@@ -85,3 +85,5 @@ bool QQuickRectangleExtruder::contains(const QRectF &bounds, const QPointF &poin
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickrectangleextruder_p.cpp"

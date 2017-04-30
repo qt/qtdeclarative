@@ -222,3 +222,5 @@ QUrl QQmlFileSelectorInterceptor::intercept(const QUrl &path, DataType type)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlfileselector.cpp"

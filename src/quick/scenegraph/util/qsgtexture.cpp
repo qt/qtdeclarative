@@ -797,7 +797,7 @@ void QSGPlainTexture::bind()
     GLenum externalFormat = GL_RGBA;
     GLenum internalFormat = GL_RGBA;
 
-#if defined(Q_OS_ANDROID)
+#if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)
     QString *deviceName =
             static_cast<QString *>(QGuiApplication::platformNativeInterface()->nativeResourceForIntegration("AndroidDeviceName"));
     static bool wrongfullyReportsBgra8888Support = deviceName != 0
@@ -904,3 +904,6 @@ void QSGPlainTexture::bind()
 
 
 QT_END_NAMESPACE
+
+#include "moc_qsgtexture.cpp"
+#include "moc_qsgtexture_p.cpp"

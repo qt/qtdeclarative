@@ -386,3 +386,5 @@ void QQmlBind::eval()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlbind_p.cpp"

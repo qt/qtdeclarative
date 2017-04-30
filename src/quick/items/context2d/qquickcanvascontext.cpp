@@ -68,3 +68,4 @@ void QQuickCanvasContext::flush()
 QT_END_NAMESPACE
 
 
+#include "moc_qquickcanvascontext_p.cpp"

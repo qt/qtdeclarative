@@ -206,3 +206,5 @@ GlobalInspector *InspectTool::globalInspector() const
 } // namespace QmlJSDebugger
 
 QT_END_NAMESPACE
+
+#include "moc_inspecttool.cpp"

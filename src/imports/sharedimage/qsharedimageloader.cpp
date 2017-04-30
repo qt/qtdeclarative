@@ -58,7 +58,7 @@ struct SharedImageHeader {
 };
 Q_STATIC_ASSERT(sizeof(SharedImageHeader) % 4 == 0);
 
-#ifndef QT_NO_SHAREDMEMORY
+#if QT_CONFIG(sharedmemory)
 struct SharedImageInfo {
     QString path;
     QPointer<QSharedMemory> shmp;
@@ -160,7 +160,7 @@ QImage QSharedImageLoaderPrivate::createImageFromMem(const void *data, void *cle
 
 QImage QSharedImageLoaderPrivate::load(const QString &path, QSharedImageLoader::ImageParameters *params)
 {
-#ifndef QT_NO_SHAREDMEMORY
+#if QT_CONFIG(sharedmemory)
     Q_Q(QSharedImageLoader);
 
     QImage nil;

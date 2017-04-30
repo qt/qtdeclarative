@@ -415,3 +415,5 @@ bool QQuickItem::grabToImage(const QJSValue &callback, const QSize &targetSize)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemgrabresult.cpp"

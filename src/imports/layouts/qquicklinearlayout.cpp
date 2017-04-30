@@ -850,3 +850,5 @@ void QQuickLinearLayout::insertLayoutItems()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklinearlayout_p.cpp"

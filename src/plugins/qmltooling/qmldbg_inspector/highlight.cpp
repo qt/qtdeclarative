@@ -201,3 +201,5 @@ void SelectionHighlight::disableNameDisplay()
 } // namespace QmlJSDebugger
 
 QT_END_NAMESPACE
+
+#include "moc_highlight.cpp"

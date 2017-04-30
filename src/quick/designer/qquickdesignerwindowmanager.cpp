@@ -115,3 +115,4 @@ void QQuickDesignerWindowManager::update(QQuickWindow *window)
 QT_END_NAMESPACE
 
 
+#include "moc_qquickdesignerwindowmanager_p.cpp"

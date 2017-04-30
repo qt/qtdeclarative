@@ -83,3 +83,5 @@ QPointF QQuickLineExtruder::extrude(const QRectF &r)
     }
     return QPointF(x,y);
 }
+
+#include "moc_qquicklineextruder_p.cpp"

@@ -439,3 +439,5 @@ void QQmlObjectModel::clear()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlobjectmodel_p.cpp"

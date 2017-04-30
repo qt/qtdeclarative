@@ -205,3 +205,5 @@ void QQuickWindowModule::defineModule()
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPEINFO(QQuickWindowQmlImpl, QML_HAS_ATTACHED_PROPERTIES)
+
+#include "moc_qquickwindowmodule_p.cpp"

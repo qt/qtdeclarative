@@ -269,3 +269,5 @@ void QQuickSprite::startImageLoading()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicksprite_p.cpp"

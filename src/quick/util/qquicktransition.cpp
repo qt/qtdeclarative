@@ -457,3 +457,5 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickTransition::animations()
 QT_END_NAMESPACE
 
 //#include <qquicktransition.moc>
+
+#include "moc_qquicktransition_p.cpp"
