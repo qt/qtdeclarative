@@ -88,7 +88,7 @@ void QQuickPopupPositioner::setParentItem(QQuickItem *parent)
     addAncestorListeners(parent->parentItem());
 
     if (m_popup->popupItem()->isVisible())
-        reposition();
+        QQuickPopupPrivate::get(m_popup)->reposition();
 }
 
 void QQuickPopupPositioner::reposition()
@@ -236,7 +236,7 @@ void QQuickPopupPositioner::reposition()
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
     if (m_parentItem && m_popup->popupItem()->isVisible())
-        reposition();
+        QQuickPopupPrivate::get(m_popup)->reposition();
 }
 
 void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)

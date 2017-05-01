@@ -422,6 +422,16 @@ void tst_Drawer::reposition()
 
     drawer->close();
     QTRY_COMPARE(geometry(popupItem), QRectF(window->width(), 150, window->width() / 2, window->height() - 150));
+
+    QQuickDrawer *drawer2 = window->property("drawer2").value<QQuickDrawer *>();
+    QVERIFY(drawer2);
+    QQuickItem *popupItem2 = drawer2->popupItem();
+    QVERIFY(popupItem2);
+
+    drawer2->open();
+    QVERIFY(popupItem2->isVisible());
+    QCOMPARE(popupItem2->x(), -drawer2->width());
+    QTRY_COMPARE(popupItem2->x(), 0.0);
 }
 
 void tst_Drawer::header()

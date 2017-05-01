@@ -52,10 +52,12 @@ import QtQuick 2.6
 import QtQuick.Controls 2.0
 
 ApplicationWindow {
+    id: window
     width: 400
     height: 400
 
     property alias drawer: drawer
+    property alias drawer2: drawer2
 
     header: Item { implicitHeight: 50 }
     footer: Item { implicitHeight: 50 }
@@ -64,5 +66,11 @@ ApplicationWindow {
         id: drawer
         width: parent.width / 2
         implicitHeight: parent.height
+    }
+
+    Drawer {
+        id: drawer2
+        width: Math.min(window.width, window.height) / 3 * 2
+        height: window.height
     }
 }
