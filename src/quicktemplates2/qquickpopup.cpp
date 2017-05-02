@@ -360,14 +360,13 @@ void QQuickPopupPrivate::handleUngrab()
 
 bool QQuickPopupPrivate::handleMouseEvent(QQuickItem *item, QMouseEvent *event)
 {
-    QPointF pos = item->mapToScene(event->localPos());
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        return handlePress(item, pos, event->timestamp());
+        return handlePress(item, event->windowPos(), event->timestamp());
     case QEvent::MouseMove:
-        return handleMove(item, pos, event->timestamp());
+        return handleMove(item, event->windowPos(), event->timestamp());
     case QEvent::MouseButtonRelease:
-        return handleRelease(item, pos, event->timestamp());
+        return handleRelease(item, event->windowPos(), event->timestamp());
     default:
         Q_UNREACHABLE();
         return false;
