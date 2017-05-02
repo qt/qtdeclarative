@@ -54,7 +54,7 @@ T.CheckDelegate {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? undefined : Default.textDisabledLightColor
+    icon.color: enabled ? Default.textDarkColor : Default.textDisabledColor
 
     contentItem: IconLabel {
         leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0

@@ -53,7 +53,7 @@ T.TabButton {
 
     icon.width: 24
     icon.height: 24
-    icon.color: !enabled ? Default.textDisabledLightColor : !checked ? Default.textLightColor : Default.textColor
+    icon.color: Color.transparent(!checked ? Default.textLightColor : down ? Default.textDarkColor : Default.textColor, enabled ? 1 : 0.3)
 
     contentItem: IconLabel {
         spacing: control.spacing

@@ -55,7 +55,9 @@ T.Button {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? undefined : Default.textDisabledLightColor
+    icon.color: Color.transparent(checked || highlighted ? Default.textLightColor :
+        visualFocus ? Default.focusColor : down ? Default.textDarkColor : Default.textColor,
+        enabled || highlighted || checked ? 1 : 0.3)
 
     contentItem: IconLabel {
         spacing: control.spacing
