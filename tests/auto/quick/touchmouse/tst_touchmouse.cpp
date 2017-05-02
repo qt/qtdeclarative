@@ -74,7 +74,9 @@ public:
         : QQuickItem(parent), touchUngrabCount(0), acceptMouse(false), acceptTouch(false), filterTouch(false), point0(-1)
     {
         setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         setAcceptTouchEvents(true);
+#endif
     }
 
     void touchEvent(QTouchEvent *event)

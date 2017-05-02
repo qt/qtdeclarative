@@ -64,7 +64,11 @@ public:
         , ungrabs(0)
         , m_active(false)
     {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         setAcceptTouchEvents(true);
+#else
+        setAcceptedMouseButtons(Qt::LeftButton); // not really, but we want touch events
+#endif
     }
 
     QPointF pos() const { return m_pos; }

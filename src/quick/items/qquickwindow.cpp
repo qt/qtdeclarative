@@ -2668,9 +2668,15 @@ void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *>
     }
     filteringParentItems.clear();
     for (QQuickItem *item : targetItems) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        bool acceptsTouchEvents = item->acceptTouchEvents();
+#else
+        // In versions prior to Qt 6, we can't trust item->acceptTouchEvents() here, because it defaults to true.
+        bool acceptsTouchEvents = false;
+#endif
         QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(item);
-        // If the item neither handles events nor has handlers which do, then it will never be a receiver, so filtering is irrelevant
-        if (!item->acceptedMouseButtons() && !item->acceptTouchEvents() &&
+        // If the item neither handles events nor has handlers which do, then it will never be a receiver, so filtering is irrelevant.
+        if (!item->acceptedMouseButtons() && !acceptsTouchEvents &&
                 !(itemPriv->extra.isAllocated() && !itemPriv->extra->pointerHandlers.isEmpty()))
             continue;
         QQuickItem *parent = item->parentItem();

@@ -3171,7 +3171,11 @@ QQuickItemPrivate::QQuickItemPrivate()
     , antialiasingValid(false)
     , isTabFence(false)
     , replayingPressEvent(false)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    , touchEnabled(true)
+#else
     , touchEnabled(false)
+#endif
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
