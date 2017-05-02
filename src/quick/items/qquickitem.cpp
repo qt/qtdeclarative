@@ -4885,6 +4885,63 @@ QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
     return nullptr;
 }
 
+/*!
+    \qmlmethod QtQuick::Item::dumpItemTree()
+
+    Dumps some details about the
+    \l {Concepts - Visual Parent in Qt Quick}{visual tree of Items} starting
+    with this item and its children, recursively.
+
+    The output looks similar to that of this QML code:
+
+    \qml
+    function dump(object, indent) {
+        console.log(indent + object)
+        for (const i in object.children)
+            dump(object.children[i], indent + "    ")
+    }
+
+    dump(myItem, "")
+    \endqml
+
+    So if you want more details, you can implement your own function and add
+    extra output to the console.log, such as values of specific properties.
+
+    \sa QObject::dumpObjectTree()
+    \since 6.3
+*/
+/*!
+    Dumps some details about the
+    \l {Concepts - Visual Parent in Qt Quick}{visual tree of Items} starting
+    with this item, recursively.
+
+    \note QObject::dumpObjectTree() dumps a similar tree; but, as explained
+    in \l {Concepts - Visual Parent in Qt Quick}, an item's QObject::parent()
+    sometimes differs from its QQuickItem::parentItem(). You can dump
+    both trees to see the difference.
+
+    \note The exact output format may change in future versions of Qt.
+
+    \since 6.3
+    \sa {Debugging Techniques}
+    \sa {https://doc.qt.io/GammaRay/gammaray-qtquick2-inspector.html}{GammaRay's Qt Quick Inspector}
+*/
+void QQuickItem::dumpItemTree() const
+{
+    Q_D(const QQuickItem);
+    d->dumpItemTree(0);
+}
+
+void QQuickItemPrivate::dumpItemTree(int indent) const
+{
+    Q_Q(const QQuickItem);
+    qDebug().nospace().noquote() << QString(indent * 4, QLatin1Char(' ')) << q;
+    for (const QQuickItem *ch : childItems) {
+        auto itemPriv = QQuickItemPrivate::get(ch);
+        itemPriv->dumpItemTree(indent + 1);
+    }
+}
+
 QQmlListProperty<QObject> QQuickItemPrivate::resources()
 {
     return QQmlListProperty<QObject>(q_func(), nullptr, QQuickItemPrivate::resources_append,

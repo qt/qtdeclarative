@@ -359,6 +359,8 @@ public:
     Q_REVISION(2, 1) Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
+    Q_REVISION(6, 3) Q_INVOKABLE void dumpItemTree() const;
+
 #if QT_CONFIG(im)
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 #endif

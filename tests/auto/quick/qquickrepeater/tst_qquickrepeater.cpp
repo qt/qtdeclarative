@@ -46,6 +46,7 @@
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests.repeater")
 
 class tst_QQuickRepeater : public QQmlDataTest
 {
@@ -463,6 +464,13 @@ void tst_QQuickRepeater::itemModel()
     testObject->setUseModel(true);
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(!testObject->error());
+
+    if (lcTests().isDebugEnabled()) {
+        qCDebug(lcTests) << "=== item tree:";
+        window->contentItem()->dumpItemTree();
+        qCDebug(lcTests) << "=== object tree:";
+        window->dumpObjectTree();
+    }
 
     QCOMPARE(container->childItems().count(), 4);
     QCOMPARE(qobject_cast<QObject*>(container->childItems().at(0))->objectName(), QLatin1String("item1"));

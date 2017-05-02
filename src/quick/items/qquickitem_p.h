@@ -687,6 +687,7 @@ public:
 #endif
 
     virtual void updatePolish() { }
+    virtual void dumpItemTree(int indent) const;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ExtraDataTags)
