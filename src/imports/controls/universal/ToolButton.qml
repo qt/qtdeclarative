@@ -54,7 +54,7 @@ T.ToolButton {
 
     icon.width: 20
     icon.height: 20
-    icon.color: enabled ? undefined : Color.transparent(Universal.foreground, 0.2)
+    icon.color: Color.transparent(Universal.foreground, enabled ? 1.0 : 0.2)
 
     property bool useSystemFocusVisuals: true
 

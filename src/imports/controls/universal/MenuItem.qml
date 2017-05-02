@@ -57,7 +57,7 @@ T.MenuItem {
 
     icon.width: 20
     icon.height: 20
-    icon.color: enabled ? undefined : Color.transparent(Universal.foreground, 0.2)
+    icon.color: !enabled ? Universal.baseLowColor : Universal.baseHighColor
 
     contentItem: IconLabel {
         leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
