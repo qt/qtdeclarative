@@ -53,6 +53,7 @@ class tst_popup : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void initTestCase();
     void visible_data();
     void visible();
     void state();
@@ -76,6 +77,12 @@ private slots:
     void cursorShape();
     void componentComplete();
 };
+
+void tst_popup::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+}
 
 void tst_popup::visible_data()
 {
