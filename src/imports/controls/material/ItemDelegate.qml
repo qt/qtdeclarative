@@ -56,7 +56,7 @@ T.ItemDelegate {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? undefined : Material.hintTextColor
+    icon.color: enabled ? Material.foreground : Material.hintTextColor
 
     contentItem: IconLabel {
         spacing: control.spacing

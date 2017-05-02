@@ -58,7 +58,7 @@ T.RadioDelegate {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? undefined : Material.hintTextColor
+    icon.color: enabled ? Material.foreground : Material.hintTextColor
 
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2

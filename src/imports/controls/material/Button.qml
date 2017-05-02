@@ -58,7 +58,9 @@ T.Button {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? undefined : Material.hintTextColor
+    icon.color: !enabled ? Material.hintTextColor :
+        flat && highlighted ? Material.accentColor :
+        highlighted ? Material.primaryHighlightedTextColor : Material.foreground
 
     Material.elevation: flat ? control.down || control.hovered ? 2 : 0
                              : control.down ? 8 : 2

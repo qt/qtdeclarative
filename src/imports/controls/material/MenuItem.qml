@@ -58,7 +58,7 @@ T.MenuItem {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? undefined : Material.hintTextColor
+    icon.color: enabled ? Material.foreground : Material.hintTextColor
 
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
