@@ -176,7 +176,7 @@ void QQuickTabBarPrivate::updateLayout()
     const qreal totalSpacing = qMax(0, count - 1) * spacing;
     totalWidth += totalSpacing;
 
-    const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / resizableCount;
+    const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / qMax(1, resizableCount);
 
     updatingLayout = true;
     for (QQuickItem *item : qAsConst(allItems)) {
