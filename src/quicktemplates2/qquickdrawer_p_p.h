@@ -66,7 +66,9 @@ public:
         return drawer->d_func();
     }
 
+    qreal offsetAt(const QPointF &point) const;
     qreal positionAt(const QPointF &point) const;
+
     void reposition() override;
     void resizeOverlay() override;
 

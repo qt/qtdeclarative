@@ -1210,6 +1210,13 @@ void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
         QQuickItemDelegate::mouseReleaseEvent(event);
 }
 
+void QQuickSwipeDelegate::touchEvent(QTouchEvent *event)
+{
+    // Don't allow QQuickControl accept the touch event, because QQuickSwipeDelegate
+    // is still based on synthesized mouse events
+    event->ignore();
+}
+
 void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeDelegate);

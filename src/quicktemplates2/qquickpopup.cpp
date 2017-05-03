@@ -338,7 +338,8 @@ bool QQuickPopupPrivate::handleMove(QQuickItem *item, const QPointF &point, ulon
 bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     Q_UNUSED(timestamp);
-    tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+    if (item != popupItem && !contains(pressPoint))
+        tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
     pressPoint = QPointF();
     touchId = -1;
     return blockInput(item, point);
@@ -359,14 +360,13 @@ void QQuickPopupPrivate::handleUngrab()
 
 bool QQuickPopupPrivate::handleMouseEvent(QQuickItem *item, QMouseEvent *event)
 {
-    QPointF pos = item->mapToScene(event->localPos());
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        return handlePress(item, pos, event->timestamp());
+        return handlePress(item, event->windowPos(), event->timestamp());
     case QEvent::MouseMove:
-        return handleMove(item, pos, event->timestamp());
+        return handleMove(item, event->windowPos(), event->timestamp());
     case QEvent::MouseButtonRelease:
-        return handleRelease(item, pos, event->timestamp());
+        return handleRelease(item, event->windowPos(), event->timestamp());
     default:
         Q_UNREACHABLE();
         return false;
@@ -1575,7 +1575,17 @@ bool QQuickPopup::hasActiveFocus() const
 /*!
     \qmlproperty bool QtQuick.Controls::Popup::modal
 
-    This property holds whether the popup is modal. The default value is \c false.
+    This property holds whether the popup is modal.
+
+    Modal popups often have a distinctive background dimming effect defined
+    in \l {ApplicationWindow::overlay}{overlay.modal}, and do not allow press
+    or release events through to items beneath them.
+
+    On desktop platforms, it is common for modal popups to be closed only when
+    the escape key is pressed. To achieve this behavior, set
+    \l closePolicy to \c Popup.CloseOnEscape.
+
+    The default value is \c false.
 */
 bool QQuickPopup::isModal() const
 {

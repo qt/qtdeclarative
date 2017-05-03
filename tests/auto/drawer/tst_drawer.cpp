@@ -91,7 +91,8 @@ private slots:
     void interactive_data();
     void interactive();
 
-    void flicking();
+    void flickable_data();
+    void flickable();
 
 private:
     struct TouchDeviceDeleter
@@ -422,6 +423,16 @@ void tst_Drawer::reposition()
 
     drawer->close();
     QTRY_COMPARE(geometry(popupItem), QRectF(window->width(), 150, window->width() / 2, window->height() - 150));
+
+    QQuickDrawer *drawer2 = window->property("drawer2").value<QQuickDrawer *>();
+    QVERIFY(drawer2);
+    QQuickItem *popupItem2 = drawer2->popupItem();
+    QVERIFY(popupItem2);
+
+    drawer2->open();
+    QVERIFY(popupItem2->isVisible());
+    QCOMPARE(popupItem2->x(), -drawer2->width());
+    QTRY_COMPARE(popupItem2->x(), 0.0);
 }
 
 void tst_Drawer::header()
@@ -879,9 +890,25 @@ void tst_Drawer::interactive()
     QCOMPARE(aboutToHideSpy.count(), 0);
 }
 
-void tst_Drawer::flicking()
+void tst_Drawer::flickable_data()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("flicking.qml"));
+    QTest::addColumn<bool>("mouse");
+    QTest::addColumn<QPoint>("from");
+    QTest::addColumn<QPoint>("to");
+
+    QTest::newRow("mouse,straight") << true << QPoint(200, 200) << QPoint(200, 100);
+    QTest::newRow("mouse,diagonal") << true << QPoint(200, 200) << QPoint(250, 100);
+    QTest::newRow("touch,straight") << false << QPoint(200, 200) << QPoint(200, 100);
+    QTest::newRow("touch,diagonal") << false << QPoint(200, 200) << QPoint(250, 100);
+}
+
+void tst_Drawer::flickable()
+{
+    QFETCH(bool, mouse);
+    QFETCH(QPoint, from);
+    QFETCH(QPoint, to);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("flickable.qml"));
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -898,23 +925,31 @@ void tst_Drawer::flicking()
     drawer->open();
     QVERIFY(drawerOpenedSpy.wait());
 
-    // mouse
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
-    for (int y = 200; y > 100; y -= 10)
-        QTest::mouseMove(window, QPoint(200, y), 1);
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(200, 100));
-    QVERIFY(flickable->isFlicking());
+    if (mouse)
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+    else
+        QTest::touchEvent(window, touchDevice.data()).press(0, from);
 
-    // reset
-    flickable->setContentY(0);
-    QVERIFY(!flickable->isFlicking());
+    static const int steps = 10;
+    for (int i = 0; i < steps; ++i) {
+        int x = i * qAbs(from.x() - to.x()) / steps;
+        int y = i * qAbs(from.y() - to.y()) / steps;
 
-    // touch
-    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(200, 200));
-    for (int y = 200; y > 100; y -= 10)
-        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(200, y));
-    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(200, 100));
-    QVERIFY(flickable->isFlicking());
+        if (mouse)
+            QTest::mouseMove(window, QPoint(x, y));
+        else
+            QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, y));
+        QTest::qWait(1); // avoid infinite velocity
+    }
+
+    QVERIFY(flickable->isDragging());
+
+    if (mouse)
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    else
+        QTest::touchEvent(window, touchDevice.data()).release(0, to);
+
+    QVERIFY(!flickable->isDragging());
 }
 
 QTEST_MAIN(tst_Drawer)

@@ -42,7 +42,7 @@ Rectangle {
 
     color: parent.Material.accentColor
     width: 2
-    visible: parent.activeFocus && parent.selectionStart === parent.selectionEnd
+    visible: parent.activeFocus && !parent.readOnly && parent.selectionStart === parent.selectionEnd
 
     Connections {
         target: cursor.parent
@@ -55,7 +55,7 @@ Rectangle {
 
     Timer {
         id: timer
-        running: cursor.parent.activeFocus
+        running: cursor.parent.activeFocus && !cursor.parent.readOnly
         repeat: true
         interval: Qt.styleHints.cursorFlashTime / 2
         onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0

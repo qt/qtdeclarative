@@ -169,6 +169,17 @@ QQuickDrawerPrivate::QQuickDrawerPrivate()
     setEdge(Qt::LeftEdge);
 }
 
+qreal QQuickDrawerPrivate::offsetAt(const QPointF &point) const
+{
+    qreal offset = positionAt(point) - position;
+
+    // don't jump when dragged open
+    if (offset > 0 && position > 0 && !contains(point))
+        offset = 0;
+
+    return offset;
+}
+
 qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
 {
     Q_Q(const QQuickDrawer);
@@ -301,10 +312,12 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     const int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
     bool overThreshold = false;
     if (position > 0 || dragMargin > 0) {
+        const bool xOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
+        const bool yOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
         if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-            overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
+            overThreshold = xOverThreshold && !yOverThreshold;
         else
-            overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
+            overThreshold = yOverThreshold && !xOverThreshold;
     }
 
     // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
@@ -320,11 +333,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
         if (!grabber || !grabber->keepMouseGrab()) {
             popupItem->grabMouse();
             popupItem->setKeepMouseGrab(true);
-            offset = positionAt(movePoint) - position;
-
-            // don't jump when dragged open
-            if (offset > 0 && position > 0 && !contains(movePoint))
-                offset = 0;
+            offset = offsetAt(movePoint);
         }
     }
 
@@ -351,10 +360,12 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         // larger threshold to avoid being too eager to steal touch (QTBUG-50045)
         const int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
         if (position > 0 || dragMargin > 0) {
+            const bool xOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, &point, threshold);
+            const bool yOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, &point, threshold);
             if (edge == Qt::LeftEdge || edge == Qt::RightEdge)
-                overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, &point, threshold);
+                overThreshold = xOverThreshold && !yOverThreshold;
             else
-                overThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, &point, threshold);
+                overThreshold = yOverThreshold && !xOverThreshold;
         }
 
         // Don't be too eager to steal presses outside the drawer (QTBUG-53929)
@@ -367,11 +378,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 
         if (overThreshold) {
             popupItem->setKeepTouchGrab(true);
-            offset = positionAt(movePoint) - position;
-
-            // don't jump when dragged open
-            if (offset > 0 && position > 0 && !contains(movePoint))
-                offset = 0;
+            offset = offsetAt(movePoint);
         }
     }
 

@@ -49,13 +49,11 @@ private slots:
     void verify();
     void verify_data();
 
-    void screenshots();
-    void screenshots_data();
-
 private:
-    QQuickView view;
+    void loadSnippet(const QString &source);
+
+    bool takeScreenshots;
     QMap<QString, QStringPair> snippetPaths;
-    QMap<QString, QStringPair> screenshotSnippetPaths;
 };
 
 static QMap<QString, QStringPair> findSnippets(const QDir &inputDir, const QDir &outputDir = QDir())
@@ -77,86 +75,70 @@ void tst_Snippets::initTestCase()
     QDir snippetsDir(QQC2_SNIPPETS_PATH);
     QVERIFY(!snippetsDir.path().isEmpty());
 
-    snippetPaths = findSnippets(snippetsDir);
+    QDir screenshotsDir(QDir::current().filePath("screenshots"));
+
+    takeScreenshots = qgetenv("SCREENSHOTS").toInt();
+    if (takeScreenshots)
+        QVERIFY(screenshotsDir.exists() || QDir::current().mkpath("screenshots"));
+
+    snippetPaths = findSnippets(snippetsDir, screenshotsDir);
     QVERIFY(!snippetPaths.isEmpty());
-
-    QDir screenshotOutputDir(QDir::current().filePath("screenshots"));
-    QVERIFY(screenshotOutputDir.exists() || QDir::current().mkpath("screenshots"));
-
-    QDir screenshotSnippetsDir(QQC2_SNIPPETS_PATH "/screenshots");
-    QVERIFY(!screenshotSnippetsDir.path().isEmpty());
-
-    screenshotSnippetPaths = findSnippets(screenshotSnippetsDir, screenshotOutputDir);
-    QVERIFY(!screenshotSnippetPaths.isEmpty());
 }
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
 
-static void loadSnippet(QQuickView *view, const QString &source)
-{
-    qRegisterMetaType<QList<QQmlError> >();
-    QSignalSpy warnings(view->engine(), SIGNAL(warnings(QList<QQmlError>)));
-    QVERIFY(warnings.isValid());
-
-    QUrl url = QUrl::fromLocalFile(source);
-    QQmlComponent *component = new QQmlComponent(view->engine(), view);
-    component->loadUrl(url);
-
-    QObject *root = component->beginCreate(view->rootContext());
-    QVERIFY(root);
-    view->setContent(url, component, root);
-    component->completeCreate();
-
-    QCOMPARE(view->status(), QQuickView::Ready);
-    QVERIFY(view->errors().isEmpty());
-    QVERIFY(view->rootObject());
-
-    QVERIFY(warnings.isEmpty());
-}
-
 void tst_Snippets::verify()
 {
     QFETCH(QString, input);
+    QFETCH(QString, output);
 
-    loadSnippet(&view, input);
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+
+    qRegisterMetaType<QList<QQmlError> >();
+    QSignalSpy warnings(&engine, SIGNAL(warnings(QList<QQmlError>)));
+    QVERIFY(warnings.isValid());
+
+    QUrl url = QUrl::fromLocalFile(input);
+    component.loadUrl(url);
+
+    QObject *root = component.create();
+    QVERIFY(root);
+
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QVERIFY(component.errors().isEmpty());
+
+    QVERIFY(warnings.isEmpty());
+
+    if (takeScreenshots) {
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
+        if (!window) {
+            QQuickView *view = new QQuickView;
+            view->setContent(url, &component, root);
+            window = view;
+        }
+
+        window->show();
+        window->requestActivate();
+        QVERIFY(QTest::qWaitForWindowActive(window));
+
+        QSharedPointer<QQuickItemGrabResult> result = window->contentItem()->grabToImage();
+        QSignalSpy spy(result.data(), SIGNAL(ready()));
+        QVERIFY(spy.isValid());
+        QVERIFY(spy.wait());
+        QVERIFY(result->saveToFile(output));
+
+        window->close();
+    }
 }
 
 void tst_Snippets::verify_data()
 {
     QTest::addColumn<QString>("input");
-
-    QMap<QString, QStringPair>::const_iterator it;
-    for (it = snippetPaths.constBegin(); it != snippetPaths.constEnd(); ++it)
-        QTest::newRow(qPrintable(it.key())) << it.value().first;
-}
-
-void tst_Snippets::screenshots()
-{
-    QFETCH(QString, input);
-    QFETCH(QString, output);
-
-    loadSnippet(&view, input);
-
-    view.show();
-    view.requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
-
-    QSharedPointer<QQuickItemGrabResult> result = view.contentItem()->grabToImage();
-    QSignalSpy spy(result.data(), SIGNAL(ready()));
-    QVERIFY(spy.isValid());
-    QVERIFY(spy.wait());
-    QVERIFY(result->saveToFile(output));
-
-    view.close();
-}
-
-void tst_Snippets::screenshots_data()
-{
-    QTest::addColumn<QString>("input");
     QTest::addColumn<QString>("output");
 
     QMap<QString, QStringPair>::const_iterator it;
-    for (it = screenshotSnippetPaths.constBegin(); it != screenshotSnippetPaths.constEnd(); ++it)
+    for (it = snippetPaths.constBegin(); it != snippetPaths.constEnd(); ++it)
         QTest::newRow(qPrintable(it.key())) << it.value().first << it.value().second;
 }
 
