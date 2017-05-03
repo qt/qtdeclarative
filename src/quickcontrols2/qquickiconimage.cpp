@@ -107,7 +107,7 @@ void QQuickIconImagePrivate::updateFillMode()
 
     updatingFillMode = true;
 
-    const QSize pixmapSize = pix.implicitSize() / calculateDevicePixelRatio();
+    const QSize pixmapSize = QSize(pix.width(), pix.height()) / calculateDevicePixelRatio();
     if (pixmapSize.width() > q->width() || pixmapSize.height() > q->height())
         q->setFillMode(QQuickImage::PreserveAspectFit);
     else
