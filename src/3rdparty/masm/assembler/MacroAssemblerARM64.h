@@ -214,27 +214,27 @@ public:
 #if defined(V4_BOOTSTRAP)
     void loadPtr(ImplicitAddress address, RegisterID dest)
     {
-        load32(address, dest);
+        load64(address, dest);
     }
 
     void subPtr(TrustedImm32 imm, RegisterID dest)
     {
-        sub32(imm, dest);
+        sub64(imm, dest);
     }
 
     void addPtr(TrustedImm32 imm, RegisterID dest)
     {
-        add32(imm, dest);
+        add64(imm, dest);
     }
 
     void addPtr(TrustedImm32 imm, RegisterID src, RegisterID dest)
     {
-        add32(imm, src, dest);
+        add64(imm, src, dest);
     }
 
     void storePtr(RegisterID src, ImplicitAddress address)
     {
-        store32(src, address);
+        store64(src, address);
     }
 #endif
 
