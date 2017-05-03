@@ -3853,7 +3853,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     initialized or OpenGL is not in use.
 
     \note This function only has an effect when using the default OpenGL scene graph
-    adpation.
+    adaptation.
 
     \sa sceneGraphInitialized(), QSGTexture
  */
@@ -3961,7 +3961,7 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     graph renderer. Clear these manually on demand.
 
     \note This function only has an effect when using the default OpenGL scene graph
-    adpation.
+    adaptation.
 
     \sa QQuickWindow::beforeRendering()
  */
