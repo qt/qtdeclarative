@@ -1149,7 +1149,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return qVariantFromValue<QObject *>(wrapper->object());
         } else if (object->as<QV4::QmlContextWrapper>()) {
             return QVariant();
-        } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
+        } else if (QV4::QQmlTypeWrapper *w = object->as<QV4::QQmlTypeWrapper>()) {
             return w->toVariant();
         } else if (QV4::QQmlValueTypeWrapper *v = object->as<QV4::QQmlValueTypeWrapper>()) {
             return v->toVariant();

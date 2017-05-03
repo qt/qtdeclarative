@@ -1462,7 +1462,7 @@ ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engin
 ReturnedValue Runtime::method_getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
 {
     Scope scope(engine);
-    QV4::Scoped<QmlTypeWrapper> wrapper(scope, object);
+    QV4::Scoped<QQmlTypeWrapper> wrapper(scope, object);
     if (!wrapper) {
         scope.engine->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();

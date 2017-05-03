@@ -294,11 +294,11 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                     if (r.scriptIndex != -1) {
                         return QV4::Encode::undefined();
                     } else if (r.type) {
-                        return QmlTypeWrapper::create(v4, d()->object(),
-                                                      r.type, Heap::QmlTypeWrapper::ExcludeEnums);
+                        return QQmlTypeWrapper::create(v4, d()->object(),
+                                                      r.type, Heap::QQmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
-                        return QmlTypeWrapper::create(v4, d()->object(),
-                                                      qmlContext->imports, r.importNamespace, Heap::QmlTypeWrapper::ExcludeEnums);
+                        return QQmlTypeWrapper::create(v4, d()->object(),
+                                                      qmlContext->imports, r.importNamespace, Heap::QQmlTypeWrapper::ExcludeEnums);
                     }
                     Q_ASSERT(!"Unreachable");
                 }
@@ -642,7 +642,7 @@ bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
     QV4::QObjectWrapper *qobjectWrapper = static_cast<QV4::QObjectWrapper *>(a);
     QV4::Object *o = b->as<Object>();
     if (o) {
-        if (QV4::QmlTypeWrapper *qmlTypeWrapper = o->as<QV4::QmlTypeWrapper>())
+        if (QV4::QQmlTypeWrapper *qmlTypeWrapper = o->as<QV4::QQmlTypeWrapper>())
             return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
     }
 
@@ -1634,7 +1634,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         qobjectPtr = 0;
         if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
             qobjectPtr = qobjectWrapper->object();
-        else if (const QV4::QmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QmlTypeWrapper>())
+        else if (const QV4::QQmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QQmlTypeWrapper>())
             queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {

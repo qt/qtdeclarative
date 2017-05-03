@@ -143,9 +143,9 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 return scripts->getIndexed(r.scriptIndex);
             } else if (r.type) {
-                return QmlTypeWrapper::create(v4, scopeObject, r.type);
+                return QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
-                return QmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
+                return QQmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
             }
             Q_ASSERT(!"Unreachable");
         }
