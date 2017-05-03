@@ -549,7 +549,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
         if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
             l->classList[0] = o->internalClass();
             l->index = idx;
-            l->setter = Lookup::setter0;
+            l->setter = idx < o->d()->vt->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
             *o->propertyData(idx) = value;
             return;
         }

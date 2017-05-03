@@ -75,6 +75,10 @@ struct Object : Base {
         Q_ASSERT(index < vt->nInlineProperties);
         return reinterpret_cast<const Value *>(this) + vt->inlinePropertyOffset + index;
     }
+    Value *inlinePropertyData(uint index) {
+        Q_ASSERT(index < vt->nInlineProperties);
+        return reinterpret_cast<Value *>(this) + vt->inlinePropertyOffset + index;
+    }
 
     const Value *propertyData(uint index) const {
         uint nInline = vt->nInlineProperties;

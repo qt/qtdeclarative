@@ -79,7 +79,7 @@ struct Lookup {
         struct {
             void *dummy0;
             void *dummy1;
-            Object *proto;
+            Heap::Object *proto;
             unsigned type;
         };
     };
@@ -116,7 +116,8 @@ struct Lookup {
     static ReturnedValue getterAccessor1(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterAccessor2(Lookup *l, ExecutionEngine *engine, const Value &object);
 
-    static ReturnedValue primitiveGetter0(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue primitiveGetter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue primitiveGetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetter1(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -136,6 +137,7 @@ struct Lookup {
     static void setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static void setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static void setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static void setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static void setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static void setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
