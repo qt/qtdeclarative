@@ -231,7 +231,7 @@ public:
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
-        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
+        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
         o->setVtable(ObjectType::staticVTable());
         o->internalClass = ic;
         return static_cast<typename ObjectType::Data *>(o);
@@ -241,7 +241,7 @@ public:
     typename ObjectType::Data *allocateObject()
     {
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
-        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
+        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
         o->setVtable(ObjectType::staticVTable());
         Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
@@ -433,7 +433,7 @@ protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
     Heap::Base *allocData(std::size_t size);
-    Heap::Object *allocObjectWithMemberData(std::size_t size, uint nMembers);
+    Heap::Object *allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);

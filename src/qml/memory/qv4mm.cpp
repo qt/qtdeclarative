@@ -757,12 +757,15 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     return *m;
 }
 
-Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nMembers)
+Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers)
 {
+    uint size = (vtable->nInlineProperties + vtable->inlinePropertyOffset)*sizeof(Value);
+    Q_ASSERT(!(size % sizeof(HeapItem)));
     Heap::Object *o = static_cast<Heap::Object *>(allocData(size));
 
     // ### Could optimize this and allocate both in one go through the block allocator
-    if (nMembers) {
+    if (nMembers > vtable->nInlineProperties) {
+        nMembers -= vtable->nInlineProperties;
         std::size_t memberSize = align(sizeof(Heap::MemberData) + (nMembers - 1)*sizeof(Value));
 //        qDebug() << "allocating member data for" << o << nMembers << memberSize;
         Heap::Base *m;

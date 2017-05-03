@@ -72,6 +72,8 @@ namespace QV4 {
 struct VTable
 {
     const VTable * const parent;
+    uint inlinePropertyOffset : 16;
+    uint nInlineProperties : 16;
     uint isExecutionContext : 1;
     uint isString : 1;
     uint isObject : 1;

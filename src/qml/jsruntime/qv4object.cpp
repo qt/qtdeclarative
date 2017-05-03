@@ -61,9 +61,13 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
+    uint nInline = d()->vtable()->nInlineProperties;
+    if (ic->size <= nInline)
+        return;
     bool hasMD = d()->memberData != nullptr;
-    if ((!hasMD && ic->size) || (hasMD && d()->memberData->size < ic->size))
-        d()->memberData = MemberData::allocate(ic->engine, ic->size, d()->memberData);
+    uint requiredSize = ic->size - nInline;
+    if (!hasMD || (hasMD && d()->memberData->size < requiredSize))
+        d()->memberData = MemberData::allocate(ic->engine, requiredSize, d()->memberData);
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -261,6 +265,13 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
         o->arrayData->mark(e);
     if (o->prototype)
         o->prototype->mark(e);
+    uint nInline = o->vtable()->nInlineProperties;
+    Value *v = reinterpret_cast<Value *>(o) + o->vt->inlinePropertyOffset;
+    const Value *end = v + nInline;
+    while (v < end) {
+        v->mark(e);
+        ++v;
+    }
 }
 
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
@@ -495,8 +506,15 @@ ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
     ReturnedValue v = l->lookup(o, &attrs);
     if (v != Primitive::emptyValue().asReturnedValue()) {
         if (attrs.isData()) {
-            if (l->level == 0)
-                l->getter = Lookup::getter0;
+            if (l->level == 0) {
+                uint nInline = o->d()->vt->nInlineProperties;
+                if (l->index < nInline)
+                    l->getter = Lookup::getter0Inline;
+                else {
+                    l->index -= nInline;
+                    l->getter = Lookup::getter0MemberData;
+                }
+                }
             else if (l->level == 1)
                 l->getter = Lookup::getter1;
             else if (l->level == 2)

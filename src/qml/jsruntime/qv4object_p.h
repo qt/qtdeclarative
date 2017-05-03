@@ -71,8 +71,25 @@ struct Object : Base {
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
-    const Value *propertyData(uint index) const { return memberData->data + index; }
-    Value *propertyData(uint index) { return memberData->data + index; }
+    const Value *inlinePropertyData(uint index) const {
+        Q_ASSERT(index < vt->nInlineProperties);
+        return reinterpret_cast<const Value *>(this) + vt->inlinePropertyOffset + index;
+    }
+
+    const Value *propertyData(uint index) const {
+        uint nInline = vt->nInlineProperties;
+        if (index < nInline)
+            return reinterpret_cast<const Value *>(this) + vt->inlinePropertyOffset + index;
+        index -= nInline;
+        return memberData->data + index;
+    }
+    Value *propertyData(uint index) {
+        uint nInline = vt->nInlineProperties;
+        if (index < nInline)
+            return reinterpret_cast<Value *>(this) + vt->inlinePropertyOffset + index;
+        index -= nInline;
+        return memberData->data + index;
+    }
 
     InternalClass *internalClass;
     Pointer<Object> prototype;
