@@ -1492,9 +1492,9 @@ QQmlEngine *qmlEngine(const QObject *obj)
 
 QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
 {
-    QQmlData *data = QQmlData::get(object);
+    QQmlData *data = QQmlData::get(object, create);
     if (!data)
-        return 0; // Attached properties are only on objects created by QML
+        return 0; // Attached properties are only on objects created by QML, unless explicitly requested (create==true)
 
     QObject *rv = data->hasExtendedData()?data->attachedProperties()->value(id):0;
     if (rv || !create)

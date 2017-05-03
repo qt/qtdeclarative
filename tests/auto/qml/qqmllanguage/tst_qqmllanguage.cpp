@@ -3070,7 +3070,7 @@ void tst_qqmllanguage::qmlAttachedPropertiesObjectMethod()
     QObject object;
 
     QCOMPARE(qmlAttachedPropertiesObject<MyQmlObject>(&object, false), (QObject *)0);
-    QCOMPARE(qmlAttachedPropertiesObject<MyQmlObject>(&object, true), (QObject *)0);
+    QVERIFY(qmlAttachedPropertiesObject<MyQmlObject>(&object, true));
 
     {
         QQmlComponent component(&engine, testFileUrl("qmlAttachedPropertiesObjectMethod.1.qml"));
