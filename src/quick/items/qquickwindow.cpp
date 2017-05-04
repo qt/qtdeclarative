@@ -2710,6 +2710,8 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
         QVarLengthArray<QPair<QQuickPointerHandler *, QQuickEventPoint *>, 32> passiveGrabsToCancel;
         for (QPair<QQuickItem *,QQuickItem *> itemAndParent : filteringParentItems) {
             QQuickItem *item = receiver ? receiver : itemAndParent.first;
+            if (item != itemAndParent.first)
+                continue;
             if (!item->acceptTouchEvents() && !item->acceptedMouseButtons())
                 continue; // if this item won't accept, parents don't need to filter the touch for it
             QQuickItem *filteringParent = itemAndParent.second;
