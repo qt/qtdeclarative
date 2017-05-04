@@ -98,7 +98,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui_properties.importButton, SIGNAL(clicked()), importDialog, SLOT(show()));
     connect(importDialog, SIGNAL(finished(int)), this, SLOT(importData(int)));
 
-    connect(this, SIGNAL(close()), this, SLOT(doClose()));
     initQml();
 }
 
