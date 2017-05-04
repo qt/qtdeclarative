@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS = qml script
+SUBDIRS = qml
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += particles
 }
