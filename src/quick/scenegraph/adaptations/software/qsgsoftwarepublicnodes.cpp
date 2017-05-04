@@ -74,6 +74,9 @@ QSGSoftwareImageNode::~QSGSoftwareImageNode()
 
 void QSGSoftwareImageNode::setTexture(QSGTexture *texture)
 {
+    if (m_owns)
+        delete m_texture;
+
     m_texture = texture; markDirty(DirtyMaterial);
     m_cachedMirroredPixmapIsDirty = true;
 }
