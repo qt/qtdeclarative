@@ -59,10 +59,10 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE(QmlContextWrapper);
+DEFINE_OBJECT_VTABLE(QQmlContextWrapper);
 DEFINE_MANAGED_VTABLE(QmlContext);
 
-void Heap::QmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+void Heap::QQmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
 {
     Object::init();
     readOnly = true;
@@ -72,7 +72,7 @@ void Heap::QmlContextWrapper::init(QQmlContextData *context, QObject *scopeObjec
     this->scopeObject.init(scopeObject);
 }
 
-void Heap::QmlContextWrapper::destroy()
+void Heap::QQmlContextWrapper::destroy()
 {
     if (*context && ownsContext)
         (*context)->destroy();
@@ -81,10 +81,10 @@ void Heap::QmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
-    Q_ASSERT(m->as<QmlContextWrapper>());
-    const QmlContextWrapper *resource = static_cast<const QmlContextWrapper *>(m);
+    Q_ASSERT(m->as<QQmlContextWrapper>());
+    const QQmlContextWrapper *resource = static_cast<const QQmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
@@ -225,15 +225,15 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
     return Encode::undefined();
 }
 
-bool QmlContextWrapper::put(Managed *m, String *name, const Value &value)
+bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
 {
-    Q_ASSERT(m->as<QmlContextWrapper>());
-    QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);
+    Q_ASSERT(m->as<QQmlContextWrapper>());
+    QQmlContextWrapper *resource = static_cast<QQmlContextWrapper *>(m);
     ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
     if (scope.hasException())
         return false;
-    QV4::Scoped<QmlContextWrapper> wrapper(scope, resource);
+    QV4::Scoped<QQmlContextWrapper> wrapper(scope, resource);
 
     uint member = wrapper->internalClass()->find(name);
     if (member < UINT_MAX)
@@ -295,7 +295,7 @@ bool QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     return Object::put(m, name, value);
 }
 
-void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
+void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
 {
     Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
     outer.set(engine, outerContext->d());
@@ -318,7 +318,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, (QObject*)0, true));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)0, true));
     qml->d()->isNullWrapper = true;
 
     qml->setReadOnly(false);
@@ -335,7 +335,7 @@ Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *
 {
     Scope scope(parent);
 
-    Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, scopeObject));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, scopeObject));
     Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
     return c;
 }

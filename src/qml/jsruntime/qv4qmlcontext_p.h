@@ -62,11 +62,11 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct QmlContextWrapper;
+struct QQmlContextWrapper;
 
 namespace Heap {
 
-struct QmlContextWrapper : Object {
+struct QQmlContextWrapper : Object {
     void init(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     void destroy();
     bool readOnly;
@@ -78,19 +78,19 @@ struct QmlContextWrapper : Object {
 };
 
 #define QmlContextMembers(class, Member) \
-    Member(class, Pointer, QmlContextWrapper *, qml)
+    Member(class, Pointer, QQmlContextWrapper *, qml)
 
 DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
     DECLARE_MARK_TABLE(QmlContext);
 
-    void init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
+    void init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml);
 };
 
 }
 
-struct Q_QML_EXPORT QmlContextWrapper : Object
+struct Q_QML_EXPORT QQmlContextWrapper : Object
 {
-    V4_OBJECT2(QmlContextWrapper, Object)
+    V4_OBJECT2(QQmlContextWrapper, Object)
     V4_NEEDS_DESTROY
 
     void takeContextOwnership() {
