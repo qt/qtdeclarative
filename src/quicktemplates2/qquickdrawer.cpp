@@ -301,7 +301,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     Q_Q(QQuickDrawer);
     handleMouseEvent(item, event);
 
-    if (!window || !interactive || popupItem->keepMouseGrab())
+    if (!window || !interactive || popupItem->keepMouseGrab() || popupItem->keepTouchGrab())
         return false;
 
     const QPointF movePoint = event->windowPos();
@@ -377,6 +377,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         }
 
         if (overThreshold) {
+            popupItem->grabTouchPoints(QVector<int>() << touchId);
             popupItem->setKeepTouchGrab(true);
             offset = offsetAt(movePoint);
         }
@@ -422,7 +423,6 @@ bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, 
         return QQuickPopupPrivate::handleRelease(item, point, timestamp);
     }
 
-    pressPoint = QPointF();
     velocityCalculator.stopMeasuring(point, timestamp);
 
     qreal velocity = 0;
@@ -478,6 +478,9 @@ bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, 
     bool wasGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
     popupItem->setKeepMouseGrab(false);
     popupItem->setKeepTouchGrab(false);
+
+    pressPoint = QPointF();
+    touchId = -1;
 
     return wasGrabbed;
 }

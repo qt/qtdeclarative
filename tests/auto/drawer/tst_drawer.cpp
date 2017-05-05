@@ -758,13 +758,26 @@ void tst_Drawer::multiple()
 void tst_Drawer::touch_data()
 {
     QTest::addColumn<QString>("source");
-    QTest::newRow("Window") << "window.qml";
-    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+    QTest::addColumn<QPoint>("from");
+    QTest::addColumn<QPoint>("to");
+
+    QTest::newRow("Window:inside") << "window.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("Window:outside") << "window.qml" << QPoint(300, 100) << QPoint(100, 100);
+    QTest::newRow("ApplicationWindow:inside") << "applicationwindow.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("ApplicationWindow:outside") << "applicationwindow.qml" << QPoint(300, 100) << QPoint(100, 100);
+
+    QTest::newRow("Window+Button:inside") << "window-button.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("Window+Button:outside") << "window-button.qml" << QPoint(300, 100) << QPoint(100, 100);
+    QTest::newRow("ApplicationWindow+Button:inside") << "applicationwindow-button.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("ApplicationWindow+Button:outside") << "applicationwindow-button.qml" << QPoint(300, 100) << QPoint(100, 100);
 }
 
 void tst_Drawer::touch()
 {
     QFETCH(QString, source);
+    QFETCH(QPoint, from);
+    QFETCH(QPoint, to);
+
     QQuickApplicationHelper helper(this, source);
 
     QQuickWindow *window = helper.window;
@@ -783,19 +796,16 @@ void tst_Drawer::touch()
     QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(0, 100));
     QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(50, 100));
     QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(150, 100));
-    QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(150, 100));
     QVERIFY(drawerOpenedSpy.wait());
     QCOMPARE(drawer->position(), 1.0);
 
     // drag to close
-    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(300, 100));
-    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
-    for (int x = 300; x > 100; x -= 10)
-        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, 100));
-    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(100, 100));
-    QTRY_COMPARE(drawer->position(), 0.5);
-    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(100, 100));
+    QTest::touchEvent(window, touchDevice.data()).press(0, from);
+    for (int x = from.x(); x > to.x(); x -= 10)
+        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, to.y()));
+    QTest::touchEvent(window, touchDevice.data()).move(0, to);
+    QTest::touchEvent(window, touchDevice.data()).release(0, to);
     QVERIFY(drawerClosedSpy.wait());
     QCOMPARE(drawer->position(), 0.0);
 }

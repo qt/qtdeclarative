@@ -304,7 +304,7 @@ bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
     if (point.id() == touchId)
         return true;
 
-    if (touchId == -1 && point.state() == Qt::TouchPointPressed) {
+    if (touchId == -1 && point.state() != Qt::TouchPointReleased) {
         touchId = point.id();
         return true;
     }
