@@ -397,7 +397,7 @@ private:
 
     void newElement(int index);
 
-    void updateCacheIndices();
+    void updateCacheIndices(int start = 0, int end = -1);
 
     friend class ListElement;
     friend class QQmlListModelWorkerAgent;

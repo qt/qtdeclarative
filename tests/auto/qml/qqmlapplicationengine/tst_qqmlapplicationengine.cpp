@@ -28,6 +28,7 @@
 
 #include "../../shared/util.h"
 #include <QQmlApplicationEngine>
+#include <QScopedPointer>
 #include <QSignalSpy>
 #if QT_CONFIG(process)
 #include <QProcess>
@@ -47,6 +48,7 @@ private slots:
     void testNonResolvedPath();
     void application();
     void applicationProperties();
+    void removeObjectsWhenDestroyed();
 private:
     QString buildDir;
     QString srcDir;
@@ -200,6 +202,23 @@ void tst_qqmlapplicationengine::applicationProperties()
 
     delete test;
 }
+
+void tst_qqmlapplicationengine::removeObjectsWhenDestroyed()
+{
+    QScopedPointer<QQmlApplicationEngine> test(new QQmlApplicationEngine);
+    QVERIFY(test->rootObjects().isEmpty());
+
+    QSignalSpy objectCreated(test.data(), SIGNAL(objectCreated(QObject*,QUrl)));
+    test->load(testFileUrl("basicTest.qml"));
+    QCOMPARE(objectCreated.count(), 1);
+
+    QSignalSpy objectDestroyed(test->rootObjects().first(), SIGNAL(destroyed()));
+    test->rootObjects().first()->deleteLater();
+    objectDestroyed.wait();
+    QCOMPARE(objectDestroyed.count(), 1);
+    QCOMPARE(test->rootObjects().size(), 0);
+}
+
 
 QTEST_MAIN(tst_qqmlapplicationengine)
 

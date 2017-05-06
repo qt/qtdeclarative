@@ -189,6 +189,7 @@ protected:
 
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
+    static QQmlPropertyData *findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local);
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);

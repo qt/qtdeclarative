@@ -86,3 +86,5 @@ void QSGSoftwarePixmapTexture::bind()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgsoftwarepixmaptexture_p.cpp"

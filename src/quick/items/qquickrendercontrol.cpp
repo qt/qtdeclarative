@@ -457,3 +457,5 @@ QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickrendercontrol.cpp"

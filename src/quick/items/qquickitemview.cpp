@@ -2507,3 +2507,5 @@ void QQuickItemViewPrivate::updateVisibleIndex()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemview_p.cpp"

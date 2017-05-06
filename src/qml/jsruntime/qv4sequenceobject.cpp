@@ -78,13 +78,22 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     F(int, IntVector, QVector<int>, 0) \
     F(qreal, RealVector, QVector<qreal>, 0.0) \
     F(bool, BoolVector, QVector<bool>, false) \
+    F(int, IntStdVector, std::vector<int>, 0) \
+    F(qreal, RealStdVector, std::vector<qreal>, 0.0) \
+    F(bool, BoolStdVector, std::vector<bool>, false) \
     F(int, Int, QList<int>, 0) \
     F(qreal, Real, QList<qreal>, 0.0) \
     F(bool, Bool, QList<bool>, false) \
     F(QString, String, QList<QString>, QString()) \
     F(QString, QString, QStringList, QString()) \
+    F(QString, StringVector, QVector<QString>, QString()) \
+    F(QString, StringStdVector, std::vector<QString>, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl()) \
+    F(QUrl, UrlVector, QVector<QUrl>, QUrl()) \
+    F(QUrl, UrlStdVector, std::vector<QUrl>, QUrl()) \
     F(QModelIndex, QModelIndex, QModelIndexList, QModelIndex()) \
+    F(QModelIndex, QModelIndexVector, QVector<QModelIndex>, QModelIndex()) \
+    F(QModelIndex, QModelIndexStdVector, std::vector<QModelIndex>, QModelIndex()) \
     F(QItemSelectionRange, QItemSelectionRange, QItemSelection, QItemSelectionRange())
 
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
@@ -263,11 +272,10 @@ public:
             }
             loadReference();
         }
-        qint32 signedIdx = static_cast<qint32>(index);
-        if (signedIdx < d()->container->count()) {
+        if (index < size_t(d()->container->size())) {
             if (hasProperty)
                 *hasProperty = true;
-            return convertElementToValue(engine(), d()->container->at(signedIdx));
+            return convertElementToValue(engine(), qAsConst(*(d()->container))[index]);
         }
         if (hasProperty)
             *hasProperty = false;
@@ -291,24 +299,22 @@ public:
             loadReference();
         }
 
-        qint32 signedIdx = static_cast<qint32>(index);
-
-        int count = d()->container->count();
+        size_t count = size_t(d()->container->size());
 
         typename Container::value_type element = convertValueToElement<typename Container::value_type>(value);
 
-        if (signedIdx == count) {
-            d()->container->append(element);
-        } else if (signedIdx < count) {
-            (*d()->container)[signedIdx] = element;
+        if (index == count) {
+            d()->container->push_back(element);
+        } else if (index < count) {
+            (*d()->container)[index] = element;
         } else {
             /* according to ECMA262r3 we need to insert */
             /* the value at the given index, increasing length to index+1. */
-            d()->container->reserve(signedIdx + 1);
-            while (signedIdx > count++) {
-                d()->container->append(typename Container::value_type());
+            d()->container->reserve(index + 1);
+            while (index > count++) {
+                d()->container->push_back(typename Container::value_type());
             }
-            d()->container->append(element);
+            d()->container->push_back(element);
         }
 
         if (d()->isReference)
@@ -328,8 +334,7 @@ public:
                 return QV4::Attr_Invalid;
             loadReference();
         }
-        qint32 signedIdx = static_cast<qint32>(index);
-        return (signedIdx < d()->container->count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
+        return (index < size_t(d()->container->size())) ? QV4::Attr_Data : QV4::Attr_Invalid;
     }
 
     void containerAdvanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
@@ -345,7 +350,7 @@ public:
             loadReference();
         }
 
-        if (it->arrayIndex < static_cast<uint>(d()->container->count())) {
+        if (it->arrayIndex < static_cast<uint>(d()->container->size())) {
             *index = it->arrayIndex;
             ++it->arrayIndex;
             *attrs = QV4::Attr_Data;
@@ -365,14 +370,13 @@ public:
                 return false;
             loadReference();
         }
-        qint32 signedIdx = static_cast<qint32>(index);
 
-        if (signedIdx >= d()->container->count())
+        if (index >= size_t(d()->container->size()))
             return false;
 
         /* according to ECMA262r3 it should be Undefined, */
         /* but we cannot, so we insert a default-value instead. */
-        d()->container->replace(signedIdx, typename Container::value_type());
+        (*d()->container)[index] = typename Container::value_type();
 
         if (d()->isReference)
             storeReference();
@@ -457,7 +461,7 @@ public:
                 RETURN_RESULT(Encode(0));
             This->loadReference();
         }
-        RETURN_RESULT(Encode(This->d()->container->count()));
+        RETURN_RESULT(Encode(qint32(This->d()->container->size())));
     }
 
     static void method_set_length(const BuiltinFunction *, Scope &scope, CallData *callData)
@@ -479,8 +483,8 @@ public:
             This->loadReference();
         }
         /* Determine whether we need to modify the sequence */
-        qint32 newCount = static_cast<qint32>(newLength);
-        qint32 count = This->d()->container->count();
+        quint32 newCount = static_cast<quint32>(newLength);
+        quint32 count = static_cast<quint32>(This->d()->container->size());
         if (newCount == count) {
             RETURN_UNDEFINED();
         } else if (newCount > count) {
@@ -489,14 +493,13 @@ public:
             /* We cannot, so we insert default-values instead. */
             This->d()->container->reserve(newCount);
             while (newCount > count++) {
-                This->d()->container->append(typename Container::value_type());
+                This->d()->container->push_back(typename Container::value_type());
             }
         } else {
             /* according to ECMA262r3 we need to remove */
             /* elements until the sequence is the required length. */
-            while (newCount < count) {
-                count--;
-                This->d()->container->removeAt(count);
+            if (newCount < count) {
+                This->d()->container->erase(This->d()->container->begin() + newCount, This->d()->container->end());
             }
         }
         /* write back if required. */
@@ -517,9 +520,12 @@ public:
         quint32 length = array->getLength();
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < length; ++i)
-            result << convertValueToElement<typename Container::value_type>((v = array->getIndexed(i)));
+            result.push_back(convertValueToElement<typename Container::value_type>((v = array->getIndexed(i))));
         return QVariant::fromValue(result);
     }
+
+    void* getRawContainerPtr() const
+    { return d()->container; }
 
     void loadReference() const
     {
@@ -595,16 +601,34 @@ typedef QQmlSequence<QVector<qreal> > QQmlRealVectorList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealVectorList);
 typedef QQmlSequence<QVector<bool> > QQmlBoolVectorList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolVectorList);
+typedef QQmlSequence<std::vector<int> > QQmlIntStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntStdVectorList);
+typedef QQmlSequence<std::vector<qreal> > QQmlRealStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealStdVectorList);
+typedef QQmlSequence<std::vector<bool> > QQmlBoolStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolStdVectorList);
 typedef QQmlSequence<QStringList> QQmlQStringList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQStringList);
 typedef QQmlSequence<QList<QString> > QQmlStringList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringList);
+typedef QQmlSequence<QVector<QString> > QQmlStringVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringVectorList);
+typedef QQmlSequence<std::vector<QString> > QQmlStringStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringStdVectorList);
 typedef QQmlSequence<QList<int> > QQmlIntList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntList);
 typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlList);
+typedef QQmlSequence<QVector<QUrl> > QQmlUrlVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlVectorList);
+typedef QQmlSequence<std::vector<QUrl> > QQmlUrlStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlStdVectorList);
 typedef QQmlSequence<QModelIndexList> QQmlQModelIndexList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexList);
+typedef QQmlSequence<QVector<QModelIndex> > QQmlQModelIndexVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexVectorList);
+typedef QQmlSequence<std::vector<QModelIndex> > QQmlQModelIndexStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexStdVectorList);
 typedef QQmlSequence<QItemSelection> QQmlQItemSelectionRangeList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQItemSelectionRangeList);
 typedef QQmlSequence<QList<bool> > QQmlBoolList;
@@ -724,6 +748,19 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
 }
 
 #undef SEQUENCE_TO_VARIANT
+
+#define SEQUENCE_GET_RAWCONTAINERPTR(ElementType, ElementTypeName, SequenceType, unused) \
+    if (const QQml##ElementTypeName##List *list = [&]() -> const QQml##ElementTypeName##List* \
+        { if (typeHint == qMetaTypeId<SequenceType>()) return object->as<QQml##ElementTypeName##List>(); return nullptr;}()) \
+        return list->getRawContainerPtr(); \
+    else
+
+void* SequencePrototype::getRawContainerPtr(const Object *object, int typeHint)
+{
+    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_GET_RAWCONTAINERPTR) { /* else */ return nullptr; }
+}
+
+#undef SEQUENCE_GET_RAWCONTAINERPTR
 
 #define MAP_META_TYPE(ElementType, ElementTypeName, SequenceType, unused) \
     if (object->as<QQml##ElementTypeName##List>()) { \

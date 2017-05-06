@@ -510,5 +510,6 @@ void QQuickOpenGLShaderEffectNode::preprocess()
 }
 
 #include "qquickopenglshadereffectnode.moc"
+#include "moc_qquickopenglshadereffectnode_p.cpp"
 
 QT_END_NAMESPACE

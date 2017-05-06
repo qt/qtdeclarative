@@ -52,3 +52,5 @@ QQmlAbstractProfilerAdapter *QQuickProfilerAdapterFactory::create(const QString 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickprofileradapterfactory.cpp"

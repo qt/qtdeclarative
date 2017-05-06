@@ -995,4 +995,6 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 
 QT_END_NAMESPACE
 
+#include "moc_qquickdrag_p.cpp"
+
 #endif // draganddrop

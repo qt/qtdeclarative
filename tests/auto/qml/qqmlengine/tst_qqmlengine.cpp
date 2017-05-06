@@ -70,8 +70,8 @@ private slots:
     void qtqmlModule();
     void urlInterceptor_data();
     void urlInterceptor();
-
     void qmlContextProperties();
+    void testGCCorruption();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -834,6 +834,15 @@ void tst_qqmlengine::qmlContextProperties()
         qDebug() << c.errorString();
     }
     QVERIFY(o);
+}
+
+void tst_qqmlengine::testGCCorruption()
+{
+    QQmlEngine e;
+
+    QQmlComponent c(&e, testFileUrl("testGCCorruption.qml"));
+    QObject *o = c.create();
+    QVERIFY2(o, qPrintable(c.errorString()));
 }
 
 QTEST_MAIN(tst_qqmlengine)

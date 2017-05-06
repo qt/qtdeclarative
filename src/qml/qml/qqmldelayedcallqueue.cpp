@@ -210,3 +210,5 @@ void QQmlDelayedCallQueue::ticked()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldelayedcallqueue_p.cpp"

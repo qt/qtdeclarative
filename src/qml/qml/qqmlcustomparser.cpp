@@ -121,13 +121,16 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
 {
     Q_ASSERT_X(ok, "QQmlCustomParser::evaluateEnum", "ok must not be a null pointer");
     *ok = false;
+
+    // we support one or two '.' in the enum phrase:
+    // * <TypeName>.<EnumValue>
+    // * <TypeName>.<ScopedEnumName>.<EnumValue>
+
     int dot = script.indexOf('.');
-    if (dot == -1)
+    if (dot == -1 || dot == script.length()-1)
         return -1;
 
-
     QString scope = QString::fromUtf8(script.left(dot));
-    QByteArray enumValue = script.mid(dot+1);
 
     if (scope != QLatin1String("Qt")) {
         if (imports.isNull())
@@ -142,9 +145,20 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
                 type = result.type;
         }
 
-        return type ? type->enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
+        if (!type)
+            return -1;
+
+        int dot2 = script.indexOf('.', dot+1);
+        const bool dot2Valid = dot2 != -1 && dot2 != script.length()-1;
+        QByteArray enumValue = script.mid(dot2Valid ? dot2 + 1 : dot + 1);
+        QByteArray scopedEnumName = (dot2Valid ? script.mid(dot + 1, dot2 - dot - 1) : QByteArray());
+        if (!scopedEnumName.isEmpty())
+            return type->scopedEnumValue(engine, scopedEnumName, enumValue, ok);
+        else
+            return type->enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok);
     }
 
+    QByteArray enumValue = script.mid(dot + 1);
     const QMetaObject *mo = StaticQtMetaObject::get();
     int i = mo->enumeratorCount();
     while (i--) {

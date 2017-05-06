@@ -509,3 +509,5 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickrepeater_p.cpp"

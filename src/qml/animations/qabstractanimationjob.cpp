@@ -672,3 +672,4 @@ QDebug operator<<(QDebug d, const QAbstractAnimationJob *job)
 QT_END_NAMESPACE
 
 //#include "moc_qabstractanimation2_p.cpp"
+#include "moc_qabstractanimationjob_p.cpp"

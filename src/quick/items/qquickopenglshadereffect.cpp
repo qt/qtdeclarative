@@ -973,3 +973,5 @@ void QQuickOpenGLShaderEffect::handleItemChange(QQuickItem::ItemChange change, c
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickopenglshadereffect_p.cpp"

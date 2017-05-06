@@ -198,3 +198,5 @@ void QmlProfilerClient::complete()
     Q_D(QmlProfilerClient);
     d->data->complete();
 }
+
+#include "moc_qmlprofilerclient.cpp"

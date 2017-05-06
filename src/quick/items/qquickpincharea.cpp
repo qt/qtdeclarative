@@ -797,3 +797,4 @@ QQuickPinch *QQuickPinchArea::pinch()
 
 QT_END_NAMESPACE
 
+#include "moc_qquickpincharea_p.cpp"

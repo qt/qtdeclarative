@@ -472,6 +472,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
     switch (value.type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
+        Q_UNREACHABLE();
     case Value::Undefined_Type:
         return engine->id_undefined()->d();
     case Value::Null_Type:
@@ -504,6 +505,7 @@ static Heap::String *convert_to_string_add(ExecutionEngine *engine, const Value 
     switch (value.type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
+        Q_UNREACHABLE();
     case Value::Undefined_Type:
         return engine->id_undefined()->d();
     case Value::Null_Type:
@@ -1460,7 +1462,7 @@ ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engin
 ReturnedValue Runtime::method_getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
 {
     Scope scope(engine);
-    QV4::Scoped<QmlTypeWrapper> wrapper(scope, object);
+    QV4::Scoped<QQmlTypeWrapper> wrapper(scope, object);
     if (!wrapper) {
         scope.engine->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();

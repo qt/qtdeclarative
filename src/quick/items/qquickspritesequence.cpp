@@ -329,3 +329,5 @@ void QQuickSpriteSequence::prepareNextFrame(QSGSpriteNode *node)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickspritesequence_p.cpp"

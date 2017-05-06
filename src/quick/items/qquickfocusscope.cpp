@@ -67,3 +67,5 @@ QQuickFocusScope::~QQuickFocusScope()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfocusscope_p.cpp"

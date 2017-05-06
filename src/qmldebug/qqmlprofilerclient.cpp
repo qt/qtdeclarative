@@ -375,3 +375,5 @@ void QQmlProfilerClient::messageReceived(const QByteArray &data)
         unknownData(stream);
 }
 QT_END_NAMESPACE
+
+#include "moc_qqmlprofilerclient_p.cpp"

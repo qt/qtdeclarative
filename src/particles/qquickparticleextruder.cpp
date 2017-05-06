@@ -69,3 +69,5 @@ bool QQuickParticleExtruder::contains(const QRectF &bounds, const QPointF &point
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickparticleextruder_p.cpp"

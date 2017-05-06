@@ -683,3 +683,5 @@ void QQuickPaintedItem::itemChange(ItemChange change, const ItemChangeData &valu
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpainteditem.cpp"

@@ -170,6 +170,7 @@ private:
 };
 
 #include "qquickwindow.moc"
+#include "moc_qquickwindow_p.cpp"
 
 
 #if QT_CONFIG(accessibility)
@@ -2918,6 +2919,8 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
 #endif // !Q_OS_WIN32
 }
 
+#if QT_DEPRECATED_SINCE(5, 8)
+
 /*!
     Propagates an event \a e to a QQuickItem \a item on the window.
 
@@ -2969,6 +2972,8 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
 
     return false;
 }
+
+#endif
 
 void QQuickWindowPrivate::cleanupNodes()
 {
@@ -4375,7 +4380,7 @@ void QQuickWindow::resetOpenGLState()
 
     \since 5.9
 
-    \sa QWindow::setScreen(), QWindow::screen(), QScreen, Qt.application
+    \sa QWindow::setScreen(), QWindow::screen(), QScreen, {QtQml::Qt::application}{Qt.application}
  */
 
 /*!
@@ -4721,6 +4726,20 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
 void QQuickWindow::setSceneGraphBackend(const QString &backend)
 {
     QSGContext::setBackend(backend);
+}
+
+/*!
+    Returns the requested Qt Quick scenegraph \a backend.
+
+    \note The return value of this function may still be outdated by
+    subsequent calls to setSceneGraphBackend() until the first QQuickWindow in the
+    application has been constructed.
+
+    \since 5.9
+ */
+QString QQuickWindow::sceneGraphBackend()
+{
+    return QSGContext::backend();
 }
 
 /*!

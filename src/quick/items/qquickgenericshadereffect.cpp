@@ -656,3 +656,5 @@ void QQuickGenericShaderEffect::markGeometryDirtyAndUpdateIfSupportsAtlas()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickgenericshadereffect_p.cpp"

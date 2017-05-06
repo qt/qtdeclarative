@@ -1573,3 +1573,5 @@ bool QQuickPixmap::connectDownloadProgress(QObject *object, int method)
 QT_END_NAMESPACE
 
 #include <qquickpixmapcache.moc>
+
+#include "moc_qquickpixmapcache_p.cpp"

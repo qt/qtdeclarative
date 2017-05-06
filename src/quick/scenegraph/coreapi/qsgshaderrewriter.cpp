@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QtCore/QByteArray>
+#include <QtCore/QString>
 #include <QtGui/QSurfaceFormat>
 
 // Duct Tape tokenizer for the purpose of parsing and rewriting
@@ -133,6 +134,7 @@ Tokenizer::Token Tokenizer::next()
                 pos += 3;
                 return Token_Void;
             }
+            Q_FALLTHROUGH();
         }
 
         case ';': return Token_SemiColon;

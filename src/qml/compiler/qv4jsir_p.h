@@ -1348,7 +1348,6 @@ struct Function {
     { return hasDirectEval || !nestedFunctions.isEmpty() || module->debugMode; }
 
     void setScheduledBlocks(const QVector<BasicBlock *> &scheduled);
-    void renumberBasicBlocks();
 
     int getNewStatementId() { return _statementCount++; }
     int statementCount() const { return _statementCount; }

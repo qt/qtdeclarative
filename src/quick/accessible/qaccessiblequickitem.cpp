@@ -142,9 +142,6 @@ QAccessibleInterface *QAccessibleQuickItem::child(int index) const
         return 0;
 
     QQuickItem *child = children.at(index);
-    if (!child) // FIXME can this happen?
-        return 0;
-
     return QAccessible::queryAccessibleInterface(child);
 }
 

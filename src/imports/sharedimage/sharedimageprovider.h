@@ -41,16 +41,17 @@
 #define SHAREDIMAGEPROVIDER_H
 
 #include <QQuickImageProvider>
+#include <private/qquickpixmapcache_p.h>
 #include <QScopedPointer>
 
 class QuickSharedImageLoader;
 
-class SharedImageProvider : public QQuickImageProvider
+class SharedImageProvider : public QQuickImageProviderWithOptions
 {
 public:
     SharedImageProvider();
 
-    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize, const QQuickImageProviderOptions &options) override;
 
 protected:
     QScopedPointer<QuickSharedImageLoader> loader;

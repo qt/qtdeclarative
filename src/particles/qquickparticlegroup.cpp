@@ -141,3 +141,5 @@ void QQuickParticleGroup::componentComplete(){
     if (!m_system && qobject_cast<QQuickParticleSystem*>(parent()))
         setSystem(qobject_cast<QQuickParticleSystem*>(parent()));
 }
+
+#include "moc_qquickparticlegroup_p.cpp"

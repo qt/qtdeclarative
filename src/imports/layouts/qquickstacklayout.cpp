@@ -341,3 +341,5 @@ bool QQuickStackLayout::shouldIgnoreItem(QQuickItem *item) const
         d_func()->m_ignoredItems << item;
     return ignored;
 }
+
+#include "moc_qquickstacklayout_p.cpp"

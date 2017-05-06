@@ -96,8 +96,7 @@ The OpenVG adaptation is an alternative renderer for \l {Qt Quick} 2 that will
 renderer the contents of the scene graph using OpenVG commands to provide
 hardware-acclerated 2D vector and raster graphics. The details for this
 adaptation are available here:
-\l{qtquick-visualcanvas-scenegraph-openvg.html}{OpenVG Adaptation}
-
+\l{qtquick-visualcanvas-adaptations-openvg.html}{OpenVG Adaptation}
 */
 
 

@@ -773,3 +773,5 @@ void QQuickStochasticEngine::addToUpdateList(uint t, int idx)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickspriteengine_p.cpp"

@@ -152,7 +152,7 @@ QSGNode *BezierCurve::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 //! [7]
 
 //! [8]
-    QRectF bounds = boundingRect();
+    QSizeF itemSize = size();
     QSGGeometry::Point2D *vertices = geometry->vertexDataAsPoint2D();
     for (int i = 0; i < m_segmentCount; ++i) {
         qreal t = i / qreal(m_segmentCount - 1);
@@ -163,8 +163,8 @@ QSGNode *BezierCurve::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                     + 3 * invt * t * t * m_p3
                     + t * t * t * m_p4;
 
-        float x = bounds.x() + pos.x() * bounds.width();
-        float y = bounds.y() + pos.y() * bounds.height();
+        float x = pos.x() * itemSize.width();
+        float y = pos.y() * itemSize.height();
 
         vertices[i].set(x, y);
     }

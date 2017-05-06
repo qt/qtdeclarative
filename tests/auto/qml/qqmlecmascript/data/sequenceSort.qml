@@ -52,7 +52,11 @@ Item {
     function doStringTest(stringList, fn) {
         var expected = createExpected(stringList, fn);
         var actual = msc.strings(stringList);
-        return checkResults(expected, actual, fn);
+        var actual2 = msc.stringsVector(stringList);
+        var actual3 = msc.stringsStdVector(stringList);
+        return checkResults(expected, actual, fn)
+        && checkResults(expected, actual2, fn)
+        && checkResults(expected, actual3, fn)
     }
     function doIntTest(intList, fn) {
         var expected = createExpected(intList, fn);
@@ -67,12 +71,16 @@ Item {
     function doIntVectorTest(intList, fn) {
         var expected = createExpected(intList, fn);
         var actual = msc.integerVector(intList);
-        return checkResults(expected, actual, fn);
+        var actual2 = msc.integerStdVector(intList);
+        return checkResults(expected, actual, fn)
+        && checkResults(expected, actual2, fn)
     }
     function doRealVectorTest(realList, fn) {
         var expected = createExpected(realList, fn);
         var actual = msc.realVector(realList);
-        return checkResults(expected, actual, fn);
+        var actual2 = msc.realStdVector(realList);
+        return checkResults(expected, actual, fn)
+        && checkResults(expected, actual2, fn)
     }
 
     function test_qtbug_25269(useCustomCompare) {

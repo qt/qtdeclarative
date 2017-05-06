@@ -64,3 +64,5 @@ QString QQmlItemSelectionRangeValueType::toString() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlmodelindexvaluetype_p.cpp"

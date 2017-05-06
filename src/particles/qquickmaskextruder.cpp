@@ -153,3 +153,5 @@ void QQuickMaskExtruder::ensureInitialized(const QRectF &rf)
     }
 }
 QT_END_NAMESPACE
+
+#include "moc_qquickmaskextruder_p.cpp"

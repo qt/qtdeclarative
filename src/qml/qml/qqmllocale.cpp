@@ -1090,3 +1090,5 @@ void QQmlLocale::method_localeCompare(const BuiltinFunction *b, Scope &scope, Ca
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qqmllocale_p.cpp"

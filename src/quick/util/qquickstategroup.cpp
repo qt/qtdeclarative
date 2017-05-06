@@ -514,3 +514,4 @@ void QQuickStateGroup::stateAboutToComplete()
 QT_END_NAMESPACE
 
 
+#include "moc_qquickstategroup_p.cpp"

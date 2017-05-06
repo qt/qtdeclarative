@@ -137,3 +137,5 @@ void QQuickWindowAttached::windowChange(QQuickWindow *window)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickwindowattached_p.cpp"

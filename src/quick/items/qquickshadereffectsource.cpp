@@ -796,5 +796,6 @@ void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeDat
 }
 
 #include "qquickshadereffectsource.moc"
+#include "moc_qquickshadereffectsource_p.cpp"
 
 QT_END_NAMESPACE

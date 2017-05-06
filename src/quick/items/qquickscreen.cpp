@@ -86,6 +86,20 @@ QT_BEGIN_NAMESPACE
     The name of the screen.
 */
 /*!
+    \qmlattachedproperty int Screen::virtualX
+    \readonly
+    \since 5.9
+
+    The x coordinate of the screen within the virtual desktop.
+*/
+/*!
+    \qmlattachedproperty int Screen::virtualY
+    \readonly
+    \since 5.9
+
+    The y coordinate of the screen within the virtual desktop.
+*/
+/*!
     \qmlattachedproperty int Screen::width
     \readonly
 
@@ -435,3 +449,5 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscreen_p.cpp"

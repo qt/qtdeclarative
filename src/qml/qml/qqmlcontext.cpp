@@ -834,3 +834,5 @@ QString QQmlContextData::urlString() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlcontext.cpp"

@@ -785,3 +785,5 @@ void QQuickPropertyChanges::attachToState()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpropertychanges_p.cpp"

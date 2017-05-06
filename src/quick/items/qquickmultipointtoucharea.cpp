@@ -176,8 +176,6 @@ void QQuickTouchPoint::setVelocity(const QVector2D &velocity)
 
     It is deprecated because a touch point is more correctly modeled as an ellipse,
     whereas this rectangle represents the outer bounds of the ellipse after \l rotation.
-
-    \sa horizontalDiameter, verticalDiameter
 */
 void QQuickTouchPoint::setArea(const QRectF &area)
 {
@@ -1009,3 +1007,5 @@ QSGNode *QQuickMultiPointTouchArea::updatePaintNode(QSGNode *oldNode, UpdatePain
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmultipointtoucharea_p.cpp"

@@ -113,3 +113,5 @@ bool QQuickAgeAffector::affectParticle(QQuickParticleData *d, qreal dt)
     return false;
 }
 QT_END_NAMESPACE
+
+#include "moc_qquickage_p.cpp"

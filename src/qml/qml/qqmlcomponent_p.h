@@ -88,6 +88,13 @@ public:
     void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate);
     static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v);
 
+    void incubateObject(
+            QQmlIncubator *incubationTask,
+            QQmlComponent *component,
+            QQmlEngine *engine,
+            QQmlContextData *context,
+            QQmlContextData *forContext);
+
     QQmlTypeData *typeData;
     void typeDataReady(QQmlTypeData *) override;
     void typeDataProgress(QQmlTypeData *, qreal) override;

@@ -75,3 +75,5 @@ QQuickImplicitSizeItem::QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimplicitsizeitem_p.cpp"

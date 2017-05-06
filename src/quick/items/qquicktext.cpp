@@ -274,15 +274,9 @@ void QQuickTextPrivate::updateLayout()
                     elideLayout->clearFormats();
                 QString tmp = text;
                 multilengthEos = tmp.indexOf(QLatin1Char('\x9c'));
-                if (multilengthEos != -1) {
+                if (multilengthEos != -1)
                     tmp = tmp.mid(0, multilengthEos);
-                    tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
-                } else if (tmp.contains(QLatin1Char('\n'))) {
-                    // Replace always does a detach.  Checking for the new line character first
-                    // means iterating over those items again if found but prevents a realloc
-                    // otherwise.
-                    tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
-                }
+                tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
                 layout.setText(tmp);
             }
             textHasChanged = false;
@@ -365,8 +359,8 @@ void QQuickTextPrivate::updateSize()
     }
 
     if (!requireImplicitSize) {
-        emit q->implicitWidthChanged();
-        emit q->implicitHeightChanged();
+        implicitWidthChanged();
+        implicitHeightChanged();
         // if the implicitWidth is used, then updateSize() has already been called (recursively)
         if (requireImplicitSize)
             return;
@@ -3062,3 +3056,5 @@ QJSValue QQuickText::fontInfo() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktext_p.cpp"

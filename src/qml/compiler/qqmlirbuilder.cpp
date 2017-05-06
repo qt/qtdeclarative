@@ -1687,6 +1687,7 @@ enum MetaObjectResolverFlags {
 };
 
 static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
+static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index);
 
 static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
                                               const QV4::IR::MemberExpressionResolver *resolver,
@@ -1702,6 +1703,14 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         if (ok) {
             member->setEnumValue(value);
             return QV4::IR::SInt32Type;
+        } else {
+            int index = type->scopedEnumIndex(qmlEngine, *member->name, &ok);
+            if (ok) {
+                auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
+                newResolver->owner = resolver->owner;
+                initScopedEnumResolver(newResolver, type, index);
+                return QV4::IR::DiscoveredType(newResolver);
+            }
         }
     }
 
@@ -1883,6 +1892,34 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
     resolver->resolveMember = &resolveMetaObjectProperty;
     resolver->data = metaObject;
     resolver->flags = 0;
+}
+
+static QV4::IR::DiscoveredType resolveScopedEnum(QQmlEnginePrivate *qmlEngine,
+                                              const QV4::IR::MemberExpressionResolver *resolver,
+                                              QV4::IR::Member *member)
+{
+    if (!member->name->constData()->isUpper())
+        return QV4::IR::VarType;
+
+    QQmlType *type = static_cast<QQmlType*>(resolver->data);
+    int index = resolver->flags;
+
+    bool ok = false;
+    int value = type->scopedEnumValue(qmlEngine, index, *member->name, &ok);
+    if (!ok)
+        return QV4::IR::VarType;
+    member->setEnumValue(value);
+    return QV4::IR::SInt32Type;
+}
+
+static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index)
+{
+    Q_ASSERT(resolver);
+
+    resolver->resolveMember = &resolveScopedEnum;
+    resolver->data = qmlType;
+    resolver->extraData = 0;
+    resolver->flags = index;
 }
 
 #endif // V4_BOOTSTRAP

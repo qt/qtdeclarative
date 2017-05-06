@@ -715,3 +715,4 @@ QQuickImageProviderWithOptions *QQuickImageProviderWithOptions::checkedCast(QQui
 
 QT_END_NAMESPACE
 
+#include "moc_qquickimageprovider.cpp"

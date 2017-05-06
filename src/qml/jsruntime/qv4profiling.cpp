@@ -141,3 +141,5 @@ void Profiler::startProfiling(quint64 features)
 } // namespace QV4
 
 QT_END_NAMESPACE
+
+#include "moc_qv4profiling_p.cpp"

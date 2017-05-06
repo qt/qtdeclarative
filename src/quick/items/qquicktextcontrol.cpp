@@ -830,6 +830,9 @@ void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
     if (e == QKeySequence::SelectAll) {
             e->accept();
             q->selectAll();
+#if QT_CONFIG(clipboard)
+            setClipboardSelection();
+#endif
             return;
     }
 #if QT_CONFIG(clipboard)
@@ -954,6 +957,10 @@ process:
     }
 
  accept:
+
+#if QT_CONFIG(clipboard)
+    setClipboardSelection();
+#endif
 
     e->accept();
     cursorOn = true;

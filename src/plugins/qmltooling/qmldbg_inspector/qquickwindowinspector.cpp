@@ -230,3 +230,5 @@ QQuickItem *QQuickWindowInspector::topVisibleItemAt(const QPointF &pos) const
 } // namespace QmlJSDebugger
 
 QT_END_NAMESPACE
+
+#include "moc_qquickwindowinspector.cpp"

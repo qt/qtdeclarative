@@ -508,3 +508,5 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickparticleemitter_p.cpp"

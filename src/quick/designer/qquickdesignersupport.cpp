@@ -90,10 +90,11 @@ void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool h
         QSGRenderContext *rc = QQuickWindowPrivate::get(referencedItem->window())->context;
         QSGLayer *texture = rc->sceneGraphContext()->createLayer(rc);
 
+        QSizeF itemSize = referencedItem->size();
         texture->setLive(true);
         texture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode());
-        texture->setRect(referencedItem->boundingRect());
-        texture->setSize(referencedItem->boundingRect().size().toSize());
+        texture->setRect(QRectF(QPointF(0, 0), itemSize));
+        texture->setSize(itemSize.toSize());
         texture->setRecursive(true);
 #if QT_CONFIG(opengl)
 #ifndef QT_OPENGL_ES

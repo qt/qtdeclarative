@@ -285,3 +285,5 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
     m_lastTimeStamp = time;
 }
 QT_END_NAMESPACE
+
+#include "moc_qquicktrailemitter_p.cpp"

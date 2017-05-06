@@ -72,7 +72,7 @@ struct SimpleCallContext;
 struct CatchContext;
 struct WithContext;
 struct QmlContext;
-struct QmlContextWrapper;
+struct QQmlContextWrapper;
 
 // Attention: Make sure that this structure is the same size on 32-bit and 64-bit
 // architecture or you'll have to change the JIT code.

@@ -125,6 +125,7 @@ protected:
                 *out << ri->prettyName();
                 break;
             }
+            Q_FALLTHROUGH();
         }
         default:
             IRPrinterWithPositions::visitTemp(e);
@@ -662,6 +663,7 @@ protected: // IRDecoder
                     addUses(rightSource->asTemp(), Use::MustHaveRegister);
                     break;
                 }
+                Q_FALLTHROUGH();
 #endif
             case OpBitAnd:
             case OpBitOr:

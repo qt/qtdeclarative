@@ -126,3 +126,5 @@ void QQmlLoggingCategory::setName(const QString &name)
     QScopedPointer<QLoggingCategory> category(new QLoggingCategory(m_name.constData()));
     m_category.swap(category);
 }
+
+#include "moc_qqmlloggingcategory_p.cpp"

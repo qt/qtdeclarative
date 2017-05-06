@@ -314,3 +314,4 @@ void QQuickFlipablePrivate::setBackTransform()
 QT_END_NAMESPACE
 
 #include "qquickflipable.moc"
+#include "moc_qquickflipable_p.cpp"

@@ -194,3 +194,5 @@ void QQuickParticlePainter::performPendingCommits()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickparticlepainter_p.cpp"

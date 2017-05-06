@@ -183,7 +183,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                      "solutions for your platform.");
         }
 #else
-        factory = new JIT::ISelFactory;
+        factory = new JIT::ISelFactory<>;
 #endif
     }
     iselFactory.reset(factory);
@@ -1147,9 +1147,9 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object());
-        } else if (object->as<QV4::QmlContextWrapper>()) {
+        } else if (object->as<QV4::QQmlContextWrapper>()) {
             return QVariant();
-        } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
+        } else if (QV4::QQmlTypeWrapper *w = object->as<QV4::QQmlTypeWrapper>()) {
             return w->toVariant();
         } else if (QV4::QQmlValueTypeWrapper *v = object->as<QV4::QQmlValueTypeWrapper>()) {
             return v->toVariant();

@@ -112,7 +112,9 @@ public:
 
     QQuickItem *mouseGrabberItem() const;
 
-    bool sendEvent(QQuickItem *, QEvent *);
+#if QT_DEPRECATED_SINCE(5, 8)
+    QT_DEPRECATED bool sendEvent(QQuickItem *, QEvent *);
+#endif
 
     QImage grabWindow();
 #if QT_CONFIG(opengl)
@@ -162,6 +164,7 @@ public:
 
     static void setSceneGraphBackend(QSGRendererInterface::GraphicsApi api);
     static void setSceneGraphBackend(const QString &backend);
+    static QString sceneGraphBackend();
 
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;

@@ -704,3 +704,5 @@ void SplineEditor::setEasingCurve(const QString &code)
         }
     }
 }
+
+#include "moc_splineeditor.cpp"

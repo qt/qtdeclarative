@@ -1616,3 +1616,5 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickwidget.cpp"

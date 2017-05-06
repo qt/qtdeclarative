@@ -265,3 +265,5 @@ QSGNinePatchNode *QSGEngine::createNinePatchNode() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgengine.cpp"
