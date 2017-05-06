@@ -34,7 +34,8 @@
     "features": {
         "d3d12": {
             "label": "Direct3D 12",
-            "purpose": "Provides a Direct3D 12 backend for the Qt Quick Scenegraph",
+            "purpose": "Provides a Direct3D 12 backend for the scenegraph.",
+            "section": "Qt Quick",
             "condition": "tests.d3d12",
             "output": [
                 "publicFeature"
@@ -42,7 +43,8 @@
         },
         "quick-animatedimage": {
             "label": "AnimatedImage item",
-            "purpose": "Provides the Qt Quick AnimatedImage Item",
+            "purpose": "Provides the AnimatedImage item.",
+            "section": "Qt Quick",
             "condition": "features.movie",
             "output": [
                 "privateFeature"
@@ -50,29 +52,33 @@
         },
         "quick-canvas": {
             "label": "Canvas item",
-            "purpose": "Provides the Qt Quick Canvas Item",
+            "purpose": "Provides the Canvas item.",
+            "section": "Qt Quick",
             "condition": "features.quick-path",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-designer": {
-            "label": "Support for Quick Designer",
-            "purpose": "Provides support for the Qt Quick Designer in Qt Creator",
+            "label": "Support for Qt Quick Designer",
+            "purpose": "Provides support for the Qt Quick Designer in Qt Creator.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-flipable": {
             "label": "Flipable item",
-            "purpose": "Provides the Qt Quick Flipable Item",
+            "purpose": "Provides the Flipable item.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-gridview": {
             "label": "GridView item",
-            "purpose": "Provides the Qt Quick GridView item",
+            "purpose": "Provides the GridView item.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
@@ -93,14 +99,16 @@
         },
         "quick-listview": {
             "label": "ListView item",
-            "purpose": "Provides the Qt Quick ListView item",
+            "purpose": "Provides the ListView item.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-particles": {
             "label": "Particle support",
-            "purpose": "Provides a particle system for Qt Quick",
+            "purpose": "Provides a particle system.",
+            "section": "Qt Quick",
             "condition": "features.quick-shadereffect && features.quick-sprite && features.opengl",
             "output": [
                 "privateFeature"
@@ -108,14 +116,16 @@
         },
         "quick-path": {
             "label": "Path support",
-            "purpose": "Provides Path elements in Qt Quick",
+            "purpose": "Provides Path elements.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-pathview": {
             "label": "PathView item",
-            "purpose": "Provides the Qt Quick PathView item",
+            "purpose": "Provides the PathView item.",
+            "section": "Qt Quick",
             "condition": "features.quick-path",
             "output": [
                 "privateFeature"
@@ -123,21 +133,24 @@
         },
         "quick-positioners": {
             "label": "Positioner items",
-            "purpose": "Provides Positioner items in Qt Quick",
+            "purpose": "Provides Positioner items.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-shadereffect": {
             "label": "ShaderEffect item",
-            "purpose": "Provides Shader effects in Qt Quick",
+            "purpose": "Provides Shader effects.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-sprite": {
             "label": "Sprite item",
-            "purpose": "Provides the Qt Quick Sprite Item",
+            "purpose": "Provides the Sprite item.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
