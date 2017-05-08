@@ -571,7 +571,7 @@ void tst_TouchMouse::buttonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->grabber(), eventItem1);
     QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
@@ -632,7 +632,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId == -1);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->grabber(), eventItem2);
     QCOMPARE(window->mouseGrabberItem(), nullptr);
 
@@ -758,7 +758,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     // for the touchMouseId to the new grabber.
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());

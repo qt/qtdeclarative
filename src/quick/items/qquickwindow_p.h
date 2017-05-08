@@ -162,6 +162,10 @@ public:
     void flushFrameSynchronousEvents();
     void deliverDelayedTouchEvent();
 
+    // the device-specific event instances which are reused during event delivery
+    mutable QVector<QQuickPointerEvent *> pointerEventInstances;
+    QQuickPointerEvent *pointerEventInstance(QQuickPointerDevice *device) const;
+
     // delivery of pointer events:
     QQuickPointerEvent *pointerEventInstance(QEvent *ev) const;
     void deliverPointerEvent(QQuickPointerEvent *);
