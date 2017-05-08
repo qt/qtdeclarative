@@ -94,6 +94,9 @@ private slots:
     void flickable_data();
     void flickable();
 
+    void dragOverModalShadow_data();
+    void dragOverModalShadow();
+
 private:
     struct TouchDeviceDeleter
     {
@@ -960,6 +963,62 @@ void tst_Drawer::flickable()
         QTest::touchEvent(window, touchDevice.data()).release(0, to);
 
     QVERIFY(!flickable->isDragging());
+}
+
+void tst_Drawer::dragOverModalShadow_data()
+{
+    QTest::addColumn<bool>("mouse");
+    QTest::newRow("mouse") << true;
+    QTest::newRow("touch") << false;
+}
+
+// QTBUG-60602
+void tst_Drawer::dragOverModalShadow()
+{
+    QFETCH(bool, mouse);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("dragOverModalShadow.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QVERIFY(!drawer->isVisible());
+
+    const QPoint from(popup->x(), popup->y() + popup->height() + 5);
+    const QPoint to(popup->x() + popup->width(), popup->y() + popup->height() + 5);
+
+    if (mouse)
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+    else
+        QTest::touchEvent(window, touchDevice.data()).press(0, from);
+    QVERIFY(!drawer->isVisible());
+
+    static const int steps = 10;
+    for (int i = 0; i < steps; ++i) {
+        int x = from.x() + i * qAbs(from.x() - to.x()) / steps;
+        int y = from.y() + i * qAbs(from.y() - to.y()) / steps;
+
+        if (mouse)
+            QTest::mouseMove(window, QPoint(x, y));
+        else
+            QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, y));
+        QTest::qWait(1); // avoid infinite velocity
+        QVERIFY(!drawer->isVisible());
+    }
+
+    if (mouse)
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    else
+        QTest::touchEvent(window, touchDevice.data()).release(0, to);
+    QVERIFY(!drawer->isVisible());
 }
 
 QTEST_MAIN(tst_Drawer)
