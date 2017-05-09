@@ -42,6 +42,7 @@ HEADERS += \
     $$PWD/qquickpage_p.h \
     $$PWD/qquickpageindicator_p.h \
     $$PWD/qquickpagelayout_p_p.h \
+    $$PWD/qquickpalette_p.h \
     $$PWD/qquickpane_p.h \
     $$PWD/qquickpane_p_p.h \
     $$PWD/qquickpopup_p.h \
@@ -113,6 +114,7 @@ SOURCES += \
     $$PWD/qquickpage.cpp \
     $$PWD/qquickpageindicator.cpp \
     $$PWD/qquickpagelayout.cpp \
+    $$PWD/qquickpalette.cpp \
     $$PWD/qquickpane.cpp \
     $$PWD/qquickpopup.cpp \
     $$PWD/qquickpopupitem.cpp \

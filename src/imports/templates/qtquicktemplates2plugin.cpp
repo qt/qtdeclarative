@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/private/qqmlglobal_p.h>
 
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickaction_p.h>
@@ -95,6 +96,8 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #endif
 
+#include "qquicktemplates2valuetypeprovider_p.h"
+
 static inline void initResources()
 {
 #ifdef QT_STATIC
@@ -110,6 +113,22 @@ extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher
 #endif
 
 QT_BEGIN_NAMESPACE
+
+static QQmlValueTypeProvider *valueTypeProvider()
+{
+    static QQuickTemplates2ValueTypeProvider provider;
+    return &provider;
+}
+
+static void initProviders()
+{
+    QQml_addValueTypeProvider(valueTypeProvider());
+}
+
+static void cleanupProviders()
+{
+    QQml_removeValueTypeProvider(valueTypeProvider());
+}
 
 class QtQuickTemplates2Plugin: public QQmlExtensionPlugin
 {
@@ -131,6 +150,7 @@ private:
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
+    initProviders();
 
 #if QT_CONFIG(shortcut)
     originalContextMatcher = qt_quick_shortcut_context_matcher();
@@ -140,6 +160,8 @@ QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensio
 
 QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 {
+    cleanupProviders();
+
 #if QT_CONFIG(shortcut)
     qt_quick_set_shortcut_context_matcher(originalContextMatcher);
 #endif
