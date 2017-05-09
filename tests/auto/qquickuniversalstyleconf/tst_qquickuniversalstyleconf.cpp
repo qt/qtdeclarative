@@ -55,16 +55,22 @@ void tst_qquickuniversalstyleconf::conf()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
+    QFont customFont;
+    customFont.setFamily("Courier");
+    customFont.setPixelSize(22);
+
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    // We specified a custom background color, so the window should have it.
+    // We specified a custom background color and font, so the window should have them.
     QCOMPARE(window->property("color").value<QColor>(), QColor("#444444"));
+    QCOMPARE(window->property("font").value<QFont>(), customFont);
 
-    // We specified a custom foreground color, so the label should have it.
+    // We specified a custom foreground color and font, so the label should have them.
     QQuickItem *label = window->property("label").value<QQuickItem*>();
     QVERIFY(label);
     QCOMPARE(label->property("color").value<QColor>(), QColor("#E51400"));
+    QCOMPARE(label->property("font").value<QFont>(), customFont);
 }
 
 QTEST_MAIN(tst_qquickuniversalstyleconf)

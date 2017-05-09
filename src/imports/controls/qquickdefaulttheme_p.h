@@ -48,11 +48,11 @@
 // We mean it.
 //
 
-#include <QtQuickControls2/private/qquickproxytheme_p.h>
+#include <QtQuickControls2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDefaultTheme : public QQuickProxyTheme
+class QQuickDefaultTheme : public QQuickTheme
 {
 public:
     explicit QQuickDefaultTheme();

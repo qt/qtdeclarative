@@ -39,7 +39,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickDefaultTheme::QQuickDefaultTheme()
-    : QQuickProxyTheme()
+    : QQuickTheme(QStringLiteral("Default"))
 {
 }
 

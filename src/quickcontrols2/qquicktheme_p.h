@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMATERIALTHEME_P_H
-#define QQUICKMATERIALTHEME_P_H
+#ifndef QQUICKTHEME_P_H
+#define QQUICKTHEME_P_H
 
 //
 //  W A R N I N G
@@ -48,31 +48,26 @@
 // We mean it.
 //
 
-#include <QtCore/qvariant.h>
+#include <QtQuickControls2/private/qquickproxytheme_p.h>
+#include <QtCore/qscopedpointer.h>
 #include <QtGui/qfont.h>
-#include <QtQuickControls2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialTheme : public QQuickTheme
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickTheme :  public QQuickProxyTheme
 {
 public:
-    explicit QQuickMaterialTheme();
+    QQuickTheme(const QString &name);
 
     const QFont *font(Font type = SystemFont) const override;
 
-    QVariant themeHint(ThemeHint hint) const override;
+protected:
+    QFont resolveFont(const QFont &font) const;
 
 private:
-    QFont systemFont;
-    QFont buttonFont;
-    QFont toolTipFont;
-    QFont itemViewFont;
-    QFont listViewFont;
-    QFont menuItemFont;
-    QFont editorFont;
+    QScopedPointer<QFont> m_styleFont;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKMATERIALTHEME_P_H
+#endif // QQUICKTHEME_P_H

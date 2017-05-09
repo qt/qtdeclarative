@@ -50,14 +50,14 @@
 
 #include <QtCore/qvariant.h>
 #include <QtGui/qpalette.h>
-#include <QtQuickControls2/private/qquickproxytheme_p.h>
+#include <QtQuickControls2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickFusionTheme :  public QQuickProxyTheme
+class QQuickFusionTheme :  public QQuickTheme
 {
 public:
-    explicit QQuickFusionTheme(QPlatformTheme *theme = nullptr);
+    explicit QQuickFusionTheme();
 
     const QPalette *palette(Palette type = SystemPalette) const override;
 };

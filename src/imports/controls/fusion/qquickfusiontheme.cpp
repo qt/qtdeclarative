@@ -38,8 +38,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickFusionTheme::QQuickFusionTheme(QPlatformTheme *theme)
-    : QQuickProxyTheme(theme)
+QQuickFusionTheme::QQuickFusionTheme()
+    : QQuickTheme(QStringLiteral("Fusion"))
 {
 }
 

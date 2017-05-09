@@ -42,8 +42,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
-    : QQuickProxyTheme(theme)
+QQuickMaterialTheme::QQuickMaterialTheme()
+    : QQuickTheme(QStringLiteral("Material"))
 {
     QFont font;
     font.setFamily(QLatin1String("Roboto"));
@@ -65,22 +65,29 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     }
 
     systemFont.setPixelSize(14);
+    systemFont = resolveFont(systemFont);
 
     buttonFont.setPixelSize(14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
+    buttonFont = resolveFont(buttonFont);
 
     toolTipFont.setPixelSize(14);
     toolTipFont.setWeight(QFont::Medium);
+    toolTipFont = resolveFont(toolTipFont);
 
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
+    itemViewFont = resolveFont(itemViewFont);
 
     listViewFont.setPixelSize(16);
+    listViewFont = resolveFont(listViewFont);
 
     menuItemFont.setPixelSize(16);
+    menuItemFont = resolveFont(menuItemFont);
 
     editorFont.setPixelSize(16);
+    editorFont = resolveFont(editorFont);
 }
 
 const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const

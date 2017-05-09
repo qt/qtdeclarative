@@ -63,6 +63,53 @@
 
     \include qquickuniversalstyle.qdocinc conf
 
+    The default \l {Control::font}{font} can be specified in a \c Font sub-group
+    in each style's section in the configuration file. The \c Font sub-group can
+    be defined in two alternative ways:
+
+    \code
+    [Default]
+    Font\Family=Open Sans
+    Font\PixelSize=20
+
+    [Material\Font]
+    Family=Open Sans
+    PixelSize=20
+    \endcode
+
+    Supported font attributes:
+    \table
+        \header
+            \li Variable
+            \li Description
+        \row
+            \li \c Family
+            \li The \l {QFont::family}{font family}.
+        \row
+            \li \c PointSize
+            \li The \l {QFont::pointSizeF}{point size}.
+        \row
+            \li \c PixelSize
+            \li The \l {QFont::pixelSize}{pixel size}.
+        \row
+            \li \c StyleHint
+            \li The \l {QFont::styleHint}{style hint}.
+                Available values: \c SansSerif, \c Helvetica, \c Serif, \c Times, \c TypeWriter, \c Courier,
+                                  \c OldEnglish, \c Decorative, \c Monospace, \c Fantasy, \c Cursive.
+        \row
+            \li \c Weight
+            \li The \l {QFont::}{weight}. Qt uses a weighting scale from \c 0 to \c 99 similar to,
+                but not the same as, the scales used in Windows or CSS. A weight of \c 0 will be thin,
+                whilst \c 99 will be extremely black.
+                Available pre-defined weights: \c Thin (0), \c ExtraLight (12), \c Light (25), \c Normal (50),
+                                               \c Medium (57), \c DemiBold (63), \c Bold (75), \c ExtraBold (81),
+                                               \c Black (87).
+        \row
+            \li \c Style
+            \li The \l {QFont::}{style}.
+                Available values: \c StyleNormal, \c StyleItalic, \c StyleOblique.
+    \endtable
+
     In order to make it possible for Qt Quick Controls 2 to find the configuration file,
     it must be built into application's resources using the \l {The Qt Resource System}.
     Here's an example \c .qrc file:

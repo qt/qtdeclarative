@@ -14,7 +14,8 @@ HEADERS += \
     $$PWD/qquickstyle_p.h \
     $$PWD/qquickstyleplugin_p.h \
     $$PWD/qquickstyleselector_p.h \
-    $$PWD/qquickstyleselector_p_p.h
+    $$PWD/qquickstyleselector_p_p.h \
+    $$PWD/qquicktheme_p.h
 
 SOURCES += \
     $$PWD/qquickanimatednode.cpp \
@@ -28,7 +29,8 @@ SOURCES += \
     $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickstyle.cpp \
     $$PWD/qquickstyleplugin.cpp \
-    $$PWD/qquickstyleselector.cpp
+    $$PWD/qquickstyleselector.cpp \
+    $$PWD/qquicktheme.cpp
 
 qtConfig(quick-listview):qtConfig(quick-pathview) {
     HEADERS += \
