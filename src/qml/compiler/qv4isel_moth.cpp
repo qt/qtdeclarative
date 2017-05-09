@@ -638,7 +638,7 @@ void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex,
 
 void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         Instruction::LoadElementLookup load;
         load.lookup = registerIndexedGetterLookup();
         load.base = getParam(base);
@@ -657,7 +657,7 @@ void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr 
 void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase,
                                       IR::Expr *targetIndex)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         Instruction::StoreElementLookup store;
         store.lookup = registerIndexedSetterLookup();
         store.base = getParam(targetBase);

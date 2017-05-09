@@ -618,7 +618,7 @@ void InstructionSelection<JITAssembler>::setQObjectProperty(IR::Expr *source, IR
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
         generateLookupCall(target, lookup, offsetof(QV4::Lookup, indexedGetter),
                            PointerToValue(base),
@@ -633,7 +633,7 @@ void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *in
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         uint lookup = registerIndexedSetterLookup();
         generateLookupCall(JITAssembler::Void, lookup, offsetof(QV4::Lookup, indexedSetter),
                            PointerToValue(targetBase), PointerToValue(targetIndex),

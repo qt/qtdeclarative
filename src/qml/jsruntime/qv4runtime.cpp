@@ -599,41 +599,53 @@ void Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, i
     o->put(name, value);
 }
 
-ReturnedValue Runtime::method_getElement(ExecutionEngine *engine, const Value &object, const Value &index)
+static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engine, const Value &object, uint idx)
 {
+    Q_ASSERT(idx < UINT_MAX);
     Scope scope(engine);
-    uint idx = index.asArrayIndex();
 
     ScopedObject o(scope, object);
     if (!o) {
-        if (idx < UINT_MAX) {
-            if (const String *str = object.as<String>()) {
-                if (idx >= (uint)str->toQString().length()) {
-                    return Encode::undefined();
-                }
-                const QString s = str->toQString().mid(idx, 1);
-                return scope.engine->newString(s)->asReturnedValue();
+        if (const String *str = object.as<String>()) {
+            if (idx >= (uint)str->toQString().length()) {
+                return Encode::undefined();
             }
+            const QString s = str->toQString().mid(idx, 1);
+            return scope.engine->newString(s)->asReturnedValue();
         }
 
+        if (object.isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(idx).arg(object.toQStringNoThrow());
+            return engine->throwTypeError(message);
+        }
+
+        o = RuntimeHelpers::convertToObject(scope.engine, object);
+        Q_ASSERT(!!o); // can't fail as null/undefined is covered above
+    }
+
+    if (o->arrayData() && !o->arrayData()->attrs) {
+        ScopedValue v(scope, o->arrayData()->get(idx));
+        if (!v->isEmpty())
+            return v->asReturnedValue();
+    }
+
+    return o->getIndexed(idx);
+}
+
+static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, const Value &object, const Value &index)
+{
+    Q_ASSERT(index.asArrayIndex() == UINT_MAX);
+    Scope scope(engine);
+
+    ScopedObject o(scope, object);
+    if (!o) {
         if (object.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index.toQStringNoThrow()).arg(object.toQStringNoThrow());
             return engine->throwTypeError(message);
         }
 
         o = RuntimeHelpers::convertToObject(scope.engine, object);
-        if (!o) // type error
-            return Encode::undefined();
-    }
-
-    if (idx < UINT_MAX) {
-        if (o->arrayData() && !o->arrayData()->attrs) {
-            ScopedValue v(scope, o->arrayData()->get(idx));
-            if (!v->isEmpty())
-                return v->asReturnedValue();
-        }
-
-        return o->getIndexed(idx);
+        Q_ASSERT(!!o); // can't fail as null/undefined is covered above
     }
 
     ScopedString name(scope, index.toString(engine));
@@ -642,18 +654,39 @@ ReturnedValue Runtime::method_getElement(ExecutionEngine *engine, const Value &o
     return o->get(name);
 }
 
-void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
+ReturnedValue Runtime::method_getElement(ExecutionEngine *engine, const Value &object, const Value &index)
+{
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->vtable()->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->len)
+                        if (!s->data(idx).isEmpty())
+                            return s->data(idx).asReturnedValue();
+                }
+            }
+        }
+        return getElementIntFallback(engine, object, idx);
+    }
+
+    return getElementFallback(engine, object, index);
+}
+
+static Q_NEVER_INLINE void setElementFallback(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     Scope scope(engine);
     ScopedObject o(scope, object.toObject(engine));
-    if (scope.engine->hasException)
+    if (engine->hasException)
         return;
 
-    uint idx = index.asArrayIndex();
-    if (idx < UINT_MAX) {
-        if (o->arrayType() == Heap::ArrayData::Simple) {
-            Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->arrayData());
-            if (s && idx < s->len && !s->data(idx).isEmpty()) {
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
+            Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
+            if (idx < s->len) {
                 s->data(idx) = value;
                 return;
             }
@@ -664,6 +697,27 @@ void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, co
 
     ScopedString name(scope, index.toString(engine));
     o->put(name, value);
+}
+
+void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
+{
+    uint idx;
+    if (index.asArrayIndex(idx)) {
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->vtable()->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->len) {
+                        s->data(idx) = value;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    return setElementFallback(engine, object, index, value);
 }
 
 ReturnedValue Runtime::method_foreachIterator(ExecutionEngine *engine, const Value &in)
