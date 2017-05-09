@@ -240,7 +240,7 @@ void tst_qquickiconlabel::spacingWithOneDelegate()
     QQuickIconLabel *label = rootItem->findChild<QQuickIconLabel *>();
     QVERIFY(label);
     QQuickItem *delegate = nullptr;
-    if (label->icon()) {
+    if (!label->icon().isEmpty()) {
         QVERIFY(!label->findChild<QQuickText *>());
         delegate = label->findChild<QQuickIconImage *>();
     } else {
@@ -285,7 +285,7 @@ void tst_qquickiconlabel::emptyIconSource()
     label->setWidth(label->implicitWidth() + 200);
     label->setHeight(label->implicitWidth() + 100);
     QVERIFY(icon->property("source").isValid());
-    label->icon()->setSource(QString());
+    label->setIcon(QQuickIcon());
     QVERIFY(!label->findChild<QQuickIconImage *>());
     horizontalCenter = label->width() / 2;
     QCOMPARE(text->x(), horizontalCenter - text->width() / 2);

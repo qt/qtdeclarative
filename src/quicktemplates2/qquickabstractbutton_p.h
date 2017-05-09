@@ -49,10 +49,10 @@
 //
 
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIcon;
 class QQuickAction;
 class QQuickAbstractButtonPrivate;
 
@@ -66,7 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
-    Q_PROPERTY(QQuickIcon *icon READ icon CONSTANT FINAL REVISION 3)
+    Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
     Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged REVISION 3)
     Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
 
@@ -99,7 +99,8 @@ public:
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
-    QQuickIcon *icon() const;
+    QQuickIcon icon() const;
+    void setIcon(const QQuickIcon &icon);
 
     enum Display {
         IconOnly,
@@ -133,6 +134,7 @@ Q_SIGNALS:
     void checkableChanged();
     void autoExclusiveChanged();
     void indicatorChanged();
+    Q_REVISION(3) void iconChanged();
     Q_REVISION(3) void displayChanged();
     Q_REVISION(3) void actionChanged();
 

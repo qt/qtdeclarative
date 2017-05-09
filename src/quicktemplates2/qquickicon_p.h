@@ -49,7 +49,9 @@
 //
 
 #include <QtCore/qurl.h>
-#include <QtCore/qobject.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qobjectdefs.h>
+#include <QtCore/qshareddata.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtGui/qcolor.h>
 
@@ -57,17 +59,25 @@ QT_BEGIN_NAMESPACE
 
 class QQuickIconPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon
 {
-    Q_OBJECT
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(int width READ width WRITE setWidth NOTIFY widthChanged FINAL)
-    Q_PROPERTY(int height READ height WRITE setHeight NOTIFY heightChanged FINAL)
-    Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged FINAL)
+    Q_GADGET
+    Q_PROPERTY(QString name READ name WRITE setName FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource FINAL)
+    Q_PROPERTY(int width READ width WRITE setWidth FINAL)
+    Q_PROPERTY(int height READ height WRITE setHeight FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor FINAL)
 
 public:
-    explicit QQuickIcon(QObject *parent = nullptr);
+    QQuickIcon();
+    QQuickIcon(const QQuickIcon &other);
+    ~QQuickIcon();
+
+    QQuickIcon& operator=(const QQuickIcon &other);
+    bool operator==(const QQuickIcon &other) const;
+    bool operator!=(const QQuickIcon &other) const;
+
+    bool isEmpty() const;
 
     QString name() const;
     void setName(const QString &name);
@@ -85,16 +95,8 @@ public:
     void setColor(const QColor &color);
     void resetColor();
 
-Q_SIGNALS:
-    void nameChanged(const QString &name);
-    void sourceChanged(const QUrl &source);
-    void widthChanged(int width);
-    void heightChanged(int height);
-    void colorChanged(const QColor &color);
-
 private:
-    Q_DISABLE_COPY(QQuickIcon)
-    Q_DECLARE_PRIVATE(QQuickIcon)
+    QSharedDataPointer<QQuickIconPrivate> d;
 };
 
 QT_END_NAMESPACE

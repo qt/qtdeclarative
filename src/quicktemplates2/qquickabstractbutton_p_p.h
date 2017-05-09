@@ -55,7 +55,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAction;
 class QQuickButtonGroup;
-class QQuickIcon;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
@@ -102,11 +101,11 @@ public:
     int holdTimer;
     int delayTimer;
     int repeatTimer;
+    QQuickIcon icon;
     QPointF pressPoint;
     Qt::MouseButtons pressButtons;
     QQuickItem *indicator;
     QQuickButtonGroup *group;
-    QQuickIcon *icon;
     QQuickAbstractButton::Display display;
     QPointer<QQuickAction> action;
 };

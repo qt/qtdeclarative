@@ -41,7 +41,6 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,7 +65,6 @@ QQuickIconLabelPrivate::QQuickIconLabelPrivate()
       leftPadding(0),
       rightPadding(0),
       bottomPadding(0),
-      icon(nullptr),
       image(nullptr),
       label(nullptr)
 {
@@ -74,7 +72,7 @@ QQuickIconLabelPrivate::QQuickIconLabelPrivate()
 
 bool QQuickIconLabelPrivate::hasIcon() const
 {
-    return display != QQuickIconLabel::TextOnly && icon && (!icon->name().isEmpty() || !icon->source().isEmpty());
+    return display != QQuickIconLabel::TextOnly && !icon.isEmpty();
 }
 
 bool QQuickIconLabelPrivate::hasText() const
@@ -92,10 +90,10 @@ bool QQuickIconLabelPrivate::createImage()
     watchChanges(image);
     beginClass(image);
     image->setObjectName(QStringLiteral("image"));
-    image->setName(icon->name());
-    image->setSource(icon->source());
-    image->setSourceSize(QSize(icon->width(), icon->height()));
-    image->setColor(icon->color());
+    image->setName(icon.name());
+    image->setSource(icon.source());
+    image->setSourceSize(QSize(icon.width(), icon.height()));
+    image->setColor(icon.color());
     QQmlEngine::setContextForObject(image, qmlContext(q));
     if (componentComplete)
         completeComponent(image);
@@ -122,11 +120,11 @@ bool QQuickIconLabelPrivate::updateImage()
 
 void QQuickIconLabelPrivate::syncImage()
 {
-    if (!image || !icon)
+    if (!image || icon.isEmpty())
         return;
 
-    image->setName(icon->name());
-    image->setSource(icon->source());
+    image->setName(icon.name());
+    image->setSource(icon.source());
 }
 
 void QQuickIconLabelPrivate::updateOrSyncImage()
@@ -200,11 +198,11 @@ void QQuickIconLabelPrivate::updateOrSyncLabel()
 
 void QQuickIconLabelPrivate::updateIcon()
 {
-    if (!image || !icon)
+    if (!image || icon.isEmpty())
         return;
 
-    image->setColor(icon->color());
-    image->setSourceSize(QSize(icon->width(), icon->height()));
+    image->setColor(icon.color());
+    image->setSourceSize(QSize(icon.width(), icon.height()));
 }
 
 void QQuickIconLabelPrivate::updateImplicitSize()
@@ -395,35 +393,19 @@ QQuickIconLabel::~QQuickIconLabel()
         d->unwatchChanges(d->label);
 }
 
-QQuickIcon *QQuickIconLabel::icon() const
+QQuickIcon QQuickIconLabel::icon() const
 {
     Q_D(const QQuickIconLabel);
     return d->icon;
 }
 
-void QQuickIconLabel::setIcon(QQuickIcon *icon)
+void QQuickIconLabel::setIcon(const QQuickIcon &icon)
 {
     Q_D(QQuickIconLabel);
     if (d->icon == icon)
         return;
 
-    if (QQuickIcon *oldIcon = d->icon) {
-        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::nameChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
-        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::sourceChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
-        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::colorChanged, d, &QQuickIconLabelPrivate::updateIcon);
-        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::widthChanged, d, &QQuickIconLabelPrivate::updateIcon);
-        QObjectPrivate::disconnect(oldIcon, &QQuickIcon::heightChanged, d, &QQuickIconLabelPrivate::updateIcon);
-    }
-
     d->icon = icon;
-    if (icon) {
-        QObjectPrivate::connect(icon, &QQuickIcon::nameChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
-        QObjectPrivate::connect(icon, &QQuickIcon::sourceChanged, d, &QQuickIconLabelPrivate::updateOrSyncImage);
-        QObjectPrivate::connect(icon, &QQuickIcon::colorChanged, d, &QQuickIconLabelPrivate::updateIcon);
-        QObjectPrivate::connect(icon, &QQuickIcon::widthChanged, d, &QQuickIconLabelPrivate::updateIcon);
-        QObjectPrivate::connect(icon, &QQuickIcon::heightChanged, d, &QQuickIconLabelPrivate::updateIcon);
-    }
-
     d->updateOrSyncImage();
 }
 

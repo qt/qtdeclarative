@@ -50,16 +50,16 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIcon;
 class QQuickIconLabelPrivate;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickIcon *icon READ icon WRITE setIcon FINAL)
+    Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon FINAL)
     Q_PROPERTY(QString text READ text WRITE setText FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
@@ -84,8 +84,8 @@ public:
     explicit QQuickIconLabel(QQuickItem *parent = nullptr);
     ~QQuickIconLabel();
 
-    QQuickIcon *icon() const;
-    void setIcon(QQuickIcon *icon);
+    QQuickIcon icon() const;
+    void setIcon(const QQuickIcon &icon);
 
     QString text() const;
     void setText(const QString text);

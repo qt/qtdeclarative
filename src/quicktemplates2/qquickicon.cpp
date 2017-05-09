@@ -34,15 +34,12 @@
 **
 ****************************************************************************/
 
-#include <QtCore/private/qobject_p.h>
 #include "qquickicon_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIconPrivate : public QObjectPrivate
+class QQuickIconPrivate : public QSharedData
 {
-    Q_DECLARE_PUBLIC(QQuickIcon)
-
 public:
     QQuickIconPrivate()
         : width(0),
@@ -58,94 +55,98 @@ public:
     QColor color;
 };
 
-QQuickIcon::QQuickIcon(QObject *parent)
-    : QObject(*(new QQuickIconPrivate), parent)
+QQuickIcon::QQuickIcon()
+    : d(new QQuickIconPrivate)
 {
+}
+
+QQuickIcon::QQuickIcon(const QQuickIcon &other)
+    : d(other.d)
+{
+}
+
+QQuickIcon::~QQuickIcon()
+{
+}
+
+QQuickIcon &QQuickIcon::operator=(const QQuickIcon &other)
+{
+    d = other.d;
+    return *this;
+}
+
+bool QQuickIcon::operator==(const QQuickIcon &other) const
+{
+    return d == other.d || (d->name == other.d->name
+                            && d->source == other.d->source
+                            && d->width == other.d->width
+                            && d->height == other.d->height
+                            && d->color == other.d->color);
+}
+
+bool QQuickIcon::operator!=(const QQuickIcon &other) const
+{
+    return !(*this == other);
+}
+
+bool QQuickIcon::isEmpty() const
+{
+    return d->name.isEmpty() && d->source.isEmpty();
 }
 
 QString QQuickIcon::name() const
 {
-    Q_D(const QQuickIcon);
     return d->name;
 }
 
 void QQuickIcon::setName(const QString &name)
 {
-    Q_D(QQuickIcon);
-    if (name == d->name)
-        return;
-
     d->name = name;
-    emit nameChanged(name);
 }
 
 QUrl QQuickIcon::source() const
 {
-    Q_D(const QQuickIcon);
     return d->source;
 }
 
 void QQuickIcon::setSource(const QUrl &source)
 {
-    Q_D(QQuickIcon);
-    if (source == d->source)
-        return;
-
     d->source = source;
-    emit sourceChanged(source);
 }
 
 int QQuickIcon::width() const
 {
-    Q_D(const QQuickIcon);
     return d->width;
 }
 
 void QQuickIcon::setWidth(int width)
 {
-    Q_D(QQuickIcon);
-    if (width == d->width)
-        return;
-
     d->width = width;
-    emit widthChanged(width);
 }
 
 int QQuickIcon::height() const
 {
-    Q_D(const QQuickIcon);
     return d->height;
 }
 
 void QQuickIcon::setHeight(int height)
 {
-    Q_D(QQuickIcon);
-    if (height == d->height)
-        return;
-
     d->height = height;
-    emit heightChanged(height);
 }
 
 QColor QQuickIcon::color() const
 {
-    Q_D(const QQuickIcon);
     return d->color;
 }
 
 void QQuickIcon::setColor(const QColor &color)
 {
-    Q_D(QQuickIcon);
-    if (color == d->color)
-        return;
-
     d->color = color;
-    emit colorChanged(color);
 }
 
 void QQuickIcon::resetColor()
 {
-    setColor(Qt::transparent);
+    d->color = Qt::transparent;
 }
 
 QT_END_NAMESPACE

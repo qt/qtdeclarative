@@ -37,7 +37,6 @@
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
 #include "qquickbuttongroup_p.h"
-#include "qquickicon_p.h"
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
 
@@ -161,7 +160,6 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       pressButtons(Qt::NoButton),
       indicator(nullptr),
       group(nullptr),
-      icon(nullptr),
       display(QQuickAbstractButton::TextBesideIcon),
       action(nullptr)
 {
@@ -637,14 +635,20 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     \sa {Control::}{contentItem}
 */
 
-QQuickIcon *QQuickAbstractButton::icon() const
+QQuickIcon QQuickAbstractButton::icon() const
 {
-    QQuickAbstractButtonPrivate *d = const_cast<QQuickAbstractButtonPrivate*>(d_func());
-    if (!d->icon) {
-        d->icon = new QQuickIcon;
-        QQml_setParent_noEvent(d->icon, const_cast<QQuickAbstractButton*>(this));
-    }
+    Q_D(const QQuickAbstractButton);
     return d->icon;
+}
+
+void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->icon == icon)
+        return;
+
+    d->icon = icon;
+    emit iconChanged();
 }
 
 /*!
@@ -704,18 +708,10 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
         QObjectPrivate::disconnect(oldAction, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
 
         disconnect(oldAction, &QQuickAction::textChanged, this, &QQuickAbstractButton::setText);
+        disconnect(oldAction, &QQuickAction::iconChanged, this, &QQuickAbstractButton::setIcon);
         disconnect(oldAction, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
         disconnect(oldAction, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
         disconnect(oldAction, &QQuickAction::enabledChanged, this, &QQuickItem::setEnabled);
-
-        QQuickIcon *actionIcon = QQuickActionPrivate::get(oldAction)->icon;
-        if (actionIcon && d->icon) {
-            disconnect(actionIcon, &QQuickIcon::nameChanged, d->icon, &QQuickIcon::setName);
-            disconnect(actionIcon, &QQuickIcon::sourceChanged, d->icon, &QQuickIcon::setSource);
-            disconnect(actionIcon, &QQuickIcon::widthChanged, d->icon, &QQuickIcon::setWidth);
-            disconnect(actionIcon, &QQuickIcon::heightChanged, d->icon, &QQuickIcon::setHeight);
-            disconnect(actionIcon, &QQuickIcon::colorChanged, d->icon, &QQuickIcon::setColor);
-        }
     }
 
     if (action) {
@@ -723,39 +719,32 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
         QObjectPrivate::connect(action, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
 
         connect(action, &QQuickAction::textChanged, this, &QQuickAbstractButton::setText);
+        connect(action, &QQuickAction::iconChanged, this, &QQuickAbstractButton::setIcon);
         connect(action, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
         connect(action, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
         connect(action, &QQuickAction::enabledChanged, this, &QQuickItem::setEnabled);
 
-        QQuickIcon *actionIcon = QQuickActionPrivate::get(action)->icon;
-        if (actionIcon) {
-            QQuickIcon *buttonIcon = icon();
-            connect(actionIcon, &QQuickIcon::nameChanged, buttonIcon, &QQuickIcon::setName);
-            connect(actionIcon, &QQuickIcon::sourceChanged, buttonIcon, &QQuickIcon::setSource);
-            connect(actionIcon, &QQuickIcon::widthChanged, buttonIcon, &QQuickIcon::setWidth);
-            connect(actionIcon, &QQuickIcon::heightChanged, buttonIcon, &QQuickIcon::setHeight);
-            connect(actionIcon, &QQuickIcon::colorChanged, buttonIcon, &QQuickIcon::setColor);
+        QQuickIcon actionIcon = action->icon();
 
-            QString name = actionIcon->name();
-            if (!name.isEmpty())
-                buttonIcon->setName(name);
+        QString name = actionIcon.name();
+        if (!name.isEmpty())
+            d->icon.setName(name);
 
-            QUrl source = actionIcon->source();
-            if (!source.isEmpty())
-                buttonIcon->setSource(source);
+        QUrl source = actionIcon.source();
+        if (!source.isEmpty())
+            d->icon.setSource(source);
 
-            int width = actionIcon->width();
-            if (width > 0)
-                buttonIcon->setWidth(width);
+        int width = actionIcon.width();
+        if (width > 0)
+            d->icon.setWidth(width);
 
-            int height = actionIcon->height();
-            if (height)
-                buttonIcon->setHeight(height);
+        int height = actionIcon.height();
+        if (height)
+            d->icon.setHeight(height);
 
-            QColor color = actionIcon->color();
-            if (color != Qt::transparent)
-                buttonIcon->setColor(color);
-        }
+        QColor color = actionIcon.color();
+        if (color != Qt::transparent)
+            d->icon.setColor(color);
 
         setText(action->text());
         setChecked(action->isChecked());

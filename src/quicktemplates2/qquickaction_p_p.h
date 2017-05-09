@@ -56,7 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIcon;
 class QShortcutEvent;
 class QQuickActionGroup;
 
@@ -115,7 +114,7 @@ public:
     bool checked;
     bool checkable;
     QString text;
-    QQuickIcon *icon;
+    QQuickIcon icon;
     QVariant vshortcut;
     QKeySequence keySequence;
     ShortcutEntry *defaultShortcutEntry;

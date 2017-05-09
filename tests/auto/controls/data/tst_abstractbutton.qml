@@ -174,40 +174,28 @@ TestCase {
         compare(control.icon.height, 0)
         compare(control.icon.color, "#00000000")
 
-        var iconNameSpy = signalSpy.createObject(control, { target: control.icon, signalName: "nameChanged"} )
-        verify(iconNameSpy.valid)
+        var iconSpy = signalSpy.createObject(control, { target: control, signalName: "iconChanged"} )
+        verify(iconSpy.valid)
 
         control.icon.name = "test-name"
         compare(control.icon.name, "test-name")
-        compare(iconNameSpy.count, 1)
-
-        var iconSourceSpy = signalSpy.createObject(control, { target: control.icon, signalName: "sourceChanged"} )
-        verify(iconSourceSpy.valid)
+        compare(iconSpy.count, 1)
 
         control.icon.source = "qrc:/test-source"
         compare(control.icon.source, "qrc:/test-source")
-        compare(iconSourceSpy.count, 1)
-
-        var iconWidthSpy = signalSpy.createObject(control, { target: control.icon, signalName: "widthChanged"} )
-        verify(iconWidthSpy.valid)
+        compare(iconSpy.count, 2)
 
         control.icon.width = 32
         compare(control.icon.width, 32)
-        compare(iconWidthSpy.count, 1)
-
-        var iconHeightSpy = signalSpy.createObject(control, { target: control.icon, signalName: "heightChanged"} )
-        verify(iconHeightSpy.valid)
+        compare(iconSpy.count, 3)
 
         control.icon.height = 32
         compare(control.icon.height, 32)
-        compare(iconHeightSpy.count, 1)
-
-        var iconColorSpy = signalSpy.createObject(control, { target: control.icon, signalName: "colorChanged"} )
-        verify(iconColorSpy.valid)
+        compare(iconSpy.count, 4)
 
         control.icon.color = "#ff0000"
         compare(control.icon.color, "#ff0000")
-        compare(iconColorSpy.count, 1)
+        compare(iconSpy.count, 5)
     }
 
     Component {

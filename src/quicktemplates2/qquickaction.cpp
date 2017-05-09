@@ -38,7 +38,6 @@
 #include "qquickaction_p_p.h"
 #include "qquickactiongroup_p.h"
 #include "qquickshortcutcontext_p_p.h"
-#include "qquickicon_p.h"
 
 #include <QtGui/qevent.h>
 #include <QtGui/private/qshortcutmap_p.h>
@@ -176,7 +175,6 @@ QQuickActionPrivate::QQuickActionPrivate()
       enabled(true),
       checked(false),
       checkable(false),
-      icon(nullptr),
       defaultShortcutEntry(nullptr),
       group(nullptr)
 {
@@ -381,14 +379,20 @@ void QQuickAction::setText(const QString &text)
 
     \include qquickicon.qdocinc grouped-properties
 */
-QQuickIcon *QQuickAction::icon() const
+QQuickIcon QQuickAction::icon() const
 {
-    QQuickActionPrivate *d = const_cast<QQuickActionPrivate *>(d_func());
-    if (!d->icon) {
-        d->icon = new QQuickIcon;
-        QQml_setParent_noEvent(d->icon, const_cast<QQuickAction *>(this));
-    }
+    Q_D(const QQuickAction);
     return d->icon;
+}
+
+void QQuickAction::setIcon(const QQuickIcon &icon)
+{
+    Q_D(QQuickAction);
+    if (d->icon == icon)
+        return;
+
+    d->icon = icon;
+    emit iconChanged(icon);
 }
 
 /*!
