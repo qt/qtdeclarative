@@ -1347,7 +1347,9 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *event) {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
-    dbg << "QQuickPointerEvent(dev:";
+    dbg << "QQuickPointerEvent(";
+    dbg << event->timestamp();
+    dbg << " dev:";
     QtDebugUtils::formatQEnum(dbg, event->device()->type());
     if (event->buttons() != Qt::NoButton) {
         dbg << " buttons:";
