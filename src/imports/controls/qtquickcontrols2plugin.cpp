@@ -57,6 +57,7 @@
 #include "qquickdefaultdial_p.h"
 #include "qquickdefaultprogressbar_p.h"
 #include "qquickdefaultstyle_p.h"
+#include "qquickdefaulttheme_p.h"
 
 static inline void initResources()
 {
@@ -77,6 +78,9 @@ public:
     QtQuickControls2Plugin(QObject *parent = nullptr);
     void registerTypes(const char *uri) override;
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
+
+    QString name() const override;
+    QQuickProxyTheme *createTheme() const override;
 };
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -179,7 +183,7 @@ static QObject *colorSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    Q_UNUSED(engine);
+    QQuickStylePlugin::initializeEngine(engine, uri);
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
@@ -201,6 +205,16 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
     qmlRegisterType<QQuickPaddedRectangle>(import, 2, 3, "PaddedRectangle");
+}
+
+QString QtQuickControls2Plugin::name() const
+{
+    return QStringLiteral("default");
+}
+
+QQuickProxyTheme *QtQuickControls2Plugin::createTheme() const
+{
+    return new QQuickDefaultTheme;
 }
 
 QT_END_NAMESPACE

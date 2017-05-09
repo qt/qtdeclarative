@@ -65,12 +65,21 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     if (!m_theme.isNull())
         return;
 
-    const QString style = name();
-    if (!style.isEmpty() && style.compare(QQuickStyle::name(), Qt::CaseInsensitive) == 0) {
+    if (isCurrent()) {
         m_theme.reset(createTheme());
         if (m_theme)
             QGuiApplicationPrivate::platform_theme = m_theme.data();
     }
+}
+
+bool QQuickStylePlugin::isCurrent() const
+{
+    QString style = QQuickStyle::name();
+    if (style.isEmpty())
+        style = QStringLiteral("Default");
+
+    const QString theme = name();
+    return theme.compare(style, Qt::CaseInsensitive) == 0;
 }
 
 QString QQuickStylePlugin::name() const

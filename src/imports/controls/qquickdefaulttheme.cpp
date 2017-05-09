@@ -34,49 +34,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLEPLUGIN_P_H
-#define QQUICKSTYLEPLUGIN_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qscopedpointer.h>
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include "qquickdefaulttheme_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickProxyTheme;
-
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
+QQuickDefaultTheme::QQuickDefaultTheme()
+    : QQuickProxyTheme()
 {
-    Q_OBJECT
-
-public:
-    explicit QQuickStylePlugin(QObject *parent = nullptr);
-    ~QQuickStylePlugin();
-
-    void registerTypes(const char *uri) override;
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
-
-    bool isCurrent() const;
-    virtual QString name() const;
-    virtual QQuickProxyTheme *createTheme() const;
-
-    QUrl typeUrl(const QString &name = QString()) const;
-
-private:
-    QScopedPointer<QQuickProxyTheme> m_theme;
-};
+}
 
 QT_END_NAMESPACE
-
-#endif // QQUICKSTYLEPLUGIN_P_H
