@@ -48,6 +48,7 @@
 // We mean it.
 //
 
+#include <QtQml/private/qlazilyallocated_p.h>
 #include <QtQuick/private/qquicktext_p_p.h>
 
 #if QT_CONFIG(accessibility)
@@ -75,7 +76,13 @@ public:
     }
 
     void resolveFont();
-    void inheritFont(const QFont &f);
+    void inheritFont(const QFont &font);
+    void updateFont(const QFont &font);
+    inline void setFont_helper(const QFont &font) {
+        if (sourceFont.resolve() == font.resolve() && sourceFont == font)
+            return;
+        updateFont(font);
+    }
 
     void textChanged(const QString &text);
 
@@ -84,7 +91,11 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
-    QFont font;
+    struct ExtraData {
+        QFont requestedFont;
+    };
+    QLazilyAllocated<ExtraData> extra;
+
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
 };

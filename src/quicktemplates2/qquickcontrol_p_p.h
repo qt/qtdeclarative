@@ -101,15 +101,15 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
-    void updateFont(const QFont &f);
-    static void updateFontRecur(QQuickItem *item, const QFont &f);
-    inline void setFont_helper(const QFont &f) {
-        if (resolvedFont.resolve() == f.resolve() && resolvedFont == f)
-            return;
-        updateFont(f);
-    }
     virtual void resolveFont();
-    void inheritFont(const QFont &f);
+    void inheritFont(const QFont &font);
+    void updateFont(const QFont &font);
+    static void updateFontRecur(QQuickItem *item, const QFont &font);
+    inline void setFont_helper(const QFont &font) {
+        if (resolvedFont.resolve() == font.resolve() && resolvedFont == font)
+            return;
+        updateFont(font);
+    }
     static QFont parentFont(const QQuickItem *item);
     static QFont themeFont(QPlatformTheme::Font type);
 
@@ -127,11 +127,10 @@ public:
 
     struct ExtraData {
         ExtraData();
-        QFont font;
+        QFont requestedFont;
     };
     QLazilyAllocated<ExtraData> extra;
 
-    QFont resolvedFont;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
@@ -150,6 +149,7 @@ public:
     qreal bottomPadding;
     qreal spacing;
     QLocale locale;
+    QFont resolvedFont;
     Qt::FocusPolicy focusPolicy;
     Qt::FocusReason focusReason;
     QQuickItem *background;

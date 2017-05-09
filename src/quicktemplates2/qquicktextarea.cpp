@@ -189,18 +189,31 @@ void QQuickTextAreaPrivate::resolveFont()
     inheritFont(QQuickControlPrivate::parentFont(q));
 }
 
-void QQuickTextAreaPrivate::inheritFont(const QFont &f)
+void QQuickTextAreaPrivate::inheritFont(const QFont &font)
 {
-    Q_Q(QQuickTextArea);
-    QFont parentFont = font.resolve(f);
-    parentFont.resolve(font.resolve() | f.resolve());
+    QFont parentFont = extra.isAllocated() ? extra->requestedFont.resolve(font) : font;
+    parentFont.resolve(extra.isAllocated() ? extra->requestedFont.resolve() | font.resolve() : font.resolve());
 
     const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
     const QFont resolvedFont = parentFont.resolve(defaultFont);
 
-    const bool changed = resolvedFont != sourceFont;
-    q->QQuickTextEdit::setFont(resolvedFont);
-    if (changed)
+    setFont_helper(resolvedFont);
+}
+
+/*!
+    \internal
+
+    Assign \a font to this control, and propagate it to all children.
+*/
+void QQuickTextAreaPrivate::updateFont(const QFont &font)
+{
+    Q_Q(QQuickTextArea);
+    QFont oldFont = sourceFont;
+    q->QQuickTextEdit::setFont(font);
+
+    QQuickControlPrivate::updateFontRecur(q, font);
+
+    if (oldFont != font)
         emit q->fontChanged();
 }
 
@@ -419,10 +432,10 @@ QFont QQuickTextArea::font() const
 void QQuickTextArea::setFont(const QFont &font)
 {
     Q_D(QQuickTextArea);
-    if (d->font.resolve() == font.resolve() && d->font == font)
+    if (d->extra.value().requestedFont.resolve() == font.resolve() && d->extra.value().requestedFont == font)
         return;
 
-    d->font = font;
+    d->extra.value().requestedFont = font;
     d->resolveFont();
 }
 

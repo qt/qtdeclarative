@@ -351,11 +351,11 @@ void QQuickControlPrivate::resolveFont()
     inheritFont(parentFont(q));
 }
 
-void QQuickControlPrivate::inheritFont(const QFont &f)
+void QQuickControlPrivate::inheritFont(const QFont &font)
 {
     Q_Q(QQuickControl);
-    QFont parentFont = extra.isAllocated() ? extra->font.resolve(f) : f;
-    parentFont.resolve(extra.isAllocated() ? extra->font.resolve() | f.resolve() : f.resolve());
+    QFont parentFont = extra.isAllocated() ? extra->requestedFont.resolve(font) : font;
+    parentFont.resolve(extra.isAllocated() ? extra->requestedFont.resolve() | font.resolve() : font.resolve());
 
     const QFont defaultFont = q->defaultFont();
     const QFont resolvedFont = parentFont.resolve(defaultFont);
@@ -368,35 +368,35 @@ void QQuickControlPrivate::inheritFont(const QFont &f)
 
     Assign \a font to this control, and propagate it to all children.
 */
-void QQuickControlPrivate::updateFont(const QFont &f)
+void QQuickControlPrivate::updateFont(const QFont &font)
 {
     Q_Q(QQuickControl);
-    QFont old = resolvedFont;
-    resolvedFont = f;
+    QFont oldFont = resolvedFont;
+    resolvedFont = font;
 
-    if (old != f)
-        q->fontChange(f, old);
+    if (oldFont != font)
+        q->fontChange(font, oldFont);
 
-    QQuickControlPrivate::updateFontRecur(q, f);
+    QQuickControlPrivate::updateFontRecur(q, font);
 
-    if (old != f)
+    if (oldFont != font)
         emit q->fontChanged();
 }
 
-void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
+void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &font)
 {
     const auto childItems = item->childItems();
     for (QQuickItem *child : childItems) {
         if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
-            QQuickControlPrivate::get(control)->inheritFont(f);
+            QQuickControlPrivate::get(control)->inheritFont(font);
         else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(child))
-            QQuickLabelPrivate::get(label)->inheritFont(f);
+            QQuickLabelPrivate::get(label)->inheritFont(font);
         else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(child))
-            QQuickTextAreaPrivate::get(textArea)->inheritFont(f);
+            QQuickTextAreaPrivate::get(textArea)->inheritFont(font);
         else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(child))
-            QQuickTextFieldPrivate::get(textField)->inheritFont(f);
+            QQuickTextFieldPrivate::get(textField)->inheritFont(font);
         else
-            QQuickControlPrivate::updateFontRecur(child, f);
+            QQuickControlPrivate::updateFontRecur(child, font);
     }
 }
 
@@ -618,10 +618,10 @@ QFont QQuickControl::font() const
 void QQuickControl::setFont(const QFont &font)
 {
     Q_D(QQuickControl);
-    if (d->extra.value().font.resolve() == font.resolve() && d->extra.value().font == font)
+    if (d->extra.value().requestedFont.resolve() == font.resolve() && d->extra.value().requestedFont == font)
         return;
 
-    d->extra.value().font = font;
+    d->extra.value().requestedFont = font;
     d->resolveFont();
 }
 
