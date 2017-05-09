@@ -147,7 +147,7 @@ TestCase {
     }
 
     function test_keyEvents(data) {
-        var container = keyCatcher.createObject(testCase)
+        var container = createTemporaryObject(keyCatcher, testCase)
         verify(container)
 
         var control = button.createObject(container)
@@ -161,7 +161,5 @@ TestCase {
 
         keyRelease(data.key)
         compare(container.lastKeyRelease, data.result)
-
-        container.destroy()
     }
 }
