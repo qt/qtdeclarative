@@ -304,7 +304,7 @@ using namespace QV4::Moth;
 
 #  define MOTH_END_INSTR(I) } \
     genericInstr = reinterpret_cast<const Instr *>(code); \
-    goto *genericInstr->common.code; \
+    goto *jumpTable[genericInstr->common.instructionType]; \
 
 #else
 
@@ -356,11 +356,7 @@ Param traceParam(const Param &param)
     if (engine->hasException) \
         goto catchException
 
-QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
-#ifdef MOTH_THREADED_INTERPRETER
-        , void ***storeJumpTable
-#endif
-        )
+QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
 {
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -369,15 +365,11 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     qt_v4ResolvePendingBreakpointsHook();
 
 #ifdef MOTH_THREADED_INTERPRETER
-    if (storeJumpTable) {
 #define MOTH_INSTR_ADDR(I, FMT) &&op_##I,
-        static void *jumpTable[] = {
-            FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
-        };
+    static void *jumpTable[] = {
+        FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
+    };
 #undef MOTH_INSTR_ADDR
-        *storeJumpTable = jumpTable;
-        return QV4::Primitive::undefinedValue().asReturnedValue();
-    }
 #endif
 
     QV4::Value *stack = 0;
@@ -428,7 +420,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     for (;;) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
 #ifdef MOTH_THREADED_INTERPRETER
-        goto *genericInstr->common.code;
+        goto *jumpTable[genericInstr->common.instructionType];
 #else
         switch (genericInstr->common.instructionType) {
 #endif
@@ -959,18 +951,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         code = exceptionHandler;
     }
 }
-
-#ifdef MOTH_THREADED_INTERPRETER
-void **VME::instructionJumpTable()
-{
-    static void **jumpTable = 0;
-    if (!jumpTable) {
-        const uchar *code = 0;
-        VME().run(0, code, &jumpTable);
-    }
-    return jumpTable;
-}
-#endif
 
 QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {
