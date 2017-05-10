@@ -861,8 +861,9 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             }
             parent = parent->parentItem();
         }
-        bool filterRelevant = isFiltering && grabberIsChild;
 
+        // when filtering, send points that are grabbed by a child and points that are not grabbed but inside
+        bool filterRelevant = isFiltering && (grabberIsChild || (!p->grabber() && item->contains(item->mapFromScene(p->scenePos()))));
         if (!(isGrabber || isPressInside || filterRelevant))
             continue;
 
