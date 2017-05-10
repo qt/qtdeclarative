@@ -32,5 +32,11 @@
 
         The icon's height will never exceed this value, though it will
         shrink when necessary.
+\row
+    \li color
+    \li This property holds the color of the icon.
+
+        The icon is tinted with the specified color, unless the color is
+        set to \c "transparent".
 \endtable
 //! [grouped-properties]

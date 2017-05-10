@@ -65,7 +65,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     radio buttons and check boxes. As an abstract control, it has no delegate
     implementations, leaving them to the types that derive from it.
 
-    \section1 Button Icons
+    \section2 Button Icons
 
     AbstractButton provides the following properties through which icons can
     be set:
@@ -85,13 +85,32 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     even if \l icon.source is also set. If the icon is not found,
     \l icon.source will be used instead.
 
-    Each \l {Styling Qt Quick Controls 2}{style} sets a default size for
-    icons, but it is possible to override this by setting the \l icon.width and
-    \l icon.height properties. The image that is loaded by an icon whose
-    \c width and \c height are not set depends on the type of icon in use. For
-    theme icons, the closest available size will be chosen. For regular icons,
-    the behavior is the same as the \l {Image::}{sourceSize} property of
-    \l Image.
+    \code
+    Button {
+        icon.name: "edit-cut"
+        icon.source: "qrc:/icons/edit-cut.png"
+    }
+    \endcode
+
+    Each \l {Styling Qt Quick Controls 2}{style} sets a default icon size and
+    color according to their guidelines, but it is possible to override these
+    by setting the \l icon.width, \l icon.height, and \l icon.color properties.
+
+    The image that is loaded by an icon whose \c width and \c height are not set
+    depends on the type of icon in use. For theme icons, the closest available
+    size will be chosen. For regular icons, the behavior is the same as the
+    \l {Image::}{sourceSize} property of \l Image.
+
+    The icon color is specified by default so that it matches the text color in
+    different states. In order to use an icon with the original colors, set the
+    color to \c "transparent".
+
+    \code
+    Button {
+        icon.color: "transparent"
+        icon.source: "qrc:/icons/logo.png"
+    }
+    \endcode
 
     The \l display property can be used to control how the icon and text are
     displayed within the button.
@@ -632,7 +651,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 
     \include qquickicon.qdocinc grouped-properties
 
-    \sa {Control::}{contentItem}
+    \sa {Button Icons}
 */
 
 QQuickIcon QQuickAbstractButton::icon() const
