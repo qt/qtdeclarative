@@ -36,6 +36,7 @@
 #include <QSignalSpy>
 #include <QDebug>
 #include <QBuffer>
+#include <QCryptographicHash>
 #include <QQmlComponent>
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQmlExpression>

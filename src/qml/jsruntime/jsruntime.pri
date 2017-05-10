@@ -46,6 +46,7 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/qv4global_p.h \
+    $$PWD/qv4alloca_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4context_p.h \
     $$PWD/qv4math_p.h \
