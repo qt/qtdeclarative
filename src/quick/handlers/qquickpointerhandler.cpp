@@ -138,6 +138,9 @@ void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
 {
     // TODO m_hadKeepMouseGrab m_hadKeepTouchGrab
     qCDebug(lcPointerHandlerDispatch) << point << grab;
+    // Don't allow one handler to cancel another's grab, unless it is stealing it for itself
+    if (!grab && point->grabberPointerHandler() != this)
+        return;
     point->setGrabberPointerHandler(grab ? this : nullptr, true);
 }
 
