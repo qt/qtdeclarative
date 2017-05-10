@@ -1979,8 +1979,14 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
 {
     translateTouchEvent(event);
-    if (event->touchPoints().size())
-        lastMousePosition = event->touchPoints().at(0).pos();
+    if (event->touchPoints().size()) {
+        auto point = event->touchPoints().at(0);
+        if (point.state() == Qt::TouchPointReleased) {
+            lastMousePosition = QPointF();
+        } else {
+            lastMousePosition = point.pos();
+        }
+    }
 
     qCDebug(DBG_TOUCH) << event;
 

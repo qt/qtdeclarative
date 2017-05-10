@@ -1448,9 +1448,6 @@ void tst_TouchMouse::hoverEnabled()
     QVERIFY(!mouseArea2->hovered());
 
     // ------------------------- Touch click on mouseArea2
-    if (QGuiApplication::platformName().compare(QLatin1String("xcb"), Qt::CaseInsensitive) == 0)
-        QSKIP("hover can be momentarily inconsistent on X11, depending on timing of flushFrameSynchronousEvents with touch and mouse movements (QTBUG-55350)");
-
     QTest::touchEvent(window.data(), device).press(0, p2, window.data());
 
     QVERIFY(mouseArea1->hovered());
