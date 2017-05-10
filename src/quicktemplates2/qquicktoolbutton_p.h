@@ -61,6 +61,7 @@ public:
 
 protected:
     QFont defaultFont() const override;
+    QPalette defaultPalette() const override;
 };
 
 QT_END_NAMESPACE

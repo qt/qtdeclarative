@@ -102,6 +102,11 @@ QFont QQuickRadioButton::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::RadioButtonFont);
 }
 
+QPalette QQuickRadioButton::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::RadioButtonPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickRadioButton::accessibleRole() const
 {

@@ -91,6 +91,8 @@ Q_SIGNALS:
     void titleChanged();
 
 protected:
+    QPalette defaultPalette() const override;
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif

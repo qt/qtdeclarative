@@ -133,6 +133,11 @@ bool QQuickToolSeparator::isVertical() const
     return d->orientation == Qt::Vertical;
 }
 
+QPalette QQuickToolSeparator::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ToolButtonPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickToolSeparator::accessibleRole() const
 {

@@ -141,6 +141,11 @@ void QQuickToolBar::setPosition(Position position)
     emit positionChanged();
 }
 
+QPalette QQuickToolBar::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ToolButtonPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickToolBar::accessibleRole() const
 {

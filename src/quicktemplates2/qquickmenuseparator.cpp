@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickmenuseparator_p.h"
+#include "qquickcontrol_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -68,6 +69,11 @@ QT_BEGIN_NAMESPACE
 QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)
     : QQuickControl(parent)
 {
+}
+
+QPalette QQuickMenuSeparator::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::MenuPalette);
 }
 
 #if QT_CONFIG(accessibility)

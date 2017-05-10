@@ -439,6 +439,11 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
         polish();
 }
 
+QPalette QQuickTabBar::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::TabBarPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickTabBar::accessibleRole() const
 {

@@ -174,6 +174,11 @@ QFont QQuickCheckBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::CheckBoxFont);
 }
 
+QPalette QQuickCheckBox::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::CheckBoxPalette);
+}
+
 void QQuickCheckBox::buttonChange(ButtonChange change)
 {
     if (change == ButtonCheckedChange)

@@ -122,6 +122,11 @@ QFont QQuickButton::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
 }
 
+QPalette QQuickButton::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ButtonPalette);
+}
+
 /*!
     \qmlproperty bool QtQuick.Controls::Button::highlighted
 

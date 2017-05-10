@@ -75,6 +75,11 @@ QFont QQuickTabButton::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::TabButtonFont);
 }
 
+QPalette QQuickTabButton::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::TabBarPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickTabButton::accessibleRole() const
 {

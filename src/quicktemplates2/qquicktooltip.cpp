@@ -279,6 +279,11 @@ QFont QQuickToolTip::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::TipLabelFont);
 }
 
+QPalette QQuickToolTip::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ToolTipPalette);
+}
+
 void QQuickToolTip::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
 {
     Q_D(QQuickToolTip);

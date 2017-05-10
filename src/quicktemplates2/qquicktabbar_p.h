@@ -99,6 +99,8 @@ protected:
     void itemMoved(int index, QQuickItem *item) override;
     void itemRemoved(int index, QQuickItem *item) override;
 
+    QPalette defaultPalette() const override;
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif

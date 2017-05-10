@@ -914,6 +914,11 @@ QFont QQuickSpinBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
 }
 
+QPalette QQuickSpinBox::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::TextLineEditPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickSpinBox::accessibleRole() const
 {

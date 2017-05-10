@@ -81,6 +81,8 @@ protected:
     void nextCheckState() override;
     void buttonChange(ButtonChange change) override;
 
+    QPalette defaultPalette() const override;
+
 private:
     Q_DISABLE_COPY(QQuickSwitch)
     Q_DECLARE_PRIVATE(QQuickSwitch)

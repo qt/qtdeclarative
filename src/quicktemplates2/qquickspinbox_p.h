@@ -148,6 +148,7 @@ protected:
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
     QFont defaultFont() const override;
+    QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;

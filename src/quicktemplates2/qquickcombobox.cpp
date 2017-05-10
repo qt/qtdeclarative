@@ -1580,6 +1580,11 @@ QFont QQuickComboBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
 }
 
+QPalette QQuickComboBox::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ComboBoxPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickComboBox::accessibleRole() const
 {

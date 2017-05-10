@@ -85,6 +85,7 @@ protected:
     void nextCheckState() override;
 
     QFont defaultFont() const override;
+    QPalette defaultPalette() const override;
 
 private:
     Q_DISABLE_COPY(QQuickDelayButton)

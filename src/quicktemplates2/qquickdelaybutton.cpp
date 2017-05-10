@@ -268,4 +268,9 @@ QFont QQuickDelayButton::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
 }
 
+QPalette QQuickDelayButton::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::ButtonPalette);
+}
+
 QT_END_NAMESPACE

@@ -153,6 +153,11 @@ QFont QQuickGroupBox::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::GroupBoxTitleFont);
 }
 
+QPalette QQuickGroupBox::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::GroupBoxPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickGroupBox::accessibleRole() const
 {

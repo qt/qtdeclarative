@@ -145,6 +145,11 @@ QFont QQuickMenuItem::defaultFont() const
     return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
 }
 
+QPalette QQuickMenuItem::defaultPalette() const
+{
+    return QQuickControlPrivate::themePalette(QPlatformTheme::MenuPalette);
+}
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickMenuItem::accessibleRole() const
 {
