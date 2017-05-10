@@ -291,12 +291,9 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             }
         }
         emit pressedChanged();
-        if (!press) {
+        if (!press && m_gesturePolicy != DragThreshold) {
             // on release, ungrab after emitting changed signals
-            if (m_gesturePolicy == DragThreshold)
-                setPassiveGrab(point, press);
-            else
-                setExclusiveGrab(point, press);
+            setExclusiveGrab(point, press);
         }
     }
 }
