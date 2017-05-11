@@ -113,11 +113,23 @@ void tst_Snippets::verify()
 
     if (takeScreenshots) {
         const QString currentDataTag = QLatin1String(QTest::currentDataTag());
-        static const QString currentStyle = QQuickStyle::name();
+        static const QString applicationStyle = QQuickStyle::name().isEmpty() ? "Default" : QQuickStyle::name();
         static const QStringList availableStyles = QQuickStyle::availableStyles();
+
+        bool isStyledSnippet = false;
+        const QString snippetStyle = currentDataTag.section("-", 1, 1);
         for (const QString &availableStyle : availableStyles) {
-            if (currentStyle != availableStyle && currentDataTag.startsWith("qtquickcontrols2-" + availableStyle.toLower() + "-"))
-                QSKIP(qPrintable(QString("Not running with the %1 style").arg(availableStyle)));
+            if (!snippetStyle.compare(availableStyle, Qt::CaseInsensitive)) {
+                if (applicationStyle != availableStyle)
+                    QSKIP(qPrintable(QString("%1 style specific snippet. Running with the %2 style.").arg(availableStyle, applicationStyle)));
+                isStyledSnippet = true;
+            }
+        }
+
+        if (!isStyledSnippet && !applicationStyle.isEmpty()) {
+            int index = output.indexOf("-", output.lastIndexOf("/"));
+            if (index != -1)
+                output.insert(index, "-" + applicationStyle.toLower());
         }
 
         QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
