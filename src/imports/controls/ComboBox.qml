@@ -98,7 +98,7 @@ T.ComboBox {
     }
 
     background: Rectangle {
-        implicitWidth: 120
+        implicitWidth: 140
         implicitHeight: 40
 
         color: !control.editable && control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
