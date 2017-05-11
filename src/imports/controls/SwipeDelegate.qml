@@ -71,6 +71,8 @@ T.SwipeDelegate {
     }
 
     background: Rectangle {
+        implicitWidth: 100
+        implicitHeight: 40
         color: control.visualFocus
             ? (control.down ? Default.focusPressedColor : Default.delegateFocusColor)
             : (control.down ? Default.delegatePressedColor : Default.backgroundColor)
