@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 static const int CircleCount = 10;
 static const int TotalDuration = 100 * CircleCount * 2;
 static const QRgb TransparentColor = 0x00000000;
-static const QRgb FillColor = 0xFF353637;
 
 static QPointF moveCircle(const QPointF &pos, qreal rotation, qreal distance)
 {
@@ -59,6 +58,9 @@ public:
 
     void updateCurrentTime(int time) override;
     void sync(QQuickItem *item) override;
+
+private:
+    QColor m_color;
 };
 
 QQuickDefaultBusyIndicatorNode::QQuickDefaultBusyIndicatorNode(QQuickDefaultBusyIndicator *item)
@@ -92,7 +94,7 @@ void QQuickDefaultBusyIndicatorNode::updateCurrentTime(int time)
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         const bool fill = (firstPhaseProgress > qreal(i) / CircleCount) || (secondPhaseProgress > 0 && secondPhaseProgress < qreal(i) / CircleCount);
-        rectNode->setColor(QColor::fromRgba(fill ? FillColor : TransparentColor));
+        rectNode->setColor(fill ? m_color : QColor::fromRgba(TransparentColor));
         rectNode->setPenWidth(fill ? 0 : 1);
         rectNode->update();
 
@@ -108,6 +110,7 @@ void QQuickDefaultBusyIndicatorNode::sync(QQuickItem *item)
     const qreal dx = (w - sz) / 2;
     const qreal dy = (h - sz) / 2;
     const int circleRadius = sz / 12;
+    m_color = static_cast<QQuickDefaultBusyIndicator *>(item)->color();
 
     QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(firstChild());
     for (int i = 0; i < CircleCount; ++i) {
@@ -134,6 +137,20 @@ QQuickDefaultBusyIndicator::QQuickDefaultBusyIndicator(QQuickItem *parent) :
     QQuickItem(parent), m_elapsed(0)
 {
     setFlag(ItemHasContents);
+}
+
+QColor QQuickDefaultBusyIndicator::color() const
+{
+    return m_color;
+}
+
+void QQuickDefaultBusyIndicator::setColor(const QColor &color)
+{
+    if (color == m_color)
+        return;
+
+    m_color = color;
+    update();
 }
 
 int QQuickDefaultBusyIndicator::elapsed() const

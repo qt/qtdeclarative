@@ -51,7 +51,6 @@ static const int BlockSpan = Blocks * (BlockWidth + BlockRestingSpacing) - Block
 static const int TotalDuration = 4000;
 static const int SecondPhaseStart = TotalDuration * 0.4;
 static const int ThirdPhaseStart = TotalDuration * 0.6;
-static const QRgb FillColor = 0x353637;
 
 static inline qreal blockStartX(int blockIndex)
 {
@@ -178,7 +177,7 @@ void QQuickDefaultProgressBarNode::sync(QQuickItem *item)
             QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode*>(transformNode->firstChild());
             if (!rectNode) {
                 rectNode = d->sceneGraphContext()->createInternalRectangleNode();
-                rectNode->setColor(FillColor);
+                rectNode->setColor(bar->color());
                 transformNode->appendChildNode(rectNode);
             }
 
@@ -200,7 +199,7 @@ void QQuickDefaultProgressBarNode::sync(QQuickItem *item)
         QSGInternalRectangleNode *rectNode = static_cast<QSGInternalRectangleNode *>(firstChild());
         if (!rectNode) {
             rectNode = d->sceneGraphContext()->createInternalRectangleNode();
-            rectNode->setColor(FillColor);
+            rectNode->setColor(bar->color());
             appendChildNode(rectNode);
         }
 
@@ -243,6 +242,20 @@ void QQuickDefaultProgressBar::setIndeterminate(bool indeterminate)
 
     m_indeterminate = indeterminate;
     setClip(m_indeterminate);
+    update();
+}
+
+QColor QQuickDefaultProgressBar::color() const
+{
+    return m_color;
+}
+
+void QQuickDefaultProgressBar::setColor(const QColor &color)
+{
+    if (color == m_color)
+        return;
+
+    m_color = color;
     update();
 }
 
