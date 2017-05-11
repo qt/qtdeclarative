@@ -229,7 +229,6 @@ void QQuickDefaultProgressBar::setProgress(qreal progress)
 
     m_progress = progress;
     update();
-    emit progressChanged();
 }
 
 bool QQuickDefaultProgressBar::isIndeterminate() const
@@ -245,7 +244,6 @@ void QQuickDefaultProgressBar::setIndeterminate(bool indeterminate)
     m_indeterminate = indeterminate;
     setClip(m_indeterminate);
     update();
-    emit indeterminateChanged();
 }
 
 void QQuickDefaultProgressBar::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)

@@ -61,7 +61,6 @@ void QQuickDialRing::setProgress(qreal progress)
 
     m_progress = progress;
     update();
-    emit progressChanged();
 }
 
 QColor QQuickDialRing::color() const
@@ -76,7 +75,6 @@ void QQuickDialRing::setColor(const QColor &color)
 
     m_color = color;
     update();
-    emit colorChanged();
 }
 
 void QQuickDialRing::paint(QPainter *painter)

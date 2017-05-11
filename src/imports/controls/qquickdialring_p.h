@@ -56,8 +56,8 @@ QT_BEGIN_NAMESPACE
 class QQuickDialRing : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
 
 public:
     QQuickDialRing(QQuickItem *parent = nullptr);
@@ -69,10 +69,6 @@ public:
     void setColor(const QColor &color);
 
     void paint(QPainter *painter) override;
-
-Q_SIGNALS:
-    void progressChanged();
-    void colorChanged();
 
 private:
     qreal m_progress;
