@@ -30,6 +30,7 @@
 #include <QtTest/QtTest>
 
 #include <QtGui/qstylehints.h>
+#include <private/qdebug_p.h>
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -61,6 +62,21 @@ struct Event
     QPoint mousePosGlobal;
     QList<QTouchEvent::TouchPoint> points;
 };
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug dbg, const struct Event &event) {
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "Event(";
+    QtDebugUtils::formatQEnum(dbg, event.type);
+    if (event.points.isEmpty())
+        dbg << " @ " << event.mousePos << " global " << event.mousePosGlobal;
+    else
+        dbg << ", " << event.points.count() << " touchpoints: " << event.points;
+    dbg << ')';
+    return dbg;
+}
+#endif
 
 class EventItem : public QQuickItem
 {
