@@ -39,6 +39,7 @@
 #include <QtQuickControls2/private/qquickcolor_p.h>
 #include <QtQuickControls2/private/qquickcolorimage_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
+#include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
 #include <QtQuickControls2/private/qquickplaceholdertext_p.h>
 #include <QtQuickControls2/private/qquickiconlabel_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
@@ -199,6 +200,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
+    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 3, "PaddedRectangle");
 }
 
 QT_END_NAMESPACE
