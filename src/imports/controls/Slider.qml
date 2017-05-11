@@ -74,5 +74,14 @@ T.Slider {
         radius: 3
         color: Default.buttonColor
         scale: control.horizontal && control.mirrored ? -1 : 1
+
+        Rectangle {
+            y: control.horizontal ? 0 : control.visualPosition * parent.height
+            width: control.horizontal ? control.position * parent.width : 6
+            height: control.horizontal ? 6 : control.position * parent.height
+
+            radius: 3
+            color: Default.textColor
+        }
     }
 }
