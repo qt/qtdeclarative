@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDIALRING_P_H
-#define QQUICKDIALRING_P_H
+#ifndef QQUICKDEFAULTDIAL_P_H
+#define QQUICKDEFAULTDIAL_P_H
 
 //
 //  W A R N I N G
@@ -53,14 +53,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDialRing : public QQuickPaintedItem
+class QQuickDefaultDial : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(qreal progress READ progress WRITE setProgress FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
 
 public:
-    QQuickDialRing(QQuickItem *parent = nullptr);
+    explicit QQuickDefaultDial(QQuickItem *parent = nullptr);
 
     qreal progress() const;
     void setProgress(qreal progress);
@@ -77,4 +77,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDIALRING_P_H
+#endif // QQUICKDEFAULTDIAL_P_H

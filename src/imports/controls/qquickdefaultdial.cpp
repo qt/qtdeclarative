@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickdialring_p.h"
+#include "qquickdefaultdial_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtGui/qpainter.h>
@@ -42,19 +42,19 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickDialRing::QQuickDialRing(QQuickItem *parent) :
+QQuickDefaultDial::QQuickDefaultDial(QQuickItem *parent) :
     QQuickPaintedItem(parent),
     m_progress(0),
     m_color(Qt::black)
 {
 }
 
-qreal QQuickDialRing::progress() const
+qreal QQuickDefaultDial::progress() const
 {
     return m_progress;
 }
 
-void QQuickDialRing::setProgress(qreal progress)
+void QQuickDefaultDial::setProgress(qreal progress)
 {
     if (progress == m_progress)
         return;
@@ -63,12 +63,12 @@ void QQuickDialRing::setProgress(qreal progress)
     update();
 }
 
-QColor QQuickDialRing::color() const
+QColor QQuickDefaultDial::color() const
 {
     return m_color;
 }
 
-void QQuickDialRing::setColor(const QColor &color)
+void QQuickDefaultDial::setColor(const QColor &color)
 {
     if (color == m_color)
         return;
@@ -77,7 +77,7 @@ void QQuickDialRing::setColor(const QColor &color)
     update();
 }
 
-void QQuickDialRing::paint(QPainter *painter)
+void QQuickDefaultDial::paint(QPainter *painter)
 {
     if (width() <= 0 || height() <= 0)
         return;

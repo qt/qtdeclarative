@@ -45,7 +45,7 @@ T.Dial {
     implicitWidth: 184
     implicitHeight: 184
 
-    background: DialRing {
+    background: DialImpl {
         width: control.availableWidth
         height: control.availableHeight
         color: control.visualFocus ? Default.focusColor : Default.frameDarkColor

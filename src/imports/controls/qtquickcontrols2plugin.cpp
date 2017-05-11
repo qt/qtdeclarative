@@ -53,9 +53,9 @@
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
+#include "qquickdefaultdial_p.h"
 #include "qquickdefaultprogressbar_p.h"
 #include "qquickdefaultstyle_p.h"
-#include "qquickdialring_p.h"
 
 static inline void initResources()
 {
@@ -184,8 +184,8 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
+    qmlRegisterType<QQuickDefaultDial>(import, 2, 0, "DialImpl");
     qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
-    qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
     qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");

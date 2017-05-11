@@ -42,6 +42,15 @@ Module {
         exportMetaObjectRevisions: [0]
     }
     Component {
+        name: "QQuickDefaultDial"
+        defaultProperty: "data"
+        prototype: "QQuickPaintedItem"
+        exports: ["QtQuick.Controls.impl/DialImpl 2.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "progress"; type: "double" }
+        Property { name: "color"; type: "QColor" }
+    }
+    Component {
         name: "QQuickDefaultProgressBar"
         defaultProperty: "data"
         prototype: "QQuickItem"
@@ -96,15 +105,6 @@ Module {
         Property { name: "separatorColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledLightColor"; type: "QColor"; isReadonly: true }
-    }
-    Component {
-        name: "QQuickDialRing"
-        defaultProperty: "data"
-        prototype: "QQuickPaintedItem"
-        exports: ["QtQuick.Controls.impl/DialRing 2.0"]
-        exportMetaObjectRevisions: [0]
-        Property { name: "progress"; type: "double" }
-        Property { name: "color"; type: "QColor" }
     }
     Component {
         name: "QQuickIconImage"

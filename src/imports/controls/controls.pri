@@ -1,12 +1,12 @@
 HEADERS += \
-    $$PWD/qquickdialring_p.h \
     $$PWD/qquickdefaultbusyindicator_p.h \
+    $$PWD/qquickdefaultdial_p.h \
     $$PWD/qquickdefaultprogressbar_p.h \
     $$PWD/qquickdefaultstyle_p.h \
 
 SOURCES += \
-    $$PWD/qquickdialring.cpp \
     $$PWD/qquickdefaultbusyindicator.cpp \
+    $$PWD/qquickdefaultdial.cpp \
     $$PWD/qquickdefaultprogressbar.cpp \
     $$PWD/qquickdefaultstyle.cpp
 
