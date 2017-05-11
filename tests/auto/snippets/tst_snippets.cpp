@@ -36,6 +36,7 @@
 
 #include <QtTest>
 #include <QtQuick>
+#include <QtQuickControls2>
 
 typedef QPair<QString, QString> QStringPair;
 
@@ -111,6 +112,14 @@ void tst_Snippets::verify()
     QVERIFY(warnings.isEmpty());
 
     if (takeScreenshots) {
+        const QString currentDataTag = QLatin1String(QTest::currentDataTag());
+        static const QString currentStyle = QQuickStyle::name();
+        static const QStringList availableStyles = QQuickStyle::availableStyles();
+        for (const QString &availableStyle : availableStyles) {
+            if (currentStyle != availableStyle && currentDataTag.startsWith("qtquickcontrols2-" + availableStyle.toLower() + "-"))
+                QSKIP(qPrintable(QString("Not running with the %1 style").arg(availableStyle)));
+        }
+
         QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
         if (!window) {
             QQuickView *view = new QQuickView;

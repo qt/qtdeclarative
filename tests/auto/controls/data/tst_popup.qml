@@ -197,7 +197,7 @@ TestCase {
     }
 
     function test_availableSize() {
-        var control = popupTemplate.createObject(testCase)
+        var control = createTemporaryObject(popupTemplate, testCase)
         verify(control)
 
         var availableWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "availableWidthChanged"})
@@ -1247,12 +1247,10 @@ TestCase {
     }
 
     function test_windowParent() {
-        var control = popupControl.createObject(applicationWindow, {width: 100, height: 100})
+        var control = createTemporaryObject(popupControl, applicationWindow, {width: 100, height: 100})
         verify(control)
 
         control.open()
         verify(control.visible)
-
-        control.destroy()
     }
 }

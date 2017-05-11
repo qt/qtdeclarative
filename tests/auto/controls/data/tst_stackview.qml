@@ -1022,7 +1022,7 @@ TestCase {
     }
 
     function test_pushSameItem() {
-        var control = stackView.createObject(testCase)
+        var control = createTemporaryObject(stackView, testCase)
         verify(control)
 
         control.push(item, StackView.Immediate)
@@ -1045,12 +1045,10 @@ TestCase {
         verify(current !== item)
         compare(control.currentItem, current)
         compare(control.depth, 3)
-
-        control.destroy()
     }
 
     function test_visible() {
-        var control = stackView.createObject(testCase)
+        var control = createTemporaryObject(stackView, testCase)
         verify(control)
 
         var item1 = component.createObject(control)
@@ -1098,8 +1096,6 @@ TestCase {
         control.pop(StackView.Immediate)
         compare(item1.visible, true)
         compare(item1.StackView.visible, true)
-
-        control.destroy()
     }
 
     function test_resolve() {

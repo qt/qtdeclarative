@@ -102,10 +102,12 @@ static inline void initResources()
 #endif
 }
 
+#if QT_CONFIG(shortcut)
 // qtdeclarative/src/quick/util/qquickshortcut.cpp
 typedef bool (*ShortcutContextMatcher)(QObject *, Qt::ShortcutContext);
 extern ShortcutContextMatcher qt_quick_shortcut_context_matcher();
 extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher);
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -121,20 +123,26 @@ public:
     void registerTypes(const char *uri);
 
 private:
+#if QT_CONFIG(shortcut)
     ShortcutContextMatcher originalContextMatcher;
+#endif
 };
 
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
     initResources();
 
+#if QT_CONFIG(shortcut)
     originalContextMatcher = qt_quick_shortcut_context_matcher();
     qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
+#endif
 }
 
 QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 {
+#if QT_CONFIG(shortcut)
     qt_quick_set_shortcut_context_matcher(originalContextMatcher);
+#endif
 }
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
