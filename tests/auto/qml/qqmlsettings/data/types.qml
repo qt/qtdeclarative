@@ -38,8 +38,10 @@ QtObject {
     property double doubleProperty
     property string stringProperty
     property url urlProperty
+    property var objectProperty
     property var intListProperty
     property var stringListProperty
+    property var objectListProperty
     property date dateProperty
     // QTBUG-32295: Expected property type
     // property time timeProperty
@@ -64,8 +66,10 @@ QtObject {
         to.doubleProperty = from.doubleProperty
         to.stringProperty = from.stringProperty
         to.urlProperty = from.urlProperty
+        to.objectProperty = from.objectProperty
         to.intListProperty = from.intListProperty
         to.stringListProperty = from.stringListProperty
+        to.objectListProperty = from.objectListProperty
         to.dateProperty = from.dateProperty
         //to.timeProperty = from.timeProperty
         to.sizeProperty = from.sizeProperty
@@ -84,8 +88,10 @@ QtObject {
         property double doubleProperty: 3.45
         property string stringProperty: "foo"
         property url urlProperty: "http://www.qt-project.org"
+        property var objectProperty: {"foo":"bar"}
         property var intListProperty: [1, 2, 3]
         property var stringListProperty: ["a", "b", "c"]
+        property var objectListProperty: [{"a":"b"}, {"c":"d"}]
         property date dateProperty: "2000-01-02"
         // QTBUG-32295: Expected property type
         //property time timeProperty: "12:34:56"
