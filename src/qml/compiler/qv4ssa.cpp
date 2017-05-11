@@ -2770,7 +2770,7 @@ public:
                 } else if (Const *c = (*conversion.expr)->asConst()) {
                     convertConst(c, conversion.targetType);
                 } else if (ArgLocal *al = (*conversion.expr)->asArgLocal()) {
-                    Temp *target = bb->TEMP(bb->newTemp());
+                    Temp *target = bb->TEMP(bb->newTemp(BasicBlock::NewTempForOptimizer));
                     target->type = conversion.targetType;
                     Expr *convert = bb->CONVERT(al, conversion.targetType);
                     Move *convCall = f->NewStmt<Move>();
@@ -2791,7 +2791,7 @@ public:
 
                     *conversion.expr = source;
                 } else if (Temp *t = (*conversion.expr)->asTemp()) {
-                    Temp *target = bb->TEMP(bb->newTemp());
+                    Temp *target = bb->TEMP(bb->newTemp(BasicBlock::NewTempForOptimizer));
                     target->type = conversion.targetType;
                     Expr *convert = bb->CONVERT(t, conversion.targetType);
                     Move *convCall = f->NewStmt<Move>();
@@ -2820,7 +2820,7 @@ public:
                     // to:
                     //   double{%3} = double{-double{%1}};
                     //   int32{%2} = int32{convert(double{%3})};
-                    Temp *tmp = bb->TEMP(bb->newTemp());
+                    Temp *tmp = bb->TEMP(bb->newTemp(BasicBlock::NewTempForOptimizer));
                     tmp->type = u->type;
                     Move *extraMove = f->NewStmt<Move>();
                     worklist.registerNewStatement(extraMove);
