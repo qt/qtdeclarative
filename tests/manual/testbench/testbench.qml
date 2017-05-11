@@ -83,37 +83,11 @@ ApplicationWindow {
             anchors.fill: parent
 
             ToolButton {
-                text: "Normal"
+                text: "ToolButton"
                 hoverEnabled: true
                 ToolTip.text: text
                 ToolTip.delay: 1000
                 ToolTip.visible: hovered
-                onClicked: menu.visible ? menu.close() : menu.open()
-
-                Menu {
-                    id: menu
-                    x: 1
-                    y: 1 + parent.height
-
-                    MenuItem {
-                        text: "Option 1"
-                        checkable: true
-                    }
-                    MenuItem {
-                        text: "Option 2"
-                        checkable: true
-                    }
-                    MenuItem {
-                        text: "Option 3"
-                        checkable: true
-                    }
-
-                    MenuSeparator {}
-
-                    MenuItem {
-                        text: "Option A"
-                    }
-                }
             }
             ToolButton {
                 text: "Pressed"
@@ -156,6 +130,54 @@ ApplicationWindow {
 
             ToolSeparator {}
 
+            ToolButton {
+                id: menuButton
+                text: "Menu"
+                hoverEnabled: true
+                ToolTip.text: text
+                ToolTip.delay: 1000
+                ToolTip.visible: hovered
+                checked: menu.visible
+                checkable: true
+
+                Menu {
+                    id: menu
+                    x: 1
+                    y: 1 + parent.height
+                    visible: menuButton.checked
+                    closePolicy: Popup.CloseOnPressOutsideParent
+
+                    MenuItem {
+                        text: "MenuItem"
+                    }
+                    MenuItem {
+                        text: "Pressed"
+                        down: true
+                    }
+                    MenuItem {
+                        text: "Disabled"
+                        enabled: false
+                    }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "Checked"
+                        checked: true
+                    }
+                    MenuItem {
+                        text: "CH+PR"
+                        checked: true
+                        down: true
+                    }
+                    MenuItem {
+                        text: "CH+DIS"
+                        checked: true
+                        enabled: false
+                    }
+                }
+            }
+
             Item {
                 Layout.fillWidth: true
             }
@@ -170,7 +192,7 @@ ApplicationWindow {
 
     footer: TabBar {
         TabButton {
-            text: "Normal"
+            text: "TabButton"
         }
         TabButton {
             text: "Pressed"
@@ -198,7 +220,7 @@ ApplicationWindow {
                     spacing: window.controlSpacing
 
                     Button {
-                        text: "Normal"
+                        text: "Button"
                     }
                     Button {
                         text: "Pressed"
@@ -255,36 +277,6 @@ ApplicationWindow {
                     Button {
                         text: "HI+CH+DIS"
                         highlighted: true
-                        enabled: false
-                        checked: true
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing * 2
-
-                    Button {
-                        text: "Normal"
-                    }
-                    Button {
-                        text: "Pressed"
-                        down: true
-                    }
-                    Button {
-                        text: "Checked"
-                        checked: true
-                    }
-                    Button {
-                        text: "CH + PR"
-                        checked: true
-                        down: true
-                    }
-                    Button {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                    Button {
-                        text: "CH + DIS"
                         enabled: false
                         checked: true
                     }
@@ -364,7 +356,7 @@ ApplicationWindow {
 
                 RowLayout {
                     CheckBox {
-                        text: "Normal"
+                        text: "CheckBox"
                     }
                     CheckBox {
                         text: "Pressed"
@@ -392,7 +384,7 @@ ApplicationWindow {
 
                 RowLayout {
                     RadioButton {
-                        text: "Normal"
+                        text: "RadioButton"
                     }
                     RadioButton {
                         text: "Pressed"
@@ -420,7 +412,7 @@ ApplicationWindow {
 
                 RowLayout {
                     Switch {
-                        text: "Normal"
+                        text: "Switch"
                     }
                     Switch {
                         text: "Pressed"
@@ -437,6 +429,11 @@ ApplicationWindow {
                     }
                     Switch {
                         text: "Disabled"
+                        enabled: false
+                    }
+                    Switch {
+                        text: "CH + DIS"
+                        checked: true
                         enabled: false
                     }
                 }
@@ -487,149 +484,110 @@ ApplicationWindow {
                 }
 
                 RowLayout {
-                    Item {
-                        implicitWidth: normalGroupBox.width
-                        implicitHeight: normalTextArea.implicitHeight
+                    spacing: window.controlSpacing * 2
 
-                        TextArea {
-                            id: normalTextArea
-                            text: "Normal"
-                        }
+                    TextArea {
+                        text: "TextArea"
+                        Layout.preferredWidth: normalGroupBox.implicitWidth
                     }
-                    Item {
-                        implicitWidth: normalGroupBox.width
-                        implicitHeight: normalTextArea.implicitHeight
 
-                        TextArea {
-                            placeholderText: "Placeholder"
-                        }
+                    TextArea {
+                        placeholderText: "Placeholder"
+                        Layout.preferredWidth: normalGroupBox.implicitWidth
                     }
-                    Item {
-                        implicitWidth: normalGroupBox.width
-                        implicitHeight: normalTextArea.implicitHeight
 
-                        TextArea {
-                            text: "Disabled"
-                            enabled: false
-                        }
+                    TextArea {
+                        text: "Disabled"
+                        enabled: false
+                        Layout.preferredWidth: normalGroupBox.implicitWidth
                     }
                 }
 
                 RowLayout {
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalTextField.implicitHeight
+                    spacing: window.controlSpacing * 2
 
-                        TextField {
-                            id: normalTextField
-                            text: "Normal"
-                        }
+                    TextField {
+                        text: "TextField"
                     }
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalTextField.implicitHeight
-
-                        TextField {
-                            placeholderText: "Placeholder"
-                        }
+                    TextField {
+                        placeholderText: "Placeholder"
                     }
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalTextField.implicitHeight
-
-                        TextField {
-                            text: "Disabled"
-                            enabled: false
-                        }
+                    TextField {
+                        text: "Disabled"
+                        enabled: false
                     }
                 }
 
                 RowLayout {
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalSpinBox.implicitHeight
+                    spacing: window.controlSpacing * 2
 
-                        SpinBox {
-                            id: normalSpinBox
-                        }
+                    SpinBox {
+                        id: normalSpinBox
                     }
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalSpinBox.implicitHeight
-
-                        SpinBox {
-                            up.pressed: true
-                        }
+                    SpinBox {
+                        up.pressed: true
                     }
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalSpinBox.implicitHeight
-
-                        SpinBox {
-                            enabled: false
-                        }
+                    SpinBox {
+                        editable: true
+                    }
+                    SpinBox {
+                        enabled: false
                     }
                 }
 
                 RowLayout {
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalComboBox.implicitHeight
+                    spacing: window.controlSpacing * 2
 
-                        ComboBox {
-                            id: normalComboBox
-                            model: 5
+                    ComboBox {
+                        model: 5
+                    }
+
+                    ComboBox {
+                        pressed: true
+                        model: ["Pressed"]
+                    }
+
+                    ComboBox {
+                        editable: true
+                        model: ListModel {
+                            id: fruitModel
+                            ListElement { text: "Banana" }
+                            ListElement { text: "Apple" }
+                            ListElement { text: "Coconut" }
+                        }
+                        onAccepted: {
+                            if (find(editText) === -1)
+                                fruitModel.append({text: editText})
                         }
                     }
 
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalComboBox.implicitHeight
-
-                        ComboBox {
-                            pressed: true
-                            model: ListModel {
-                                ListElement { text: "Pressed" }
-                            }
-                        }
-                    }
-
-                    Item {
-                        implicitWidth: normalGroupBox.implicitWidth
-                        implicitHeight: normalComboBox.implicitHeight
-
-                        ComboBox {
-                            enabled: false
-                            model: ["Disabled"]
-                        }
+                    ComboBox {
+                        enabled: false
+                        model: ["Disabled"]
                     }
                 }
 
                 RowLayout {
                     GroupBox {
                         id: normalGroupBox
-                        title: "Normal"
+                        title: "GroupBox"
 
-                        Item {
-                            implicitWidth: 200
-                            implicitHeight: 100
+                        contentWidth: 200
+                        contentHeight: 100
 
-                            BusyIndicator {
-                                anchors.centerIn: parent
-                            }
+                        BusyIndicator {
+                            anchors.centerIn: parent
                         }
                     }
                     GroupBox {
                         enabled: false
                         title: "Disabled"
 
-                        Item {
-                            implicitWidth: 200
-                            implicitHeight: 100
+                        contentWidth: 200
+                        contentHeight: 100
 
-                            BusyIndicator {
-                                anchors.centerIn: parent
-                            }
+                        BusyIndicator {
+                            anchors.centerIn: parent
                         }
                     }
                     GroupBox {
@@ -637,16 +595,14 @@ ApplicationWindow {
                         title: "."
                         label.visible: false
 
-                        Item {
-                            implicitWidth: 200
-                            implicitHeight: 100
+                        contentWidth: 200
+                        contentHeight: 100
 
-                            PageIndicator {
-                                count: 5
-                                enabled: false
-                                anchors.bottom: parent.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
+                        PageIndicator {
+                            count: 5
+                            enabled: false
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
                 }
@@ -655,67 +611,61 @@ ApplicationWindow {
                     Frame {
                         id: scrollBarFrame
 
-                        Item {
-                            implicitWidth: 200
-                            implicitHeight: 100
+                        contentWidth: 200
+                        contentHeight: 100
 
-                            Label {
-                                text: "Normal"
-                                anchors.centerIn: parent
-                            }
+                        Label {
+                            text: "ScrollBar"
+                            anchors.centerIn: parent
+                        }
 
-                            ScrollBar {
-                                size: 0.3
-                                position: 0.2
-                                active: true
-                                orientation: Qt.Vertical
-                                height: parent.height
-                                anchors.right: parent.right
-                            }
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
                         }
                     }
 
                     Frame {
-                        Item {
-                            implicitWidth: 200
-                            implicitHeight: 100
+                        contentWidth: 200
+                        contentHeight: 100
 
-                            Label {
-                                text: "Pressed"
-                                anchors.centerIn: parent
-                            }
+                        Label {
+                            text: "Pressed"
+                            anchors.centerIn: parent
+                        }
 
-                            ScrollBar {
-                                size: 0.3
-                                position: 0.2
-                                active: true
-                                orientation: Qt.Vertical
-                                height: parent.height
-                                anchors.right: parent.right
-                                pressed: true
-                            }
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                            pressed: true
                         }
                     }
 
                     Frame {
-                        Item {
-                            implicitWidth: 200
-                            implicitHeight: 100
-                            enabled: false
+                        contentWidth: 200
+                        contentHeight: 100
+                        enabled: false
 
-                            Label {
-                                text: "Disabled"
-                                anchors.centerIn: parent
-                            }
+                        Label {
+                            text: "Disabled"
+                            anchors.centerIn: parent
+                        }
 
-                            ScrollBar {
-                                size: 0.3
-                                position: 0.2
-                                active: true
-                                orientation: Qt.Vertical
-                                height: parent.height
-                                anchors.right: parent.right
-                            }
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
                         }
                     }
                 }
@@ -783,17 +733,22 @@ ApplicationWindow {
 
                 ListModel {
                     id: checkableDelegateModel
-                    ListElement { label: "Normal" }
                     ListElement { label: "Pressed"; press: true }
                     ListElement { label: "Checked"; check: true }
                     ListElement { label: "CH + PR"; check: true; press: true }
                     ListElement { label: "Disabled"; disabled: true }
+                    ListElement { label: "CH + DIS"; check: true; disabled: true }
                 }
 
                 RowLayout {
                     Frame {
                         Column {
                             width: 200
+
+                            CheckDelegate {
+                                text: "CheckDelegate"
+                                width: parent.width
+                            }
 
                             Repeater {
                                 model: checkableDelegateModel
@@ -803,19 +758,19 @@ ApplicationWindow {
                                     down: press
                                     checked: check
                                     enabled: !disabled
-                                    ButtonGroup.group: radioButtonGroup
                                 }
                             }
                         }
                     }
 
-                    ButtonGroup {
-                        id: radioButtonGroup
-                    }
-
                     Frame {
                         Column {
                             width: 200
+
+                            RadioDelegate {
+                                text: "RadioDelegate"
+                                width: parent.width
+                            }
 
                             Repeater {
                                 model: checkableDelegateModel
@@ -825,7 +780,6 @@ ApplicationWindow {
                                     width: parent.width
                                     checked: check
                                     enabled: !disabled
-                                    ButtonGroup.group: radioButtonGroup
                                 }
                             }
                         }
@@ -834,6 +788,11 @@ ApplicationWindow {
                     Frame {
                         Column {
                             width: 200
+
+                            SwitchDelegate {
+                                text: "SwitchDelegate"
+                                width: parent.width
+                            }
 
                             Repeater {
                                 model: checkableDelegateModel
@@ -851,7 +810,6 @@ ApplicationWindow {
 
                 ListModel {
                     id: regularDelegateModel
-                    ListElement { label: "Normal" }
                     ListElement { label: "Pressed"; press: true }
                     ListElement { label: "Disabled"; disabled: true }
                 }
@@ -860,6 +818,11 @@ ApplicationWindow {
                     Frame {
                         Column {
                             width: 200
+
+                            ItemDelegate {
+                                text: "ItemDelegate"
+                                width: parent.width
+                            }
 
                             Repeater {
                                 model: regularDelegateModel
@@ -878,40 +841,52 @@ ApplicationWindow {
                             width: 200
                             clip: true
 
+                            SwipeDelegate {
+                                text: "SwipeDelegate"
+                                width: parent.width
+                                swipe.left: removeComponent
+                                swipe.right: removeComponent
+                            }
+
                             Repeater {
                                 model: regularDelegateModel
                                 delegate: SwipeDelegate {
-                                    id: swipeDelegate
                                     text: label
                                     width: parent.width
                                     down: press
                                     enabled: !disabled
 
-                                    Component {
-                                        id: removeComponent
-
-                                        Rectangle {
-                                            color: swipeDelegate.swipe.complete && swipeDelegate.pressed ? "#333" : "#444"
-                                            width: parent.width
-                                            height: parent.height
-                                            clip: true
-
-                                            Label {
-                                                font.pixelSize: swipeDelegate.font.pixelSize
-                                                text: "Boop"
-                                                color: "white"
-                                                anchors.centerIn: parent
-                                            }
-                                        }
-                                    }
-
                                     swipe.left: removeComponent
                                     swipe.right: removeComponent
+                                }
+                            }
+
+                            Component {
+                                id: removeComponent
+
+                                Rectangle {
+                                    color: parent.swipe.complete && parent.pressed ? "#333" : "#444"
+                                    width: parent.width
+                                    height: parent.height
+                                    clip: true
+
+                                    Label {
+                                        font.pixelSize: parent.parent.font.pixelSize
+                                        text: "Boop"
+                                        color: "white"
+                                        anchors.centerIn: parent
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            ScrollBar.vertical: ScrollBar {
+                parent: window.contentItem
+                x: parent.width - width
+                height: parent.height
             }
         }
     }
