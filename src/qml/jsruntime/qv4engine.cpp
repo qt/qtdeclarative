@@ -130,10 +130,8 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 qint32 ExecutionEngine::maxCallDepth = -1;
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
-    : callDepth(0)
-    , executableAllocator(new QV4::ExecutableAllocator)
+    : executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
-    , currentContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , globalCode(0)

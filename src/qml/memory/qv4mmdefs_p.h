@@ -275,6 +275,14 @@ struct EngineBase {
 #endif
     MemoryManager *memoryManager = 0;
     Runtime runtime;
+
+    qint32 callDepth = 0;
+    Value *jsStackLimit = 0;
+    Value *jsStackBase = 0;
+
+    ExecutionContext *currentContext = 0;
+    IdentifierTable *identifierTable = 0;
+    Object *globalObject = 0;
 };
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(pop)

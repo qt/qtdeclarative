@@ -96,21 +96,14 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    qint32 callDepth;
-
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
-
-    ExecutionContext *currentContext;
-
-    Value *jsStackLimit;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
     enum { JSStackLimit = 4*1024*1024 };
     WTF::PageAllocation *jsStack;
-    Value *jsStackBase;
 
     void pushForGC(Heap::Base *m) {
         *jsStackTop = m;
@@ -128,10 +121,6 @@ public:
             ptr[i] = Primitive::undefinedValue();
         return ptr;
     }
-
-    IdentifierTable *identifierTable;
-
-    Object *globalObject;
 
     Function *globalCode;
 
