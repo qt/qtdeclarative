@@ -120,7 +120,7 @@ public:
     QtQuickTemplates2Plugin(QObject *parent = nullptr);
     ~QtQuickTemplates2Plugin();
 
-    void registerTypes(const char *uri);
+    void registerTypes(const char *uri) override;
 
 private:
 #if QT_CONFIG(shortcut)

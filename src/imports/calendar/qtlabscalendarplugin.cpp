@@ -58,7 +58,7 @@ class QtLabsCalendarPlugin: public QQmlExtensionPlugin
 
 public:
     QtLabsCalendarPlugin(QObject *parent = nullptr);
-    void registerTypes(const char *uri);
+    void registerTypes(const char *uri) override;
 };
 
 QtLabsCalendarPlugin::QtLabsCalendarPlugin(QObject *parent) : QQmlExtensionPlugin(parent)

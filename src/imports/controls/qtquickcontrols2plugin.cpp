@@ -75,8 +75,8 @@ class QtQuickControls2Plugin: public QQuickStylePlugin
 
 public:
     QtQuickControls2Plugin(QObject *parent = nullptr);
-    void registerTypes(const char *uri);
-    void initializeEngine(QQmlEngine *engine, const char *uri);
+    void registerTypes(const char *uri) override;
+    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 };
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
