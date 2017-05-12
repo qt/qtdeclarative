@@ -129,7 +129,7 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
 
 static void insertHoleIntoPropertyData(Object *object, int idx)
 {
-    int inlineSize = object->d()->vt->nInlineProperties;
+    int inlineSize = object->d()->vtable()->nInlineProperties;
     int icSize = object->internalClass()->size;
     int from = qMax(idx, inlineSize);
     int to = from + 1;
@@ -151,7 +151,7 @@ static void insertHoleIntoPropertyData(Object *object, int idx)
 
 static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
 {
-    int inlineSize = object->d()->vt->nInlineProperties;
+    int inlineSize = object->d()->vtable()->nInlineProperties;
     int delta = (accessor ? 2 : 1);
     int oldSize = object->internalClass()->size + delta;
     int to = idx;

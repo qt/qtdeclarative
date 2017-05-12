@@ -287,7 +287,7 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
         l->proto = proto->d();
         if (attrs.isData()) {
             if (l->level == 0) {
-                uint nInline = l->proto->vt->nInlineProperties;
+                uint nInline = l->proto->vtable()->nInlineProperties;
                 if (l->index < nInline)
                     l->getter = Lookup::primitiveGetter0Inline;
                 else {
@@ -696,7 +696,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
     if (v != Primitive::emptyValue().asReturnedValue()) {
         if (attrs.isData()) {
             if (l->level == 0) {
-                uint nInline = o->d()->vt->nInlineProperties;
+                uint nInline = o->d()->vtable()->nInlineProperties;
                 if (l->index < nInline)
                     l->globalGetter = globalGetter0Inline;
                 else {

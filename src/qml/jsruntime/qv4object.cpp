@@ -266,7 +266,7 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
     if (o->prototype)
         o->prototype->mark(e);
     uint nInline = o->vtable()->nInlineProperties;
-    Value *v = reinterpret_cast<Value *>(o) + o->vt->inlinePropertyOffset;
+    Value *v = reinterpret_cast<Value *>(o) + o->vtable()->inlinePropertyOffset;
     const Value *end = v + nInline;
     while (v < end) {
         v->mark(e);
@@ -507,7 +507,7 @@ ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
     if (v != Primitive::emptyValue().asReturnedValue()) {
         if (attrs.isData()) {
             if (l->level == 0) {
-                uint nInline = o->d()->vt->nInlineProperties;
+                uint nInline = o->d()->vtable()->nInlineProperties;
                 if (l->index < nInline)
                     l->getter = Lookup::getter0Inline;
                 else {
@@ -549,7 +549,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
         if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
             l->classList[0] = o->internalClass();
             l->index = idx;
-            l->setter = idx < o->d()->vt->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
+            l->setter = idx < o->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
             *o->propertyData(idx) = value;
             return;
         }

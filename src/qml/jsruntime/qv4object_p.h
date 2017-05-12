@@ -72,25 +72,25 @@ struct Object : Base {
     void destroy() { Base::destroy(); }
 
     const Value *inlinePropertyData(uint index) const {
-        Q_ASSERT(index < vt->nInlineProperties);
-        return reinterpret_cast<const Value *>(this) + vt->inlinePropertyOffset + index;
+        Q_ASSERT(index < vtable()->nInlineProperties);
+        return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
     }
     Value *inlinePropertyData(uint index) {
-        Q_ASSERT(index < vt->nInlineProperties);
-        return reinterpret_cast<Value *>(this) + vt->inlinePropertyOffset + index;
+        Q_ASSERT(index < vtable()->nInlineProperties);
+        return reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
     }
 
     const Value *propertyData(uint index) const {
-        uint nInline = vt->nInlineProperties;
+        uint nInline = vtable()->nInlineProperties;
         if (index < nInline)
-            return reinterpret_cast<const Value *>(this) + vt->inlinePropertyOffset + index;
+            return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
         index -= nInline;
         return memberData->data + index;
     }
     Value *propertyData(uint index) {
-        uint nInline = vt->nInlineProperties;
+        uint nInline = vtable()->nInlineProperties;
         if (index < nInline)
-            return reinterpret_cast<Value *>(this) + vt->inlinePropertyOffset + index;
+            return reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
         index -= nInline;
         return memberData->data + index;
     }
