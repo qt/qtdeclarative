@@ -55,13 +55,17 @@ QT_BEGIN_NAMESPACE
 class QQuickDefaultBusyIndicator : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
+    Q_PROPERTY(QColor pen READ pen WRITE setPen FINAL)
+    Q_PROPERTY(QColor fill READ fill WRITE setFill FINAL)
 
 public:
     explicit QQuickDefaultBusyIndicator(QQuickItem *parent = nullptr);
 
-    QColor color() const;
-    void setColor(const QColor &color);
+    QColor pen() const;
+    void setPen(const QColor &pen);
+
+    QColor fill() const;
+    void setFill(const QColor &fill);
 
     int elapsed() const;
 
@@ -71,7 +75,8 @@ protected:
 
 private:
     int m_elapsed;
-    QColor m_color;
+    QColor m_pen;
+    QColor m_fill;
 };
 
 QT_END_NAMESPACE

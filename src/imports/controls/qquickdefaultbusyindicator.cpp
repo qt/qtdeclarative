@@ -60,7 +60,8 @@ public:
     void sync(QQuickItem *item) override;
 
 private:
-    QColor m_color;
+    QColor m_pen;
+    QColor m_fill;
 };
 
 QQuickDefaultBusyIndicatorNode::QQuickDefaultBusyIndicatorNode(QQuickDefaultBusyIndicator *item)
@@ -94,8 +95,9 @@ void QQuickDefaultBusyIndicatorNode::updateCurrentTime(int time)
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         const bool fill = (firstPhaseProgress > qreal(i) / CircleCount) || (secondPhaseProgress > 0 && secondPhaseProgress < qreal(i) / CircleCount);
-        rectNode->setColor(fill ? m_color : QColor::fromRgba(TransparentColor));
-        rectNode->setPenWidth(fill ? 0 : 1);
+        rectNode->setColor(fill ? m_fill : QColor::fromRgba(TransparentColor));
+        rectNode->setPenColor(m_pen);
+        rectNode->setPenWidth(1);
         rectNode->update();
 
         transformNode = static_cast<QSGTransformNode*>(transformNode->nextSibling());
@@ -110,7 +112,9 @@ void QQuickDefaultBusyIndicatorNode::sync(QQuickItem *item)
     const qreal dx = (w - sz) / 2;
     const qreal dy = (h - sz) / 2;
     const int circleRadius = sz / 12;
-    m_color = static_cast<QQuickDefaultBusyIndicator *>(item)->color();
+
+    m_pen = static_cast<QQuickDefaultBusyIndicator *>(item)->pen();
+    m_fill = static_cast<QQuickDefaultBusyIndicator *>(item)->fill();
 
     QSGTransformNode *transformNode = static_cast<QSGTransformNode *>(firstChild());
     for (int i = 0; i < CircleCount; ++i) {
@@ -139,17 +143,31 @@ QQuickDefaultBusyIndicator::QQuickDefaultBusyIndicator(QQuickItem *parent) :
     setFlag(ItemHasContents);
 }
 
-QColor QQuickDefaultBusyIndicator::color() const
+QColor QQuickDefaultBusyIndicator::pen() const
 {
-    return m_color;
+    return m_pen;
 }
 
-void QQuickDefaultBusyIndicator::setColor(const QColor &color)
+void QQuickDefaultBusyIndicator::setPen(const QColor &pen)
 {
-    if (color == m_color)
+    if (pen == m_pen)
         return;
 
-    m_color = color;
+    m_pen = pen;
+    update();
+}
+
+QColor QQuickDefaultBusyIndicator::fill() const
+{
+    return m_fill;
+}
+
+void QQuickDefaultBusyIndicator::setFill(const QColor &fill)
+{
+    if (fill == m_fill)
+        return;
+
+    m_fill = fill;
     update();
 }
 

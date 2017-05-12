@@ -51,7 +51,8 @@ T.BusyIndicator {
         implicitWidth: 48
         implicitHeight: 48
 
-        color: Default.textColor
+        pen: Default.textColor
+        fill: Default.textColor
         opacity: control.running ? 1 : 0
         visible: control.running || animator.running
         Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }

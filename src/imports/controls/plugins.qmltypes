@@ -40,7 +40,8 @@ Module {
         prototype: "QQuickItem"
         exports: ["QtQuick.Controls.impl/BusyIndicatorImpl 2.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "color"; type: "QColor" }
+        Property { name: "pen"; type: "QColor" }
+        Property { name: "fill"; type: "QColor" }
     }
     Component {
         name: "QQuickDefaultDial"
