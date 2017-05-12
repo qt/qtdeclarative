@@ -61,9 +61,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QMutexLocker>
-#include <QWaitCondition>
 #include <QBuffer>
-#include <QWaitCondition>
 #include <QtCore/qdebug.h>
 #include <private/qobject_p.h>
 #include <QQmlFile>
@@ -222,7 +220,6 @@ private:
 
     QMutex mutex;
     QQuickPixmapReaderThreadObject *threadObject;
-    QWaitCondition waitCondition;
 
 #if QT_CONFIG(qml_network)
     QNetworkAccessManager *networkAccessManager();
