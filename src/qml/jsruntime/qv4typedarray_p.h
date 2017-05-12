@@ -148,6 +148,7 @@ struct TypedArrayCtor: FunctionObject
 struct TypedArrayPrototype : Object
 {
     V4_OBJECT2(TypedArrayPrototype, Object)
+    V4_PROTOTYPE(objectPrototype)
 
     void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
 

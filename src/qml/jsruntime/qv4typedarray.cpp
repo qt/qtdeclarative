@@ -372,7 +372,8 @@ void Heap::TypedArray::init(Type t)
 
 Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type t)
 {
-    return e->memoryManager->allocObject<TypedArray>(e->internalClasses[EngineBase::Class_Object], e->typedArrayPrototype + t, t);
+    QV4::InternalClass *ic = e->internalClasses[EngineBase::Class_Empty]->changeVTable(staticVTable());
+    return e->memoryManager->allocObject<TypedArray>(ic, e->typedArrayPrototype + t, t);
 }
 
 void TypedArray::markObjects(Heap::Base *that, ExecutionEngine *e)

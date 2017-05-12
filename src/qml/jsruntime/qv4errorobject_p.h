@@ -203,8 +203,10 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    V4_OBJECT2(SyntaxErrorObject, ErrorObject)
+    typedef Heap::SyntaxErrorObject Data;
     V4_PROTOTYPE(syntaxErrorPrototype)
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct TypeErrorObject: ErrorObject {

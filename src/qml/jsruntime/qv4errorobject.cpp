@@ -183,8 +183,6 @@ void ErrorObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 DEFINE_OBJECT_VTABLE(ErrorObject);
 
-DEFINE_OBJECT_VTABLE(SyntaxErrorObject);
-
 void Heap::SyntaxErrorObject::init(const Value &msg)
 {
     Heap::ErrorObject::init(msg, SyntaxError);

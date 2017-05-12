@@ -249,8 +249,17 @@ InternalClass *InternalClass::changeVTableImpl(const VTable *vt)
 
     // create a new class and add it to the tree
     InternalClass *newClass;
-    newClass = engine->newClass(*this);
-    newClass->vtable = vt;
+    if (this == engine->internalClasses[EngineBase::Class_Empty]) {
+        newClass = engine->newClass(*this);
+        newClass->vtable = vt;
+    } else {
+        newClass = engine->internalClasses[EngineBase::Class_Empty]->changeVTable(vt);
+        newClass = newClass->changePrototype(prototype);
+        for (uint i = 0; i < size; ++i) {
+            if (!propertyData.at(i).isEmpty())
+                newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
+        }
+    }
 
     t.lookup = newClass;
     Q_ASSERT(t.lookup);

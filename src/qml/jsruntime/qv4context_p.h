@@ -228,6 +228,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     V4_MANAGED(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
+    V4_INTERNALCLASS(ExecutionContext)
 
     ExecutionEngine *engine() const { return d()->engine; }
 

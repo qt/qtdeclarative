@@ -198,6 +198,8 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
+    InternalClass *internalClass() const { return d()->internalClass; }
+
     bool isListType() const { return d()->vtable()->type == Type_QmlSequence; }
 
     bool isArrayObject() const { return d()->vtable()->type == Type_ArrayObject; }

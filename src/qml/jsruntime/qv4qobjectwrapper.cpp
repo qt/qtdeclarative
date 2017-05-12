@@ -997,7 +997,6 @@ void QObjectWrapper::destroyObject(bool lastCall)
         }
     }
 
-    h->internalClass = 0;
     h->~Data();
 }
 

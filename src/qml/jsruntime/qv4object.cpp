@@ -61,6 +61,7 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
+    Q_ASSERT(ic && ic->vtable);
     uint nInline = d()->vtable()->nInlineProperties;
     if (ic->size <= nInline)
         return;

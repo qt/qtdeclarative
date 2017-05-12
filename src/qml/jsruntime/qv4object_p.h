@@ -95,7 +95,6 @@ struct Object : Base {
         return memberData->data + index;
     }
 
-    InternalClass *internalClass;
     Pointer<Object> prototype;
     Pointer<MemberData> memberData;
     Pointer<ArrayData> arrayData;
@@ -204,7 +203,6 @@ struct Q_QML_EXPORT Object: Managed {
         SetterOffset = 1
     };
 
-    InternalClass *internalClass() const { return d()->internalClass; }
     void setInternalClass(InternalClass *ic);
 
     const Value *propertyData(uint index) const { return d()->propertyData(index); }

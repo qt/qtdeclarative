@@ -280,7 +280,7 @@ struct InternalClass : public QQmlJS::Managed {
     void destroy();
 
 private:
-    InternalClass *changeVTableImpl(const VTable *vt);
+    Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);

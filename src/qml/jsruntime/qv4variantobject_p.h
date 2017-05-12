@@ -105,6 +105,7 @@ struct VariantObject : Object
 struct VariantPrototype : VariantObject
 {
 public:
+    V4_PROTOTYPE(objectPrototype)
     void init();
 
     static void method_preserve(const BuiltinFunction *, Scope &scope, CallData *callData);

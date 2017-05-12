@@ -210,7 +210,8 @@ public:
     {
         Heap::CallContext *ctxt = stackAllocator.allocate();
         memset(ctxt, 0, sizeof(Heap::CallContext));
-        ctxt->setVtable(QV4::CallContext::staticVTable());
+        ctxt->internalClass = CallContext::defaultInternalClass(engine);
+        Q_ASSERT(ctxt->internalClass && ctxt->internalClass->vtable);
         ctxt->init(v4);
         return ctxt;
 
@@ -224,7 +225,10 @@ public:
         V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
         Heap::Base *o = allocData(size);
-        o->setVtable(ManagedType::staticVTable());
+        InternalClass *ic = ManagedType::defaultInternalClass(engine);
+        ic = ic->changeVTable(ManagedType::staticVTable());
+        o->internalClass = ic;
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
         return static_cast<typename ManagedType::Data *>(o);
     }
 
@@ -232,8 +236,9 @@ public:
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
         Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        o->setVtable(ObjectType::staticVTable());
         o->internalClass = ic;
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
+        Q_ASSERT(ic->vtable == ObjectType::staticVTable());
         return static_cast<typename ObjectType::Data *>(o);
     }
 
@@ -241,10 +246,11 @@ public:
     typename ObjectType::Data *allocateObject()
     {
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
+        ic = ic->changeVTable(ObjectType::staticVTable());
         Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        o->setVtable(ObjectType::staticVTable());
         Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
         o->prototype = prototype->d();
         return static_cast<typename ObjectType::Data *>(o);
     }
@@ -253,7 +259,8 @@ public:
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
-        o->setVtable(ManagedType::staticVTable());
+        o->internalClass = ManagedType::defaultInternalClass(engine);
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
         o->init(this, arg1);
         return o;
     }

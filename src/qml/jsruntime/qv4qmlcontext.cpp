@@ -331,6 +331,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     qml->setReadOnly(true);
 
     Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    Q_ASSERT(c->vtable() == staticVTable());
     return c;
 }
 
@@ -340,6 +341,7 @@ Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *
 
     Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, scopeObject));
     Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    Q_ASSERT(c->vtable() == staticVTable());
     return c;
 }
 

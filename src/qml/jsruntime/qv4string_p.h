@@ -72,7 +72,6 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     };
 
 #ifndef V4_BOOTSTRAP
-    V4_INTERNALCLASS(String)
     void init(MemoryManager *mm, const QString &text);
     void init(MemoryManager *mm, String *l, String *n);
     void destroy();
@@ -140,6 +139,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
     V4_MANAGED(String, Managed)
     Q_MANAGED_TYPE(String)
+    V4_INTERNALCLASS(String)
     V4_NEEDS_DESTROY
     enum {
         IsString = true
