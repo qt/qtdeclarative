@@ -53,6 +53,7 @@
 #include <QtCore/qstring.h>
 #include "qv4managed_p.h"
 #include <QtCore/private/qnumeric_p.h>
+#include "qv4enginebase_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +72,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     };
 
 #ifndef V4_BOOTSTRAP
+    V4_INTERNALCLASS(String)
     void init(MemoryManager *mm, const QString &text);
     void init(MemoryManager *mm, String *l, String *n);
     void destroy();

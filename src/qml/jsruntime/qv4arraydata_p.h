@@ -236,6 +236,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 {
     V4_ARRAYDATA(SimpleArrayData)
+    V4_INTERNALCLASS(SimpleArrayData)
 
     uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
     Value data(uint index) const { return d()->data(index); }
@@ -262,6 +263,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
 {
     V4_ARRAYDATA(SparseArrayData)
+    V4_INTERNALCLASS(SparseArrayData)
     V4_NEEDS_DESTROY
 
     ReturnedValue &freeList() { return d()->freeList; }

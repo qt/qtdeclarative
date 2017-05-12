@@ -137,9 +137,6 @@ struct Object : Base {
         } \
         V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
 
-#define V4_INTERNALCLASS(c) \
-    static QV4::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
-{ return e->internalClasses[QV4::EngineBase::Class_##c]; }
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
     { return e->p(); }

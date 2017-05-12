@@ -52,6 +52,7 @@
 
 #include "qv4global_p.h"
 #include "qv4value_p.h"
+#include "qv4enginebase_p.h"
 #include <private/qv4heap_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -150,6 +151,10 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
 const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0) \
 QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
+
+#define V4_INTERNALCLASS(c) \
+    static QV4::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
+        { return e->internalClasses[QV4::EngineBase::Class_##c]; }
 
 struct Q_QML_PRIVATE_EXPORT Managed : Value
 {

@@ -73,6 +73,7 @@ V4_ASSERT_IS_TRIVIAL(MemberData)
 struct MemberData : Managed
 {
     V4_MANAGED(MemberData, Managed)
+    V4_INTERNALCLASS(MemberData)
 
     Value &operator[] (uint idx) { return d()->data[idx]; }
     const Value *data() const { return d()->data; }

@@ -83,6 +83,10 @@ struct EngineBase {
 
     enum {
         Class_Empty,
+        Class_String,
+        Class_MemberData,
+        Class_SimpleArrayData,
+        Class_SparseArrayData,
         Class_Object,
         Class_ArrayObject,
         Class_FunctionObject,

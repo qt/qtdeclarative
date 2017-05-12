@@ -215,6 +215,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     internalClasses[Class_Empty] =  new (classPool) InternalClass(this);
     internalClasses[Class_Object] = internalClasses[Class_Empty];
 
+    internalClasses[Class_String] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::String::staticVTable());
+    internalClasses[Class_MemberData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::MemberData::staticVTable());
+    internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
+    internalClasses[Class_SparseArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
     jsStrings[String_undefined] = newIdentifier(QStringLiteral("undefined"));
