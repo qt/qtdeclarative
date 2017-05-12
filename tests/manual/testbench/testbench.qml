@@ -383,6 +383,40 @@ ApplicationWindow {
                 }
 
                 RowLayout {
+                    CheckBox {
+                        text: "Tri-state\nCheckBox"
+                        tristate: true
+                    }
+                    CheckBox {
+                        text: "Pressed"
+                        down: true
+                        tristate: true
+                    }
+                    CheckBox {
+                        text: "Partially\nChecked"
+                        tristate: true
+                        checkState: Qt.PartiallyChecked
+                    }
+                    CheckBox {
+                        text: "CH + PR"
+                        tristate: true
+                        checkState: Qt.PartiallyChecked
+                        down: true
+                    }
+                    CheckBox {
+                        text: "Disabled"
+                        tristate: true
+                        enabled: false
+                    }
+                    CheckBox {
+                        text: "CH + DIS"
+                        tristate: true
+                        checkState: Qt.PartiallyChecked
+                        enabled: false
+                    }
+                }
+
+                RowLayout {
                     RadioButton {
                         text: "RadioButton"
                     }
@@ -440,7 +474,7 @@ ApplicationWindow {
 
                 RowLayout {
                     ProgressBar {
-                        value: 0.5
+                        value: slider.value
                     }
                     ProgressBar {
                         value: 0.5
@@ -454,6 +488,7 @@ ApplicationWindow {
 
                 RowLayout {
                     Slider {
+                        id: slider
                         value: 0.5
                     }
                     Slider {
@@ -611,6 +646,7 @@ ApplicationWindow {
                     Frame {
                         id: scrollBarFrame
 
+                        padding: 0
                         contentWidth: 200
                         contentHeight: 100
 
@@ -620,9 +656,9 @@ ApplicationWindow {
                         }
 
                         ScrollBar {
-                            size: 0.3
-                            position: 0.2
-                            active: true
+                            size: 0.6
+                            position: 0.1
+                            policy: ScrollBar.AlwaysOn
                             orientation: Qt.Vertical
                             height: parent.height
                             anchors.right: parent.right
@@ -630,6 +666,7 @@ ApplicationWindow {
                     }
 
                     Frame {
+                        padding: 0
                         contentWidth: 200
                         contentHeight: 100
 
@@ -639,9 +676,9 @@ ApplicationWindow {
                         }
 
                         ScrollBar {
-                            size: 0.3
-                            position: 0.2
-                            active: true
+                            size: 0.6
+                            position: 0.1
+                            policy: ScrollBar.AlwaysOn
                             orientation: Qt.Vertical
                             height: parent.height
                             anchors.right: parent.right
@@ -650,6 +687,7 @@ ApplicationWindow {
                     }
 
                     Frame {
+                        padding: 0
                         contentWidth: 200
                         contentHeight: 100
                         enabled: false
@@ -660,9 +698,9 @@ ApplicationWindow {
                         }
 
                         ScrollBar {
-                            size: 0.3
-                            position: 0.2
-                            active: true
+                            size: 0.6
+                            position: 0.1
+                            policy: ScrollBar.AlwaysOn
                             orientation: Qt.Vertical
                             height: parent.height
                             anchors.right: parent.right
@@ -672,12 +710,13 @@ ApplicationWindow {
 
                 RowLayout {
                     Frame {
+                        padding: 0
                         Layout.preferredWidth: 100
                         Layout.preferredHeight: 100
 
                         ScrollIndicator {
-                            size: 0.3
-                            position: 0.2
+                            size: 0.6
+                            position: 0.1
                             active: true
                             orientation: Qt.Vertical
                             height: parent.height
@@ -686,12 +725,13 @@ ApplicationWindow {
                     }
 
                     Frame {
+                        padding: 0
                         Layout.preferredWidth: 100
                         Layout.preferredHeight: 100
 
                         ScrollIndicator {
-                            size: 0.3
-                            position: 0.2
+                            size: 0.6
+                            position: 0.1
                             active: true
                             orientation: Qt.Vertical
                             height: parent.height
@@ -721,10 +761,12 @@ ApplicationWindow {
 
                 RowLayout {
                     Dial {
+                        value: 0.5
                         implicitWidth: 100
                         implicitHeight: 100
                     }
                     Dial {
+                        value: 0.5
                         implicitWidth: 100
                         implicitHeight: 100
                         enabled: false
@@ -748,6 +790,7 @@ ApplicationWindow {
                             CheckDelegate {
                                 text: "CheckDelegate"
                                 width: parent.width
+                                focusPolicy: Qt.StrongFocus
                             }
 
                             Repeater {
@@ -758,6 +801,7 @@ ApplicationWindow {
                                     down: press
                                     checked: check
                                     enabled: !disabled
+                                    focusPolicy: Qt.StrongFocus
                                 }
                             }
                         }
@@ -770,6 +814,7 @@ ApplicationWindow {
                             RadioDelegate {
                                 text: "RadioDelegate"
                                 width: parent.width
+                                focusPolicy: Qt.StrongFocus
                             }
 
                             Repeater {
@@ -780,6 +825,7 @@ ApplicationWindow {
                                     width: parent.width
                                     checked: check
                                     enabled: !disabled
+                                    focusPolicy: Qt.StrongFocus
                                 }
                             }
                         }
@@ -792,6 +838,7 @@ ApplicationWindow {
                             SwitchDelegate {
                                 text: "SwitchDelegate"
                                 width: parent.width
+                                focusPolicy: Qt.StrongFocus
                             }
 
                             Repeater {
@@ -802,6 +849,7 @@ ApplicationWindow {
                                     checked: check
                                     down: press
                                     enabled: !disabled
+                                    focusPolicy: Qt.StrongFocus
                                 }
                             }
                         }
@@ -822,6 +870,7 @@ ApplicationWindow {
                             ItemDelegate {
                                 text: "ItemDelegate"
                                 width: parent.width
+                                focusPolicy: Qt.StrongFocus
                             }
 
                             Repeater {
@@ -831,6 +880,7 @@ ApplicationWindow {
                                     width: parent.width
                                     down: press
                                     enabled: !disabled
+                                    focusPolicy: Qt.StrongFocus
                                 }
                             }
                         }
@@ -846,6 +896,7 @@ ApplicationWindow {
                                 width: parent.width
                                 swipe.left: removeComponent
                                 swipe.right: removeComponent
+                                focusPolicy: Qt.StrongFocus
                             }
 
                             Repeater {
@@ -855,6 +906,7 @@ ApplicationWindow {
                                     width: parent.width
                                     down: press
                                     enabled: !disabled
+                                    focusPolicy: Qt.StrongFocus
 
                                     swipe.left: removeComponent
                                     swipe.right: removeComponent
