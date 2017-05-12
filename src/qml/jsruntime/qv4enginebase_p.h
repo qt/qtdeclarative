@@ -80,6 +80,25 @@ struct EngineBase {
     ExecutionContext *currentContext = 0;
     IdentifierTable *identifierTable = 0;
     Object *globalObject = 0;
+
+    enum {
+        Class_Empty,
+        Class_Object,
+        Class_ArrayObject,
+        Class_FunctionObject,
+        Class_StringObject,
+        Class_ScriptFunction,
+        Class_ObjectProto,
+        Class_RegExpExecArray,
+        Class_RegExpObject,
+        Class_ArgumentsObject,
+        Class_StrictArgumentsObject,
+        Class_ErrorObject,
+        Class_ErrorObjectWithMessage,
+        Class_ErrorProto,
+        NClasses
+    };
+    InternalClass *internalClasses[NClasses];
 };
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(pop)

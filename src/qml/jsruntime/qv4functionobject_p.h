@@ -134,7 +134,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     };
     V4_OBJECT2(FunctionObject, Object)
     Q_MANAGED_TYPE(FunctionObject)
-    V4_INTERNALCLASS(functionClass)
+    V4_INTERNALCLASS(FunctionObject)
     V4_PROTOTYPE(functionPrototype)
     V4_NEEDS_DESTROY
 
@@ -236,7 +236,7 @@ void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index
 
 struct ScriptFunction : FunctionObject {
     V4_OBJECT2(ScriptFunction, FunctionObject)
-    V4_INTERNALCLASS(scriptFunctionClass)
+    V4_INTERNALCLASS(ScriptFunction)
 
     static void construct(const Managed *, Scope &scope, CallData *callData);
     static void call(const Managed *that, Scope &scope, CallData *callData);

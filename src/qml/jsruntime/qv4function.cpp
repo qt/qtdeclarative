@@ -59,7 +59,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 {
     Q_UNUSED(engine);
 
-    internalClass = engine->emptyClass;
+    internalClass = engine->internalClasses[EngineBase::Class_Empty];
     const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);
@@ -95,7 +95,7 @@ Function::~Function()
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
 {
-    internalClass = engine->emptyClass;
+    internalClass = engine->internalClasses[EngineBase::Class_Empty];
 
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);

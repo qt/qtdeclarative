@@ -220,7 +220,7 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
         return t.lookup;
 
     // create a new class and add it to the tree
-    InternalClass *newClass = engine->emptyClass;
+    InternalClass *newClass = engine->internalClasses[EngineBase::Class_Empty];
     for (uint i = 0; i < size; ++i) {
         if (i == idx) {
             newClass = newClass->addMember(nameMap.at(i), data);
@@ -332,7 +332,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
         object->setInternalClass(t.lookup);
     } else {
         // create a new class and add it to the tree
-        InternalClass *newClass = oldClass->engine->emptyClass;
+        InternalClass *newClass = oldClass->engine->internalClasses[EngineBase::Class_Empty];
         for (uint i = 0; i < oldClass->size; ++i) {
             if (i == propIdx)
                 continue;
@@ -365,7 +365,7 @@ InternalClass *InternalClass::sealed()
     if (m_sealed)
         return m_sealed;
 
-    m_sealed = engine->emptyClass;
+    m_sealed = engine->internalClasses[EngineBase::Class_Empty];
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
@@ -394,7 +394,7 @@ InternalClass *InternalClass::frozen()
 
 InternalClass *InternalClass::propertiesFrozen() const
 {
-    InternalClass *frozen = engine->emptyClass;
+    InternalClass *frozen = engine->internalClasses[EngineBase::Class_Empty];
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())

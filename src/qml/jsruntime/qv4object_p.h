@@ -138,8 +138,8 @@ struct Object : Base {
         V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
 
 #define V4_INTERNALCLASS(c) \
-    static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
-    { return e->c; }
+    static QV4::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
+{ return e->internalClasses[QV4::EngineBase::Class_##c]; }
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
     { return e->p(); }
@@ -198,7 +198,7 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
     Q_MANAGED_TYPE(Object)
-    V4_INTERNALCLASS(emptyClass)
+    V4_INTERNALCLASS(Object)
     V4_PROTOTYPE(objectPrototype)
 
     enum {
@@ -472,7 +472,7 @@ struct NumberObject: Object {
 struct ArrayObject: Object {
     V4_OBJECT2(ArrayObject, Object)
     Q_MANAGED_TYPE(ArrayObject)
-    V4_INTERNALCLASS(arrayClass)
+    V4_INTERNALCLASS(ArrayObject)
     V4_PROTOTYPE(arrayPrototype)
 
     void init(ExecutionEngine *engine);

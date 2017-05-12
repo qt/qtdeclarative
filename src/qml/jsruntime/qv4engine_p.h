@@ -233,25 +233,6 @@ public:
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
 
     InternalClassPool *classPool;
-    InternalClass *emptyClass;
-
-    InternalClass *arrayClass;
-    InternalClass *stringClass;
-
-    InternalClass *functionClass;
-    InternalClass *scriptFunctionClass;
-    InternalClass *protoClass;
-
-    InternalClass *regExpExecArrayClass;
-    InternalClass *regExpObjectClass;
-
-    InternalClass *argumentsObjectClass;
-    InternalClass *strictArgumentsObjectClass;
-
-    InternalClass *errorClass;
-    InternalClass *errorClassWithMessage;
-    InternalClass *errorProtoClass;
-
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }

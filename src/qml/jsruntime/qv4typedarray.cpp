@@ -372,7 +372,7 @@ void Heap::TypedArray::init(Type t)
 
 Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type t)
 {
-    return e->memoryManager->allocObject<TypedArray>(e->emptyClass, e->typedArrayPrototype + t, t);
+    return e->memoryManager->allocObject<TypedArray>(e->internalClasses[EngineBase::Class_Object], e->typedArrayPrototype + t, t);
 }
 
 void TypedArray::markObjects(Heap::Base *that, ExecutionEngine *e)

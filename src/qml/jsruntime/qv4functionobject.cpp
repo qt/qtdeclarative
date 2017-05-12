@@ -122,8 +122,8 @@ void FunctionObject::init(String *n, bool createProto)
 
     Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()) == Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype()));
-        Q_ASSERT(s.engine->protoClass->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
+        ScopedObject proto(s, scope()->engine->newObject(s.engine->internalClasses[EngineBase::Class_ObjectProto], s.engine->objectPrototype()));
+        Q_ASSERT(s.engine->internalClasses[EngineBase::Class_ObjectProto]->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
         *proto->propertyData(Heap::FunctionObject::Index_ProtoConstructor) = this->asReturnedValue();
         *propertyData(Heap::FunctionObject::Index_Prototype) = proto.asReturnedValue();
     } else {
@@ -375,7 +375,7 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
-    InternalClass *ic = v4->emptyClass;
+    InternalClass *ic = v4->internalClasses[EngineBase::Class_Object];
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
     callData->thisObject = obj.asReturnedValue();
