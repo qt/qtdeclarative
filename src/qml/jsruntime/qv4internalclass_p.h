@@ -54,15 +54,13 @@
 
 #include <QHash>
 #include <private/qqmljsmemorypool_p.h>
-#include <private/qv4engine_p.h>
-#include <private/qv4identifiertable_p.h>
+#include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
 struct String;
-struct ExecutionEngine;
 struct Object;
 struct Identifier;
 struct VTable;
@@ -222,12 +220,16 @@ private:
 
 struct InternalClassTransition
 {
-    Identifier *id;
+    union {
+        Identifier *id;
+        const VTable *vtable;
+    };
     InternalClass *lookup;
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
-        NotExtensible = 0x100
+        NotExtensible = 0x100,
+        VTableChange = 0x200,
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -239,6 +241,7 @@ struct InternalClassTransition
 
 struct InternalClass : public QQmlJS::Managed {
     ExecutionEngine *engine;
+    const VTable *vtable;
 
     PropertyHash propertyTable; // id to valueIndex
     SharedInternalClassData<Identifier *> nameMap;
@@ -255,6 +258,12 @@ struct InternalClass : public QQmlJS::Managed {
     bool extensible;
 
     InternalClass *nonExtensible();
+    InternalClass *changeVTable(const VTable *vt) {
+        if (vtable == vt)
+            return this;
+        return changeVTableImpl(vt);
+    }
+
     static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
@@ -271,23 +280,12 @@ struct InternalClass : public QQmlJS::Managed {
     void destroy();
 
 private:
+    InternalClass *changeVTableImpl(const VTable *vt);
     InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);
 };
-
-inline uint InternalClass::find(const String *string)
-{
-    engine->identifierTable->identifier(string);
-    const Identifier *id = string->d()->identifier;
-
-    uint index = propertyTable.lookup(id);
-    if (index < size)
-        return index;
-
-    return UINT_MAX;
-}
 
 struct InternalClassPool : public QQmlJS::MemoryPool
 {
