@@ -77,7 +77,7 @@ T.RangeSlider {
         border.width: activeFocus ? 2 : 1
         border.color: control.enabled ? (activeFocus
             ? Default.focusColor
-            : (control.first.pressed ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
+            : (control.second.pressed ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
         color: control.enabled ? (second.pressed
             ? (activeFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
             : (activeFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
