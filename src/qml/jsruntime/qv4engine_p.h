@@ -55,6 +55,7 @@
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
 #include <private/qintrusivelist_p.h>
+#include "qv4enginebase_p.h"
 
 #ifndef V4_BOOTSTRAP
 #  include <private/qv8engine_p.h>
