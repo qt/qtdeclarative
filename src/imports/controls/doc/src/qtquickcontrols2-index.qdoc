@@ -128,18 +128,18 @@
         \li ...
     \endtable
 
-    \section1 Important Concepts in Qt Quick Controls 2
+    \section1 Topics
 
     \list
-      \li \l{Qt Quick Controls 2 Guidelines}
-      \li \l{Styling Qt Quick Controls 2}
-      \li \l{Customizing Qt Quick Controls 2}
-      \li \l{High-DPI Support in Qt Quick Controls 2}
-      \li \l{Using File Selectors with Qt Quick Controls 2}
+      \li \l{Qt Quick Controls 2 Guidelines}{Guidelines}
+      \li \l{Styling Qt Quick Controls 2}{Styling}
+      \li \l{Customizing Qt Quick Controls 2}{Customization}
+      \li \l{High-DPI Support in Qt Quick Controls 2}{High-DPI Support}
+      \li \l{Using File Selectors with Qt Quick Controls 2}{Using File Selectors}
+      \li \l{Deploying Qt Quick Controls 2 Applications}{Deployment}
+      \li \l{Qt Quick Controls 2 Configuration File}{Configuration File}
+      \li \l{Supported Environment Variables in Qt Quick Controls 2}{Environment Variables}
       \li \l{Differences between Qt Quick Controls}
-      \li \l{Deploying Qt Quick Controls 2 Applications}
-      \li \l{Qt Quick Controls 2 Configuration File}
-      \li \l{Supported Environment Variables in Qt Quick Controls 2}
     \endlist
 
     \section1 Reference
