@@ -117,6 +117,8 @@ struct ScriptFunction : FunctionObject {
         Index_Length
     };
     void init(QV4::ExecutionContext *scope, Function *function);
+
+    QV4::InternalClass *cachedClassForConstructor;
 };
 
 struct BoundFunction : FunctionObject {
@@ -199,6 +201,7 @@ struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     V4_OBJECT2(BuiltinFunction, FunctionObject)
+    V4_INTERNALCLASS(BuiltinFunction)
 
     static Heap::OldBuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     {
@@ -241,7 +244,7 @@ struct ScriptFunction : FunctionObject {
     static void construct(const Managed *, Scope &scope, CallData *callData);
     static void call(const Managed *that, Scope &scope, CallData *callData);
 
-    Heap::Object *protoForConstructor() const;
+    InternalClass *classForConstructor() const;
 };
 
 

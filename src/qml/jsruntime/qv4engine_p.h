@@ -366,6 +366,8 @@ public:
     void popContext();
     ExecutionContext *parentContext(ExecutionContext *context) const;
 
+    InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
+
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
 

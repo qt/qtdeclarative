@@ -106,6 +106,7 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
     , vtable(0)
+    , prototype(0)
     , m_sealed(0)
     , m_frozen(0)
     , size(0)
@@ -118,6 +119,7 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     : QQmlJS::Managed()
     , engine(other.engine)
     , vtable(other.vtable)
+    , prototype(other.prototype)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
@@ -223,6 +225,7 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->internalClasses[EngineBase::Class_Empty]->changeVTable(vtable);
+    newClass = newClass->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         if (i == idx) {
             newClass = newClass->addMember(nameMap.at(i), data);
@@ -233,6 +236,35 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
 
     t.lookup = newClass;
     Q_ASSERT(t.lookup);
+    return newClass;
+}
+
+InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
+{
+    Q_ASSERT(prototype != proto);
+
+    Transition temp = { { nullptr }, 0, Transition::PrototypeChange };
+    temp.prototype = proto;
+
+    Transition &t = lookupOrInsertTransition(temp);
+    if (t.lookup)
+        return t.lookup;
+
+    // create a new class and add it to the tree
+    InternalClass *newClass;
+    if (!size && !prototype) {
+        newClass = engine->newClass(*this);
+        newClass->prototype = proto;
+    } else {
+        newClass = engine->internalClasses[EngineBase::Class_Empty]->changeVTable(vtable);
+        newClass = newClass->changePrototype(proto);
+        for (uint i = 0; i < size; ++i) {
+            if (!propertyData.at(i).isEmpty())
+                newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
+        }
+    }
+
+    t.lookup = newClass;
     return newClass;
 }
 
@@ -366,6 +398,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     } else {
         // create a new class and add it to the tree
         InternalClass *newClass = oldClass->engine->internalClasses[EngineBase::Class_Empty]->changeVTable(oldClass->vtable);
+        newClass = newClass->changePrototype(oldClass->prototype);
         for (uint i = 0; i < oldClass->size; ++i) {
             if (i == propIdx)
                 continue;
@@ -411,6 +444,7 @@ InternalClass *InternalClass::sealed()
         return m_sealed;
 
     m_sealed = engine->internalClasses[EngineBase::Class_Empty]->changeVTable(vtable);
+    m_sealed = m_sealed->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
@@ -440,6 +474,7 @@ InternalClass *InternalClass::frozen()
 InternalClass *InternalClass::propertiesFrozen() const
 {
     InternalClass *frozen = engine->internalClasses[EngineBase::Class_Empty]->changeVTable(vtable);
+    frozen = frozen->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
@@ -480,9 +515,25 @@ void InternalClass::destroy()
     }
 }
 
+void InternalClass::mark(ExecutionEngine *e)
+{
+    if (m_sealed)
+        m_sealed->mark(e);
+    if (m_frozen)
+        m_frozen->mark(e);
+
+    for (size_t i = 0; i < transitions.size(); ++i) {
+        Q_ASSERT(transitions.at(i).lookup);
+        transitions.at(i).lookup->mark(e);
+    }
+    if (prototype)
+        prototype->mark(engine);
+}
+
 void InternalClassPool::markObjects(ExecutionEngine *engine)
 {
-    Q_UNUSED(engine);
+    InternalClass *ic = engine->internalClasses[EngineBase::Class_Empty];
+    ic->mark(engine);
 }
 
 QT_END_NAMESPACE

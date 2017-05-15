@@ -375,8 +375,8 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
-    InternalClass *ic = v4->internalClasses[EngineBase::Class_Object];
-    ScopedObject proto(scope, f->protoForConstructor());
+    InternalClass *ic = f->classForConstructor();
+    ScopedObject proto(scope, ic->prototype);
     ScopedObject obj(scope, v4->newObject(ic, proto));
     callData->thisObject = obj.asReturnedValue();
 
@@ -444,12 +444,19 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     }
 }
 
-Heap::Object *ScriptFunction::protoForConstructor() const
+InternalClass *ScriptFunction::classForConstructor() const
 {
     const Object *o = d()->protoProperty();
+    InternalClass *ic = d()->cachedClassForConstructor;
+    if (ic && ic->prototype == o->d())
+        return ic;
+
+    ic = engine()->internalClasses[EngineBase::Class_Object];
     if (o)
-        return o->d();
-    return engine()->objectPrototype()->d();
+        ic = ic->changePrototype(o->d());
+    d()->cachedClassForConstructor = ic;
+
+    return ic;
 }
 
 

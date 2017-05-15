@@ -247,11 +247,11 @@ public:
     {
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
         ic = ic->changeVTable(ObjectType::staticVTable());
+        ic = ic->changePrototype(ObjectType::defaultPrototype(engine)->d());
         Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        Object *prototype = ObjectType::defaultPrototype(engine);
         o->internalClass = ic;
         Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        o->prototype = prototype->d();
+        Q_ASSERT(o->internalClass->prototype == ObjectType::defaultPrototype(engine)->d());
         return static_cast<typename ObjectType::Data *>(o);
     }
 
@@ -279,7 +279,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init();
         return t->d();
     }
@@ -289,7 +290,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1);
         return t->d();
     }
@@ -299,7 +301,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
@@ -309,7 +312,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
@@ -319,7 +323,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype = prototype->d();
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }

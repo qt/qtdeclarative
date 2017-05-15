@@ -88,13 +88,14 @@ void Object::setProperty(uint index, const Property *p)
 
 bool Object::setPrototype(Object *proto)
 {
-    Heap::Object *pp = proto ? proto->d() : 0;
+    Heap::Object *p = proto ? proto->d() : 0;
+    Heap::Object *pp = p;
     while (pp) {
         if (pp == d())
             return false;
-        pp = pp->prototype;
+        pp = pp->prototype();
     }
-    d()->prototype = proto ? proto->d() : 0;
+    setInternalClass(internalClass()->changePrototype(p));
     return true;
 }
 
@@ -264,8 +265,6 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
         o->memberData->mark(e);
     if (o->arrayData)
         o->arrayData->mark(e);
-    if (o->prototype)
-        o->prototype->mark(e);
     uint nInline = o->vtable()->nInlineProperties;
     Value *v = reinterpret_cast<Value *>(o) + o->vtable()->inlinePropertyOffset;
     const Value *end = v + nInline;
@@ -345,7 +344,7 @@ Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
             return o->propertyData(attrs->isAccessor() ? idx + SetterOffset : idx);
         }
 
-        o = o->prototype;
+        o = o->prototype();
     }
     *attrs = Attr_Invalid;
     return 0;
@@ -368,7 +367,7 @@ Value *Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
                 return reinterpret_cast<Value *>(0x1);
             }
         }
-        o = o->prototype;
+        o = o->prototype();
     }
     *attrs = Attr_Invalid;
     return 0;
@@ -1204,7 +1203,7 @@ ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
     // 15.3.5.3, 4
     while (v) {
         // 15.3.5.3, 4, a
-        v = v->prototype;
+        v = v->prototype();
 
         // 15.3.5.3, 4, b
         if (!v)

@@ -95,7 +95,7 @@ struct Object : Base {
         return memberData->data + index;
     }
 
-    Pointer<Object> prototype;
+    Heap::Object *prototype() const { return internalClass->prototype; }
     Pointer<MemberData> memberData;
     Pointer<ArrayData> arrayData;
 };
@@ -215,7 +215,7 @@ struct Q_QML_EXPORT Object: Managed {
     void setProperty(uint index, const Property *p);
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
-    Heap::Object *prototype() const { return d()->prototype; }
+    Heap::Object *prototype() const { return d()->prototype(); }
     bool setPrototype(Object *proto);
 
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);

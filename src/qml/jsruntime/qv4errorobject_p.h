@@ -326,25 +326,25 @@ inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message) {
-    return e->memoryManager->allocObject<T>(
-                e->internalClasses[message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage],
-                T::defaultPrototype(e), message);
+    InternalClass *ic = e->internalClasses[message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
+    ic = ic->changePrototype(T::defaultPrototype(e)->d());
+    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), message);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
-    return e->memoryManager->allocObject<T>(
-                e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage],
-                T::defaultPrototype(e), v);
+    InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
+    ic = ic->changePrototype(T::defaultPrototype(e)->d());
+    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message, const QString &filename, int line, int column) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
-    return e->memoryManager->allocObject<T>(
-                e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage],
-                T::defaultPrototype(e), v, filename, line, column);
+    InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
+    ic = ic->changePrototype(T::defaultPrototype(e)->d());
+    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v, filename, line, column);
 }
 
 

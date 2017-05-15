@@ -109,6 +109,7 @@ struct StringCtor: FunctionObject
 
 struct StringPrototype: StringObject
 {
+    V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
     static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);

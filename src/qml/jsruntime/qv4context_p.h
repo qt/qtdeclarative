@@ -272,6 +272,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 struct Q_QML_EXPORT CallContext : public ExecutionContext
 {
     V4_MANAGED(CallContext, ExecutionContext)
+    V4_INTERNALCLASS(CallContext)
 
     // formals are in reverse order
     Identifier * const *formals() const;

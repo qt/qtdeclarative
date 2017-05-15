@@ -328,8 +328,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
     *obj->propertyData(Index_Constructor) = ctor;
     *obj->propertyData(Index_Message) = engine->id_empty();
     *obj->propertyData(Index_Name) = engine->newString(QString::fromLatin1(ErrorObject::className(t)));
-    if (t == Heap::ErrorObject::Error)
-        obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
+    obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
 }
 
 void ErrorPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
