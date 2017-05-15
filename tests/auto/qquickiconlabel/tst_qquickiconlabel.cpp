@@ -32,6 +32,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
@@ -54,6 +55,7 @@ private slots:
     void spacingWithOneDelegate_data();
     void spacingWithOneDelegate();
     void emptyIconSource();
+    void colorChanges();
 };
 
 tst_qquickiconlabel::tst_qquickiconlabel()
@@ -289,6 +291,34 @@ void tst_qquickiconlabel::emptyIconSource()
     QVERIFY(!label->findChild<QQuickIconImage *>());
     horizontalCenter = label->width() / 2;
     QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
+}
+
+void tst_qquickiconlabel::colorChanges()
+{
+    QQuickView view(testFileUrl("colorChanges.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *rootItem = view.rootObject();
+    QVERIFY(rootItem);
+
+    QQuickIconLabel *label = rootItem->findChild<QQuickIconLabel *>();
+    QVERIFY(label);
+    QCOMPARE(label->spacing(), 0.0);
+    QCOMPARE(label->display(), QQuickIconLabel::TextBesideIcon);
+    QCOMPARE(label->isMirrored(), false);
+
+    QSharedPointer<QQuickItemGrabResult> grabResult = label->grabToImage();
+    QTRY_VERIFY(!grabResult->image().isNull());
+    const QImage enabledImageGrab = grabResult->image();
+
+    // The color should change to "red" when the item is disabled.
+    rootItem->setEnabled(false);
+
+    grabResult = label->grabToImage();
+    QTRY_VERIFY(!grabResult->image().isNull());
+    QVERIFY(grabResult->image() != enabledImageGrab);
 }
 
 QTEST_MAIN(tst_qquickiconlabel)

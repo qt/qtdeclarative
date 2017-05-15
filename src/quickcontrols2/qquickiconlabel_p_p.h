@@ -79,7 +79,6 @@ public:
     void syncLabel();
     void updateOrSyncLabel();
 
-    void updateIcon();
     void updateImplicitSize();
     void layout();
 

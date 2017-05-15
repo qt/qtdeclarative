@@ -125,6 +125,8 @@ void QQuickIconLabelPrivate::syncImage()
 
     image->setName(icon.name());
     image->setSource(icon.source());
+    image->setSourceSize(QSize(icon.width(), icon.height()));
+    image->setColor(icon.color());
 }
 
 void QQuickIconLabelPrivate::updateOrSyncImage()
@@ -194,15 +196,6 @@ void QQuickIconLabelPrivate::updateOrSyncLabel()
     } else {
         syncLabel();
     }
-}
-
-void QQuickIconLabelPrivate::updateIcon()
-{
-    if (!image || icon.isEmpty())
-        return;
-
-    image->setColor(icon.color());
-    image->setSourceSize(QSize(icon.width(), icon.height()));
 }
 
 void QQuickIconLabelPrivate::updateImplicitSize()
