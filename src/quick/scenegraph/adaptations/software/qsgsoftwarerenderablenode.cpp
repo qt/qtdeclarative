@@ -54,9 +54,27 @@
 #include <private/qsgrendernode_p.h>
 #include <private/qsgtexture_p.h>
 
+#include <qmath.h>
+
 Q_LOGGING_CATEGORY(lcRenderable, "qt.scenegraph.softwarecontext.renderable")
 
 QT_BEGIN_NAMESPACE
+
+// Largest subrectangle with integer coordinates
+inline QRect toRectMin(const QRectF & r)
+{
+    int x1 = qCeil(r.left());
+    int x2 = qFloor(r.right());
+    int y1 = qCeil(r.top());
+    int y2 = qFloor(r.bottom());
+    return QRect(x1, y1, x2 - x1, y2 - y1);
+}
+
+// Smallest superrectangle with integer coordinates
+inline QRect toRectMax(const QRectF & r)
+{
+    return r.toAlignedRect();
+}
 
 QSGSoftwareRenderableNode::QSGSoftwareRenderableNode(NodeType type, QSGNode *node)
     : m_nodeType(type)
@@ -117,7 +135,7 @@ void QSGSoftwareRenderableNode::update()
     // Update the Node properties
     m_isDirty = true;
 
-    QRect boundingRect;
+    QRectF boundingRect;
 
     switch (m_nodeType) {
     case QSGSoftwareRenderableNode::SimpleRect:
@@ -126,7 +144,7 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = m_handle.simpleRectNode->rect().toRect();
+        boundingRect = m_handle.simpleRectNode->rect();
         break;
     case QSGSoftwareRenderableNode::SimpleTexture:
         if (!m_handle.simpleTextureNode->texture()->hasAlphaChannel() && !m_transform.isRotating())
@@ -134,7 +152,7 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = m_handle.simpleTextureNode->rect().toRect();
+        boundingRect = m_handle.simpleTextureNode->rect();
         break;
     case QSGSoftwareRenderableNode::Image:
         // There isn't a way to tell, so assume it's not
@@ -148,7 +166,7 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = QRect(0, 0, m_handle.painterNode->size().width(), m_handle.painterNode->size().height());
+        boundingRect = QRectF(0, 0, m_handle.painterNode->size().width(), m_handle.painterNode->size().height());
         break;
     case QSGSoftwareRenderableNode::Rectangle:
         if (m_handle.rectangleNode->isOpaque() && !m_transform.isRotating())
@@ -156,19 +174,19 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = m_handle.rectangleNode->rect().toRect();
+        boundingRect = m_handle.rectangleNode->rect();
         break;
     case QSGSoftwareRenderableNode::Glyph:
         // Always has alpha
         m_isOpaque = false;
 
-        boundingRect = m_handle.glpyhNode->boundingRect().toAlignedRect();
+        boundingRect = m_handle.glpyhNode->boundingRect();
         break;
     case QSGSoftwareRenderableNode::NinePatch:
         // Difficult to tell, assume non-opaque
         m_isOpaque = false;
 
-        boundingRect = m_handle.ninePatchNode->bounds().toRect();
+        boundingRect = m_handle.ninePatchNode->bounds();
         break;
     case QSGSoftwareRenderableNode::SimpleRectangle:
         if (m_handle.simpleRectangleNode->color().alpha() == 255 && !m_transform.isRotating())
@@ -176,7 +194,7 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = m_handle.simpleRectangleNode->rect().toRect();
+        boundingRect = m_handle.simpleRectangleNode->rect();
         break;
     case QSGSoftwareRenderableNode::SimpleImage:
         if (!m_handle.simpleImageNode->texture()->hasAlphaChannel() && !m_transform.isRotating())
@@ -184,12 +202,12 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = m_handle.simpleImageNode->rect().toRect();
+        boundingRect = m_handle.simpleImageNode->rect();
         break;
 #if QT_CONFIG(quick_sprite)
     case QSGSoftwareRenderableNode::SpriteNode:
         m_isOpaque = m_handle.spriteNode->isOpaque();
-        boundingRect = m_handle.spriteNode->rect().toRect();
+        boundingRect = m_handle.spriteNode->rect();
         break;
 #endif
     case QSGSoftwareRenderableNode::RenderNode:
@@ -198,27 +216,32 @@ void QSGSoftwareRenderableNode::update()
         else
             m_isOpaque = false;
 
-        boundingRect = m_handle.renderNode->rect().toRect();
+        boundingRect = m_handle.renderNode->rect();
         break;
     default:
         break;
     }
 
-    m_boundingRect = m_transform.mapRect(boundingRect);
+    const QRectF transformedRect = m_transform.mapRect(boundingRect);
+    m_boundingRectMin = toRectMin(transformedRect);
+    m_boundingRectMax = toRectMax(transformedRect);
 
     if (m_hasClipRegion && m_clipRegion.rectCount() <= 1) {
         // If there is a clipRegion, and it is empty, the item wont be rendered
-        if (m_clipRegion.isEmpty())
-            m_boundingRect = QRect();
-        else
-            m_boundingRect = m_boundingRect.intersected(m_clipRegion.rects().first());
+        if (m_clipRegion.isEmpty()) {
+            m_boundingRectMin = QRect();
+            m_boundingRectMax = QRect();
+        } else {
+            m_boundingRectMin = m_boundingRectMin.intersected(m_clipRegion.rects().first());
+            m_boundingRectMax = m_boundingRectMax.intersected(m_clipRegion.rects().first());
+        }
     }
 
     // Overrides
     if (m_opacity < 1.0f)
         m_isOpaque = false;
 
-    m_dirtyRegion = QRegion(m_boundingRect);
+    m_dirtyRegion = QRegion(m_boundingRectMax);
 }
 
 struct RenderNodeState : public QSGRenderNode::RenderState
@@ -258,7 +281,7 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
             rs.cr = m_clipRegion;
 
             const QRect br = m_handle.renderNode->flags().testFlag(QSGRenderNode::BoundedRectRendering)
-                ? m_boundingRect :
+                ? m_boundingRectMax :
                 QRect(0, 0, painter->device()->width(), painter->device()->height());
 
             painter->save();
@@ -335,17 +358,11 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
     painter->restore();
 
     QRegion areaToBeFlushed = m_dirtyRegion;
-    m_previousDirtyRegion = QRegion(m_boundingRect);
+    m_previousDirtyRegion = QRegion(m_boundingRectMax);
     m_isDirty = false;
     m_dirtyRegion = QRegion();
 
     return areaToBeFlushed;
-}
-
-QRect QSGSoftwareRenderableNode::boundingRect() const
-{
-    // This returns the bounding area of a renderable node in world coordinates
-    return m_boundingRect;
 }
 
 bool QSGSoftwareRenderableNode::isDirtyRegionEmpty() const
@@ -392,12 +409,12 @@ void QSGSoftwareRenderableNode::markMaterialDirty()
 
 void QSGSoftwareRenderableNode::addDirtyRegion(const QRegion &dirtyRegion, bool forceDirty)
 {
-    // Check if the dirty region applys to this node
+    // Check if the dirty region applies to this node
     QRegion prev = m_dirtyRegion;
-    if (dirtyRegion.intersects(boundingRect())) {
+    if (dirtyRegion.intersects(m_boundingRectMax)) {
         if (forceDirty)
             m_isDirty = true;
-        m_dirtyRegion += dirtyRegion.intersected(boundingRect());
+        m_dirtyRegion += dirtyRegion.intersected(m_boundingRectMax);
     }
     qCDebug(lcRenderable) << "addDirtyRegion: " << dirtyRegion << "old dirtyRegion: " << prev << "new dirtyRegion: " << m_dirtyRegion;
 }
@@ -407,7 +424,7 @@ void QSGSoftwareRenderableNode::subtractDirtyRegion(const QRegion &dirtyRegion)
     QRegion prev = m_dirtyRegion;
     if (m_isDirty) {
         // Check if this rect concerns us
-        if (dirtyRegion.intersects(QRegion(boundingRect()))) {
+        if (dirtyRegion.intersects(m_boundingRectMax)) {
             m_dirtyRegion -= dirtyRegion;
             if (m_dirtyRegion.isEmpty())
                 m_isDirty = false;
@@ -423,7 +440,7 @@ QRegion QSGSoftwareRenderableNode::previousDirtyRegion(bool wasRemoved) const
     if (wasRemoved)
         return m_previousDirtyRegion;
 
-    return m_previousDirtyRegion.subtracted(QRegion(m_boundingRect));
+    return m_previousDirtyRegion.subtracted(QRegion(m_boundingRectMax));
 }
 
 QRegion QSGSoftwareRenderableNode::dirtyRegion() const

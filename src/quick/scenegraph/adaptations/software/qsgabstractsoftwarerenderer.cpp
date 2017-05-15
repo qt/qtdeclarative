@@ -165,12 +165,12 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
 
         // Keep up with obscured regions
         if (node->isOpaque()) {
-            m_obscuredRegion += QRegion(node->boundingRect());
+            m_obscuredRegion += node->boundingRectMin();
         }
 
         if (node->isDirty()) {
             // Don't paint things outside of the rendering area
-            if (!m_background->rect().toRect().contains(node->boundingRect(), /*proper*/ true)) {
+            if (!m_background->rect().toRect().contains(node->boundingRectMax(), /*proper*/ true)) {
                 // Some part(s) of node is(are) outside of the rendering area
                 QRegion renderArea(m_background->rect().toRect());
                 QRegion outsideRegions = node->dirtyRegion().subtracted(renderArea);
@@ -181,7 +181,7 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
             // Get the dirty region's to pass to the next nodes
             if (node->isOpaque()) {
                 // if isOpaque, subtract node's dirty rect from m_dirtyRegion
-                m_dirtyRegion -= node->dirtyRegion();
+                m_dirtyRegion -= node->boundingRectMin();
             } else {
                 // if isAlpha, add node's dirty rect to m_dirtyRegion
                 m_dirtyRegion += node->dirtyRegion();
@@ -264,7 +264,7 @@ void QSGAbstractSoftwareRenderer::nodeRemoved(QSGNode *node)
         // Need to mark this region dirty in the other nodes
         QRegion dirtyRegion = renderable->previousDirtyRegion(true);
         if (dirtyRegion.isEmpty())
-            dirtyRegion = renderable->boundingRect();
+            dirtyRegion = renderable->boundingRectMax();
         m_dirtyRegion += dirtyRegion;
         m_nodes.remove(node);
         delete renderable;
