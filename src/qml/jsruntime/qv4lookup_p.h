@@ -79,13 +79,14 @@ struct Lookup {
         struct {
             void *dummy0;
             void *dummy1;
+            void *dummy2;
             Heap::Object *proto;
-            unsigned type;
         };
     };
     union {
         int level;
         uint index2;
+        unsigned type;
     };
     uint index;
     uint nameIndex;

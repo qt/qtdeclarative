@@ -402,8 +402,8 @@ ReturnedValue Lookup::getter1(Lookup *l, ExecutionEngine *engine, const Value &o
     // the internal class won't match
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
-        if (l->classList[0] == o->internalClass && l->classList[1] == o->prototype()->internalClass)
-            return o->prototype()->propertyData(l->index)->asReturnedValue();
+        if (l->classList[0] == o->internalClass && l->classList[1] == l->proto->internalClass)
+            return l->proto->propertyData(l->index)->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
 }
@@ -415,9 +415,9 @@ ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const Value &o
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass) {
-            Heap::Object *p = o->prototype();
-            if (l->classList[1] == p->internalClass) {
-                p = p->prototype();
+            Q_ASSERT(l->proto == o->prototype());
+            if (l->classList[1] == l->proto->internalClass) {
+                Heap::Object *p = l->proto->prototype();
                 if (l->classList[2] == p->internalClass)
                     return p->propertyData(l->index)->asReturnedValue();
             }
@@ -550,7 +550,7 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass &&
-            l->classList[1] == o->prototype()->internalClass) {
+            l->classList[1] == l->proto->internalClass) {
             Scope scope(o->internalClass->engine);
             ScopedFunctionObject getter(scope, o->prototype()->propertyData(l->index + Object::GetterOffset));
             if (!getter)
@@ -573,9 +573,9 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const 
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass) {
-            o = o->prototype();
-            if (l->classList[1] == o->internalClass) {
-                o = o->prototype();
+            Q_ASSERT(o->prototype() == l->proto);
+            if (l->classList[1] == l->proto->internalClass) {
+                o = l->proto->prototype();
                 if (l->classList[2] == o->internalClass) {
                     Scope scope(o->internalClass->engine);
                     ScopedFunctionObject getter(scope, o->propertyData(l->index + Object::GetterOffset));
@@ -877,7 +877,7 @@ void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, c
 
 void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = object.as<Object>();
+    Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         *o->propertyData(l->index) = value;
         return;
@@ -888,7 +888,7 @@ void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Va
 
 void Lookup::setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = object.as<Object>();
+    Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         *o->d()->inlinePropertyData(l->index) = value;
         return;
@@ -899,13 +899,12 @@ void Lookup::setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, co
 
 void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = object.as<Object>();
+    Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
-        if (!o->prototype()) {
-            o->setInternalClass(l->classList[3]);
-            *o->propertyData(l->index) = value;
-            return;
-        }
+        Q_ASSERT(!o->prototype());
+        o->setInternalClass(l->classList[3]);
+        *o->propertyData(l->index) = value;
+        return;
     }
 
     l->setter = setterFallback;
@@ -914,10 +913,12 @@ void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, co
 
 void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = object.as<Object>();
+    Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         Heap::Object *p = o->prototype();
-        if (p && p->internalClass == l->classList[1]) {
+        Q_ASSERT(p);
+        if (p->internalClass == l->classList[1]) {
+            Q_ASSERT(!p->prototype());
             o->setInternalClass(l->classList[3]);
             *o->propertyData(l->index) = value;
             return;
@@ -930,12 +931,15 @@ void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, co
 
 void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = object.as<Object>();
+    Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         Heap::Object *p = o->prototype();
-        if (p && p->internalClass == l->classList[1]) {
+        Q_ASSERT(p);
+        if (p->internalClass == l->classList[1]) {
             p = p->prototype();
-            if (p && p->internalClass == l->classList[2]) {
+            Q_ASSERT(p);
+            if (p->internalClass == l->classList[2]) {
+                Q_ASSERT(!p->prototype());
                 o->setInternalClass(l->classList[3]);
                 *o->propertyData(l->index) = value;
                 return;
@@ -949,7 +953,7 @@ void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, co
 
 void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = object.as<Object>();
+    Object *o = static_cast<Object *>(object.managed());
     if (o) {
         if (o->internalClass() == l->classList[0]) {
             *o->propertyData(l->index) = value;

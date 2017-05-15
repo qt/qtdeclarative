@@ -505,7 +505,9 @@ ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
     PropertyAttributes attrs;
     ReturnedValue v = l->lookup(o, &attrs);
     if (v != Primitive::emptyValue().asReturnedValue()) {
+        l->proto = l->classList[0]->prototype;
         if (attrs.isData()) {
+            Q_ASSERT(l->classList[0] == o->internalClass());
             if (l->level == 0) {
                 uint nInline = o->d()->vtable()->nInlineProperties;
                 if (l->index < nInline)
