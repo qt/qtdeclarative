@@ -46,21 +46,31 @@
             <img src="images/qtquickcontrols2-default.png" alt="Default" width="100%"/>
           </a>
         </td>
-        <td style="border:0px; padding-right:25px;">
+        <td style="border:0px">
           <a href="qtquickcontrols2-material.html">
             <img src="images/qtquickcontrols2-material.png" alt="Material" width="100%"/>
           </a>
         </td>
-        <td style="border:0px;">
+      </tr>
+      <tr>
+        <td style="border:0px">Default Style</td>
+        <td style="border:0px">Material Style</td>
+      </tr>
+      <tr>
+        <td style="border:0px; padding-top:45px; padding-right:25px;">
+          <a href="qtquickcontrols2-fusion.html">
+            <img src="images/qtquickcontrols2-fusion.png" alt="Fusion" width="100%"/>
+          </a>
+        </td>
+        <td style="border:0px; padding-top:45px; ">
           <a href="qtquickcontrols2-universal.html">
             <img src="images/qtquickcontrols2-universal.png" alt="Universal" width="100%"/>
           </a>
         </td>
       </tr>
       <tr>
-        <td style="border:0px">Default</td>
-        <td style="border:0px">Material</td>
-        <td style="border:0px">Universal</td>
+        <td style="border:0px">Fusion Style</td>
+        <td style="border:0px">Universal Style</td>
       </tr>
     </table>
     \endraw

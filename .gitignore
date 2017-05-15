@@ -30,6 +30,7 @@
 /tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/calendar/tst_calendar
 /tests/auto/controls/default/tst_default
+/tests/auto/controls/fusion/tst_fusion
 /tests/auto/controls/material/tst_material
 /tests/auto/controls/universal/tst_universal
 /tests/auto/cursor/tst_cursor
