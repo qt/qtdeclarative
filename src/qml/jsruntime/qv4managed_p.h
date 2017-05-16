@@ -131,7 +131,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 {     \
     parentVTable, \
     (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
-    (sizeof(classname::Data) + QV4::Chunk::SlotSize - 1)/QV4::Chunk::SlotSize*QV4::Chunk::SlotSize/sizeof(QV4::Value) \
+    (sizeof(classname::Data) + (std::is_same<classname, Object>::value ? 2*sizeof(QV4::Value) : 0) + QV4::Chunk::SlotSize - 1)/QV4::Chunk::SlotSize*QV4::Chunk::SlotSize/sizeof(QV4::Value) \
         - (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
     classname::IsExecutionContext,   \
     classname::IsString,   \
