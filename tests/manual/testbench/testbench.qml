@@ -66,8 +66,11 @@ ApplicationWindow {
         y = Screen.height / 2 - height / 2
     }
 
-    Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
-    Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
+    LayoutMirroring.childrenInherit: true
+    LayoutMirroring.enabled: mirroredMenuItem.checked
+
+    Material.theme: darkMenuItem.checked ? Material.Dark : Material.Light
+    Universal.theme: darkMenuItem.checked ? Universal.Dark : Universal.Light
 
     property int controlSpacing: 10
 
@@ -82,98 +85,102 @@ ApplicationWindow {
         RowLayout {
             anchors.fill: parent
 
-            ToolButton {
-                text: "ToolButton"
-                hoverEnabled: true
-                ToolTip.text: text
-                ToolTip.delay: 1000
-                ToolTip.visible: hovered
-            }
-            ToolButton {
-                text: "Pressed"
-                down: true
-                hoverEnabled: true
-                ToolTip.text: text
-                ToolTip.delay: 1000
-                ToolTip.visible: hovered
-            }
-            ToolButton {
-                text: "Checked"
-                checkable: true
-                checked: true
-                hoverEnabled: true
-                ToolTip.text: text
-                ToolTip.delay: 1000
-                ToolTip.visible: hovered
-            }
-            ToolButton {
-                text: "Highlighted"
-                highlighted: true
-                hoverEnabled: true
-                ToolTip.text: text
-                ToolTip.delay: 1000
-                ToolTip.visible: hovered
-            }
-            ToolButton {
-                text: "Disabled"
-                enabled: false
-            }
+            RowLayout {
+                enabled: enabledMenuItem.checked
 
-            ToolSeparator {}
+                ToolButton {
+                    text: "ToolButton"
+                    hoverEnabled: true
+                    ToolTip.text: text
+                    ToolTip.delay: 1000
+                    ToolTip.visible: hovered
+                }
+                ToolButton {
+                    text: "Pressed"
+                    down: true
+                    hoverEnabled: true
+                    ToolTip.text: text
+                    ToolTip.delay: 1000
+                    ToolTip.visible: hovered
+                }
+                ToolButton {
+                    text: "Checked"
+                    checkable: true
+                    checked: true
+                    hoverEnabled: true
+                    ToolTip.text: text
+                    ToolTip.delay: 1000
+                    ToolTip.visible: hovered
+                }
+                ToolButton {
+                    text: "Highlighted"
+                    highlighted: true
+                    hoverEnabled: true
+                    ToolTip.text: text
+                    ToolTip.delay: 1000
+                    ToolTip.visible: hovered
+                }
+                ToolButton {
+                    text: "Disabled"
+                    enabled: false
+                }
 
-            ToolButton {
-                text: "1"
-            }
-            ToolButton {
-                text: "2"
-            }
+                ToolSeparator {}
 
-            ToolSeparator {}
+                ToolButton {
+                    text: "1"
+                }
+                ToolButton {
+                    text: "2"
+                }
 
-            ToolButton {
-                id: menuButton
-                text: "Menu"
-                hoverEnabled: true
-                ToolTip.text: text
-                ToolTip.delay: 1000
-                ToolTip.visible: hovered
-                checked: menu.visible
-                checkable: true
+                ToolSeparator {}
 
-                Menu {
-                    id: menu
-                    x: 1
-                    y: 1 + parent.height
-                    visible: menuButton.checked
-                    closePolicy: Popup.CloseOnPressOutsideParent
+                ToolButton {
+                    id: menuButton
+                    text: "Menu"
+                    hoverEnabled: true
+                    ToolTip.text: text
+                    ToolTip.delay: 1000
+                    ToolTip.visible: hovered
+                    checked: menu.visible
+                    checkable: true
 
-                    MenuItem {
-                        text: "MenuItem"
-                    }
-                    MenuItem {
-                        text: "Pressed"
-                        down: true
-                    }
-                    MenuItem {
-                        text: "Disabled"
-                        enabled: false
-                    }
+                    Menu {
+                        id: menu
+                        x: 1
+                        y: 1 + parent.height
+                        visible: menuButton.checked
+                        closePolicy: Popup.CloseOnPressOutsideParent
 
-                    MenuSeparator {}
+                        MenuItem {
+                            text: "MenuItem"
+                        }
+                        MenuItem {
+                            text: "Pressed"
+                            down: true
+                        }
+                        MenuItem {
+                            text: "Disabled"
+                            enabled: false
+                        }
 
-                    MenuItem {
-                        text: "Checked"
-                        checked: true
-                    }
-                    MenuItem {
-                        text: "CH+PR"
-                        checked: true
-                        down: true
-                    }
-                    MenuItem {
-                        text: "CH+DIS"
-                        checked: true
-                        enabled: false
+                        MenuSeparator {}
+
+                        MenuItem {
+                            text: "Checked"
+                            checked: true
+                        }
+                        MenuItem {
+                            text: "CH+PR"
+                            checked: true
+                            down: true
+                        }
+                        MenuItem {
+                            text: "CH+DIS"
+                            checked: true
+                            enabled: false
+                        }
                     }
                 }
             }
@@ -181,16 +188,52 @@ ApplicationWindow {
             Item {
                 Layout.fillWidth: true
             }
-            Label {
-                text: "Light/Dark"
-            }
-            Switch {
-                id: themeSwitch
+
+            ToolButton {
+                id: optionsMenuButton
+                text: "\u22EE" // VERTICAL ELLIPSIS
+                checked: optionsMenu.visible
+                checkable: true
+
+                Menu {
+                    id: optionsMenu
+                    x: 1
+                    y: 1 + parent.height
+                    visible: optionsMenuButton.checked
+                    closePolicy: Popup.CloseOnPressOutsideParent
+
+                    MenuItem {
+                        id: enabledMenuItem
+                        text: "Enabled"
+                        checkable: true
+                        checked: true
+                    }
+
+                    MenuItem {
+                        id: mirroredMenuItem
+                        text: "Mirrored"
+                        checkable: true
+                    }
+
+                    MenuItem {
+                        id: darkMenuItem
+                        text: "Dark"
+                        checkable: true
+                    }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "Quit"
+                        onTriggered: Qt.quit()
+                    }
+                }
             }
         }
     }
 
     footer: TabBar {
+        enabled: enabledMenuItem.checked
         TabButton {
             text: "TabButton"
         }
@@ -215,6 +258,7 @@ ApplicationWindow {
                 id: flow
                 width: parent.width
                 spacing: 30
+                enabled: enabledMenuItem.checked
 
                 RowLayout {
                     spacing: window.controlSpacing
