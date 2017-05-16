@@ -54,7 +54,6 @@
 #include "qquickitem.h"
 #include "qevent.h"
 #include "qquickpointerdevicehandler_p.h"
-#include "../items/qquickmultipointtoucharea_p.h"
 
 QT_BEGIN_NAMESPACE
 
