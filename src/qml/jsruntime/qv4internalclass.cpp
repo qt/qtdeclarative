@@ -506,25 +506,25 @@ void InternalClass::destroy()
     }
 }
 
-void InternalClass::mark(ExecutionEngine *e)
-{
-    if (m_sealed)
-        m_sealed->mark(e);
-    if (m_frozen)
-        m_frozen->mark(e);
-
-    for (size_t i = 0; i < transitions.size(); ++i) {
-        Q_ASSERT(transitions.at(i).lookup);
-        transitions.at(i).lookup->mark(e);
-    }
-    if (prototype)
-        prototype->mark(engine);
-}
-
 void InternalClassPool::markObjects(ExecutionEngine *engine)
 {
     InternalClass *ic = engine->internalClasses[EngineBase::Class_Empty];
-    ic->mark(engine);
+    Q_ASSERT(!ic->prototype);
+
+    // only need to go two levels into the IC hierarchy, as prototype changes
+    // can only happen there
+    for (auto &t : ic->transitions) {
+        Q_ASSERT(t.lookup);
+        if (t.flags == InternalClassTransition::VTableChange) {
+            InternalClass *ic2 = t.lookup;
+            for (auto &t2 : ic2->transitions) {
+                if (t2.flags == InternalClassTransition::PrototypeChange)
+                    t2.lookup->prototype->mark(engine);
+            }
+        } else if (t.flags == InternalClassTransition::PrototypeChange) {
+            t.lookup->prototype->mark(engine);
+        }
+    }
 }
 
 QT_END_NAMESPACE

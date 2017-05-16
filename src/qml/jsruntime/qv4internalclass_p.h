@@ -293,7 +293,6 @@ struct InternalClass : public QQmlJS::Managed {
     Q_REQUIRED_RESULT InternalClass *propertiesFrozen() const;
 
     void destroy();
-    void mark(ExecutionEngine *e);
 
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
