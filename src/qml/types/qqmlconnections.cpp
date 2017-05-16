@@ -287,6 +287,7 @@ void QQmlConnections::connectSignals()
             int signalIndex = QQmlPropertyPrivate::get(prop)->signalIndex();
             QQmlBoundSignal *signal =
                 new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
+            signal->setEnabled(d->enabled);
 
             QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(target, signalIndex,
