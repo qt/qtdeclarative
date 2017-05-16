@@ -59,6 +59,10 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct MarkStack;
+
+typedef void(*ClassDestroyStatsCallback)(const char *);
+
 /*
  * Chunks are the basic structure containing GC managed objects.
  *
@@ -175,7 +179,7 @@ struct Chunk {
         return usedSlots;
     }
 
-    void sweep();
+    bool sweep();
     void freeAll();
 
     void sortIntoBins(HeapItem **bins, uint nBins);
