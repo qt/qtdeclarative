@@ -699,7 +699,7 @@ TestCase {
         compare(highlightedSpy.count, 0)
         mouseMove(content, content.width / 2 + 1, content.height / 2 + 1)
         compare(activatedSpy.count, 0)
-        compare(highlightedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
         mouseRelease(content)
         compare(activatedSpy.count, 1)
         compare(highlightedSpy.count, 1)
@@ -1141,6 +1141,55 @@ TestCase {
 
         openedSpy.target = null
         closedSpy.target = null
+    }
+
+    function test_mouseHighlight() {
+        var control = createTemporaryObject(comboBox, testCase, {model: 20})
+        verify(control)
+
+        compare(control.highlightedIndex, -1)
+
+        var openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
+        verify(openedSpy.valid)
+
+        control.popup.open()
+        compare(control.highlightedIndex, 0)
+        tryCompare(openedSpy, "count", 1)
+
+        var listview = control.popup.contentItem
+        verify(listview)
+        waitForRendering(listview)
+
+        // hover-highlight through all visible list items one by one
+        var hoverIndex = -1
+        var prevHoverItem = null
+        for (var y = 0; y < listview.height; ++y) {
+            var hoverItem = listview.itemAt(0, listview.contentY + y)
+            if (!hoverItem || !hoverItem.visible || hoverItem === prevHoverItem)
+                continue
+            mouseMove(hoverItem, 0, 0)
+            tryCompare(control, "highlightedIndex", ++hoverIndex)
+            prevHoverItem = hoverItem
+        }
+
+        mouseMove(listview, listview.width / 2, listview.height / 2)
+
+        // wheel-highlight the rest of the items
+        var delta = 120
+        var prevWheelItem = null
+        while (!listview.atYEnd) {
+            var prevContentY = listview.contentY
+            mouseWheel(listview, listview.width / 2, listview.height / 2, -delta, -delta)
+            tryCompare(listview, "moving", false)
+            verify(listview.contentY > prevContentY)
+
+            var wheelItem = listview.itemAt(listview.width / 2, listview.contentY + listview.height / 2)
+            if (!wheelItem || !wheelItem.visible || wheelItem === prevWheelItem)
+                continue
+
+            tryCompare(control, "highlightedIndex", parseInt(wheelItem.text))
+            prevWheelItem = wheelItem
+        }
     }
 
     RegExpValidator {

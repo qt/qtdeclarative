@@ -37,6 +37,7 @@
 #include "qquickcombobox_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickabstractbutton_p.h"
+#include "qquickabstractbutton_p_p.h"
 #include "qquickpopup_p_p.h"
 
 #include <QtCore/qregexp.h>
@@ -50,6 +51,7 @@
 #include <QtQml/private/qqmldelegatemodel_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
+#include <QtQuick/private/qquickitemview_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -221,6 +223,7 @@ public:
     void popupVisibleChanged();
 
     void itemClicked();
+    void itemHovered();
 
     void createdItem(int index, QObject *object);
     void modelUpdated();
@@ -253,6 +256,7 @@ public:
     bool hasDown;
     bool pressed;
     bool ownModel;
+    bool keyNavigating;
     bool hasDisplayText;
     bool hasCurrentIndex;
     int highlightedIndex;
@@ -291,6 +295,7 @@ QQuickComboBoxPrivate::QQuickComboBoxPrivate()
       hasDown(false),
       pressed(false),
       ownModel(false),
+      keyNavigating(false),
       hasDisplayText(false),
       hasCurrentIndex(false),
       highlightedIndex(-1),
@@ -341,7 +346,15 @@ void QQuickComboBoxPrivate::popupVisibleChanged()
     if (isPopupVisible())
         QGuiApplication::inputMethod()->reset();
 
+    QQuickItemView *itemView = popup->findChild<QQuickItemView *>();
+    if (itemView)
+        itemView->setHighlightRangeMode(QQuickItemView::NoHighlightRange);
+
     updateHighlightedIndex();
+
+    if (itemView)
+        itemView->positionViewAtIndex(highlightedIndex, QQuickItemView::Beginning);
+
     if (!hasDown) {
         q->setDown(pressed || isPopupVisible());
         hasDown = false;
@@ -358,6 +371,25 @@ void QQuickComboBoxPrivate::itemClicked()
     }
 }
 
+void QQuickComboBoxPrivate::itemHovered()
+{
+    Q_Q(QQuickComboBox);
+    if (keyNavigating)
+        return;
+
+    QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(q->sender());
+    if (!button || !button->isHovered() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
+        return;
+
+    int index = delegateModel->indexOf(button, nullptr);
+    if (index != -1) {
+        setHighlightedIndex(index, Highlight);
+
+        if (QQuickItemView *itemView = popup->findChild<QQuickItemView *>())
+            itemView->positionViewAtIndex(index, QQuickItemView::Contain);
+    }
+}
+
 void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 {
     Q_Q(QQuickComboBox);
@@ -371,6 +403,7 @@ void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
     if (button) {
         button->setFocusPolicy(Qt::NoFocus);
         connect(button, &QQuickAbstractButton::clicked, this, &QQuickComboBoxPrivate::itemClicked);
+        connect(button, &QQuickAbstractButton::hoveredChanged, this, &QQuickComboBoxPrivate::itemHovered);
     }
 
     if (index == currentIndex && !q->isEditable())
@@ -1155,6 +1188,9 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
         QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
+
+        if (QQuickItemView *itemView = popup->findChild<QQuickItemView *>())
+            itemView->setHighlightRangeMode(QQuickItemView::NoHighlightRange);
     }
     d->popup = popup;
     emit popupChanged();
@@ -1446,14 +1482,17 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         event->accept();
         break;
     case Qt::Key_Up:
+        d->keyNavigating = true;
         d->decrementCurrentIndex();
         event->accept();
         break;
     case Qt::Key_Down:
+        d->keyNavigating = true;
         d->incrementCurrentIndex();
         event->accept();
         break;
     case Qt::Key_Home:
+        d->keyNavigating = true;
         if (d->isPopupVisible())
             d->setHighlightedIndex(0, Highlight);
         else
@@ -1461,6 +1500,7 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         event->accept();
         break;
     case Qt::Key_End:
+        d->keyNavigating = true;
         if (d->isPopupVisible())
             d->setHighlightedIndex(count() - 1, Highlight);
         else
@@ -1480,6 +1520,8 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::keyReleaseEvent(event);
+
+    d->keyNavigating = false;
     if (!d->popup || event->isAutoRepeat())
         return;
 
