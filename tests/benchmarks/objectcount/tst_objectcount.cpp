@@ -88,18 +88,6 @@ void tst_ObjectCount::cleanup()
     qtHookData[QHooks::RemoveQObject] = 0;
 }
 
-template <typename T>
-static void printObjects(const QObjectList &objects)
-{
-    std::cout << "RESULT tst_ObjectCount::" << QTest::currentTestFunction() << "():\"" << QTest::currentDataTag() << "\":" << std::endl;
-    std::cout << "     " << T::staticMetaObject.className() << "s: " << objects.count() << std::endl;
-
-    if (qt_verbose) {
-        for (QObject *object : objects)
-            qInfo() << "\t" << object;
-    }
-}
-
 static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList())
 {
     // We cannot use QQmlComponent to load QML files directly from the source tree.
@@ -157,7 +145,12 @@ static void doBenchmark(QQmlEngine *engine, const QUrl &url)
             objects += object;
     }
 
-    printObjects<T>(objects);
+    if (qt_verbose) {
+        for (QObject *object : objects)
+            qInfo() << "\t" << object;
+    }
+
+    QTest::setBenchmarkResult(objects.count(), QTest::Events);
 }
 
 void tst_ObjectCount::qobjects()
