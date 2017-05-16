@@ -279,7 +279,14 @@ struct InternalClass : public QQmlJS::Managed {
     static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = 0);
     static void removeMember(Object *object, Identifier *id);
     uint find(const String *string);
-    uint find(const Identifier *id);
+    uint find(const Identifier *id)
+    {
+        uint index = propertyTable.lookup(id);
+        if (index < size)
+            return index;
+
+        return UINT_MAX;
+    }
 
     Q_REQUIRED_RESULT InternalClass *sealed();
     Q_REQUIRED_RESULT InternalClass *frozen();

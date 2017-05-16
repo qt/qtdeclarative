@@ -429,15 +429,6 @@ uint QV4::InternalClass::find(const String *string)
     return UINT_MAX;
 }
 
-uint InternalClass::find(const Identifier *id)
-{
-    uint index = propertyTable.lookup(id);
-    if (index < size)
-        return index;
-
-    return UINT_MAX;
-}
-
 InternalClass *InternalClass::sealed()
 {
     if (m_sealed)

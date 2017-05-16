@@ -209,6 +209,9 @@ unsigned int CallContext::variableCount() const
 
 bool ExecutionContext::deleteProperty(String *name)
 {
+    name->makeIdentifier(engine());
+    Identifier *id = name->identifier();
+
     Scope scope(this);
     bool hasWith = false;
     ScopedContext ctx(scope, this);
@@ -237,7 +240,7 @@ bool ExecutionContext::deleteProperty(String *name)
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             if (c->v4Function && (c->v4Function->needsActivation() || hasWith)) {
-                uint index = c->v4Function->internalClass->find(name);
+                uint index = c->v4Function->internalClass->find(id);
                 if (index < UINT_MAX)
                     // ### throw in strict mode?
                     return false;
@@ -361,6 +364,9 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
 void ExecutionContext::setProperty(String *name, const Value &value)
 {
+    name->makeIdentifier(engine());
+    Identifier *id = name->identifier();
+
     Scope scope(this);
     ScopedContext ctx(scope, this);
     ScopedObject activation(scope);
@@ -392,7 +398,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             if (c->v4Function) {
-                uint index = c->v4Function->internalClass->find(name);
+                uint index = c->v4Function->internalClass->find(id);
                 if (index < UINT_MAX) {
                     if (index < c->v4Function->nFormals) {
                         c->callData->args[c->v4Function->nFormals - index - 1] = value;
@@ -414,7 +420,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         }
 
         if (activation) {
-            uint member = activation->internalClass()->find(name);
+            uint member = activation->internalClass()->find(id);
             if (member < UINT_MAX) {
                 activation->putValue(member, value);
                 return;
@@ -473,7 +479,10 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             if (c->v4Function && (c->v4Function->needsActivation() || hasWith || hasCatchScope)) {
-                uint index = c->v4Function->internalClass->find(name);
+                name->makeIdentifier(engine());
+                Identifier *id = name->identifier();
+
+                uint index = c->v4Function->internalClass->find(id);
                 if (index < UINT_MAX) {
                     if (index < c->v4Function->nFormals)
                         return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
@@ -551,7 +560,10 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             if (c->v4Function && (c->v4Function->needsActivation() || hasWith || hasCatchScope)) {
-                uint index = c->v4Function->internalClass->find(name);
+                name->makeIdentifier(engine());
+                Identifier *id = name->identifier();
+
+                uint index = c->v4Function->internalClass->find(id);
                 if (index < UINT_MAX) {
                     if (index < c->v4Function->nFormals)
                         return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();

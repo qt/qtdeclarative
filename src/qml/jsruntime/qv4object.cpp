@@ -294,7 +294,10 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
     if (idx != UINT_MAX)
         return getOwnProperty(idx, attrs, p);
 
-    uint member = internalClass()->find(name);
+    name->makeIdentifier(engine());
+    Identifier *id = name->identifier();
+
+    uint member = internalClass()->find(id);
     if (member < UINT_MAX) {
         *attrs = internalClass()->propertyData[member];
         if (p) {
@@ -336,9 +339,12 @@ Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
+    name->makeIdentifier(engine());
+    Identifier *id = name->identifier();
+
     Heap::Object *o = d();
     while (o) {
-        uint idx = o->internalClass->find(name);
+        uint idx = o->internalClass->find(id);
         if (idx < UINT_MAX) {
             *attrs = o->internalClass->propertyData[idx];
             return o->propertyData(attrs->isAccessor() ? idx + SetterOffset : idx);
@@ -411,7 +417,10 @@ bool Object::hasOwnProperty(String *name) const
     if (idx != UINT_MAX)
         return hasOwnProperty(idx);
 
-    if (internalClass()->find(name) < UINT_MAX)
+    name->makeIdentifier(engine());
+    Identifier *id = name->identifier();
+
+    if (internalClass()->find(id) < UINT_MAX)
         return true;
     if (!query(name).isEmpty())
         return true;
@@ -468,8 +477,11 @@ PropertyAttributes Object::query(const Managed *m, String *name)
     if (idx != UINT_MAX)
         return queryIndexed(m, idx);
 
+    name->makeIdentifier(m->internalClass()->engine);
+    Identifier *id = name->identifier();
+
     const Object *o = static_cast<const Object *>(m);
-    idx = o->internalClass()->find(name);
+    idx = o->internalClass()->find(id);
     if (idx < UINT_MAX)
         return o->internalClass()->propertyData[idx];
 
@@ -670,10 +682,11 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
 
     Scope scope(engine());
     name->makeIdentifier(scope.engine);
+    Identifier *id = name->identifier();
 
     ScopedObject o(scope, this);
     while (o) {
-        uint idx = o->internalClass()->find(name);
+        uint idx = o->internalClass()->find(id);
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
@@ -736,8 +749,9 @@ void Object::internalPut(String *name, const Value &value)
         return putIndexed(idx, value);
 
     name->makeIdentifier(engine());
+    Identifier *id = name->identifier();
 
-    uint member = internalClass()->find(name);
+    uint member = internalClass()->find(id);
     Value *v = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
@@ -890,7 +904,7 @@ bool Object::internalDeleteProperty(String *name)
 
     name->makeIdentifier(engine());
 
-    uint memberIdx = internalClass()->find(name);
+    uint memberIdx = internalClass()->find(name->identifier());
     if (memberIdx != UINT_MAX) {
         if (internalClass()->propertyData[memberIdx].isConfigurable()) {
             InternalClass::removeMember(this, name->identifier());
@@ -961,7 +975,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     }
 
     // Clause 1
-    memberIndex = internalClass()->find(name);
+    memberIndex = internalClass()->find(name->identifier());
 
     if (memberIndex == UINT_MAX) {
         // clause 3
