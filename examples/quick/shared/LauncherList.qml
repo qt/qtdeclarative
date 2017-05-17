@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2017 Crimson AS <info@crimson.no>
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
@@ -40,6 +41,8 @@
 import QtQuick 2.0
 
 Rectangle {
+    property int activePageCount: 0
+
     //model is a list of {"name":"somename", "url":"file:///some/url/mainfile.qml"}
     //function used to add to model A) to enforce scheme B) to allow Qt.resolveUrl in url assignments
 
@@ -48,48 +51,138 @@ Rectangle {
     {
         myModel.append({"name":name, "description":desc, "url":url})
     }
-    function hideExample()
-    {
-        ei.visible = false;
-    }
 
-    ListView {
-        clip: true
-        delegate: SimpleLauncherDelegate{exampleItem: ei}
-        model: ListModel {id:myModel}
+    // The container rectangle here is used to give a nice "feel" when
+    // transitioning into an example.
+    Rectangle {
         anchors.fill: parent
+        color: "black"
+
+        ListView {
+            id: launcherList
+            clip: true
+            delegate: SimpleLauncherDelegate{
+                onClicked: {
+                    var page = pageComponent.createObject(pageContainer, { exampleUrl: url })
+                    page.show()
+                }
+            }
+            model: ListModel {id:myModel}
+            anchors.fill: parent
+            enabled: opacity == 1.0
+        }
     }
 
     Item {
-        id: ei
-        visible: false
-        clip: true
-        property url exampleUrl
-        onExampleUrlChanged: visible = (exampleUrl == '' ? false : true); //Setting exampleUrl automatically shows example
+        id: pageContainer
         anchors.fill: parent
-        anchors.bottomMargin: 40
+    }
+
+    Component {
+        id: pageComponent
         Rectangle {
-            id: bg
-            anchors.fill: parent
+            id: page
+            clip: true
+            property url exampleUrl
+            width: parent.width
+            height: parent.height - bar.height
             color: "white"
-        }
-        MouseArea{
-            anchors.fill: parent
-            enabled: ei.visible
-            //Eats mouse events
-        }
-        Loader{
-            focus: true
-            source: ei.exampleUrl
-            anchors.fill: parent
+            MouseArea{
+                //Eats mouse events
+                anchors.fill: parent
+            }
+            Loader{
+                focus: true
+                source: parent.exampleUrl
+                anchors.fill: parent
+            }
+
+            x: -width
+
+            function show() {
+                showAnim.start()
+            }
+
+            function exit() {
+                exitAnim.start()
+            }
+
+            ParallelAnimation {
+                id: showAnim
+                ScriptAction {
+                    script: activePageCount++
+                }
+                NumberAnimation {
+                    target: launcherList
+                    property: "opacity"
+                    from: 1.0
+                    to: 0.0
+                    duration: 500
+                }
+                NumberAnimation {
+                    target: launcherList
+                    property: "scale"
+                    from: 1.0
+                    to: 0.0
+                    duration: 500
+                }
+                NumberAnimation {
+                    target: page
+                    property: "x"
+                    from: -page.width
+                    to: 0
+                    duration: 300
+                }
+            }
+            SequentialAnimation {
+                id: exitAnim
+
+                ScriptAction {
+                    script: activePageCount--
+                }
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: launcherList
+                        property: "opacity"
+                        from: 0.0
+                        to: 1.0
+                        duration: 300
+                    }
+                    NumberAnimation {
+                        target: launcherList
+                        property: "scale"
+                        from: 0.0
+                        to: 1.0
+                        duration: 300
+                    }
+                    NumberAnimation {
+                        target: page
+                        property: "x"
+                        from: 0
+                        to: -page.width
+                        duration: 300
+                    }
+                }
+
+                ScriptAction {
+                    script: page.destroy()
+                }
+            }
         }
     }
     Rectangle {
         id: bar
-        visible: ei.visible
+        visible: height > 0
         anchors.bottom: parent.bottom
         width: parent.width
-        height: 40
+        height: activePageCount > 0 ? 40 : 0
+
+        Behavior on height {
+            NumberAnimation {
+                duration: 300
+            }
+        }
 
         Rectangle {
             height: 1
@@ -113,12 +206,6 @@ Rectangle {
             GradientStop { position: 1 ; color: "#ccc" }
         }
 
-        MouseArea{
-            anchors.fill: parent
-            enabled: ei.visible
-            //Eats mouse events
-        }
-
         Image {
             id: back
             source: "images/back.png"
@@ -134,7 +221,10 @@ Rectangle {
                 width: 38
                 height: 31
                 anchors.verticalCenterOffset: -1
-                onClicked: ei.exampleUrl = ""
+                enabled: activePageCount > 0
+                onClicked: {
+                    pageContainer.children[pageContainer.children.length - 1].exit()
+                }
                 Rectangle {
                     anchors.fill: parent
                     opacity: mouse.pressed ? 1 : 0
