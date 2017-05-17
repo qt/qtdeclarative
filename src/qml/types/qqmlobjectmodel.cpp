@@ -129,7 +129,7 @@ public:
         }
 
         QQmlChangeSet changeSet;
-        changeSet.move(from, to, n, -1);
+        changeSet.move(from, to, n, 0);
         emit q->modelUpdated(changeSet, false);
         emit q->childrenChanged();
     }
