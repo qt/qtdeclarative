@@ -96,6 +96,10 @@ public Q_SLOTS:
 Q_SIGNALS:
     void accepted();
     void rejected();
+    Q_REVISION(3) void applied();
+    Q_REVISION(3) void reset();
+    Q_REVISION(3) void discarded();
+    Q_REVISION(3) void helpRequested();
 
     void titleChanged();
     void headerChanged();

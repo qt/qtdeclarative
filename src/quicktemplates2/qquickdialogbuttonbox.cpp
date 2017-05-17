@@ -38,6 +38,7 @@
 #include "qquickdialogbuttonbox_p_p.h"
 #include "qquickabstractbutton_p.h"
 #include "qquickbutton_p.h"
+#include "qquickdialog_p_p.h"
 
 #include <QtCore/qpointer.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -167,12 +168,6 @@ QT_BEGIN_NAMESPACE
     \sa accepted(), rejected(), helpRequested()
 */
 
-static QPlatformDialogHelper::ButtonRole buttonRole(QQuickAbstractButton *button)
-{
-    const QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, false));
-    return attached ? attached->buttonRole() : QPlatformDialogHelper::InvalidRole;
-}
-
 QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
     : alignment(0),
       position(QQuickDialogButtonBox::Footer),
@@ -268,8 +263,8 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
     struct ButtonLayout {
         bool operator()(QQuickAbstractButton *first, QQuickAbstractButton *second)
         {
-            const QPlatformDialogHelper::ButtonRole firstRole = buttonRole(first);
-            const QPlatformDialogHelper::ButtonRole secondRole = buttonRole(second);
+            const QPlatformDialogHelper::ButtonRole firstRole = QQuickDialogPrivate::buttonRole(first);
+            const QPlatformDialogHelper::ButtonRole secondRole = QQuickDialogPrivate::buttonRole(second);
 
             if (firstRole != secondRole && firstRole != QPlatformDialogHelper::InvalidRole && secondRole != QPlatformDialogHelper::InvalidRole) {
                 const int *l = m_layout;
@@ -313,7 +308,7 @@ void QQuickDialogButtonBoxPrivate::handleClick()
     // or change its role. Now changing the role is not possible yet, but arguably
     // both clicked and accepted/rejected/etc. should be emitted "atomically"
     // depending on whatever role the button had at the time of the click.
-    const QPlatformDialogHelper::ButtonRole role = buttonRole(button);
+    const QPlatformDialogHelper::ButtonRole role = QQuickDialogPrivate::buttonRole(button);
     QPointer<QQuickDialogButtonBox> guard(q);
 
     emit q->clicked(button);

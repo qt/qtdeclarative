@@ -37,6 +37,7 @@
 #include "qquickdialog_p.h"
 #include "qquickdialog_p_p.h"
 #include "qquickdialogbuttonbox_p.h"
+#include "qquickabstractbutton_p.h"
 #include "qquickpopupitem_p_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -115,6 +116,69 @@ QT_BEGIN_NAMESPACE
     \sa accepted()
 */
 
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::Dialog::applied()
+
+    This signal is emitted when the \c Dialog.Apply standard button is clicked.
+
+    \sa discarded(), reset()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::Dialog::reset()
+
+    This signal is emitted when the \c Dialog.Reset standard button is clicked.
+
+    \sa discarded(), applied()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::Dialog::discarded()
+
+    This signal is emitted when the \c Dialog.Discard standard button is clicked.
+
+    \sa reset(), applied()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::Dialog::helpRequested()
+
+    This signal is emitted when the \c Dialog.Help standard button is clicked.
+
+    \sa accepted(), rejected()
+*/
+
+QPlatformDialogHelper::ButtonRole QQuickDialogPrivate::buttonRole(QQuickAbstractButton *button)
+{
+    const QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, false));
+    return attached ? attached->buttonRole() : QPlatformDialogHelper::InvalidRole;
+}
+
+void QQuickDialogPrivate::handleClick(QQuickAbstractButton *button)
+{
+    Q_Q(QQuickDialog);
+    switch (buttonRole(button)) {
+    case QPlatformDialogHelper::ApplyRole:
+        emit q->applied();
+        break;
+    case QPlatformDialogHelper::ResetRole:
+        emit q->reset();
+        break;
+    case QPlatformDialogHelper::DestructiveRole:
+        emit q->discarded();
+        break;
+    case QPlatformDialogHelper::HelpRole:
+        emit q->helpRequested();
+        break;
+    default:
+        break;
+    }
+}
+
 QQuickDialog::QQuickDialog(QObject *parent)
     : QQuickPopup(*(new QQuickDialogPrivate), parent)
 {
@@ -188,12 +252,14 @@ void QQuickDialog::setHeader(QQuickItem *header)
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldHeader)) {
         disconnect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
         disconnect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         if (d->buttonBox == buttonBox)
             d->buttonBox = nullptr;
     }
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(header)) {
         connect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
         connect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         d->buttonBox = buttonBox;
         buttonBox->setStandardButtons(d->standardButtons);
     }
@@ -235,12 +301,14 @@ void QQuickDialog::setFooter(QQuickItem *footer)
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldFooter)) {
         disconnect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
         disconnect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         if (d->buttonBox == buttonBox)
             d->buttonBox = nullptr;
     }
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(footer)) {
         connect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
         connect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         d->buttonBox = buttonBox;
         buttonBox->setStandardButtons(d->standardButtons);
     }
