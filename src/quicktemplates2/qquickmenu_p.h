@@ -81,6 +81,8 @@ public:
     QString title() const;
     void setTitle(QString &title);
 
+    Q_REVISION(3) Q_INVOKABLE void popup(QQmlV4Function *args);
+
 protected:
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;

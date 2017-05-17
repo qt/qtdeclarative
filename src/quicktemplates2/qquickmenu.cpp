@@ -38,8 +38,16 @@
 #include "qquickmenu_p_p.h"
 #include "qquickmenuitem_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickpopupitem_p_p.h"
 
 #include <QtGui/qevent.h>
+#include <QtGui/qcursor.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qv4scopedvalue_p.h>
+#include <QtQml/private/qv4variantobject_p.h>
+#include <QtQml/private/qv4qobjectwrapper_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
@@ -66,6 +74,37 @@ QT_BEGIN_NAMESPACE
         \li Context menus; for example, a menu that is shown after right clicking
         \li Popup menus; for example, a menu that is shown after clicking a button
     \endlist
+
+    When used as a context menu, the recommended way of opening the menu is to call
+    \l popup(). Unless a position is explicitly specified, the menu is positioned at
+    the mouse cursor on desktop platforms that have a mouse cursor available, and
+    otherwise centered over its parent item.
+
+    \code
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: {
+            if (mouse.button === Qt.RightButton)
+                contextMenu.popup()
+        }
+        onPressAndHold: {
+            if (mouse.source === Qt.MouseEventNotSynthesized)
+                contextMenu.popup()
+        }
+
+        Menu {
+            id: contextMenu
+            MenuItem { text: "Cut" }
+            MenuItem { text: "Copy" }
+            MenuItem { text: "Paste" }
+        }
+    }
+    \endcode
+
+    When used as a popup menu, it is easiest to specify the position by specifying
+    the desired \l x and \y coordinates using the respective properties, and call
+    \l open() to open the menu.
 
     \code
     Button {
@@ -450,6 +489,102 @@ void QQuickMenu::setTitle(QString &title)
         return;
     d->title = title;
     emit titleChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::popup(MenuItem item = null)
+
+    Opens the menu at the mouse cursor on desktop platforms that have a mouse cursor
+    available, and otherwise centers the menu over its parent item.
+
+    The menu can be optionally aligned to a specific menu \a item.
+
+    \sa Popup::open()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::popup(point pos, MenuItem item = null)
+
+    Opens the menu at the specified position \a pos in the popups coordinate system,
+    that is, a coordinate relative to its parent item.
+
+    The menu can be optionally aligned to a specific menu \a item.
+
+    \sa Popup::open()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::popup(real x, real y, MenuItem item = null)
+
+    Opens the menu at the specified position \a x, \a y in the popups coordinate system,
+    that is, a coordinate relative to its parent item.
+
+    The menu can be optionally aligned to a specific menu \a item.
+
+    \sa Popup::open()
+*/
+void QQuickMenu::popup(QQmlV4Function *args)
+{
+    Q_D(QQuickMenu);
+    const int len = args->length();
+    if (len > 3) {
+        args->v4engine()->throwTypeError();
+        return;
+    }
+
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    QV4::Scope scope(v4);
+
+    QQmlNullableValue<QPointF> pos;
+    QQuickMenuItem *menuItem = nullptr;
+
+    if (len > 0) {
+        // MenuItem item
+        QV4::ScopedValue lastArg(scope, (*args)[len - 1]);
+        const QV4::QObjectWrapper *obj = lastArg->as<QV4::QObjectWrapper>();
+        if (obj)
+            menuItem = qobject_cast<QQuickMenuItem *>(obj->object());
+    }
+
+    if (len >= 2) {
+        // real x, real y
+        QV4::ScopedValue firstArg(scope, (*args)[0]);
+        QV4::ScopedValue secondArg(scope, (*args)[1]);
+        if (firstArg->isNumber() && secondArg->isNumber())
+            pos = QPointF(firstArg->asDouble(), secondArg->asDouble());
+    }
+
+    if (pos.isNull && len >= 1) {
+        // point pos
+        QV4::ScopedValue firstArg(scope, (*args)[0]);
+        const QVariant var = v4->toVariant(firstArg, -1);
+        if (var.userType() == QMetaType::QPointF)
+            pos = var.toPointF();
+    }
+
+    // Unless the position has been explicitly specified, position the menu at
+    // the mouse cursor on desktop platforms that have a mouse cursor available
+    // and support multiple windows.
+#if QT_CONFIG(cursor)
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MultipleWindows)) {
+        if (pos.isNull && d->parentItem)
+            pos = d->parentItem->mapFromGlobal(QCursor::pos());
+        if (menuItem)
+            pos.value.ry() -= d->popupItem->mapFromItem(menuItem, QPointF(0, 0)).y();
+    }
+#endif
+
+    // As a fallback, center the menu over its parent item.
+    if (pos.isNull && d->parentItem)
+        pos = QPointF((d->parentItem->width() - width()) / 2, (d->parentItem->height() - height()) / 2);
+
+    if (!pos.isNull)
+        setPosition(pos);
+
+    open();
 }
 
 void QQuickMenu::componentComplete()

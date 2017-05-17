@@ -36,6 +36,7 @@
 
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
+#include <QtGui/qcursor.h>
 #include <QtGui/qstylehints.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -69,6 +70,7 @@ private slots:
     void menuSeparator();
     void repeater();
     void order();
+    void popup();
 };
 
 void tst_menu::defaults()
@@ -382,6 +384,69 @@ void tst_menu::order()
         QVERIFY(item);
         QCOMPARE(item->property("text").toString(), texts.at(i));
     }
+}
+
+void tst_menu::popup()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("popup.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+
+    QQuickMenuItem *menuItem1 = window->property("menuItem1").value<QQuickMenuItem *>();
+    QVERIFY(menuItem1);
+
+    QQuickMenuItem *menuItem2 = window->property("menuItem2").value<QQuickMenuItem *>();
+    QVERIFY(menuItem2);
+
+    QQuickMenuItem *menuItem3 = window->property("menuItem3").value<QQuickMenuItem *>();
+    QVERIFY(menuItem3);
+
+#if QT_CONFIG(cursor)
+    QPoint cursorPos = window->mapToGlobal(QPoint(11, 22));
+    QCursor::setPos(cursorPos);
+    QTRY_COMPARE(QCursor::pos(), cursorPos);
+
+    QVERIFY(QMetaObject::invokeMethod(window, "popupAtCursor"));
+    QTRY_COMPARE(menu->property("x").toInt(), 11);
+    QTRY_COMPARE(menu->property("y").toInt(), 22);
+    menu->close();
+
+    QVERIFY(QMetaObject::invokeMethod(window, "popupAtPos", Q_ARG(QVariant, QPointF(33, 44))));
+    QTRY_COMPARE(menu->property("x").toInt(), 33);
+    QTRY_COMPARE(menu->property("y").toInt(), 44);
+    menu->close();
+
+    QVERIFY(QMetaObject::invokeMethod(window, "popupAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, 66)));
+    QTRY_COMPARE(menu->property("x").toInt(), 55);
+    QTRY_COMPARE(menu->property("y").toInt(), 66);
+    menu->close();
+
+    cursorPos = window->mapToGlobal(QPoint(12, window->height() / 2));
+    QCursor::setPos(cursorPos);
+    QTRY_COMPARE(QCursor::pos(), cursorPos);
+
+    const QList<QQuickMenuItem *> menuItems = QList<QQuickMenuItem *>() << menuItem1 << menuItem2 << menuItem3;
+    for (QQuickMenuItem *menuItem : menuItems) {
+        QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCursor", Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QTRY_COMPARE(menu->property("x").toInt(), 12);
+        QTRY_COMPARE(menu->property("y").toInt(), window->height() / 2 + menu->topPadding() - menuItem->y());
+        menu->close();
+
+        QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtPos", Q_ARG(QVariant, QPointF(33, window->height() / 3)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QTRY_COMPARE(menu->property("x").toInt(), 33);
+        QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 + menu->topPadding() - menuItem->y());
+        menu->close();
+
+        QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, window->height() / 3 * 2), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QTRY_COMPARE(menu->property("x").toInt(), 55);
+        QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
+        menu->close();
+    }
+#endif
 }
 
 QTEST_MAIN(tst_menu)
