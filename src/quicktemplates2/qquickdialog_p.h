@@ -54,6 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickDialogPrivate;
+class QQuickAbstractButton;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
 {
@@ -79,6 +80,7 @@ public:
 
     QPlatformDialogHelper::StandardButtons standardButtons() const;
     void setStandardButtons(QPlatformDialogHelper::StandardButtons buttons);
+    Q_REVISION(3) Q_INVOKABLE QQuickAbstractButton *standardButton(QPlatformDialogHelper::StandardButton button) const;
 
     enum StandardCode { Rejected, Accepted };
     Q_ENUM(StandardCode)

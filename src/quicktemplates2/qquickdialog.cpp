@@ -302,6 +302,22 @@ void QQuickDialog::setStandardButtons(QPlatformDialogHelper::StandardButtons but
 
 /*!
     \since QtQuick.Controls 2.3
+    \qmlmethod AbstractButton QtQuick.Controls::Dialog::standardButton(StandardButton button)
+
+    Returns the specified standard \a button, or \c null if it does not exist.
+
+    \sa standardButtons
+*/
+QQuickAbstractButton *QQuickDialog::standardButton(QPlatformDialogHelper::StandardButton button) const
+{
+    Q_D(const QQuickDialog);
+    if (!d->buttonBox)
+        return nullptr;
+    return d->buttonBox->standardButton(button);
+}
+
+/*!
+    \since QtQuick.Controls 2.3
     \qmlproperty int QtQuick.Controls::Dialog::result
 
     This property holds the result code.
