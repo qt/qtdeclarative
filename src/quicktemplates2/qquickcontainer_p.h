@@ -103,6 +103,7 @@ protected:
 
     virtual bool isContent(QQuickItem *item) const;
     virtual void itemAdded(int index, QQuickItem *item);
+    virtual void itemMoved(int index, QQuickItem *item);
     virtual void itemRemoved(int index, QQuickItem *item);
 
 private:

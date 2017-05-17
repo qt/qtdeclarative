@@ -66,7 +66,7 @@ public:
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
-    void moveItem(int from, int to);
+    void moveItem(int from, int to, QQuickItem *item);
     void removeItem(int index, QQuickItem *item);
 
     void _q_currentIndexChanged();

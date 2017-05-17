@@ -253,19 +253,33 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
 
     q->itemAdded(index, item);
 
-    if (contentModel->count() == 1 && currentIndex == -1)
+    int count = contentModel->count();
+    for (int i = index + 1; i < count; ++i)
+        q->itemMoved(i, itemAt(i));
+
+    if (count == 1 && currentIndex == -1)
         q->setCurrentIndex(index);
 
     updatingCurrent = false;
 }
 
-void QQuickContainerPrivate::moveItem(int from, int to)
+void QQuickContainerPrivate::moveItem(int from, int to, QQuickItem *item)
 {
     Q_Q(QQuickContainer);
     int oldCurrent = currentIndex;
     contentModel->move(from, to);
 
     updatingCurrent = true;
+
+    q->itemMoved(to, item);
+
+    if (from < to) {
+        for (int i = from; i < to; ++i)
+            q->itemMoved(i, itemAt(i));
+    } else {
+        for (int i = from; i > to; --i)
+            q->itemMoved(i, itemAt(i));
+    }
 
     if (from == oldCurrent)
         q->setCurrentIndex(to);
@@ -299,6 +313,10 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
     contentModel->remove(index);
 
     q->itemRemoved(index, item);
+
+    int count = contentModel->count();
+    for (int i = index; i < count; ++i)
+        q->itemMoved(i, itemAt(i));
 
     if (currentChanged)
         emit q->currentIndexChanged();
@@ -476,7 +494,7 @@ void QQuickContainer::insertItem(int index, QQuickItem *item)
         if (oldIndex < index)
             --index;
         if (oldIndex != index)
-            d->moveItem(oldIndex, index);
+            d->moveItem(oldIndex, index, item);
     } else {
         d->insertItem(index, item);
     }
@@ -497,7 +515,7 @@ void QQuickContainer::moveItem(int from, int to)
         to = count - 1;
 
     if (from != to)
-        d->moveItem(from, to);
+        d->moveItem(from, to, d->itemAt(from));
 }
 
 /*!
@@ -730,6 +748,12 @@ bool QQuickContainer::isContent(QQuickItem *item) const
 }
 
 void QQuickContainer::itemAdded(int index, QQuickItem *item)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(item);
+}
+
+void QQuickContainer::itemMoved(int index, QQuickItem *item)
 {
     Q_UNUSED(index);
     Q_UNUSED(item);
