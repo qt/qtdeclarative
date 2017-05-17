@@ -576,4 +576,121 @@ TestCase {
         compare(tab2.height, control.contentHeight)
         compare(tab3.height, control.contentHeight)
     }
+
+    Component {
+        id: attachedButton
+        TabButton {
+            property int index: TabBar.index
+            property TabBar tabBar: TabBar.tabBar
+            property int position: TabBar.position
+        }
+    }
+
+    function test_attached() {
+        var control = createTemporaryObject(tabBar, testCase, {position: TabBar.Footer})
+
+        // append
+        var tab1 = createTemporaryObject(attachedButton, testCase)
+        compare(tab1.index, -1)
+        compare(tab1.tabBar, null)
+        compare(tab1.position, TabBar.Header)
+
+        control.addItem(tab1)
+        compare(tab1.index, 0)
+        compare(tab1.tabBar, control)
+        compare(tab1.position, TabBar.Footer)
+
+        // insert in the beginning
+        var tab2 = createTemporaryObject(attachedButton, testCase)
+        compare(tab2.index, -1)
+        compare(tab2.tabBar, null)
+        compare(tab2.position, TabBar.Header)
+
+        control.insertItem(0, tab2)
+        compare(tab2.index, 0)
+        compare(tab2.tabBar, control)
+        compare(tab2.position, TabBar.Footer)
+
+        compare(tab1.index, 1)
+
+        // insert in the middle
+        var tab3 = createTemporaryObject(attachedButton, testCase)
+        compare(tab3.index, -1)
+        compare(tab3.tabBar, null)
+        compare(tab3.position, TabBar.Header)
+
+        control.insertItem(1, tab3)
+        compare(tab3.index, 1)
+        compare(tab3.tabBar, control)
+        compare(tab3.position, TabBar.Footer)
+
+        compare(tab2.index, 0)
+        compare(tab1.index, 2)
+
+        // insert in the end
+        var tab4 = createTemporaryObject(attachedButton, testCase)
+        compare(tab4.index, -1)
+        compare(tab4.tabBar, null)
+        compare(tab4.position, TabBar.Header)
+
+        control.insertItem(-1, tab4)
+        compare(tab4.index, 3)
+        compare(tab4.tabBar, control)
+        compare(tab4.position, TabBar.Footer)
+
+        compare(tab2.index, 0)
+        compare(tab3.index, 1)
+        compare(tab1.index, 2)
+
+        // move forwards
+        control.moveItem(0, 1)
+        compare(tab3.index, 0)
+        compare(tab2.index, 1)
+        compare(tab1.index, 2)
+        compare(tab4.index, 3)
+
+        control.moveItem(0, 2)
+        compare(tab2.index, 0)
+        compare(tab1.index, 1)
+        compare(tab3.index, 2)
+        compare(tab4.index, 3)
+
+        control.moveItem(1, 3)
+        compare(tab2.index, 0)
+        compare(tab3.index, 1)
+        compare(tab4.index, 2)
+        compare(tab1.index, 3)
+
+        // move backwards
+        control.moveItem(3, 2)
+        compare(tab2.index, 0)
+        compare(tab3.index, 1)
+        compare(tab1.index, 2)
+        compare(tab4.index, 3)
+
+        control.moveItem(3, 1)
+        compare(tab2.index, 0)
+        compare(tab4.index, 1)
+        compare(tab3.index, 2)
+        compare(tab1.index, 3)
+
+        // remove from the beginning
+        control.removeItem(0)
+        compare(tab2.index, -1)
+        compare(tab2.tabBar, null)
+        compare(tab2.position, TabBar.Header)
+
+        compare(tab4.index, 0)
+        compare(tab3.index, 1)
+        compare(tab1.index, 2)
+
+        // remove from the middle
+        control.removeItem(1)
+        compare(tab3.index, -1)
+        compare(tab3.tabBar, null)
+        compare(tab3.position, TabBar.Header)
+
+        compare(tab4.index, 0)
+        compare(tab1.index, 1)
+    }
 }
