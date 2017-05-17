@@ -99,6 +99,7 @@ TestCase {
         verify(acceptedSpy.valid)
         control.accept()
         compare(acceptedSpy.count, 1)
+        compare(control.result, Dialog.Accepted)
 
         tryCompare(control, "visible", false)
     }
@@ -118,6 +119,7 @@ TestCase {
         verify(rejectedSpy.valid)
         control.reject()
         compare(rejectedSpy.count, 1)
+        compare(control.result, Dialog.Rejected)
 
         tryCompare(control, "visible", false)
 

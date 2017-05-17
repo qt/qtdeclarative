@@ -60,13 +60,14 @@ class QQuickDialogPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickDialog)
 
 public:
-    QQuickDialogPrivate() : buttonBox(nullptr) { }
+    QQuickDialogPrivate() : result(0), buttonBox(nullptr) { }
 
     static QQuickDialogPrivate *get(QQuickDialog *dialog)
     {
         return dialog->d_func();
     }
 
+    int result;
     QString title;
     QQuickDialogButtonBox *buttonBox;
     QScopedPointer<QQuickPageLayout> layout;

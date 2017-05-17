@@ -62,6 +62,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
+    Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL REVISION 3)
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
 
 public:
@@ -79,9 +80,16 @@ public:
     QPlatformDialogHelper::StandardButtons standardButtons() const;
     void setStandardButtons(QPlatformDialogHelper::StandardButtons buttons);
 
+    enum StandardCode { Rejected, Accepted };
+    Q_ENUM(StandardCode)
+
+    int result() const;
+    void setResult(int result);
+
 public Q_SLOTS:
-    void accept();
-    void reject();
+    virtual void accept();
+    virtual void reject();
+    virtual void done(int result);
 
 Q_SIGNALS:
     void accepted();
@@ -91,6 +99,7 @@ Q_SIGNALS:
     void headerChanged();
     void footerChanged();
     void standardButtonsChanged();
+    Q_REVISION(3) void resultChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;

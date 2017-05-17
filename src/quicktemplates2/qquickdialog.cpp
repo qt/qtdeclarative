@@ -301,16 +301,43 @@ void QQuickDialog::setStandardButtons(QPlatformDialogHelper::StandardButtons but
 }
 
 /*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty int QtQuick.Controls::Dialog::result
+
+    This property holds the result code.
+
+    Standard result codes:
+    \value Dialog.Accepted The dialog was accepted.
+    \value Dialog.Rejected The dialog was rejected.
+
+    \sa accept(), reject(), done()
+*/
+int QQuickDialog::result() const
+{
+    Q_D(const QQuickDialog);
+    return d->result;
+}
+
+void QQuickDialog::setResult(int result)
+{
+    Q_D(QQuickDialog);
+    if (d->result == result)
+        return;
+
+    d->result = result;
+    emit resultChanged();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::Dialog::accept()
 
     Closes the dialog and emits the \l accepted() signal.
 
-    \sa reject()
+    \sa reject(), done()
 */
 void QQuickDialog::accept()
 {
-    close();
-    emit accepted();
+    done(Accepted);
 }
 
 /*!
@@ -318,12 +345,32 @@ void QQuickDialog::accept()
 
     Closes the dialog and emits the \l rejected() signal.
 
-    \sa accept()
+    \sa accept(), done()
 */
 void QQuickDialog::reject()
 {
+    done(Rejected);
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlmethod void Qt.labs.platform::Dialog::done(int result)
+
+    Closes the dialog, sets the \a result, and emits \l accepted() or
+    \l rejected() depending on whether the result is \c Dialog.Accepted
+    or \c Dialog.Rejected, respectively.
+
+    \sa accept(), reject(), result
+*/
+void QQuickDialog::done(int result)
+{
     close();
-    emit rejected();
+    setResult(result);
+
+    if (result == Accepted)
+        emit accepted();
+    else if (result == Rejected)
+        emit rejected();
 }
 
 void QQuickDialog::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
