@@ -98,6 +98,9 @@ Q_SIGNALS:
     void accepted();
     void rejected();
     void helpRequested();
+    Q_REVISION(3) void applied();
+    Q_REVISION(3) void reset();
+    Q_REVISION(3) void discarded();
     void clicked(QQuickAbstractButton *button);
 
     void positionChanged();

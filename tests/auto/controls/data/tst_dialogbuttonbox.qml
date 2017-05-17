@@ -159,10 +159,10 @@ TestCase {
             { tag: "Save", standardButton: DialogButtonBox.Save, buttonRole: DialogButtonBox.AcceptRole, signalName: "accepted" },
             { tag: "Cancel", standardButton: DialogButtonBox.Cancel, buttonRole: DialogButtonBox.RejectRole, signalName: "rejected" },
             { tag: "Close", standardButton: DialogButtonBox.Close, buttonRole: DialogButtonBox.RejectRole, signalName: "rejected" },
-            { tag: "Discard", standardButton: DialogButtonBox.Discard, buttonRole: DialogButtonBox.DestructiveRole },
-            { tag: "Apply", standardButton: DialogButtonBox.Apply, buttonRole: DialogButtonBox.ApplyRole },
-            { tag: "Reset", standardButton: DialogButtonBox.Reset, buttonRole: DialogButtonBox.ResetRole },
-            { tag: "RestoreDefaults", standardButton: DialogButtonBox.RestoreDefaults, buttonRole: DialogButtonBox.ResetRole },
+            { tag: "Discard", standardButton: DialogButtonBox.Discard, buttonRole: DialogButtonBox.DestructiveRole, signalName: "discarded" },
+            { tag: "Apply", standardButton: DialogButtonBox.Apply, buttonRole: DialogButtonBox.ApplyRole, signalName: "applied" },
+            { tag: "Reset", standardButton: DialogButtonBox.Reset, buttonRole: DialogButtonBox.ResetRole, signalName: "reset" },
+            { tag: "RestoreDefaults", standardButton: DialogButtonBox.RestoreDefaults, buttonRole: DialogButtonBox.ResetRole, signalName: "reset" },
             { tag: "Help", standardButton: DialogButtonBox.Help, buttonRole: DialogButtonBox.HelpRole, signalName: "helpRequested" },
             { tag: "SaveAll", standardButton: DialogButtonBox.SaveAll, buttonRole: DialogButtonBox.AcceptRole, signalName: "accepted" },
             { tag: "Yes", standardButton: DialogButtonBox.Yes, buttonRole: DialogButtonBox.YesRole, signalName: "accepted" },
@@ -188,11 +188,11 @@ TestCase {
         var clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickedSpy.valid)
         var roleSpy = signalSpy.createObject(control, {target: control, signalName: data.signalName})
-        compare(roleSpy.valid, !!data.signalName)
+        verify(roleSpy.valid)
 
         button.clicked()
         compare(clickedSpy.count, 1)
         compare(clickedSpy.signalArguments[0][0], button)
-        compare(roleSpy.count, !!data.signalName ? 1 : 0)
+        compare(roleSpy.count, 1)
     }
 }

@@ -122,6 +122,36 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::DialogButtonBox::applied()
+
+    This signal is emitted when a button defined with the \c ApplyRole is
+    clicked.
+
+    \sa discarded(), reset()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::DialogButtonBox::reset()
+
+    This signal is emitted when a button defined with the \c ResetRole is
+    clicked.
+
+    \sa discarded(), applied()
+*/
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlsignal QtQuick.Controls::DialogButtonBox::discarded()
+
+    This signal is emitted when a button defined with the \c DiscardRole is
+    clicked.
+
+    \sa reset(), applied()
+*/
+
+/*!
     \qmlsignal QtQuick.Controls::DialogButtonBox::helpRequested()
 
     This signal is emitted when a button defined with the \c HelpRole is clicked.
@@ -299,6 +329,15 @@ void QQuickDialogButtonBoxPrivate::handleClick()
     case QPlatformDialogHelper::RejectRole:
     case QPlatformDialogHelper::NoRole:
         emit q->rejected();
+        break;
+    case QPlatformDialogHelper::ApplyRole:
+        emit q->applied();
+        break;
+    case QPlatformDialogHelper::ResetRole:
+        emit q->reset();
+        break;
+    case QPlatformDialogHelper::DestructiveRole:
+        emit q->discarded();
         break;
     case QPlatformDialogHelper::HelpRole:
         emit q->helpRequested();
