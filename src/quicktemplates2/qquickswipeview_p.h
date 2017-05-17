@@ -84,6 +84,8 @@ Q_SIGNALS:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemAdded(int index, QQuickItem *item) override;
+    void itemMoved(int index, QQuickItem *item) override;
+    void itemRemoved(int index, QQuickItem *item) override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
@@ -107,7 +109,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeViewAttached : public QObject
 
 public:
     explicit QQuickSwipeViewAttached(QObject *parent = nullptr);
-    ~QQuickSwipeViewAttached();
 
     int index() const;
     bool isCurrentItem() const;
