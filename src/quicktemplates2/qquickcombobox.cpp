@@ -672,7 +672,15 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
 
 QQuickComboBox::~QQuickComboBox()
 {
-    setPopup(nullptr);
+    Q_D(QQuickComboBox);
+    // Disconnect visibleChanged() to avoid a spurious highlightedIndexChanged() signal
+    // emission during the destruction of the (visible) popup. (QTBUG-57650)
+    QObjectPrivate::disconnect(d->popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
+
+    // Delete the popup directly instead of calling setPopup(nullptr) to avoid calling
+    // destroyDelegate(popup) and potentially accessing a destroyed QML context. (QTBUG-50992)
+    delete d->popup;
+    d->popup = nullptr;
 }
 
 /*!
