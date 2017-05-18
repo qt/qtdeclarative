@@ -349,13 +349,18 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         }
     } else {
         bool containsReleasedPoints = event->isReleaseEvent();
-        if (!active() && !containsReleasedPoints) {
+        if (!active()) {
             // Verify that at least one of the points has moved beyond threshold needed to activate the handler
             for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
-                if (QQuickWindowPrivate::dragOverThreshold(point)) {
-                    if (grabPoints(m_currentPoints))
-                        setActive(true);
+                if (!containsReleasedPoints && QQuickWindowPrivate::dragOverThreshold(point) && grabPoints(m_currentPoints)) {
+                    setActive(true);
                     break;
+                } else {
+                    setPassiveGrab(point);
+                }
+                if (point->state() == QQuickEventPoint::Pressed) {
+                    point->setAccepted(false); // don't stop propagation
+                    setPassiveGrab(point);
                 }
             }
             if (!active())

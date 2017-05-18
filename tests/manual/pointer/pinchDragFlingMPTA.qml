@@ -92,6 +92,7 @@ Rectangle {
     }
     Text {
         anchors.bottom: parent.bottom
-        text: pinch3.active ? getTransformationDetails(container, pinch3) : "Pinch with 3 fingers to scale, rotate and translate"
+        text: pinch3.active ? getTransformationDetails(container, pinch3) :
+            "Pinch with 3 fingers to scale, rotate and translate\nHold down Meta to drag with one finger or mouse"
     }
 }
