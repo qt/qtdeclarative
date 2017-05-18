@@ -49,6 +49,8 @@ private slots:
 
     void select_data();
     void select();
+
+    void platformSelectors();
 };
 
 void tst_QQuickStyleSelector::initTestCase()
@@ -137,6 +139,24 @@ void tst_QQuickStyleSelector::select()
     QQuickStyleSelector selector;
     selector.setBaseUrl(dataDirectoryUrl());
     QCOMPARE(selector.select(file), expected);
+}
+
+void tst_QQuickStyleSelector::platformSelectors()
+{
+    QQuickStyle::setStyle(QDir(dataDirectory()).filePath("PlatformStyle"));
+
+    QQuickStyleSelector selector;
+    selector.setBaseUrl(dataDirectoryUrl());
+
+#if defined(Q_OS_LINUX)
+    QCOMPARE(selector.select("Button.qml"), testFileUrl("PlatformStyle/+linux/Button.qml").toString());
+#elif defined(Q_OS_MACOS)
+    QCOMPARE(selector.select("Button.qml"), testFileUrl("PlatformStyle/+macos/Button.qml").toString());
+#elif defined(Q_OS_WIN)
+    QCOMPARE(selector.select("Button.qml"), testFileUrl("PlatformStyle/+windows/Button.qml").toString());
+#else
+    QCOMPARE(selector.select("Button.qml"), testFileUrl("PlatformStyle/Button.qml").toString());
+#endif
 }
 
 QTEST_MAIN(tst_QQuickStyleSelector)

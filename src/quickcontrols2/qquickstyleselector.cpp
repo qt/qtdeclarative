@@ -65,13 +65,21 @@ static QString ensureSlash(const QString &path)
     return path + QLatin1Char('/');
 }
 
+static QStringList prefixedPlatformSelectors(const QChar &prefix)
+{
+    QStringList selectors = QFileSelectorPrivate::platformSelectors();
+    for (int i = 0; i < selectors.count(); ++i)
+        selectors[i].prepend(prefix);
+    return selectors;
+}
+
 static QStringList allSelectors(const QString &style = QString())
 {
-    static const QStringList platformSelectors = QFileSelectorPrivate::platformSelectors();
+    static const QStringList platformSelectors = prefixedPlatformSelectors(QLatin1Char('+'));
     QStringList selectors = platformSelectors;
     const QString locale = QLocale().name();
     if (!locale.isEmpty())
-        selectors += locale;
+        selectors += QLatin1Char('+') + locale;
     if (!style.isEmpty())
         selectors.prepend(style);
     return selectors;
