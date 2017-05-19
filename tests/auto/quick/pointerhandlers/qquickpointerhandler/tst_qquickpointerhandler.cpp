@@ -26,38 +26,30 @@
 **
 ****************************************************************************/
 
-
 #include <QtTest/QtTest>
 
+#include <private/qdebug_p.h>
 #include <QtGui/qstylehints.h>
-
-#include <QtQuick/qquickview.h>
-#include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qquickmousearea_p.h>
-#include <QtQuick/private/qquickmultipointtoucharea_p.h>
-#include <QtQuick/private/qquickpincharea_p.h>
-#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
-#include <qpa/qwindowsysteminterface.h>
-
-#include <private/qquickwindow_p.h>
-
-#include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlproperty.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickview.h>
 
 #include "../../../shared/util.h"
 #include "../../shared/viewtestutil.h"
 
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
-struct Event
+class Event
 {
+    Q_GADGET
+public:
     enum Destination {
         FilterDestination,
         MouseDestination,
         TouchDestination,
         HandlerDestination
     };
+    Q_ENUM(Destination)
 
     Event(Destination d, QEvent::Type t, Qt::TouchPointState s, QPointF item, QPointF scene)
         : destination(d), type(t), state(s), posWrtItem(item), posWrtScene(scene)
@@ -66,17 +58,25 @@ struct Event
     Destination destination;
     QEvent::Type type;
     Qt::TouchPointState state;
-
     QPointF posWrtItem;
     QPointF posWrtScene;
-
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug dbg, const struct Event &event) {
+QDebug operator<<(QDebug dbg, const class Event &event) {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
-    dbg << "Event(" << event.type << " @" << event.posWrtScene << ")";
+    dbg << "Event(";
+    QtDebugUtils::formatQEnum(dbg, event.destination);
+    dbg << ' ';
+    QtDebugUtils::formatQEnum(dbg, event.type);
+    dbg << ' ';
+    QtDebugUtils::formatQEnum(dbg, event.state);
+    dbg << " @ ";
+    QtDebugUtils::formatQPoint(dbg, event.posWrtItem);
+    dbg << " S ";
+    QtDebugUtils::formatQPoint(dbg, event.posWrtScene);
+    dbg << ')';
     return dbg;
 }
 #endif
