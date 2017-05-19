@@ -2117,8 +2117,10 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
 {
     // the list of devices should be very small so a linear search should be ok
     for (QQuickPointerEvent *e: pointerEventInstances) {
-        if (e->device() == device)
+        if (e->device() == device) {
+            device->m_event = e;
             return e;
+        }
     }
 
     QQuickPointerEvent *ev = nullptr;
@@ -2136,6 +2138,7 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
         break;
     }
     pointerEventInstances << ev;
+    device->m_event = ev;
     return ev;
 }
 
