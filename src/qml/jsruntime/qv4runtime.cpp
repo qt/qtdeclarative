@@ -554,7 +554,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
         if (!sright->d()->length())
             return sleft->asReturnedValue();
         MemoryManager *mm = engine->memoryManager;
-        return (mm->alloc<String>(mm, sleft->d(), sright->d()))->asReturnedValue();
+        return (mm->alloc<String>(sleft->d(), sright->d()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -586,7 +586,7 @@ QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Valu
     if (!sright->d()->length())
         return pleft->asReturnedValue();
     MemoryManager *mm = engine->memoryManager;
-    return (mm->alloc<String>(mm, sleft->d(), sright->d()))->asReturnedValue();
+    return (mm->alloc<String>(sleft->d(), sright->d()))->asReturnedValue();
 }
 
 void Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)

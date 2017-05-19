@@ -75,10 +75,9 @@ bool String::isEqualTo(Managed *t, Managed *o)
 }
 
 
-void Heap::String::init(MemoryManager *mm, const QString &t)
+void Heap::String::init(const QString &t)
 {
     Base::init();
-    this->mm = mm;
 
     subtype = String::StringType_Unknown;
 
@@ -90,10 +89,9 @@ void Heap::String::init(MemoryManager *mm, const QString &t)
     len = text->size;
 }
 
-void Heap::String::init(MemoryManager *mm, String *l, String *r)
+void Heap::String::init(String *l, String *r)
 {
     Base::init();
-    this->mm = mm;
 
     subtype = String::StringType_Unknown;
 
@@ -116,7 +114,7 @@ void Heap::String::init(MemoryManager *mm, String *l, String *r)
 
 void Heap::String::destroy() {
     if (!largestSubLength) {
-        mm->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
+        internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
         if (!text->ref.deref())
             QStringData::deallocate(text);
     }
@@ -161,7 +159,7 @@ void Heap::String::simplifyString() const
     text->ref.ref();
     identifier = 0;
     largestSubLength = 0;
-    mm->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
+    internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
 }
 
 void Heap::String::append(const String *data, QChar *ch)

@@ -72,8 +72,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     };
 
 #ifndef V4_BOOTSTRAP
-    void init(MemoryManager *mm, const QString &text);
-    void init(MemoryManager *mm, String *l, String *n);
+    void init(const QString &text);
+    void init(String *l, String *n);
     void destroy();
     void simplifyString() const;
     int length() const {
@@ -126,7 +126,6 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     mutable uint stringHash;
     mutable uint largestSubLength;
     uint len;
-    MemoryManager *mm;
 private:
     static void append(const String *data, QChar *ch);
 #endif

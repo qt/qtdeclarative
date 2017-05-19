@@ -261,7 +261,7 @@ public:
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
         o->internalClass = ManagedType::defaultInternalClass(engine);
         Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        o->init(this, arg1);
+        o->init(arg1);
         return o;
     }
 
