@@ -300,7 +300,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
 {
-    Heap::ExecutionContext::init(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext);
+    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_QmlContext);
     outer = outerContext->d();
     strictMode = false;
     callData = outer->callData;
@@ -330,7 +330,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     qml->QV4::Object::put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
     qml->setReadOnly(true);
 
-    Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    Heap::QmlContext *c = scope.engine->memoryManager->alloc<QmlContext>(parent, qml);
     Q_ASSERT(c->vtable() == staticVTable());
     return c;
 }
@@ -340,7 +340,7 @@ Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *
     Scope scope(parent);
 
     Scoped<QmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QmlContextWrapper>(context, scopeObject));
-    Heap::QmlContext *c = parent->d()->engine->memoryManager->alloc<QmlContext>(parent, qml);
+    Heap::QmlContext *c = scope.engine->memoryManager->alloc<QmlContext>(parent, qml);
     Q_ASSERT(c->vtable() == staticVTable());
     return c;
 }

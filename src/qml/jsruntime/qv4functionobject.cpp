@@ -122,7 +122,7 @@ void FunctionObject::init(String *n, bool createProto)
 
     Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()) == Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        ScopedObject proto(s, scope()->engine->newObject(s.engine->internalClasses[EngineBase::Class_ObjectProto], s.engine->objectPrototype()));
+        ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses[EngineBase::Class_ObjectProto], s.engine->objectPrototype()));
         Q_ASSERT(s.engine->internalClasses[EngineBase::Class_ObjectProto]->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
         *proto->propertyData(Heap::FunctionObject::Index_ProtoConstructor) = this->asReturnedValue();
         *propertyData(Heap::FunctionObject::Index_Prototype) = proto.asReturnedValue();
@@ -136,7 +136,7 @@ void FunctionObject::init(String *n, bool createProto)
 
 ReturnedValue FunctionObject::name() const
 {
-    return get(scope()->engine->id_name());
+    return get(scope()->internalClass->engine->id_name());
 }
 
 void FunctionObject::construct(const Managed *that, Scope &scope, CallData *)
@@ -160,7 +160,7 @@ void FunctionObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
-    return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
+    return scope->engine()->memoryManager->allocObject<ScriptFunction>(scope, function);
 }
 
 bool FunctionObject::isBinding() const
@@ -439,8 +439,8 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
         ScopedProperty pd(s);
         pd->value = s.engine->thrower();
         pd->set = s.engine->thrower();
-        f->insertMember(scope->d()->engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        f->insertMember(scope->d()->engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        f->insertMember(s.engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
@@ -497,7 +497,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
+    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext();
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);

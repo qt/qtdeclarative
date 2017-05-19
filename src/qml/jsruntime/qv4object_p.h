@@ -273,8 +273,6 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void insertMember(String *s, const Property *p, PropertyAttributes attributes);
 
-    inline ExecutionEngine *engine() const { return internalClass()->engine; }
-
     bool isExtensible() const { return d()->internalClass->extensible; }
 
     // Array handling

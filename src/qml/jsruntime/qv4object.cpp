@@ -254,7 +254,7 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
     if (idx != UINT_MAX)
         return getOwnProperty(idx, attrs, p);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier();
     Identifier *id = name->identifier();
 
     uint member = internalClass()->find(id);
@@ -299,7 +299,7 @@ Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier();
     Identifier *id = name->identifier();
 
     Heap::Object *o = d();
@@ -377,7 +377,7 @@ bool Object::hasOwnProperty(String *name) const
     if (idx != UINT_MAX)
         return hasOwnProperty(idx);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier();
     Identifier *id = name->identifier();
 
     if (internalClass()->find(id) < UINT_MAX)
@@ -437,7 +437,7 @@ PropertyAttributes Object::query(const Managed *m, String *name)
     if (idx != UINT_MAX)
         return queryIndexed(m, idx);
 
-    name->makeIdentifier(m->internalClass()->engine);
+    name->makeIdentifier();
     Identifier *id = name->identifier();
 
     const Object *o = static_cast<const Object *>(m);
@@ -640,10 +640,10 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
     if (idx != UINT_MAX)
         return getIndexed(idx, hasProperty);
 
-    Scope scope(engine());
-    name->makeIdentifier(scope.engine);
+    name->makeIdentifier();
     Identifier *id = name->identifier();
 
+    Scope scope(engine());
     ScopedObject o(scope, this);
     while (o) {
         uint idx = o->internalClass()->find(id);
@@ -708,7 +708,7 @@ void Object::internalPut(String *name, const Value &value)
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier();
     Identifier *id = name->identifier();
 
     uint member = internalClass()->find(id);
@@ -862,7 +862,7 @@ bool Object::internalDeleteProperty(String *name)
     if (idx != UINT_MAX)
         return deleteIndexedProperty(idx);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier();
 
     uint memberIdx = internalClass()->find(name->identifier());
     if (memberIdx != UINT_MAX) {
@@ -901,7 +901,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         return __defineOwnProperty__(engine, idx, p, attrs);
 
     Scope scope(engine);
-    name->makeIdentifier(scope.engine);
+    name->makeIdentifier();
 
     uint memberIndex;
 

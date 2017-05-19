@@ -199,6 +199,7 @@ public:
     Q_MANAGED_TYPE(Invalid)
 
     InternalClass *internalClass() const { return d()->internalClass; }
+    inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
     bool isListType() const { return d()->vtable()->type == Type_QmlSequence; }
 

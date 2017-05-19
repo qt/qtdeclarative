@@ -206,13 +206,13 @@ public:
     Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
-    QV4::Heap::CallContext *allocSimpleCallContext(QV4::ExecutionEngine *v4)
+    QV4::Heap::CallContext *allocSimpleCallContext()
     {
         Heap::CallContext *ctxt = stackAllocator.allocate();
         memset(ctxt, 0, sizeof(Heap::CallContext));
         ctxt->internalClass = CallContext::defaultInternalClass(engine);
         Q_ASSERT(ctxt->internalClass && ctxt->internalClass->vtable);
-        ctxt->init(v4);
+        ctxt->init();
         return ctxt;
 
     }

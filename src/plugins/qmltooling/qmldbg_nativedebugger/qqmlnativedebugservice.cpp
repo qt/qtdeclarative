@@ -465,7 +465,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     }
     TRACE_PROTOCOL("Context: " << executionContext);
 
-    QV4::ExecutionEngine *engine = executionContext->d()->engine;
+    QV4::ExecutionEngine *engine = executionContext->engine();
     if (!engine) {
         setError(response, QStringLiteral("No execution engine passed"));
         return;
@@ -517,7 +517,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
     }
     TRACE_PROTOCOL("Context: " << executionContext);
 
-    QV4::ExecutionEngine *engine = executionContext->d()->engine;
+    QV4::ExecutionEngine *engine = executionContext->engine();
     if (!engine) {
         setError(response, QStringLiteral("No execution engine passed"));
         return;
@@ -669,7 +669,7 @@ QV4::Function *NativeDebugger::getFunction() const
     if (QV4::Function *function = context->getFunction())
         return function;
     else
-        return context->d()->engine->globalCode;
+        return m_engine->globalCode;
 }
 
 void NativeDebugger::pauseAndWait()

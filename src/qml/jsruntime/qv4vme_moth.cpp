@@ -172,7 +172,7 @@ static QV4::Function *qt_v4ExtractFunction(QV4::ExecutionContext *context)
     if (QV4::Function *function = context->getFunction())
         return function;
     else
-        return context->d()->engine->globalCode;
+        return context->engine()->globalCode;
 }
 
 static void qt_v4TriggerBreakpoint(const Breakpoint &bp, QV4::Function *function)

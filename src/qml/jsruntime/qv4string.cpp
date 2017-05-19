@@ -141,12 +141,12 @@ uint String::toUInt(bool *ok) const
     return UINT_MAX;
 }
 
-void String::makeIdentifierImpl(ExecutionEngine *e) const
+void String::makeIdentifierImpl() const
 {
     if (d()->largestSubLength)
         d()->simplifyString();
     Q_ASSERT(!d()->largestSubLength);
-    e->identifierTable->identifier(this);
+    engine()->identifierTable->identifier(this);
 }
 
 void Heap::String::simplifyString() const
