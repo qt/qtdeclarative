@@ -501,6 +501,7 @@ public:
       : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
       , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name)
       , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId))
+      , m_event(nullptr)
     {
     }
 
@@ -512,6 +513,8 @@ public:
     int buttonCount() const { return m_buttonCount; }
     QString name() const { return m_name; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
+
+    QQuickPointerEvent *pointerEvent() const { return m_event; } // deprecated
 
     static QQuickPointerDevice *touchDevice(QTouchDevice *d);
     static QList<QQuickPointerDevice *> touchDevices();
@@ -526,6 +529,10 @@ private:
     int m_buttonCount;
     QString m_name;
     QPointingDeviceUniqueId m_uniqueId;
+
+    // the event instance used last time within the context of one window
+    QQuickPointerEvent *m_event; // deprecated
+    friend class QQuickWindowPrivate; // not needed after removing the above
 
     Q_DISABLE_COPY(QQuickPointerDevice)
 };
