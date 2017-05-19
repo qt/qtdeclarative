@@ -109,9 +109,9 @@ using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
-static ReturnedValue throwTypeError(CallContext *ctx)
+void throwTypeError(const BuiltinFunction *, Scope &scope, CallData *)
 {
-    return ctx->engine()->throwTypeError();
+    scope.result = scope.engine->throwTypeError();
 }
 
 

@@ -255,12 +255,8 @@ struct Q_QML_EXPORT Object: Managed {
         insertMember(name, value, Attr_Data|Attr_NotEnumerable);
     }
     void defineDefaultProperty(const QString &name, const Value &value);
-    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
-    void defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
-    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
-    void defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     void defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
                                 void (*setter)(const BuiltinFunction *, Scope &, CallData *));
     void defineAccessorProperty(String *name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),

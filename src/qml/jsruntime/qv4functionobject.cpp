@@ -460,42 +460,6 @@ InternalClass *ScriptFunction::classForConstructor() const
 }
 
 
-
-DEFINE_OBJECT_VTABLE(OldBuiltinFunction);
-
-void Heap::OldBuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *))
-{
-    Heap::FunctionObject::init(scope, name);
-    this->code = code;
-}
-
-void OldBuiltinFunction::construct(const Managed *f, Scope &scope, CallData *)
-{
-    scope.result = static_cast<const OldBuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
-}
-
-void OldBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    const OldBuiltinFunction *f = static_cast<const OldBuiltinFunction *>(that);
-    ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    ExecutionContextSaver ctxSaver(scope);
-
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
-    ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
-    ctx->callData = callData;
-    v4->pushContext(ctx);
-    Q_ASSERT(v4->current == ctx);
-
-    scope.result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext));
-    v4->memoryManager->freeSimpleCallContext();
-}
-
 DEFINE_OBJECT_VTABLE(BuiltinFunction);
 
 void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *))

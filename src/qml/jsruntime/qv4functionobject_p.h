@@ -192,21 +192,10 @@ struct FunctionPrototype: FunctionObject
     static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
-struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
-    V4_OBJECT2(OldBuiltinFunction, FunctionObject)
-
-    static void construct(const Managed *, Scope &scope, CallData *);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-};
-
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     V4_OBJECT2(BuiltinFunction, FunctionObject)
     V4_INTERNALCLASS(BuiltinFunction)
 
-    static Heap::OldBuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
-    {
-        return scope->engine()->memoryManager->allocObject<OldBuiltinFunction>(scope, name, code);
-    }
     static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *))
     {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
