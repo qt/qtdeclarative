@@ -792,6 +792,7 @@ void QQuickComboBox::setEditable(bool editable)
     }
 
     d->extra.value().editable = editable;
+    setAccessibleProperty("editable", editable);
     emit editableChanged();
 }
 
@@ -1590,8 +1591,10 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
     Q_D(QQuickComboBox);
     QQuickControl::accessibilityActiveChanged(active);
 
-    if (active)
+    if (active) {
         setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
+        setAccessibleProperty("editable", isEditable());
+    }
 }
 #endif //
 
