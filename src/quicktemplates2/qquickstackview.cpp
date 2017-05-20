@@ -787,6 +787,9 @@ void QQuickStackView::replace(QQmlV4Function *args)
 void QQuickStackView::clear()
 {
     Q_D(QQuickStackView);
+    if (d->elements.isEmpty())
+        return;
+
     d->setCurrentItem(nullptr);
     qDeleteAll(d->elements);
     d->elements.clear();

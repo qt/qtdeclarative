@@ -221,21 +221,33 @@ TestCase {
     function test_depth() {
         var control = createTemporaryObject(stackView, testCase)
         verify(control)
+        var depthSpy = signalSpy.createObject(control, {target: control, signalName: "depthChanged"})
+        verify(depthSpy.valid)
         compare(control.depth, 0)
         control.push(item, StackView.Immediate)
         compare(control.depth, 1)
+        compare(depthSpy.count, 1)
         control.clear()
         compare(control.depth, 0)
+        compare(depthSpy.count, 2)
         control.push(component, StackView.Immediate)
         compare(control.depth, 1)
+        compare(depthSpy.count, 3)
         control.push(component, StackView.Immediate)
         compare(control.depth, 2)
+        compare(depthSpy.count, 4)
         control.pop(StackView.Immediate)
         compare(control.depth, 1)
+        compare(depthSpy.count, 5)
         control.pop(StackView.Immediate) // ignored
         compare(control.depth, 1)
+        compare(depthSpy.count, 5)
         control.clear()
         compare(control.depth, 0)
+        compare(depthSpy.count, 6)
+        control.clear()
+        compare(control.depth, 0)
+        compare(depthSpy.count, 6)
     }
 
     function test_size() {
