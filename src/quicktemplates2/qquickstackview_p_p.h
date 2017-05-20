@@ -92,6 +92,7 @@ public:
 
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
     void setBusy(bool busy);
+    void depthChange();
 
     bool busy;
     QString operation;

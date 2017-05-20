@@ -517,7 +517,7 @@ void QQuickStackView::push(QQmlV4Function *args)
         exit = d->elements.top();
 
     if (d->pushElements(elements)) {
-        emit depthChanged();
+        d->depthChange();
         QQuickStackElement *enter = d->elements.top();
         d->startTransition(QQuickStackTransition::pushEnter(operation, enter, this),
                            QQuickStackTransition::pushExit(operation, exit, this),
@@ -612,7 +612,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
             d->removing.insert(exit);
             previousItem = exit->item;
         }
-        emit depthChanged();
+        d->depthChange();
         d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
                            QQuickStackTransition::popEnter(operation, enter, this),
                            operation == Immediate);
@@ -759,7 +759,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 
     if (exit != target ? d->replaceElements(target, elements) : d->pushElements(elements)) {
         if (depth != d->elements.count())
-            emit depthChanged();
+            d->depthChange();
         if (exit) {
             exit->removal = true;
             d->removing.insert(exit);
@@ -777,6 +777,21 @@ void QQuickStackView::replace(QQmlV4Function *args)
     } else {
         args->setReturnValue(QV4::Encode::null());
     }
+}
+
+/*!
+    \since QtQuick.Controls 2.3
+    \qmlproperty bool QtQuick.Controls::StackView::empty
+    \readonly
+
+    This property holds whether the stack is empty.
+
+    \sa depth
+*/
+bool QQuickStackView::isEmpty() const
+{
+    Q_D(const QQuickStackView);
+    return d->elements.isEmpty();
 }
 
 /*!
@@ -808,7 +823,7 @@ void QQuickStackView::clear(Operation operation)
     d->setCurrentItem(nullptr);
     qDeleteAll(d->elements);
     d->elements.clear();
-    emit depthChanged();
+    d->depthChange();
 }
 
 /*!
@@ -1012,7 +1027,7 @@ void QQuickStackView::componentComplete()
     if (!error.isEmpty()) {
         d->warn(error);
     } else if (d->pushElement(element)) {
-        emit depthChanged();
+        d->depthChange();
         d->setCurrentItem(element);
         element->setStatus(QQuickStackView::Active);
     }

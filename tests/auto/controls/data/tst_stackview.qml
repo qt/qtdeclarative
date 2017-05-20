@@ -222,20 +222,28 @@ TestCase {
         var control = createTemporaryObject(stackView, testCase)
         verify(control)
         compare(control.depth, 0)
+        compare(control.empty, true)
         control.push(item, StackView.Immediate)
         compare(control.depth, 1)
+        compare(control.empty, false)
         control.clear()
         compare(control.depth, 0)
+        compare(control.empty, true)
         control.push(component, StackView.Immediate)
         compare(control.depth, 1)
+        compare(control.empty, false)
         control.push(component, StackView.Immediate)
         compare(control.depth, 2)
+        compare(control.empty, false)
         control.pop(StackView.Immediate)
         compare(control.depth, 1)
+        compare(control.empty, false)
         control.pop(StackView.Immediate) // ignored
         compare(control.depth, 1)
+        compare(control.empty, false)
         control.clear()
         compare(control.depth, 0)
+        compare(control.empty, true)
     }
 
     function test_size() {

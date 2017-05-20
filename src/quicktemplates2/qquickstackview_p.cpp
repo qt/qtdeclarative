@@ -297,4 +297,12 @@ void QQuickStackViewPrivate::setBusy(bool b)
     emit q->busyChanged();
 }
 
+void QQuickStackViewPrivate::depthChange()
+{
+    Q_Q(QQuickStackView);
+    emit q->depthChanged();
+    if (elements.count() <= 1)
+        emit q->emptyChanged();
+}
+
 QT_END_NAMESPACE
