@@ -135,7 +135,7 @@ public:
     Q_INVOKABLE void replace(QQmlV4Function *args);
 
 public Q_SLOTS:
-    void clear();
+    void clear(Operation operation = Immediate);
 
 Q_SIGNALS:
     void busyChanged();

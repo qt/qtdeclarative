@@ -498,6 +498,24 @@ TestCase {
         compare(control.currentItem, item8)
     }
 
+    function test_clear() {
+        var control = createTemporaryObject(stackView, testCase)
+        verify(control)
+
+        control.push(component, StackView.Immediate)
+
+        control.clear()
+        compare(control.depth, 0)
+        compare(control.busy, false)
+
+        control.push(component, StackView.Immediate)
+
+        control.clear(StackView.PopTransition)
+        compare(control.depth, 0)
+        compare(control.busy, true)
+        tryCompare(control, "busy", false)
+    }
+
     function test_visibility_data() {
         return [
             {tag:"default transitions", properties: {}},

@@ -780,13 +780,31 @@ void QQuickStackView::replace(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::StackView::clear()
+    \qmlmethod void QtQuick.Controls::StackView::clear(transition)
 
-    Removes all items from the stack. No animations are applied.
+    Removes all items from the stack.
+
+    Since QtQuick.Controls 2.3, a \a transition can be optionally specified. Supported transitions:
+
+    \value StackView.Immediate Clear the stack immediately without any transition (default).
+    \value StackView.PushTransition Clear the stack with a push transition.
+    \value StackView.ReplaceTransition Clear the stack with a replace transition.
+    \value StackView.PopTransition Clear the stack with a pop transition.
 */
-void QQuickStackView::clear()
+void QQuickStackView::clear(Operation operation)
 {
     Q_D(QQuickStackView);
+    if (d->elements.isEmpty())
+        return;
+
+    if (operation != Immediate) {
+        QQuickStackElement *exit = d->elements.pop();
+        exit->removal = true;
+        d->removing.insert(exit);
+        d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
+                           QQuickStackTransition::popEnter(operation, nullptr, this), false);
+    }
+
     d->setCurrentItem(nullptr);
     qDeleteAll(d->elements);
     d->elements.clear();
