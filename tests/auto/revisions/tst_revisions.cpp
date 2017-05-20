@@ -46,6 +46,9 @@ class tst_revisions : public QObject
 private slots:
     void revisions_data();
     void revisions();
+
+    void window_data();
+    void window();
 };
 
 void tst_revisions::revisions_data()
@@ -75,6 +78,34 @@ void tst_revisions::revisions()
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+}
+
+void tst_revisions::window_data()
+{
+    QTest::addColumn<int>("revision");
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QString>("error");
+
+    // Qt 5.7: 2.0, Qt 5.8: 2.1
+    for (int i = 0; i <= 1; ++i)
+        QTest::newRow(qPrintable(QString("screen:2.%1").arg(i))) << i << "screen: null" << QString(":1 \"ApplicationWindow.screen\" is not available in QtQuick.Templates 2.%1").arg(i);
+
+    // Qt 5.9: 2.2, Qt 5.10: 2.3...
+    for (int i = 2; i <= QT_VERSION_MINOR - 7; ++i)
+        QTest::newRow(qPrintable(QString("screen:2.%1").arg(i))) << i << "screen: null" << "";
+}
+
+void tst_revisions::window()
+{
+    QFETCH(int, revision);
+    QFETCH(QString, qml);
+    QFETCH(QString, error);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString("import QtQuick.Templates 2.%1; ApplicationWindow { %2 }").arg(revision).arg(qml).toUtf8(), QUrl());
+    QScopedPointer<QObject> window(component.create());
+    QCOMPARE(window.isNull(), !error.isEmpty());
 }
 
 QTEST_MAIN(tst_revisions)

@@ -61,17 +61,11 @@ private slots:
     void init();
     void cleanup();
 
-    void calendar();
-    void calendar_data();
+    void qobjects();
+    void qobjects_data();
 
-    void controls();
-    void controls_data();
-
-    void material();
-    void material_data();
-
-    void universal();
-    void universal_data();
+    void qquickitems();
+    void qquickitems_data();
 
 private:
     QQmlEngine engine;
@@ -92,17 +86,6 @@ void tst_ObjectCount::cleanup()
 {
     qtHookData[QHooks::AddQObject] = 0;
     qtHookData[QHooks::RemoveQObject] = 0;
-}
-
-static void printItems(const QList<QQuickItem *> &items)
-{
-    std::cout << "RESULT tst_ObjectCount::" << QTest::currentTestFunction() << "():\"" << QTest::currentDataTag() << "\":" << std::endl;
-    std::cout << "     QQuickItems: " << items.count() << " (total of QObjects: " << qt_qobjects->count() << ")" << std::endl;
-
-    if (qt_verbose) {
-        for (QObject *object : qAsConst(*qt_qobjects))
-            qInfo() << "\t" << object;
-    }
 }
 
 static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList())
@@ -138,6 +121,14 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
     }
 }
 
+static void initTestRows(QQmlEngine *engine)
+{
+    addTestRows(engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRows(engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+}
+
+template <typename T>
 static void doBenchmark(QQmlEngine *engine, const QUrl &url)
 {
     QQmlComponent component(engine);
@@ -148,61 +139,42 @@ static void doBenchmark(QQmlEngine *engine, const QUrl &url)
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object.data(), qPrintable(component.errorString()));
 
-    QList<QQuickItem *> items;
-    for (QObject *object : qAsConst(*qt_qobjects)) {
-        QQuickItem *item = qobject_cast<QQuickItem *>(object);
-        if (item)
-            items += item;
+    QObjectList objects;
+    for (QObject *object : qAsConst(*qt_qobjects())) {
+        if (qobject_cast<T *>(object))
+            objects += object;
     }
-    printItems(items);
+
+    if (qt_verbose) {
+        for (QObject *object : objects)
+            qInfo() << "\t" << object;
+    }
+
+    QTest::setBenchmarkResult(objects.count(), QTest::Events);
 }
 
-void tst_ObjectCount::calendar()
+void tst_ObjectCount::qobjects()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark<QObject>(&engine, url);
 }
 
-void tst_ObjectCount::calendar_data()
+void tst_ObjectCount::qobjects_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "calendar", "Qt/labs/calendar");
+    initTestRows(&engine);
 }
 
-void tst_ObjectCount::controls()
+void tst_ObjectCount::qquickitems()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark<QQuickItem>(&engine, url);
 }
 
-void tst_ObjectCount::controls_data()
+void tst_ObjectCount::qquickitems_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
-}
-
-void tst_ObjectCount::material()
-{
-    QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
-}
-
-void tst_ObjectCount::material_data()
-{
-    QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
-}
-
-void tst_ObjectCount::universal()
-{
-    QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
-}
-
-void tst_ObjectCount::universal_data()
-{
-    QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    initTestRows(&engine);
 }
 
 QTEST_MAIN(tst_ObjectCount)

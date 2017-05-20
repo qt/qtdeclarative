@@ -216,6 +216,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickTextInput, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextEdit, 7>(uri, 2, 0);
     qmlRegisterRevision<QQuickWindow, 2>(uri, 2, 0);
+    qmlRegisterRevision<QWindow, 3>(uri, 2, 0);
 
     // QtQuick.Templates 2.1 (new types and revisions in Qt 5.8)
     qmlRegisterType<QQuickButtonGroup, 1>(uri, 2, 1, "ButtonGroup");
@@ -263,6 +264,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // make revisioned properties available to their subclasses (synced with Qt 5.9)
     qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
     qmlRegisterRevision<QQuickTextInput, 9>(uri, 2, 2);
+    qmlRegisterRevision<QQuickWindowQmlImpl, 2>(uri, 2, 2);
 
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");

@@ -31,7 +31,7 @@
 
     The Default style is a basic all-round style.
 
-    The Default style a simple and light-weight style that offers the maximum
+    The Default style is a simple and light-weight style that offers the maximum
     performance for Qt Quick Controls 2. It is built with a minimal amount of Qt
     Quick primitives, and keeps animations and transitions to the minimum.
 

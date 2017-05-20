@@ -108,7 +108,7 @@ public:
 
     QQuickItem *getContentItem() override;
 
-    QQuickFlickable *ensureFlickable();
+    QQuickFlickable *ensureFlickable(bool content);
     bool setFlickable(QQuickFlickable *flickable, bool content);
 
     void updateContentWidth();
@@ -146,14 +146,14 @@ QQuickScrollViewPrivate::QQuickScrollViewPrivate()
 
 QQuickItem *QQuickScrollViewPrivate::getContentItem()
 {
-    return ensureFlickable();
+    return ensureFlickable(false);
 }
 
-QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable()
+QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(bool content)
 {
     Q_Q(QQuickScrollView);
     if (!flickable)
-        setFlickable(new QQuickFlickable(q), true);
+        setFlickable(new QQuickFlickable(q), content);
     return flickable;
 }
 
@@ -271,7 +271,7 @@ void QQuickScrollViewPrivate::contentData_append(QQmlListProperty<QObject> *prop
     if (!p->flickable && p->setFlickable(qobject_cast<QQuickFlickable *>(obj), true))
         return;
 
-    QQuickFlickable *flickable = p->ensureFlickable();
+    QQuickFlickable *flickable = p->ensureFlickable(true);
     Q_ASSERT(flickable);
     QQmlListProperty<QObject> data = flickable->flickableData();
     data.append(&data, obj);
@@ -313,7 +313,7 @@ void QQuickScrollViewPrivate::contentChildren_append(QQmlListProperty<QQuickItem
     if (!p->flickable)
         p->setFlickable(qobject_cast<QQuickFlickable *>(item), true);
 
-    QQuickFlickable *flickable = p->ensureFlickable();
+    QQuickFlickable *flickable = p->ensureFlickable(true);
     Q_ASSERT(flickable);
     QQmlListProperty<QQuickItem> children = flickable->flickableChildren();
     children.append(&children, item);
@@ -552,7 +552,7 @@ void QQuickScrollView::componentComplete()
     Q_D(QQuickScrollView);
     QQuickControl::componentComplete();
     if (!d->contentItem)
-        d->ensureFlickable();
+        d->ensureFlickable(true);
 }
 
 void QQuickScrollView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)

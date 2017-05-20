@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import QtQuick.Window 2.2
+import QtQuick.Window 2.3
 import QtQuick.Templates 2.3 as T
 import QtQuick.Controls.Material 2.3
 

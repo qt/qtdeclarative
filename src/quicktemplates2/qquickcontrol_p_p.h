@@ -95,6 +95,7 @@ public:
     virtual void resizeContent();
 
     virtual QQuickItem *getContentItem();
+    void setContentItem_helper(QQuickItem *item, bool notify = true);
 
 #if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;

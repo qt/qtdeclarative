@@ -2,7 +2,7 @@ HEADERS += \
     $$PWD/qquickdefaultbusyindicator_p.h \
     $$PWD/qquickdefaultdial_p.h \
     $$PWD/qquickdefaultprogressbar_p.h \
-    $$PWD/qquickdefaultstyle_p.h \
+    $$PWD/qquickdefaultstyle_p.h
 
 SOURCES += \
     $$PWD/qquickdefaultbusyindicator.cpp \
