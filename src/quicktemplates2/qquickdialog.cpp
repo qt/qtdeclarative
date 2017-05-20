@@ -438,7 +438,7 @@ void QQuickDialog::reject()
 
 /*!
     \since QtQuick.Controls 2.3
-    \qmlmethod void Qt.labs.platform::Dialog::done(int result)
+    \qmlmethod void QtQuick.Controls::Dialog::done(int result)
 
     Closes the dialog, sets the \a result, and emits \l accepted() or
     \l rejected() depending on whether the result is \c Dialog.Accepted
