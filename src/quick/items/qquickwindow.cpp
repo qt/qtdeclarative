@@ -503,6 +503,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , lastWheelEventAccepted(false)
     , componentCompleted(true)
     , allowChildEventFiltering(true)
+    , allowDoubleClick(true)
     , lastFocusReason(Qt::OtherFocusReason)
     , renderTarget(0)
     , renderTargetId(0)
@@ -2092,7 +2093,8 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
     case QEvent::MouseButtonDblClick:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
                               event->button(), event->buttons());
-        deliverPointerEvent(pointerEventInstance(event));
+        if (allowDoubleClick)
+            deliverPointerEvent(pointerEventInstance(event));
         break;
     case QEvent::MouseMove:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
@@ -2404,7 +2406,11 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     pointerEvent->localize(item);
 
     // Let the Item's handlers (if any) have the event first.
-    itemPrivate->handlePointerEvent(pointerEvent);
+    // However, double click should never be delivered to handlers.
+    if (!pointerEvent->isDoubleClickEvent()) {
+        itemPrivate->handlePointerEvent(pointerEvent);
+        allowDoubleClick = !(pointerEvent->asPointerMouseEvent() && pointerEvent->isPressEvent() && pointerEvent->allPointsAccepted());
+    }
     if (handlersOnly)
         return;
     if (pointerEvent->allPointsAccepted() && !pointerEvent->isReleaseEvent())

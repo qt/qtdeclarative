@@ -879,8 +879,9 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     Qt::TouchPointState state = Qt::TouchPointStationary;
     switch (ev->type()) {
     case QEvent::MouseButtonPress:
-    case QEvent::MouseButtonDblClick:
         m_mousePoint->clearPassiveGrabbers();
+        Q_FALLTHROUGH();
+    case QEvent::MouseButtonDblClick:
         state = Qt::TouchPointPressed;
         break;
     case QEvent::MouseButtonRelease:
@@ -1053,6 +1054,12 @@ bool QQuickPointerMouseEvent::isPressEvent() const
     auto me = static_cast<QMouseEvent*>(m_event);
     return ((me->type() == QEvent::MouseButtonPress || me->type() == QEvent::MouseButtonDblClick) &&
             (me->buttons() & me->button()) == me->buttons());
+}
+
+bool QQuickPointerMouseEvent::isDoubleClickEvent() const
+{
+    auto me = static_cast<QMouseEvent*>(m_event);
+    return (me->type() == QEvent::MouseButtonDblClick);
 }
 
 bool QQuickPointerMouseEvent::isUpdateEvent() const

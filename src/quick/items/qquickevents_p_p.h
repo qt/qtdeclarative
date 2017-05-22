@@ -407,6 +407,7 @@ public: // helpers for C++ only (during event delivery)
     virtual void localize(QQuickItem *target) = 0;
 
     virtual bool isPressEvent() const = 0;
+    virtual bool isDoubleClickEvent() const { return false; }
     virtual bool isUpdateEvent() const = 0;
     virtual bool isReleaseEvent() const = 0;
     virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
@@ -451,6 +452,7 @@ public:
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
     bool isPressEvent() const override;
+    bool isDoubleClickEvent() const override;
     bool isUpdateEvent() const override;
     bool isReleaseEvent() const override;
     QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }

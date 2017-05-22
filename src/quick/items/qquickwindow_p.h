@@ -262,6 +262,7 @@ public:
     bool componentCompleted : 1;
 
     bool allowChildEventFiltering : 1;
+    bool allowDoubleClick : 1;
 
     Qt::FocusReason lastFocusReason;
 
