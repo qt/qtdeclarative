@@ -1133,6 +1133,7 @@ TestCase {
         control.popup.open()
         compare(control.highlightedIndex, 99)
         tryCompare(openedSpy, "count", 2)
+        tryVerify(function() { return listview.height > 0 })
 
         var last = listview.itemAt(0, listview.contentY + listview.height - 1)
         verify(last)
