@@ -276,13 +276,13 @@ public:
     Q_FLAG(States)
 
     enum GrabState {
-        GrabPassive = 0,
-        GrabExclusive,
-        UngrabPassive,
-        UngrabExclusive,
-        CancelGrabPassive,
-        CancelGrabExclusive,
-        OverrideGrabPassive
+        GrabPassive = 0x01,
+        UngrabPassive = 0x02,
+        CancelGrabPassive = 0x03,
+        OverrideGrabPassive = 0x04,
+        GrabExclusive = 0x10,
+        UngrabExclusive = 0x20,
+        CancelGrabExclusive = 0x30,
     };
     Q_ENUM(GrabState)
 
