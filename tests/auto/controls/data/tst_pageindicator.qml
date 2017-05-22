@@ -84,7 +84,7 @@ TestCase {
     }
 
     function test_interactive() {
-        var control = createTemporaryObject(pageIndicator, testCase, {count: 5})
+        var control = createTemporaryObject(pageIndicator, testCase, {count: 5, spacing: 10, padding: 10})
         verify(control)
 
         verify(!control.interactive)
@@ -100,9 +100,6 @@ TestCase {
         compare(control.currentIndex, 2)
 
         // test also clicking outside delegates => the nearest should be selected
-        control.padding = 10
-        control.spacing = 10
-
         for (var i = 0; i < control.count; ++i) {
             var child = control.contentItem.children[i]
             for (var x = -2; x <= child.width + 2; ++x) {
