@@ -120,6 +120,7 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png")
 
+        var padding = data.mirrored ? control.contentItem.rightPadding : control.contentItem.leftPadding
         var iconImage = findChild(control.contentItem, "image")
         var textLabel = findChild(control.contentItem, "label")
 
@@ -127,20 +128,20 @@ TestCase {
         case MenuItem.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width : 0)
+            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width - padding : padding)
             compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
             break;
         case MenuItem.TextOnly:
             verify(!iconImage)
             verify(textLabel)
-            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width : 0)
+            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width - padding : padding)
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         case MenuItem.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width - (textLabel.width - iconImage.width) / 2 : (textLabel.width - iconImage.width) / 2)
-            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width : 0)
+            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width - (textLabel.width - iconImage.width) / 2 - padding : (textLabel.width - iconImage.width) / 2 + padding)
+            compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width - padding : padding)
             verify(iconImage.y < textLabel.y)
             break;
         case MenuItem.TextBesideIcon:
