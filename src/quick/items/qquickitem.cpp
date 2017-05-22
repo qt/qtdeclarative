@@ -6343,6 +6343,7 @@ void QQuickItem::setFlags(Flags flags)
   \qmlproperty real QtQuick::Item::height
 
   Defines the item's position and size.
+  The default value is \c 0.
 
   The (x,y) position is relative to the \l parent.
 
