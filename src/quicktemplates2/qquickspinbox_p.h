@@ -151,6 +151,7 @@ protected:
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
+    void accessibilityActiveChanged(bool active) override;
 #endif
 
 private:

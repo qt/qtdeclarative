@@ -497,6 +497,7 @@ void QQuickSpinBox::setEditable(bool editable)
 #endif
 
     d->editable = editable;
+    setAccessibleProperty("editable", editable);
     emit editableChanged();
 }
 
@@ -917,6 +918,15 @@ QFont QQuickSpinBox::defaultFont() const
 QAccessible::Role QQuickSpinBox::accessibleRole() const
 {
     return QAccessible::SpinBox;
+}
+
+void QQuickSpinBox::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::accessibilityActiveChanged(active);
+
+    if (active)
+        setAccessibleProperty("editable", d->editable);
 }
 #endif
 
