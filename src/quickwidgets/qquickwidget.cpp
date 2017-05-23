@@ -1440,6 +1440,9 @@ bool QQuickWidget::event(QEvent *e)
         d->offscreenWindow->setWindowState(resolveWindowState(windowState()));
         break;
 
+    case QEvent::ShortcutOverride:
+        return QCoreApplication::sendEvent(d->offscreenWindow, e);
+
     default:
         break;
     }
