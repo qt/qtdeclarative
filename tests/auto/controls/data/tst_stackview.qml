@@ -221,42 +221,75 @@ TestCase {
     function test_depth() {
         var control = createTemporaryObject(stackView, testCase)
         verify(control)
+
+        var depthChanges = 0
+        var emptyChanges = 0
         var depthSpy = signalSpy.createObject(control, {target: control, signalName: "depthChanged"})
+        var emptySpy = signalSpy.createObject(control, {target: control, signalName: "emptyChanged"})
         verify(depthSpy.valid)
+        verify(emptySpy.valid)
         compare(control.depth, 0)
         compare(control.empty, true)
+
         control.push(item, StackView.Immediate)
         compare(control.depth, 1)
-        compare(depthSpy.count, 1)
+        compare(depthSpy.count, ++depthChanges)
         compare(control.empty, false)
+        compare(emptySpy.count, ++emptyChanges)
+
         control.clear()
         compare(control.depth, 0)
-        compare(depthSpy.count, 2)
+        compare(depthSpy.count, ++depthChanges)
         compare(control.empty, true)
+        compare(emptySpy.count, ++emptyChanges)
+
         control.push(component, StackView.Immediate)
         compare(control.depth, 1)
-        compare(depthSpy.count, 3)
+        compare(depthSpy.count, ++depthChanges)
         compare(control.empty, false)
+        compare(emptySpy.count, ++emptyChanges)
+
         control.push(component, StackView.Immediate)
         compare(control.depth, 2)
-        compare(depthSpy.count, 4)
+        compare(depthSpy.count, ++depthChanges)
         compare(control.empty, false)
-        control.pop(StackView.Immediate)
+        compare(emptySpy.count, emptyChanges)
+
+        control.replace(component, StackView.Immediate)
+        compare(control.depth, 2)
+        compare(depthSpy.count, depthChanges)
+        compare(control.empty, false)
+        compare(emptySpy.count, emptyChanges)
+
+        control.replace([component, component], StackView.Immediate)
+        compare(control.depth, 3)
+        compare(depthSpy.count, ++depthChanges)
+        compare(control.empty, false)
+        compare(emptySpy.count, emptyChanges)
+
+        control.pop(null, StackView.Immediate)
         compare(control.depth, 1)
-        compare(depthSpy.count, 5)
+        compare(depthSpy.count, ++depthChanges)
         compare(control.empty, false)
+        compare(emptySpy.count, emptyChanges)
+
         control.pop(StackView.Immediate) // ignored
         compare(control.depth, 1)
-        compare(depthSpy.count, 5)
+        compare(depthSpy.count, depthChanges)
         compare(control.empty, false)
+        compare(emptySpy.count, emptyChanges)
+
         control.clear()
         compare(control.depth, 0)
-        compare(depthSpy.count, 6)
+        compare(depthSpy.count, ++depthChanges)
         compare(control.empty, true)
+        compare(emptySpy.count, ++emptyChanges)
+
         control.clear()
         compare(control.depth, 0)
-        compare(depthSpy.count, 6)
+        compare(depthSpy.count, depthChanges)
         compare(control.empty, true)
+        compare(emptySpy.count, emptyChanges)
     }
 
     function test_size() {
