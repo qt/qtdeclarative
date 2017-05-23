@@ -1596,10 +1596,10 @@ QQuickWindow *QQuickWidget::quickWindow() const
 
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
-    Q_UNUSED(event)
     Q_D(QQuickWidget);
     if (d->useSoftwareRenderer) {
         QPainter painter(this);
+        d->updateRegion = d->updateRegion.united(event->region());
         if (d->updateRegion.isNull()) {
             //Paint everything
             painter.drawImage(rect(), d->softwareImage);
