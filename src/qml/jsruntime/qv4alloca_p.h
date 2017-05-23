@@ -58,7 +58,7 @@
 #elif QT_CONFIG(alloca_malloc_h)
 #  include <malloc.h>
 // This does not matter unless compiling in strict standard mode.
-#  ifdef Q_OS_WIN
+#  ifdef Q_CC_MSVC
 #    define alloca _alloca
 #  endif
 #else
