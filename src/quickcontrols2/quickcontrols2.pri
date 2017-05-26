@@ -7,14 +7,14 @@ HEADERS += \
     $$PWD/qquickiconimage_p_p.h \
     $$PWD/qquickiconlabel_p.h \
     $$PWD/qquickiconlabel_p_p.h \
+    $$PWD/qquickpaddedrectangle_p.h \
     $$PWD/qquickplaceholdertext_p.h \
     $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickstyle.h \
     $$PWD/qquickstyle_p.h \
     $$PWD/qquickstyleplugin_p.h \
     $$PWD/qquickstyleselector_p.h \
-    $$PWD/qquickstyleselector_p_p.h \
-    $$PWD/qquickpaddedrectangle_p.h
+    $$PWD/qquickstyleselector_p_p.h
 
 SOURCES += \
     $$PWD/qquickanimatednode.cpp \
@@ -23,12 +23,12 @@ SOURCES += \
     $$PWD/qquickcolorimage.cpp \
     $$PWD/qquickiconimage.cpp \
     $$PWD/qquickiconlabel.cpp \
+    $$PWD/qquickpaddedrectangle.cpp \
     $$PWD/qquickplaceholdertext.cpp \
     $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickstyle.cpp \
     $$PWD/qquickstyleplugin.cpp \
-    $$PWD/qquickstyleselector.cpp \
-    $$PWD/qquickpaddedrectangle.cpp
+    $$PWD/qquickstyleselector.cpp
 
 qtConfig(quick-listview):qtConfig(quick-pathview) {
     HEADERS += \
