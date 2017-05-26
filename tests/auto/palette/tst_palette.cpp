@@ -183,7 +183,7 @@ void tst_palette::inheritance()
     QCOMPARE(grandChild->property("palette").value<QPalette>(), windowPalette);
 }
 
-class TestTheme :  public QQuickProxyTheme
+class TestTheme : public QQuickProxyTheme
 {
 public:
     TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme)

@@ -53,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickProxyTheme :  public QPlatformTheme
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickProxyTheme : public QPlatformTheme
 {
 public:
     explicit QQuickProxyTheme(QPlatformTheme *theme = nullptr);

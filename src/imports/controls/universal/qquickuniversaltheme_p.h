@@ -53,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickUniversalTheme :  public QQuickProxyTheme
+class QQuickUniversalTheme : public QQuickProxyTheme
 {
 public:
     explicit QQuickUniversalTheme(QPlatformTheme *theme = nullptr);

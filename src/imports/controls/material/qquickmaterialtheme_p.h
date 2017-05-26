@@ -54,7 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialTheme :  public QQuickProxyTheme
+class QQuickMaterialTheme : public QQuickProxyTheme
 {
 public:
     explicit QQuickMaterialTheme(QPlatformTheme *theme = nullptr);

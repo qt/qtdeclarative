@@ -504,7 +504,7 @@ void tst_applicationwindow::font()
     QCOMPARE(item6->font(), font);
 }
 
-class TestTheme :  public QQuickProxyTheme
+class TestTheme : public QQuickProxyTheme
 {
 public:
     TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme), m_font("Courier")
