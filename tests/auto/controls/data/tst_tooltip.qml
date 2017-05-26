@@ -121,6 +121,11 @@ TestCase {
         var item2 = createTemporaryObject(mouseArea, testCase)
         verify(item2)
 
+        // Reset the properties to the expected default values, in case
+        // we're not the first test that uses attached properties to be run.
+        var sharedTip = ToolTip.toolTip
+        sharedTip[data.property] = data.defaultValue
+
         compare(item1.ToolTip[data.property], data.defaultValue)
         compare(item2.ToolTip[data.property], data.defaultValue)
 
@@ -130,7 +135,6 @@ TestCase {
         var spy2 = signalSpy.createObject(item2, {target: item2.ToolTip, signalName: data.signalName})
         verify(spy2.valid)
 
-        var sharedTip = ToolTip.toolTip
         sharedSpy.signalName = data.signalName
         verify(sharedSpy.valid)
         sharedSpy.clear()
