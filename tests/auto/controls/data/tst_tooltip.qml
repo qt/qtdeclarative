@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.9
 import QtTest 1.0
 import QtQuick.Controls 2.2
 
@@ -257,5 +257,41 @@ TestCase {
         else
             control.visible = true
         tryCompare(control, "opacity", 1)
+    }
+
+    Component {
+        id: buttonAndShortcutComponent
+
+        Item {
+            property alias shortcut: shortcut
+            property alias button: button
+
+            Shortcut {
+                id: shortcut
+                sequence: "A"
+            }
+
+            Button {
+                id: button
+                text: "Just a button"
+                focusPolicy: Qt.NoFocus
+
+                ToolTip.visible: button.hovered
+                ToolTip.text: qsTr("Some helpful text")
+            }
+        }
+    }
+
+    function test_activateShortcutWhileToolTipVisible() {
+        var root = createTemporaryObject(buttonAndShortcutComponent, testCase)
+        verify(root)
+
+        mouseMove(root.button, root.button.width / 2, root.button.height / 2)
+        tryCompare(root.button.ToolTip.toolTip, "visible", true)
+
+        var shortcutActivatedSpy = signalSpy.createObject(root, { target: root.shortcut, signalName: "activated" })
+        verify(shortcutActivatedSpy.valid)
+        keyPress(Qt.Key_A)
+        compare(shortcutActivatedSpy.count, 1)
     }
 }
