@@ -7,7 +7,7 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 HEADERS += \
-    $$PWD/qtquickcontrols2global.h
+    $$PWD/qtquickcontrols2global.h \
     $$PWD/qtquickcontrols2global_p.h
 
 include(quickcontrols2.pri)
