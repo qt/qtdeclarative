@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 SUBDIRS = \
         qjsengine \
-#        qjsvalue \ ### FIXME: doesn't build
+        qjsvalue \
         qjsvalueiterator \
 
 TRUSTED_BENCHMARKS += \

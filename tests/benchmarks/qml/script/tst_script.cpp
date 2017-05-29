@@ -52,10 +52,8 @@ private slots:
    void property_getter_qmetaproperty();
 #endif
     void property_qobject();
-    void property_qmlobject();
 
     void setproperty_js();
-    void setproperty_qmlobject();
 
     void function_js();
 #if 0
@@ -63,7 +61,6 @@ private slots:
     void function_cpp();
 #endif
     void function_qobject();
-    void function_qmlobject();
 
     void function_args_js();
 #if 0
@@ -71,7 +68,6 @@ private slots:
     void function_args_cpp();
 #endif
     void function_args_qobject();
-    void function_args_qmlobject();
 
     void signal_unconnected();
     void signal_qml();
@@ -178,7 +174,7 @@ void tst_script::property_js()
     }
 }
 
-#if 0
+#if 0 // This requires internal API access in V4
 static QJSValue property_getter_method(QScriptContext *, QJSEngine *engine)
 {
     static int x = 0;
@@ -305,26 +301,6 @@ void tst_script::property_qobject()
     }
 }
 
-void tst_script::property_qmlobject()
-{
-    QQmlEngine qmlengine;
-
-    TestObject to;
-    QV8Engine *engine = QQmlEnginePrivate::getV8Engine(&qmlengine);
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
-    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
-
-    QJSValueList args;
-    args << v;
-    QJSValue prog = qmlengine.evaluate(PROPERTY_PROGRAM).call(args);
-    prog.call();
-
-    QBENCHMARK {
-        prog.call();
-    }
-}
-
 #define SETPROPERTY_PROGRAM \
     "(function(testObject) { return (function() { " \
     "    for (var ii = 0; ii < 10000; ++ii) { " \
@@ -342,27 +318,6 @@ void tst_script::setproperty_js()
     QJSValueList args;
     args << v;
     QJSValue prog = engine.evaluate(SETPROPERTY_PROGRAM).call(args);
-    prog.call();
-
-    QBENCHMARK {
-        prog.call();
-    }
-}
-
-void tst_script::setproperty_qmlobject()
-{
-    QQmlEngine qmlengine;
-
-    TestObject to;
-
-    QV8Engine *engine = QQmlEnginePrivate::getV8Engine(&qmlengine);
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
-    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
-
-    QJSValueList args;
-    args << v;
-    QJSValue prog = qmlengine.evaluate(SETPROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -437,27 +392,6 @@ void tst_script::function_qobject()
     }
 }
 
-void tst_script::function_qmlobject()
-{
-    QQmlEngine qmlengine;
-
-    TestObject to;
-
-    QV8Engine *engine = QQmlEnginePrivate::getV8Engine(&qmlengine);
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
-    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
-
-    QJSValueList args;
-    args << v;
-    QJSValue prog = qmlengine.evaluate(FUNCTION_PROGRAM).call(args);
-    prog.call();
-
-    QBENCHMARK {
-        prog.call();
-    }
-}
-
 #define FUNCTION_ARGS_PROGRAM \
     "(function(testObject) { return (function() { " \
     "    var test = 0; " \
@@ -518,27 +452,6 @@ void tst_script::function_args_qobject()
     QJSValueList args;
     args << v;
     QJSValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(args);
-    prog.call();
-
-    QBENCHMARK {
-        prog.call();
-    }
-}
-
-void tst_script::function_args_qmlobject()
-{
-    QQmlEngine qmlengine;
-
-    TestObject to;
-
-    QV8Engine *engine = QQmlEnginePrivate::getV8Engine(&qmlengine);
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(engine->context());
-    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
-
-    QJSValueList args;
-    args << v;
-    QJSValue prog = qmlengine.evaluate(FUNCTION_ARGS_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {

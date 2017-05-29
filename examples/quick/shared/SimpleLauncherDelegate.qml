@@ -45,6 +45,8 @@ Rectangle {
     width: ListView.view.width
     height: button.implicitHeight + 22
 
+    signal clicked()
+
     gradient: Gradient {
         GradientStop {
             position: 0
@@ -81,7 +83,7 @@ Rectangle {
         MouseArea {
             id: mouseArea
             anchors.fill: parent
-            onClicked: exampleItem.exampleUrl = url
+            onClicked: container.clicked()
             hoverEnabled: true
         }
 

@@ -211,12 +211,13 @@ public:
     Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
-    QV4::Heap::SimpleCallContext *allocSimpleCallContext(QV4::ExecutionEngine *v4)
+    QV4::Heap::CallContext *allocSimpleCallContext()
     {
         Heap::CallContext *ctxt = stackAllocator.allocate();
         memset(ctxt, 0, sizeof(Heap::SimpleCallContext));
-        ctxt->setVtable(QV4::SimpleCallContext::staticVTable());
-        ctxt->init(v4);
+        ctxt->internalClass = SimpleCallContext::defaultInternalClass(engine);
+        Q_ASSERT(ctxt->internalClass && ctxt->internalClass->vtable);
+        ctxt->init();
         return ctxt;
 
     }
@@ -229,16 +230,20 @@ public:
         V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
         size = align(size);
         Heap::Base *o = allocData(size);
-        o->setVtable(ManagedType::staticVTable());
+        InternalClass *ic = ManagedType::defaultInternalClass(engine);
+        ic = ic->changeVTable(ManagedType::staticVTable());
+        o->internalClass = ic;
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
         return static_cast<typename ManagedType::Data *>(o);
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
-        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
-        o->setVtable(ObjectType::staticVTable());
+        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
         o->internalClass = ic;
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
+        Q_ASSERT(ic->vtable == ObjectType::staticVTable());
         return static_cast<typename ObjectType::Data *>(o);
     }
 
@@ -246,11 +251,12 @@ public:
     typename ObjectType::Data *allocateObject()
     {
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
-        Heap::Object *o = allocObjectWithMemberData(align(sizeof(typename ObjectType::Data)), ic->size);
-        o->setVtable(ObjectType::staticVTable());
-        Object *prototype = ObjectType::defaultPrototype(engine);
+        ic = ic->changeVTable(ObjectType::staticVTable());
+        ic = ic->changePrototype(ObjectType::defaultPrototype(engine)->d());
+        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
         o->internalClass = ic;
-        o->prototype.set(engine, prototype->d());
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
+        Q_ASSERT(o->internalClass->prototype == ObjectType::defaultPrototype(engine)->d());
         return static_cast<typename ObjectType::Data *>(o);
     }
 
@@ -258,8 +264,9 @@ public:
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
-        o->setVtable(ManagedType::staticVTable());
-        o->init(this, arg1);
+        o->internalClass = ManagedType::defaultInternalClass(engine);
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
+        o->init(arg1);
         return o;
     }
 
@@ -277,7 +284,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype.set(engine, prototype->d());
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init();
         return t->d();
     }
@@ -287,7 +295,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype.set(engine, prototype->d());
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1);
         return t->d();
     }
@@ -297,7 +306,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype.set(engine, prototype->d());
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2);
         return t->d();
     }
@@ -307,7 +317,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype.set(engine, prototype->d());
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
     }
@@ -317,7 +328,8 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->prototype.set(engine, prototype->d());
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();
     }
@@ -437,7 +449,7 @@ protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
     Heap::Base *allocData(std::size_t size);
-    Heap::Object *allocObjectWithMemberData(std::size_t size, uint nMembers);
+    Heap::Object *allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);

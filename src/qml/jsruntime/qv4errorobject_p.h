@@ -160,7 +160,7 @@ struct ErrorObject: Object {
 
     V4_OBJECT2(ErrorObject, Object)
     Q_MANAGED_TYPE(ErrorObject)
-    V4_INTERNALCLASS(errorClass)
+    V4_INTERNALCLASS(ErrorObject)
     V4_PROTOTYPE(errorPrototype)
     V4_NEEDS_DESTROY
 
@@ -205,8 +205,10 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
-    V4_OBJECT2(SyntaxErrorObject, ErrorObject)
+    typedef Heap::SyntaxErrorObject Data;
     V4_PROTOTYPE(syntaxErrorPrototype)
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct TypeErrorObject: ErrorObject {
@@ -326,19 +328,25 @@ inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message) {
-    return e->memoryManager->allocObject<T>(message.isUndefined() ? e->errorClass : e->errorClassWithMessage, T::defaultPrototype(e), message);
+    InternalClass *ic = e->internalClasses[message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
+    ic = ic->changePrototype(T::defaultPrototype(e)->d());
+    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), message);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
-    return e->memoryManager->allocObject<T>(v->isUndefined() ? e->errorClass : e->errorClassWithMessage, T::defaultPrototype(e), v);
+    InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
+    ic = ic->changePrototype(T::defaultPrototype(e)->d());
+    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message, const QString &filename, int line, int column) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
-    return e->memoryManager->allocObject<T>(v->isUndefined() ? e->errorClass : e->errorClassWithMessage, T::defaultPrototype(e), v, filename, line, column);
+    InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
+    ic = ic->changePrototype(T::defaultPrototype(e)->d());
+    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v, filename, line, column);
 }
 
 

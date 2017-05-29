@@ -61,14 +61,13 @@ public:
 
 V4_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
-static QV4::ReturnedValue get_index(QV4::CallContext *ctx)
+static void get_index(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object")));
 
-    return QV4::Encode(o->d()->item->index);
+    RETURN_RESULT(QV4::Encode(o->d()->item->index));
 }
 
 template <typename T, typename M> static void setModelDataType(QMetaObjectBuilder *builder, M *metaType)
@@ -195,19 +194,18 @@ public:
         dataType->watchedRoles += newRoles;
     }
 
-    static QV4::ReturnedValue get_hasModelChildren(QV4::CallContext *ctx)
+    static void get_hasModelChildren(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
     {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
         if (!o)
-            return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object")));
 
         const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(o->d()->item)->type->model;
         if (o->d()->item->index >= 0 && *model) {
             const QAbstractItemModel * const aim = model->aim();
-            return QV4::Encode(aim->hasChildren(aim->index(o->d()->item->index, 0, model->rootIndex)));
+            RETURN_RESULT(QV4::Encode(aim->hasChildren(aim->index(o->d()->item->index, 0, model->rootIndex))));
         } else {
-            return QV4::Encode(false);
+            RETURN_RESULT(QV4::Encode(false));
         }
     }
 
@@ -583,27 +581,25 @@ public:
         }
     }
 
-    static QV4::ReturnedValue get_modelData(QV4::CallContext *ctx)
+    static void get_modelData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
     {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
         if (!o)
-            return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object")));
 
-        return scope.engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
+        RETURN_RESULT(scope.engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData));
     }
 
-    static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)
+    static void set_modelData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
     {
-        QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
         if (!o)
-            return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-        if (!ctx->argc())
-            return ctx->engine()->throwTypeError();
+            RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object")));
+        if (!callData->argc)
+            RETURN_RESULT(scope.engine->throwTypeError());
 
-        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(scope.engine->toVariant(ctx->args()[0], QVariant::Invalid));
-        return QV4::Encode::undefined();
+        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(scope.engine->toVariant(callData->args[0], QVariant::Invalid));
+        RETURN_RESULT(QV4::Encode::undefined());
     }
 
     QV4::ReturnedValue get() override

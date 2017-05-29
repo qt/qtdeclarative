@@ -571,7 +571,7 @@ void tst_TouchMouse::buttonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->grabber(), eventItem1);
     QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
@@ -632,7 +632,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId == -1);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->grabber(), eventItem2);
     QCOMPARE(window->mouseGrabberItem(), nullptr);
 
@@ -758,7 +758,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     // for the touchMouseId to the new grabber.
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());
@@ -1422,7 +1422,6 @@ void tst_TouchMouse::hoverEnabled()
     QSignalSpy exitSpy2(mouseArea2, SIGNAL(exited()));
     QSignalSpy clickSpy2(mouseArea2, SIGNAL(clicked(QQuickMouseEvent *)));
 
-    QPoint p0(50, 50);
     QPoint p1(150, 150);
     QPoint p2(150, 250);
 
@@ -1448,9 +1447,6 @@ void tst_TouchMouse::hoverEnabled()
     QVERIFY(!mouseArea2->hovered());
 
     // ------------------------- Touch click on mouseArea2
-    if (QGuiApplication::platformName().compare(QLatin1String("xcb"), Qt::CaseInsensitive) == 0)
-        QSKIP("hover can be momentarily inconsistent on X11, depending on timing of flushFrameSynchronousEvents with touch and mouse movements (QTBUG-55350)");
-
     QTest::touchEvent(window.data(), device).press(0, p2, window.data());
 
     QVERIFY(mouseArea1->hovered());

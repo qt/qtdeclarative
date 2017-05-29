@@ -267,6 +267,8 @@ private slots:
     void instanceof_data();
     void instanceof();
 
+    void concurrentLoadQmlDir();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4557,6 +4559,20 @@ void tst_qqmllanguage::instanceof()
         QVERIFY(expr.hasError());
         QCOMPARE(expr.error().description(), expectedValue.toString());
     }
+}
+
+void tst_qqmllanguage::concurrentLoadQmlDir()
+{
+    ThreadedTestHTTPServer server(dataDirectory());
+    QString serverdir = server.urlString("/lib/");
+    engine.setImportPathList(QStringList(defaultImportPathList) << serverdir);
+
+    QQmlComponent component(&engine, testFileUrl("concurrentLoad_main.qml"));
+    QTRY_VERIFY(component.isReady());
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    engine.setImportPathList(defaultImportPathList);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

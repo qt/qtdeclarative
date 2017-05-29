@@ -59,7 +59,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 {
     Q_UNUSED(engine);
 
-    internalClass = engine->emptyClass;
+    internalClass = engine->internalClasses[EngineBase::Class_Empty];
     const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);
@@ -74,7 +74,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
             }
             // duplicate arguments, need some trick to store them
             MemoryManager *mm = engine->memoryManager;
-            arg = mm->alloc<String>(mm, arg->d(), engine->newString(QString(0xfffe)));
+            arg = mm->alloc<String>(arg->d(), engine->newString(QString(0xfffe)));
         }
     }
     nFormals = compiledFunction->nFormals;
@@ -92,7 +92,7 @@ Function::~Function()
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
 {
-    internalClass = engine->emptyClass;
+    internalClass = engine->internalClasses[EngineBase::Class_Empty];
 
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);
@@ -106,7 +106,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
                 break;
             }
             // duplicate arguments, need some trick to store them
-            arg = engine->memoryManager->alloc<String>(engine->memoryManager, arg->d(), engine->newString(QString(0xfffe)));
+            arg = engine->memoryManager->alloc<String>(arg->d(), engine->newString(QString(0xfffe)));
         }
     }
     nFormals = parameters.size();

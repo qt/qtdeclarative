@@ -105,7 +105,7 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
             QV4::Scope scope(v4);
             QV4::Scoped<QV4::MemberData> sp(scope, m_target->propertyAndMethodStorage.value());
             if (sp) {
-                QV4::MemberData::Index index{ sp->d(), static_cast<uint>(m_index) };
+                QV4::MemberData::Index index{ sp->d(), sp->d()->values.values + m_index };
                 index.set(v4, QV4::Primitive::nullValue());
             }
         }

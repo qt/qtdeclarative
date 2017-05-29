@@ -68,8 +68,6 @@ struct BuiltinFunction;
 namespace Heap {
 
 #define ObjectMembers(class, Member) \
-    Member(class, NoMark, InternalClass *, internalClass) \
-    Member(class, Pointer, Object *, prototype) \
     Member(class, Pointer, MemberData *, memberData) \
     Member(class, Pointer, ArrayData *, arrayData)
 
@@ -78,12 +76,59 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     void init() { Base::init(); }
     void destroy() { Base::destroy(); }
 
-    const Value *propertyData(uint index) const { return memberData->values.data() + index; }
-    void setProperty(ExecutionEngine *e, uint index, Value v) const { memberData->values.set(e, index, v); }
-    void setProperty(ExecutionEngine *e, uint index, Heap::Base *b) const { memberData->values.set(e, index, b); }
+    const Value *inlinePropertyData(uint index) const {
+        Q_ASSERT(index < vtable()->nInlineProperties);
+        return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
+    }
+    void setInlineProperty(ExecutionEngine *e, uint index, Value v) {
+        Q_ASSERT(index < vtable()->nInlineProperties);
+        Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
+        WriteBarrier::write(e, this, prop, v);
+    }
+    void setInlineProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
+        Q_ASSERT(index < vtable()->nInlineProperties);
+        Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
+        WriteBarrier::write(e, this, prop, b);
+    }
+
+    QV4::MemberData::Index writablePropertyData(uint index) {
+        uint nInline = vtable()->nInlineProperties;
+        if (index < nInline)
+            return { this, reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index};
+        index -= nInline;
+        return { memberData, memberData->values.values + index };
+    }
+
+    const Value *propertyData(uint index) const {
+        uint nInline = vtable()->nInlineProperties;
+        if (index < nInline)
+            return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
+        index -= nInline;
+        return memberData->values.data() + index;
+    }
+    void setProperty(ExecutionEngine *e, uint index, Value v) {
+        uint nInline = vtable()->nInlineProperties;
+        if (index < nInline) {
+            setInlineProperty(e, index, v);
+            return;
+        }
+        index -= nInline;
+        memberData->values.set(e, index, v);
+    }
+    void setProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
+        uint nInline = vtable()->nInlineProperties;
+        if (index < nInline) {
+            setInlineProperty(e, index, b);
+            return;
+        }
+        index -= nInline;
+        memberData->values.set(e, index, b);
+    }
+
+    Heap::Object *prototype() const { return internalClass->prototype; }
 };
 
-Q_STATIC_ASSERT(Object::markTable == ((2 << 4) | (2 << 6) | (2 << 8)));
+Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
 
 }
 
@@ -122,9 +167,6 @@ Q_STATIC_ASSERT(Object::markTable == ((2 << 4) | (2 << 6) | (2 << 8)));
         V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass); \
         static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable;
 
-#define V4_INTERNALCLASS(c) \
-    static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
-    { return e->c; }
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
     { return e->p(); }
@@ -183,7 +225,7 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
     Q_MANAGED_TYPE(Object)
-    V4_INTERNALCLASS(emptyClass)
+    V4_INTERNALCLASS(Object)
     V4_PROTOTYPE(objectPrototype)
 
     enum {
@@ -192,7 +234,6 @@ struct Q_QML_EXPORT Object: Managed {
         SetterOffset = 1
     };
 
-    InternalClass *internalClass() const { return d()->internalClass; }
     void setInternalClass(InternalClass *ic);
 
     const Value *propertyData(uint index) const { return d()->propertyData(index); }
@@ -208,7 +249,7 @@ struct Q_QML_EXPORT Object: Managed {
     void setProperty(ExecutionEngine *engine, uint index, Heap::Base *b) const { d()->setProperty(engine, index, b); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
-    Heap::Object *prototype() const { return d()->prototype; }
+    Heap::Object *prototype() const { return d()->prototype(); }
     bool setPrototype(Object *proto);
 
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
@@ -246,12 +287,8 @@ struct Q_QML_EXPORT Object: Managed {
         insertMember(name, value, Attr_Data|Attr_NotEnumerable);
     }
     void defineDefaultProperty(const QString &name, const Value &value);
-    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
-    void defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
-    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
-    void defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     void defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
                                 void (*setter)(const BuiltinFunction *, Scope &, CallData *));
     void defineAccessorProperty(String *name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
@@ -271,8 +308,6 @@ struct Q_QML_EXPORT Object: Managed {
         insertMember(s, p, attributes);
     }
     void insertMember(String *s, const Property *p, PropertyAttributes attributes);
-
-    inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
     bool isExtensible() const { return d()->internalClass->extensible; }
 
@@ -424,6 +459,7 @@ protected:
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
+    static void markObjects(Heap::Base *, MarkStack *);
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;
@@ -498,7 +534,7 @@ struct NumberObject: Object {
 struct ArrayObject: Object {
     V4_OBJECT2(ArrayObject, Object)
     Q_MANAGED_TYPE(ArrayObject)
-    V4_INTERNALCLASS(arrayClass)
+    V4_INTERNALCLASS(ArrayObject)
     V4_PROTOTYPE(arrayPrototype)
 
     void init(ExecutionEngine *engine);
