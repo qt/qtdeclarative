@@ -449,6 +449,12 @@ The following functions are also on the Qt object.
         \li \c "windows" - Windows
         \li \c "winrt" - WinRT / UWP
     \endlist
+
+    \row
+    \li \c platform.pluginName
+    \li This is the name of the platform set on the QGuiApplication instance
+        as returned by \l QGuiApplication::platformName()
+
     \endtable
 */
 

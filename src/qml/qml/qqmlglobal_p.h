@@ -311,6 +311,7 @@ public:
     virtual QObject *styleHints();
     virtual QStringList fontFamilies();
     virtual bool openUrlExternally(QUrl &);
+    virtual QString pluginName() const;
 };
 
 Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *);

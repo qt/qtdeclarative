@@ -3,7 +3,8 @@ TARGET = tst_qquickapplication
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qquickapplication.cpp
-OTHER_FILES += data/tst_displayname.qml
+OTHER_FILES += data/tst_displayname.qml \
+    data/tst_platformname.qml
 
 include (../../shared/util.pri)
 
