@@ -58,8 +58,6 @@ class QQuickFusionTheme :  public QQuickTheme
 {
 public:
     explicit QQuickFusionTheme();
-
-    const QPalette *palette(Palette type = SystemPalette) const override;
 };
 
 QT_END_NAMESPACE

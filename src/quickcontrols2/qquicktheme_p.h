@@ -51,6 +51,7 @@
 #include <QtQuickControls2/private/qquickproxytheme_p.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtGui/qfont.h>
+#include <QtGui/qpalette.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,12 +61,15 @@ public:
     QQuickTheme(const QString &name);
 
     const QFont *font(Font type = SystemFont) const override;
+    const QPalette *palette(Palette type = SystemPalette) const override;
 
 protected:
     QFont resolveFont(const QFont &font) const;
+    QPalette resolvePalette(const QPalette &palette) const;
 
 private:
     QScopedPointer<QFont> m_styleFont;
+    QScopedPointer<QPalette> m_stylePalette;
 };
 
 QT_END_NAMESPACE

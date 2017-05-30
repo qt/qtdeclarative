@@ -69,9 +69,13 @@ void tst_palette::palette_data()
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QTest::newRow("Control") << "palette-control-default.qml" << QPalette();
-    QTest::newRow("AppWindow") << "palette-appwindow-default.qml" << QPalette();
-    QTest::newRow("Popup") << "palette-popup-default.qml" << QPalette();
+    QPalette defaultPalette;
+    defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
+    defaultPalette.setColor(QPalette::Text, QColor("#101010"));
+
+    QTest::newRow("Control") << "palette-control-default.qml" << defaultPalette;
+    QTest::newRow("AppWindow") << "palette-appwindow-default.qml" << defaultPalette;
+    QTest::newRow("Popup") << "palette-popup-default.qml" << defaultPalette;
 
     QPalette customPalette;
     customPalette.setColor(QPalette::AlternateBase, QColor("aqua"));
@@ -142,13 +146,17 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QCOMPARE(window->palette(), QPalette());
+    QPalette defaultPalette;
+    defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
+    defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
-    QCOMPARE(control->property("palette").value<QPalette>(), QPalette());
-    QCOMPARE(child->property("palette").value<QPalette>(), QPalette());
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), QPalette());
+    QCOMPARE(window->palette(), defaultPalette);
 
-    QPalette childPalette;
+    QCOMPARE(control->property("palette").value<QPalette>(), defaultPalette);
+    QCOMPARE(child->property("palette").value<QPalette>(), defaultPalette);
+    QCOMPARE(grandChild->property("palette").value<QPalette>(), defaultPalette);
+
+    QPalette childPalette(defaultPalette);
     childPalette.setColor(QPalette::Base, Qt::red);
     childPalette.setColor(QPalette::Text, Qt::green);
     childPalette.setColor(QPalette::Button, Qt::blue);
@@ -163,7 +171,7 @@ void tst_palette::inheritance()
     QCOMPARE(child->property("palette").value<QPalette>(), childPalette);
     QCOMPARE(grandChild->property("palette").value<QPalette>(), grandChildPalette);
 
-    QPalette windowPalette;
+    QPalette windowPalette(defaultPalette);
     windowPalette.setColor(QPalette::Window, Qt::gray);
     window->setPalette(windowPalette);
     QCOMPARE(window->palette(), windowPalette);

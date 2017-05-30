@@ -83,6 +83,41 @@ QFont *readFont(const QSharedPointer<QSettings> &settings)
     settings->endGroup();
     return new QFont(f);
 }
+
+static void readColorGroup(const QSharedPointer<QSettings> &settings, QPalette::ColorGroup group, QPalette *palette)
+{
+    const QStringList keys = settings->childKeys();
+    if (keys.isEmpty())
+        return;
+
+    static const int index = QPalette::staticMetaObject.indexOfEnumerator("ColorRole");
+    Q_ASSERT(index != -1);
+    QMetaEnum metaEnum = QPalette::staticMetaObject.enumerator(index);
+
+    for (const QString &key : keys) {
+        bool ok = false;
+        int role = metaEnum.keyToValue(key.toUtf8(), &ok);
+        if (ok)
+            palette->setColor(group, static_cast<QPalette::ColorRole>(role), settings->value(key).value<QColor>());
+    }
+}
+
+static QPalette *readPalette(const QSharedPointer<QSettings> &settings)
+{
+    QPalette p;
+    settings->beginGroup(QStringLiteral("Palette"));
+    readColorGroup(settings, QPalette::All, &p);
+
+    settings->beginGroup(QStringLiteral("Normal"));
+    readColorGroup(settings, QPalette::Normal, &p);
+    settings->endGroup();
+
+    settings->beginGroup(QStringLiteral("Disabled"));
+    readColorGroup(settings, QPalette::Disabled, &p);
+    settings->endGroup();
+    return new QPalette(p);
+}
+
 #endif // QT_CONFIG(settings)
 
 QQuickTheme::QQuickTheme(const QString &style)
@@ -90,8 +125,10 @@ QQuickTheme::QQuickTheme(const QString &style)
 {
 #if QT_CONFIG(settings)
     QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(style);
-    if (settings)
+    if (settings) {
         m_styleFont.reset(readFont(settings));
+        m_stylePalette.reset(readPalette(settings));
+    }
 #endif
 }
 
@@ -101,12 +138,26 @@ const QFont *QQuickTheme::font(Font type) const
     return m_styleFont.data();
 }
 
+const QPalette *QQuickTheme::palette(Palette type) const
+{
+    Q_UNUSED(type);
+    return m_stylePalette.data();
+}
+
 QFont QQuickTheme::resolveFont(const QFont &font) const
 {
     if (!m_styleFont)
         return font;
 
     return m_styleFont->resolve(font);
+}
+
+QPalette QQuickTheme::resolvePalette(const QPalette &palette) const
+{
+    if (!m_stylePalette)
+        return palette;
+
+    return m_stylePalette->resolve(palette);
 }
 
 QT_END_NAMESPACE

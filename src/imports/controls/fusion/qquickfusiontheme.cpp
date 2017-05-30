@@ -43,9 +43,4 @@ QQuickFusionTheme::QQuickFusionTheme()
 {
 }
 
-const QPalette *QQuickFusionTheme::palette(Palette type) const
-{
-    return QQuickProxyTheme::palette(type);
-}
-
 QT_END_NAMESPACE

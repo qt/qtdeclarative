@@ -8,6 +8,8 @@ QT += core-private gui-private qml-private quick-private testlib quicktemplates2
 
 include (../shared/util.pri)
 
+RESOURCES += qtquickcontrols2.conf
+
 TESTDATA = data/*
 
 OTHER_FILES += \
