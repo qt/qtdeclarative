@@ -44,7 +44,7 @@
 static void initResources()
 {
 #ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_handlers_1);
+    Q_INIT_RESOURCE(qmake_Qt_labs_handlers);
 #endif
 }
 
