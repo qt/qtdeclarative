@@ -65,7 +65,7 @@ Item {
             Text {
                 color: "white"
                 anchors.centerIn: parent
-                text: dragHandler.pos.x.toFixed(1) + "," + dragHandler.pos.y.toFixed(1)
+                text: dragHandler.point.position.x.toFixed(1) + "," + dragHandler.point.position.y.toFixed(1)
             }
         }
     }
