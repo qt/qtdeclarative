@@ -638,7 +638,7 @@ void QQuickDrawer::resetDragMargin()
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::Drawer::interactive
 
     This property holds whether the drawer is interactive. A non-interactive

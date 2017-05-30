@@ -22,13 +22,15 @@
         },
         "quickcontrols2-material": {
             "label": "Material",
-            "purpose": "Provides a Qt Quick Controls 2 style based on the Material Design guidelines",
+            "purpose": "Provides a style based on the Material Design guidelines.",
+            "section": "Quick Controls 2",
             "condition": "features.quickcontrols2-default",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-universal": {
             "label": "Universal",
-            "purpose": "Provides a Qt Quick Controls 2 style based on the Universal Design guidelines",
+            "purpose": "Provides a style based on the Universal Design guidelines.",
+            "section": "Quick Controls 2",
             "condition": "features.quickcontrols2-default",
             "output": [ "privateFeature" ]
         }

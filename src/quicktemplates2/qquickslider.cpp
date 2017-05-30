@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal QtQuick.Controls::Slider::moved()
 
     This signal is emitted when the slider has been interactively moved
@@ -430,7 +430,7 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::Slider::live
 
     This property holds whether the slider provides live updates for the \l value
@@ -562,7 +562,7 @@ void QQuickSlider::setHandle(QQuickItem *handle)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlmethod real QtQuick.Controls::Slider::valueAt(real position)
 
     Returns the value for the given \a position.

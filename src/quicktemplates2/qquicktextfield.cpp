@@ -91,7 +91,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlsignal QtQuick.Controls::TextField::pressed(MouseEvent event)
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text field is pressed by the user.
     The \l {MouseEvent}{event} parameter provides information about the press,
@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlsignal QtQuick.Controls::TextField::released(MouseEvent event)
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text field is released by the user.
     The \l {MouseEvent}{event} parameter provides information about the release,
@@ -429,7 +429,7 @@ void QQuickTextField::setFocusReason(Qt::FocusReason reason)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::TextField::hovered
     \readonly
 
@@ -462,7 +462,7 @@ void QQuickTextField::setHovered(bool hovered)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::TextField::hoverEnabled
 
     This property determines whether the text field accepts hover events. The default value is \c false.

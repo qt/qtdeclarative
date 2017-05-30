@@ -829,7 +829,7 @@ bool QQuickRangeSlider::isVertical() const
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::RangeSlider::live
 
     This property holds whether the slider provides live updates for the \l first.value

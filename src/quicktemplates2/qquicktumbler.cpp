@@ -409,7 +409,7 @@ void QQuickTumbler::setVisibleItemCount(int visibleItemCount)
 
 /*!
     \qmlproperty bool QtQuick.Controls::Tumbler::wrap
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This property determines whether or not the tumbler wraps around when it
     reaches the top or bottom.
@@ -441,7 +441,7 @@ void QQuickTumbler::resetWrap()
 
 /*!
     \qmlproperty bool QtQuick.Controls::Tumbler::moving
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
 
     This property describes whether the tumbler is currently moving, due to
     the user either dragging or flicking it.

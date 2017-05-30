@@ -1163,7 +1163,7 @@ QQuickStackView::Status QQuickStackViewAttached::status() const
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlattachedproperty bool QtQuick.Controls::StackView::visible
 
     This attached property holds the visibility of the item it's attached to.
@@ -1212,7 +1212,7 @@ void QQuickStackViewAttached::resetVisible()
 
 /*!
     \qmlattachedsignal QtQuick.Controls::StackView::activated()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This attached signal is emitted when the item it's attached to is activated in the stack.
 
@@ -1221,7 +1221,7 @@ void QQuickStackViewAttached::resetVisible()
 
 /*!
     \qmlattachedsignal QtQuick.Controls::StackView::deactivated()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This attached signal is emitted when the item it's attached to is deactivated in the stack.
 
@@ -1230,7 +1230,7 @@ void QQuickStackViewAttached::resetVisible()
 
 /*!
     \qmlattachedsignal QtQuick.Controls::StackView::activating()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This attached signal is emitted when the item it's attached to is in the process of being
     activated in the stack.
@@ -1240,7 +1240,7 @@ void QQuickStackViewAttached::resetVisible()
 
 /*!
     \qmlattachedsignal QtQuick.Controls::StackView::deactivating()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This attached signal is emitted when the item it's attached to is in the process of being
     dectivated in the stack.
@@ -1250,7 +1250,7 @@ void QQuickStackViewAttached::resetVisible()
 
 /*!
     \qmlattachedsignal QtQuick.Controls::StackView::removed()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This attached signal is emitted when the item it's attached to has been
     removed from the stack. It can be used to safely destroy an Item that was

@@ -648,7 +648,7 @@ void QQuickContainer::setCurrentIndex(int index)
 
 /*!
     \qmlmethod void QtQuick.Controls::Container::incrementCurrentIndex()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     Increments the current index of the container.
 
@@ -666,7 +666,7 @@ void QQuickContainer::incrementCurrentIndex()
 
 /*!
     \qmlmethod void QtQuick.Controls::Container::decrementCurrentIndex()
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     Decrements the current index of the container.
 

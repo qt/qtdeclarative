@@ -207,7 +207,7 @@ void QQuickMaterialRippleBackgroundNode::sync(QQuickItem *item)
 
     QMatrix4x4 matrix;
     if (qFuzzyIsNull(ripple->clipRadius())) {
-        matrix.translate((w - sz) / 2, (h - sz) / 2);
+        matrix.translate(qRound((w - sz) / 2), qRound((h - sz) / 2));
         rectNode->setRect(QRectF(0, 0, sz, sz));
         rectNode->setRadius(sz / 2);
     } else {

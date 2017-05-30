@@ -234,7 +234,7 @@ void QQuickPage::setFooter(QQuickItem *footer)
 
 /*!
     \qmlproperty real QtQuick.Controls::Page::contentWidth
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This property holds the content width. It is used for calculating the total
     implicit width of the page.
@@ -259,7 +259,7 @@ void QQuickPage::setContentWidth(qreal width)
 
 /*!
     \qmlproperty real QtQuick.Controls::Page::contentHeight
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This property holds the content height. It is used for calculating the total
     implicit height of the page.

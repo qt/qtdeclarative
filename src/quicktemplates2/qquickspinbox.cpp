@@ -94,7 +94,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal QtQuick.Controls::SpinBox::valueModified()
 
     This signal is emitted when the spin box value has been interactively
@@ -670,7 +670,7 @@ QQuickSpinButton *QQuickSpinBox::down() const
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty flags QtQuick.Controls::SpinBox::inputMethodHints
 
     This property provides hints to the input method about the expected content
@@ -697,7 +697,7 @@ void QQuickSpinBox::setInputMethodHints(Qt::InputMethodHints hints)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::SpinBox::inputMethodComposing
     \readonly
 

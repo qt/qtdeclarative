@@ -41,10 +41,12 @@
 
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
+#include <QtQuickTemplates2/private/qquickstackview_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -76,6 +78,7 @@ private slots:
     void grabber();
     void cursorShape();
     void componentComplete();
+    void closeOnEscapeWithNestedPopups();
 };
 
 void tst_popup::initTestCase()
@@ -836,6 +839,71 @@ void tst_popup::componentComplete()
 
     component.completeCreate();
     QVERIFY(qmlPopup->isComponentComplete());
+}
+
+void tst_popup::closeOnEscapeWithNestedPopups()
+{
+    // Tests the scenario in the Gallery example, where there are nested popups that should
+    // close in the correct order when the Escape key is pressed.
+    QQuickApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithNestedPopups.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    // The stack view should have two items, and it should pop the second when escape is pressed
+    // and it has focus.
+    QQuickStackView *stackView = window->findChild<QQuickStackView*>("stackView");
+    QVERIFY(stackView);
+    QCOMPARE(stackView->depth(), 2);
+
+    QQuickItem *optionsToolButton = window->findChild<QQuickItem*>("optionsToolButton");
+    QVERIFY(optionsToolButton);
+
+    // Click on the options tool button. The settings menu should pop up.
+    const QPoint optionsToolButtonCenter = optionsToolButton->mapToScene(
+        QPointF(optionsToolButton->width() / 2, optionsToolButton->height() / 2)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, optionsToolButtonCenter);
+
+    QQuickPopup *optionsMenu = window->findChild<QQuickPopup*>("optionsMenu");
+    QVERIFY(optionsMenu);
+    QTRY_VERIFY(optionsMenu->isVisible());
+
+    QQuickItem *settingsMenuItem = window->findChild<QQuickItem*>("settingsMenuItem");
+    QVERIFY(settingsMenuItem);
+
+    // Click on the settings menu item. The settings dialog should pop up.
+    const QPoint settingsMenuItemCenter = settingsMenuItem->mapToScene(
+        QPointF(settingsMenuItem->width() / 2, settingsMenuItem->height() / 2)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, settingsMenuItemCenter);
+
+    QQuickPopup *settingsDialog = window->contentItem()->findChild<QQuickPopup*>("settingsDialog");
+    QVERIFY(settingsDialog);
+    QTRY_VERIFY(settingsDialog->isVisible());
+
+    QQuickComboBox *comboBox = window->contentItem()->findChild<QQuickComboBox*>("comboBox");
+    QVERIFY(comboBox);
+
+    // Click on the combo box button. The combo box popup should pop up.
+    const QPoint comboBoxCenter = comboBox->mapToScene(
+        QPointF(comboBox->width() / 2, comboBox->height() / 2)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, comboBoxCenter);
+    QTRY_VERIFY(comboBox->popup()->isVisible());
+
+    // Close the combo box popup with the escape key. The settings dialog should still be visible.
+    QTest::keyClick(window, Qt::Key_Escape);
+    QTRY_VERIFY(!comboBox->popup()->isVisible());
+    QVERIFY(settingsDialog->isVisible());
+
+    // Close the settings dialog with the escape key.
+    QTest::keyClick(window, Qt::Key_Escape);
+    QTRY_VERIFY(!settingsDialog->isVisible());
+
+    // The stack view should still have two items.
+    QCOMPARE(stackView->depth(), 2);
+
+    // Remove one by pressing the Escape key (the Shortcut should be activated).
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(stackView->depth(), 1);
 }
 
 QTEST_MAIN(tst_popup)
