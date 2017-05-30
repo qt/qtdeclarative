@@ -93,7 +93,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal QtQuick.Controls::AbstractButton::toggled()
 
     This signal is emitted when a checkable button is interactively toggled by the user.

@@ -157,7 +157,7 @@ QQuickSwipeView::QQuickSwipeView(QQuickItem *parent)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::SwipeView::interactive
 
     This property describes whether the user can interact with the SwipeView.
@@ -182,7 +182,7 @@ void QQuickSwipeView::setInteractive(bool interactive)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty enumeration QtQuick.Controls::SwipeView::orientation
 
     This property holds the orientation.
@@ -256,7 +256,7 @@ QAccessible::Role QQuickSwipeView::accessibleRole() const
 
 /*!
     \qmlattachedproperty bool QtQuick.Controls::SwipeView::isNextItem
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \readonly
 
     This attached property is \c true if this child is the next item.
@@ -266,7 +266,7 @@ QAccessible::Role QQuickSwipeView::accessibleRole() const
 
 /*!
     \qmlattachedproperty bool QtQuick.Controls::SwipeView::isPreviousItem
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \readonly
 
     This attached property is \c true if this child is the previous item.

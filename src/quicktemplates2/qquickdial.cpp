@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal QtQuick.Controls::Dial::moved()
 
     This signal is emitted when the dial has been interactively moved
@@ -514,7 +514,7 @@ void QQuickDial::setPressed(bool pressed)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::Dial::live
 
     This property holds whether the dial provides live updates for the \l value

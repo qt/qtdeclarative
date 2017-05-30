@@ -458,7 +458,7 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty enumeration QtQuick.Controls::ScrollBar::snapMode
 
     This property holds the snap mode.
@@ -498,7 +498,7 @@ void QQuickScrollBar::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::ScrollBar::interactive
 
     This property holds whether the scroll bar is interactive. The default value is \c true.
@@ -528,7 +528,7 @@ void QQuickScrollBar::resetInteractive()
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty enumeration QtQuick.Controls::ScrollBar::policy
 
     This property holds the policy of the scroll bar. The default policy is \c ScrollBar.AsNeeded.

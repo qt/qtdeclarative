@@ -159,7 +159,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal void QtQuick.Controls::ComboBox::accepted()
 
     This signal is emitted when the \uicontrol Return or \uicontrol Enter key is pressed
@@ -748,7 +748,7 @@ QQmlInstanceModel *QQuickComboBox::delegateModel() const
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::ComboBox::editable
 
     This property holds whether the combo box is editable.
@@ -797,7 +797,7 @@ void QQuickComboBox::setEditable(bool editable)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::ComboBox::flat
 
     This property holds whether the combo box button is flat.
@@ -827,7 +827,7 @@ void QQuickComboBox::setFlat(bool flat)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::ComboBox::down
 
     This property holds whether the combo box button is visually down.
@@ -995,7 +995,7 @@ void QQuickComboBox::resetDisplayText()
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty string QtQuick.Controls::ComboBox::editText
 
     This property holds the text in the text field of an editable combo box.
@@ -1161,7 +1161,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty Validator QtQuick.Controls::ComboBox::validator
 
     This property holds an input text validator for an editable combo box.
@@ -1210,7 +1210,7 @@ void QQuickComboBox::setValidator(QValidator *validator)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty flags QtQuick.Controls::ComboBox::inputMethodHints
 
     Provides hints to the input method about the expected content of the combo box and how it
@@ -1237,7 +1237,7 @@ void QQuickComboBox::setInputMethodHints(Qt::InputMethodHints hints)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::ComboBox::inputMethodComposing
     \readonly
 
@@ -1254,7 +1254,7 @@ bool QQuickComboBox::isInputMethodComposing() const
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::ComboBox::acceptableInput
     \readonly
 
@@ -1349,7 +1349,7 @@ void QQuickComboBox::decrementCurrentIndex()
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlmethod void QtQuick.Controls::ComboBox::selectAll()
 
     Selects all the text in the editable text field of the combo box.

@@ -262,7 +262,7 @@ void QQuickTabBar::setPosition(Position position)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty real QtQuick.Controls::TabBar::contentWidth
 
     This property holds the content width. It is used for calculating the total
@@ -303,7 +303,7 @@ void QQuickTabBar::resetContentWidth()
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty real QtQuick.Controls::TabBar::contentHeight
 
     This property holds the content height. It is used for calculating the total

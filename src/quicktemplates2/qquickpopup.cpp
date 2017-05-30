@@ -952,7 +952,7 @@ qreal QQuickPopup::availableHeight() const
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty real QtQuick.Controls::Popup::spacing
 
     This property holds the spacing.

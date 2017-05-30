@@ -125,7 +125,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlsignal QtQuick.Controls::ButtonGroup::clicked(AbstractButton button)
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when a \a button in the group has been clicked.
 

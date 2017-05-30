@@ -110,7 +110,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlsignal QtQuick.Controls::TextArea::pressed(MouseEvent event)
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text area is pressed by the user.
     The \l {MouseEvent}{event} parameter provides information about the press,
@@ -121,7 +121,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlsignal QtQuick.Controls::TextArea::released(MouseEvent event)
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text area is released by the user.
     The \l {MouseEvent}{event} parameter provides information about the release,
@@ -507,7 +507,7 @@ void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::TextArea::hovered
     \readonly
 
@@ -540,7 +540,7 @@ void QQuickTextArea::setHovered(bool hovered)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::TextArea::hoverEnabled
 
     This property determines whether the text area accepts hover events. The default value is \c true.

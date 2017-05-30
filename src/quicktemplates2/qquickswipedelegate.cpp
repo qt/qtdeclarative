@@ -959,7 +959,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
 }
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlmethod void QtQuick.Controls::SwipeDelegate::swipe.open(enumeration side)
 
     This method sets the \c position of the swipe so that it opens
@@ -980,7 +980,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
 */
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlmethod void QtQuick.Controls::SwipeDelegate::swipe.close()
 
     This method sets the \c position of the swipe to \c 0. Any animations
@@ -991,7 +991,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal void QtQuick.Controls::SwipeDelegate::swipe.opened()
 
     This signal is emitted when the delegate has been swiped open
@@ -1005,7 +1005,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
 */
 
 /*!
-    \since QtQuick.Controls 2.2
+    \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal void QtQuick.Controls::SwipeDelegate::swipe.closed()
 
     This signal is emitted when the delegate has been swiped to closed
@@ -1019,7 +1019,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
 */
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlsignal void QtQuick.Controls::SwipeDelegate::swipe.completed()
 
     This signal is emitted when \c swipe.complete becomes \c true.
@@ -1252,7 +1252,7 @@ public:
 };
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlattachedsignal QtQuick.Controls::SwipeDelegate::clicked()
 
     This signal can be attached to a non-interactive item declared in
@@ -1287,7 +1287,7 @@ QQuickSwipeDelegateAttached::QQuickSwipeDelegateAttached(QObject *object)
 }
 
 /*!
-    \since QtQuick.Controls 2.1
+    \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlattachedproperty bool QtQuick.Controls::SwipeDelegate::pressed
     \readonly
 
