@@ -714,7 +714,7 @@ bool QQuickSpinBox::isInputMethodComposing() const
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::SpinBox::wrap
 
     This property holds whether the spinbox wraps. The default value is \c false.

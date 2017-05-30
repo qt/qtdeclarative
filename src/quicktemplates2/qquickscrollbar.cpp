@@ -561,7 +561,7 @@ void QQuickScrollBar::setPolicy(Policy policy)
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::ScrollBar::horizontal
     \readonly
 
@@ -576,7 +576,7 @@ bool QQuickScrollBar::isHorizontal() const
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::ScrollBar::vertical
     \readonly
 

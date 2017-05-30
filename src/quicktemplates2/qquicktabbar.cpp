@@ -453,7 +453,7 @@ QAccessible::Role QQuickTabBar::accessibleRole() const
 
 /*!
     \qmlattachedproperty int QtQuick.Controls::TabBar::index
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \readonly
 
     This attached property holds the index of each tab button in the TabBar.
@@ -463,7 +463,7 @@ QAccessible::Role QQuickTabBar::accessibleRole() const
 
 /*!
     \qmlattachedproperty TabBar QtQuick.Controls::TabBar::tabBar
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \readonly
 
     This attached property holds the tab bar that manages this tab button.
@@ -473,7 +473,7 @@ QAccessible::Role QQuickTabBar::accessibleRole() const
 
 /*!
     \qmlattachedproperty enumeration QtQuick.Controls::TabBar::position
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \readonly
 
     This attached property holds the position of the tab bar.

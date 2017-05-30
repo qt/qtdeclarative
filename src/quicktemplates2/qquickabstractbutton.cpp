@@ -671,7 +671,7 @@ void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty enumeration QtQuick.Controls::AbstractButton::display
 
     This property determines how the \l icon and \l text are displayed within
@@ -703,7 +703,7 @@ void QQuickAbstractButton::setDisplay(Display display)
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty Action QtQuick.Controls::AbstractButton::action
 
     This property holds the button action.

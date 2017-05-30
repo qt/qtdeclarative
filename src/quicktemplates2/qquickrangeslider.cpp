@@ -799,7 +799,7 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::RangeSlider::horizontal
     \readonly
 
@@ -814,7 +814,7 @@ bool QQuickRangeSlider::isHorizontal() const
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::RangeSlider::vertical
     \readonly
 

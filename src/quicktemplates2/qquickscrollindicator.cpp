@@ -298,7 +298,7 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::ScrollIndicator::horizontal
     \readonly
 
@@ -313,7 +313,7 @@ bool QQuickScrollIndicator::isHorizontal() const
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::ScrollIndicator::vertical
     \readonly
 

@@ -117,7 +117,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::Dialog::applied()
 
     This signal is emitted when the \c Dialog.Apply standard button is clicked.
@@ -126,7 +126,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::Dialog::reset()
 
     This signal is emitted when the \c Dialog.Reset standard button is clicked.
@@ -135,7 +135,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::Dialog::discarded()
 
     This signal is emitted when the \c Dialog.Discard standard button is clicked.
@@ -144,7 +144,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::Dialog::helpRequested()
 
     This signal is emitted when the \c Dialog.Help standard button is clicked.
@@ -369,7 +369,7 @@ void QQuickDialog::setStandardButtons(QPlatformDialogHelper::StandardButtons but
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod AbstractButton QtQuick.Controls::Dialog::standardButton(StandardButton button)
 
     Returns the specified standard \a button, or \c null if it does not exist.
@@ -385,7 +385,7 @@ QQuickAbstractButton *QQuickDialog::standardButton(QPlatformDialogHelper::Standa
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty int QtQuick.Controls::Dialog::result
 
     This property holds the result code.
@@ -437,7 +437,7 @@ void QQuickDialog::reject()
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Dialog::done(int result)
 
     Closes the dialog, sets the \a result, and emits \l accepted() or

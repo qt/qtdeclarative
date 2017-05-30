@@ -479,7 +479,7 @@ void QQuickSlider::setPressed(bool pressed)
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::Slider::horizontal
     \readonly
 
@@ -494,7 +494,7 @@ bool QQuickSlider::isHorizontal() const
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::Slider::vertical
     \readonly
 

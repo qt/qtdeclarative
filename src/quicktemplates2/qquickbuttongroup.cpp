@@ -318,7 +318,7 @@ QQmlListProperty<QQuickAbstractButton> QQuickButtonGroup::buttons()
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::ButtonGroup::exclusive
 
     This property holds whether the button group is exclusive. The default value is \c true.

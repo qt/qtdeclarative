@@ -714,7 +714,7 @@ void QQuickApplicationWindow::resetLocale()
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty palette QtQuick.Controls::ApplicationWindow::palette
 
     This property holds the palette currently set for the window.

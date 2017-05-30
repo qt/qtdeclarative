@@ -644,7 +644,7 @@ bool QQuickTextArea::contains(const QPointF &point) const
 }
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty palette QtQuick.Controls::TextArea::palette
 
     This property holds the palette currently set for the text area.

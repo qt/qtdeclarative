@@ -123,7 +123,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::DialogButtonBox::applied()
 
     This signal is emitted when a button defined with the \c ApplyRole is
@@ -133,7 +133,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::DialogButtonBox::reset()
 
     This signal is emitted when a button defined with the \c ResetRole is
@@ -143,7 +143,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlsignal QtQuick.Controls::DialogButtonBox::discarded()
 
     This signal is emitted when a button defined with the \c DiscardRole is

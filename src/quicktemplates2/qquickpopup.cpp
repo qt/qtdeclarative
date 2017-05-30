@@ -1349,7 +1349,7 @@ void QQuickPopup::resetFont()
 
 
 /*!
-    \since QtQuick.Controls 2.3
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty palette QtQuick.Controls::Popup::palette
 
     This property holds the palette currently set for the popup.
