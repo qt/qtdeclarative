@@ -57,8 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAccessibleAttached;
-
 class QQuickLabelPrivate : public QQuickTextPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
@@ -108,7 +106,6 @@ public:
 
     QPalette resolvedPalette;
     QQuickItem *background;
-    QQuickAccessibleAttached *accessibleAttached;
 };
 
 QT_END_NAMESPACE

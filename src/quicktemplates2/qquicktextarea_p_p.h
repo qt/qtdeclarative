@@ -62,7 +62,6 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickFlickable;
-class QQuickAccessibleAttached;
 
 class QQuickTextAreaPrivate : public QQuickTextEditPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
@@ -141,7 +140,6 @@ public:
     QString placeholder;
     Qt::FocusReason focusReason;
     QQuickPressHandler pressHandler;
-    QQuickAccessibleAttached *accessibleAttached;
     QQuickFlickable *flickable;
 };
 

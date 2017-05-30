@@ -130,8 +130,7 @@ QQuickControlPrivate::QQuickControlPrivate()
       focusPolicy(Qt::NoFocus),
       focusReason(Qt::OtherFocusReason),
       background(nullptr),
-      contentItem(nullptr),
-      accessibleAttached(nullptr)
+      contentItem(nullptr)
 {
 #if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
@@ -1398,7 +1397,7 @@ void QQuickControl::componentComplete()
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #endif
 #if QT_CONFIG(accessibility)
-    if (!d->accessibleAttached && QAccessible::isActive())
+    if (QAccessible::isActive())
         accessibilityActiveChanged(true);
 #endif
 }
@@ -1610,29 +1609,20 @@ QAccessible::Role QQuickControl::accessibleRole() const
 
 void QQuickControl::accessibilityActiveChanged(bool active)
 {
-    Q_D(QQuickControl);
-    if (d->accessibleAttached || !active)
+    if (!active)
         return;
 
-    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-
-    // QQuickControl relies on the existence of a QQuickAccessibleAttached object.
-    // However, qmlAttachedPropertiesObject(create=true) creates an instance only
-    // for items that have been created by a QML engine. Therefore we create the
-    // object by hand for items created in C++ (QQuickPopupItem, for instance).
-    if (!d->accessibleAttached)
-        d->accessibleAttached = new QQuickAccessibleAttached(this);
-
-    d->accessibleAttached->setRole(accessibleRole());
+    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+    Q_ASSERT(accessibleAttached);
+    accessibleAttached->setRole(accessibleRole());
 }
 #endif
 
 QString QQuickControl::accessibleName() const
 {
 #if QT_CONFIG(accessibility)
-    Q_D(const QQuickControl);
-    if (d->accessibleAttached)
-        return d->accessibleAttached->name();
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+        return accessibleAttached->name();
 #endif
     return QString();
 }
@@ -1640,9 +1630,8 @@ QString QQuickControl::accessibleName() const
 void QQuickControl::setAccessibleName(const QString &name)
 {
 #if QT_CONFIG(accessibility)
-    Q_D(QQuickControl);
-    if (d->accessibleAttached)
-        d->accessibleAttached->setName(name);
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+        accessibleAttached->setName(name);
 #else
     Q_UNUSED(name)
 #endif
@@ -1651,9 +1640,7 @@ void QQuickControl::setAccessibleName(const QString &name)
 QVariant QQuickControl::accessibleProperty(const char *propertyName)
 {
 #if QT_CONFIG(accessibility)
-    Q_D(QQuickControl);
-    if (d->accessibleAttached)
-        return QQuickAccessibleAttached::property(this, propertyName);
+    return QQuickAccessibleAttached::property(this, propertyName);
 #endif
     Q_UNUSED(propertyName)
     return QVariant();
@@ -1662,9 +1649,7 @@ QVariant QQuickControl::accessibleProperty(const char *propertyName)
 bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
 {
 #if QT_CONFIG(accessibility)
-    Q_D(QQuickControl);
-    if (d->accessibleAttached)
-        return QQuickAccessibleAttached::setProperty(this, propertyName, value);
+    return QQuickAccessibleAttached::setProperty(this, propertyName, value);
 #endif
     Q_UNUSED(propertyName)
     Q_UNUSED(value)

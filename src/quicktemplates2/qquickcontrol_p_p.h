@@ -60,8 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAccessibleAttached;
-
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
@@ -169,7 +167,6 @@ public:
     Qt::FocusReason focusReason;
     QQuickItem *background;
     QQuickItem *contentItem;
-    QQuickAccessibleAttached *accessibleAttached;
 };
 
 QT_END_NAMESPACE

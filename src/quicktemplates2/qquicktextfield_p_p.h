@@ -60,8 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAccessibleAttached;
-
 class QQuickTextFieldPrivate : public QQuickTextInputPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
@@ -130,7 +128,6 @@ public:
     QString placeholder;
     Qt::FocusReason focusReason;
     QQuickPressHandler pressHandler;
-    QQuickAccessibleAttached *accessibleAttached;
 };
 
 QT_END_NAMESPACE

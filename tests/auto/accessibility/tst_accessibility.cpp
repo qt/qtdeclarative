@@ -113,16 +113,6 @@ void tst_accessibility::a11y_data()
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
 }
 
-#if QT_CONFIG(accessibility)
-static QQuickAccessibleAttached *accessibleAttached(QQuickItem *item)
-{
-    QQuickAccessibleAttached *acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
-    if (!acc)
-        acc = item->findChild<QQuickAccessibleAttached *>();
-    return acc;
-}
-#endif
-
 void tst_accessibility::a11y()
 {
     QFETCH(QString, name);
@@ -152,7 +142,7 @@ void tst_accessibility::a11y()
     QVERIFY(item);
 
 #if QT_CONFIG(accessibility)
-    QQuickAccessibleAttached *acc = accessibleAttached(item);
+    QQuickAccessibleAttached *acc = QQuickAccessibleAttached::attachedProperties(item);
     if (name != QLatin1Literal("dayofweekrow")
             && name != QLatin1Literal("monthgrid")
             && name != QLatin1Literal("weeknumbercolumn")) {
@@ -161,7 +151,7 @@ void tst_accessibility::a11y()
         } else {
             QVERIFY(!acc);
             QAccessible::setActive(true);
-            acc = accessibleAttached(item);
+            acc = QQuickAccessibleAttached::attachedProperties(item);
         }
     }
     QVERIFY(acc);
@@ -170,8 +160,6 @@ void tst_accessibility::a11y()
 #else
     Q_UNUSED(role)
     Q_UNUSED(text)
-    QObject *acc = qmlAttachedPropertiesObject<QObject>(item, false);
-    QVERIFY(!acc);
 #endif
 }
 

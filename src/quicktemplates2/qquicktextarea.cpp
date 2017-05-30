@@ -138,7 +138,6 @@ QQuickTextAreaPrivate::QQuickTextAreaPrivate()
 #endif
       background(nullptr),
       focusReason(Qt::OtherFocusReason),
-      accessibleAttached(nullptr),
       flickable(nullptr)
 {
 #if QT_CONFIG(accessibility)
@@ -410,7 +409,7 @@ void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 {
     Q_UNUSED(isReadOnly);
 #if QT_CONFIG(accessibility)
-    if (accessibleAttached)
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(q_func()))
         accessibleAttached->set_readOnly(isReadOnly);
 #endif
 #if QT_CONFIG(cursor)
@@ -421,18 +420,15 @@ void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 #if QT_CONFIG(accessibility)
 void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
 {
-    if (accessibleAttached || !active)
+    if (!active)
         return;
 
     Q_Q(QQuickTextArea);
-    accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
-    if (accessibleAttached) {
-        accessibleAttached->setRole(accessibleRole());
-        accessibleAttached->set_readOnly(q->isReadOnly());
-        accessibleAttached->setDescription(placeholder);
-    } else {
-        qWarning() << "QQuickTextArea: " << q << " QQuickAccessibleAttached object creation failed!";
-    }
+    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    Q_ASSERT(accessibleAttached);
+    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->set_readOnly(q->isReadOnly());
+    accessibleAttached->setDescription(placeholder);
 }
 
 QAccessible::Role QQuickTextAreaPrivate::accessibleRole() const
@@ -532,8 +528,8 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
 
     d->placeholder = text;
 #if QT_CONFIG(accessibility)
-    if (d->accessibleAttached)
-        d->accessibleAttached->setDescription(text);
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+        accessibleAttached->setDescription(text);
 #endif
     emit placeholderTextChanged();
 }
@@ -692,7 +688,7 @@ void QQuickTextArea::componentComplete()
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
 #endif
 #if QT_CONFIG(accessibility)
-    if (!d->accessibleAttached && QAccessible::isActive())
+    if (QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
 }

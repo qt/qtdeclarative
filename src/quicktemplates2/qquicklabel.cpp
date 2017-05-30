@@ -79,8 +79,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickLabelPrivate::QQuickLabelPrivate()
-    : background(nullptr),
-      accessibleAttached(nullptr)
+    : background(nullptr)
 {
 #if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
@@ -176,7 +175,8 @@ void QQuickLabelPrivate::updatePalette(const QPalette &palette)
 void QQuickLabelPrivate::textChanged(const QString &text)
 {
 #if QT_CONFIG(accessibility)
-    if (accessibleAttached)
+    Q_Q(QQuickLabel);
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(q))
         accessibleAttached->setName(text);
 #else
     Q_UNUSED(text)
@@ -186,17 +186,14 @@ void QQuickLabelPrivate::textChanged(const QString &text)
 #if QT_CONFIG(accessibility)
 void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
 {
-    if (accessibleAttached || !active)
+    if (!active)
         return;
 
     Q_Q(QQuickLabel);
-    accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
-    if (accessibleAttached) {
-        accessibleAttached->setRole(accessibleRole());
-        accessibleAttached->setName(text);
-    } else {
-        qWarning() << "QQuickLabel: " << q << " QQuickAccessibleAttached object creation failed!";
-    }
+    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    Q_ASSERT(accessibleAttached);
+    accessibleAttached->setRole(accessibleRole());
+    accessibleAttached->setName(text);
 }
 
 QAccessible::Role QQuickLabelPrivate::accessibleRole() const
@@ -308,7 +305,7 @@ void QQuickLabel::componentComplete()
     Q_D(QQuickLabel);
     QQuickText::componentComplete();
 #if QT_CONFIG(accessibility)
-    if (!d->accessibleAttached && QAccessible::isActive())
+    if (QAccessible::isActive())
         d->accessibilityActiveChanged(true);
 #endif
 }
