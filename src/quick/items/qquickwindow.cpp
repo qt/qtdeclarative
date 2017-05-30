@@ -3862,7 +3862,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
 {
     Q_D(const QQuickWindow);
-    if (!isSceneGraphInitialized() || image.isNull()) // check both for d->context and d->context->isValid()
+    if (!isSceneGraphInitialized()) // check both for d->context and d->context->isValid()
          return 0;
     uint flags = 0;
     if (options & TextureCanUseAtlas)     flags |= QSGRenderContext::CreateTexture_Atlas;

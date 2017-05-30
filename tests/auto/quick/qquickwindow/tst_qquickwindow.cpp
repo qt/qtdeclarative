@@ -375,8 +375,6 @@ private slots:
 
     void testDragEventPropertyPropagation();
 
-    void createTextureFromImage();
-
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -2831,15 +2829,6 @@ void tst_qquickwindow::testDragEventPropertyPropagation()
         QCOMPARE(dropEvent->isAccepted(), dropTarget.dropAccept);
         QCOMPARE(dropEvent->dropAction(), dropTarget.dropDropAction);
     }
-}
-
-void tst_qquickwindow::createTextureFromImage()
-{
-    // An invalid image should return a null pointer.
-    QQuickWindow window;
-    window.show();
-    QTest::qWaitForWindowExposed(&window);
-    QVERIFY(!window.createTextureFromImage(QImage()));
 }
 
 QTEST_MAIN(tst_qquickwindow)
