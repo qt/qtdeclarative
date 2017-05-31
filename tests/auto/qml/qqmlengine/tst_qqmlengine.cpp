@@ -41,6 +41,7 @@
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQmlExpression>
 #include <QQmlIncubationController>
+#include <QTemporaryDir>
 #include <private/qqmlengine_p.h>
 #include <QQmlAbstractUrlInterceptor>
 
@@ -51,6 +52,7 @@ public:
     tst_qqmlengine() {}
 
 private slots:
+    void initTestCase() override;
     void rootContext();
     void networkAccessManager();
     void synchronousNetworkAccessManager();
@@ -80,7 +82,16 @@ public slots:
         static QObject *ptr = new QObject();
         return ptr;
     }
+
+private:
+    QTemporaryDir m_tempDir;
 };
+
+void tst_qqmlengine::initTestCase()
+{
+    QVERIFY2(m_tempDir.isValid(), qPrintable(m_tempDir.errorString()));
+    QQmlDataTest::initTestCase();
+}
 
 void tst_qqmlengine::rootContext()
 {
@@ -286,9 +297,12 @@ void tst_qqmlengine::clearComponentCache()
 {
     QQmlEngine engine;
 
+    const QString fileName = m_tempDir.filePath(QStringLiteral("temp.qml"));
+    const QUrl fileUrl = QUrl::fromLocalFile(fileName);
+
     // Create original qml file
     {
-        QFile file("temp.qml");
+        QFile file(fileName);
         QVERIFY(file.open(QIODevice::WriteOnly));
         file.write("import QtQuick 2.0\nQtObject {\nproperty int test: 10\n}\n");
         file.close();
@@ -296,7 +310,7 @@ void tst_qqmlengine::clearComponentCache()
 
     // Test "test" property
     {
-        QQmlComponent component(&engine, "temp.qml");
+        QQmlComponent component(&engine, fileUrl);
         QObject *obj = component.create();
         QVERIFY(obj != 0);
         QCOMPARE(obj->property("test").toInt(), 10);
@@ -311,7 +325,7 @@ void tst_qqmlengine::clearComponentCache()
         // Similar effects of lacking precision have been observed on some Linux systems.
         QThread::sleep(1);
 
-        QFile file("temp.qml");
+        QFile file(fileName);
         QVERIFY(file.open(QIODevice::WriteOnly));
         file.write("import QtQuick 2.0\nQtObject {\nproperty int test: 11\n}\n");
         file.close();
@@ -319,7 +333,7 @@ void tst_qqmlengine::clearComponentCache()
 
     // Test cache hit
     {
-        QQmlComponent component(&engine, "temp.qml");
+        QQmlComponent component(&engine, fileUrl);
         QObject *obj = component.create();
         QVERIFY(obj != 0);
         QCOMPARE(obj->property("test").toInt(), 10);
@@ -331,12 +345,18 @@ void tst_qqmlengine::clearComponentCache()
 
     // Test cache refresh
     {
-        QQmlComponent component(&engine, "temp.qml");
+        QQmlComponent component(&engine, fileUrl);
         QObject *obj = component.create();
         QVERIFY(obj != 0);
         QCOMPARE(obj->property("test").toInt(), 11);
         delete obj;
     }
+
+    // Regular Synchronous loading will leave us with an event posted
+    // to the gui thread and an extra refcount that will only be dropped after the
+    // event delivery. Call sendPostedEvents() to get rid of it so that
+    // the temporary directory can be removed.
+    QCoreApplication::sendPostedEvents();
 }
 
 struct ComponentCacheFunctions : public QObject, public QQmlIncubationController
