@@ -97,6 +97,8 @@ Q_SIGNALS:
     void contentChildrenChanged();
 
 protected:
+    void componentComplete() override;
+
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;

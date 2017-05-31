@@ -100,6 +100,18 @@ TestCase {
     }
 
     Component {
+        id: headerFooterPage
+        Page {
+            header: ToolBar { }
+            footer: ToolBar { }
+            contentItem: Item {
+                implicitWidth: 100
+                implicitHeight: 30
+            }
+        }
+    }
+
+    Component {
         id: toolBar
         ToolBar { }
     }
@@ -261,5 +273,30 @@ TestCase {
         compare(control.contentItem.height, control.availableHeight
                                             - (data.header ? control.header.height + control.spacing : 0)
                                             - (data.footer ? control.footer.height + control.spacing : 0))
+    }
+
+    function test_headerFooter() {
+        var control = createTemporaryObject(headerFooterPage, testCase, {width: 100, height: 100})
+        verify(control)
+
+        compare(control.width, 100)
+        compare(control.height, 100)
+
+        verify(control.header)
+        compare(control.header.x, 0)
+        compare(control.header.y, 0)
+        compare(control.header.width, control.width)
+        verify(control.header.height > 0)
+
+        verify(control.footer)
+        compare(control.footer.x, 0)
+        compare(control.footer.y, control.height - control.footer.height)
+        compare(control.footer.width, control.width)
+        verify(control.footer.height > 0)
+
+        compare(control.contentItem.x, 0)
+        compare(control.contentItem.y, control.header.height)
+        compare(control.contentItem.width, control.width)
+        compare(control.contentItem.height, control.height - control.header.height - control.footer.height)
     }
 }
