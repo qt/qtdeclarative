@@ -24,7 +24,7 @@ SUBDIRS =   quick-accessibility \
             imageresponseprovider \
             window \
             particles \
-            pathitem \
+            shapes \
             demos
 
 #OpenGL Support Required

@@ -69,7 +69,7 @@ QUICKTESTS =  \
     qquickmousearea \
     qquickmultipointtoucharea \
     qquickpainteditem \
-    qquickpathitem \
+    qquickshape \
     qquickpathview \
     qquickpincharea \
     qquickpositioners \

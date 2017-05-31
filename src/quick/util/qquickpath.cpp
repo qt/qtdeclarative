@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPath
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a path for use by \l PathView and \l PathItem
+    \brief Defines a path for use by \l PathView and \l Shape
 
     A Path is composed of one or more path segments - PathLine, PathQuad,
     PathCubic, PathArc, PathCurve, PathSvg.
@@ -80,16 +80,16 @@ QT_BEGIN_NAMESPACE
     along the path.
 
     Path and the other types for specifying path elements are shared between
-    \l PathView and \l PathItem. The following table provides an overview of the
+    \l PathView and \l Shape. The following table provides an overview of the
     applicability of the various path elements:
 
     \table
     \header
         \li Element
         \li PathView
-        \li PathItem
-        \li PathItem, GL_NV_path_rendering
-        \li PathItem, software
+        \li Shape
+        \li Shape, GL_NV_path_rendering
+        \li Shape, software
     \row
         \li PathMove
         \li N/A
@@ -146,7 +146,7 @@ QT_BEGIN_NAMESPACE
         \li No
     \endtable
 
-    \sa PathView, PathItem, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 QQuickPath::QQuickPath(QObject *parent)
  : QObject(*(new QQuickPathPrivate), parent)
@@ -1119,7 +1119,7 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
     \ingroup qtquick-animation-paths
     \brief Moves the Path's position
 
-    While not relevant with PathView, for Path elements used with PathItem it
+    While not relevant with PathView, for Path elements used with Shape it
     is important to distinguish between the operations of drawing a straight
     line and moving the path position without drawing anything.
 
@@ -1927,7 +1927,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 
     \note Mixing PathSvg with other type of elements is not always supported,
     therefore it is strongly recommended to avoid this. For example, when
-    \l PathItem is backed by \c{GL_NV_path_rendering}, a Path can contain one or
+    \l Shape is backed by \c{GL_NV_path_rendering}, a Path can contain one or
     more PathSvg elements, or one or more other type of elements, but not both.
 
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathCurve

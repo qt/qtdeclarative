@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/pathitemtest">
-        <file>pathitemtest.qml</file>
-    </qresource>
-</RCC>

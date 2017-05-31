@@ -1,4 +1,0 @@
-module Qt.labs.pathitem
-plugin qmlpathitemplugin
-classname QmlPathItemPlugin
-typeinfo plugins.qmltypes

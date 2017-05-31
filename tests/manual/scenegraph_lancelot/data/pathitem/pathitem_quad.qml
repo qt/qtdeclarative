@@ -1,5 +1,5 @@
 import QtQuick 2.9
-import Qt.labs.pathitem 1.0
+import QtQuick.Shapes 1.0
 
 Item {
     width: 320
