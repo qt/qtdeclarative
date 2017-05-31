@@ -88,6 +88,8 @@ void QQuickPopupItemPrivate::resolveFont()
 {
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
         inheritFont(window->font());
+    else
+        inheritFont(themeFont(QPlatformTheme::SystemFont));
 }
 
 QQuickItem *QQuickPopupItemPrivate::getContentItem()

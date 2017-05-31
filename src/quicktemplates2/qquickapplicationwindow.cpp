@@ -36,7 +36,7 @@
 
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
-#include "qquickpopup_p.h"
+#include "qquickpopup_p_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
@@ -171,6 +171,8 @@ public:
     void _q_updateActiveFocus();
     void setActiveFocusControl(QQuickItem *item);
 
+    static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
+
     bool complete;
     QQuickItem *background;
     QQuickItem *contentItem;
@@ -282,6 +284,15 @@ void QQuickApplicationWindowPrivate::setActiveFocusControl(QQuickItem *control)
         activeFocusControl = control;
         emit q->activeFocusControlChanged();
     }
+}
+
+void QQuickApplicationWindowPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
+{
+    QQuickItemPrivate::data_append(prop, obj);
+
+    // associate "top-level" popups with the window as soon as they are added to the default property
+    if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj))
+        QQuickPopupPrivate::get(popup)->setWindow(static_cast<QQuickApplicationWindow *>(prop->data));
 }
 
 QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent)
@@ -483,7 +494,11 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
 */
 QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
 {
-    return QQuickItemPrivate::get(contentItem())->data();
+    return QQmlListProperty<QObject>(contentItem(), this,
+                                     QQuickApplicationWindowPrivate::contentData_append,
+                                     QQuickItemPrivate::data_count,
+                                     QQuickItemPrivate::data_at,
+                                     QQuickItemPrivate::data_clear);
 }
 
 /*!
@@ -628,7 +643,6 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
 
     QQuickControlPrivate::updateFontRecur(q->QQuickWindow::contentItem(), f);
 
-    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
     const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
     for (QQuickPopup *popup : popups)
         QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritFont(f);

@@ -568,13 +568,19 @@ void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
             QQuickOverlayPrivate::get(overlay)->removePopup(q);
     }
 
+    window = newWindow;
+
     if (newWindow) {
         QQuickOverlay *overlay = QQuickOverlay::overlay(newWindow);
         if (overlay)
             QQuickOverlayPrivate::get(overlay)->addPopup(q);
+
+        QQuickControlPrivate *p = QQuickControlPrivate::get(popupItem);
+        p->resolveFont();
+        if (QQuickApplicationWindow *appWindow = qobject_cast<QQuickApplicationWindow *>(newWindow))
+            p->updateLocale(appWindow->locale(), false); // explicit=false
     }
 
-    window = newWindow;
     emit q->windowChanged(newWindow);
 
     if (complete && visible && window)
@@ -1394,11 +1400,6 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (parent) {
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);
-
-        QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
-        p->resolveFont();
-        if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(parent->window()))
-            p->updateLocale(window->locale(), false); // explicit=false
     } else {
         close();
     }
