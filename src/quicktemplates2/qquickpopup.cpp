@@ -103,7 +103,7 @@ QT_BEGIN_NAMESPACE
 
     \section1 Popup Layout
 
-    The following diagram illustrates the layout of a typical popup:
+    The following diagram illustrates the layout of a popup within a window:
 
     \image qtquickcontrols2-popup.png
 
@@ -983,12 +983,13 @@ void QQuickPopup::resetSpacing()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::margins
 
-    This property holds the default margins around the popup.
+    This property holds the distance between the edges of the popup and the
+    edges of its window.
 
     A popup with negative margins is not pushed within the bounds
     of the enclosing window. The default value is \c -1.
 
-    \sa topMargin, leftMargin, rightMargin, bottomMargin
+    \sa topMargin, leftMargin, rightMargin, bottomMargin, {Popup Layout}
 */
 qreal QQuickPopup::margins() const
 {
@@ -1024,12 +1025,13 @@ void QQuickPopup::resetMargins()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::topMargin
 
-    This property holds the top margin around the popup.
+    This property holds the distance between the top edge of the popup and
+    the top edge of its window.
 
     A popup with a negative top margin is not pushed within the top edge
     of the enclosing window. The default value is \c -1.
 
-    \sa margins, bottomMargin
+    \sa margins, bottomMargin, {Popup Layout}
 */
 qreal QQuickPopup::topMargin() const
 {
@@ -1054,12 +1056,13 @@ void QQuickPopup::resetTopMargin()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::leftMargin
 
-    This property holds the left margin around the popup.
+    This property holds the distance between the left edge of the popup and
+    the left edge of its window.
 
     A popup with a negative left margin is not pushed within the left edge
     of the enclosing window. The default value is \c -1.
 
-    \sa margins, rightMargin
+    \sa margins, rightMargin, {Popup Layout}
 */
 qreal QQuickPopup::leftMargin() const
 {
@@ -1084,12 +1087,13 @@ void QQuickPopup::resetLeftMargin()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::rightMargin
 
-    This property holds the right margin around the popup.
+    This property holds the distance between the right edge of the popup and
+    the right edge of its window.
 
     A popup with a negative right margin is not pushed within the right edge
     of the enclosing window. The default value is \c -1.
 
-    \sa margins, leftMargin
+    \sa margins, leftMargin, {Popup Layout}
 */
 qreal QQuickPopup::rightMargin() const
 {
@@ -1114,12 +1118,13 @@ void QQuickPopup::resetRightMargin()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::bottomMargin
 
-    This property holds the bottom margin around the popup.
+    This property holds the distance between the bottom edge of the popup and
+    the bottom edge of its window.
 
     A popup with a negative bottom margin is not pushed within the bottom edge
     of the enclosing window. The default value is \c -1.
 
-    \sa margins, topMargin
+    \sa margins, topMargin, {Popup Layout}
 */
 qreal QQuickPopup::bottomMargin() const
 {
