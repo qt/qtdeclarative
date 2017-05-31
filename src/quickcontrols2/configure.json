@@ -16,7 +16,8 @@
         },
         "quickcontrols2-fusion": {
             "label": "Fusion",
-            "purpose": "Provides a platform agnostic Fusion style for the Qt Quick Controls 2",
+            "purpose": "Provides the platform agnostic desktop-oriented Fusion style.",
+            "section": "Quick Controls 2",
             "condition": "features.quickcontrols2-default",
             "output": [ "privateFeature" ]
         },
