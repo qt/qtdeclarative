@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,21 +48,40 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickStyle>
+import QtQuick 2.6
+import QtQuick.Controls 2.0
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
+ApplicationWindow {
+    width: 400
+    height: 400
 
-    //! [style]
-    QQuickStyle::setStyle(QStringLiteral("qrc:/qml/Style"));
-    //! [style]
+    property alias drawer: drawer
+    property alias popup: popup
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/wearable.qml")));
+    Drawer {
+        id: drawer
+        width: 200
+        height: parent.height
+        dragMargin: parent.width
+    }
 
-    return app.exec();
+    Popup {
+        id: popup
+        modal: true
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: parent.width / 2
+        height: parent.height / 2
+
+        Rectangle {
+            objectName: "shadow"
+            parent: popup.background
+            anchors.fill: parent
+            anchors.margins: -20
+
+            z: -1
+            opacity: 0.5
+            color: "silver"
+        }
+    }
 }

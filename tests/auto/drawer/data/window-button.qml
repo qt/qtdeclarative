@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,21 +48,24 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickStyle>
+import QtQuick 2.6
+import QtQuick.Window 2.2
+import QtQuick.Controls 2.0
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
+Window {
+    width: 400
+    height: 400
 
-    //! [style]
-    QQuickStyle::setStyle(QStringLiteral("qrc:/qml/Style"));
-    //! [style]
+    property alias drawer: drawer
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/wearable.qml")));
+    Drawer {
+        id: drawer
+        width: 200
+        height: 200
 
-    return app.exec();
+        Button {
+            text: "Button"
+            anchors.fill: parent
+        }
+    }
 }
