@@ -14,9 +14,12 @@ SOURCES += \
 
 QML_CONTROLS = \
     $$PWD/AbstractButton.qml \
+    $$PWD/Action.qml \
+    $$PWD/ActionGroup.qml \
     $$PWD/ApplicationWindow.qml \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
+    $$PWD/ButtonGroup.qml \
     $$PWD/CheckBox.qml \
     $$PWD/CheckDelegate.qml \
     $$PWD/CheckIndicator.qml \
