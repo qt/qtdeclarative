@@ -37,6 +37,7 @@
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
 #include "qquickmenuitem_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtGui/qevent.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
@@ -523,6 +524,11 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
     QQuickItem *item = itemAt(index);
     if (item)
         item->forceActiveFocus();
+}
+
+QFont QQuickMenu::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::MenuFont);
 }
 
 #if QT_CONFIG(accessibility)
