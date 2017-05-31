@@ -337,6 +337,7 @@ private slots:
     void instanceof();
     void freeze_empty_object();
     void singleBlockLoops();
+    void qtbug_60547();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8248,6 +8249,16 @@ void tst_qqmlecmascript::singleBlockLoops()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != 0);
     QVERIFY(!component.isError());
+}
+
+// 'counter' was incorrectly resolved as a type rather than a variable.
+// This fix ensures it looks up the right thing.
+void tst_qqmlecmascript::qtbug_60547()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug60547/main.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+    QCOMPARE(object->property("counter"), QVariant(int(1)));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -41,6 +41,7 @@
 #include <qcoreevent.h>
 #include <qsettings.h>
 #include <qpointer.h>
+#include <qjsvalue.h>
 #include <qdebug.h>
 #include <qhash.h>
 
@@ -241,6 +242,7 @@ public:
     void store();
 
     void _q_propertyChanged();
+    QVariant readProperty(const QMetaProperty &property) const;
 
     QQmlSettings *q_ptr;
     int timerId;
@@ -295,7 +297,7 @@ void QQmlSettingsPrivate::load()
     for (int i = offset; i < count; ++i) {
         QMetaProperty property = mo->property(i);
 
-        const QVariant previousValue = property.read(q);
+        const QVariant previousValue = readProperty(property);
         const QVariant currentValue = instance()->value(property.name(), previousValue);
 
         if (!currentValue.isNull() && (!previousValue.isValid()
@@ -340,14 +342,24 @@ void QQmlSettingsPrivate::_q_propertyChanged()
     const int count = mo->propertyCount();
     for (int i = offset; i < count; ++i) {
         const QMetaProperty &property = mo->property(i);
-        changedProperties.insert(property.name(), property.read(q));
+        const QVariant value = readProperty(property);
+        changedProperties.insert(property.name(), value);
 #ifdef SETTINGS_DEBUG
-        qDebug() << "QQmlSettings: cache" << property.name() << ":" << property.read(q);
+        qDebug() << "QQmlSettings: cache" << property.name() << ":" << value;
 #endif
     }
     if (timerId != 0)
         q->killTimer(timerId);
     timerId = q->startTimer(settingsWriteDelay);
+}
+
+QVariant QQmlSettingsPrivate::readProperty(const QMetaProperty &property) const
+{
+    Q_Q(const QQmlSettings);
+    QVariant var = property.read(q);
+    if (var.userType() == qMetaTypeId<QJSValue>())
+        var = var.value<QJSValue>().toVariant();
+    return var;
 }
 
 QQmlSettings::QQmlSettings(QObject *parent)
