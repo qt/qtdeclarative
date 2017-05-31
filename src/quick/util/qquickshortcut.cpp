@@ -416,3 +416,5 @@ void QQuickShortcut::ungrabShortcut(Shortcut &shortcut)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickshortcut_p.cpp"

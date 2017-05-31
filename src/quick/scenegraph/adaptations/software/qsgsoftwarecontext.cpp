@@ -222,3 +222,5 @@ void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) c
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgsoftwarecontext_p.cpp"

@@ -751,3 +751,5 @@ void QQuickContext2DImageTexture::compositeTile(QQuickContext2DTile* tile)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcontext2dtexture_p.cpp"

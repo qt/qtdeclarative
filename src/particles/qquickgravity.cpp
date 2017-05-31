@@ -134,3 +134,5 @@ bool QQuickGravityAffector::affectParticle(QQuickParticleData *d, qreal dt)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickgravity_p.cpp"

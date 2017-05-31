@@ -301,3 +301,5 @@ void QQuickGraphicsInfo::setWindow(QQuickWindow *window)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickgraphicsinfo_p.cpp"

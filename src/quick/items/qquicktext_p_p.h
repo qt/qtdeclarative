@@ -89,6 +89,7 @@ public:
     void processHoverEvent(QHoverEvent *event);
 
     QRectF layedOutTextRect;
+    QSizeF advance;
 
     struct ExtraData {
         ExtraData();

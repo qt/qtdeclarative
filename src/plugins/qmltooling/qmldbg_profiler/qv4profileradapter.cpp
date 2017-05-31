@@ -210,3 +210,5 @@ void QV4ProfilerAdapter::forwardEnabledWhileWaiting(quint64 features)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4profileradapter.cpp"

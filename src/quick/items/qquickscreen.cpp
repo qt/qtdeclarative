@@ -86,6 +86,41 @@ QT_BEGIN_NAMESPACE
     The name of the screen.
 */
 /*!
+    \qmlattachedproperty int Screen::virtualX
+    \readonly
+    \since 5.9
+
+    The x coordinate of the screen within the virtual desktop.
+*/
+/*!
+    \qmlattachedproperty int Screen::virtualY
+    \readonly
+    \since 5.9
+
+    The y coordinate of the screen within the virtual desktop.
+*/
+/*!
+    \qmlattachedproperty string Screen::manufacturer
+    \readonly
+    \since 5.10
+
+    The manufacturer of the screen.
+*/
+/*!
+    \qmlattachedproperty string Screen::model
+    \readonly
+    \since 5.10
+
+    The model of the screen.
+*/
+/*!
+    \qmlattachedproperty string Screen::serialNumber
+    \readonly
+    \since 5.10
+
+    The serial number of the screen.
+*/
+/*!
     \qmlattachedproperty int Screen::width
     \readonly
 
@@ -220,6 +255,27 @@ QString QQuickScreenInfo::name() const
     return m_screen->name();
 }
 
+QString QQuickScreenInfo::manufacturer() const
+{
+    if (!m_screen)
+        return QString();
+    return m_screen->manufacturer();
+}
+
+QString QQuickScreenInfo::model() const
+{
+    if (!m_screen)
+        return QString();
+    return m_screen->model();
+}
+
+QString QQuickScreenInfo::serialNumber() const
+{
+    if (!m_screen)
+        return QString();
+    return m_screen->serialNumber();
+}
+
 int QQuickScreenInfo::width() const
 {
     if (!m_screen)
@@ -321,6 +377,12 @@ void QQuickScreenInfo::setWrappedScreen(QScreen *screen)
     }
     if (!oldScreen || screen->name() != oldScreen->name())
         emit nameChanged();
+    if (!oldScreen || screen->manufacturer() != oldScreen->manufacturer())
+        emit manufacturerChanged();
+    if (!oldScreen || screen->model() != oldScreen->model())
+        emit modelChanged();
+    if (!oldScreen || screen->serialNumber() != oldScreen->serialNumber())
+        emit serialNumberChanged();
     if (!oldScreen || screen->orientation() != oldScreen->orientation())
         emit orientationChanged();
     if (!oldScreen || screen->primaryOrientation() != oldScreen->primaryOrientation())
@@ -435,3 +497,5 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscreen_p.cpp"

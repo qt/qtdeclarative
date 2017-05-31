@@ -223,6 +223,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(Qt::TextFormat qtEnumProperty READ qtEnumProperty WRITE setQtEnumProperty NOTIFY qtEnumPropertyChanged)
     Q_PROPERTY(MyMirroredEnum mirroredEnumProperty READ mirroredEnumProperty WRITE setMirroredEnumProperty NOTIFY mirroredEnumPropertyChanged)
     Q_PROPERTY(MyEnumContainer::RelatedEnum relatedEnumProperty READ relatedEnumProperty WRITE setRelatedEnumProperty)
+    Q_PROPERTY(MyScopedEnum scopedEnum READ scopedEnum WRITE setScopedEnum)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
     Q_PROPERTY(QByteArray byteArrayProperty READ byteArrayProperty WRITE setByteArrayProperty NOTIFY byteArrayPropertyChanged)
     Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty NOTIFY uintPropertyChanged)
@@ -337,6 +338,14 @@ public:
     }
     void setRelatedEnumProperty(MyEnumContainer::RelatedEnum v) {
         relatedEnumPropertyValue = v;
+    }
+
+    enum class MyScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
+    Q_ENUM(MyScopedEnum)
+    MyScopedEnum scopedEnumPropertyValue;
+    MyScopedEnum scopedEnum() const { return scopedEnumPropertyValue; }
+    void setScopedEnum(MyScopedEnum v) {
+        scopedEnumPropertyValue = v;
     }
 
     QString stringPropertyValue;
@@ -737,6 +746,13 @@ namespace MyNamespace {
         Key5 = 5
     };
     Q_ENUM_NS(MyNSEnum);
+
+    enum class MyOtherNSEnum {
+        OtherKey1 = 1,
+        OtherKey2
+    };
+    Q_ENUM_NS(MyOtherNSEnum);
+
 
     class MyNamespacedType : public QObject
     {
@@ -1171,9 +1187,11 @@ class MyCompositeBaseType : public QObject
 {
     Q_OBJECT
     Q_ENUMS(CompositeEnum)
+    Q_ENUMS(ScopedCompositeEnum)
 
 public:
     enum CompositeEnum { EnumValue0, EnumValue42 = 42 };
+    enum class ScopedCompositeEnum : int { EnumValue15 = 15 };
     static QObject *qmlAttachedProperties(QObject *parent) { return new QObject(parent); }
 };
 

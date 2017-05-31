@@ -113,3 +113,5 @@ void SegmentProperties::invalidate()
 
      m_blockSignals = false;
 }
+
+#include "moc_segmentproperties.cpp"

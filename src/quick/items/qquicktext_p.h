@@ -99,6 +99,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
 
     Q_PROPERTY(QJSValue fontInfo READ fontInfo NOTIFY fontInfoChanged REVISION 9)
+    Q_PROPERTY(QSizeF advance READ advance NOTIFY contentSizeChanged REVISION 10)
 
 public:
     QQuickText(QQuickItem *parent=0);
@@ -251,6 +252,7 @@ public:
     void resetBottomPadding();
 
     QJSValue fontInfo() const;
+    QSizeF advance() const;
 
 Q_SIGNALS:
     void textChanged(const QString &text);

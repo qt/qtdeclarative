@@ -267,3 +267,5 @@ bool QQuickParticleAffector::isColliding(QQuickParticleData *d) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickparticleaffector_p.cpp"

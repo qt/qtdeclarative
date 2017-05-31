@@ -758,3 +758,5 @@ void QQuickFontValueType::setHintingPreference(QQuickFontValueType::HintingPrefe
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickvaluetypes_p.cpp"

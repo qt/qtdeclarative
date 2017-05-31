@@ -346,3 +346,5 @@ QString QQuickFontMetrics::elidedText(const QString &text, Qt::TextElideMode mod
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfontmetrics_p.cpp"

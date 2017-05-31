@@ -618,4 +618,6 @@ void QQuickDropEvent::accept(QQmlV4Function *args)
 
 QT_END_NAMESPACE
 
+#include "moc_qquickdroparea_p.cpp"
+
 #endif // draganddrop

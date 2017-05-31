@@ -444,10 +444,6 @@ void Function::setScheduledBlocks(const QVector<BasicBlock *> &scheduled)
     Q_ASSERT(!_allBasicBlocks);
     _allBasicBlocks = new QVector<BasicBlock *>(basicBlocks());
     _basicBlocks = scheduled;
-}
-
-void Function::renumberBasicBlocks()
-{
     for (int i = 0, ei = basicBlockCount(); i != ei; ++i)
         basicBlock(i)->changeIndex(i);
 }

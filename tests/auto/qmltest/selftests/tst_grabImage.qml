@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2017 Crimson AS <info@crimson.no>
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -45,9 +46,66 @@ TestCase {
         oldImage = grabImage(rect);
         // Don't change anything...
         newImage = grabImage(rect);
-        verify(newImage.equals(oldImage));
+        try {
+            compare(newImage.size, oldImage.size);
+            verify(newImage.equals(oldImage));
+        } catch (ex) {
+            oldImage.save("tst_grabImage_test_equals_oldImage.png")
+            newImage.save("tst_grabImage_test_equals_newImage.png")
+            throw ex;
+        }
 
         verify(!newImage.equals(null));
         verify(!newImage.equals(undefined));
+    }
+
+    function test_sizeProps() {
+        var rect = createTemporaryQmlObject("import QtQuick 2.0; Rectangle { color: 'red'; width: 10; height: 20; }", testCase);
+        var image = grabImage(rect);
+
+        try {
+            compare(image.width, 10)
+            compare(image.height, 20)
+            compare(image.size, Qt.size(10, 20))
+        } catch (ex) {
+            image.save("tst_grabImage_test_sizeProps.png")
+            throw ex;
+        }
+    }
+
+    function test_save() {
+        var rect = createTemporaryQmlObject("import QtQuick 2.0; Rectangle { color: 'red'; width: 10; height: 20; }", testCase);
+        var grabbedImage = grabImage(rect);
+        grabbedImage.save("tst_grabImage_test_save.png")
+
+        // Now try to load it
+        var url = Qt.resolvedUrl("tst_grabImage_test_save.png")
+        var image = createTemporaryQmlObject("import QtQuick 2.0; Image { source: \"" + url + "\" }", testCase);
+        tryCompare(image, "status", Image.Ready)
+        var grabbedImage2 = grabImage(image);
+
+        try {
+            verify(grabbedImage2.equals(grabbedImage))
+        } catch (ex) {
+            grabbedImage2.save("tst_grabImage_test_save2.png")
+            throw ex;
+        }
+    }
+
+    function test_saveThrowsWhenFailing() {
+        var rect = createTemporaryQmlObject("import QtQuick 2.0; Rectangle { color: 'red'; width: 10; height: 20; }", testCase);
+        var grabbedImage = grabImage(rect);
+        var didThrow = false;
+
+        try {
+            // Format doesn't exist, so this will throw
+            grabbedImage.save("tst_grabImage_test_saveThrowsWhenFailing.never-gonna-give-you-up");
+        } catch (ex) {
+            didThrow = true;
+        }
+
+        if (!didThrow) {
+            fail("save() should have thrown, but didn't!")
+        }
     }
 }

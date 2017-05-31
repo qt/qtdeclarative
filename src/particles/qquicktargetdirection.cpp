@@ -129,3 +129,5 @@ QPointF QQuickTargetDirection::sample(const QPointF &from)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktargetdirection_p.cpp"

@@ -3056,3 +3056,5 @@ void QQuickTextEdit::clear()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktextedit_p.cpp"

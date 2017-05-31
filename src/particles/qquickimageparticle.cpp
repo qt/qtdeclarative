@@ -1927,3 +1927,5 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimageparticle_p.cpp"

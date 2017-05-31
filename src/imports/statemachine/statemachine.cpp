@@ -219,3 +219,5 @@ QQmlListProperty<QObject> StateMachine::children()
 
     \sa running, stop(), State::finished
 */
+
+#include "moc_statemachine.cpp"

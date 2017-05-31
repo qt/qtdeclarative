@@ -81,3 +81,5 @@ void QQmlProfiler::reportData(bool trackLocations)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlprofiler_p.cpp"

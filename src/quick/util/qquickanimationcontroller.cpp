@@ -297,3 +297,4 @@ void QQuickAnimationController::completeToEnd()
 QT_END_NAMESPACE
 
 
+#include "moc_qquickanimationcontroller_p.cpp"

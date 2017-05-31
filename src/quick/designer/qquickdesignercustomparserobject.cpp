@@ -57,3 +57,5 @@ void QQuickDesignerCustomParser::applyBindings(QObject *, QV4::CompiledData::Com
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdesignercustomparserobject_p.cpp"

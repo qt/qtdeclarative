@@ -585,3 +585,5 @@ QQuickAnimatorJob *QQuickUniformAnimator::createJob() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimator_p.cpp"

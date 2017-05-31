@@ -128,3 +128,5 @@ void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlextensionplugin.cpp"

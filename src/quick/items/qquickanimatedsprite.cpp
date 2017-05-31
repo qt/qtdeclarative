@@ -815,3 +815,5 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimatedsprite_p.cpp"

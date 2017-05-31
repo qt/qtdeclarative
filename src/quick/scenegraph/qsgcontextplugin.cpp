@@ -232,4 +232,15 @@ void QSGContext::setBackend(const QString &backend)
     backendData->quickWindowBackendRequest = backend;
 }
 
+QString QSGContext::backend()
+{
+    QSGAdaptationBackendData *backendData = qsg_adaptation_data();
+    if (backendData->tried)
+        return backendData->name;
+
+    return backendData->quickWindowBackendRequest;
+}
+
 QT_END_NAMESPACE
+
+#include "moc_qsgcontextplugin_p.cpp"

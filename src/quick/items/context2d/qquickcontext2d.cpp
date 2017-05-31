@@ -4325,3 +4325,5 @@ void QQuickContext2D::setV4Engine(QV4::ExecutionEngine *engine)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcontext2d_p.cpp"

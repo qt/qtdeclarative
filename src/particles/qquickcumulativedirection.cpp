@@ -68,3 +68,5 @@ QPointF QQuickCumulativeDirection::sample(const QPointF &from)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcumulativedirection_p.cpp"

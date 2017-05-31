@@ -313,3 +313,5 @@ QQuickItemParticleAttached *QQuickItemParticle::qmlAttachedProperties(QObject *o
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemparticle_p.cpp"

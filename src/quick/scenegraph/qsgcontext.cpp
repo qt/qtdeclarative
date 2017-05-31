@@ -228,14 +228,6 @@ public:
     int m_good;
 };
 
-class QSGTextureCleanupEvent : public QEvent
-{
-public:
-    QSGTextureCleanupEvent(QSGTexture *t) : QEvent(QEvent::User), texture(t) { }
-    ~QSGTextureCleanupEvent() { delete texture; }
-    QSGTexture *texture;
-};
-
 /*!
     \class QSGContext
 
@@ -413,5 +405,6 @@ void QSGRenderContext::textureFactoryDestroyed(QObject *o)
 }
 
 #include "qsgcontext.moc"
+#include "moc_qsgcontext_p.cpp"
 
 QT_END_NAMESPACE

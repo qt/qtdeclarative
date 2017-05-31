@@ -2428,3 +2428,4 @@ QQuickPathViewAttached *QQuickPathView::qmlAttachedProperties(QObject *obj)
 
 QT_END_NAMESPACE
 
+#include "moc_qquickpathview_p.cpp"

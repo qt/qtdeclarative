@@ -269,3 +269,5 @@ void QSGSoftwareRenderLoop::handleUpdateRequest(QQuickWindow *window)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgsoftwarerenderloop_p.cpp"

@@ -640,6 +640,10 @@ void QQuickCanvasItem::releaseResources()
         QQuickWindowQObjectCleanupJob::schedule(window(), d->textureProvider);
         d->textureProvider = 0;
     }
+    if (d->nodeTexture) {
+        QQuickWindowQObjectCleanupJob::schedule(window(), d->nodeTexture);
+        d->nodeTexture = 0;
+    }
 }
 
 bool QQuickCanvasItem::event(QEvent *event)
@@ -662,6 +666,8 @@ void QQuickCanvasItem::invalidateSceneGraph()
     d->node = 0; // managed by the scene graph, just reset the pointer
     delete d->textureProvider;
     d->textureProvider = 0;
+    delete d->nodeTexture;
+    d->nodeTexture = 0;
 }
 
 void QQuickCanvasItem::schedulePolish()
@@ -1246,3 +1252,5 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcanvasitem_p.cpp"

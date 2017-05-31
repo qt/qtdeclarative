@@ -79,3 +79,5 @@ QString QQmlPlatform::os()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlplatform_p.cpp"

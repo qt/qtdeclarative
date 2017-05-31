@@ -110,3 +110,5 @@ qreal QQuickTextUtil::alignedY(const qreal textHeight, const qreal itemHeight, i
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktextutil_p.cpp"

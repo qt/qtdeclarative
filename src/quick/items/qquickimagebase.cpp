@@ -328,16 +328,16 @@ void QQuickImageBase::requestProgress(qint64 received, qint64 total)
 
 void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    if (change == ItemSceneChange && value.window)
-        connect(value.window, &QQuickWindow::screenChanged, this, &QQuickImageBase::handleScreenChanged);
+    Q_D(QQuickImageBase);
+    // If the screen DPI changed, reload image.
+    if (change == ItemDevicePixelRatioHasChanged && value.realValue != d->devicePixelRatio) {
+        // ### how can we get here with !qmlEngine(this)? that implies
+        // itemChange() on an item pending deletion, which seems strange.
+        if (qmlEngine(this) && isComponentComplete() && d->url.isValid()) {
+            load();
+        }
+    }
     QQuickItem::itemChange(change, value);
-}
-
-void QQuickImageBase::handleScreenChanged(QScreen* screen)
-{
-    // Screen DPI might have changed, reload images on screen change.
-    if (qmlEngine(this) && screen && isComponentComplete())
-        load();
 }
 
 void QQuickImageBase::componentComplete()
@@ -406,3 +406,5 @@ void QQuickImageBase::setAutoTransform(bool transform)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimagebase_p.cpp"

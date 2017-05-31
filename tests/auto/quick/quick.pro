@@ -86,7 +86,8 @@ QUICKTESTS =  \
     qquickdesignersupport \
     qquickscreen \
     touchmouse \
-    scenegraph
+    scenegraph \
+    sharedimage
 
 SUBDIRS += $$PUBLICTESTS
 

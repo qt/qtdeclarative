@@ -472,3 +472,5 @@ QRectF QSGDefaultLayer::normalizedTextureSubRect() const
                   m_mirrorHorizontal ? -1 : 1,
                   m_mirrorVertical ? 1 : -1);
 }
+
+#include "moc_qsgdefaultlayer_p.cpp"

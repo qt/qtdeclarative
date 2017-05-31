@@ -68,6 +68,9 @@ class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(QString manufacturer READ manufacturer NOTIFY manufacturerChanged REVISION 10)
+    Q_PROPERTY(QString model READ model NOTIFY modelChanged REVISION 10)
+    Q_PROPERTY(QString serialNumber READ serialNumber NOTIFY serialNumberChanged REVISION 10)
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged)
@@ -87,6 +90,9 @@ public:
     QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
 
     QString name() const;
+    QString manufacturer() const;
+    QString model() const;
+    QString serialNumber() const;
     int width() const;
     int height() const;
     int desktopAvailableWidth() const;
@@ -104,6 +110,9 @@ public:
 
 Q_SIGNALS:
     void nameChanged();
+    Q_REVISION(10) void manufacturerChanged();
+    Q_REVISION(10) void modelChanged();
+    Q_REVISION(10) void serialNumberChanged();
     void widthChanged();
     void heightChanged();
     void desktopGeometryChanged();

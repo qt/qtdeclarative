@@ -123,7 +123,6 @@ protected:
 private Q_SLOTS:
     virtual void requestFinished();
     void requestProgress(qint64,qint64);
-    void handleScreenChanged(QScreen *screen);
 
 private:
     Q_DISABLE_COPY(QQuickImageBase)

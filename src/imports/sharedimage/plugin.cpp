@@ -43,7 +43,7 @@
 
 
 /*!
-    \qmlmodule QtQuick.SharedImage 1
+    \qmlmodule Qt.labs.sharedimage 1
     \title Qt Quick Shared Image Provider
     \ingroup qmlmodules
     \brief Adds an image provider which utilizes shared CPU memory
@@ -62,7 +62,7 @@
 
     To use this module, import it like this:
     \code
-    import QtQuick.SharedImage 1.0
+    import Qt.labs.sharedimage 1.0
     \endcode
 
     The sharing functionality is provided through a QQuickImageProvider. Use
@@ -99,13 +99,6 @@
     The shared image module does not provide any directly usable QML types.
 */
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_SharedImage);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QtQuickSharedImagePlugin : public QQmlExtensionPlugin
@@ -113,13 +106,12 @@ class QtQuickSharedImagePlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuickSharedImagePlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQuickSharedImagePlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) {}
 
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    void registerTypes(const char *uri) override
     {
-        Q_ASSERT(uri == QStringLiteral("QtQuick.SharedImage"));
-        // Need to register *something* to let our version number be known:
-        qmlRegisterTypeNotAvailable(uri, 1, 0, "nosuchtype", QStringLiteral("Just a dummy type, do not use"));
+        Q_ASSERT(uri == QStringLiteral("Qt.labs.sharedimage"));
+        qmlRegisterModule(uri, 1, 0);
     }
 
     void initializeEngine(QQmlEngine *engine, const char *uri) override

@@ -112,11 +112,6 @@ public:
 
     QObject *modelObject() { return this; }
 
-    void incubateObject(
-            QQmlComponent *component,
-            QQmlEngine *engine,
-            QQmlContextData *context,
-            QQmlContextData *forContext);
     void destroyObject();
 
     static QQmlDelegateModelItem *dataForObject(QObject *object);

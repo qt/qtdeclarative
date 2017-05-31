@@ -200,3 +200,5 @@ void QQuickOpenGLInfo::setWindow(QQuickWindow *window)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickopenglinfo_p.cpp"

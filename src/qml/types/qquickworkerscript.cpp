@@ -758,3 +758,4 @@ QT_END_NAMESPACE
 
 #include <qquickworkerscript.moc>
 
+#include "moc_qquickworkerscript_p.cpp"

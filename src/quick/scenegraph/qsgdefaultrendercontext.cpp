@@ -301,3 +301,5 @@ QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(con
 
     return cache;
 }
+
+#include "moc_qsgdefaultrendercontext_p.cpp"

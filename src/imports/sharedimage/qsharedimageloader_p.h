@@ -56,11 +56,6 @@ class QSharedImageLoader : public QObject
     Q_DECLARE_PRIVATE(QSharedImageLoader)
 
 public:
-    enum ImageParameter {
-        OriginalSize = 0,
-        RequestedSize,
-        NumImageParameters
-    };
     typedef QVector<QVariant> ImageParameters;
 
     QSharedImageLoader(QObject *parent = Q_NULLPTR);

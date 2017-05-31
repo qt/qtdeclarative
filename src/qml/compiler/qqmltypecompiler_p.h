@@ -209,7 +209,7 @@ private:
     bool tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache,
                                     const QQmlPropertyData *prop,
                                     QmlIR::Binding *binding);
-    int evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const;
+    int evaluateEnum(const QString &scope, const QStringRef &enumName, const QStringRef &enumValue, bool *ok) const;
 
 
     const QVector<QmlIR::Object*> &qmlObjects;

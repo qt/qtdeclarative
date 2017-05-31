@@ -265,3 +265,5 @@ QString QQuickTextMetrics::elidedText() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktextmetrics_p.cpp"

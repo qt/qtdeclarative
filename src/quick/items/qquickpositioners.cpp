@@ -2215,3 +2215,5 @@ void QQuickFlow::reportConflictingAnchors()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpositioners_p.cpp"

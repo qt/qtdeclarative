@@ -140,3 +140,5 @@ void QQuickApplication::updateScreens()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickapplication_p.cpp"

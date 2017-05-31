@@ -160,3 +160,5 @@ bool QQuickAttractorAffector::affectParticle(QQuickParticleData *d, qreal dt)
     return true;
 }
 QT_END_NAMESPACE
+
+#include "moc_qquickpointattractor_p.cpp"

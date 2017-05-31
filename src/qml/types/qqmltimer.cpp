@@ -355,3 +355,5 @@ void QQmlTimerPrivate::animationFinished(QAbstractAnimationJob *)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmltimer_p.cpp"

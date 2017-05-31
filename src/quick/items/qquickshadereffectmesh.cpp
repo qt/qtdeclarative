@@ -434,3 +434,5 @@ void QQuickBorderImageMesh::setVerticalTileMode(TileMode t)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickshadereffectmesh_p.cpp"

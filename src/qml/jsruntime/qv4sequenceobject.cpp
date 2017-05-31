@@ -524,6 +524,9 @@ public:
         return QVariant::fromValue(result);
     }
 
+    void* getRawContainerPtr() const
+    { return d()->container; }
+
     void loadReference() const
     {
         Q_ASSERT(d()->object);
@@ -745,6 +748,19 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
 }
 
 #undef SEQUENCE_TO_VARIANT
+
+#define SEQUENCE_GET_RAWCONTAINERPTR(ElementType, ElementTypeName, SequenceType, unused) \
+    if (const QQml##ElementTypeName##List *list = [&]() -> const QQml##ElementTypeName##List* \
+        { if (typeHint == qMetaTypeId<SequenceType>()) return object->as<QQml##ElementTypeName##List>(); return nullptr;}()) \
+        return list->getRawContainerPtr(); \
+    else
+
+void* SequencePrototype::getRawContainerPtr(const Object *object, int typeHint)
+{
+    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_GET_RAWCONTAINERPTR) { /* else */ return nullptr; }
+}
+
+#undef SEQUENCE_GET_RAWCONTAINERPTR
 
 #define MAP_META_TYPE(ElementType, ElementTypeName, SequenceType, unused) \
     if (object->as<QQml##ElementTypeName##List>()) { \

@@ -364,3 +364,5 @@ QQmlDebugConnector *QQmlNativeDebugConnectorFactory::create(const QString &key)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlnativedebugconnector.cpp"

@@ -708,3 +708,5 @@ void QQuickStateOperation::setState(QQuickState *state)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstate_p.cpp"

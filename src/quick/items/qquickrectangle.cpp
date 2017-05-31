@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2017 Crimson AS <info@crimson.no>
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -90,6 +91,7 @@ void QQuickPen::setWidth(qreal w)
 
     m_width = w;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    static_cast<QQuickItem*>(parent())->update();
     emit penChanged();
 }
 
@@ -102,6 +104,7 @@ void QQuickPen::setColor(const QColor &c)
 {
     m_color = c;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    static_cast<QQuickItem*>(parent())->update();
     emit penChanged();
 }
 
@@ -116,6 +119,7 @@ void QQuickPen::setPixelAligned(bool aligned)
         return;
     m_aligned = aligned;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    static_cast<QQuickItem*>(parent())->update();
     emit penChanged();
 }
 
@@ -266,10 +270,8 @@ QGradientStops QQuickGradient::gradientStops() const
 
 void QQuickGradient::doUpdate()
 {
-    emit updated();
+    static_cast<QQuickItem*>(parent())->update();
 }
-
-int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 
 /*!
     \qmltype Rectangle
@@ -324,11 +326,6 @@ QQuickRectangle::QQuickRectangle(QQuickItem *parent)
     setFlag(ItemHasContents);
 }
 
-void QQuickRectangle::doUpdate()
-{
-    update();
-}
-
 /*!
     \qmlproperty bool QtQuick::Rectangle::antialiasing
 
@@ -356,7 +353,11 @@ void QQuickRectangle::doUpdate()
 QQuickPen *QQuickRectangle::border()
 {
     Q_D(QQuickRectangle);
-    return d->getPen();
+    if (!d->pen) {
+        d->pen = new QQuickPen;
+        QQml_setParent_noEvent(d->pen, this);
+    }
+    return d->pen;
 }
 
 /*!
@@ -389,16 +390,7 @@ void QQuickRectangle::setGradient(QQuickGradient *gradient)
     Q_D(QQuickRectangle);
     if (d->gradient == gradient)
         return;
-    static int updatedSignalIdx = -1;
-    if (updatedSignalIdx < 0)
-        updatedSignalIdx = QMetaMethod::fromSignal(&QQuickGradient::updated).methodIndex();
-    if (d->doUpdateSlotIdx < 0)
-        d->doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
-    if (d->gradient)
-        QMetaObject::disconnect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
     d->gradient = gradient;
-    if (d->gradient)
-        QMetaObject::connect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
     update();
 }
 
@@ -511,3 +503,5 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickrectangle_p.cpp"

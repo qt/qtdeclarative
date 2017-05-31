@@ -174,3 +174,5 @@ QQmlDebugConnectorFactory::~QQmlDebugConnectorFactory()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldebugconnector_p.cpp"

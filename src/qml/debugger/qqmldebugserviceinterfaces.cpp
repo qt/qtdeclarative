@@ -50,3 +50,5 @@ const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
 const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldebugserviceinterfaces_p.cpp"

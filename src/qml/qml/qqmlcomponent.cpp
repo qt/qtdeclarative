@@ -1040,6 +1040,35 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
     enginePriv->incubate(incubator, forContextData);
 }
 
+/*
+    This is essentially a copy of QQmlComponent::create(); except it takes the QQmlContextData
+    arguments instead of QQmlContext which means we don't have to construct the rather weighty
+    wrapper class for every delegate item.
+
+    This is used by QQmlDelegateModel.
+*/
+void QQmlComponentPrivate::incubateObject(
+        QQmlIncubator *incubationTask,
+        QQmlComponent *component,
+        QQmlEngine *engine,
+        QQmlContextData *context,
+        QQmlContextData *forContext)
+{
+    QQmlIncubatorPrivate *incubatorPriv = QQmlIncubatorPrivate::get(incubationTask);
+    QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
+    QQmlComponentPrivate *componentPriv = QQmlComponentPrivate::get(component);
+
+    incubatorPriv->compilationUnit = componentPriv->compilationUnit;
+    incubatorPriv->compilationUnit->addref();
+    incubatorPriv->enginePriv = enginePriv;
+    incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->compilationUnit, componentPriv->creationContext));
+    incubatorPriv->subComponentToCreate = componentPriv->start;
+
+    enginePriv->incubate(*incubationTask, forContext);
+}
+
+
+
 class QQmlComponentIncubator;
 
 namespace QV4 {
@@ -1527,3 +1556,5 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 #undef INITIALPROPERTIES_SOURCE
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlcomponent.cpp"

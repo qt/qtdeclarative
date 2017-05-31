@@ -359,7 +359,7 @@ int ListModel::appendElement()
 void ListModel::insertElement(int index)
 {
     newElement(index);
-    updateCacheIndices();
+    updateCacheIndices(index);
 }
 
 void ListModel::move(int from, int to, int n)
@@ -381,7 +381,7 @@ void ListModel::move(int from, int to, int n)
     for (int i=0 ; i < store.count() ; ++i)
         elements[from+i] = store[i];
 
-    updateCacheIndices();
+    updateCacheIndices(from, to + n);
 }
 
 void ListModel::newElement(int index)
@@ -390,9 +390,14 @@ void ListModel::newElement(int index)
     elements.insert(index, e);
 }
 
-void ListModel::updateCacheIndices()
+void ListModel::updateCacheIndices(int start, int end)
 {
-    for (int i=0 ; i < elements.count() ; ++i) {
+    int count = elements.count();
+
+    if (end < 0 || end > count)
+        end = count;
+
+    for (int i = start; i < end; ++i) {
         ListElement *e = elements.at(i);
         if (ModelNodeMetaObject *mo = e->objectCache())
             mo->m_elementIndex = i;
@@ -574,7 +579,7 @@ void ListModel::remove(int index, int count)
         delete elements[index+i];
     }
     elements.remove(index, count);
-    updateCacheIndices();
+    updateCacheIndices(index);
 }
 
 void ListModel::insert(int elementIndex, QV4::Object *object)
@@ -1987,12 +1992,12 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
     if (m_mainThread && m_agent == 0) {
         if (enableDynamicRoles) {
             if (m_layout->roleCount())
-                qmlWarning(this) << tr("unable to enable dynamic roles as this model is not empty!");
+                qmlWarning(this) << tr("unable to enable dynamic roles as this model is not empty");
             else
                 m_dynamicRoles = true;
         } else {
             if (m_roles.count()) {
-                qmlWarning(this) << tr("unable to enable static roles as this model is not empty!");
+                qmlWarning(this) << tr("unable to enable static roles as this model is not empty");
             } else {
                 m_dynamicRoles = false;
             }
@@ -2606,3 +2611,5 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qqmllistmodel_p.cpp"
