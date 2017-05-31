@@ -1428,4 +1428,27 @@ TestCase {
         compare(control.currentIndex, 0)
         compare(control.currentText, "A")
     }
+
+    function test_emptyPopupAfterModelCleared() {
+        var control = createTemporaryObject(comboBox, testCase, { model: 1 })
+        verify(control)
+        compare(control.popup.implicitHeight, 0)
+        compare(control.popup.height, 0)
+
+        // Ensure that it's open so that the popup's implicitHeight changes when we increase the model count.
+        control.popup.open()
+        tryCompare(control.popup, "visible", true)
+
+        // Add lots of items to the model. The popup should take up the entire height of the window.
+        control.model = 100
+        compare(control.popup.height, control.Window.height - control.popup.topMargin - control.popup.bottomMargin)
+
+        control.popup.close()
+
+        // Clearing the model should result in a zero height.
+        control.model = 0
+        control.popup.open()
+        tryCompare(control.popup, "visible", true)
+        compare(control.popup.height, 0)
+    }
 }
