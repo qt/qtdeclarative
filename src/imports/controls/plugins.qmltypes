@@ -134,6 +134,13 @@ Module {
         defaultProperty: "data"
     }
     Component {
+        prototype: "QQuickButtonGroup"
+        name: "QtQuick.Controls/ButtonGroup 2.0"
+        exports: ["QtQuick.Controls/ButtonGroup 2.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+    }
+    Component {
         prototype: "QQuickCheckBox"
         name: "QtQuick.Controls/CheckBox 2.0"
         exports: ["QtQuick.Controls/CheckBox 2.0"]

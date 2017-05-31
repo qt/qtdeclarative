@@ -44,7 +44,6 @@
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
-#include <QtQuickTemplates2/private/qquickbuttongroup_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultprogressbar_p.h"
@@ -94,8 +93,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
     qmlRegisterType(selector.select(QStringLiteral("Button.qml")), uri, 2, 0, "Button");
-    qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
-    qmlRegisterType<QQuickButtonGroupAttached>();
+    qmlRegisterType(selector.select(QStringLiteral("ButtonGroup.qml")), uri, 2, 0, "ButtonGroup");
     qmlRegisterType(selector.select(QStringLiteral("CheckBox.qml")), uri, 2, 0, "CheckBox");
     qmlRegisterType(selector.select(QStringLiteral("CheckDelegate.qml")), uri, 2, 0, "CheckDelegate");
     qmlRegisterType(selector.select(QStringLiteral("ComboBox.qml")), uri, 2, 0, "ComboBox");
@@ -138,7 +136,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 #endif
 
     // QtQuick.Controls 2.1 (new types in Qt 5.8)
-    qmlRegisterType<QQuickButtonGroup,1 >(uri, 2, 1, "ButtonGroup");
     qmlRegisterType(selector.select(QStringLiteral("Dialog.qml")), uri, 2, 1, "Dialog");
     qmlRegisterType(selector.select(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
     qmlRegisterType(selector.select(QStringLiteral("MenuSeparator.qml")), uri, 2, 1, "MenuSeparator");
