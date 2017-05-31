@@ -457,6 +457,7 @@ bool QQuickPopupPrivate::prepareExitTransition()
         }
         transitionState = ExitTransition;
         emit q->aboutToHide();
+        emit q->openedChanged();
     }
     return true;
 }
@@ -467,6 +468,7 @@ void QQuickPopupPrivate::finalizeEnterTransition()
     if (focus)
         popupItem->setFocus(true);
     transitionState = NoTransition;
+    emit q->openedChanged();
     emit q->opened();
 }
 
@@ -1698,7 +1700,7 @@ void QQuickPopup::resetDim()
 
     This property holds whether the popup is visible. The default value is \c false.
 
-    \sa open(), close()
+    \sa open(), close(), opened
 */
 bool QQuickPopup::isVisible() const
 {
@@ -1720,6 +1722,21 @@ void QQuickPopup::setVisible(bool visible)
     } else {
         d->visible = visible;
     }
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty bool QtQuick.Controls::Popup::opened
+
+    This property holds whether the popup is fully open. The popup is considered opened
+    when it's visible and neither the \l enter nor \l exit transitions are running.
+
+    \sa open(), close(), visible
+*/
+bool QQuickPopup::isOpened() const
+{
+    Q_D(const QQuickPopup);
+    return d->transitionState == QQuickPopupPrivate::NoTransition && isVisible();
 }
 
 /*!

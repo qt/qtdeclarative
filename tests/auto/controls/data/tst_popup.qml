@@ -1178,16 +1178,6 @@ TestCase {
         compare(child.ApplicationWindow.window, null)
     }
 
-    SignalSpy {
-        id: openedSpy
-        signalName: "opened"
-    }
-
-    SignalSpy {
-        id: closedSpy
-        signalName: "closed"
-    }
-
     Component {
         id: pausePopup
         Popup {
@@ -1200,19 +1190,32 @@ TestCase {
         var control = createTemporaryObject(pausePopup, testCase)
         verify(control)
 
-        openedSpy.target = control
-        closedSpy.target = control
+        var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
+        verify(openedSpy.valid)
+        var closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
+        verify(closedSpy.valid)
+        var openedChangeSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "openedChanged"})
+        verify(openedChangeSpy.valid)
 
         control.open()
         compare(control.visible, true)
+        compare(control.opened, false)
+        compare(openedChangeSpy.count, 0)
         compare(openedSpy.count, 0)
         tryCompare(openedSpy, "count", 1)
+        compare(control.opened, true)
+        compare(openedChangeSpy.count, 1)
         compare(closedSpy.count, 0)
 
         control.close()
+        compare(control.visible, true)
+        compare(control.opened, false)
+        compare(openedChangeSpy.count, 2)
         compare(openedSpy.count, 1)
         compare(closedSpy.count, 0)
         tryCompare(closedSpy, "count", 1)
+        compare(control.opened, false)
+        compare(openedChangeSpy.count, 2)
         compare(control.visible, false)
     }
 
