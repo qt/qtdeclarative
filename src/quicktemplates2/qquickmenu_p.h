@@ -55,6 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlComponent;
 class QQuickMenuItem;
 class QQuickMenuPrivate;
 
@@ -64,6 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL REVISION 3)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -81,6 +83,9 @@ public:
     QString title() const;
     void setTitle(QString &title);
 
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
+
     Q_REVISION(3) Q_INVOKABLE void popup(QQmlV4Function *args);
 
 protected:
@@ -91,6 +96,7 @@ protected:
 
 Q_SIGNALS:
     void titleChanged();
+    Q_REVISION(3) void delegateChanged();
 
 protected:
     QPalette defaultPalette() const override;

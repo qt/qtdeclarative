@@ -52,6 +52,8 @@ T.Menu {
     margins: 0
     padding: 1
 
+    delegate: MenuItem { }
+
     contentItem: ListView {
         implicitHeight: contentHeight
         model: control.contentModel

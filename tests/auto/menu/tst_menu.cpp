@@ -71,6 +71,7 @@ private slots:
     void repeater();
     void order();
     void popup();
+    void actions();
 };
 
 void tst_menu::defaults()
@@ -447,6 +448,37 @@ void tst_menu::popup()
         menu->close();
     }
 #endif
+}
+
+void tst_menu::actions()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("actions.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+
+    QQuickMenuItem *menuItem1 = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(menuItem1);
+    QVERIFY(menuItem1->action());
+    QCOMPARE(menuItem1->text(), "action1");
+
+    QQuickMenuItem *menuItem2 = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
+    QVERIFY(menuItem2);
+    QVERIFY(!menuItem2->action());
+    QCOMPARE(menuItem2->text(), "menuitem2");
+
+    QQuickMenuItem *menuItem3 = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
+    QVERIFY(menuItem3);
+    QVERIFY(menuItem3->action());
+    QCOMPARE(menuItem3->text(), "action3");
+
+    QQuickMenuItem *menuItem4 = qobject_cast<QQuickMenuItem *>(menu->itemAt(3));
+    QVERIFY(menuItem4);
+    QVERIFY(!menuItem4->action());
+    QCOMPARE(menuItem4->text(), "menuitem4");
 }
 
 QTEST_MAIN(tst_menu)

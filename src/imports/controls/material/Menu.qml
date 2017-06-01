@@ -56,6 +56,8 @@ T.Menu {
 
     transformOrigin: Item.Top
 
+    delegate: MenuItem { }
+
     enter: Transition {
         // grow_fade_in
         NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }

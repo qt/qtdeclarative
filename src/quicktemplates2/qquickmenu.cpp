@@ -39,11 +39,14 @@
 #include "qquickmenuitem_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickaction_p.h"
 
 #include <QtGui/qevent.h>
 #include <QtGui/qcursor.h>
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qv4scopedvalue_p.h>
 #include <QtQml/private/qv4variantobject_p.h>
@@ -129,6 +132,17 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    Since QtQuick.Controls 2.3 (Qt 5.10), it is also possible to declare
+    Action objects inside Menu:
+
+    \code
+    Menu {
+        Action { text: "Cut" }
+        Action { text: "Copy" }
+        Action { text: "Paste" }
+    }
+    \endcode
+
     Typically, menu items are statically declared as children of the menu, but
     Menu also provides API to \l {addItem}{add}, \l {insertItem}{insert},
     \l {moveItem}{move} and \l {removeItem}{remove} items dynamically. The
@@ -143,7 +157,8 @@ QT_BEGIN_NAMESPACE
 
 QQuickMenuPrivate::QQuickMenuPrivate()
     : contentItem(nullptr),
-      contentModel(nullptr)
+      contentModel(nullptr),
+      delegate(nullptr)
 {
     Q_Q(QQuickMenu);
     contentModel = new QQmlObjectModel(q);
@@ -194,6 +209,30 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
         QObject::disconnect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
     }
+}
+
+QQuickItem *QQuickMenuPrivate::createItem(QQuickAction *action)
+{
+    Q_Q(QQuickMenu);
+    if (!delegate)
+        return nullptr;
+
+    QQmlContext *creationContext = delegate->creationContext();
+    if (!creationContext)
+        creationContext = qmlContext(q);
+    QQmlContext *context = new QQmlContext(creationContext, q);
+    context->setContextObject(q);
+
+    QObject *object = delegate->beginCreate(context);
+    if (QQuickItem *item = qobject_cast<QQuickItem *>(object)) {
+        if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton*>(object))
+            button->setAction(action);
+        delegate->completeCreate();
+        return item;
+    }
+
+    delete object;
+    return nullptr;
 }
 
 void QQuickMenuPrivate::resizeItem(QQuickItem *item)
@@ -293,7 +332,13 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
 {
     QQuickMenuPrivate *p = static_cast<QQuickMenuPrivate *>(prop->data);
     QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
+
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
+    if (!item) {
+        if (QQuickAction *action = qobject_cast<QQuickAction *>(obj))
+            item = p->createItem(action);
+    }
+
     if (item) {
         if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
             QQuickItemPrivate::get(item)->addItemChangeListener(p, QQuickItemPrivate::SiblingOrder);
@@ -489,6 +534,39 @@ void QQuickMenu::setTitle(QString &title)
         return;
     d->title = title;
     emit titleChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty Component QtQuick.Controls::Menu::delegate
+
+    This property holds the component that is used to create items
+    to present actions.
+
+    \code
+    Menu {
+        Action { text: "Cut" }
+        Action { text: "Copy" }
+        Action { text: "Paste" }
+    }
+    \endcode
+
+    \sa Action
+*/
+QQmlComponent *QQuickMenu::delegate() const
+{
+    Q_D(const QQuickMenu);
+    return d->delegate;
+}
+
+void QQuickMenu::setDelegate(QQmlComponent *delegate)
+{
+    Q_D(QQuickMenu);
+    if (d->delegate == delegate)
+        return;
+
+    d->delegate = delegate;
+    emit delegateChanged();
 }
 
 /*!

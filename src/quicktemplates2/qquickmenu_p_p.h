@@ -55,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAction;
+class QQmlComponent;
 class QQmlObjectModel;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
@@ -68,6 +70,7 @@ public:
     void insertItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
+    QQuickItem *createItem(QQuickAction *action);
 
     void resizeItem(QQuickItem *item);
     void resizeItems();
@@ -92,6 +95,7 @@ public:
     QQuickItem *contentItem; // TODO: cleanup
     QVector<QObject *> contentData;
     QQmlObjectModel *contentModel;
+    QQmlComponent *delegate;
     QString title;
 };
 
