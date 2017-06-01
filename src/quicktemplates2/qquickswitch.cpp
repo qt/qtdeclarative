@@ -187,6 +187,7 @@ void QQuickSwitch::mouseMoveEvent(QMouseEvent *event)
     QQuickAbstractButton::mouseMoveEvent(event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickSwitch::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickSwitch);
@@ -200,6 +201,7 @@ void QQuickSwitch::touchEvent(QTouchEvent *event)
     }
     QQuickAbstractButton::touchEvent(event);
 }
+#endif
 
 void QQuickSwitch::mirrorChange()
 {

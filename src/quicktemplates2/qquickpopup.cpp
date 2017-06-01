@@ -299,6 +299,7 @@ bool QQuickPopupPrivate::contains(const QPointF &scenePos) const
     return popupItem->contains(popupItem->mapFromScene(scenePos));
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 {
     if (point.id() == touchId)
@@ -311,6 +312,7 @@ bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 
     return false;
 }
+#endif
 
 bool QQuickPopupPrivate::blockInput(QQuickItem *item, const QPointF &point) const
 {
@@ -373,6 +375,7 @@ bool QQuickPopupPrivate::handleMouseEvent(QQuickItem *item, QMouseEvent *event)
     }
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
 {
     switch (event->type()) {
@@ -418,6 +421,7 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
 
     return false;
 }
+#endif
 
 bool QQuickPopupPrivate::prepareEnterTransition()
 {
@@ -1987,10 +1991,12 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
             event->accept();
         return d->modal;
 
+#if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
         return d->handleTouchEvent(item, static_cast<QTouchEvent *>(event));
+#endif
 
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
@@ -2001,6 +2007,7 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
     }
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickPopup::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPopup);
@@ -2012,6 +2019,7 @@ void QQuickPopup::touchUngrabEvent()
     Q_D(QQuickPopup);
     d->handleUngrab();
 }
+#endif
 
 #if QT_CONFIG(wheelevent)
 void QQuickPopup::wheelEvent(QWheelEvent *event)

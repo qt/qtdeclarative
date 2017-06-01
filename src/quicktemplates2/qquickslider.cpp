@@ -633,6 +633,7 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
     QQuickControl::mouseMoveEvent(event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickSlider::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickSlider);
@@ -670,6 +671,7 @@ void QQuickSlider::touchEvent(QTouchEvent *event)
         break;
     }
 }
+#endif
 
 #if QT_CONFIG(wheelevent)
 void QQuickSlider::wheelEvent(QWheelEvent *event)

@@ -278,6 +278,7 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
         }
         break;
 
+#if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
         for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
@@ -288,6 +289,7 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
             }
         }
         break;
+#endif
 
     default:
         break;
@@ -340,6 +342,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     return overThreshold;
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 {
     Q_Q(QQuickDrawer);
@@ -385,6 +388,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 
     return overThreshold;
 }
+#endif
 
 static const qreal openCloseVelocityThreshold = 300;
 
@@ -672,8 +676,10 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 {
     Q_D(QQuickDrawer);
     switch (event->type()) {
+#if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchUpdate:
         return d->grabTouch(child, static_cast<QTouchEvent *>(event));
+#endif
     case QEvent::MouseMove:
         return d->grabMouse(child, static_cast<QMouseEvent *>(event));
     case QEvent::MouseButtonPress:
@@ -695,8 +701,10 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickDrawer);
     switch (event->type()) {
+#if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchUpdate:
         return d->grabTouch(item, static_cast<QTouchEvent *>(event));
+#endif
     case QEvent::MouseMove:
         return d->grabMouse(item, static_cast<QMouseEvent *>(event));
     default:
@@ -705,11 +713,13 @@ bool QQuickDrawer::overlayEvent(QQuickItem *item, QEvent *event)
     return QQuickPopup::overlayEvent(item, event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickDrawer::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickDrawer);
     d->grabTouch(d->popupItem, event);
 }
+#endif
 
 void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {

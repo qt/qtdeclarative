@@ -74,7 +74,9 @@ public:
 
     bool startDrag(QEvent *event);
     bool grabMouse(QQuickItem *item, QMouseEvent *event);
+#if QT_CONFIG(quicktemplates2_multitouch)
     bool grabTouch(QQuickItem *item, QTouchEvent *event);
+#endif
 
     bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp) override;
     bool handleMove(QQuickItem* item, const QPointF &point, ulong timestamp) override;

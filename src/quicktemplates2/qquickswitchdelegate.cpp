@@ -184,6 +184,7 @@ void QQuickSwitchDelegate::mouseMoveEvent(QMouseEvent *event)
     QQuickItemDelegate::mouseMoveEvent(event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickSwitchDelegate);
@@ -197,6 +198,7 @@ void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
     }
     QQuickItemDelegate::touchEvent(event);
 }
+#endif
 
 QFont QQuickSwitchDelegate::defaultFont() const
 {
