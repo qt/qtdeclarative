@@ -70,6 +70,7 @@ private slots:
     void resizemodeitem();
     void errors();
     void engine();
+    void findChild();
 };
 
 
@@ -263,6 +264,45 @@ void tst_QQuickView::engine()
     QVERIFY(!view4->errors().isEmpty());
     QCOMPARE(view4->errors().back().description(), QLatin1String("QQuickView: invalid qml engine."));
     delete view4;
+}
+
+void tst_QQuickView::findChild()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("findChild.qml"));
+
+    // QQuickView
+    // |_ QQuickWindow::contentItem
+    // |  |_ QQuickView::rootObject: QML Item("rootObject") (findChild.qml)
+    // |  |  |_ QML Item("rootObjectChild") (findChild.qml)
+    // |  |_ QObject("contentItemChild")
+    // |_ QObject("viewChild")
+
+    QObject *viewChild = new QObject(&view);
+    viewChild->setObjectName("viewChild");
+
+    QObject *contentItemChild = new QObject(view.contentItem());
+    contentItemChild->setObjectName("contentItemChild");
+
+    QObject *rootObject = view.rootObject();
+    QVERIFY(rootObject);
+
+    QObject *rootObjectChild = rootObject->findChild<QObject *>("rootObjectChild");
+    QVERIFY(rootObjectChild);
+
+    QCOMPARE(view.findChild<QObject *>("viewChild"), viewChild);
+    QCOMPARE(view.findChild<QObject *>("contentItemChild"), contentItemChild);
+    QCOMPARE(view.findChild<QObject *>("rootObject"), rootObject);
+    QCOMPARE(view.findChild<QObject *>("rootObjectChild"), rootObjectChild);
+
+    QVERIFY(!view.contentItem()->findChild<QObject *>("viewChild")); // sibling
+    QCOMPARE(view.contentItem()->findChild<QObject *>("contentItemChild"), contentItemChild);
+    QCOMPARE(view.contentItem()->findChild<QObject *>("rootObject"), rootObject);
+    QCOMPARE(view.contentItem()->findChild<QObject *>("rootObjectChild"), rootObjectChild);
+
+    QVERIFY(!view.rootObject()->findChild<QObject *>("viewChild")); // ancestor
+    QVERIFY(!view.rootObject()->findChild<QObject *>("contentItemChild")); // cousin
+    QVERIFY(!view.rootObject()->findChild<QObject *>("rootObject")); // self
 }
 
 QTEST_MAIN(tst_QQuickView)
