@@ -58,8 +58,10 @@ T.MenuItem {
     icon.height: 16
 
     contentItem: IconLabel {
-        leftPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.mirrored ? control.indicator.width + control.spacing : 0
+        readonly property real arrowPadding: control.subMenu && control.arrow ? control.arrow.width + control.spacing : 0
+        readonly property real indicatorPadding: control.checkable && control.indicator ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? indicatorPadding : arrowPadding
+        rightPadding: control.mirrored ? indicatorPadding : arrowPadding
 
         spacing: control.spacing
         mirrored: control.mirrored
@@ -70,6 +72,18 @@ T.MenuItem {
         text: control.text
         font: control.font
         color: control.down || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
+    }
+
+    arrow: ColorImage {
+        x: control.mirrored ? control.padding : control.width - width - control.padding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        width: 20
+
+        visible: control.subMenu
+        rotation: control.mirrored ? 90 : -90
+        color: control.down || control.hovered || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+        fillMode: Image.Pad
     }
 
     indicator: CheckIndicator {

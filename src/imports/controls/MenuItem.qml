@@ -57,8 +57,10 @@ T.MenuItem {
     icon.color: enabled ? Default.textDarkColor : Default.textDisabledColor
 
     contentItem: IconLabel {
-        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+        readonly property real arrowPadding: control.subMenu && control.arrow ? control.arrow.width + control.spacing : 0
+        readonly property real indicatorPadding: control.checkable && control.indicator ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? indicatorPadding : arrowPadding
+        rightPadding: control.mirrored ? indicatorPadding : arrowPadding
 
         spacing: control.spacing
         mirrored: control.mirrored
@@ -77,6 +79,15 @@ T.MenuItem {
 
         visible: control.checked
         source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
+    }
+
+    arrow: Image {
+        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+
+        visible: control.subMenu
+        mirror: control.mirrored
+        source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/arrow-indicator.png" : ""
     }
 
     background: Item {

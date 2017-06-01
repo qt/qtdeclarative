@@ -51,6 +51,7 @@ T.Menu {
 
     margins: 0
     padding: 1
+    overlap: 2
 
     delegate: MenuItem { }
 

@@ -68,9 +68,12 @@ public:
     }
 
     void setMenu(QQuickMenu *menu);
+    void setSubMenu(QQuickMenu *subMenu);
 
     bool highlighted;
+    QQuickItem *arrow;
     QQuickMenu *menu;
+    QQuickMenu *subMenu;
 };
 
 QT_END_NAMESPACE

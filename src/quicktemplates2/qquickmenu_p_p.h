@@ -51,11 +51,11 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qpointer.h>
 
+#include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMenu;
 class QQuickAction;
 class QQmlComponent;
 class QQmlObjectModel;
@@ -68,10 +68,20 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPri
 public:
     QQuickMenuPrivate();
 
+    static QQuickMenuPrivate *get(QQuickMenu *menu)
+    {
+        return menu->d_func();
+    }
+
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
+
+    QQuickItem *beginCreateItem();
+    void completeCreateItem();
+
+    QQuickItem *createItem(QQuickMenu *menu);
     QQuickItem *createItem(QQuickAction *action);
 
     void resizeItem(QQuickItem *item);
@@ -83,9 +93,15 @@ public:
     void itemDestroyed(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
 
+    bool blockInput(QQuickItem *item, const QPointF &point) const override;
+
     void onItemPressed();
     void onItemHovered();
+    void onItemTriggered();
     void onItemActiveFocusChanged();
+
+    void openSubMenu(QQuickMenuItem *item, bool activate);
+    void closeSubMenu(QQuickMenu *subMenu);
 
     int currentIndex() const;
     void setCurrentIndex(int index);
@@ -95,6 +111,9 @@ public:
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
+    bool cascade;
+    qreal overlap;
+    QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;
     QQuickItem *contentItem; // TODO: cleanup
     QVector<QObject *> contentData;

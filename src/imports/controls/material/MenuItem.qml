@@ -67,9 +67,21 @@ T.MenuItem {
         control: control
     }
 
+    arrow: ColorImage {
+        x: control.mirrored ? control.padding : control.width - width - control.padding
+        y: control.topPadding + (control.availableHeight - height) / 2
+
+        visible: control.subMenu
+        mirror: control.mirrored
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/arrow-indicator.png"
+    }
+
     contentItem: IconLabel {
-        leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
+        readonly property real arrowPadding: control.subMenu && control.arrow ? control.arrow.width + control.spacing : 0
+        readonly property real indicatorPadding: control.checkable && control.indicator ? control.indicator.width + control.spacing : 0
+        leftPadding: !control.mirrored ? indicatorPadding : arrowPadding
+        rightPadding: control.mirrored ? indicatorPadding : arrowPadding
 
         spacing: control.spacing
         mirrored: control.mirrored

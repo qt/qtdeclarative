@@ -36,6 +36,7 @@
 
 #include "qquickmenuitem_p.h"
 #include "qquickmenuitem_p_p.h"
+#include "qquickmenu_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
@@ -89,7 +90,9 @@ QT_BEGIN_NAMESPACE
 
 QQuickMenuItemPrivate::QQuickMenuItemPrivate()
     : highlighted(false),
-      menu(nullptr)
+      arrow(nullptr),
+      menu(nullptr),
+      subMenu(nullptr)
 {
 }
 
@@ -101,6 +104,24 @@ void QQuickMenuItemPrivate::setMenu(QQuickMenu *newMenu)
 
     menu = newMenu;
     emit q->menuChanged();
+}
+
+void QQuickMenuItemPrivate::setSubMenu(QQuickMenu *newSubMenu)
+{
+    Q_Q(QQuickMenuItem);
+    if (subMenu == newSubMenu)
+        return;
+
+    if (subMenu)
+        QObject::disconnect(subMenu, &QQuickMenu::titleChanged, q, &QQuickAbstractButton::setText);
+
+    if (newSubMenu) {
+        QObject::connect(newSubMenu, &QQuickMenu::titleChanged, q, &QQuickAbstractButton::setText);
+        q->setText(newSubMenu->title());
+    }
+
+    subMenu = newSubMenu;
+    emit q->subMenuChanged();
 }
 
 /*!
@@ -142,6 +163,33 @@ void QQuickMenuItem::setHighlighted(bool highlighted)
 
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty Item QtQuick.Controls::MenuItem::arrow
+
+    This property holds the sub-menu arrow item.
+
+    \sa {Customizing MenuItem}
+*/
+QQuickItem *QQuickMenuItem::arrow() const
+{
+    Q_D(const QQuickMenuItem);
+    return d->arrow;
+}
+
+void QQuickMenuItem::setArrow(QQuickItem *arrow)
+{
+    Q_D(QQuickMenuItem);
+    if (d->arrow == arrow)
+        return;
+
+    QQuickControlPrivate::destroyDelegate(d->arrow, this);
+    d->arrow = arrow;
+    if (arrow && !arrow->parentItem())
+        arrow->setParentItem(this);
+    emit arrowChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty Menu QtQuick.Controls::MenuItem::menu
     \readonly
 
@@ -152,6 +200,20 @@ QQuickMenu *QQuickMenuItem::menu() const
 {
     Q_D(const QQuickMenuItem);
     return d->menu;
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty Menu QtQuick.Controls::MenuItem::subMenu
+    \readonly
+
+    This property holds the sub-menu that this item presents in
+    the parent menu, or \c null if this item is not a sub-menu item.
+*/
+QQuickMenu *QQuickMenuItem::subMenu() const
+{
+    Q_D(const QQuickMenuItem);
+    return d->subMenu;
 }
 
 QFont QQuickMenuItem::defaultFont() const

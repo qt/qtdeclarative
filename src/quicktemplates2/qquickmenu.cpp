@@ -131,16 +131,29 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    Since QtQuick.Controls 2.3 (Qt 5.10), it is also possible to declare
-    Action objects inside Menu:
+    Since QtQuick.Controls 2.3 (Qt 5.10), it is also possible to create sub-menus
+    and declare Action objects inside Menu:
 
     \code
     Menu {
         Action { text: "Cut" }
         Action { text: "Copy" }
         Action { text: "Paste" }
+
+        MenuSeparator { }
+
+        Menu {
+            title: "Find/Replace"
+            Action { text: "Find Next" }
+            Action { text: "Find Previous" }
+            Action { text: "Replace" }
+        }
     }
     \endcode
+
+    Sub-menus are \l {cascade}{cascading} by default on desktop platforms
+    that have a mouse cursor available. Non-cascading menus are shown one
+    menu at a time, and centered over the parent menu.
 
     Typically, menu items are statically declared as children of the menu, but
     Menu also provides API to \l {addItem}{add}, \l {insertItem}{insert},
@@ -154,8 +167,24 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Menu}, {Menu Controls}, {Popup Controls}
 */
 
+static const QQuickPopup::ClosePolicy defaultMenuClosePolicy =
+        QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnReleaseOutside;
+static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy =
+        QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseOnReleaseOutsideParent;
+
+static bool shouldCascade()
+{
+#if QT_CONFIG(cursor)
+    return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MultipleWindows);
+#else
+    return false;
+#endif
+}
+
 QQuickMenuPrivate::QQuickMenuPrivate()
-    : contentItem(nullptr),
+    : cascade(shouldCascade()),
+      overlap(0),
+      contentItem(nullptr),
       contentModel(nullptr),
       delegate(nullptr)
 {
@@ -184,7 +213,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         Q_Q(QQuickMenu);
         QQuickMenuItemPrivate::get(menuItem)->setMenu(q);
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
-        QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
+        QObjectPrivate::connect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
@@ -205,16 +234,15 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
 
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
     if (menuItem) {
-        Q_Q(QQuickMenu);
         QQuickMenuItemPrivate::get(menuItem)->setMenu(nullptr);
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
-        QObject::disconnect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
+        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
 }
 
-QQuickItem *QQuickMenuPrivate::createItem(QQuickAction *action)
+QQuickItem *QQuickMenuPrivate::beginCreateItem()
 {
     Q_Q(QQuickMenu);
     if (!delegate)
@@ -227,15 +255,37 @@ QQuickItem *QQuickMenuPrivate::createItem(QQuickAction *action)
     context->setContextObject(q);
 
     QObject *object = delegate->beginCreate(context);
-    if (QQuickItem *item = qobject_cast<QQuickItem *>(object)) {
-        if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton*>(object))
-            button->setAction(action);
-        delegate->completeCreate();
-        return item;
-    }
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (!item)
+        delete object;
 
-    delete object;
-    return nullptr;
+    return item;
+}
+
+void QQuickMenuPrivate::completeCreateItem()
+{
+    if (!delegate)
+        return;
+
+    delegate->completeCreate();
+}
+
+QQuickItem *QQuickMenuPrivate::createItem(QQuickMenu *menu)
+{
+    QQuickItem *item = beginCreateItem();
+    if (QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item))
+        QQuickMenuItemPrivate::get(menuItem)->setSubMenu(menu);
+    completeCreateItem();
+    return item;
+}
+
+QQuickItem *QQuickMenuPrivate::createItem(QQuickAction *action)
+{
+    QQuickItem *item = beginCreateItem();
+    if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(item))
+        button->setAction(action);
+    completeCreateItem();
+    return item;
 }
 
 void QQuickMenuPrivate::resizeItem(QQuickItem *item)
@@ -299,6 +349,12 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, 
         resizeItems();
 }
 
+bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
+{
+    // keep the parent menu open when a cascading sub-menu (this menu) is interacted with
+    return (cascade && parentMenu && contains(point)) || QQuickPopupPrivate::blockInput(item, point);
+}
+
 void QQuickMenuPrivate::onItemPressed()
 {
     Q_Q(QQuickMenu);
@@ -314,9 +370,40 @@ void QQuickMenuPrivate::onItemHovered()
     if (!button || !button->isHovered() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
         return;
 
+    QQuickMenuItem *oldCurrentItem = currentItem;
+
     int index = contentModel->indexOf(button, nullptr);
-    if (index != -1)
+    if (index != -1) {
         setCurrentIndex(index);
+        if (oldCurrentItem != currentItem) {
+            if (oldCurrentItem)
+                closeSubMenu(oldCurrentItem->subMenu());
+            if (currentItem) {
+                QQuickMenu *subMenu = currentItem->menu();
+                if (subMenu && subMenu->cascade())
+                    openSubMenu(currentItem, false);
+            }
+        }
+    }
+}
+
+void QQuickMenuPrivate::onItemTriggered()
+{
+    Q_Q(QQuickMenu);
+    QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(q->sender());
+    if (!item)
+        return;
+
+    if (item->subMenu()) {
+        openSubMenu(item, true);
+    } else {
+        // close the whole chain of menus
+        q->close();
+        while (parentMenu) {
+            parentMenu->close();
+            parentMenu = QQuickMenuPrivate::get(parentMenu)->parentMenu;
+        }
+    }
 }
 
 void QQuickMenuPrivate::onItemActiveFocusChanged()
@@ -328,6 +415,67 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
 
     int indexOfItem = contentModel->indexOf(item, nullptr);
     setCurrentIndex(indexOfItem);
+}
+
+void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
+{
+    Q_Q(QQuickMenu);
+    QQuickMenu *subMenu = item ? item->subMenu() : nullptr;
+    if (!subMenu)
+        return;
+
+    if (cascade) {
+        subMenu->setParentItem(item);
+        subMenu->setClosePolicy(cascadingSubMenuClosePolicy);
+        if (popupItem->isMirrored()) {
+            subMenu->setTransformOrigin(QQuickPopup::TopRight);
+            subMenu->setPosition(QPointF(-subMenu->width() - q->leftPadding() + subMenu->overlap(), -subMenu->topPadding()));
+        } else {
+            subMenu->setTransformOrigin(QQuickPopup::TopLeft);
+            subMenu->setPosition(QPointF(item->width() + q->rightPadding() - subMenu->overlap(), -subMenu->topPadding()));
+        }
+    } else {
+        subMenu->setParentItem(parentItem);
+        subMenu->setClosePolicy(defaultMenuClosePolicy);
+        subMenu->setTransformOrigin(QQuickPopup::Center);
+        subMenu->setPosition(QPointF(q->x() + (q->width() - subMenu->width()) / 2,
+                                     q->y() + (q->height() - subMenu->height()) / 2));
+    }
+
+    QQuickMenuPrivate *p = QQuickMenuPrivate::get(subMenu);
+    p->parentMenu = q;
+    if (activate)
+        p->setCurrentIndex(0);
+    subMenu->setCascade(cascade);
+    subMenu->open();
+
+    // transfer focus to the sub-menu
+    if (focus)
+        subMenu->popupItem()->setFocus(true);
+
+    if (!subMenu->cascade())
+        q->close();
+}
+
+void QQuickMenuPrivate::closeSubMenu(QQuickMenu *subMenu)
+{
+    if (!subMenu || !subMenu->isVisible())
+        return;
+
+    // transfer focus back to the parent menu
+    QQuickMenu *parentMenu = QQuickMenuPrivate::get(subMenu)->parentMenu;
+    if (parentMenu && parentMenu->hasFocus()) {
+        parentMenu->popupItem()->setFocus(true);
+        if (!subMenu->cascade())
+            parentMenu->open();
+    }
+
+    // close the whole chain of sub-menus
+    while (subMenu) {
+        QPointer<QQuickMenuItem> currentSubMenuItem = QQuickMenuPrivate::get(subMenu)->currentItem;
+        subMenu->close();
+        subMenu = currentSubMenuItem ? currentSubMenuItem->subMenu() : nullptr;
+    }
 }
 
 int QQuickMenuPrivate::currentIndex() const
@@ -355,13 +503,15 @@ void QQuickMenuPrivate::setCurrentIndex(int index)
 
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
-    QQuickMenuPrivate *p = static_cast<QQuickMenuPrivate *>(prop->data);
-    QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
+    QQuickMenu *q = qobject_cast<QQuickMenu *>(prop->object);
+    QQuickMenuPrivate *p = QQuickMenuPrivate::get(q);
 
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (!item) {
         if (QQuickAction *action = qobject_cast<QQuickAction *>(obj))
             item = p->createItem(action);
+        else if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
+            item = p->createItem(menu);
     }
 
     if (item) {
@@ -378,27 +528,27 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
 
 int QQuickMenuPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
-    QQuickMenuPrivate *p = static_cast<QQuickMenuPrivate *>(prop->data);
-    return p->contentData.count();
+    QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
+    return QQuickMenuPrivate::get(q)->contentData.count();
 }
 
 QObject *QQuickMenuPrivate::contentData_at(QQmlListProperty<QObject> *prop, int index)
 {
-    QQuickMenuPrivate *p = static_cast<QQuickMenuPrivate *>(prop->data);
-    return p->contentData.value(index);
+    QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
+    return QQuickMenuPrivate::get(q)->contentData.value(index);
 }
 
 void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 {
-    QQuickMenuPrivate *p = static_cast<QQuickMenuPrivate *>(prop->data);
-    p->contentData.clear();
+    QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
+    QQuickMenuPrivate::get(q)->contentData.clear();
 }
 
 QQuickMenu::QQuickMenu(QObject *parent)
     : QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     setFocus(true);
-    setClosePolicy(CloseOnEscape | CloseOnPressOutside | CloseOnReleaseOutside);
+    setClosePolicy(defaultMenuClosePolicy);
 }
 
 /*!
@@ -568,8 +718,7 @@ QVariant QQuickMenu::contentModel() const
 */
 QQmlListProperty<QObject> QQuickMenu::contentData()
 {
-    Q_D(QQuickMenu);
-    return QQmlListProperty<QObject>(this, d,
+    return QQmlListProperty<QObject>(this, nullptr,
         QQuickMenuPrivate::contentData_append,
         QQuickMenuPrivate::contentData_count,
         QQuickMenuPrivate::contentData_at,
@@ -598,6 +747,64 @@ void QQuickMenu::setTitle(QString &title)
         return;
     d->title = title;
     emit titleChanged(title);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty bool QtQuick.Controls::Menu::cascade
+
+    This property holds whether the menu cascades its sub-menus.
+
+    The default value is platform-specific. Menus are cascading by default on
+    desktop platforms that have a mouse cursor available. Non-cascading menus
+    are shown one menu at a time, and centered over the parent menu.
+
+    \note Changing the value of the property has no effect while the menu is open.
+
+    \sa overlap
+*/
+bool QQuickMenu::cascade() const
+{
+    Q_D(const QQuickMenu);
+    return d->cascade;
+}
+
+void QQuickMenu::setCascade(bool cascade)
+{
+    Q_D(QQuickMenu);
+    if (d->cascade == cascade)
+        return;
+    d->cascade = cascade;
+    emit cascadeChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty real QtQuick.Controls::Menu::overlap
+
+    This property holds the amount of pixels by which the menu horizontally overlaps its parent menu.
+
+    The property only has effect when the menu is used as a cascading sub-menu.
+
+    The default value is style-specific.
+
+    \note Changing the value of the property has no effect while the menu is open.
+
+    \sa cascade
+*/
+qreal QQuickMenu::overlap() const
+{
+    Q_D(const QQuickMenu);
+    return d->overlap;
+}
+
+void QQuickMenu::setOverlap(qreal overlap)
+{
+    Q_D(QQuickMenu);
+    if (d->overlap == overlap)
+        return;
+    d->overlap = overlap;
+    emit cascadeChanged();
 }
 
 /*!
@@ -758,7 +965,7 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
     QQuickPopup::itemChange(change, data);
 
     if (change == QQuickItem::ItemVisibleHasChanged) {
-        if (!data.boolValue) {
+        if (!data.boolValue && d->cascade) {
             // Ensure that when the menu isn't visible, there's no current item
             // the next time it's opened.
             QQuickItem *focusItem = QQuickItemPrivate::get(d->contentItem)->subFocusItem;
@@ -795,6 +1002,16 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
         break;
+
+    case Qt::Key_Left:
+    case Qt::Key_Right:
+        if (d->popupItem->isMirrored() == (event->key() == Qt::Key_Right)) {
+            if (d->parentMenu && d->currentItem)
+                d->closeSubMenu(this);
+        } else {
+            d->openSubMenu(d->currentItem, true);
+        }
+        return;
 
     default:
         break;

@@ -73,6 +73,12 @@ private slots:
     void popup();
     void actions();
     void removeTakeItem();
+    void subMenuMouse_data();
+    void subMenuMouse();
+    void subMenuKeyboard_data();
+    void subMenuKeyboard();
+    void subMenuPosition_data();
+    void subMenuPosition();
 };
 
 void tst_menu::defaults()
@@ -572,6 +578,341 @@ void tst_menu::removeTakeItem()
     QVERIFY(!menuItem3->menu());
     QCoreApplication::sendPostedEvents(menuItem3, QEvent::DeferredDelete);
     QVERIFY(!menuItem3.isNull());
+}
+
+void tst_menu::subMenuMouse_data()
+{
+    QTest::addColumn<bool>("cascade");
+
+    QTest::newRow("cascading") << true;
+    QTest::newRow("non-cascading") << false;
+}
+
+void tst_menu::subMenuMouse()
+{
+    QFETCH(bool, cascade);
+
+    QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    moveMouseAway(window);
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    mainMenu->setCascade(cascade);
+    QCOMPARE(mainMenu->cascade(), cascade);
+
+    QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
+    QVERIFY(subMenu1);
+
+    QQuickMenu *subMenu2 = window->property("subMenu2").value<QQuickMenu *>();
+    QVERIFY(subMenu2);
+
+    QQuickMenu *subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
+    QVERIFY(subSubMenu1);
+
+    mainMenu->open();
+    QVERIFY(mainMenu->isVisible());
+    QVERIFY(!subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // open the sub-menu with mouse click
+    QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
+    QVERIFY(subMenu1Item);
+    QCOMPARE(subMenu1Item->subMenu(), subMenu1);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // open the cascading sub-sub-menu with mouse hover
+    QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
+    QVERIFY(subSubMenu1Item);
+    QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1);
+    QTest::mouseMove(window, subSubMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QCOMPARE(subSubMenu1->isVisible(), cascade);
+
+    // close the sub-sub-menu with mouse hover over another parent menu item
+    QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+    QVERIFY(subMenuItem1);
+    QVERIFY(!subMenuItem1->subMenu());
+    QTest::mouseMove(window, subMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // re-open the sub-sub-menu with mouse hover
+    QTest::mouseMove(window, subSubMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QCOMPARE(subSubMenu1->isVisible(), cascade);
+
+    // close sub-menu and sub-sub-menu with mouse hover in the main menu
+    QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
+    QVERIFY(mainMenuItem1);
+    QTest::mouseMove(window, mainMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QCOMPARE(subMenu1->isVisible(), !cascade);
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // close all menus by click triggering an item
+    QQuickMenuItem *subSubMenuItem1 = qobject_cast<QQuickMenuItem *>(subSubMenu1->itemAt(0));
+    QVERIFY(subSubMenuItem1);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subSubMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    QVERIFY(!mainMenu->isVisible());
+    QVERIFY(!subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+}
+
+void tst_menu::subMenuKeyboard_data()
+{
+    QTest::addColumn<bool>("cascade");
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("cascading") << true << false;
+    QTest::newRow("cascading,mirrored") << true << true;
+    QTest::newRow("non-cascading") << false << false;
+    QTest::newRow("non-cascading,mirrored") << false << true;
+}
+
+void tst_menu::subMenuKeyboard()
+{
+    QFETCH(bool, cascade);
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    moveMouseAway(window);
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    mainMenu->setCascade(cascade);
+    QCOMPARE(mainMenu->cascade(), cascade);
+
+    QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
+    QVERIFY(subMenu1);
+
+    QQuickMenu *subMenu2 = window->property("subMenu2").value<QQuickMenu *>();
+    QVERIFY(subMenu2);
+
+    QQuickMenu *subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
+    QVERIFY(subSubMenu1);
+
+    mainMenu->open();
+    QVERIFY(mainMenu->isVisible());
+    QVERIFY(!subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // navigate to the sub-menu item and trigger it
+    QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
+    QVERIFY(subMenu1Item);
+    QVERIFY(!subMenu1Item->isHighlighted());
+    QCOMPARE(subMenu1Item->subMenu(), subMenu1);
+    QTest::keyClick(window, Qt::Key_Down);
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(subMenu1Item->isHighlighted());
+    QTest::keyClick(window, Qt::Key_Space);
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // navigate to the sub-sub-menu item and open it with the arrow key
+    QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
+    QVERIFY(subSubMenu1Item);
+    QVERIFY(!subSubMenu1Item->isHighlighted());
+    QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1);
+    QTest::keyClick(window, Qt::Key_Down);
+    QTest::keyClick(window, Qt::Key_Down);
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(subSubMenu1Item->isHighlighted());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+    QTest::keyClick(window, mirrored ? Qt::Key_Left : Qt::Key_Right);
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QCOMPARE(subMenu1->isVisible(), cascade);
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(subSubMenu1->isVisible());
+
+    // navigate within the sub-sub-menu
+    QQuickMenuItem *subSubMenuItem1 = qobject_cast<QQuickMenuItem *>(subSubMenu1->itemAt(0));
+    QVERIFY(subSubMenuItem1);
+    QQuickMenuItem *subSubMenuItem2 = qobject_cast<QQuickMenuItem *>(subSubMenu1->itemAt(1));
+    QVERIFY(subSubMenuItem2);
+    QVERIFY(subSubMenuItem1->isHighlighted());
+    QVERIFY(!subSubMenuItem2->isHighlighted());
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(!subSubMenuItem1->isHighlighted());
+    QVERIFY(subSubMenuItem2->isHighlighted());
+
+    // navigate to the parent menu with the arrow key
+    QTest::keyClick(window, mirrored ? Qt::Key_Right : Qt::Key_Left);
+    QVERIFY(subSubMenu1Item->isHighlighted());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // navigate within the sub-menu
+    QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+    QVERIFY(subMenuItem1);
+    QQuickMenuItem *subMenuItem2 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(1));
+    QVERIFY(subMenuItem2);
+    QVERIFY(!subMenuItem1->isHighlighted());
+    QVERIFY(!subMenuItem2->isHighlighted());
+    QVERIFY(subSubMenu1Item->isHighlighted());
+    QTest::keyClick(window, Qt::Key_Up);
+    QVERIFY(!subMenuItem1->isHighlighted());
+    QVERIFY(subMenuItem2->isHighlighted());
+    QVERIFY(!subSubMenu1Item->isHighlighted());
+
+    // close the menus with esc
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(!subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+    QTest::keyClick(window, Qt::Key_Escape);
+    QVERIFY(!mainMenu->isVisible());
+    QVERIFY(!subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+}
+
+void tst_menu::subMenuPosition_data()
+{
+    QTest::addColumn<bool>("cascade");
+    QTest::addColumn<bool>("mirrored");
+    QTest::addColumn<qreal>("overlap");
+
+    QTest::newRow("cascading") << true << false << 0.0;
+    QTest::newRow("cascading,overlap") << true << false << 10.0;
+    QTest::newRow("cascading,mirrored") << true << true << 0.0;
+    QTest::newRow("cascading,mirrored,overlap") << true << true << 10.0;
+    QTest::newRow("non-cascading") << false << false << 0.0;
+}
+
+void tst_menu::subMenuPosition()
+{
+    QFETCH(bool, cascade);
+    QFETCH(bool, mirrored);
+    QFETCH(qreal, overlap);
+
+    QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    moveMouseAway(window);
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    mainMenu->setCascade(cascade);
+    QCOMPARE(mainMenu->cascade(), cascade);
+    mainMenu->setOverlap(overlap);
+    QCOMPARE(mainMenu->overlap(), overlap);
+
+    QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
+    QVERIFY(subMenu1);
+    subMenu1->setCascade(cascade);
+    QCOMPARE(subMenu1->cascade(), cascade);
+    subMenu1->setOverlap(overlap);
+    QCOMPARE(subMenu1->overlap(), overlap);
+
+    QQuickMenu *subMenu2 = window->property("subMenu2").value<QQuickMenu *>();
+    QVERIFY(subMenu2);
+    subMenu2->setCascade(cascade);
+    QCOMPARE(subMenu2->cascade(), cascade);
+    subMenu2->setOverlap(overlap);
+    QCOMPARE(subMenu2->overlap(), overlap);
+
+    QQuickMenu *subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
+    QVERIFY(subSubMenu1);
+    subSubMenu1->setCascade(cascade);
+    QCOMPARE(subSubMenu1->cascade(), cascade);
+    subSubMenu1->setOverlap(overlap);
+    QCOMPARE(subSubMenu1->overlap(), overlap);
+
+    if (mirrored)
+        mainMenu->setPosition(QPointF(290, 10));
+    else
+        mainMenu->setPosition(QPointF(10, 10));
+
+    mainMenu->open();
+    QVERIFY(mainMenu->isVisible());
+    QVERIFY(!subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    // open the sub-menu
+    QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
+    QVERIFY(subMenu1Item);
+    QCOMPARE(subMenu1Item->subMenu(), subMenu1);
+    emit subMenu1Item->triggered();
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu1->isVisible());
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(!subSubMenu1->isVisible());
+
+    if (cascade) {
+        QCOMPARE(subMenu1->parentItem(), subMenu1Item);
+        // vertically aligned to the parent menu item
+        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y() - subMenu1->topPadding());
+        if (mirrored)
+            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap); // on the left of the parent menu
+        else
+            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap); // on the right of the parent menu
+    } else {
+        QCOMPARE(subMenu1->parentItem(), mainMenu->parentItem());
+        // centered over the parent menu
+        QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
+        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
+    }
+
+    // open the sub-sub-menu
+    QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
+    QVERIFY(subSubMenu1Item);
+    QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1);
+    emit subSubMenu1Item->triggered();
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QCOMPARE(subMenu1->isVisible(), cascade);
+    QVERIFY(!subMenu2->isVisible());
+    QVERIFY(subSubMenu1->isVisible());
+
+    if (cascade) {
+        QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
+        // vertically aligned to the parent menu item
+        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y() - subSubMenu1->topPadding());
+        if (mirrored)
+            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap); // on the left of the parent menu
+        else
+            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap); // on the right of the parent menu
+    } else {
+        QCOMPARE(subSubMenu1->parentItem(), subMenu1->parentItem());
+        // centered over the parent menu
+        QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
+        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
+    }
 }
 
 QTEST_MAIN(tst_menu)
