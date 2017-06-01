@@ -36,6 +36,7 @@ HEADERS += \
     $$PWD/qquickmenu_p.h \
     $$PWD/qquickmenu_p_p.h \
     $$PWD/qquickmenuitem_p.h \
+    $$PWD/qquickmenuitem_p_p.h \
     $$PWD/qquickmenuseparator_p.h \
     $$PWD/qquickoverlay_p.h \
     $$PWD/qquickoverlay_p_p.h \

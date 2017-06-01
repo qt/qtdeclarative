@@ -36,8 +36,7 @@
 
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
-#include "qquickmenuitem_p.h"
-#include "qquickcontrol_p_p.h"
+#include "qquickmenuitem_p_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickaction_p.h"
 
@@ -183,6 +182,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
     if (menuItem) {
         Q_Q(QQuickMenu);
+        QQuickMenuItemPrivate::get(menuItem)->setMenu(q);
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
         QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
@@ -205,6 +205,7 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
     if (menuItem) {
         Q_Q(QQuickMenu);
+        QQuickMenuItemPrivate::get(menuItem)->setMenu(nullptr);
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
         QObject::disconnect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);

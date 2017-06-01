@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMENUITEM_P_H
-#define QQUICKMENUITEM_P_H
+#ifndef QQUICKMENUITEM_P_P_H
+#define QQUICKMENUITEM_P_P_H
 
 //
 //  W A R N I N G
@@ -48,47 +48,31 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickMenu;
-class QQuickMenuItemPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuItem : public QQuickAbstractButton
+class QQuickMenuItemPrivate : public QQuickAbstractButtonPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
-    Q_PROPERTY(QQuickMenu *menu READ menu NOTIFY menuChanged FINAL REVISION 3)
+    Q_DECLARE_PUBLIC(QQuickMenuItem)
 
 public:
-    explicit QQuickMenuItem(QQuickItem *parent = nullptr);
+    QQuickMenuItemPrivate();
 
-    bool isHighlighted() const;
-    void setHighlighted(bool highlighted);
+    static QQuickMenuItemPrivate *get(QQuickMenuItem *item)
+    {
+        return item->d_func();
+    }
 
-    QQuickMenu *menu() const;
+    void setMenu(QQuickMenu *menu);
 
-Q_SIGNALS:
-    void triggered();
-    void highlightedChanged();
-    Q_REVISION(3) void menuChanged();
-
-protected:
-    QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
-
-#if QT_CONFIG(accessibility)
-    QAccessible::Role accessibleRole() const override;
-#endif
-
-private:
-    Q_DISABLE_COPY(QQuickMenuItem)
-    Q_DECLARE_PRIVATE(QQuickMenuItem)
+    bool highlighted;
+    QQuickMenu *menu;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMenuItem)
-
-#endif // QQUICKMENUITEM_P_H
+#endif // QQUICKMENUITEM_P_P_H

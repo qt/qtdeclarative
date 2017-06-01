@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickmenuitem_p.h"
-#include "qquickabstractbutton_p_p.h"
+#include "qquickmenuitem_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
@@ -87,19 +87,20 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing MenuItem}, {Menu Controls}
 */
 
-class QQuickMenuItemPrivate : public QQuickAbstractButtonPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickMenuItem)
-
-public:
-    QQuickMenuItemPrivate();
-
-    bool highlighted;
-};
-
 QQuickMenuItemPrivate::QQuickMenuItemPrivate()
-    : highlighted(false)
+    : highlighted(false),
+      menu(nullptr)
 {
+}
+
+void QQuickMenuItemPrivate::setMenu(QQuickMenu *newMenu)
+{
+    Q_Q(QQuickMenuItem);
+    if (menu == newMenu)
+        return;
+
+    menu = newMenu;
+    emit q->menuChanged();
 }
 
 /*!
@@ -138,6 +139,20 @@ void QQuickMenuItem::setHighlighted(bool highlighted)
 
     d->highlighted = highlighted;
     emit highlightedChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty Menu QtQuick.Controls::MenuItem::menu
+    \readonly
+
+    This property holds the menu that contains this menu item,
+    or \c null if the item is not in a menu.
+*/
+QQuickMenu *QQuickMenuItem::menu() const
+{
+    Q_D(const QQuickMenuItem);
+    return d->menu;
 }
 
 QFont QQuickMenuItem::defaultFont() const

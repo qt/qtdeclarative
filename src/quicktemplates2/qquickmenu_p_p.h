@@ -55,6 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickMenu;
 class QQuickAction;
 class QQmlComponent;
 class QQmlObjectModel;

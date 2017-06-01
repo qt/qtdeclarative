@@ -65,6 +65,11 @@ TestCase {
         MenuItem { }
     }
 
+    Component {
+        id: menu
+        Menu { }
+    }
+
     function test_baseline() {
         var control = createTemporaryObject(menuItem, testCase)
         verify(control)
@@ -155,5 +160,34 @@ TestCase {
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }
+    }
+
+    function test_menu() {
+        var control = createTemporaryObject(menu, testCase)
+        verify(control)
+
+        var item1 = createTemporaryObject(menuItem, testCase)
+        verify(item1)
+        compare(item1.menu, null)
+
+        var item2 = createTemporaryObject(menuItem, testCase)
+        verify(item2)
+        compare(item2.menu, null)
+
+        control.addItem(item1)
+        compare(item1.menu, control)
+        compare(item2.menu, null)
+
+        control.insertItem(1, item2)
+        compare(item1.menu, control)
+        compare(item2.menu, control)
+
+        control.removeItem(1)
+        compare(item1.menu, control)
+        compare(item2.menu, null)
+
+        control.removeItem(0)
+        compare(item1.menu, null)
+        compare(item2.menu, null)
     }
 }
