@@ -88,11 +88,6 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    ApplicationWindow supports popups via its \l overlay property, which
-    ensures that popups are displayed above other content and that the
-    background is dimmed when a \l {Popup::}{modal} or \l {Popup::dim}
-    {dimmed} popup is visible.
-
     \note By default, an ApplicationWindow is not visible.
 
     \section2 Attached ApplicationWindow Properties
@@ -107,29 +102,9 @@ QT_BEGIN_NAMESPACE
     to access the window and its building blocks from places where no direct
     access to the window is available, without creating a dependency to a
     certain window \c id. A QML component that uses the ApplicationWindow
-    attached properties works in any window regardless of its \c id. The
-    following example uses the attached \c overlay property to position the
-    popup to the center of the window, despite the position of the button
-    that opens the popup.
+    attached properties works in any window regardless of its \c id.
 
-    \code
-    Button {
-        onClicked: popup.open()
-
-        Popup {
-            id: popup
-
-            parent: ApplicationWindow.overlay
-
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 100
-            height: 100
-        }
-    }
-    \endcode
-
-    \sa {Customizing ApplicationWindow}, Page, {Container Controls}
+    \sa {Customizing ApplicationWindow}, Overlay, Page, {Container Controls}
 */
 
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
@@ -378,7 +353,7 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
           follows the control's size. In most cases, there is no need to specify
           width or height for a background item.
 
-    \sa {Customizing ApplicationWindow}, contentItem, header, footer, overlay
+    \sa {Customizing ApplicationWindow}, contentItem, header, footer
 */
 QQuickItem *QQuickApplicationWindow::background() const
 {
@@ -554,9 +529,9 @@ QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
     This property holds the window content item.
 
     The content item is stacked above the \l background item, and under the
-    \l header, \l footer, and \l overlay items.
+    \l header, and \l footer items.
 
-    \sa background, header, footer, overlay
+    \sa background, header, footer
 */
 QQuickItem *QQuickApplicationWindow::contentItem() const
 {
@@ -591,10 +566,13 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 }
 
 /*!
+    \deprecated
     \qmlpropertygroup QtQuick.Controls::ApplicationWindow::overlay
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay
     \qmlproperty Component QtQuick.Controls::ApplicationWindow::overlay.modal
     \qmlproperty Component QtQuick.Controls::ApplicationWindow::overlay.modeless
+
+    Use the \l Overlay attached properties and signals instead.
 
     This property holds the window overlay item. Popups are automatically
     reparented to the overlay.
@@ -976,8 +954,11 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
 }
 
 /*!
+    \deprecated
     \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::overlay
     \readonly
+
+    Use the \l Overlay::overlay attached property instead.
 
     This attached property holds the window overlay item. The property can be attached
     to any item. The value is \c null if the item is not in an ApplicationWindow.

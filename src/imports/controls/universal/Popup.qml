@@ -56,4 +56,12 @@ T.Popup {
         border.color: control.Universal.chromeHighColor
         border.width: 1 // FlyoutBorderThemeThickness
     }
+
+    T.Overlay.modal: Rectangle {
+        color: control.Universal.baseLowColor
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: control.Universal.baseLowColor
+    }
 }

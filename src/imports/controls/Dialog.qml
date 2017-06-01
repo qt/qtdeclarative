@@ -76,4 +76,12 @@ T.Dialog {
     footer: DialogButtonBox {
         visible: count > 0
     }
+
+    T.Overlay.modal: Rectangle {
+        color: Default.overlayModalColor
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: Default.overlayDimColor
+    }
 }

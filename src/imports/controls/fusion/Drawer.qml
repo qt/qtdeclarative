@@ -44,7 +44,7 @@ import QtQuick.Controls.Fusion.impl 2.3
 T.Drawer {
     id: control
 
-    parent: T.ApplicationWindow.overlay
+    parent: T.Overlay.overlay
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
@@ -78,5 +78,13 @@ T.Drawer {
             x: control.edge === Qt.LeftEdge ? parent.width : 0
             y: control.edge === Qt.TopEdge ? parent.height : 0
         }
+    }
+
+    T.Overlay.modal: Rectangle {
+        color: Fusion.topShadow
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: Fusion.topShadow
     }
 }

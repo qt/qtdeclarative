@@ -48,6 +48,7 @@
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultdial_p.h"
@@ -157,6 +158,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     // QtQuick.Controls 2.3 (new types in Qt 5.10)
     qmlRegisterType(selector.select(QStringLiteral("Action.qml")), uri, 2, 3, "Action");
     qmlRegisterType(selector.select(QStringLiteral("ActionGroup.qml")), uri, 2, 3, "ActionGroup");
+    qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
 }
 
 static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)

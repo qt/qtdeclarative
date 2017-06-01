@@ -301,6 +301,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qRegisterMetaType<QQuickIcon>();
     qmlRegisterType<QQuickMenu, 3>(uri, 2, 3, "Menu");
     qmlRegisterType<QQuickMenuItem, 3>(uri, 2, 3, "MenuItem");
+    qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
+    qmlRegisterType<QQuickOverlayAttached>();
     qmlRegisterType<QQuickPopup, 3>(uri, 2, 3, "Popup");
     qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
     qmlRegisterType<QQuickScrollBar, 3>(uri, 2, 3, "ScrollBar");

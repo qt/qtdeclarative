@@ -69,4 +69,12 @@ T.Menu {
         color: Default.backgroundColor
         border.color: Default.frameDarkColor
     }
+
+    T.Overlay.modal: Rectangle {
+        color: Default.overlayModalColor
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: Default.overlayDimColor
+    }
 }

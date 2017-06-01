@@ -82,4 +82,12 @@ T.Menu {
             opacity: 0.2
         }
     }
+
+    T.Overlay.modal: Rectangle {
+        color: Fusion.topShadow
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: Fusion.topShadow
+    }
 }

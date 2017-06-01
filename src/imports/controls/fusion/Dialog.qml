@@ -92,4 +92,12 @@ T.Dialog {
     footer: DialogButtonBox {
         visible: count > 0
     }
+
+    T.Overlay.modal: Rectangle {
+        color: Fusion.topShadow
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: Fusion.topShadow
+    }
 }

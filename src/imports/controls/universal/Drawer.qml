@@ -41,7 +41,7 @@ import QtQuick.Controls.Universal 2.3
 T.Drawer {
     id: control
 
-    parent: T.ApplicationWindow.overlay
+    parent: T.Overlay.overlay
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
@@ -67,5 +67,13 @@ T.Drawer {
             x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
             y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
         }
+    }
+
+    T.Overlay.modal: Rectangle {
+        color: control.Universal.baseLowColor
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: control.Universal.baseLowColor
     }
 }

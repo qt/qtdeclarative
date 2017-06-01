@@ -55,6 +55,8 @@ QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
 class QQuickOverlayPrivate;
+class QQuickOverlayAttached;
+class QQuickOverlayAttachedPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
 {
@@ -73,6 +75,8 @@ public:
     void setModeless(QQmlComponent *modeless);
 
     static QQuickOverlay *overlay(QQuickWindow *window);
+
+    static QQuickOverlayAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     void modalChanged();
@@ -101,8 +105,39 @@ private:
     Q_DECLARE_PRIVATE(QQuickOverlay)
 };
 
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlayAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
+    Q_PROPERTY(QQmlComponent *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
+    Q_PROPERTY(QQmlComponent *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
+
+public:
+    explicit QQuickOverlayAttached(QObject *parent = nullptr);
+
+    QQuickOverlay *overlay() const;
+
+    QQmlComponent *modal() const;
+    void setModal(QQmlComponent *modal);
+
+    QQmlComponent *modeless() const;
+    void setModeless(QQmlComponent *modeless);
+
+Q_SIGNALS:
+    void overlayChanged();
+    void modalChanged();
+    void modelessChanged();
+    void pressed();
+    void released();
+
+private:
+    Q_DISABLE_COPY(QQuickOverlayAttached)
+    Q_DECLARE_PRIVATE(QQuickOverlayAttached)
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickOverlay)
+QML_DECLARE_TYPEINFO(QQuickOverlay, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKOVERLAY_P_H

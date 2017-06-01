@@ -59,4 +59,12 @@ T.Popup {
         border.color: control.palette.mid
         radius: 2
     }
+
+    T.Overlay.modal: Rectangle {
+        color: Fusion.topShadow
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: Fusion.topShadow
+    }
 }

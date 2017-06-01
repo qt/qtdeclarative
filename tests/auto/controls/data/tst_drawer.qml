@@ -50,7 +50,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.3
 
 TestCase {
     id: testCase
@@ -70,7 +70,7 @@ TestCase {
         compare(control.edge, Qt.LeftEdge)
         compare(control.position, 0.0)
         compare(control.dragMargin, Qt.styleHints.startDragDistance)
-        compare(control.parent, ApplicationWindow.overlay)
+        compare(control.parent, Overlay.overlay)
     }
 
     Component {

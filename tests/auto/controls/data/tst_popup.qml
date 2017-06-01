@@ -50,8 +50,8 @@
 
 import QtQuick 2.4
 import QtTest 1.0
-import QtQuick.Controls 2.2
-import QtQuick.Templates 2.2 as T
+import QtQuick.Controls 2.3
+import QtQuick.Templates 2.3 as T
 
 TestCase {
     id: testCase
@@ -1069,6 +1069,7 @@ TestCase {
         tryCompare(window, "active", true)
 
         compare(window.overlay.children.length, 0)
+        compare(window.overlay, window.Overlay.overlay)
 
         var firstOverlay = findOverlay(window, window.firstDrawer)
         verify(!firstOverlay)

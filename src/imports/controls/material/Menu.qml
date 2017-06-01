@@ -94,4 +94,14 @@ T.Menu {
             elevation: control.Material.elevation
         }
     }
+
+    T.Overlay.modal: Rectangle {
+        color: control.Material.backgroundDimColor
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+    }
+
+    T.Overlay.modeless: Rectangle {
+        color: control.Material.backgroundDimColor
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+    }
 }

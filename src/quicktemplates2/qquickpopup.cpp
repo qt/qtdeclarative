@@ -655,8 +655,16 @@ void QQuickPopupPrivate::createOverlay()
     if (!overlay)
         return;
 
+    QQmlComponent *component = nullptr;
+    QQuickOverlayAttached *overlayAttached = qobject_cast<QQuickOverlayAttached *>(qmlAttachedPropertiesObject<QQuickOverlay>(q, false));
+    if (overlayAttached)
+        component = modal ? overlayAttached->modal() : overlayAttached->modeless();
+
+    if (!component)
+        component = modal ? overlay->modal() : overlay->modeless();
+
     if (!dimmer)
-        dimmer = createDimmer(modal ? overlay->modal() : overlay->modeless(), q, overlay);
+        dimmer = createDimmer(component, q, overlay);
     resizeOverlay();
 }
 
