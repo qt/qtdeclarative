@@ -1,6 +1,5 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 Crimson AS <info@crimson.no>
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -270,8 +269,10 @@ QGradientStops QQuickGradient::gradientStops() const
 
 void QQuickGradient::doUpdate()
 {
-    static_cast<QQuickItem*>(parent())->update();
+    emit updated();
 }
+
+int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 
 /*!
     \qmltype Rectangle
@@ -324,6 +325,11 @@ QQuickRectangle::QQuickRectangle(QQuickItem *parent)
 : QQuickItem(*(new QQuickRectanglePrivate), parent)
 {
     setFlag(ItemHasContents);
+}
+
+void QQuickRectangle::doUpdate()
+{
+    update();
 }
 
 /*!
@@ -390,7 +396,16 @@ void QQuickRectangle::setGradient(QQuickGradient *gradient)
     Q_D(QQuickRectangle);
     if (d->gradient == gradient)
         return;
+    static int updatedSignalIdx = -1;
+    if (updatedSignalIdx < 0)
+        updatedSignalIdx = QMetaMethod::fromSignal(&QQuickGradient::updated).methodIndex();
+    if (d->doUpdateSlotIdx < 0)
+        d->doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
+    if (d->gradient)
+        QMetaObject::disconnect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
     d->gradient = gradient;
+    if (d->gradient)
+        QMetaObject::connect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
     update();
 }
 

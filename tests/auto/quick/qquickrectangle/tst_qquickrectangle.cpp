@@ -32,6 +32,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
+#include <private/qquickitem_p.h>
 #include <private/qquickrectangle_p.h>
 
 #include "../../shared/util.h"
@@ -46,6 +47,8 @@ private slots:
     void color();
     void gradient();
     void gradient_border();
+    void gradient_separate();
+    void gradient_multiple();
     void antialiasing();
 
 private:
@@ -109,6 +112,62 @@ void tst_qquickrectangle::gradient_border()
     view.show();
 
     QVERIFY(QTest::qWaitForWindowExposed(&view));
+}
+
+// A gradient not defined inline with the Rectangle using it should still change
+// that Rectangle.
+void tst_qquickrectangle::gradient_separate()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("gradient-separate.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(view.rootObject());
+    QVERIFY(rect);
+
+    // Start off clean
+    QQuickItemPrivate *rectPriv = QQuickItemPrivate::get(rect);
+    bool isDirty = rectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QVERIFY(!isDirty);
+
+    QMetaObject::invokeMethod(rect, "changeGradient");
+
+    // Changing the gradient should have scheduled an update of the item.
+    isDirty = rectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QVERIFY(isDirty);
+}
+
+// When a gradient is changed, every Rectangle connected to it must update.
+void tst_qquickrectangle::gradient_multiple()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("gradient-multiple.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickRectangle *firstRect = qobject_cast<QQuickRectangle*>(view.rootObject()->property("firstRectangle").value<QObject*>());
+    QQuickRectangle *secondRect = qobject_cast<QQuickRectangle*>(view.rootObject()->property("secondRectangle").value<QObject*>());
+    QVERIFY(firstRect);
+    QVERIFY(secondRect);
+
+    // Start off clean
+    QQuickItemPrivate *firstRectPriv = QQuickItemPrivate::get(firstRect);
+    QQuickItemPrivate *secondRectPriv = QQuickItemPrivate::get(secondRect);
+    bool firstIsDirty = firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    bool secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QVERIFY(!firstIsDirty);
+    QVERIFY(!secondIsDirty);
+
+    QMetaObject::invokeMethod(view.rootObject(), "changeGradient");
+
+    // Changing the gradient should have scheduled an update of both items
+    firstIsDirty = firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QVERIFY(firstIsDirty);
+    QVERIFY(secondIsDirty);
 }
 
 void tst_qquickrectangle::antialiasing()
