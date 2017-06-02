@@ -111,6 +111,7 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 
     clearActiveGuards();
     clearPermanentGuards();
+    clearError();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = 0;
 
