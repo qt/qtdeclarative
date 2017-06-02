@@ -64,7 +64,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
     Q_OBJECT
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL REVISION 3)
     Q_CLASSINFO("DefaultProperty", "contentData")
 

@@ -128,7 +128,7 @@ class QQuickTumblerAttachedPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT)
+    Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT FINAL)
     Q_PROPERTY(qreal displacement READ displacement NOTIFY displacementChanged FINAL)
 
 public:

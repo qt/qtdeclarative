@@ -67,7 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
-    Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged REVISION 3)
+    Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
 
 public:

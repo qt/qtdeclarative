@@ -60,7 +60,7 @@ class QQuickSwipeDelegateAttachedPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT)
+    Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT FINAL)
 
 public:
     explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);

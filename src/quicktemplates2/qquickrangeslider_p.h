@@ -60,8 +60,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
     Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(QQuickRangeSliderNode *first READ first CONSTANT)
-    Q_PROPERTY(QQuickRangeSliderNode *second READ second CONSTANT)
+    Q_PROPERTY(QQuickRangeSliderNode *first READ first CONSTANT FINAL)
+    Q_PROPERTY(QQuickRangeSliderNode *second READ second CONSTANT FINAL)
     Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
