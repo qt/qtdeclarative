@@ -597,7 +597,7 @@ void QQuickMenu::setTitle(QString &title)
     if (title == d->title)
         return;
     d->title = title;
-    emit titleChanged();
+    emit titleChanged(title);
 }
 
 /*!

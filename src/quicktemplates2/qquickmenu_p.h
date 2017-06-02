@@ -97,7 +97,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) override;
 
 Q_SIGNALS:
-    void titleChanged();
+    void titleChanged(const QString &title);
     Q_REVISION(3) void delegateChanged();
 
 protected:
