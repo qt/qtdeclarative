@@ -72,6 +72,7 @@ private slots:
     void order();
     void popup();
     void actions();
+    void removeTakeItem();
 };
 
 void tst_menu::defaults()
@@ -479,6 +480,55 @@ void tst_menu::actions()
     QVERIFY(menuItem4);
     QVERIFY(!menuItem4->action());
     QCOMPARE(menuItem4->text(), "menuitem4");
+}
+
+void tst_menu::removeTakeItem()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("removeTakeItem.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+
+    QPointer<QQuickMenuItem> menuItem1 = window->property("menuItem1").value<QQuickMenuItem *>();
+    QVERIFY(!menuItem1.isNull());
+    QCOMPARE(menuItem1->menu(), menu);
+
+    QPointer<QQuickMenuItem> menuItem2 = window->property("menuItem2").value<QQuickMenuItem *>();
+    QVERIFY(!menuItem2.isNull());
+    QCOMPARE(menuItem2->menu(), menu);
+
+    QPointer<QQuickMenuItem> menuItem3 = window->property("menuItem3").value<QQuickMenuItem *>();
+    QVERIFY(!menuItem3.isNull());
+    QCOMPARE(menuItem3->menu(), menu);
+
+    // takeItem(int) does not destroy
+    QVariant ret;
+    QVERIFY(QMetaObject::invokeMethod(window, "takeSecondItem", Q_RETURN_ARG(QVariant, ret)));
+    QCOMPARE(ret.value<QQuickMenuItem *>(), menuItem2);
+    QVERIFY(!menuItem2->menu());
+    QCoreApplication::sendPostedEvents(menuItem2, QEvent::DeferredDelete);
+    QVERIFY(!menuItem2.isNull());
+
+    // removeItem(Item) destroys
+    QVERIFY(QMetaObject::invokeMethod(window, "removeFirstItem"));
+    QVERIFY(!menuItem1->menu());
+    QCoreApplication::sendPostedEvents(menuItem1, QEvent::DeferredDelete);
+    QVERIFY(menuItem1.isNull());
+
+    // removeItem(null) must not call removeItem(0)
+    QVERIFY(QMetaObject::invokeMethod(window, "removeNullItem"));
+    QCOMPARE(menuItem3->menu(), menu);
+    QCoreApplication::sendPostedEvents(menuItem3, QEvent::DeferredDelete);
+    QVERIFY(!menuItem3.isNull());
+
+    // deprecated removeItem(int) does not destroy
+    QVERIFY(QMetaObject::invokeMethod(window, "removeFirstIndex"));
+    QVERIFY(!menuItem3->menu());
+    QCoreApplication::sendPostedEvents(menuItem3, QEvent::DeferredDelete);
+    QVERIFY(!menuItem3.isNull());
 }
 
 QTEST_MAIN(tst_menu)
