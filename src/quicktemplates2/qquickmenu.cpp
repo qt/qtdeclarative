@@ -106,8 +106,8 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     When used as a popup menu, it is easiest to specify the position by specifying
-    the desired \l x and \y coordinates using the respective properties, and call
-    \l open() to open the menu.
+    the desired \l {Popup::}{x} and \l {Popup::}{y} coordinates using the respective
+    properties, and call \l {Popup::}{open()} to open the menu.
 
     \code
     Button {
