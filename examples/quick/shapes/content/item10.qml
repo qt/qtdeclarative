@@ -68,13 +68,11 @@ Rectangle {
                 strokeColor: "black"
                 fillColor: "lightBlue"
 
-                Path {
-                    startX: 50; startY: 100
-                    PathCubic {
-                        x: 150; y: 100
-                        control1X: cp1.x; control1Y: cp1.y
-                        control2X: cp2.x; control2Y: cp2.y
-                    }
+                startX: 50; startY: 100
+                PathCubic {
+                    x: 150; y: 100
+                    control1X: cp1.x; control1Y: cp1.y
+                    control2X: cp2.x; control2Y: cp2.y
                 }
             }
         }

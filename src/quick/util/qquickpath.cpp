@@ -153,6 +153,11 @@ QQuickPath::QQuickPath(QObject *parent)
 {
 }
 
+QQuickPath::QQuickPath(QQuickPathPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
+{
+}
+
 QQuickPath::~QQuickPath()
 {
 }

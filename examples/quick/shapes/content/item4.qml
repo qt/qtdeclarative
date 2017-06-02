@@ -58,30 +58,28 @@ Rectangle {
         anchors.fill: parent
 
         ShapePath {
+            id: p
             strokeWidth: 5
             strokeColor: "blue"
             strokeStyle: ShapePath.DashLine
             dashPattern: [ 1, 4, 4, 4 ]
             fillColor: "lightBlue"
 
-            Path {
-                id: p
-                property real xr: 70
-                property real yr: 30
-                startX: shape.width / 2 - xr
-                startY: shape.height / 2 - yr
-                PathArc {
-                    x: shape.width / 2 + p.xr
-                    y: shape.height / 2 + p.yr
-                    radiusX: p.xr; radiusY: p.yr
-                    useLargeArc: true
-                }
-                PathArc {
-                    x: shape.width / 2 - p.xr
-                    y: shape.height / 2 - p.yr
-                    radiusX: p.xr; radiusY: p.yr
-                    useLargeArc: true
-                }
+            property real xr: 70
+            property real yr: 30
+            startX: shape.width / 2 - xr
+            startY: shape.height / 2 - yr
+            PathArc {
+                x: shape.width / 2 + p.xr
+                y: shape.height / 2 + p.yr
+                radiusX: p.xr; radiusY: p.yr
+                useLargeArc: true
+            }
+            PathArc {
+                x: shape.width / 2 - p.xr
+                y: shape.height / 2 - p.yr
+                radiusX: p.xr; radiusY: p.yr
+                useLargeArc: true
             }
         }
     }

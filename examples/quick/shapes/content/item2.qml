@@ -59,6 +59,7 @@ Rectangle {
         anchors.fill: parent
 
         ShapePath {
+            id: p1
             fillColor: "transparent" // stroke only
             strokeWidth: 4
 
@@ -81,23 +82,20 @@ Rectangle {
                 }
             }
 
-            Path {
-                id: p1
-                property real r: 60
-                startX: circ1.width / 2 - r
-                startY: circ1.height / 2 - r
-                PathArc {
-                    x: circ1.width / 2 + p1.r
-                    y: circ1.height / 2 + p1.r
-                    radiusX: p1.r; radiusY: p1.r
-                    useLargeArc: true
-                }
-                PathArc {
-                    x: circ1.width / 2 - p1.r
-                    y: circ1.height / 2 - p1.r
-                    radiusX: p1.r; radiusY: p1.r
-                    useLargeArc: true
-                }
+            property real r: 60
+            startX: circ1.width / 2 - r
+            startY: circ1.height / 2 - r
+            PathArc {
+                x: circ1.width / 2 + p1.r
+                y: circ1.height / 2 + p1.r
+                radiusX: p1.r; radiusY: p1.r
+                useLargeArc: true
+            }
+            PathArc {
+                x: circ1.width / 2 - p1.r
+                y: circ1.height / 2 - p1.r
+                radiusX: p1.r; radiusY: p1.r
+                useLargeArc: true
             }
         }
     }
@@ -113,6 +111,7 @@ Rectangle {
         }
 
         ShapePath {
+            id: p2
             strokeWidth: -1 // or strokeColor: "transparent"
 
             SequentialAnimation on fillColor {
@@ -134,23 +133,20 @@ Rectangle {
                 }
             }
 
-            Path {
-                id: p2
-                property real r: 40
-                startX: circ2.width / 2 - r
-                startY: circ2.height / 2 - r
-                PathArc {
-                    x: circ2.width / 2 + p2.r
-                    y: circ2.height / 2 + p2.r
-                    radiusX: p2.r; radiusY: p2.r
-                    useLargeArc: true
-                }
-                PathArc {
-                    x: circ2.width / 2 - p2.r
-                    y: circ2.height / 2 - p2.r
-                    radiusX: p2.r; radiusY: p2.r
-                    useLargeArc: true
-                }
+            property real r: 40
+            startX: circ2.width / 2 - r
+            startY: circ2.height / 2 - r
+            PathArc {
+                x: circ2.width / 2 + p2.r
+                y: circ2.height / 2 + p2.r
+                radiusX: p2.r; radiusY: p2.r
+                useLargeArc: true
+            }
+            PathArc {
+                x: circ2.width / 2 - p2.r
+                y: circ2.height / 2 - p2.r
+                radiusX: p2.r; radiusY: p2.r
+                useLargeArc: true
             }
         }
     }

@@ -72,13 +72,11 @@ Rectangle {
                     ShapeGradientStop { position: 1; color: "red" }
                 }
 
-                Path {
-                    startX: 10; startY: 10
-                    PathLine { relativeX: 180; relativeY: 0 }
-                    PathLine { relativeX: 0; relativeY: 180 }
-                    PathLine { relativeX: -180; relativeY: 0 }
-                    PathLine { relativeX: 0; relativeY: -180 }
-                }
+                startX: 10; startY: 10
+                PathLine { relativeX: 180; relativeY: 0 }
+                PathLine { relativeX: 0; relativeY: 180 }
+                PathLine { relativeX: -180; relativeY: 0 }
+                PathLine { relativeX: 0; relativeY: -180 }
             }
         }
 
@@ -100,12 +98,10 @@ Rectangle {
                 strokeColor: "gray"
                 strokeWidth: 2
                 fillColor: "transparent"
-                Path {
-                    PathMove { x: 0; y: 50 }
-                    PathLine { relativeX: 200; relativeY: 0 }
-                    PathMove { x: 0; y: 150 }
-                    PathLine { relativeX: 200; relativeY: 0 }
-                }
+                PathMove { x: 0; y: 50 }
+                PathLine { relativeX: 200; relativeY: 0 }
+                PathMove { x: 0; y: 150 }
+                PathLine { relativeX: 200; relativeY: 0 }
             }
         }
     }

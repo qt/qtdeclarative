@@ -54,7 +54,7 @@
 #include "qquickitem.h"
 
 #include <private/qtquickglobal_p.h>
-#include <private/qquickpath_p.h>
+#include <private/qquickpath_p_p.h>
 #include <private/qv8engine_p.h>
 #include <QGradientStops>
 
@@ -152,12 +152,9 @@ private:
     QPointF m_end;
 };
 
-class QQuickShapePath : public QObject
+class QQuickShapePath : public QQuickPath
 {
     Q_OBJECT
-
-    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
-    Q_CLASSINFO("DefaultProperty", "path")
 
     Q_PROPERTY(QColor strokeColor READ strokeColor WRITE setStrokeColor NOTIFY strokeColorChanged)
     Q_PROPERTY(qreal strokeWidth READ strokeWidth WRITE setStrokeWidth NOTIFY strokeWidthChanged)
@@ -201,9 +198,6 @@ public:
     QQuickShapePath(QObject *parent = nullptr);
     ~QQuickShapePath();
 
-    QQuickPath *path() const;
-    void setPath(QQuickPath *path);
-
     QColor strokeColor() const;
     void setStrokeColor(const QColor &color);
 
@@ -239,8 +233,7 @@ public:
     void resetFillGradient();
 
 Q_SIGNALS:
-    void changed();
-    void pathChanged();
+    void shapePathChanged();
     void strokeColorChanged();
     void strokeWidthChanged();
     void fillColorChanged();
@@ -256,7 +249,6 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuickShapePath)
     Q_DECLARE_PRIVATE(QQuickShapePath)
-    Q_PRIVATE_SLOT(d_func(), void _q_pathChanged())
     Q_PRIVATE_SLOT(d_func(), void _q_fillGradientChanged())
 };
 

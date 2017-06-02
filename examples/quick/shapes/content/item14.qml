@@ -67,13 +67,11 @@ Rectangle {
                 strokeStyle: ShapePath.DashLine
                 strokeWidth: 4
 
-                Path {
-                    startX: 50; startY: 100
-                    PathArc {
-                        x: 100; y: 150
-                        radiusX: 50; radiusY: 50
-                        useLargeArc: model.index === 1
-                    }
+                startX: 50; startY: 100
+                PathArc {
+                    x: 100; y: 150
+                    radiusX: 50; radiusY: 50
+                    useLargeArc: model.index === 1
                 }
             }
         }

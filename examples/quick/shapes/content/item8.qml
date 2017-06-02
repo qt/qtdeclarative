@@ -71,12 +71,10 @@ Rectangle {
 
             capStyle: styles[capStyleIdx]
 
-            Path {
-                startX: 40; startY: 30
-                PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-                PathLine { x: 150; y: 80 }
-                PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
-            }
+            startX: 40; startY: 30
+            PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
+            PathLine { x: 150; y: 80 }
+            PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
         }
     }
 

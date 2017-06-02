@@ -133,17 +133,17 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
-    \inherits Object
+    \inherits Path
     \brief Describes a Path and associated properties for stroking and filling
     \since 5.10
 
-    A Shape contains one or more ShapePath elements. At least one
-    ShapePath is necessary in order to have a Shape output anything
-    visible. A ShapeItem in turn contains a Path and properties describing the
-    stroking and filling parameters, such as the stroke width and color, the
-    fill color or gradient, join and cap styles, and so on. Finally, the Path
-    object contains a list of path elements like PathMove, PathLine, PathCubic,
-    PathQuad, PathArc.
+    A Shape contains one or more ShapePath elements. At least one ShapePath is
+    necessary in order to have a Shape output anything visible. A ShapePath
+    itself is a \l Path with additional properties describing the stroking and
+    filling parameters, such as the stroke width and color, the fill color or
+    gradient, join and cap styles, and so on. As with ordinary \l Path objects,
+    ShapePath also contains a list of path elements like \l PathMove, \l PathLine,
+    \l PathCubic, \l PathQuad, \l PathArc, together with a starting position.
 
     Any property changes in these data sets will be bubble up and change the
     output of the Shape. This means that it is simple and easy to change, or
@@ -166,12 +166,10 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
 
         joinStyle: styles[joinStyleIndex]
 
-        Path {
-            startX: 30
-            startY: 30
-            PathLine { x: 100; y: 100 }
-            PathLine { x: 30; y: 100 }
-        }
+        startX: 30
+        startY: 30
+        PathLine { x: 100; y: 100 }
+        PathLine { x: 30; y: 100 }
     }
     \endcode
 
@@ -182,57 +180,27 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
  */
 
 QQuickShapePathPrivate::QQuickShapePathPrivate()
-    : path(nullptr),
-      dirty(DirtyAll)
+    : dirty(DirtyAll)
 {
 }
 
 QQuickShapePath::QQuickShapePath(QObject *parent)
-    : QObject(*(new QQuickShapePathPrivate), parent)
+    : QQuickPath(*(new QQuickShapePathPrivate), parent)
 {
+    // The inherited changed() and the shapePathChanged() signals remain
+    // distinct, and this is intentional. Combining the two is not possible due
+    // to the difference in semantics and the need to act (see dirty flag
+    // below) differently on QQuickPath-related changes.
+
+    connect(this, &QQuickPath::changed, [this]() {
+        Q_D(QQuickShapePath);
+        d->dirty |= QQuickShapePathPrivate::DirtyPath;
+        emit shapePathChanged();
+    });
 }
 
 QQuickShapePath::~QQuickShapePath()
 {
-}
-
-/*!
-    \qmlproperty Path QtQuick.Shapes::ShapePath::path
-
-    This property holds the Path object.
-
-    \default
- */
-
-QQuickPath *QQuickShapePath::path() const
-{
-    Q_D(const QQuickShapePath);
-    return d->path;
-}
-
-void QQuickShapePath::setPath(QQuickPath *path)
-{
-    Q_D(QQuickShapePath);
-    if (d->path == path)
-        return;
-
-    if (d->path)
-        qmlobject_disconnect(d->path, QQuickPath, SIGNAL(changed()),
-                             this, QQuickShapePath, SLOT(_q_pathChanged()));
-    d->path = path;
-    qmlobject_connect(d->path, QQuickPath, SIGNAL(changed()),
-                      this, QQuickShapePath, SLOT(_q_pathChanged()));
-
-    d->dirty |= QQuickShapePathPrivate::DirtyPath;
-    emit pathChanged();
-    emit changed();
-}
-
-void QQuickShapePathPrivate::_q_pathChanged()
-{
-    Q_Q(QQuickShapePath);
-    dirty |= DirtyPath;
-    emit q->changed();
 }
 
 /*!
@@ -258,7 +226,7 @@ void QQuickShapePath::setStrokeColor(const QColor &color)
         d->sfp.strokeColor = color;
         d->dirty |= QQuickShapePathPrivate::DirtyStrokeColor;
         emit strokeColorChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -285,7 +253,7 @@ void QQuickShapePath::setStrokeWidth(qreal w)
         d->sfp.strokeWidth = w;
         d->dirty |= QQuickShapePathPrivate::DirtyStrokeWidth;
         emit strokeWidthChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -312,7 +280,7 @@ void QQuickShapePath::setFillColor(const QColor &color)
         d->sfp.fillColor = color;
         d->dirty |= QQuickShapePathPrivate::DirtyFillColor;
         emit fillColorChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -342,7 +310,7 @@ void QQuickShapePath::setFillRule(FillRule fillRule)
         d->sfp.fillRule = fillRule;
         d->dirty |= QQuickShapePathPrivate::DirtyFillRule;
         emit fillRuleChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -372,7 +340,7 @@ void QQuickShapePath::setJoinStyle(JoinStyle style)
         d->sfp.joinStyle = style;
         d->dirty |= QQuickShapePathPrivate::DirtyStyle;
         emit joinStyleChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -398,7 +366,7 @@ void QQuickShapePath::setMiterLimit(int limit)
         d->sfp.miterLimit = limit;
         d->dirty |= QQuickShapePathPrivate::DirtyStyle;
         emit miterLimitChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -428,7 +396,7 @@ void QQuickShapePath::setCapStyle(CapStyle style)
         d->sfp.capStyle = style;
         d->dirty |= QQuickShapePathPrivate::DirtyStyle;
         emit capStyleChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -457,7 +425,7 @@ void QQuickShapePath::setStrokeStyle(StrokeStyle style)
         d->sfp.strokeStyle = style;
         d->dirty |= QQuickShapePathPrivate::DirtyDash;
         emit strokeStyleChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -485,7 +453,7 @@ void QQuickShapePath::setDashOffset(qreal offset)
         d->sfp.dashOffset = offset;
         d->dirty |= QQuickShapePathPrivate::DirtyDash;
         emit dashOffsetChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -516,7 +484,7 @@ void QQuickShapePath::setDashPattern(const QVector<qreal> &array)
         d->sfp.dashPattern = array;
         d->dirty |= QQuickShapePathPrivate::DirtyDash;
         emit dashPatternChanged();
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -549,7 +517,7 @@ void QQuickShapePath::setFillGradient(QQuickShapeGradient *gradient)
             qmlobject_connect(d->sfp.fillGradient, QQuickShapeGradient, SIGNAL(updated()),
                               this, QQuickShapePath, SLOT(_q_fillGradientChanged()));
         d->dirty |= QQuickShapePathPrivate::DirtyFillGradient;
-        emit changed();
+        emit shapePathChanged();
     }
 }
 
@@ -557,7 +525,7 @@ void QQuickShapePathPrivate::_q_fillGradientChanged()
 {
     Q_Q(QQuickShapePath);
     dirty |= DirtyFillGradient;
-    emit q->changed();
+    emit q->shapePathChanged();
 }
 
 void QQuickShapePath::resetFillGradient()
@@ -613,12 +581,10 @@ void QQuickShapePath::resetFillGradient()
             }
             strokeStyle: ShapePath.DashLine
             dashPattern: [ 1, 4 ]
-            Path {
-                startX: 20; startY: 20
-                PathLine { x: 180; y: 130 }
-                PathLine { x: 20; y: 130 }
-                PathLine { x: 20; y: 20 }
-            }
+            startX: 20; startY: 20
+            PathLine { x: 180; y: 130 }
+            PathLine { x: 20; y: 130 }
+            PathLine { x: 20; y: 20 }
         }
     }
     \endcode
@@ -838,7 +804,7 @@ static void vpe_append(QQmlListProperty<QQuickShapePath> *property, QQuickShapeP
     d->qmlData.sp.append(obj);
 
     if (d->componentComplete) {
-        QObject::connect(obj, SIGNAL(changed()), item, SLOT(_q_shapePathChanged()));
+        QObject::connect(obj, SIGNAL(shapePathChanged()), item, SLOT(_q_shapePathChanged()));
         d->_q_shapePathChanged();
     }
 }
@@ -855,7 +821,7 @@ static void vpe_clear(QQmlListProperty<QQuickShapePath> *property)
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
 
     for (QQuickShapePath *p : d->qmlData.sp)
-        QObject::disconnect(p, SIGNAL(changed()), item, SLOT(_q_shapePathChanged()));
+        QObject::disconnect(p, SIGNAL(shapePathChanged()), item, SLOT(_q_shapePathChanged()));
 
     d->qmlData.sp.clear();
 
@@ -894,7 +860,7 @@ void QQuickShape::componentComplete()
     d->componentComplete = true;
 
     for (QQuickShapePath *p : d->qmlData.sp)
-        connect(p, SIGNAL(changed()), this, SLOT(_q_shapePathChanged()));
+        connect(p, SIGNAL(shapePathChanged()), this, SLOT(_q_shapePathChanged()));
 
     d->_q_shapePathChanged();
 }
@@ -1042,7 +1008,7 @@ void QQuickShapePrivate::sync()
             int &dirty(QQuickShapePathPrivate::get(p)->dirty);
 
             if (dirty & QQuickShapePathPrivate::DirtyPath)
-                renderer->setPath(i, p->path());
+                renderer->setPath(i, p);
             if (dirty & QQuickShapePathPrivate::DirtyStrokeColor)
                 renderer->setStrokeColor(i, p->strokeColor());
             if (dirty & QQuickShapePathPrivate::DirtyStrokeWidth)

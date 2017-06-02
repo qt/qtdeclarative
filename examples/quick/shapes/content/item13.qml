@@ -71,14 +71,12 @@ Rectangle {
                     strokeStyle: ShapePath.DashLine
                     strokeWidth: 4
 
-                    Path {
-                        startX: 4; startY: 4
-                        PathArc {
-                            id: arc
-                            x: 96; y: 96
-                            radiusX: 100; radiusY: 100
-                            direction: model.index === 0 ? PathArc.Clockwise : PathArc.Counterclockwise
-                        }
+                    startX: 4; startY: 4
+                    PathArc {
+                        id: arc
+                        x: 96; y: 96
+                        radiusX: 100; radiusY: 100
+                        direction: model.index === 0 ? PathArc.Clockwise : PathArc.Counterclockwise
                     }
                 }
             }

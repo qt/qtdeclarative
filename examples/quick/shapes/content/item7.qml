@@ -73,12 +73,10 @@ Rectangle {
 
             joinStyle: styles[joinStyleIdx]
 
-            Path {
-                startX: 30
-                startY: 30
-                PathLine { x: 100; y: 100 }
-                PathLine { x: 30; y: 100 }
-            }
+            startX: 30
+            startY: 30
+            PathLine { x: 100; y: 100 }
+            PathLine { x: 30; y: 100 }
         }
     }
 

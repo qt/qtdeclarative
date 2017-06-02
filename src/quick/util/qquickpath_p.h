@@ -419,6 +419,7 @@ Q_SIGNALS:
     void startYChanged();
 
 protected:
+    QQuickPath(QQuickPathPrivate &dd, QObject *parent = nullptr);
     void componentComplete() override;
     void classBegin() override;
     void disconnectPathElements();

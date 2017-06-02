@@ -103,7 +103,8 @@ void tst_QQuickShape::vpInitValues()
 
     QQuickShapePath *vp = vps.at(&vps, 0);
     QVERIFY(vp != nullptr);
-    QVERIFY(!vp->path());
+    QQmlListReference pathList(vp, "pathElements");
+    QCOMPARE(pathList.count(), 0);
     QCOMPARE(vp->strokeColor(), QColor(Qt::white));
     QCOMPARE(vp->strokeWidth(), 1.0f);
     QCOMPARE(vp->fillColor(), QColor(Qt::white));
@@ -134,7 +135,6 @@ void tst_QQuickShape::basicShape()
     QVERIFY(vp != nullptr);
     QCOMPARE(vp->strokeWidth(), 4.0f);
     QVERIFY(vp->fillGradient() != nullptr);
-    QVERIFY(vp->path() != nullptr);
     QCOMPARE(vp->strokeStyle(), QQuickShapePath::DashLine);
 
     vp->setStrokeWidth(5.0f);
@@ -148,7 +148,7 @@ void tst_QQuickShape::basicShape()
     QCOMPARE(stopList.count(), 5);
     QVERIFY(stopList.at(2) != nullptr);
 
-    QQuickPath *path = vp->path();
+    QQuickPath *path = vp;
     QCOMPARE(path->startX(), 20.0f);
     QQmlListReference pathList(path, "pathElements");
     QCOMPARE(pathList.count(), 3);
@@ -173,8 +173,8 @@ void tst_QQuickShape::changeSignals()
     QQuickShapePath *vp = qobject_cast<QQuickShapePath *>(list.at(0));
     QVERIFY(vp != nullptr);
 
-    // Verify that VisualPath property changes emit changed().
-    QSignalSpy vpChangeSpy(vp, SIGNAL(changed()));
+    // Verify that VisualPath property changes emit shapePathChanged().
+    QSignalSpy vpChangeSpy(vp, SIGNAL(shapePathChanged()));
     QSignalSpy strokeColorPropSpy(vp, SIGNAL(strokeColorChanged()));
     vp->setStrokeColor(Qt::blue);
     vp->setStrokeWidth(1.0f);
@@ -190,15 +190,15 @@ void tst_QQuickShape::changeSignals()
     QCOMPARE(strokeColorPropSpy.count(), 1);
     QCOMPARE(vpChangeSpy.count(), 10);
 
-    // Verify that property changes from Path and its elements bubble up and result in changed().
-    QQuickPath *path = vp->path();
+    // Verify that property changes from Path and its elements bubble up and result in shapePathChanged().
+    QQuickPath *path = vp;
     path->setStartX(30);
     QCOMPARE(vpChangeSpy.count(), 11);
     QQmlListReference pathList(path, "pathElements");
     qobject_cast<QQuickPathLine *>(pathList.at(1))->setY(200);
     QCOMPARE(vpChangeSpy.count(), 12);
 
-    // Verify that property changes from the gradient bubble up and result in changed().
+    // Verify that property changes from the gradient bubble up and result in shapePathChanged().
     vp->setFillGradient(g);
     QCOMPARE(vpChangeSpy.count(), 13);
     QQuickShapeLinearGradient *lgrad = qobject_cast<QQuickShapeLinearGradient *>(g);

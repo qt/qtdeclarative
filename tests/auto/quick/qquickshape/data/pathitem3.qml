@@ -24,12 +24,10 @@ Item {
             }
             strokeStyle: ShapePath.DashLine
             dashPattern: [ 1, 4 ]
-            Path {
-                startX: 20; startY: 20
-                PathLine { x: 180; y: 130 }
-                PathLine { x: 20; y: 130 }
-                PathLine { x: 20; y: 20 }
-            }
+            startX: 20; startY: 20
+            PathLine { x: 180; y: 130 }
+            PathLine { x: 20; y: 130 }
+            PathLine { x: 20; y: 20 }
         }
     }
 }

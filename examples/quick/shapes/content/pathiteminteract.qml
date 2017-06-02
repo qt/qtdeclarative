@@ -192,20 +192,20 @@ Rectangle {
                             var p = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; ShapePath {' +
                                                        'strokeColor: "black"; fillColor: "transparent";'+
                                                        'strokeWidth: ' + widthSlider.value + ';' +
-                                                       'Path { startX: ' + x + '; startY: ' + y + ';' +
-                                                       'PathLine { x: ' + x + ' + 1; y: ' + y + ' + 1 } } }',
+                                                       'startX: ' + x + '; startY: ' + y + ';' +
+                                                       'PathLine { x: ' + x + ' + 1; y: ' + y + ' + 1 } }',
                                                        root, "dynamic_visual_path");
                             shape.elements.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
                             if (!activePath)
                                 return;
-                            var pathObj = activePath.path.pathElements[0];
+                            var pathObj = activePath.pathElements[0];
                             pathObj.x = x;
                             pathObj.y = y;
                         }, "end": function() {
-                            canvas.genResizer(activePath.path, activePath.path.startX, activePath.path.startY, "startX", "startY", "red");
-                            var pathObj = activePath.path.pathElements[0];
+                            canvas.genResizer(activePath, activePath.startX, activePath.startY, "startX", "startY", "red");
+                            var pathObj = activePath.pathElements[0];
                             canvas.genResizer(pathObj, pathObj.x, pathObj.y, "x", "y", "red");
                             activePath = null;
                         }
@@ -214,21 +214,21 @@ Rectangle {
                             var p = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; ShapePath {' +
                                                        'strokeColor: "black"; fillColor: "' + (root.fill ? 'green' : 'transparent') + '";'+
                                                        'strokeWidth: ' + widthSlider.value + ';' +
-                                                       'Path { startX: ' + x + '; startY: ' + y + ';' +
+                                                       'startX: ' + x + '; startY: ' + y + ';' +
                                                        'PathCubic { x: ' + x + ' + 1; y: ' + y + ' + 1;' +
-                                                       'control1X: ' + x + ' + 50; control1Y: ' + y + ' + 50; control2X: ' + x + ' + 150; control2Y: ' + y + ' + 50; } } }',
+                                                       'control1X: ' + x + ' + 50; control1Y: ' + y + ' + 50; control2X: ' + x + ' + 150; control2Y: ' + y + ' + 50; } }',
                                                        root, "dynamic_visual_path");
                             shape.elements.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
                             if (!activePath)
                                 return;
-                            var pathObj = activePath.path.pathElements[0];
+                            var pathObj = activePath.pathElements[0];
                             pathObj.x = x;
                             pathObj.y = y;
                         }, "end": function() {
-                            canvas.genResizer(activePath.path, activePath.path.startX, activePath.path.startY, "startX", "startY", "red");
-                            var pathObj = activePath.path.pathElements[0];
+                            canvas.genResizer(activePath, activePath.startX, activePath.startY, "startX", "startY", "red");
+                            var pathObj = activePath.pathElements[0];
                             canvas.genResizer(pathObj, pathObj.x, pathObj.y, "x", "y", "red");
                             canvas.genResizer(pathObj, pathObj.control1X, pathObj.control1Y, "control1X", "control1Y", "blue");
                             canvas.genResizer(pathObj, pathObj.control2X, pathObj.control2Y, "control2X", "control2Y", "lightBlue");
@@ -239,21 +239,21 @@ Rectangle {
                             var p = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; ShapePath {' +
                                                        'strokeColor: "black"; fillColor: "' + (root.fill ? 'green' : 'transparent') + '";'+
                                                        'strokeWidth: ' + widthSlider.value + ';' +
-                                                       'Path { startX: ' + x + '; startY: ' + y + ';' +
+                                                       'startX: ' + x + '; startY: ' + y + ';' +
                                                        'PathQuad { x: ' + x + ' + 1; y: ' + y + ' + 1;' +
-                                                       'controlX: ' + x + ' + 50; controlY: ' + y + ' + 50 } } }',
+                                                       'controlX: ' + x + ' + 50; controlY: ' + y + ' + 50 } }',
                                                        root, "dynamic_visual_path");
                             shape.elements.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
                             if (!activePath)
                                 return;
-                            var pathObj = activePath.path.pathElements[0];
+                            var pathObj = activePath.pathElements[0];
                             pathObj.x = x;
                             pathObj.y = y;
                         }, "end": function() {
-                            canvas.genResizer(activePath.path, activePath.path.startX, activePath.path.startY, "startX", "startY", "red");
-                            var pathObj = activePath.path.pathElements[0];
+                            canvas.genResizer(activePath, activePath.startX, activePath.startY, "startX", "startY", "red");
+                            var pathObj = activePath.pathElements[0];
                             canvas.genResizer(pathObj, pathObj.x, pathObj.y, "x", "y", "red");
                             canvas.genResizer(pathObj, pathObj.controlX, pathObj.controlY, "controlX", "controlY", "blue");
                             activePath = null;

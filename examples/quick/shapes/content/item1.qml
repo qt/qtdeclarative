@@ -69,12 +69,10 @@ Rectangle {
                 PauseAnimation { duration: 2000 }
             }
 
-            Path {
-                startX: 30; startY: 30
-                PathLine { x: ctr.width - 30; y: ctr.height - 30 }
-                PathLine { x: 30; y: ctr.height - 30 }
-                PathLine { x: 30; y: 30 }
-            }
+            startX: 30; startY: 30
+            PathLine { x: ctr.width - 30; y: ctr.height - 30 }
+            PathLine { x: 30; y: ctr.height - 30 }
+            PathLine { x: 30; y: 30 }
         }
     }
 }

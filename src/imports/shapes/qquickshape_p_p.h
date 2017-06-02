@@ -131,7 +131,7 @@ public:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickAbstractPathRenderer::Flags)
 
-class QQuickShapePathPrivate : public QObjectPrivate
+class QQuickShapePathPrivate : public QQuickPathPrivate
 {
     Q_DECLARE_PUBLIC(QQuickShapePath)
 
@@ -156,7 +156,6 @@ public:
 
     static QQuickShapePathPrivate *get(QQuickShapePath *p) { return p->d_func(); }
 
-    QQuickPath *path;
     int dirty;
     QQuickShapeStrokeFillParams sfp;
 };

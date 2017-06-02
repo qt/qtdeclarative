@@ -67,13 +67,11 @@ Rectangle {
                 strokeStyle: ShapePath.DashLine
                 strokeWidth: 4
 
-                Path {
-                    startX: 50; startY: 100
-                    PathArc {
-                        x: 150; y: 100
-                        radiusX: 50; radiusY: 20
-                        xAxisRotation: model.index === 0 ? 0 : 45
-                    }
+                startX: 50; startY: 100
+                PathArc {
+                    x: 150; y: 100
+                    radiusX: 50; radiusY: 20
+                    xAxisRotation: model.index === 0 ? 0 : 45
                 }
             }
         }
@@ -90,14 +88,12 @@ Rectangle {
                 fillColor: "transparent"
                 strokeColor: model.index === 0 ? "red" : "blue"
 
-                Path {
-                    startX: 50; startY: 100
-                    PathArc {
-                        x: 150; y: 100
-                        radiusX: 50; radiusY: 20
-                        xAxisRotation: model.index === 0 ? 0 : 45
-                        direction: PathArc.Counterclockwise
-                    }
+                startX: 50; startY: 100
+                PathArc {
+                    x: 150; y: 100
+                    radiusX: 50; radiusY: 20
+                    xAxisRotation: model.index === 0 ? 0 : 45
+                    direction: PathArc.Counterclockwise
                 }
             }
         }

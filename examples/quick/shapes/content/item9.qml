@@ -68,13 +68,11 @@ Rectangle {
                 strokeColor: "black"
                 fillColor: "transparent"
 
-                Path {
-                    startX: 50
-                    startY: 50
-                    PathQuad {
-                        x: 150; y: 50
-                        controlX: cp.x; controlY: cp.y
-                    }
+                startX: 50
+                startY: 50
+                PathQuad {
+                    x: 150; y: 50
+                    controlX: cp.x; controlY: cp.y
                 }
             }
         }

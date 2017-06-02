@@ -66,24 +66,22 @@ Rectangle {
                 ShapeGradientStop { position: 1; color: "green" }
             }
 
-            Path {
-                startX: 10; startY: 100
-                PathArc {
-                    relativeX: 50; y: 100
-                    radiusX: 25; radiusY: 25
-                }
-                PathArc {
-                    relativeX: 50; y: 100
-                    radiusX: 25; radiusY: 35
-                }
-                PathArc {
-                    relativeX: 50; y: 100
-                    radiusX: 25; radiusY: 60
-                }
-                PathArc {
-                    relativeX: 50; y: 100
-                    radiusX: 50; radiusY: 120
-                }
+            startX: 10; startY: 100
+            PathArc {
+                relativeX: 50; y: 100
+                radiusX: 25; radiusY: 25
+            }
+            PathArc {
+                relativeX: 50; y: 100
+                radiusX: 25; radiusY: 35
+            }
+            PathArc {
+                relativeX: 50; y: 100
+                radiusX: 25; radiusY: 60
+            }
+            PathArc {
+                relativeX: 50; y: 100
+                radiusX: 50; radiusY: 120
             }
         }
     }
@@ -102,13 +100,11 @@ Rectangle {
             strokeWidth: 20
             capStyle: ShapePath.RoundCap
 
-            Path {
-                startX: 20; startY: 50
-                PathArc {
-                    x: 20; y: 90
-                    radiusX: 45; radiusY: 45
-                    useLargeArc: true
-                }
+            startX: 20; startY: 50
+            PathArc {
+                x: 20; y: 90
+                radiusX: 45; radiusY: 45
+                useLargeArc: true
             }
         }
     }
