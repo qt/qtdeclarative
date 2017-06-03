@@ -126,4 +126,46 @@ TestCase {
         compare(control1.currentIndex, 1)
         compare(control2.currentIndex, 1)
     }
+
+    function test_removeTakeItem() {
+        var control = createTemporaryObject(container, testCase)
+        verify(control)
+
+        var item1 = rectangle.createObject(control)
+        var item2 = rectangle.createObject(control)
+        var item3 = rectangle.createObject(control)
+
+        item1.Component.onDestruction.connect(function() { item1 = null })
+        item2.Component.onDestruction.connect(function() { item2 = null })
+        item3.Component.onDestruction.connect(function() { item3 = null })
+
+        control.addItem(item1)
+        control.addItem(item2)
+        control.addItem(item3)
+        compare(control.count, 3)
+
+        // takeItem(int) does not destroy
+        compare(control.takeItem(1), item2)
+        compare(control.count, 2)
+        wait(1)
+        verify(item2)
+
+        // removeItem(Item) destroys
+        control.removeItem(item1)
+        compare(control.count, 1)
+        wait(1)
+        verify(!item1)
+
+        // removeItem(null) must not call removeItem(0)
+        control.removeItem(null)
+        compare(control.count, 1)
+        wait(1)
+        verify(item3)
+
+        // deprecated removeItem(int) does not destroy
+        control.removeItem(0)
+        compare(control.count, 0)
+        wait(1)
+        verify(item3)
+    }
 }

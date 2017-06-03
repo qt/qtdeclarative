@@ -519,22 +519,61 @@ void QQuickContainer::moveItem(int from, int to)
 }
 
 /*!
+    \deprecated
     \qmlmethod void QtQuick.Controls::Container::removeItem(int index)
 
-    Removes an item at \a index.
+    Use Container::removeItem(Item) or Container::takeItem(int) instead.
+*/
+void QQuickContainer::removeItem(const QVariant &var)
+{
+    if (var.userType() == QMetaType::Nullptr)
+        return;
+
+    if (QQuickItem *item = var.value<QQuickItem *>())
+        removeItem(item);
+    else
+        takeItem(var.toInt());
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Container::removeItem(Item item)
+
+    Removes and destroys the specified \a item.
+*/
+void QQuickContainer::removeItem(QQuickItem *item)
+{
+    Q_D(QQuickContainer);
+    if (!item)
+        return;
+
+    const int index = d->contentModel->indexOf(item, nullptr);
+    if (index == -1)
+        return;
+
+    d->removeItem(index, item);
+    item->deleteLater();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod Item QtQuick.Controls::Container::takeItem(int index)
+
+    Removes and returns the item at \a index.
 
     \note The ownership of the item is transferred to the caller.
 */
-void QQuickContainer::removeItem(int index)
+QQuickItem *QQuickContainer::takeItem(int index)
 {
     Q_D(QQuickContainer);
     const int count = d->contentModel->count();
     if (index < 0 || index >= count)
-        return;
+        return nullptr;
 
     QQuickItem *item = itemAt(index);
     if (item)
         d->removeItem(index, item);
+    return item;
 }
 
 /*!
