@@ -560,6 +560,21 @@
         \printto eof
 
 
+    \section2 Customizing MenuBar
+
+        MenuBar can have a visual \l {Control::background}{background} item,
+        and MenuBarItem consists of two visual items: \l {Control::background}
+        {background} and \l {Control::contentItem}{content item}.
+
+        \image qtquickcontrols2-menubar-custom.png
+
+        \quotefromfile qtquickcontrols2-menubar-custom.qml
+        \skipto import QtQuick 2.9
+        \printuntil import QtQuick.Controls 2.3
+        \skipto MenuBar
+        \printto eof
+
+
     \section2 Customizing PageIndicator
 
         PageIndicator consists of a \l {Control::background}{background}, \l {Control::contentItem}{content item}, and \l {PageIndicator::delegate}{delegate}.

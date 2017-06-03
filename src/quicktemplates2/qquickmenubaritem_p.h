@@ -34,60 +34,69 @@
 **
 ****************************************************************************/
 
-#include "qquickshortcutcontext_p_p.h"
-#include "qquickoverlay_p_p.h"
-#include "qquicktooltip_p.h"
-#include "qquickpopup_p.h"
-#include "qquickmenu_p.h"
-#include "qquickmenubaritem_p.h"
+#ifndef QQUICKMENUBARITEM_P_H
+#define QQUICKMENUBARITEM_P_H
 
-#include <QtGui/qguiapplication.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-static bool isBlockedByPopup(QQuickItem *item)
+class QQuickMenu;
+class QQuickMenuBar;
+class QQuickMenuBarItemPrivate;
+
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBarItem : public QQuickAbstractButton
 {
-    if (!item || !item->window())
-        return false;
+    Q_OBJECT
+    Q_PROPERTY(QQuickMenuBar *menuBar READ menuBar NOTIFY menuBarChanged FINAL)
+    Q_PROPERTY(QQuickMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
+    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
 
-    QQuickOverlay *overlay = QQuickOverlay::overlay(item->window());
-    const auto popups = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
-    for (QQuickPopup *popup : popups) {
-        if (qobject_cast<QQuickToolTip *>(popup))
-            continue; // ignore tooltips (QTBUG-60492)
-        if (popup->isModal() || popup->closePolicy() & QQuickPopup::CloseOnEscape) {
-            if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(popup)) {
-                if (qobject_cast<QQuickMenuBarItem *>(menu->parentItem()))
-                    continue;
-            }
-            return item != popup->popupItem() && !popup->popupItem()->isAncestorOf(item);
-        }
-    }
+public:
+    explicit QQuickMenuBarItem(QQuickItem *parent = nullptr);
 
-    return false;
-}
+    QQuickMenuBar *menuBar() const;
 
-bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
-{
-    QQuickItem *item = nullptr;
-    switch (context) {
-    case Qt::ApplicationShortcut:
-        return true;
-    case Qt::WindowShortcut:
-        while (obj && !obj->isWindowType()) {
-            obj = obj->parent();
-            item = qobject_cast<QQuickItem *>(obj);
-            if (item) {
-                obj = item->window();
-            } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj)) {
-                obj = popup->window();
-                item = popup->popupItem();
-            }
-        }
-        return obj && obj == QGuiApplication::focusWindow() && !isBlockedByPopup(item);
-    default:
-        return false;
-    }
-}
+    QQuickMenu *menu() const;
+    void setMenu(QQuickMenu *menu);
+
+    bool isHighlighted() const;
+    void setHighlighted(bool highlighted);
+
+Q_SIGNALS:
+    void triggered();
+    void menuBarChanged();
+    void menuChanged();
+    void highlightedChanged();
+
+protected:
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+
+    QFont defaultFont() const override;
+    QPalette defaultPalette() const override;
+
+#if QT_CONFIG(accessibility)
+    QAccessible::Role accessibleRole() const override;
+#endif
+
+private:
+    Q_DISABLE_COPY(QQuickMenuBarItem)
+    Q_DECLARE_PRIVATE(QQuickMenuBarItem)
+};
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickMenuBarItem)
+
+#endif // QQUICKMENUBARITEM_P_H

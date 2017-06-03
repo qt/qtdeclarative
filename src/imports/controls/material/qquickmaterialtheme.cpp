@@ -103,6 +103,7 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
         return &itemViewFont;
     case QPlatformTheme::ListViewFont:
         return &listViewFont;
+    case QPlatformTheme::MenuBarFont:
     case QPlatformTheme::MenuItemFont:
     case QPlatformTheme::ComboMenuItemFont:
         return &menuItemFont;

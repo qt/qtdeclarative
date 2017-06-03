@@ -36,6 +36,8 @@ QML_CONTROLS = \
     $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
     $$PWD/Menu.qml \
+    $$PWD/MenuBar.qml \
+    $$PWD/MenuBarItem.qml \
     $$PWD/MenuItem.qml \
     $$PWD/MenuSeparator.qml \
     $$PWD/Page.qml \

@@ -60,6 +60,8 @@
 #include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
+#include <QtQuickTemplates2/private/qquickmenubar_p.h>
+#include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
@@ -300,6 +302,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 3, "DialogButtonBox");
     qRegisterMetaType<QQuickIcon>();
     qmlRegisterType<QQuickMenu, 3>(uri, 2, 3, "Menu");
+    qmlRegisterType<QQuickMenuBar>(uri, 2, 3, "MenuBar");
+    qmlRegisterType<QQuickMenuBarItem>(uri, 2, 3, "MenuBarItem");
     qmlRegisterType<QQuickMenuItem, 3>(uri, 2, 3, "MenuItem");
     qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
     qmlRegisterType<QQuickOverlayAttached>();

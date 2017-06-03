@@ -18,6 +18,7 @@ SUBDIRS += \
     qquickiconlabel \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
+    qquickmenubar \
     qquickstyle \
     qquickstyleselector \
     qquickuniversalstyle \
@@ -31,4 +32,4 @@ boot2qt: SUBDIRS -= applicationwindow calendar controls cursor \
                     drawer focus font menu platform palette popup \
                     qquickmaterialstyle qquickmaterialstyleconf \
                     qquickuniversalstyle qquickuniversalstyleconf \
-                    snippets
+                    snippets qquickmenubar

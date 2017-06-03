@@ -158,6 +158,8 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     // QtQuick.Controls 2.3 (new types in Qt 5.10)
     qmlRegisterType(selector.select(QStringLiteral("Action.qml")), uri, 2, 3, "Action");
     qmlRegisterType(selector.select(QStringLiteral("ActionGroup.qml")), uri, 2, 3, "ActionGroup");
+    qmlRegisterType(selector.select(QStringLiteral("MenuBar.qml")), uri, 2, 3, "MenuBar");
+    qmlRegisterType(selector.select(QStringLiteral("MenuBarItem.qml")), uri, 2, 3, "MenuBarItem");
     qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
 }
 

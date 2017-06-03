@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMENU_P_P_H
-#define QQUICKMENU_P_P_H
+#ifndef QQUICKMENUBAR_P_P_H
+#define QQUICKMENUBAR_P_P_H
 
 //
 //  W A R N I N G
@@ -48,91 +48,60 @@
 // We mean it.
 //
 
-#include <QtCore/qvector.h>
-#include <QtCore/qpointer.h>
-
-#include <QtQuickTemplates2/private/qquickmenu_p.h>
-#include <QtQuickTemplates2/private/qquickpopup_p_p.h>
+#include <QtQuickTemplates2/private/qquickmenubar_p.h>
+#include <QtQuickTemplates2/private/qquickcontainer_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAction;
 class QQmlComponent;
-class QQmlObjectModel;
-class QQuickMenuItem;
+class QQuickMenuBarItem;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBarPrivate : public QQuickContainerPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickMenu)
+    Q_DECLARE_PUBLIC(QQuickMenuBar)
 
 public:
-    QQuickMenuPrivate();
+    QQuickMenuBarPrivate();
 
-    static QQuickMenuPrivate *get(QQuickMenu *menu)
+    static QQuickMenuBarPrivate *get(QQuickMenuBar *menuBar)
     {
-        return menu->d_func();
+        return menuBar->d_func();
     }
-
-    QQuickItem *itemAt(int index) const;
-    void insertItem(int index, QQuickItem *item);
-    void moveItem(int from, int to);
-    void removeItem(int index, QQuickItem *item);
 
     QQuickItem *beginCreateItem();
     void completeCreateItem();
 
     QQuickItem *createItem(QQuickMenu *menu);
-    QQuickItem *createItem(QQuickAction *action);
 
-    void resizeItem(QQuickItem *item);
-    void resizeItems();
-
-    void itemChildAdded(QQuickItem *item, QQuickItem *child) override;
-    void itemSiblingOrderChanged(QQuickItem *item) override;
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
-    void itemDestroyed(QQuickItem *item) override;
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
-
-    void reposition() override;
-    bool prepareEnterTransition() override;
-    bool prepareExitTransition() override;
-    bool blockInput(QQuickItem *item, const QPointF &point) const override;
+    void toggleCurrentMenu(bool visible, bool activate);
+    void activateItem(QQuickMenuBarItem *item);
+    void activateNextItem();
+    void activatePreviousItem();
 
     void onItemHovered();
     void onItemTriggered();
-    void onItemActiveFocusChanged();
+    void onMenuAboutToHide();
 
-    QQuickMenu *currentSubMenu() const;
-    void setParentMenu(QQuickMenu *parent);
-    void resolveParentItem();
-
-    void propagateKeyEvent(QKeyEvent *event);
-
-    void startHoverTimer();
-    void stopHoverTimer();
-
-    void setCurrentIndex(int index, Qt::FocusReason reason);
-    bool activateNextItem();
-    bool activatePreviousItem();
+    void updateContentSize();
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
-    static int contentData_count(QQmlListProperty<QObject> *prop);
-    static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
-    static void contentData_clear(QQmlListProperty<QObject> *prop);
 
-    bool cascade;
-    int hoverTimer;
-    int currentIndex;
-    qreal overlap;
-    QPointer<QQuickMenu> parentMenu;
-    QPointer<QQuickMenuItem> currentItem;
-    QQuickItem *contentItem; // TODO: cleanup
-    QVector<QObject *> contentData;
-    QQmlObjectModel *contentModel;
+    static void menus_append(QQmlListProperty<QQuickMenu> *prop, QQuickMenu *obj);
+    static int menus_count(QQmlListProperty<QQuickMenu> *prop);
+    static QQuickMenu *menus_at(QQmlListProperty<QQuickMenu> *prop, int index);
+    static void menus_clear(QQmlListProperty<QQuickMenu> *prop);
+
+    bool popupMode;
+    bool triggering;
+    bool hasContentWidth;
+    bool hasContentHeight;
+    qreal contentWidth;
+    qreal contentHeight;
     QQmlComponent *delegate;
-    QString title;
+    QPointer<QQuickMenuBarItem> currentItem;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKMENU_P_P_H
+#endif // QQUICKMENUBAR_P_P_H

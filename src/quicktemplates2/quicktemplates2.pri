@@ -35,6 +35,10 @@ HEADERS += \
     $$PWD/qquicklabel_p_p.h \
     $$PWD/qquickmenu_p.h \
     $$PWD/qquickmenu_p_p.h \
+    $$PWD/qquickmenubar_p.h \
+    $$PWD/qquickmenubar_p_p.h \
+    $$PWD/qquickmenubaritem_p.h \
+    $$PWD/qquickmenubaritem_p_p.h \
     $$PWD/qquickmenuitem_p.h \
     $$PWD/qquickmenuitem_p_p.h \
     $$PWD/qquickmenuseparator_p.h \
@@ -109,6 +113,8 @@ SOURCES += \
     $$PWD/qquickitemdelegate.cpp \
     $$PWD/qquicklabel.cpp \
     $$PWD/qquickmenu.cpp \
+    $$PWD/qquickmenubar.cpp \
+    $$PWD/qquickmenubaritem.cpp \
     $$PWD/qquickmenuitem.cpp \
     $$PWD/qquickmenuseparator.cpp \
     $$PWD/qquickoverlay.cpp \

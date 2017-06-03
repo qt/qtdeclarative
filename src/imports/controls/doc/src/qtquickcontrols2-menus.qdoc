@@ -52,4 +52,17 @@
     \li is highlighted (for example, on keyboard navigation)
     \li performs some action on activation
     \endlist
+
+    \section1 MenuBar Control
+
+    \image qtquickcontrols2-menubar.png
+
+    \l MenuBar control can be used for window menu bars.
+
+    \l MenuBarItem is an item in the MenuBar control. Each item in a menu bar:
+    \list
+    \li displays text to the user
+    \li is highlighted (for example, on keyboard navigation)
+    \li pops up the respective menu on activation
+    \endlist
 */

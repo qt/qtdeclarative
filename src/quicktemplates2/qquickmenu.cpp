@@ -37,6 +37,8 @@
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
 #include "qquickmenuitem_p_p.h"
+#include "qquickmenubaritem_p.h"
+#include "qquickmenubar_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickaction_p.h"
 
@@ -522,6 +524,19 @@ void QQuickMenuPrivate::resolveParentItem()
         q->setParentItem(findParentMenuItem(q));
 }
 
+void QQuickMenuPrivate::propagateKeyEvent(QKeyEvent *event)
+{
+    if (QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(parentItem)) {
+        if (QQuickMenu *menu = menuItem->menu())
+            QQuickMenuPrivate::get(menu)->propagateKeyEvent(event);
+    } else if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(parentItem)) {
+        if (QQuickMenuBar *menuBar = menuBarItem->menuBar()) {
+            event->accept();
+            QCoreApplication::sendEvent(menuBar, event);
+        }
+    }
+}
+
 void QQuickMenuPrivate::startHoverTimer()
 {
     Q_Q(QQuickMenu);
@@ -567,7 +582,7 @@ void QQuickMenuPrivate::setCurrentIndex(int index, Qt::FocusReason reason)
     emit q->currentIndexChanged();
 }
 
-void QQuickMenuPrivate::activateNextItem()
+bool QQuickMenuPrivate::activateNextItem()
 {
     int index = currentIndex;
     int count = contentModel->count();
@@ -576,11 +591,12 @@ void QQuickMenuPrivate::activateNextItem()
         if (!item || !item->activeFocusOnTab())
             continue;
         setCurrentIndex(index, Qt::TabFocusReason);
-        break;
+        return true;
     }
+    return false;
 }
 
-void QQuickMenuPrivate::activatePreviousItem()
+bool QQuickMenuPrivate::activatePreviousItem()
 {
     int index = currentIndex;
     while (--index >= 0) {
@@ -588,8 +604,9 @@ void QQuickMenuPrivate::activatePreviousItem()
         if (!item || !item->activeFocusOnTab())
             continue;
         setCurrentIndex(index, Qt::BacktabFocusReason);
-        break;
+        return true;
     }
+    return false;
 }
 
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -1358,8 +1375,6 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickMenu);
     QQuickPopup::keyPressEvent(event);
-    if (d->contentModel->count() == 0)
-        return;
 
     // QTBUG-17051
     // Work around the fact that ListView has no way of distinguishing between
@@ -1369,7 +1384,8 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
     // shown at once.
     switch (event->key()) {
     case Qt::Key_Up:
-        d->activatePreviousItem();
+        if (!d->activatePreviousItem())
+            d->propagateKeyEvent(event);
         break;
 
     case Qt::Key_Down:
@@ -1378,17 +1394,23 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
 
     case Qt::Key_Left:
     case Qt::Key_Right:
+        event->ignore();
         if (d->popupItem->isMirrored() == (event->key() == Qt::Key_Right)) {
             if (d->parentMenu && d->currentItem) {
                 if (!d->cascade)
                     d->parentMenu->open();
                 close();
+                event->accept();
             }
         } else {
-            if (QQuickMenu *subMenu = d->currentSubMenu())
+            if (QQuickMenu *subMenu = d->currentSubMenu()) {
                 subMenu->popup(subMenu->itemAt(0));
+                event->accept();
+            }
         }
-        return;
+        if (!event->isAccepted())
+            d->propagateKeyEvent(event);
+        break;
 
     default:
         break;
