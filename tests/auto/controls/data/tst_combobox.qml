@@ -732,6 +732,9 @@ TestCase {
         compare(highlightedSpy.count, 0)
         mouseMove(content, content.width / 2 + 1, content.height / 2 + 1)
         compare(activatedSpy.count, 0)
+        if ((Qt.platform.pluginName === "offscreen")
+            || (Qt.platform.pluginName === "minimal"))
+            expectFail("", "Mouse highlighting not functional on offscreen/minimal platforms")
         compare(highlightedSpy.count, 1)
         mouseRelease(content)
         compare(activatedSpy.count, 1)
@@ -1177,6 +1180,9 @@ TestCase {
     }
 
     function test_mouseHighlight() {
+        if ((Qt.platform.pluginName === "offscreen")
+            || (Qt.platform.pluginName === "minimal"))
+            skip("Mouse highlight not functional on offscreen/minimal platforms")
         var control = createTemporaryObject(comboBox, testCase, {model: 20})
         verify(control)
 

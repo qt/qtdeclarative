@@ -283,6 +283,10 @@ TestCase {
     }
 
     function test_activateShortcutWhileToolTipVisible() {
+        if ((Qt.platform.pluginName === "offscreen")
+            || (Qt.platform.pluginName === "minimal"))
+            skip("Mouse hoovering not functional on offscreen/minimal platforms")
+
         var root = createTemporaryObject(buttonAndShortcutComponent, testCase)
         verify(root)
 

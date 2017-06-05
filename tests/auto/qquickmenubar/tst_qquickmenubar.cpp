@@ -77,6 +77,10 @@ void tst_qquickmenubar::delegate()
 
 void tst_qquickmenubar::mouse()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+
     QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));

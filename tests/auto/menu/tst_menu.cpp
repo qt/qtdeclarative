@@ -127,6 +127,10 @@ void tst_menu::count()
 
 void tst_menu::mouse()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
+
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.appWindow;
@@ -896,6 +900,10 @@ void tst_menu::subMenuMouse_data()
 
 void tst_menu::subMenuMouse()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
+
     QFETCH(bool, cascade);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
