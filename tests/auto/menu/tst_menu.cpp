@@ -136,6 +136,21 @@ void tst_menu::mouse()
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
+    // Hover-highlight through the menu items one by one
+    QQuickItem *prevHoverItem = nullptr;
+    QQuickItem *listView = menu->contentItem();
+    for (int y = 0; y < listView->height(); ++y) {
+        QQuickItem *hoverItem = nullptr;
+        QVERIFY(QMetaObject::invokeMethod(listView, "itemAt", Q_RETURN_ARG(QQuickItem *, hoverItem), Q_ARG(qreal, 0), Q_ARG(qreal, listView->property("contentY").toReal() + y)));
+        if (!hoverItem || !hoverItem->isVisible() || hoverItem == prevHoverItem)
+            continue;
+        QTest::mouseMove(window, QPoint(hoverItem->x() + hoverItem->width() / 2, hoverItem->y() + hoverItem->height() / 2));
+        QTRY_VERIFY(hoverItem->property("highlighted").toBool());
+        if (prevHoverItem)
+            QVERIFY(!prevHoverItem->property("highlighted").toBool());
+        prevHoverItem = hoverItem;
+    }
+
     // Try pressing within the menu and releasing outside of it; it should close.
     // TODO: won't work until QQuickPopup::releasedOutside() actually gets emitted
 //    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(firstItem->width() / 2, firstItem->height() / 2));
@@ -178,16 +193,20 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->property("highlighted").toBool());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
 
     QQuickItem *secondItem = menu->itemAt(1);
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
     QVERIFY(secondItem->hasActiveFocus());
+    QVERIFY(secondItem->property("highlighted").toBool());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(1));
 
     QSignalSpy secondTriggeredSpy(secondItem, SIGNAL(triggered()));
@@ -197,7 +216,9 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
     QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->property("highlighted").toBool());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
@@ -205,26 +226,36 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
     QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->property("highlighted").toBool());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->property("highlighted").toBool());
 
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(secondItem->hasActiveFocus());
+    QVERIFY(secondItem->property("highlighted").toBool());
 
     QTest::keyClick(window, Qt::Key_Down);
     QQuickItem *thirdItem = menu->itemAt(2);
     QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
     QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->property("highlighted").toBool());
     QVERIFY(thirdItem->hasActiveFocus());
+    QVERIFY(thirdItem->property("highlighted").toBool());
 
     // Key navigation shouldn't wrap by default.
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
     QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->property("highlighted").toBool());
     QVERIFY(thirdItem->hasActiveFocus());
+    QVERIFY(thirdItem->property("highlighted").toBool());
 
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(visibleSpy.count(), 4);

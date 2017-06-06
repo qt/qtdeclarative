@@ -88,7 +88,7 @@ T.MenuItem {
             y: 1
             width: parent.width - 2
             height: parent.height - 2
-            color: control.visualFocus || control.down ? Default.delegateColor : "transparent"
+            color: control.highlighted || control.down ? Default.delegateColor : "transparent"
         }
     }
 }

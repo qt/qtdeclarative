@@ -69,7 +69,7 @@ T.MenuItem {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.down || control.hovered || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
+        color: control.down || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
     }
 
     indicator: CheckIndicator {
@@ -85,6 +85,6 @@ T.MenuItem {
         implicitHeight: 20
 
         color: Fusion.highlight(control.palette)
-        visible: control.down || control.hovered || control.highlighted
+        visible: control.down || control.highlighted
     }
 }

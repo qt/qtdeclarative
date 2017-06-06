@@ -186,6 +186,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
         QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
+        QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
 }
 
@@ -209,6 +210,7 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
         QObject::disconnect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
+        QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
 }
 
@@ -305,6 +307,18 @@ void QQuickMenuPrivate::onItemPressed()
         item->forceActiveFocus();
 }
 
+void QQuickMenuPrivate::onItemHovered()
+{
+    Q_Q(QQuickMenu);
+    QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(q->sender());
+    if (!button || !button->isHovered() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
+        return;
+
+    int index = contentModel->indexOf(button, nullptr);
+    if (index != -1)
+        setCurrentIndex(index);
+}
+
 void QQuickMenuPrivate::onItemActiveFocusChanged()
 {
     Q_Q(QQuickMenu);
@@ -327,6 +341,16 @@ int QQuickMenuPrivate::currentIndex() const
 void QQuickMenuPrivate::setCurrentIndex(int index)
 {
     contentItem->setProperty("currentIndex", index);
+
+    QQuickMenuItem *newCurrentItem = contentItem->property("currentItem").value<QQuickMenuItem *>();
+
+    if (currentItem != newCurrentItem) {
+        if (currentItem)
+            currentItem->setHighlighted(false);
+        if (newCurrentItem)
+            newCurrentItem->setHighlighted(true);
+        currentItem = newCurrentItem;
+    }
 }
 
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)

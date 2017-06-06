@@ -59,6 +59,7 @@ class QQuickMenu;
 class QQuickAction;
 class QQmlComponent;
 class QQmlObjectModel;
+class QQuickMenuItem;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
@@ -83,6 +84,7 @@ public:
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
 
     void onItemPressed();
+    void onItemHovered();
     void onItemActiveFocusChanged();
 
     int currentIndex() const;
@@ -93,6 +95,7 @@ public:
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
+    QPointer<QQuickMenuItem> currentItem;
     QQuickItem *contentItem; // TODO: cleanup
     QVector<QObject *> contentData;
     QQmlObjectModel *contentModel;

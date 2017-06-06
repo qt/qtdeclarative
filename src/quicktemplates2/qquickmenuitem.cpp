@@ -118,10 +118,9 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent)
 /*!
     \qmlproperty bool QtQuick.Controls::MenuItem::highlighted
 
-    This property holds whether the menu item is highlighted.
+    This property holds whether the menu item is highlighted by the user.
 
-    A menu item can be highlighted in order to draw the user's attention
-    towards it. It has no effect on keyboard interaction.
+    A menu item can be highlighted by mouse hover or keyboard navigation.
 
     The default value is \c false.
 */

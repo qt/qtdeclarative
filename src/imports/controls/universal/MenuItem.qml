@@ -89,7 +89,7 @@ T.MenuItem {
 
         color: !control.enabled ? control.Universal.baseLowColor :
                 control.down ? control.Universal.listMediumColor :
-                control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
+                control.highlighted ? control.Universal.listLowColor : control.Universal.altMediumLowColor
 
         Rectangle {
             x: 1; y: 1

@@ -94,7 +94,7 @@ T.MenuItem {
             clip: visible
             pressed: control.pressed
             anchor: control
-            active: control.down || control.visualFocus || control.hovered
+            active: control.down || control.highlighted
             color: control.Material.rippleColor
         }
     }
