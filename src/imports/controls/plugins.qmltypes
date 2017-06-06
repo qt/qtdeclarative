@@ -133,7 +133,7 @@ Module {
                 "TextUnderIcon": 3
             }
         }
-        Property { name: "icon"; type: "QQuickIcon"; isPointer: true }
+        Property { name: "icon"; type: "QQuickIcon" }
         Property { name: "text"; type: "string" }
         Property { name: "font"; type: "QFont" }
         Property { name: "color"; type: "QColor" }
@@ -141,6 +141,18 @@ Module {
         Property { name: "spacing"; type: "double" }
         Property { name: "mirrored"; type: "bool" }
         Property { name: "alignment"; type: "Qt::Alignment" }
+        Property { name: "topPadding"; type: "double" }
+        Property { name: "leftPadding"; type: "double" }
+        Property { name: "rightPadding"; type: "double" }
+        Property { name: "bottomPadding"; type: "double" }
+    }
+    Component {
+        name: "QQuickPaddedRectangle"
+        defaultProperty: "data"
+        prototype: "QQuickRectangle"
+        exports: ["QtQuick.Controls.impl/PaddedRectangle 2.3"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "padding"; type: "double" }
         Property { name: "topPadding"; type: "double" }
         Property { name: "leftPadding"; type: "double" }
         Property { name: "rightPadding"; type: "double" }
@@ -172,6 +184,20 @@ Module {
         defaultProperty: "data"
     }
     Component {
+        prototype: "QQuickAction"
+        name: "QtQuick.Controls/Action 2.3"
+        exports: ["QtQuick.Controls/Action 2.3"]
+        exportMetaObjectRevisions: [3]
+        isComposite: true
+    }
+    Component {
+        prototype: "QQuickActionGroup"
+        name: "QtQuick.Controls/ActionGroup 2.3"
+        exports: ["QtQuick.Controls/ActionGroup 2.3"]
+        exportMetaObjectRevisions: [3]
+        isComposite: true
+    }
+    Component {
         prototype: "QQuickApplicationWindow"
         name: "QtQuick.Controls/ApplicationWindow 2.0"
         exports: ["QtQuick.Controls/ApplicationWindow 2.0"]
@@ -194,6 +220,13 @@ Module {
         exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "data"
+    }
+    Component {
+        prototype: "QQuickButtonGroup"
+        name: "QtQuick.Controls/ButtonGroup 2.0"
+        exports: ["QtQuick.Controls/ButtonGroup 2.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
     }
     Component {
         prototype: "QQuickCheckBox"
@@ -589,9 +622,19 @@ Module {
         prototype: "QQuickControl"
         exports: [
             "QtQuick.Templates/AbstractButton 2.0",
-            "QtQuick.Templates/AbstractButton 2.2"
+            "QtQuick.Templates/AbstractButton 2.2",
+            "QtQuick.Templates/AbstractButton 2.3"
         ]
-        exportMetaObjectRevisions: [0, 2]
+        exportMetaObjectRevisions: [0, 2, 3]
+        Enum {
+            name: "Display"
+            values: {
+                "IconOnly": 0,
+                "TextOnly": 1,
+                "TextBesideIcon": 2,
+                "TextUnderIcon": 3
+            }
+        }
         Property { name: "text"; type: "string" }
         Property { name: "down"; type: "bool" }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
@@ -599,7 +642,7 @@ Module {
         Property { name: "checkable"; type: "bool" }
         Property { name: "autoExclusive"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
-        Property { name: "icon"; revision: 3; type: "QQuickIcon"; isReadonly: true; isPointer: true }
+        Property { name: "icon"; revision: 3; type: "QQuickIcon" }
         Property { name: "display"; revision: 3; type: "Display" }
         Property { name: "action"; revision: 3; type: "QQuickAction"; isPointer: true }
         Signal { name: "pressed" }
@@ -609,6 +652,7 @@ Module {
         Signal { name: "toggled"; revision: 2 }
         Signal { name: "pressAndHold" }
         Signal { name: "doubleClicked" }
+        Signal { name: "iconChanged"; revision: 3 }
         Signal { name: "displayChanged"; revision: 3 }
         Signal { name: "actionChanged"; revision: 3 }
         Method { name: "toggle" }
@@ -619,7 +663,7 @@ Module {
         exports: ["QtQuick.Templates/Action 2.3"]
         exportMetaObjectRevisions: [0]
         Property { name: "text"; type: "string" }
-        Property { name: "icon"; type: "QQuickIcon"; isReadonly: true; isPointer: true }
+        Property { name: "icon"; type: "QQuickIcon" }
         Property { name: "enabled"; type: "bool" }
         Property { name: "checked"; type: "bool" }
         Property { name: "checkable"; type: "bool" }
@@ -627,6 +671,10 @@ Module {
         Signal {
             name: "textChanged"
             Parameter { name: "text"; type: "string" }
+        }
+        Signal {
+            name: "iconChanged"
+            Parameter { name: "icon"; type: "QQuickIcon" }
         }
         Signal {
             name: "enabledChanged"
@@ -697,8 +745,11 @@ Module {
         name: "QQuickApplicationWindow"
         defaultProperty: "contentData"
         prototype: "QQuickWindowQmlImpl"
-        exports: ["QtQuick.Templates/ApplicationWindow 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/ApplicationWindow 2.0",
+            "QtQuick.Templates/ApplicationWindow 2.3"
+        ]
+        exportMetaObjectRevisions: [0, 3]
         attachedType: "QQuickApplicationWindowAttached"
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
@@ -709,6 +760,8 @@ Module {
         Property { name: "overlay"; type: "QQuickOverlay"; isReadonly: true; isPointer: true }
         Property { name: "font"; type: "QFont" }
         Property { name: "locale"; type: "QLocale" }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
+        Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
         name: "QQuickApplicationWindowAttached"
@@ -743,12 +796,15 @@ Module {
         prototype: "QObject"
         exports: [
             "QtQuick.Templates/ButtonGroup 2.0",
-            "QtQuick.Templates/ButtonGroup 2.1"
+            "QtQuick.Templates/ButtonGroup 2.1",
+            "QtQuick.Templates/ButtonGroup 2.3"
         ]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 1, 3]
         attachedType: "QQuickButtonGroupAttached"
         Property { name: "checkedButton"; type: "QQuickAbstractButton"; isPointer: true }
         Property { name: "buttons"; type: "QQuickAbstractButton"; isList: true; isReadonly: true }
+        Property { name: "exclusive"; revision: 3; type: "bool" }
+        Signal { name: "exclusiveChanged"; revision: 3 }
         Signal {
             name: "clicked"
             revision: 1
@@ -859,9 +915,10 @@ Module {
         prototype: "QQuickControl"
         exports: [
             "QtQuick.Templates/Container 2.0",
-            "QtQuick.Templates/Container 2.1"
+            "QtQuick.Templates/Container 2.1",
+            "QtQuick.Templates/Container 2.3"
         ]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 1, 3]
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "contentModel"; type: "QVariant"; isReadonly: true }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
@@ -895,6 +952,12 @@ Module {
         }
         Method {
             name: "removeItem"
+            Parameter { name: "item"; type: "QVariant" }
+        }
+        Method {
+            name: "takeItem"
+            revision: 3
+            type: "QQuickItem*"
             Parameter { name: "index"; type: "int" }
         }
     }
@@ -902,8 +965,11 @@ Module {
         name: "QQuickControl"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick.Templates/Control 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/Control 2.0",
+            "QtQuick.Templates/Control 2.3"
+        ]
+        exportMetaObjectRevisions: [0, 3]
         Property { name: "font"; type: "QFont" }
         Property { name: "availableWidth"; type: "double"; isReadonly: true }
         Property { name: "availableHeight"; type: "double"; isReadonly: true }
@@ -923,6 +989,8 @@ Module {
         Property { name: "wheelEnabled"; type: "bool" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
+        Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
         name: "QQuickDelayButton"
@@ -969,23 +1037,52 @@ Module {
         name: "QQuickDialog"
         defaultProperty: "contentData"
         prototype: "QQuickPopup"
-        exports: ["QtQuick.Templates/Dialog 2.1"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/Dialog 2.1",
+            "QtQuick.Templates/Dialog 2.3"
+        ]
+        exportMetaObjectRevisions: [0, 3]
+        Enum {
+            name: "StandardCode"
+            values: {
+                "Rejected": 0,
+                "Accepted": 1
+            }
+        }
         Property { name: "title"; type: "string" }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
         Property { name: "standardButtons"; type: "QPlatformDialogHelper::StandardButtons" }
+        Property { name: "result"; revision: 3; type: "int" }
         Signal { name: "accepted" }
         Signal { name: "rejected" }
+        Signal { name: "applied"; revision: 3 }
+        Signal { name: "reset"; revision: 3 }
+        Signal { name: "discarded"; revision: 3 }
+        Signal { name: "helpRequested"; revision: 3 }
+        Signal { name: "resultChanged"; revision: 3 }
         Method { name: "accept" }
         Method { name: "reject" }
+        Method {
+            name: "done"
+            Parameter { name: "result"; type: "int" }
+        }
+        Method {
+            name: "standardButton"
+            revision: 3
+            type: "QQuickAbstractButton*"
+            Parameter { name: "button"; type: "QPlatformDialogHelper::StandardButton" }
+        }
     }
     Component {
         name: "QQuickDialogButtonBox"
         defaultProperty: "contentData"
         prototype: "QQuickContainer"
-        exports: ["QtQuick.Templates/DialogButtonBox 2.1"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/DialogButtonBox 2.1",
+            "QtQuick.Templates/DialogButtonBox 2.3"
+        ]
+        exportMetaObjectRevisions: [0, 0]
         attachedType: "QQuickDialogButtonBoxAttached"
         Enum {
             name: "Position"
@@ -1001,6 +1098,9 @@ Module {
         Signal { name: "accepted" }
         Signal { name: "rejected" }
         Signal { name: "helpRequested" }
+        Signal { name: "applied"; revision: 3 }
+        Signal { name: "reset"; revision: 3 }
+        Signal { name: "discarded"; revision: 3 }
         Signal {
             name: "clicked"
             Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
@@ -1049,35 +1149,6 @@ Module {
         Property { name: "label"; type: "QQuickItem"; isPointer: true }
     }
     Component {
-        name: "QQuickIcon"
-        prototype: "QObject"
-        Property { name: "name"; type: "string" }
-        Property { name: "source"; type: "string" }
-        Property { name: "width"; type: "int" }
-        Property { name: "height"; type: "int" }
-        Property { name: "color"; type: "QColor" }
-        Signal {
-            name: "nameChanged"
-            Parameter { name: "name"; type: "string" }
-        }
-        Signal {
-            name: "sourceChanged"
-            Parameter { name: "source"; type: "string" }
-        }
-        Signal {
-            name: "widthChanged"
-            Parameter { name: "width"; type: "int" }
-        }
-        Signal {
-            name: "heightChanged"
-            Parameter { name: "height"; type: "int" }
-        }
-        Signal {
-            name: "colorChanged"
-            Parameter { name: "color"; type: "QColor" }
-        }
-    }
-    Component {
         name: "QQuickItemDelegate"
         defaultProperty: "data"
         prototype: "QQuickAbstractButton"
@@ -1093,16 +1164,20 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "font"; type: "QFont" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
+        Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
         name: "QQuickMenu"
         defaultProperty: "contentData"
         prototype: "QQuickPopup"
-        exports: ["QtQuick.Templates/Menu 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick.Templates/Menu 2.0", "QtQuick.Templates/Menu 2.3"]
+        exportMetaObjectRevisions: [0, 3]
         Property { name: "contentModel"; type: "QVariant"; isReadonly: true }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "title"; type: "string" }
+        Property { name: "delegate"; revision: 3; type: "QQmlComponent"; isPointer: true }
+        Signal { name: "delegateChanged"; revision: 3 }
         Method {
             name: "itemAt"
             type: "QQuickItem*"
@@ -1124,17 +1199,33 @@ Module {
         }
         Method {
             name: "removeItem"
+            Parameter { name: "item"; type: "QVariant" }
+        }
+        Method {
+            name: "takeItem"
+            revision: 3
+            type: "QQuickItem*"
             Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "popup"
+            revision: 3
+            Parameter { name: "args"; type: "QQmlV4Function"; isPointer: true }
         }
     }
     Component {
         name: "QQuickMenuItem"
         defaultProperty: "data"
         prototype: "QQuickAbstractButton"
-        exports: ["QtQuick.Templates/MenuItem 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Templates/MenuItem 2.0",
+            "QtQuick.Templates/MenuItem 2.3"
+        ]
+        exportMetaObjectRevisions: [0, 3]
         Property { name: "highlighted"; type: "bool" }
+        Property { name: "menu"; revision: 3; type: "QQuickMenu"; isReadonly: true; isPointer: true }
         Signal { name: "triggered" }
+        Signal { name: "menuChanged"; revision: 3 }
     }
     Component {
         name: "QQuickMenuSeparator"
@@ -1196,9 +1287,10 @@ Module {
         prototype: "QObject"
         exports: [
             "QtQuick.Templates/Popup 2.0",
-            "QtQuick.Templates/Popup 2.1"
+            "QtQuick.Templates/Popup 2.1",
+            "QtQuick.Templates/Popup 2.3"
         ]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 1, 3]
         Enum {
             name: "ClosePolicy"
             values: {
@@ -1248,6 +1340,7 @@ Module {
         Property { name: "bottomPadding"; type: "double" }
         Property { name: "locale"; type: "QLocale" }
         Property { name: "font"; type: "QFont" }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
         Property { name: "parent"; type: "QQuickItem"; isPointer: true }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
@@ -1259,6 +1352,7 @@ Module {
         Property { name: "modal"; type: "bool" }
         Property { name: "dim"; type: "bool" }
         Property { name: "visible"; type: "bool" }
+        Property { name: "opened"; revision: 3; type: "bool"; isReadonly: true }
         Property { name: "opacity"; type: "double" }
         Property { name: "scale"; type: "double" }
         Property { name: "closePolicy"; type: "ClosePolicy" }
@@ -1266,6 +1360,8 @@ Module {
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
         Signal { name: "spacingChanged"; revision: 1 }
+        Signal { name: "paletteChanged"; revision: 3 }
+        Signal { name: "openedChanged"; revision: 3 }
         Signal {
             name: "windowChanged"
             Parameter { name: "window"; type: "QQuickWindow"; isPointer: true }
@@ -1516,9 +1612,10 @@ Module {
         exports: [
             "QtQuick.Templates/SpinBox 2.0",
             "QtQuick.Templates/SpinBox 2.1",
-            "QtQuick.Templates/SpinBox 2.2"
+            "QtQuick.Templates/SpinBox 2.2",
+            "QtQuick.Templates/SpinBox 2.3"
         ]
-        exportMetaObjectRevisions: [0, 1, 2]
+        exportMetaObjectRevisions: [0, 1, 2, 3]
         Property { name: "from"; type: "int" }
         Property { name: "to"; type: "int" }
         Property { name: "value"; type: "int" }
@@ -1531,9 +1628,11 @@ Module {
         Property { name: "down"; type: "QQuickSpinButton"; isReadonly: true; isPointer: true }
         Property { name: "inputMethodHints"; revision: 2; type: "Qt::InputMethodHints" }
         Property { name: "inputMethodComposing"; revision: 2; type: "bool"; isReadonly: true }
+        Property { name: "wrap"; revision: 3; type: "bool" }
         Signal { name: "valueModified"; revision: 2 }
         Signal { name: "inputMethodHintsChanged"; revision: 2 }
         Signal { name: "inputMethodComposingChanged"; revision: 2 }
+        Signal { name: "wrapChanged"; revision: 3 }
         Method { name: "increase" }
         Method { name: "decrease" }
     }
@@ -1591,6 +1690,12 @@ Module {
         Property { name: "pushExit"; type: "QQuickTransition"; isPointer: true }
         Property { name: "replaceEnter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "replaceExit"; type: "QQuickTransition"; isPointer: true }
+        Property { name: "empty"; revision: 3; type: "bool"; isReadonly: true }
+        Signal { name: "emptyChanged"; revision: 3 }
+        Method {
+            name: "clear"
+            Parameter { name: "operation"; type: "Operation" }
+        }
         Method { name: "clear" }
         Method {
             name: "get"
@@ -1743,6 +1848,7 @@ Module {
             "QtQuick.Templates/TabBar 2.2"
         ]
         exportMetaObjectRevisions: [0, 2]
+        attachedType: "QQuickTabBarAttached"
         Enum {
             name: "Position"
             values: {
@@ -1755,6 +1861,13 @@ Module {
         Property { name: "contentHeight"; revision: 2; type: "double" }
         Signal { name: "contentWidthChanged"; revision: 2 }
         Signal { name: "contentHeightChanged"; revision: 2 }
+    }
+    Component {
+        name: "QQuickTabBarAttached"
+        prototype: "QObject"
+        Property { name: "index"; type: "int"; isReadonly: true }
+        Property { name: "tabBar"; type: "QQuickTabBar"; isReadonly: true; isPointer: true }
+        Property { name: "position"; type: "QQuickTabBar::Position"; isReadonly: true }
     }
     Component {
         name: "QQuickTabButton"
@@ -1781,6 +1894,7 @@ Module {
         Property { name: "focusReason"; type: "Qt::FocusReason" }
         Property { name: "hovered"; revision: 1; type: "bool"; isReadonly: true }
         Property { name: "hoverEnabled"; revision: 1; type: "bool" }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
         Signal { name: "implicitWidthChanged3" }
         Signal { name: "implicitHeightChanged3" }
         Signal { name: "hoveredChanged"; revision: 1 }
@@ -1799,6 +1913,7 @@ Module {
             revision: 1
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
         }
+        Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
         name: "QQuickTextAreaAttached"
@@ -1822,6 +1937,7 @@ Module {
         Property { name: "focusReason"; type: "Qt::FocusReason" }
         Property { name: "hovered"; revision: 1; type: "bool"; isReadonly: true }
         Property { name: "hoverEnabled"; revision: 1; type: "bool" }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
         Signal { name: "implicitWidthChanged3" }
         Signal { name: "implicitHeightChanged3" }
         Signal { name: "hoveredChanged"; revision: 1 }
@@ -1840,6 +1956,7 @@ Module {
             revision: 1
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
         }
+        Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
         name: "QQuickToolBar"
