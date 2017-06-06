@@ -80,6 +80,14 @@ TestCase {
         }
     }
 
+    function init() {
+        // QTBUG-61225: Move the mouse away to avoid QQuickWindowPrivate::flushFrameSynchronousEvents()
+        // delivering interfering hover events based on the last mouse position from earlier tests. For
+        // example, ComboBox::test_activation() kept receiving hover events for the last mouse position
+        // from CheckDelegate::test_checked().
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1)
+    }
+
     function test_defaults() {
         var control = createTemporaryObject(comboBox, testCase)
         verify(control)
@@ -1476,5 +1484,28 @@ TestCase {
         control.currentIndex = 0
         compare(control.currentIndex, 0)
         compare(control.currentText, "A")
+    }
+
+    function test_emptyPopupAfterModelCleared() {
+        var control = createTemporaryObject(comboBox, testCase, { model: 1 })
+        verify(control)
+        compare(control.popup.implicitHeight, 0)
+        compare(control.popup.height, control.popup.topPadding + control.popup.bottomPadding)
+
+        // Ensure that it's open so that the popup's implicitHeight changes when we increase the model count.
+        control.popup.open()
+        tryCompare(control.popup, "visible", true)
+
+        // Add lots of items to the model. The popup should take up the entire height of the window.
+        control.model = 100
+        compare(control.popup.height, control.Window.height - control.popup.topMargin - control.popup.bottomMargin)
+
+        control.popup.close()
+
+        // Clearing the model should result in a zero height.
+        control.model = 0
+        control.popup.open()
+        tryCompare(control.popup, "visible", true)
+        compare(control.popup.height, control.popup.topPadding + control.popup.bottomPadding)
     }
 }

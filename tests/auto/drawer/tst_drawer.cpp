@@ -94,6 +94,9 @@ private slots:
     void flickable_data();
     void flickable();
 
+    void dragOverModalShadow_data();
+    void dragOverModalShadow();
+
 private:
     struct TouchDeviceDeleter
     {
@@ -758,13 +761,26 @@ void tst_Drawer::multiple()
 void tst_Drawer::touch_data()
 {
     QTest::addColumn<QString>("source");
-    QTest::newRow("Window") << "window.qml";
-    QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
+    QTest::addColumn<QPoint>("from");
+    QTest::addColumn<QPoint>("to");
+
+    QTest::newRow("Window:inside") << "window.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("Window:outside") << "window.qml" << QPoint(300, 100) << QPoint(100, 100);
+    QTest::newRow("ApplicationWindow:inside") << "applicationwindow.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("ApplicationWindow:outside") << "applicationwindow.qml" << QPoint(300, 100) << QPoint(100, 100);
+
+    QTest::newRow("Window+Button:inside") << "window-button.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("Window+Button:outside") << "window-button.qml" << QPoint(300, 100) << QPoint(100, 100);
+    QTest::newRow("ApplicationWindow+Button:inside") << "applicationwindow-button.qml" << QPoint(150, 100) << QPoint(50, 100);
+    QTest::newRow("ApplicationWindow+Button:outside") << "applicationwindow-button.qml" << QPoint(300, 100) << QPoint(100, 100);
 }
 
 void tst_Drawer::touch()
 {
     QFETCH(QString, source);
+    QFETCH(QPoint, from);
+    QFETCH(QPoint, to);
+
     QQuickApplicationHelper helper(this, source);
 
     QQuickWindow *window = helper.window;
@@ -783,19 +799,16 @@ void tst_Drawer::touch()
     QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(0, 100));
     QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(50, 100));
     QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(150, 100));
-    QTRY_COMPARE(drawer->position(), 0.5);
     QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(150, 100));
     QVERIFY(drawerOpenedSpy.wait());
     QCOMPARE(drawer->position(), 1.0);
 
     // drag to close
-    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(300, 100));
-    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(300 - drawer->dragMargin(), 100));
-    for (int x = 300; x > 100; x -= 10)
-        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, 100));
-    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(100, 100));
-    QTRY_COMPARE(drawer->position(), 0.5);
-    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(100, 100));
+    QTest::touchEvent(window, touchDevice.data()).press(0, from);
+    for (int x = from.x(); x > to.x(); x -= 10)
+        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, to.y()));
+    QTest::touchEvent(window, touchDevice.data()).move(0, to);
+    QTest::touchEvent(window, touchDevice.data()).release(0, to);
     QVERIFY(drawerClosedSpy.wait());
     QCOMPARE(drawer->position(), 0.0);
 }
@@ -950,6 +963,62 @@ void tst_Drawer::flickable()
         QTest::touchEvent(window, touchDevice.data()).release(0, to);
 
     QVERIFY(!flickable->isDragging());
+}
+
+void tst_Drawer::dragOverModalShadow_data()
+{
+    QTest::addColumn<bool>("mouse");
+    QTest::newRow("mouse") << true;
+    QTest::newRow("touch") << false;
+}
+
+// QTBUG-60602
+void tst_Drawer::dragOverModalShadow()
+{
+    QFETCH(bool, mouse);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("dragOverModalShadow.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QVERIFY(!drawer->isVisible());
+
+    const QPoint from(popup->x(), popup->y() + popup->height() + 5);
+    const QPoint to(popup->x() + popup->width(), popup->y() + popup->height() + 5);
+
+    if (mouse)
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+    else
+        QTest::touchEvent(window, touchDevice.data()).press(0, from);
+    QVERIFY(!drawer->isVisible());
+
+    static const int steps = 10;
+    for (int i = 0; i < steps; ++i) {
+        int x = from.x() + i * qAbs(from.x() - to.x()) / steps;
+        int y = from.y() + i * qAbs(from.y() - to.y()) / steps;
+
+        if (mouse)
+            QTest::mouseMove(window, QPoint(x, y));
+        else
+            QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, y));
+        QTest::qWait(1); // avoid infinite velocity
+        QVERIFY(!drawer->isVisible());
+    }
+
+    if (mouse)
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    else
+        QTest::touchEvent(window, touchDevice.data()).release(0, to);
+    QVERIFY(!drawer->isVisible());
 }
 
 QTEST_MAIN(tst_Drawer)

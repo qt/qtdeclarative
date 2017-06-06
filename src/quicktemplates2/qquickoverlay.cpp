@@ -181,10 +181,22 @@ QQuickOverlayPrivate::QQuickOverlayPrivate()
 {
 }
 
-bool QQuickOverlayPrivate::startDrag(QEvent *event)
+bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
 {
+    Q_Q(QQuickOverlay);
     if (allDrawers.isEmpty())
         return false;
+
+    // don't start dragging a drawer if a modal popup overlay is blocking (QTBUG-60602)
+    QQuickItem *item = q->childAt(pos.x(), pos.y());
+    if (item) {
+        const auto popups = stackingOrderPopups();
+        for (QQuickPopup *popup : popups) {
+            QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
+            if (p->dimmer == item && popup->isVisible() && popup->isModal())
+                return false;
+        }
+    }
 
     const QVector<QQuickDrawer *> drawers = stackingOrderDrawers();
     for (QQuickDrawer *drawer : drawers) {
@@ -251,7 +263,7 @@ bool QQuickOverlayPrivate::handleMouseEvent(QQuickItem *source, QMouseEvent *eve
 {
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        if (!target && startDrag(event))
+        if (!target && startDrag(event, event->windowPos()))
             return true;
         return handlePress(source, event, target);
     case QEvent::MouseMove:
@@ -269,17 +281,12 @@ bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *eve
     bool handled = false;
     switch (event->type()) {
     case QEvent::TouchBegin:
-        if (!target && startDrag(event))
-            handled = true;
-        else
-            handled = handlePress(source, event, target);
-        break;
-
     case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
             switch (point.state()) {
             case Qt::TouchPointPressed:
-                if (!target && startDrag(event))
+                if (!target && startDrag(event, point.scenePos()))
                     handled = true;
                 else
                     handled |= handlePress(source, event, target);
@@ -294,10 +301,6 @@ bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *eve
                 break;
             }
         }
-        break;
-
-    case QEvent::TouchEnd:
-        handled = handleRelease(source, event, target ? target : mouseGrabberPopup.data());
         break;
 
     default:

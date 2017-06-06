@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.9
+import QtQuick.Window 2.3
 import QtQuick.Templates 2.3 as T
 import QtQuick.Controls 2.3
 import QtQuick.Controls.impl 2.3
@@ -142,7 +143,7 @@ T.ComboBox {
     popup: T.Popup {
         id: popup
         width: control.width
-        implicitHeight: contentItem.implicitHeight + 2
+        height: Math.min(contentItem.implicitHeight + 2, control.Window.height - topMargin - bottomMargin)
         topMargin: 6
         bottomMargin: 6
         palette: control.palette

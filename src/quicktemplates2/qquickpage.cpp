@@ -329,6 +329,13 @@ QQmlListProperty<QQuickItem> QQuickPage::contentChildren()
                                         QQuickItemPrivate::children_clear);
 }
 
+void QQuickPage::componentComplete()
+{
+    Q_D(QQuickPage);
+    QQuickControl::componentComplete();
+    d->layout->update();
+}
+
 void QQuickPage::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     QQuickControl::contentItemChange(newItem, oldItem);
