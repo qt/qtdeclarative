@@ -83,14 +83,14 @@ Rectangle {
                     ShapePath {
                         strokeWidth: 4
                         strokeColor: "red"
-                        fillGradient: ShapeLinearGradient {
+                        fillGradient: LinearGradient {
                             x1: 0; y1: 0
                             x2: 200; y2: 100
-                            ShapeGradientStop { position: 0; color: "blue" }
-                            ShapeGradientStop { position: 0.2; color: "green" }
-                            ShapeGradientStop { position: 0.4; color: "red" }
-                            ShapeGradientStop { position: 0.6; color: "yellow" }
-                            ShapeGradientStop { position: 1; color: "cyan" }
+                            GradientStop { position: 0; color: "blue" }
+                            GradientStop { position: 0.2; color: "green" }
+                            GradientStop { position: 0.4; color: "red" }
+                            GradientStop { position: 0.6; color: "yellow" }
+                            GradientStop { position: 1; color: "cyan" }
                         }
                         fillColor: "blue" // ignored with the gradient set
                         strokeStyle: ShapePath.DashLine

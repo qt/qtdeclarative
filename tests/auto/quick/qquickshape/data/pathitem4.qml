@@ -28,10 +28,10 @@ Item {
         }
 
         ShapePath {
-            fillGradient: ShapeLinearGradient {
+            fillGradient: LinearGradient {
                 y2: 150
-                ShapeGradientStop { position: 0; color: "yellow" }
-                ShapeGradientStop { position: 1; color: "green" }
+                GradientStop { position: 0; color: "yellow" }
+                GradientStop { position: 1; color: "green" }
             }
 
             startX: 10; startY: 100

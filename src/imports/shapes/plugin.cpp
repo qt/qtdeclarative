@@ -63,9 +63,8 @@ public:
         Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));
         qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");
         qmlRegisterType<QQuickShapePath>(uri, 1, 0, "ShapePath");
-        qmlRegisterType<QQuickShapeGradientStop>(uri, 1, 0, "ShapeGradientStop");
         qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
-        qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "ShapeLinearGradient");
+        qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
     }
 };
 

@@ -55,38 +55,16 @@
 
 #include <private/qtquickglobal_p.h>
 #include <private/qquickpath_p_p.h>
-#include <private/qv8engine_p.h>
-#include <QGradientStops>
+#include <private/qquickrectangle_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickShapePathPrivate;
 class QQuickShapePrivate;
 
-class QQuickShapeGradientStop : public QObject
+class QQuickShapeGradient : public QQuickGradient
 {
     Q_OBJECT
-    Q_PROPERTY(qreal position READ position WRITE setPosition)
-    Q_PROPERTY(QColor color READ color WRITE setColor)
-
-public:
-    QQuickShapeGradientStop(QObject *parent = nullptr);
-
-    qreal position() const;
-    void setPosition(qreal position);
-
-    QColor color() const;
-    void setColor(const QColor &color);
-
-private:
-    qreal m_position;
-    QColor m_color;
-};
-
-class QQuickShapeGradient : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QObject> stops READ stops)
     Q_PROPERTY(SpreadMode spread READ spread WRITE setSpread NOTIFY spreadChanged)
     Q_CLASSINFO("DefaultProperty", "stops")
 
@@ -100,23 +78,13 @@ public:
 
     QQuickShapeGradient(QObject *parent = nullptr);
 
-    QQmlListProperty<QObject> stops();
-
-    QGradientStops sortedGradientStops() const;
-
     SpreadMode spread() const;
     void setSpread(SpreadMode mode);
 
 signals:
-    void updated();
     void spreadChanged();
 
 private:
-    static int countStops(QQmlListProperty<QObject> *list);
-    static QObject *atStop(QQmlListProperty<QObject> *list, int index);
-    static void appendStop(QQmlListProperty<QObject> *list, QObject *stop);
-
-    QVector<QObject *> m_stops;
     SpreadMode m_spread;
 };
 

@@ -247,7 +247,7 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
     ShapePathData &d(m_sp[index]);
     d.fillGradientActive = gradient != nullptr;
     if (gradient) {
-        d.fillGradient.stops = gradient->sortedGradientStops();
+        d.fillGradient.stops = gradient->gradientStops(); // sorted
         d.fillGradient.spread = gradient->spread();
         if (QQuickShapeLinearGradient *g  = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
             d.fillGradient.start = QPointF(g->x1(), g->y1());

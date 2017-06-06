@@ -13,14 +13,14 @@ Item {
         ShapePath {
             strokeWidth: 4
             strokeColor: "red"
-            fillGradient: ShapeLinearGradient {
+            fillGradient: LinearGradient {
                 x1: 20; y1: 20
                 x2: 180; y2: 130
-                ShapeGradientStop { position: 0; color: "blue" }
-                ShapeGradientStop { position: 0.2; color: "green" }
-                ShapeGradientStop { position: 0.4; color: "red" }
-                ShapeGradientStop { position: 0.6; color: "yellow" }
-                ShapeGradientStop { position: 1; color: "cyan" }
+                GradientStop { position: 0; color: "blue" }
+                GradientStop { position: 0.2; color: "green" }
+                GradientStop { position: 0.4; color: "red" }
+                GradientStop { position: 0.6; color: "yellow" }
+                GradientStop { position: 1; color: "cyan" }
             }
             strokeStyle: ShapePath.DashLine
             dashPattern: [ 1, 4 ]

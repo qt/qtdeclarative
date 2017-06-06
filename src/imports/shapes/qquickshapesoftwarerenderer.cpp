@@ -144,7 +144,7 @@ void QQuickShapeSoftwareRenderer::setFillGradient(int index, QQuickShapeGradient
     if (QQuickShapeLinearGradient *linearGradient = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
         QLinearGradient painterGradient(linearGradient->x1(), linearGradient->y1(),
                                         linearGradient->x2(), linearGradient->y2());
-        painterGradient.setStops(linearGradient->sortedGradientStops());
+        painterGradient.setStops(linearGradient->gradientStops()); // sorted
         switch (gradient->spread()) {
         case QQuickShapeGradient::PadSpread:
             painterGradient.setSpread(QGradient::PadSpread);

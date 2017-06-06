@@ -47,12 +47,6 @@
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
 
-#include <private/qv4engine_p.h>
-#include <private/qv4object_p.h>
-#include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4mm_p.h>
-#include <private/qqmlengine_p.h>
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -497,6 +491,9 @@ void QQuickShapePath::setDashPattern(const QVector<qreal> &array)
 
     When set, ShapePath.fillColor is ignored and filling is done using one of
     the ShapeGradient subtypes.
+
+    \note The Gradient type cannot be used here. Rather, prefer using one of the
+    advanced subtypes, like LinearGradient.
  */
 
 QQuickShapeGradient *QQuickShapePath::fillGradient() const
@@ -570,14 +567,14 @@ void QQuickShapePath::resetFillGradient()
         ShapePath {
             strokeWidth: 4
             strokeColor: "red"
-            fillGradient: ShapeLinearGradient {
+            fillGradient: LinearGradient {
                 x1: 20; y1: 20
                 x2: 180; y2: 130
-                ShapeGradientStop { position: 0; color: "blue" }
-                ShapeGradientStop { position: 0.2; color: "green" }
-                ShapeGradientStop { position: 0.4; color: "red" }
-                ShapeGradientStop { position: 0.6; color: "yellow" }
-                ShapeGradientStop { position: 1; color: "cyan" }
+                GradientStop { position: 0; color: "blue" }
+                GradientStop { position: 0.2; color: "green" }
+                GradientStop { position: 0.4; color: "red" }
+                GradientStop { position: 0.6; color: "yellow" }
+                GradientStop { position: 1; color: "cyan" }
             }
             strokeStyle: ShapePath.DashLine
             dashPattern: [ 1, 4 ]
@@ -1063,148 +1060,28 @@ void QQuickShapePrivate::sync()
 // ***** gradient support *****
 
 /*!
-    \qmltype ShapeGradientStop
-    \instantiates QQuickShapeGradientStop
-    \inqmlmodule QtQuick.Shapes
-    \ingroup qtquick-paths
-    \ingroup qtquick-views
-    \inherits Object
-    \brief Defines a color at a position in a gradient
-    \since 5.10
- */
-
-QQuickShapeGradientStop::QQuickShapeGradientStop(QObject *parent)
-    : QObject(parent),
-      m_position(0),
-      m_color(Qt::black)
-{
-}
-
-/*!
-    \qmlproperty real QtQuick.Shapes::ShapeGradientStop::position
-
-    The position and color properties describe the color used at a given
-    position in a gradient, as represented by a gradient stop.
-
-    The default value is 0.
- */
-
-qreal QQuickShapeGradientStop::position() const
-{
-    return m_position;
-}
-
-void QQuickShapeGradientStop::setPosition(qreal position)
-{
-    if (m_position != position) {
-        m_position = position;
-        if (QQuickShapeGradient *grad = qobject_cast<QQuickShapeGradient *>(parent()))
-            emit grad->updated();
-    }
-}
-
-/*!
-    \qmlproperty real QtQuick.Shapes::ShapeGradientStop::color
-
-    The position and color properties describe the color used at a given
-    position in a gradient, as represented by a gradient stop.
-
-    The default value is \c black.
- */
-
-QColor QQuickShapeGradientStop::color() const
-{
-    return m_color;
-}
-
-void QQuickShapeGradientStop::setColor(const QColor &color)
-{
-    if (m_color != color) {
-        m_color = color;
-        if (QQuickShapeGradient *grad = qobject_cast<QQuickShapeGradient *>(parent()))
-            emit grad->updated();
-    }
-}
-
-/*!
     \qmltype ShapeGradient
     \instantiates QQuickShapeGradient
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
-    \inherits Object
+    \inherits Gradient
     \brief Base type of Shape fill gradients
     \since 5.10
 
-    This is an abstract base class for gradients like ShapeLinearGradient and
-    cannot be created directly.
+    This is an abstract base class for gradients like LinearGradient and
+    cannot be created directly. It extends \l Gradient with properties like the
+    spread mode.
  */
 
 QQuickShapeGradient::QQuickShapeGradient(QObject *parent)
-    : QObject(parent),
+    : QQuickGradient(parent),
       m_spread(PadSpread)
 {
 }
 
-int QQuickShapeGradient::countStops(QQmlListProperty<QObject> *list)
-{
-    QQuickShapeGradient *grad = qobject_cast<QQuickShapeGradient *>(list->object);
-    Q_ASSERT(grad);
-    return grad->m_stops.count();
-}
-
-QObject *QQuickShapeGradient::atStop(QQmlListProperty<QObject> *list, int index)
-{
-    QQuickShapeGradient *grad = qobject_cast<QQuickShapeGradient *>(list->object);
-    Q_ASSERT(grad);
-    return grad->m_stops.at(index);
-}
-
-void QQuickShapeGradient::appendStop(QQmlListProperty<QObject> *list, QObject *stop)
-{
-    QQuickShapeGradientStop *sstop = qobject_cast<QQuickShapeGradientStop *>(stop);
-    if (!sstop) {
-        qWarning("Gradient stop list only supports QQuickShapeGradientStop elements");
-        return;
-    }
-    QQuickShapeGradient *grad = qobject_cast<QQuickShapeGradient *>(list->object);
-    Q_ASSERT(grad);
-    sstop->setParent(grad);
-    grad->m_stops.append(sstop);
-}
-
 /*!
-    \qmlproperty list<Object> QtQuick.Shapes::ShapeGradient::stops
-    \default
-
-    The list of ShapeGradientStop objects defining the colors at given positions
-    in the gradient.
- */
-
-QQmlListProperty<QObject> QQuickShapeGradient::stops()
-{
-    return QQmlListProperty<QObject>(this, nullptr,
-                                     &QQuickShapeGradient::appendStop,
-                                     &QQuickShapeGradient::countStops,
-                                     &QQuickShapeGradient::atStop,
-                                     nullptr);
-}
-
-QGradientStops QQuickShapeGradient::sortedGradientStops() const
-{
-    QGradientStops result;
-    for (int i = 0; i < m_stops.count(); ++i) {
-        QQuickShapeGradientStop *s = static_cast<QQuickShapeGradientStop *>(m_stops[i]);
-        int j = 0;
-        while (j < result.count() && result[j].first < s->position())
-            ++j;
-        result.insert(j, QGradientStop(s->position(), s->color()));
-    }
-    return result;
-}
-
-/*!
-    \qmlproperty enumeration QtQuick.Shapes::ShapeGradient::spred
+    \qmlproperty enumeration QtQuick.Shapes::ShapeGradient::spread
 
     Specifies how the area outside the gradient area should be filled. The
     default value is ShapeGradient.PadSpread.
@@ -1231,7 +1108,7 @@ void QQuickShapeGradient::setSpread(SpreadMode mode)
 }
 
 /*!
-    \qmltype ShapeLinearGradient
+    \qmltype LinearGradient
     \instantiates QQuickShapeLinearGradient
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
@@ -1244,6 +1121,9 @@ void QQuickShapeGradient::setSpread(SpreadMode mode)
     these points the gradient is either padded, reflected or repeated depending
     on the spread type.
 
+    \note LinearGradient is not compatible with Rectangle items that only
+    support Gradient. This type is to be used with Shape.
+
     \sa QLinearGradient
  */
 
@@ -1253,10 +1133,10 @@ QQuickShapeLinearGradient::QQuickShapeLinearGradient(QObject *parent)
 }
 
 /*!
-    \qmlproperty real QtQuick.Shapes::ShapeLinearGradient::x1
-    \qmlproperty real QtQuick.Shapes::ShapeLinearGradient::y1
-    \qmlproperty real QtQuick.Shapes::ShapeLinearGradient::x2
-    \qmlproperty real QtQuick.Shapes::ShapeLinearGradient::y2
+    \qmlproperty real QtQuick.Shapes::LinearGradient::x1
+    \qmlproperty real QtQuick.Shapes::LinearGradient::y1
+    \qmlproperty real QtQuick.Shapes::LinearGradient::x2
+    \qmlproperty real QtQuick.Shapes::LinearGradient::y2
 
     These properties define the start and end points between which color
     interpolation occurs. By default both the stard and end points are set to

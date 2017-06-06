@@ -65,9 +65,8 @@ tst_QQuickShape::tst_QQuickShape()
     const char *uri = "tst_qquickpathitem";
     qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");
     qmlRegisterType<QQuickShapePath>(uri, 1, 0, "ShapePath");
-    qmlRegisterType<QQuickShapeGradientStop>(uri, 1, 0, "ShapeGradientStop");
     qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
-    qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "ShapeLinearGradient");
+    qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
 }
 
 void tst_QQuickShape::initValues()
@@ -206,9 +205,9 @@ void tst_QQuickShape::changeSignals()
     QCOMPARE(vpChangeSpy.count(), 14);
     QQmlListReference stopList(lgrad, "stops");
     QCOMPARE(stopList.count(), 5);
-    qobject_cast<QQuickShapeGradientStop *>(stopList.at(1))->setPosition(0.3);
+    qobject_cast<QQuickGradientStop *>(stopList.at(1))->setPosition(0.3);
     QCOMPARE(vpChangeSpy.count(), 15);
-    qobject_cast<QQuickShapeGradientStop *>(stopList.at(1))->setColor(Qt::black);
+    qobject_cast<QQuickGradientStop *>(stopList.at(1))->setColor(Qt::black);
     QCOMPARE(vpChangeSpy.count(), 16);
 }
 

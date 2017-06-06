@@ -192,14 +192,6 @@ Module {
         Signal { name: "updated" }
     }
     Component {
-        name: "QQuickShapeGradientStop"
-        prototype: "QObject"
-        exports: ["QtQuick.Shapes/ShapeGradientStop 1.0"]
-        exportMetaObjectRevisions: [0]
-        Property { name: "position"; type: "double" }
-        Property { name: "color"; type: "QColor" }
-    }
-    Component {
         name: "QQuickShape"
         defaultProperty: "elements"
         prototype: "QQuickItem"
@@ -232,7 +224,7 @@ Module {
         name: "QQuickShapeLinearGradient"
         defaultProperty: "stops"
         prototype: "QQuickShapeGradient"
-        exports: ["QtQuick.Shapes/ShapeLinearGradient 1.0"]
+        exports: ["QtQuick.Shapes/LinearGradient 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "x1"; type: "double" }
         Property { name: "y1"; type: "double" }

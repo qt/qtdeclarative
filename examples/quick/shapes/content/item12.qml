@@ -65,11 +65,11 @@ Rectangle {
             ShapePath {
                 strokeColor: "transparent"
 
-                fillGradient: ShapeLinearGradient {
+                fillGradient: LinearGradient {
                     id: grad
                     y1: 50; y2: 150
-                    ShapeGradientStop { position: 0; color: "black" }
-                    ShapeGradientStop { position: 1; color: "red" }
+                    GradientStop { position: 0; color: "black" }
+                    GradientStop { position: 1; color: "red" }
                 }
 
                 startX: 10; startY: 10
