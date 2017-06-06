@@ -202,6 +202,9 @@ BenchmarkSuite.prototype.NotifyError = function(error) {
 // Runs a single benchmark for at least a second and computes the
 // average time it takes to run a single iteration.
 BenchmarkSuite.prototype.RunSingleBenchmark = function(benchmark, data) {
+  // run the garbage collector, to give more reproducible conditions to each test
+  gc()
+
   function Measure(data) {
     var elapsed = 0;
     var start = new Date();

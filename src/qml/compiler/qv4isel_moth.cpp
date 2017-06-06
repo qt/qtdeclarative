@@ -638,7 +638,7 @@ void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex,
 
 void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         Instruction::LoadElementLookup load;
         load.lookup = registerIndexedGetterLookup();
         load.base = getParam(base);
@@ -657,7 +657,7 @@ void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr 
 void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase,
                                       IR::Expr *targetIndex)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         Instruction::StoreElementLookup store;
         store.lookup = registerIndexedSetterLookup();
         store.base = getParam(targetBase);
@@ -1436,29 +1436,6 @@ CompilationUnit::~CompilationUnit()
 
 void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
 {
-#ifdef MOTH_THREADED_INTERPRETER
-    // link byte code against addresses of instructions
-    for (int i = 0; i < codeRefs.count(); ++i) {
-        QByteArray &codeRef = codeRefs[i];
-        char *code = codeRef.data();
-        int index = 0;
-        while (index < codeRef.size()) {
-            Instr *genericInstr = reinterpret_cast<Instr *>(code + index);
-
-            switch (genericInstr->common.instructionType) {
-#define LINK_INSTRUCTION(InstructionType, Member) \
-            case Instr::InstructionType: \
-                genericInstr->common.code = VME::instructionJumpTable()[static_cast<int>(genericInstr->common.instructionType)]; \
-                index += InstrMeta<(int)Instr::InstructionType>::Size; \
-            break;
-
-            FOR_EACH_MOTH_INSTR(LINK_INSTRUCTION)
-
-            }
-        }
-    }
-#endif
-
     runtimeFunctions.resize(data->functionTableSize);
     runtimeFunctions.fill(0);
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
@@ -1516,17 +1493,6 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
 
     QByteArray padding;
 
-#if defined(MOTH_THREADED_INTERPRETER) && !defined(V4_BOOTSTRAP)
-    // Map from instruction label back to instruction type. Only needed when persisting
-    // already linked compilation units;
-    QHash<void*, int> reverseInstructionMapping;
-    if (engine) {
-        void **instructions = VME::instructionJumpTable();
-        for (int i = 0; i < Instr::LastInstruction; ++i)
-            reverseInstructionMapping.insert(instructions[i], i);
-    }
-#endif
-
     for (int i = 0; i < codeRefs.size(); ++i) {
         const CompiledData::Function *compiledFunction = unit->functionAt(i);
 
@@ -1544,27 +1510,6 @@ bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit
         }
 
         QByteArray code = codeRefs.at(i);
-
-#if defined(MOTH_THREADED_INTERPRETER) && !defined(V4_BOOTSTRAP)
-        if (!reverseInstructionMapping.isEmpty()) {
-            char *codePtr = code.data(); // detaches
-            int index = 0;
-            while (index < code.size()) {
-                Instr *genericInstr = reinterpret_cast<Instr *>(codePtr + index);
-
-                genericInstr->common.instructionType = reverseInstructionMapping.value(genericInstr->common.code);
-
-                switch (genericInstr->common.instructionType) {
-    #define REVERSE_INSTRUCTION(InstructionType, Member) \
-                case Instr::InstructionType: \
-                    index += InstrMeta<(int)Instr::InstructionType>::Size; \
-                break;
-
-                FOR_EACH_MOTH_INSTR(REVERSE_INSTRUCTION)
-                }
-            }
-        }
-#endif
 
         written = device->write(code.constData(), compiledFunction->codeSize);
         if (written != qint64(compiledFunction->codeSize)) {

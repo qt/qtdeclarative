@@ -102,7 +102,7 @@ struct ScopedValue;
 
 struct Scope {
     inline Scope(ExecutionContext *ctx)
-        : engine(ctx->d()->engine)
+        : engine(ctx->engine())
         , mark(engine->jsStackTop)
         , result(*engine->jsAlloca(1))
     {

@@ -73,7 +73,7 @@ adaptations.
 
 The default adaptation capable of providing the full Qt Quick 2 feature
 set is the OpenGL adaptation.  All of the details of the OpenGL
-adpatation can are available here:
+adaptation can are available here:
 \l{qtquick-visualcanvas-scenegraph-renderer.html}{OpenGL Adaptation}
 
 \section1 Software Adaptation

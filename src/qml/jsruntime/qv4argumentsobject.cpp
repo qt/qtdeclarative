@@ -48,7 +48,7 @@ DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 void Heap::ArgumentsObject::init(QV4::CallContext *context)
 {
-    ExecutionEngine *v4 = context->d()->engine;
+    ExecutionEngine *v4 = internalClass->engine;
 
     Object::init();
     fullyCreated = false;
@@ -59,8 +59,8 @@ void Heap::ArgumentsObject::init(QV4::CallContext *context)
     Scoped<QV4::ArgumentsObject> args(scope, this);
 
     if (context->d()->strictMode) {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
-        Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller()));
+        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
+        Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(v4->id_caller()));
         args->setProperty(CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
         args->setProperty(CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
         args->setProperty(CallerPropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
@@ -70,10 +70,10 @@ void Heap::ArgumentsObject::init(QV4::CallContext *context)
         args->arrayPut(0, context->args(), context->argc());
         args->d()->fullyCreated = true;
     } else {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
+        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
         args->setProperty(CalleePropertyIndex, context->d()->function);
     }
-    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length()));
+    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()));
     args->setProperty(LengthPropertyIndex, Primitive::fromInt32(context->d()->callData->argc));
 }
 
@@ -82,18 +82,19 @@ void ArgumentsObject::fullyCreate()
     if (fullyCreated())
         return;
 
+    Scope scope(engine());
+
     uint argCount = context()->callData->argc;
     uint numAccessors = qMin(context()->formalParameterCount(), argCount);
     ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
-    context()->engine->requireArgumentsAccessors(numAccessors);
+    scope.engine->requireArgumentsAccessors(numAccessors);
 
-    Scope scope(engine());
     Scoped<MemberData> md(scope, d()->mappedArguments);
     if (numAccessors) {
-        d()->mappedArguments.set(scope.engine, md->allocate(engine(), numAccessors));
+        d()->mappedArguments.set(scope.engine, md->allocate(scope.engine, numAccessors));
         for (uint i = 0; i < numAccessors; ++i) {
             d()->mappedArguments->values.set(scope.engine, i, context()->callData->args[i]);
-            arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
+            arraySet(i, scope.engine->argumentsAccessors + i, Attr_Accessor);
         }
     }
     arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
@@ -114,7 +115,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     bool isMapped = false;
     if (arrayData() && index < numAccessors &&
         arrayData()->attributes(index).isAccessor() &&
-        arrayData()->get(index) == context()->engine->argumentsAccessors[index].getter()->asReturnedValue())
+        arrayData()->get(index) == scope.engine->argumentsAccessors[index].getter()->asReturnedValue())
         isMapped = true;
 
     if (isMapped) {

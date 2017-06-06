@@ -1060,7 +1060,6 @@ void QObjectWrapper::destroyObject(bool lastCall)
         }
     }
 
-    h->internalClass = 0;
     h->~Data();
 }
 
@@ -1813,7 +1812,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->allocObject<QObjectMethod>(scope));
+    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->setObject(object);
 
     if (QQmlData *ddata = QQmlData::get(object))
@@ -1864,7 +1863,7 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) co
         result = QLatin1String("null");
     }
 
-    return ctx->d()->engine->newString(result)->asReturnedValue();
+    return ctx->engine()->newString(result)->asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const

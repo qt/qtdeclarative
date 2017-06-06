@@ -1320,8 +1320,8 @@ bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, const QV4::CompiledData:
 {
     QQmlQmldirData *data = typeLoader()->getQmldir(url);
 
-    data->setImport(import);
-    data->setPriority(priority);
+    data->setImport(this, import);
+    data->setPriority(this, priority);
 
     if (data->status() == Error) {
         // This qmldir must not exist - which is not an error
@@ -1349,7 +1349,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(QQmlQmldirData *data, const QV4::Compile
 
     QHash<const QV4::CompiledData::Import *, int>::iterator it = m_unresolvedImports.find(import);
     if (it != m_unresolvedImports.end()) {
-        *it = data->priority();
+        *it = data->priority(this);
     }
 
     // Release this reference at destruction
@@ -1482,7 +1482,7 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
     if (blob->type() == QQmlDataBlob::QmldirFile) {
         QQmlQmldirData *data = static_cast<QQmlQmldirData *>(blob);
 
-        const QV4::CompiledData::Import *import = data->import();
+        const QV4::CompiledData::Import *import = data->import(this);
 
         QList<QQmlError> errors;
         if (!qmldirDataAvailable(data, &errors)) {
@@ -1506,11 +1506,11 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
 {
     bool resolve = true;
 
-    const QV4::CompiledData::Import *import = data->import();
-    data->setImport(0);
+    const QV4::CompiledData::Import *import = data->import(this);
+    data->setImport(this, 0);
 
-    int priority = data->priority();
-    data->setPriority(0);
+    int priority = data->priority(this);
+    data->setPriority(this, 0);
 
     if (import) {
         // Do we need to resolve this import?
@@ -3069,7 +3069,7 @@ void QQmlScriptBlob::initializeFromCompilationUnit(QV4::CompiledData::Compilatio
 }
 
 QQmlQmldirData::QQmlQmldirData(const QUrl &url, QQmlTypeLoader *loader)
-: QQmlTypeLoader::Blob(url, QmldirFile, loader), m_import(0), m_priority(0)
+: QQmlTypeLoader::Blob(url, QmldirFile, loader)
 {
 }
 
@@ -3078,24 +3078,31 @@ const QString &QQmlQmldirData::content() const
     return m_content;
 }
 
-const QV4::CompiledData::Import *QQmlQmldirData::import() const
+const QV4::CompiledData::Import *QQmlQmldirData::import(QQmlTypeLoader::Blob *blob) const
 {
-    return m_import;
+    QHash<QQmlTypeLoader::Blob *, const QV4::CompiledData::Import *>::const_iterator it =
+        m_imports.find(blob);
+    if (it == m_imports.end())
+        return 0;
+    return *it;
 }
 
-void QQmlQmldirData::setImport(const QV4::CompiledData::Import *import)
+void QQmlQmldirData::setImport(QQmlTypeLoader::Blob *blob, const QV4::CompiledData::Import *import)
 {
-    m_import = import;
+    m_imports[blob] = import;
 }
 
-int QQmlQmldirData::priority() const
+int QQmlQmldirData::priority(QQmlTypeLoader::Blob *blob) const
 {
-    return m_priority;
+    QHash<QQmlTypeLoader::Blob *, int>::const_iterator it = m_priorities.find(blob);
+    if (it == m_priorities.end())
+        return 0;
+    return *it;
 }
 
-void QQmlQmldirData::setPriority(int priority)
+void QQmlQmldirData::setPriority(QQmlTypeLoader::Blob *blob, int priority)
 {
-    m_priority = priority;
+    m_priorities[blob] = priority;
 }
 
 void QQmlQmldirData::dataReceived(const SourceCodeData &data)

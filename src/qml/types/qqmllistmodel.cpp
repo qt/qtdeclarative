@@ -1076,6 +1076,7 @@ void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *tar
                     QVariant v = src->getProperty(srcRole, 0, 0);
                     target->setVariantProperty(targetRole, v);
                 }
+                break;
             case ListLayout::Role::VariantMap:
                 {
                     QVariantMap *map = src->getVariantMapProperty(srcRole);

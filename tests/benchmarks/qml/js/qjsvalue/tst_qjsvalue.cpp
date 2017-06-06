@@ -943,7 +943,7 @@ void tst_QJSValue::defineStandardTestValues()
     QTest::newRow("regexp") << m_engine->evaluate("new RegExp('foo')");
     QTest::newRow("error") << m_engine->evaluate("new Error");
 
-    QTest::newRow("qobject") << m_engine->newQObject(this);
+    QTest::newRow("qobject") << m_engine->newQObject(new QObject);
 #if 0 // no qmetaobject
     QTest::newRow("qmetaobject") << m_engine->newQMetaObject(&QJSEngine::staticMetaObject);
 #endif

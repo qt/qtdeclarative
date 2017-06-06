@@ -260,7 +260,7 @@ QV4::Function *QV4Debugger::getFunction() const
     if (QV4::Function *function = context->getFunction())
         return function;
     else
-        return context->d()->engine->globalCode;
+        return m_engine->globalCode;
 }
 
 void QV4Debugger::runJobUnpaused()

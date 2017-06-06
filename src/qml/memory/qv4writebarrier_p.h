@@ -149,6 +149,9 @@ struct HeapValue : Value {
     void set(ExecutionEngine *e, const Value &newVal) {
         WriteBarrier::write(e, base(), this, newVal);
     }
+    void set(ExecutionEngine *e, Heap::Base *b) {
+        WriteBarrier::write(e, base(), this, b);
+    }
 };
 
 template <size_t offset>

@@ -48,7 +48,7 @@ Item {
         id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Get data", "Send get request and show received header and body",  Qt.resolvedUrl("get.qml"));
+            addExample("Get data", "Send get request and show received header and body",  Qt.resolvedUrl("Get.qml"));
         }
     }
 }

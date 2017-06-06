@@ -104,7 +104,6 @@ struct QmlContext;
 
 #define ExecutionContextMembers(class, Member) \
     Member(class, NoMark, CallData *, callData)  \
-    Member(class, NoMark, ExecutionEngine *, engine) \
     Member(class, Pointer, ExecutionContext *, outer) \
     Member(class, NoMark, Lookup *, lookups) \
     Member(class, NoMark, const QV4::Value *, constantTable) \
@@ -124,11 +123,10 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
         Type_CallContext = 0x6
     };
 
-    void init(ExecutionEngine *engine, ContextType t)
+    void init(ContextType t)
     {
         Base::init();
 
-        this->engine = engine;
         type = t;
         lineNumber = -1;
     }
@@ -146,8 +144,7 @@ Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionConte
 
 Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, callData) == 0);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, engine) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, engine) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, lookups) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, constantTable) == offsetof(ExecutionContextData, lookups) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, compilationUnit) == offsetof(ExecutionContextData, constantTable) + QT_POINTER_SIZE);
@@ -160,9 +157,9 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(Execution
 DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
     DECLARE_MARK_TABLE(SimpleCallContext);
 
-    void init(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
+    void init(ContextType t = Type_SimpleCallContext)
     {
-        ExecutionContext::init(engine, t);
+        ExecutionContext::init(t);
     }
 
     inline unsigned int formalParameterCount() const;
@@ -240,8 +237,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     V4_MANAGED(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
-
-    ExecutionEngine *engine() const { return d()->engine; }
+    V4_INTERNALCLASS(ExecutionContext)
 
     Heap::CallContext *newCallContext(Function *f, CallData *callData);
     Heap::WithContext *newWithContext(Heap::Object *with);
@@ -281,6 +277,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 struct Q_QML_EXPORT SimpleCallContext : public ExecutionContext
 {
     V4_MANAGED(SimpleCallContext, ExecutionContext)
+    V4_INTERNALCLASS(SimpleCallContext)
 
     // formals are in reverse order
     Identifier * const *formals() const;

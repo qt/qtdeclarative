@@ -103,7 +103,7 @@ DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
 struct RegExpObject: Object {
     V4_OBJECT2(RegExpObject, Object)
     Q_MANAGED_TYPE(RegExpObject)
-    V4_INTERNALCLASS(regExpObjectClass)
+    V4_INTERNALCLASS(RegExpObject)
     V4_PROTOTYPE(regExpPrototype)
 
     // needs to be compatible with the flags in qv4jsir_p.h

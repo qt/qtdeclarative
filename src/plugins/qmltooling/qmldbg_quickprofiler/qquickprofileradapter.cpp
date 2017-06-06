@@ -74,8 +74,6 @@ QQuickProfilerAdapter::~QQuickProfilerAdapter()
 }
 
 // convert to QByteArrays that can be sent to the debug client
-// use of QDataStream can skew results
-//     (see tst_qqmldebugtrace::trace() benchmark)
 static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
                                            QList<QByteArray> &messages)
 {

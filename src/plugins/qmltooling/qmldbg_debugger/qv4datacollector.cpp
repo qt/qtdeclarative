@@ -76,7 +76,7 @@ QV4::Heap::SimpleCallContext *QV4DataCollector::findScope(QV4::ExecutionContext 
     if (!ctxt)
         return 0;
 
-    QV4::Scope s(ctxt->d()->engine);
+    QV4::Scope s(ctxt);
     QV4::ScopedContext ctx(s, ctxt);
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->d()->outer;

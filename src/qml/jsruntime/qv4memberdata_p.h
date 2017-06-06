@@ -72,17 +72,18 @@ V4_ASSERT_IS_TRIVIAL(MemberData)
 struct MemberData : Managed
 {
     V4_MANAGED(MemberData, Managed)
+    V4_INTERNALCLASS(MemberData)
 
     struct Index {
-        Heap::MemberData *memberData;
-        uint index;
+        Heap::Base *base;
+        Value *slot;
 
-        void set(ExecutionEngine *e, Value newVal) {
-            memberData->values.set(e, index, newVal);
+        void set(EngineBase *e, Value newVal) {
+            WriteBarrier::write(e, base, slot, newVal);
         }
-        const Value *operator->() const { return &memberData->values[index]; }
-        const Value &operator*() const { return memberData->values[index]; }
-        bool isNull() const { return !memberData; }
+        const Value *operator->() const { return slot; }
+        const Value &operator*() const { return *slot; }
+        bool isNull() const { return !slot; }
     };
 
     const Value &operator[] (uint idx) const { return d()->values[idx]; }

@@ -65,6 +65,7 @@ namespace QV4 {
 
 struct SequencePrototype : public QV4::Object
 {
+    V4_PROTOTYPE(arrayPrototype)
     void init();
 
     static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)

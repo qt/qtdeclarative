@@ -348,8 +348,9 @@ static void increaseFreedCountForClass(const char *className)
     (*freedObjectStatsGlobal())[className]++;
 }
 
-void Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
+bool Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
 {
+    bool hasUsedSlots = false;
     SDUMP() << "sweeping chunk" << this;
     HeapItem *o = realBase();
     bool lastSlotFree = false;
@@ -395,6 +396,7 @@ void Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
         }
         objectBitmap[i] = blackBitmap[i];
         grayBitmap[i] = 0;
+        hasUsedSlots |= (blackBitmap[i] != 0);
         extendsBitmap[i] = e;
         lastSlotFree = !((objectBitmap[i]|extendsBitmap[i]) >> (sizeof(quintptr)*8 - 1));
         SDUMP() << "        new extends =" << binary(e);
@@ -403,6 +405,7 @@ void Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
         o += Chunk::Bits;
     }
     //    DEBUG << "swept chunk" << this << "freed" << slotsFreed << "slots.";
+    return hasUsedSlots;
 }
 
 void Chunk::freeAll()
@@ -700,12 +703,21 @@ void BlockAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
 
 //    qDebug() << "BlockAlloc: sweep";
     usedSlotsAfterLastSweep = 0;
-    for (auto c : chunks) {
-        c->sweep(classCountPtr);
-        c->sortIntoBins(freeBins, NumBins);
-//        qDebug() << "used slots in chunk" << c << ":" << c->nUsedSlots();
-        usedSlotsAfterLastSweep += c->nUsedSlots();
-    }
+
+    auto isFree = [this, classCountPtr] (Chunk *c) {
+        bool isUsed = c->sweep(classCountPtr);
+
+        if (isUsed) {
+            c->sortIntoBins(freeBins, NumBins);
+            usedSlotsAfterLastSweep += c->nUsedSlots();
+        } else {
+            chunkAllocator->free(c);
+        }
+        return !isUsed;
+    };
+
+    auto newEnd = std::remove_if(chunks.begin(), chunks.end(), isFree);
+    chunks.erase(newEnd, chunks.end());
 }
 
 void BlockAllocator::freeAll()
@@ -922,13 +934,17 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     return *m;
 }
 
-Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nMembers)
+Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers)
 {
+    uint size = (vtable->nInlineProperties + vtable->inlinePropertyOffset)*sizeof(Value);
+    Q_ASSERT(!(size % sizeof(HeapItem)));
+
     Heap::Object *o;
-    if (!nMembers) {
+    if (nMembers <= vtable->nInlineProperties) {
         o = static_cast<Heap::Object *>(allocData(size));
     } else {
         // Allocate both in one go through the block allocator
+        nMembers -= vtable->nInlineProperties;
         std::size_t memberSize = align(sizeof(Heap::MemberData) + (nMembers - 1)*sizeof(Value));
         size_t totalSize = size + memberSize;
         Heap::MemberData *m;
@@ -947,7 +963,8 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(std::size_t size, uint nM
             Chunk::clearBit(c->extendsBitmap, index);
         }
         o->memberData.set(engine, m);
-        m->setVtable(MemberData::staticVTable());
+        m->internalClass = engine->internalClasses[EngineBase::Class_MemberData];
+        Q_ASSERT(o->memberData->internalClass);
         m->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
         m->values.size = o->memberData->values.alloc;
         m->init();
@@ -1147,7 +1164,8 @@ void MemoryManager::runGC()
         qDebug() << "    Allocations since last GC" << allocationCount;
         allocationCount = 0;
 #endif
-        qDebug() << "Allocated" << totalMem << "bytes in" << blockAllocator.chunks.size() << "chunks";
+        size_t oldChunks = blockAllocator.chunks.size();
+        qDebug() << "Allocated" << totalMem << "bytes in" << oldChunks << "chunks";
         qDebug() << "Fragmented memory before GC" << (totalMem - usedBefore);
         dumpBins(&blockAllocator);
 
@@ -1190,8 +1208,9 @@ void MemoryManager::runGC()
         });
 
         qDebug() << "Used memory before GC:" << usedBefore;
-        qDebug() << "Used memory after GC :" << usedAfter;
-        qDebug() << "Freed up bytes       :" << (usedBefore - usedAfter);
+        qDebug() << "Used memory after GC:" << usedAfter;
+        qDebug() << "Freed up bytes      :" << (usedBefore - usedAfter);
+        qDebug() << "Freed up chunks     :" << (oldChunks - blockAllocator.chunks.size());
         size_t lost = blockAllocator.allocatedMem() - memInBins - usedAfter;
         if (lost)
             qDebug() << "!!!!!!!!!!!!!!!!!!!!! LOST MEM:" << lost << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";

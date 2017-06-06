@@ -621,7 +621,7 @@ void InstructionSelection<JITAssembler>::setQObjectProperty(IR::Expr *source, IR
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         uint lookup = registerIndexedGetterLookup();
         generateLookupCall(target, lookup, offsetof(QV4::Lookup, indexedGetter),
                            JITTargetPlatform::EngineRegister,
@@ -637,7 +637,7 @@ void InstructionSelection<JITAssembler>::getElement(IR::Expr *base, IR::Expr *in
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::setElement(IR::Expr *source, IR::Expr *targetBase, IR::Expr *targetIndex)
 {
-    if (useFastLookups) {
+    if (0 && useFastLookups) {
         uint lookup = registerIndexedSetterLookup();
         generateLookupCall(JITAssembler::Void, lookup, offsetof(QV4::Lookup, indexedSetter),
                            JITTargetPlatform::EngineRegister,
@@ -1639,14 +1639,20 @@ QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory<JITAssembler>::createU
     return result;
 }
 
+#endif // ENABLE(ASSEMBLER)
+
 QT_BEGIN_NAMESPACE
 namespace QV4 { namespace JIT {
+#if ENABLE(ASSEMBLER)
 template class Q_QML_EXPORT InstructionSelection<>;
 template class Q_QML_EXPORT ISelFactory<>;
+#endif
+
 #if defined(V4_BOOTSTRAP)
 
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture)
 {
+#if ENABLE(ASSEMBLER)
     using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
     using ARM64CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;
 
@@ -1667,6 +1673,7 @@ Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &arch
 #endif
     if (!hostArch.isEmpty() && architecture == hostArch)
         return new ISelFactory<>;
+#endif // ENABLE(ASSEMBLER)
 
     return nullptr;
 }
@@ -1675,4 +1682,3 @@ Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &arch
 } }
 QT_END_NAMESPACE
 
-#endif // ENABLE(ASSEMBLER)

@@ -61,9 +61,14 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
+    Q_ASSERT(ic && ic->vtable);
+    uint nInline = d()->vtable()->nInlineProperties;
+    if (ic->size <= nInline)
+        return;
     bool hasMD = d()->memberData != nullptr;
-    if ((!hasMD && ic->size) || (hasMD && d()->memberData->values.size < ic->size))
-        d()->memberData.set(engine(), MemberData::allocate(ic->engine, ic->size, d()->memberData));
+    uint requiredSize = ic->size - nInline;
+    if (!(hasMD && requiredSize) || (hasMD && d()->memberData->values.size < requiredSize))
+        d()->memberData.set(ic->engine, MemberData::allocate(ic->engine, requiredSize, d()->memberData));
 }
 
 void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
@@ -83,13 +88,14 @@ void Object::setProperty(uint index, const Property *p)
 
 bool Object::setPrototype(Object *proto)
 {
-    Heap::Object *pp = proto ? proto->d() : 0;
+    Heap::Object *p = proto ? proto->d() : 0;
+    Heap::Object *pp = p;
     while (pp) {
         if (pp == d())
             return false;
-        pp = pp->prototype;
+        pp = pp->prototype();
     }
-    d()->prototype.set(engine(), proto ? proto->d() : 0);
+    setInternalClass(internalClass()->changePrototype(p));
     return true;
 }
 
@@ -150,17 +156,6 @@ void Object::defineDefaultProperty(const QString &name, const Value &value)
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount)
-{
-    ExecutionEngine *e = engine();
-    Scope scope(e);
-    ScopedString s(scope, e->newIdentifier(name));
-    ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
-    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(s, function);
-}
-
 void Object::defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
 {
     ExecutionEngine *e = engine();
@@ -172,16 +167,6 @@ void Object::defineDefaultProperty(const QString &name, void (*code)(const Built
     defineDefaultProperty(s, function);
 }
 
-void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount)
-{
-    ExecutionEngine *e = engine();
-    Scope scope(e);
-    ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
-    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(name, function);
-}
-
 void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
 {
     ExecutionEngine *e = engine();
@@ -190,25 +175,6 @@ void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunct
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
     function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
-}
-
-void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
-{
-    ExecutionEngine *e = engine();
-    Scope scope(e);
-    ScopedString s(scope, e->newIdentifier(name));
-    defineAccessorProperty(s, getter, setter);
-}
-
-void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
-{
-    ExecutionEngine *v4 = engine();
-    QV4::Scope scope(v4);
-    ScopedProperty p(scope);
-    ExecutionContext *global = v4->rootContext();
-    p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
-    p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
-    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
 void Object::defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
@@ -258,6 +224,18 @@ void Object::defineReadonlyConfigurableProperty(String *name, const Value &value
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
 
+void Object::markObjects(Heap::Base *b, MarkStack *stack)
+{
+    Heap::Object *o = static_cast<Heap::Object *>(b);
+    uint nInline = o->vtable()->nInlineProperties;
+    Value *v = reinterpret_cast<Value *>(o) + o->vtable()->inlinePropertyOffset;
+    const Value *end = v + nInline;
+    while (v < end) {
+        v->mark(stack);
+        ++v;
+    }
+}
+
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
@@ -278,7 +256,10 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
     if (idx != UINT_MAX)
         return getOwnProperty(idx, attrs, p);
 
-    uint member = internalClass()->find(name);
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
+
+    uint member = internalClass()->find(id);
     if (member < UINT_MAX) {
         *attrs = internalClass()->propertyData[member];
         if (p) {
@@ -317,15 +298,18 @@ MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *att
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
+
     Heap::Object *o = d();
     while (o) {
-        uint idx = o->internalClass->find(name);
+        uint idx = o->internalClass->find(id);
         if (idx < UINT_MAX) {
             *attrs = o->internalClass->propertyData[idx];
-            return MemberData::Index{ o->memberData, attrs->isAccessor() ? idx + SetterOffset : idx };
+            return o->writablePropertyData(attrs->isAccessor() ? idx + SetterOffset : idx );
         }
 
-        o = o->prototype;
+        o = o->prototype();
     }
     *attrs = Attr_Invalid;
     return { 0, 0 };
@@ -350,7 +334,7 @@ ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
                 return { reinterpret_cast<Heap::ArrayData *>(0x1), 0 };
             }
         }
-        o = o->prototype;
+        o = o->prototype();
     }
     *attrs = Attr_Invalid;
     return { 0, 0 };
@@ -394,7 +378,10 @@ bool Object::hasOwnProperty(String *name) const
     if (idx != UINT_MAX)
         return hasOwnProperty(idx);
 
-    if (internalClass()->find(name) < UINT_MAX)
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
+
+    if (internalClass()->find(id) < UINT_MAX)
         return true;
     if (!query(name).isEmpty())
         return true;
@@ -451,8 +438,11 @@ PropertyAttributes Object::query(const Managed *m, String *name)
     if (idx != UINT_MAX)
         return queryIndexed(m, idx);
 
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
+
     const Object *o = static_cast<const Object *>(m);
-    idx = o->internalClass()->find(name);
+    idx = o->internalClass()->find(id);
     if (idx < UINT_MAX)
         return o->internalClass()->propertyData[idx];
 
@@ -488,9 +478,18 @@ ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
     PropertyAttributes attrs;
     ReturnedValue v = l->lookup(o, &attrs);
     if (v != Primitive::emptyValue().asReturnedValue()) {
+        l->proto = l->classList[0]->prototype;
         if (attrs.isData()) {
-            if (l->level == 0)
-                l->getter = Lookup::getter0;
+            Q_ASSERT(l->classList[0] == o->internalClass());
+            if (l->level == 0) {
+                uint nInline = o->d()->vtable()->nInlineProperties;
+                if (l->index < nInline)
+                    l->getter = Lookup::getter0Inline;
+                else {
+                    l->index -= nInline;
+                    l->getter = Lookup::getter0MemberData;
+                }
+                }
             else if (l->level == 1)
                 l->getter = Lookup::getter1;
             else if (l->level == 2)
@@ -525,7 +524,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
         if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
             l->classList[0] = o->internalClass();
             l->index = idx;
-            l->setter = Lookup::setter0;
+            l->setter = idx < o->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
             o->setProperty(idx, value);
             return;
         }
@@ -642,12 +641,13 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
     if (idx != UINT_MAX)
         return getIndexed(idx, hasProperty);
 
-    Scope scope(engine());
-    name->makeIdentifier(scope.engine);
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
 
+    Scope scope(engine());
     ScopedObject o(scope, this);
     while (o) {
-        uint idx = o->internalClass()->find(name);
+        uint idx = o->internalClass()->find(id);
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
@@ -709,14 +709,15 @@ bool Object::internalPut(String *name, const Value &value)
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier(engine);
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
 
     MemberData::Index memberIndex{0, 0};
-    uint member = internalClass()->find(name);
+    uint member = internalClass()->find(id);
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
         attrs = internalClass()->propertyData[member];
-        memberIndex = { d()->memberData, (attrs.isAccessor() ? member + SetterOffset : member) };
+        memberIndex = d()->writablePropertyData(attrs.isAccessor() ? member + SetterOffset : member);
     }
 
     // clause 1
@@ -869,9 +870,9 @@ bool Object::internalDeleteProperty(String *name)
     if (idx != UINT_MAX)
         return deleteIndexedProperty(idx);
 
-    name->makeIdentifier(engine());
+    name->makeIdentifier();
 
-    uint memberIdx = internalClass()->find(name);
+    uint memberIdx = internalClass()->find(name->identifier());
     if (memberIdx != UINT_MAX) {
         if (internalClass()->propertyData[memberIdx].isConfigurable()) {
             InternalClass::removeMember(this, name->identifier());
@@ -908,7 +909,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         return __defineOwnProperty__(engine, idx, p, attrs);
 
     Scope scope(engine);
-    name->makeIdentifier(scope.engine);
+    name->makeIdentifier();
 
     uint memberIndex;
 
@@ -942,7 +943,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     }
 
     // Clause 1
-    memberIndex = internalClass()->find(name);
+    memberIndex = internalClass()->find(name->identifier());
 
     if (memberIndex == UINT_MAX) {
         // clause 3
@@ -1188,7 +1189,7 @@ ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
     // 15.3.5.3, 4
     while (v) {
         // 15.3.5.3, 4, a
-        v = v->prototype;
+        v = v->prototype();
 
         // 15.3.5.3, 4, b
         if (!v)

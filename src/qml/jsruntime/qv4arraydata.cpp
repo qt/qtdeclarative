@@ -51,6 +51,8 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
 const QV4::VTable QV4::ArrayData::static_vtbl = {
     0,
     0,
+    0,
+    0,
     QV4::ArrayData::IsExecutionContext,
     QV4::ArrayData::IsString,
     QV4::ArrayData::IsObject,
