@@ -80,7 +80,7 @@ void tst_QQuickShape::initValues()
     QVERIFY(!obj->asynchronous());
     QVERIFY(obj->enableVendorExtensions());
     QVERIFY(obj->status() == QQuickShape::Null);
-    auto vps = obj->elements();
+    auto vps = obj->data();
     QVERIFY(vps.count(&vps) == 0);
 
     delete obj;
@@ -97,10 +97,10 @@ void tst_QQuickShape::vpInitValues()
     QVERIFY(!obj->asynchronous());
     QVERIFY(obj->enableVendorExtensions());
     QVERIFY(obj->status() == QQuickShape::Null);
-    auto vps = obj->elements();
+    auto vps = obj->data();
     QVERIFY(vps.count(&vps) == 2);
 
-    QQuickShapePath *vp = vps.at(&vps, 0);
+    QQuickShapePath *vp = qobject_cast<QQuickShapePath *>(vps.at(&vps, 0));
     QVERIFY(vp != nullptr);
     QQmlListReference pathList(vp, "pathElements");
     QCOMPARE(pathList.count(), 0);
@@ -128,7 +128,7 @@ void tst_QQuickShape::basicShape()
 
     QQuickShape *obj = findItem<QQuickShape>(window->rootObject(), "pathItem");
     QVERIFY(obj != nullptr);
-    QQmlListReference list(obj, "elements");
+    QQmlListReference list(obj, "data");
     QCOMPARE(list.count(), 1);
     QQuickShapePath *vp = qobject_cast<QQuickShapePath *>(list.at(0));
     QVERIFY(vp != nullptr);
@@ -168,7 +168,7 @@ void tst_QQuickShape::changeSignals()
     obj->setAsynchronous(false);
     QCOMPARE(asyncPropSpy.count(), 2);
 
-    QQmlListReference list(obj, "elements");
+    QQmlListReference list(obj, "data");
     QQuickShapePath *vp = qobject_cast<QQuickShapePath *>(list.at(0));
     QVERIFY(vp != nullptr);
 

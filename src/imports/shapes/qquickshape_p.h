@@ -227,8 +227,8 @@ class QQuickShape : public QQuickItem
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(bool enableVendorExtensions READ enableVendorExtensions WRITE setEnableVendorExtensions NOTIFY enableVendorExtensionsChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QQmlListProperty<QQuickShapePath> elements READ elements)
-    Q_CLASSINFO("DefaultProperty", "elements")
+    Q_PROPERTY(QQmlListProperty<QObject> data READ data)
+    Q_CLASSINFO("DefaultProperty", "data")
 
 public:
     enum RendererType {
@@ -259,7 +259,7 @@ public:
 
     Status status() const;
 
-    QQmlListProperty<QQuickShapePath> elements();
+    QQmlListProperty<QObject> data();
 
 protected:
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;

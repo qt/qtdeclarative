@@ -588,6 +588,11 @@ void QQuickShapePath::resetFillGradient()
 
     \image pathitem-code-example.png
 
+    Like \l Item, Shape also allows any visual or non-visual objects to be
+    declared as children. ShapePath objects are handled specially. This is
+    useful since it allows adding visual items, like \l Rectangle or \l Image,
+    and non-visual objects, like \l Timer directly as children of Shape.
+
     \note It is important to be aware of performance implications, in particular
     when the application is running on the generic Shape implementation due to
     not having support for accelerated path rendering.  The geometry generation
@@ -788,31 +793,23 @@ QQuickShape::Status QQuickShape::status() const
     return d->status;
 }
 
-static QQuickShapePath *vpe_at(QQmlListProperty<QQuickShapePath> *property, int index)
-{
-    QQuickShapePrivate *d = QQuickShapePrivate::get(static_cast<QQuickShape *>(property->object));
-    return d->qmlData.sp.at(index);
-}
-
-static void vpe_append(QQmlListProperty<QQuickShapePath> *property, QQuickShapePath *obj)
+static void vpe_append(QQmlListProperty<QObject> *property, QObject *obj)
 {
     QQuickShape *item = static_cast<QQuickShape *>(property->object);
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
-    d->qmlData.sp.append(obj);
+    QQuickShapePath *path = qobject_cast<QQuickShapePath *>(obj);
+    if (path)
+        d->qmlData.sp.append(path);
 
-    if (d->componentComplete) {
-        QObject::connect(obj, SIGNAL(shapePathChanged()), item, SLOT(_q_shapePathChanged()));
+    QQuickItemPrivate::data_append(property, obj);
+
+    if (path && d->componentComplete) {
+        QObject::connect(path, SIGNAL(shapePathChanged()), item, SLOT(_q_shapePathChanged()));
         d->_q_shapePathChanged();
     }
 }
 
-static int vpe_count(QQmlListProperty<QQuickShapePath> *property)
-{
-    QQuickShapePrivate *d = QQuickShapePrivate::get(static_cast<QQuickShape *>(property->object));
-    return d->qmlData.sp.count();
-}
-
-static void vpe_clear(QQmlListProperty<QQuickShapePath> *property)
+static void vpe_clear(QQmlListProperty<QObject> *property)
 {
     QQuickShape *item = static_cast<QQuickShape *>(property->object);
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
@@ -822,27 +819,30 @@ static void vpe_clear(QQmlListProperty<QQuickShapePath> *property)
 
     d->qmlData.sp.clear();
 
+    QQuickItemPrivate::data_clear(property);
+
     if (d->componentComplete)
         d->_q_shapePathChanged();
 }
 
 /*!
-    \qmlproperty list<ShapePath> QtQuick.Shapes::Shape::elements
+    \qmlproperty list<Object> QtQuick.Shapes::Shape::data
 
     This property holds the ShapePath objects that define the contents of the
-    Shape.
+    Shape. It can also contain any other type of objects, since Shape, like Item,
+    allows adding any visual or non-visual objects as children.
 
     \default
  */
 
-QQmlListProperty<QQuickShapePath> QQuickShape::elements()
+QQmlListProperty<QObject> QQuickShape::data()
 {
-    return QQmlListProperty<QQuickShapePath>(this,
-                                              nullptr,
-                                              vpe_append,
-                                              vpe_count,
-                                              vpe_at,
-                                              vpe_clear);
+    return QQmlListProperty<QObject>(this,
+                                     nullptr,
+                                     vpe_append,
+                                     QQuickItemPrivate::data_count,
+                                     QQuickItemPrivate::data_at,
+                                     vpe_clear);
 }
 
 void QQuickShape::classBegin()

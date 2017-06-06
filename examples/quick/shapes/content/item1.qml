@@ -74,5 +74,22 @@ Rectangle {
             PathLine { x: 30; y: ctr.height - 30 }
             PathLine { x: 30; y: 30 }
         }
+
+        // Besides ShapePath, Shape supports visual and non-visual objects too, allowing
+        // free mixing without going through extra hoops:
+        Rectangle {
+            id: testRect
+            color: "green"
+            opacity: 0.3
+            width: 20
+            height: 20
+            anchors.right: parent.right
+        }
+        Timer {
+            interval: 100
+            repeat: true
+            onTriggered: testRect.width = testRect.width > 1 ? testRect.width - 1 : 20
+            running: true
+        }
     }
 }

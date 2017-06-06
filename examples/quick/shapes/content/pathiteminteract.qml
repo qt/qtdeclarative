@@ -195,7 +195,7 @@ Rectangle {
                                                        'startX: ' + x + '; startY: ' + y + ';' +
                                                        'PathLine { x: ' + x + ' + 1; y: ' + y + ' + 1 } }',
                                                        root, "dynamic_visual_path");
-                            shape.elements.push(p);
+                            shape.data.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
                             if (!activePath)
@@ -218,7 +218,7 @@ Rectangle {
                                                        'PathCubic { x: ' + x + ' + 1; y: ' + y + ' + 1;' +
                                                        'control1X: ' + x + ' + 50; control1Y: ' + y + ' + 50; control2X: ' + x + ' + 150; control2Y: ' + y + ' + 50; } }',
                                                        root, "dynamic_visual_path");
-                            shape.elements.push(p);
+                            shape.data.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
                             if (!activePath)
@@ -243,7 +243,7 @@ Rectangle {
                                                        'PathQuad { x: ' + x + ' + 1; y: ' + y + ' + 1;' +
                                                        'controlX: ' + x + ' + 50; controlY: ' + y + ' + 50 } }',
                                                        root, "dynamic_visual_path");
-                            shape.elements.push(p);
+                            shape.data.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
                             if (!activePath)
@@ -279,7 +279,7 @@ Rectangle {
             id: shape
             anchors.fill: parent
 
-            elements: []
+            data: []
         }
     }
 }
