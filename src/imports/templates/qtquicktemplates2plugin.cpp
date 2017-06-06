@@ -295,6 +295,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickApplicationWindow, 3>(uri, 2, 3, "ApplicationWindow");
     qmlRegisterType<QQuickButtonGroup, 3>(uri, 2, 3, "ButtonGroup");
     qmlRegisterType<QQuickControl, 3>(uri, 2, 3, "Control");
+    qmlRegisterType<QQuickContainer, 3>(uri, 2, 3, "Container");
     qmlRegisterType<QQuickDialog, 3>(uri, 2, 3, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 3, "DialogButtonBox");
     qRegisterMetaType<QQuickIcon>();
