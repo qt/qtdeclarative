@@ -702,6 +702,9 @@ void QQuickMenu::popup(QQmlV4Function *args)
     if (!pos.isNull)
         setPosition(pos);
 
+    if (menuItem)
+        d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr));
+
     open();
 }
 

@@ -413,16 +413,19 @@ void tst_menu::popup()
     QTRY_COMPARE(QCursor::pos(), cursorPos);
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCursor"));
+    QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_COMPARE(menu->property("x").toInt(), 11);
     QTRY_COMPARE(menu->property("y").toInt(), 22);
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtPos", Q_ARG(QVariant, QPointF(33, 44))));
+    QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_COMPARE(menu->property("x").toInt(), 33);
     QTRY_COMPARE(menu->property("y").toInt(), 44);
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, 66)));
+    QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_COMPARE(menu->property("x").toInt(), 55);
     QTRY_COMPARE(menu->property("y").toInt(), 66);
     menu->close();
@@ -434,16 +437,19 @@ void tst_menu::popup()
     const QList<QQuickMenuItem *> menuItems = QList<QQuickMenuItem *>() << menuItem1 << menuItem2 << menuItem3;
     for (QQuickMenuItem *menuItem : menuItems) {
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCursor", Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_COMPARE(menu->property("x").toInt(), 12);
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 2 + menu->topPadding() - menuItem->y());
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtPos", Q_ARG(QVariant, QPointF(33, window->height() / 3)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_COMPARE(menu->property("x").toInt(), 33);
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 + menu->topPadding() - menuItem->y());
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, window->height() / 3 * 2), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_COMPARE(menu->property("x").toInt(), 55);
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
         menu->close();
