@@ -58,8 +58,13 @@
     {Google Material Design Guidelines}. It allows for a unified experience
     across platforms and device sizes.
 
-    \image qtquickcontrols2-material.png
-    \caption The Material style in light and dark themes
+    \table
+        \row
+            \li \image qtquickcontrols2-material-light.png
+                \caption The Material style in light theme
+            \li \image qtquickcontrols2-material-dark.png
+                \caption The Material style in dark theme
+    \endtable
 
     To run an application with the Material style, see
     \l {Using Styles in Qt Quick Controls 2}.
@@ -108,7 +113,7 @@
                 }
                 \endqml
             \li
-                \image qtquickcontrols2-material-dark.png
+                \image qtquickcontrols2-material-purple.png
     \endtable
 
     In addition to specifying the attributes in QML, it is also possible to
