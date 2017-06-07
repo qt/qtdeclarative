@@ -38,8 +38,10 @@ QtObject {
     property double doubleProperty: 3.45
     property string stringProperty: "foo"
     property url urlProperty: "http://www.qt-project.org"
+    property var objectProperty: {"foo":"bar"}
     property var intListProperty: [1, 2, 3]
     property var stringListProperty: ["a", "b", "c"]
+    property var objectListProperty: [{"a":"b"}, {"c":"d"}]
     property date dateProperty: "2000-01-02"
     // QTBUG-32295: Expected property type
     //property time timeProperty: "12:34:56"
@@ -58,8 +60,10 @@ QtObject {
         property alias doubleProperty: root.doubleProperty
         property alias stringProperty: root.stringProperty
         property alias urlProperty: root.urlProperty
+        property alias objectProperty: root.objectProperty
         property alias intListProperty: root.intListProperty
         property alias stringListProperty: root.stringListProperty
+        property alias objectListProperty: root.objectListProperty
         property alias dateProperty: root.dateProperty
         // QTBUG-32295: Expected property type
         //property alias timeProperty: root.timeProperty

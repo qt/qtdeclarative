@@ -59,6 +59,7 @@ private slots:
     void reparentToNewWindow();
     void nullEngine();
     void keyEvents();
+    void shortcuts();
 };
 
 
@@ -363,6 +364,38 @@ void tst_qquickwidget::keyEvents()
     QTest::keyClick(widget.window()->windowHandle(), Qt::Key_A);
 
     QTRY_VERIFY(widget.ok);
+}
+
+class ShortcutEventFilter : public QObject
+{
+public:
+    bool eventFilter(QObject *obj, QEvent *e) override {
+        if (e->type() == QEvent::ShortcutOverride)
+            shortcutOk = true;
+
+        return QObject::eventFilter(obj, e);
+    }
+
+    bool shortcutOk = false;
+};
+
+void tst_qquickwidget::shortcuts()
+{
+    // Verify that ShortcutOverride events do not get lost. (QTBUG-60988)
+    KeyHandlingWidget widget;
+    widget.setSource(testFileUrl("rectangle.qml"));
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(widget.window(), 5000));
+
+    // Send to the widget, verify that the QQuickWindow sees it.
+
+    ShortcutEventFilter filter;
+    widget.quickWindow()->installEventFilter(&filter);
+
+    QKeyEvent e(QEvent::ShortcutOverride, Qt::Key_A, Qt::ControlModifier);
+    QCoreApplication::sendEvent(&widget, &e);
+
+    QTRY_VERIFY(filter.shortcutOk);
 }
 
 QTEST_MAIN(tst_qquickwidget)

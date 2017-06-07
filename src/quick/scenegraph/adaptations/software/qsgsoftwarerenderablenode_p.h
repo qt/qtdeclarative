@@ -98,7 +98,8 @@ public:
     void update();
 
     QRegion renderNode(QPainter *painter, bool forceOpaquePainting = false);
-    QRect boundingRect() const;
+    QRect boundingRectMin() const { return m_boundingRectMin; }
+    QRect boundingRectMax() const { return m_boundingRectMax; }
     NodeType type() const { return m_nodeType; }
     bool isOpaque() const { return m_isOpaque; }
     bool isDirty() const { return m_isDirty; }
@@ -149,7 +150,8 @@ private:
     bool m_hasClipRegion;
     float m_opacity;
 
-    QRect m_boundingRect;
+    QRect m_boundingRectMin;
+    QRect m_boundingRectMax;
 };
 
 QT_END_NAMESPACE

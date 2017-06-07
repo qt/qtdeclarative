@@ -375,7 +375,7 @@ private slots:
 
     void testDragEventPropertyPropagation();
 
-    void createTextureFromImage();
+    void findChild();
 
 private:
     QTouchDevice *touchDevice;
@@ -2827,13 +2827,26 @@ void tst_qquickwindow::testDragEventPropertyPropagation()
     }
 }
 
-void tst_qquickwindow::createTextureFromImage()
+void tst_qquickwindow::findChild()
 {
-    // An invalid image should return a null pointer.
     QQuickWindow window;
-    window.show();
-    QTest::qWaitForWindowExposed(&window);
-    QVERIFY(!window.createTextureFromImage(QImage()));
+
+    // QQuickWindow
+    // |_ QQuickWindow::contentItem
+    // |  |_ QObject("contentItemChild")
+    // |_ QObject("viewChild")
+
+    QObject *windowChild = new QObject(&window);
+    windowChild->setObjectName("windowChild");
+
+    QObject *contentItemChild = new QObject(window.contentItem());
+    contentItemChild->setObjectName("contentItemChild");
+
+    QCOMPARE(window.findChild<QObject *>("windowChild"), windowChild);
+    QCOMPARE(window.findChild<QObject *>("contentItemChild"), contentItemChild);
+
+    QVERIFY(!window.contentItem()->findChild<QObject *>("viewChild")); // sibling
+    QCOMPARE(window.contentItem()->findChild<QObject *>("contentItemChild"), contentItemChild);
 }
 
 QTEST_MAIN(tst_qquickwindow)

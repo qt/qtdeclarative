@@ -43,6 +43,7 @@ QtQml
    to allow getting the actual storage path for a particular database.
  - [QTBUG-53091] Introduced Qt.application.displayName, to map the
    QGuiApplication::applicationDisplayName property to QML.
+ - [QTBUG-45316] QML Settings has been fixed to handle JavaScript arrays.
 
 QtQuick
 -------

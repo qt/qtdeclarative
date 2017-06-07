@@ -1961,7 +1961,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
     // with the correct QML context.
 
     // Look for IDs first.
-    for (const IdMapping &mapping : qAsConst(_idObjects))
+    for (const IdMapping &mapping : qAsConst(_idObjects)) {
         if (name == mapping.name) {
             if (_function->isQmlBinding)
                 _function->idObjectDependencies.insert(mapping.idIndex);
@@ -1979,8 +1979,9 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             result->isReadOnly = true; // don't allow use as lvalue
             return result;
         }
+    }
 
-    {
+    if (name.at(0).isUpper()) {
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1) {

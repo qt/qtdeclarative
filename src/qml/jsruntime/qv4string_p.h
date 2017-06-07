@@ -175,10 +175,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
     uint toUInt(bool *ok) const;
 
-    Q_DECL_DEPRECATED void makeIdentifier(ExecutionEngine *) {
-        makeIdentifier();
-    }
-
     void makeIdentifier() const {
         if (d()->identifier)
             return;

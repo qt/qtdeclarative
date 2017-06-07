@@ -1414,7 +1414,7 @@ Module {
         Property { name: "source"; type: "QObject"; isPointer: true }
         Property { name: "target"; type: "QObject"; isReadonly: true; isPointer: true }
         Property { name: "hotSpot"; type: "QPointF" }
-        Property { name: "imageSource"; revision: 8; type: "QUrl" }
+        Property { name: "imageSource"; type: "QUrl" }
         Property { name: "keys"; type: "QStringList" }
         Property { name: "mimeData"; type: "QVariantMap" }
         Property { name: "supportedActions"; type: "Qt::DropActions" }

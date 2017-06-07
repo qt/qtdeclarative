@@ -526,6 +526,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     Q_Q(QQuickWindow);
 
     contentItem = new QQuickRootItem;
+    QQml_setParent_noEvent(contentItem, c);
     QQmlEngine::setObjectOwnership(contentItem, QQmlEngine::CppOwnership);
     QQuickItemPrivate *contentItemPrivate = QQuickItemPrivate::get(contentItem);
     contentItemPrivate->window = q;
@@ -2117,10 +2118,8 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
 {
     // the list of devices should be very small so a linear search should be ok
     for (QQuickPointerEvent *e: pointerEventInstances) {
-        if (e->device() == device) {
-            device->m_event = e;
+        if (e->device() == device)
             return e;
-        }
     }
 
     QQuickPointerEvent *ev = nullptr;
@@ -2138,7 +2137,6 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
         break;
     }
     pointerEventInstances << ev;
-    device->m_event = ev;
     return ev;
 }
 
@@ -3874,7 +3872,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
 {
     Q_D(const QQuickWindow);
-    if (!isSceneGraphInitialized() || image.isNull()) // check both for d->context and d->context->isValid()
+    if (!isSceneGraphInitialized()) // check both for d->context and d->context->isValid()
          return 0;
     uint flags = 0;
     if (options & TextureCanUseAtlas)     flags |= QSGRenderContext::CreateTexture_Atlas;
