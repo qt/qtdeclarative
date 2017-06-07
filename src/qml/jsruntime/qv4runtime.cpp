@@ -1706,7 +1706,9 @@ ReturnedValue Runtime::method_div(const Value &left, const Value &right)
     if (Value::integerCompatible(left, right)) {
         int lval = left.integerValue();
         int rval = right.integerValue();
-        if (rval != 0 && (lval % rval == 0))
+        if (rval != 0 // division by zero should result in a NaN
+                && (lval % rval == 0)  // fractions can't be stored in an int
+                && !(lval == 0 && rval < 0)) // 0 / -something results in -0.0
             return Encode(int(lval / rval));
         else
             return Encode(double(lval) / rval);
