@@ -52,3 +52,7 @@ qmldevtools_build|qtConfig(qml-interpreter) {
         $$PWD/qv4instr_moth.cpp \
         $$PWD/qv4isel_moth.cpp
 }
+
+gcc {
+    equals(QT_GCC_MAJOR_VERSION, 5): QMAKE_CXXFLAGS += -fno-strict-aliasing
+}
