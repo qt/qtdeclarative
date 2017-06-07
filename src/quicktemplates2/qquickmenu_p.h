@@ -81,6 +81,11 @@ public:
     void removeItem(QQuickItem *item); // ### Qt 6: Q_INVOKABLE
     Q_REVISION(3) Q_INVOKABLE QQuickItem *takeItem(int index);
 
+    Q_REVISION(3) Q_INVOKABLE void addMenu(QQuickMenu *menu);
+    Q_REVISION(3) Q_INVOKABLE void insertMenu(int index, QQuickMenu *menu);
+    Q_REVISION(3) Q_INVOKABLE void removeMenu(QQuickMenu *menu);
+    Q_REVISION(3) Q_INVOKABLE QQuickMenu *takeMenu(int index);
+
     QVariant contentModel() const;
     QQmlListProperty<QObject> contentData();
 

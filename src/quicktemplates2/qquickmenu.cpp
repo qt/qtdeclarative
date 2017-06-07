@@ -687,6 +687,82 @@ QQuickItem *QQuickMenu::takeItem(int index)
 }
 
 /*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::addMenu(Menu menu)
+
+    Adds \a menu as a sub-menu to the end of this menu.
+*/
+void QQuickMenu::addMenu(QQuickMenu *menu)
+{
+    Q_D(QQuickMenu);
+    insertMenu(d->contentModel->count(), menu);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::insertMenu(int index, Menu menu)
+
+    Inserts \a menu as a sub-menu at \a index. The index is within all items in the menu.
+*/
+void QQuickMenu::insertMenu(int index, QQuickMenu *menu)
+{
+    Q_D(QQuickMenu);
+    if (!menu)
+        return;
+
+    insertItem(index, d->createItem(menu));
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::removeMenu(Menu menu)
+
+    Removes and destroys the specified \a menu.
+*/
+void QQuickMenu::removeMenu(QQuickMenu *menu)
+{
+    Q_D(QQuickMenu);
+    if (!menu)
+        return;
+
+    const int count = d->contentModel->count();
+    for (int i = 0; i < count; ++i) {
+        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(i));
+        if (!item || item->subMenu() != menu)
+            continue;
+
+        removeItem(item);
+        break;
+    }
+
+    menu->deleteLater();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod Menu QtQuick.Controls::Menu::takeMenu(int index)
+
+    Removes and returns the menu at \a index. The index is within all items in the menu.
+
+    \note The ownership of the menu is transferred to the caller.
+*/
+QQuickMenu *QQuickMenu::takeMenu(int index)
+{
+    Q_D(QQuickMenu);
+    QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
+    if (!item)
+        return nullptr;
+
+    QQuickMenu *subMenu = item->subMenu();
+    if (!subMenu)
+        return nullptr;
+
+    d->removeItem(index, item);
+    item->deleteLater();
+    return subMenu;
+}
+
+/*!
     \qmlproperty model QtQuick.Controls::Menu::contentModel
     \readonly
 

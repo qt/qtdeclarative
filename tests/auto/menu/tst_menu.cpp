@@ -79,6 +79,7 @@ private slots:
     void subMenuKeyboard();
     void subMenuPosition_data();
     void subMenuPosition();
+    void addRemoveSubMenus();
 };
 
 void tst_menu::defaults()
@@ -917,6 +918,58 @@ void tst_menu::subMenuPosition()
         QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
         QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
     }
+}
+
+void tst_menu::addRemoveSubMenus()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+
+    QPointer<QQuickMenu> subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
+    QVERIFY(!subMenu1.isNull());
+
+    QPointer<QQuickMenu> subMenu2 = window->property("subMenu2").value<QQuickMenu *>();
+    QVERIFY(!subMenu2.isNull());
+
+    QPointer<QQuickMenu> subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
+    QVERIFY(!subSubMenu1.isNull());
+
+    // takeMenu(int) does not destroy the menu, but does destroy the respective item in the parent menu
+    QPointer<QQuickMenuItem> subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
+    QVERIFY(subSubMenu1Item);
+    QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1.data());
+    QCOMPARE(subMenu1->takeMenu(2), subSubMenu1.data());
+    QVERIFY(!subMenu1->itemAt(2));
+    QCoreApplication::sendPostedEvents(subSubMenu1, QEvent::DeferredDelete);
+    QVERIFY(!subSubMenu1.isNull());
+    QCoreApplication::sendPostedEvents(subSubMenu1Item, QEvent::DeferredDelete);
+    QVERIFY(subSubMenu1Item.isNull());
+
+    // takeMenu(int) does not destroy an item that doesn't present a menu
+    QPointer<QQuickMenuItem> subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
+    QVERIFY(subMenuItem1);
+    QVERIFY(!subMenuItem1->subMenu());
+    QVERIFY(!subMenu1->takeMenu(0));
+    QCoreApplication::sendPostedEvents(subMenuItem1, QEvent::DeferredDelete);
+    QVERIFY(!subMenuItem1.isNull());
+
+    // addMenu(Menu) re-creates the respective item in the parent menu
+    subMenu1->addMenu(subSubMenu1);
+    subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
+    QVERIFY(!subSubMenu1Item.isNull());
+
+    // removeMenu(Menu) destroys both the menu and the respective item in the parent menu
+    subMenu1->removeMenu(subSubMenu1);
+    QVERIFY(!subMenu1->itemAt(2));
+    QCoreApplication::sendPostedEvents(subSubMenu1, QEvent::DeferredDelete);
+    QVERIFY(subSubMenu1.isNull());
+    QCoreApplication::sendPostedEvents(subSubMenu1Item, QEvent::DeferredDelete);
+    QVERIFY(subSubMenu1Item.isNull());
 }
 
 QTEST_MAIN(tst_menu)
