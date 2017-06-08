@@ -254,6 +254,31 @@ void QQuickMenuPrivate::setCurrentIndex(int index)
     contentItem->setProperty("currentIndex", index);
 }
 
+void QQuickMenuPrivate::activateNextItem()
+{
+    int index = currentIndex();
+    int count = contentModel->count();
+    while (++index < count) {
+        QQuickItem *item = itemAt(index);
+        if (!item || !item->activeFocusOnTab())
+            continue;
+        item->forceActiveFocus(Qt::TabFocusReason);
+        break;
+    }
+}
+
+void QQuickMenuPrivate::activatePreviousItem()
+{
+    int index = currentIndex();
+    while (--index >= 0) {
+        QQuickItem *item = itemAt(index);
+        if (!item || !item->activeFocusOnTab())
+            continue;
+        item->forceActiveFocus(Qt::BacktabFocusReason);
+        break;
+    }
+}
+
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
     QQuickMenuPrivate *p = static_cast<QQuickMenuPrivate *>(prop->data);
@@ -511,23 +536,16 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
     // shown at once.
     switch (event->key()) {
     case Qt::Key_Up:
-        if (d->contentItem->metaObject()->indexOfMethod("decrementCurrentIndex()") != -1)
-            QMetaObject::invokeMethod(d->contentItem, "decrementCurrentIndex");
+        d->activatePreviousItem();
         break;
 
     case Qt::Key_Down:
-        if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
-            QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
+        d->activateNextItem();
         break;
 
     default:
         break;
     }
-
-    int index = d->currentIndex();
-    QQuickItem *item = itemAt(index);
-    if (item)
-        item->forceActiveFocus();
 }
 
 QFont QQuickMenu::defaultFont() const

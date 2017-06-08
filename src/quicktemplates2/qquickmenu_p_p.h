@@ -84,6 +84,9 @@ public:
     int currentIndex() const;
     void setCurrentIndex(int index);
 
+    void activateNextItem();
+    void activatePreviousItem();
+
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
     static int contentData_count(QQmlListProperty<QObject> *prop);
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
