@@ -102,6 +102,9 @@ public:
     void openSubMenu(QQuickMenuItem *item, bool activate);
     void closeSubMenu(QQuickMenu *subMenu);
 
+    void startHoverTimer();
+    void stopHoverTimer();
+
     int currentIndex() const;
     void setCurrentIndex(int index);
 
@@ -111,6 +114,7 @@ public:
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
     bool cascade;
+    int hoverTimer;
     qreal overlap;
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;

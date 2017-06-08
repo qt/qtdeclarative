@@ -111,6 +111,8 @@ Q_SIGNALS:
     Q_REVISION(3) void delegateChanged();
 
 protected:
+    void timerEvent(QTimerEvent *event) override;
+
     QFont defaultFont() const override;
     QPalette defaultPalette() const override;
 

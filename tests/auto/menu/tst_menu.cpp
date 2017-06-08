@@ -636,7 +636,9 @@ void tst_menu::subMenuMouse()
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
-    QCOMPARE(subSubMenu1->isVisible(), cascade);
+    QVERIFY(!subSubMenu1->isVisible());
+    if (cascade)
+        QTRY_VERIFY(subSubMenu1->isVisible());
 
     // close the sub-sub-menu with mouse hover over another parent menu item
     QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
@@ -653,7 +655,9 @@ void tst_menu::subMenuMouse()
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
-    QCOMPARE(subSubMenu1->isVisible(), cascade);
+    QVERIFY(!subSubMenu1->isVisible());
+    if (cascade)
+        QTRY_VERIFY(subSubMenu1->isVisible());
 
     // close sub-menu and sub-sub-menu with mouse hover in the main menu
     QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));

@@ -59,6 +59,9 @@
 
 QT_BEGIN_NAMESPACE
 
+// copied from qfusionstyle.cpp
+static const int SUBMENU_DELAY = 225;
+
 /*!
     \qmltype Menu
     \inherits Popup
@@ -183,6 +186,7 @@ static bool shouldCascade()
 
 QQuickMenuPrivate::QQuickMenuPrivate()
     : cascade(shouldCascade()),
+      hoverTimer(0),
       overlap(0),
       contentItem(nullptr),
       contentModel(nullptr),
@@ -371,7 +375,7 @@ void QQuickMenuPrivate::onItemHovered()
             if (currentItem) {
                 QQuickMenu *subMenu = currentItem->menu();
                 if (subMenu && subMenu->cascade())
-                    openSubMenu(currentItem, false);
+                    startHoverTimer();
             }
         }
     }
@@ -468,6 +472,23 @@ void QQuickMenuPrivate::closeSubMenu(QQuickMenu *subMenu)
     }
 }
 
+void QQuickMenuPrivate::startHoverTimer()
+{
+    Q_Q(QQuickMenu);
+    stopHoverTimer();
+    hoverTimer = q->startTimer(SUBMENU_DELAY);
+}
+
+void QQuickMenuPrivate::stopHoverTimer()
+{
+    Q_Q(QQuickMenu);
+    if (!hoverTimer)
+        return;
+
+    q->killTimer(hoverTimer);
+    hoverTimer = 0;
+}
+
 int QQuickMenuPrivate::currentIndex() const
 {
     QVariant index = contentItem->property("currentIndex");
@@ -483,6 +504,7 @@ void QQuickMenuPrivate::setCurrentIndex(int index)
     QQuickMenuItem *newCurrentItem = contentItem->property("currentItem").value<QQuickMenuItem *>();
 
     if (currentItem != newCurrentItem) {
+        stopHoverTimer();
         if (currentItem)
             currentItem->setHighlighted(false);
         if (newCurrentItem)
@@ -1011,6 +1033,15 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
     QQuickItem *item = itemAt(index);
     if (item)
         item->forceActiveFocus();
+}
+
+void QQuickMenu::timerEvent(QTimerEvent *event)
+{
+    Q_D(QQuickMenu);
+    if (event->timerId() == d->hoverTimer) {
+        d->openSubMenu(d->currentItem, false);
+        d->stopHoverTimer();
+    }
 }
 
 QFont QQuickMenu::defaultFont() const
