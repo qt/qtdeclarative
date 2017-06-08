@@ -35,45 +35,10 @@
     to build complete interfaces in Qt Quick. The module was introduced
     in Qt 5.7.
 
+    \image qtquickcontrols2-styles.png
+
     Qt Quick Controls 2 comes with a selection customizable styles.
     See \l {Styling Qt Quick Controls 2} for more details.
-
-    \raw HTML
-    <table style="background:transparent; border:0px" width="66%">
-      <tr>
-        <td style="border:0px; padding-right:25px;">
-          <a href="qtquickcontrols2-default.html">
-            <img src="images/qtquickcontrols2-default.png" alt="Default" width="100%"/>
-          </a>
-        </td>
-        <td style="border:0px">
-          <a href="qtquickcontrols2-material.html">
-            <img src="images/qtquickcontrols2-material.png" alt="Material" width="100%"/>
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td style="border:0px">Default Style</td>
-        <td style="border:0px">Material Style</td>
-      </tr>
-      <tr>
-        <td style="border:0px; padding-top:45px; padding-right:25px;">
-          <a href="qtquickcontrols2-fusion.html">
-            <img src="images/qtquickcontrols2-fusion.png" alt="Fusion" width="100%"/>
-          </a>
-        </td>
-        <td style="border:0px; padding-top:45px; ">
-          <a href="qtquickcontrols2-universal.html">
-            <img src="images/qtquickcontrols2-universal.png" alt="Universal" width="100%"/>
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td style="border:0px">Fusion Style</td>
-        <td style="border:0px">Universal Style</td>
-      </tr>
-    </table>
-    \endraw
 
     \section1 Prerequisites
 

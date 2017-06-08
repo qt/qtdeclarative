@@ -97,9 +97,22 @@ void tst_QQuickStyle::environmentVariables()
 
 void tst_QQuickStyle::availableStyles()
 {
-    QStringList styles = QQuickStyle::availableStyles();
+    QString path = QFINDTESTDATA("data");
+    QVERIFY(!path.isEmpty());
+    qputenv("QT_QUICK_CONTROLS_STYLE_PATH", path.toLocal8Bit());
+
+    QStringList paths = QQuickStylePrivate::stylePaths();
+    QVERIFY(paths.contains(path));
+
+    const QStringList styles = QQuickStyle::availableStyles();
     QVERIFY(!styles.isEmpty());
     QCOMPARE(styles.first(), QString("Default"));
+    QVERIFY(!styles.contains("designer"));
+
+    // QTBUG-60973
+    for (const QString &style : styles) {
+        QVERIFY2(!style.endsWith(".dSYM"), qPrintable(style));
+    }
 }
 
 QTEST_MAIN(tst_QQuickStyle)

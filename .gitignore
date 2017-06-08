@@ -36,6 +36,7 @@
 /tests/auto/cursor/tst_cursor
 /tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
+/tests/auto/font/tst_font
 /tests/auto/menu/tst_menu
 /tests/auto/palette/tst_palette
 /tests/auto/platform/tst_platform

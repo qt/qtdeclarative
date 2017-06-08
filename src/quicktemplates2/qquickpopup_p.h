@@ -362,8 +362,10 @@ protected:
     virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent();
     virtual bool overlayEvent(QQuickItem *item, QEvent *event);
+#if QT_CONFIG(quicktemplates2_multitouch)
     virtual void touchEvent(QTouchEvent *event);
     virtual void touchUngrabEvent();
+#endif
 #if QT_CONFIG(wheelevent)
     virtual void wheelEvent(QWheelEvent *event);
 #endif

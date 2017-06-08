@@ -144,6 +144,7 @@ QQuickControlPrivate::~QQuickControlPrivate()
 #endif
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 {
     if (point.id() == touchId)
@@ -156,6 +157,7 @@ bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 
     return false;
 }
+#endif
 
 void QQuickControlPrivate::handlePress(const QPointF &)
 {
@@ -1474,6 +1476,7 @@ void QQuickControl::mouseUngrabEvent()
     d->handleUngrab();
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickControl::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickControl);
@@ -1528,6 +1531,7 @@ void QQuickControl::touchUngrabEvent()
     Q_D(QQuickControl);
     d->handleUngrab();
 }
+#endif
 
 #if QT_CONFIG(wheelevent)
 void QQuickControl::wheelEvent(QWheelEvent *event)

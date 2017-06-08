@@ -29,60 +29,36 @@
     \page qtquickcontrols2-styles.html
     \title Styling Qt Quick Controls 2
 
+    \section1 Available Styles
+
     Qt Quick Controls 2 comes with a selection of styles.
 
-    \raw HTML
-    <table style="background:transparent; border:0px">
-      <tr>
-        <td style="border:0px; padding-right:25px">
-          <a href="qtquickcontrols2-default.html">
-            <img src="images/qtquickcontrols2-default.png" width="45%"/>
-          </a>
-        </td>
-        <td style="border:0px">
-          <a href="qtquickcontrols2-material.html">
-            <img src="images/qtquickcontrols2-material.png" width="75%"/>
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td style="border:0px">
-          The <a href="qtquickcontrols2-default.html">Default</a> style is
-          a simple and light-weight all-round style that offers the maximum
-          performance for Qt Quick Controls 2.
-        </td>
-        <td style="border:0px">
-          The <a href="qtquickcontrols2-material.html">Material</a> style offers an appealing design
-          based on the <a href="https://www.google.com/design/spec/material-design/introduction.html">
-          Google Material Design Guidelines</a>, but requires more system resources than the Default style.
-        </td>
-      </tr>
-      <tr>
-        <td style="border:0px; padding-top:45px; padding-right:25px;">
-          <a href="qtquickcontrols2-fusion.html">
-            <img src="images/qtquickcontrols2-fusion.png" width="75%"/>
-          </a>
-        </td>
-        <td style="border:0px; padding-top:45px;">
-          <a href="qtquickcontrols2-universal.html">
-            <img src="images/qtquickcontrols2-universal.png" width="75%"/>
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td style="border:0px">
-          The <a href="qtquickcontrols2-fusion.html">Fusion</a> style is
-          a platform-agnostic style that offers a desktop-oriented look'n'feel
-          for Qt Quick Controls 2.
-        </td>
-        <td style="border:0px">
-          The <a href="qtquickcontrols2-universal.html">Universal</a> style offers an appealing design
-          based on the <a href="https://dev.windows.com/design">Microsoft Universal Design Guidelines</a>,
-          but requires more system resources than the Default style.
-        </td>
-      </tr>
-    </table>
-    \endraw
+    \section2 Default Style
+
+    \image qtquickcontrols2-default-thumbnail.png
+    The \l {Default Style} is a simple and light-weight all-round style that offers
+    the maximum performance for Qt Quick Controls 2.
+
+    \section2 Fusion Style
+
+    \image qtquickcontrols2-fusion-thumbnail.png
+    The \l {Fusion Style} is a platform-agnostic style that offers a desktop-oriented
+    look'n'feel for Qt Quick Controls 2.
+
+    \section2 Material Style
+
+    \image qtquickcontrols2-material-thumbnail.png
+    The \l {Material Style} offers an appealing design based on the
+    \l {https://www.google.com/design/spec/material-design/introduction.html}
+    {Google Material Design Guidelines}, but requires more system resources than
+    the Default style.
+
+    \section2 Universal Style
+
+    \image qtquickcontrols2-universal-thumbnail.png
+    The \l {Universal Style} offers an appealing design based on the
+    \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines},
+    but requires more system resources than the Default style.
 
     \section1 Using Styles in Qt Quick Controls 2
 

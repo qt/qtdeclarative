@@ -88,7 +88,9 @@ protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     bool overlayEvent(QQuickItem *item, QEvent *event) override;
+#if QT_CONFIG(quicktemplates2_multitouch)
     void touchEvent(QTouchEvent *event) override;
+#endif
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 

@@ -99,7 +99,9 @@ public:
 
     bool contains(const QPointF &scenePos) const;
 
+#if QT_CONFIG(quicktemplates2_multitouch)
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
+#endif
     virtual bool blockInput(QQuickItem *item, const QPointF &point) const;
 
     virtual bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp);
@@ -108,7 +110,9 @@ public:
     virtual void handleUngrab();
 
     bool handleMouseEvent(QQuickItem *item, QMouseEvent *event);
+#if QT_CONFIG(quicktemplates2_multitouch)
     bool handleTouchEvent(QQuickItem *item, QTouchEvent *event);
+#endif
 
     virtual void reposition();
     virtual void resizeOverlay();
