@@ -92,7 +92,7 @@ Item {
 
         Label {
             text: root.text
-            font.pixelSize: roundButton.contentItem.font.pixelSize * 0.5
+            font.pixelSize: roundButton.font.pixelSize * 0.5
             anchors.top: parent.bottom
             anchors.topMargin: 2
             anchors.horizontalCenter: parent.horizontalCenter
