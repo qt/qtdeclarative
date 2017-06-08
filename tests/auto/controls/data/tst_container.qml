@@ -126,4 +126,31 @@ TestCase {
         compare(control1.currentIndex, 1)
         compare(control2.currentIndex, 1)
     }
+
+    Component {
+        id: repeaterContainer
+        Container {
+            id: container
+            Item { objectName: "0" }
+            Item { objectName: "1" }
+            Item { objectName: "2" }
+            Item { objectName: "3" }
+            contentItem: Row {
+                Repeater {
+                    model: container.contentModel
+                }
+            }
+        }
+    }
+
+    // don't crash (QTBUG-61310)
+    function test_repeater() {
+        var control = createTemporaryObject(repeaterContainer)
+        verify(control)
+
+        compare(control.itemAt(0).objectName, "0")
+        compare(control.itemAt(1).objectName, "1")
+        compare(control.itemAt(2).objectName, "2")
+        compare(control.itemAt(3).objectName, "3")
+    }
 }
