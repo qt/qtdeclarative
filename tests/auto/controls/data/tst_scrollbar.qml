@@ -736,4 +736,44 @@ TestCase {
 
         container.destroy()
     }
+
+    function test_flashing() {
+        var control = createTemporaryObject(scrollBar, testCase, {size: 0.2})
+        verify(control)
+
+        var activeSpy = signalSpy.createObject(control, {target: control, signalName: "activeChanged"})
+        verify(activeSpy.valid)
+
+        compare(control.active, false)
+        if (control.contentItem)
+            compare(control.contentItem.opacity, 0)
+        if (control.background)
+            compare(control.background.opacity, 0)
+
+        control.increase()
+        compare(control.position, 0.1)
+        compare(control.active, false)
+        compare(activeSpy.count, 2)
+        if (control.contentItem)
+            verify(control.contentItem.opacity > 0)
+        if (control.background)
+            verify(control.background.opacity > 0)
+        if (control.contentItem)
+            tryCompare(control.contentItem, "opacity", 0)
+        if (control.background)
+            tryCompare(control.background, "opacity", 0)
+
+        control.decrease()
+        compare(control.position, 0.0)
+        compare(control.active, false)
+        compare(activeSpy.count, 4)
+        if (control.contentItem)
+            verify(control.contentItem.opacity > 0)
+        if (control.background)
+            verify(control.background.opacity > 0)
+        if (control.contentItem)
+            tryCompare(control.contentItem, "opacity", 0)
+        if (control.background)
+            tryCompare(control.background, "opacity", 0)
+    }
 }
