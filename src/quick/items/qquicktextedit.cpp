@@ -3051,6 +3051,32 @@ void QQuickTextEdit::resetBottomPadding()
 }
 
 /*!
+    \qmlproperty real QtQuick::TextEdit::tabStopDistance
+    \since 5.10
+
+    The default distance, in device units, between tab stops.
+
+    \sa QTextOption::setTabStop()
+*/
+int QQuickTextEdit::tabStopDistance() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document->defaultTextOption().tabStop();
+}
+
+void QQuickTextEdit::setTabStopDistance(qreal distance)
+{
+    Q_D(QQuickTextEdit);
+    QTextOption textOptions = d->document->defaultTextOption();
+    if (textOptions.tabStop() == distance)
+        return;
+
+    textOptions.setTabStop(distance);
+    d->document->setDefaultTextOption(textOptions);
+    emit tabStopDistanceChanged(distance);
+}
+
+/*!
     \qmlmethod QtQuick::TextEdit::clear()
     \since 5.7
 
