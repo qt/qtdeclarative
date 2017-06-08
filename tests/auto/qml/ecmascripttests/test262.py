@@ -569,6 +569,7 @@ def Main():
   #logging.basicConfig(level=logging.DEBUG)
   os.environ["TZ"] = "PST8PDT"
   os.environ["LANG"] = "en_US.UTF-8"
+  os.environ["LC_TIME"] = "en_US.UTF-8"
   parser = BuildOptions()
   (options, args) = parser.parse_args()
   ValidateOptions(options)

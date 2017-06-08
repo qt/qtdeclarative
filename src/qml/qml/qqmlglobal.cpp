@@ -343,6 +343,8 @@ QObject *QQmlGuiProvider::styleHints()
     return o;
 }
 
+QString QQmlGuiProvider::pluginName() const { return QString(); }
+
 static QQmlGuiProvider *guiProvider = 0;
 
 Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newProvider)

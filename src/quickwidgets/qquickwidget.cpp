@@ -1440,6 +1440,9 @@ bool QQuickWidget::event(QEvent *e)
         d->offscreenWindow->setWindowState(resolveWindowState(windowState()));
         break;
 
+    case QEvent::ShortcutOverride:
+        return QCoreApplication::sendEvent(d->offscreenWindow, e);
+
     default:
         break;
     }
@@ -1596,10 +1599,10 @@ QQuickWindow *QQuickWidget::quickWindow() const
 
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
-    Q_UNUSED(event)
     Q_D(QQuickWidget);
     if (d->useSoftwareRenderer) {
         QPainter painter(this);
+        d->updateRegion = d->updateRegion.united(event->region());
         if (d->updateRegion.isNull()) {
             //Paint everything
             painter.drawImage(rect(), d->softwareImage);

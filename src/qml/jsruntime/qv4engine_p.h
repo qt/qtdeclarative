@@ -55,6 +55,7 @@
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
 #include <private/qintrusivelist_p.h>
+#include "qv4enginebase_p.h"
 
 #ifndef V4_BOOTSTRAP
 #  include <private/qv8engine_p.h>
@@ -96,15 +97,9 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    qint32 callDepth;
-
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
-
-    ExecutionContext *currentContext;
-
-    Value *jsStackLimit;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
@@ -113,7 +108,6 @@ public:
         GCStackLimit = 2*1024*1024
     };
     WTF::PageAllocation *jsStack;
-    Value *jsStackBase;
 
     WTF::PageAllocation *gcStack;
 
@@ -124,10 +118,6 @@ public:
             ptr[i] = Primitive::undefinedValue();
         return ptr;
     }
-
-    IdentifierTable *identifierTable;
-
-    Object *globalObject;
 
     Function *globalCode;
 
@@ -239,25 +229,6 @@ public:
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
 
     InternalClassPool *classPool;
-    InternalClass *emptyClass;
-
-    InternalClass *arrayClass;
-    InternalClass *stringClass;
-
-    InternalClass *functionClass;
-    InternalClass *scriptFunctionClass;
-    InternalClass *protoClass;
-
-    InternalClass *regExpExecArrayClass;
-    InternalClass *regExpObjectClass;
-
-    InternalClass *argumentsObjectClass;
-    InternalClass *strictArgumentsObjectClass;
-
-    InternalClass *errorClass;
-    InternalClass *errorClassWithMessage;
-    InternalClass *errorProtoClass;
-
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
@@ -390,6 +361,8 @@ public:
     void pushContext(ExecutionContext *context);
     void popContext();
     ExecutionContext *parentContext(ExecutionContext *context) const;
+
+    InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
 
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass, Object *prototype);

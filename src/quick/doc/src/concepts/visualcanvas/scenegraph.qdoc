@@ -32,7 +32,7 @@
 \section1 The Scene Graph in Qt Quick
 
 Qt Quick 2 makes use of a dedicated scene graph based and a series of
-adpatations of which the default uses OpenGL ES 2.0 or OpenGL 2.0 for
+adaptations of which the default uses OpenGL ES 2.0 or OpenGL 2.0 for
 its rendering. Using a scene graph for graphics rather than the
 traditional imperative painting systems (QPainter and
 similar), means the scene to be rendered can be retained between

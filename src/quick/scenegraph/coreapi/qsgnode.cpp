@@ -792,7 +792,7 @@ QSGBasicGeometryNode::~QSGBasicGeometryNode()
     If the node has the flag QSGNode::OwnsGeometry set, it will also delete the
     geometry object it is pointing to. This flag is not set by default.
 
-    If the geometry is changed whitout calling setGeometry() again, the user
+    If the geometry is changed without calling setGeometry() again, the user
     must also mark the geometry as dirty using QSGNode::markDirty().
 
     \sa markDirty()
@@ -845,7 +845,7 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 
     The geometry node supports two types of materials, the opaqueMaterial and the normal
     material. The opaqueMaterial is used when the accumulated scene graph opacity at the
-    time of rendering is 1. The primary usecase is to special case opaque rendering
+    time of rendering is 1. The primary use case is to special case opaque rendering
     to avoid an extra operation in the fragment shader can have significant performance
     impact on embedded graphics chips. The opaque material is optional.
 
@@ -887,7 +887,7 @@ QSGGeometryNode::QSGGeometryNode(QSGGeometryNodePrivate &dd)
     Deletes this geometry node.
 
     The flags QSGNode::OwnsMaterial, QSGNode::OwnsOpaqueMaterial and
-    QSGNode::OwnsGeometry decides weither the geometry node should also
+    QSGNode::OwnsGeometry decides whether the geometry node should also
     delete the materials and geometry. By default, these flags are disabled.
  */
 
@@ -961,7 +961,7 @@ void QSGGeometryNode::setRenderOrder(int order)
     Geometry nodes must have a material before they can be added to the
     scene graph.
 
-    If the material is changed whitout calling setMaterial() again, the user
+    If the material is changed without calling setMaterial() again, the user
     must also mark the material as dirty using QSGNode::markDirty().
 
  */
@@ -991,7 +991,7 @@ void QSGGeometryNode::setMaterial(QSGMaterial *material)
     allowed to set QSGMaterial::Blending to true and draw transparent
     pixels.
 
-    If the material is changed whitout calling setOpaqueMaterial()
+    If the material is changed without calling setOpaqueMaterial()
     again, the user must also mark the opaque material as dirty using
     QSGNode::markDirty().
 
@@ -1371,7 +1371,7 @@ void QSGOpacityNode::setOpacity(qreal opacity)
 
     Returns this node's accumulated opacity.
 
-    This vaule is calculated during rendering and only stored
+    This value is calculated during rendering and only stored
     in the opacity node temporarily.
 
     \internal

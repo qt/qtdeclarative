@@ -5417,7 +5417,11 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
             showMeTheCode(function, "After loop detection");
 //            cfg2dot(function, loopDetection.allLoops());
 
-            if (peelLoops) {
+            // ### disable loop peeling for now. It doesn't give any measurable performance
+            // improvements at this time, but significantly increases the size of the
+            // JIT generated code
+            Q_UNUSED(peelLoops);
+            if (0 && peelLoops) {
                 QVector<LoopDetection::LoopInfo *> innerLoops = loopDetection.innermostLoops();
                 LoopPeeling(df).run(innerLoops);
 

@@ -375,6 +375,8 @@ private slots:
 
     void testDragEventPropertyPropagation();
 
+    void findChild();
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -2823,6 +2825,28 @@ void tst_qquickwindow::testDragEventPropertyPropagation()
         QCOMPARE(dropEvent->isAccepted(), dropTarget.dropAccept);
         QCOMPARE(dropEvent->dropAction(), dropTarget.dropDropAction);
     }
+}
+
+void tst_qquickwindow::findChild()
+{
+    QQuickWindow window;
+
+    // QQuickWindow
+    // |_ QQuickWindow::contentItem
+    // |  |_ QObject("contentItemChild")
+    // |_ QObject("viewChild")
+
+    QObject *windowChild = new QObject(&window);
+    windowChild->setObjectName("windowChild");
+
+    QObject *contentItemChild = new QObject(window.contentItem());
+    contentItemChild->setObjectName("contentItemChild");
+
+    QCOMPARE(window.findChild<QObject *>("windowChild"), windowChild);
+    QCOMPARE(window.findChild<QObject *>("contentItemChild"), contentItemChild);
+
+    QVERIFY(!window.contentItem()->findChild<QObject *>("viewChild")); // sibling
+    QCOMPARE(window.contentItem()->findChild<QObject *>("contentItemChild"), contentItemChild);
 }
 
 QTEST_MAIN(tst_qquickwindow)

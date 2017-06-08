@@ -124,8 +124,8 @@ void FunctionObject::init(String *n, bool createProto)
 
     Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()) == Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype()));
-        Q_ASSERT(s.engine->protoClass->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
+        ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses[EngineBase::Class_ObjectProto], s.engine->objectPrototype()));
+        Q_ASSERT(s.engine->internalClasses[EngineBase::Class_ObjectProto]->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
         proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
         setProperty(Heap::FunctionObject::Index_Prototype, proto);
     } else {
@@ -138,7 +138,7 @@ void FunctionObject::init(String *n, bool createProto)
 
 ReturnedValue FunctionObject::name() const
 {
-    return get(scope()->engine->id_name());
+    return get(scope()->internalClass->engine->id_name());
 }
 
 void FunctionObject::construct(const Managed *that, Scope &scope, CallData *)
@@ -153,7 +153,7 @@ void FunctionObject::call(const Managed *, Scope &scope, CallData *)
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
-    return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
+    return scope->engine()->memoryManager->allocObject<ScriptFunction>(scope, function);
 }
 
 bool FunctionObject::isBinding() const
@@ -369,8 +369,8 @@ void ScriptFunction::construct(const Managed *that, Scope &scope, CallData *call
 
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
-    InternalClass *ic = v4->emptyClass;
-    ScopedObject proto(scope, f->protoForConstructor());
+    InternalClass *ic = f->classForConstructor();
+    ScopedObject proto(scope, ic->prototype);
     ScopedObject obj(scope, v4->newObject(ic, proto));
     callData->thisObject = obj.asReturnedValue();
 
@@ -433,54 +433,24 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
         ScopedProperty pd(s);
         pd->value = s.engine->thrower();
         pd->set = s.engine->thrower();
-        f->insertMember(scope->d()->engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        f->insertMember(scope->d()->engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        f->insertMember(s.engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
-Heap::Object *ScriptFunction::protoForConstructor() const
+InternalClass *ScriptFunction::classForConstructor() const
 {
     const Object *o = d()->protoProperty();
+    InternalClass *ic = d()->cachedClassForConstructor;
+    if (ic && ic->prototype == o->d())
+        return ic;
+
+    ic = engine()->internalClasses[EngineBase::Class_Object];
     if (o)
-        return o->d();
-    return engine()->objectPrototype()->d();
-}
+        ic = ic->changePrototype(o->d());
+    d()->cachedClassForConstructor = ic;
 
-
-
-DEFINE_OBJECT_VTABLE(OldBuiltinFunction);
-
-void Heap::OldBuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *))
-{
-    Heap::FunctionObject::init(scope, name);
-    this->code = code;
-}
-
-void OldBuiltinFunction::construct(const Managed *f, Scope &scope, CallData *)
-{
-    scope.result = static_cast<const OldBuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
-}
-
-void OldBuiltinFunction::call(const Managed *that, Scope &scope, CallData *callData)
-{
-    const OldBuiltinFunction *f = static_cast<const OldBuiltinFunction *>(that);
-    ExecutionEngine *v4 = scope.engine;
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
-    CHECK_STACK_LIMITS(v4, scope);
-
-    ExecutionContextSaver ctxSaver(scope);
-
-    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
-    ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
-    ctx->callData = callData;
-    v4->pushContext(ctx);
-    Q_ASSERT(v4->current == ctx);
-
-    scope.result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext));
-    v4->memoryManager->freeSimpleCallContext();
+    return ic;
 }
 
 DEFINE_OBJECT_VTABLE(BuiltinFunction);
@@ -520,7 +490,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext(v4);
+    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext();
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);

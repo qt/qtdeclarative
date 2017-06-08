@@ -114,6 +114,8 @@ struct DateCtor: FunctionObject
 
 struct DatePrototype: Object
 {
+    V4_PROTOTYPE(objectPrototype)
+
     void init(ExecutionEngine *engine, Object *ctor);
 
     static double getThisDate(Scope &scope, CallData *callData);

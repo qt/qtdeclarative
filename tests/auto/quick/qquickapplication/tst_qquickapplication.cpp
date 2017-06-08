@@ -53,6 +53,7 @@ private slots:
     void styleHints();
     void cleanup();
     void displayName();
+    void platformName();
 
 private:
     QQmlEngine engine;
@@ -262,6 +263,24 @@ void tst_qquickapplication::displayName()
 
     QMetaObject::invokeMethod(item, "updateDisplayName", Q_ARG(QVariant, QVariant(name[2])));
     QCOMPARE(QGuiApplication::applicationDisplayName(), name[2]);
+}
+
+void tst_qquickapplication::platformName()
+{
+    // Set up QML component
+    QQmlComponent component(&engine, testFileUrl("tst_platformname.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(item);
+    QQuickView view;
+    item->setParentItem(view.rootObject());
+
+    // Get native platform name
+    QString guiApplicationPlatformName = QGuiApplication::platformName();
+    QVERIFY(!guiApplicationPlatformName.isEmpty());
+
+    // Get platform name from QML component and verify it's same
+    QString qmlPlatformName = qvariant_cast<QString>(item->property("platformName"));
+    QCOMPARE(qmlPlatformName, guiApplicationPlatformName);
 }
 
 QTEST_MAIN(tst_qquickapplication)

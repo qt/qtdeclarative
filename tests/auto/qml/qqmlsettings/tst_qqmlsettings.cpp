@@ -55,25 +55,36 @@ private slots:
     void initial();
 };
 
+// ### Replace keyValueMap("foo", "bar") with QVariantMap({{"foo", "bar"}})
+// when C++11 uniform initialization can be used (not supported by MSVC 2013).
+static QVariantMap keyValueMap(const QString &key, const QString &value)
+{
+    QVariantMap var;
+    var.insert(key, value);
+    return var;
+}
+
 class CppObject : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
-    Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty NOTIFY boolPropertyChanged)
-    Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty NOTIFY realPropertyChanged)
-    Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty NOTIFY doublePropertyChanged)
-    Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
-    Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty NOTIFY urlPropertyChanged)
-    Q_PROPERTY(QVariant varProperty READ varProperty WRITE setVarProperty NOTIFY varPropertyChanged)
-    Q_PROPERTY(QVariantList intListProperty READ intListProperty WRITE setIntListProperty NOTIFY intListPropertyChanged)
-    Q_PROPERTY(QVariantList stringListProperty READ stringListProperty WRITE setStringListProperty NOTIFY stringListPropertyChanged)
-    Q_PROPERTY(QDate dateProperty READ dateProperty WRITE setDateProperty NOTIFY datePropertyChanged)
-    // QTBUG-32295: Q_PROPERTY(QTime timeProperty READ timeProperty WRITE setTimeProperty NOTIFY timePropertyChanged)
-    Q_PROPERTY(QSizeF sizeProperty READ sizeProperty WRITE setSizeProperty NOTIFY sizePropertyChanged)
-    Q_PROPERTY(QPointF pointProperty READ pointProperty WRITE setPointProperty NOTIFY pointPropertyChanged)
-    Q_PROPERTY(QRectF rectProperty READ rectProperty WRITE setRectProperty NOTIFY rectPropertyChanged)
-    Q_PROPERTY(QColor colorProperty READ colorProperty WRITE setColorProperty NOTIFY colorPropertyChanged)
-    Q_PROPERTY(QFont fontProperty READ fontProperty WRITE setFontProperty NOTIFY fontPropertyChanged)
+    Q_PROPERTY(int intProperty MEMBER m_intProperty NOTIFY intPropertyChanged)
+    Q_PROPERTY(bool boolProperty MEMBER m_boolProperty NOTIFY boolPropertyChanged)
+    Q_PROPERTY(qreal realProperty MEMBER m_realProperty NOTIFY realPropertyChanged)
+    Q_PROPERTY(double doubleProperty MEMBER m_doubleProperty NOTIFY doublePropertyChanged)
+    Q_PROPERTY(QString stringProperty MEMBER m_stringProperty NOTIFY stringPropertyChanged)
+    Q_PROPERTY(QUrl urlProperty MEMBER m_urlProperty NOTIFY urlPropertyChanged)
+    Q_PROPERTY(QVariant varProperty MEMBER m_varProperty NOTIFY varPropertyChanged)
+    Q_PROPERTY(QVariantMap objectProperty MEMBER m_objectProperty NOTIFY objectPropertyChanged)
+    Q_PROPERTY(QVariantList intListProperty MEMBER m_intListProperty NOTIFY intListPropertyChanged)
+    Q_PROPERTY(QVariantList stringListProperty MEMBER m_stringListProperty NOTIFY stringListPropertyChanged)
+    Q_PROPERTY(QVariantList objectListProperty MEMBER m_objectListProperty NOTIFY objectListPropertyChanged)
+    Q_PROPERTY(QDate dateProperty MEMBER m_dateProperty NOTIFY datePropertyChanged)
+    // QTBUG-32295: Q_PROPERTY(QTime timeProperty MEMBER m_timeProperty NOTIFY timePropertyChanged)
+    Q_PROPERTY(QSizeF sizeProperty MEMBER m_sizeProperty NOTIFY sizePropertyChanged)
+    Q_PROPERTY(QPointF pointProperty MEMBER m_pointProperty NOTIFY pointPropertyChanged)
+    Q_PROPERTY(QRectF rectProperty MEMBER m_rectProperty NOTIFY rectPropertyChanged)
+    Q_PROPERTY(QColor colorProperty MEMBER m_colorProperty NOTIFY colorPropertyChanged)
+    Q_PROPERTY(QFont fontProperty MEMBER m_fontProperty NOTIFY fontPropertyChanged)
 
 public:
     CppObject(QObject *parent = 0) : QObject(parent),
@@ -83,8 +94,10 @@ public:
         m_doubleProperty(3.45),
         m_stringProperty("foo"),
         m_urlProperty("http://www.qt-project.org"),
+        m_objectProperty(keyValueMap("foo", "bar")),
         m_intListProperty(QVariantList() << 1 << 2 << 3),
         m_stringListProperty(QVariantList() << "a" << "b" << "c"),
+        m_objectListProperty(QVariantList() << keyValueMap("a", "b") << keyValueMap("c", "d")),
         m_dateProperty(2000, 1, 2),
         // QTBUG-32295: m_timeProperty(12, 34, 56),
         m_sizeProperty(12, 34),
@@ -92,143 +105,6 @@ public:
         m_rectProperty(1, 2, 3, 4),
         m_colorProperty("red")
     {
-    }
-
-    int intProperty() const { return m_intProperty; }
-    bool boolProperty() const { return m_boolProperty; }
-    qreal realProperty() const { return m_realProperty; }
-    double doubleProperty() const { return m_doubleProperty; }
-    QString stringProperty() const { return m_stringProperty; }
-    QUrl urlProperty() const { return m_urlProperty; }
-    QVariant varProperty() const { return m_varProperty; }
-    QVariantList intListProperty() const { return m_intListProperty; }
-    QVariantList stringListProperty() const { return m_stringListProperty; }
-    QDate dateProperty() const { return m_dateProperty; }
-    QSizeF sizeProperty() const { return m_sizeProperty; }
-    QPointF pointProperty() const { return m_pointProperty; }
-    QRectF rectProperty() const { return m_rectProperty; }
-    QColor colorProperty() const { return m_colorProperty; }
-    QFont fontProperty() const { return m_fontProperty; }
-
-public slots:
-    void setIntProperty(int arg)
-    {
-        if (m_intProperty != arg) {
-            m_intProperty = arg;
-            emit intPropertyChanged(arg);
-        }
-    }
-
-    void setBoolProperty(bool arg)
-    {
-        if (m_boolProperty != arg) {
-            m_boolProperty = arg;
-            emit boolPropertyChanged(arg);
-        }
-    }
-
-    void setRealProperty(qreal arg)
-    {
-        if (m_realProperty != arg) {
-            m_realProperty = arg;
-            emit realPropertyChanged(arg);
-        }
-    }
-
-    void setDoubleProperty(double arg)
-    {
-        if (m_doubleProperty != arg) {
-            m_doubleProperty = arg;
-            emit doublePropertyChanged(arg);
-        }
-    }
-
-    void setStringProperty(const QString &arg)
-    {
-        if (m_stringProperty != arg) {
-            m_stringProperty = arg;
-            emit stringPropertyChanged(arg);
-        }
-    }
-
-    void setUrlProperty(const QUrl &arg)
-    {
-        if (m_urlProperty != arg) {
-            m_urlProperty = arg;
-            emit urlPropertyChanged(arg);
-        }
-    }
-
-    void setVarProperty(const QVariant &arg)
-    {
-        if (m_varProperty != arg) {
-            m_varProperty = arg;
-            emit varPropertyChanged(arg);
-        }
-    }
-
-    void setIntListProperty(const QVariantList &arg)
-    {
-        if (m_intListProperty != arg) {
-            m_intListProperty = arg;
-            emit intListPropertyChanged(arg);
-        }
-    }
-
-    void setStringListProperty(const QVariantList &arg)
-    {
-        if (m_stringListProperty != arg) {
-            m_stringListProperty = arg;
-            emit stringListPropertyChanged(arg);
-        }
-    }
-
-    void setDateProperty(const QDate &arg)
-    {
-        if (m_dateProperty != arg) {
-            m_dateProperty = arg;
-            emit datePropertyChanged(arg);
-        }
-    }
-
-    void setSizeProperty(const QSizeF &arg)
-    {
-        if (m_sizeProperty != arg) {
-            m_sizeProperty = arg;
-            emit sizePropertyChanged(arg);
-        }
-    }
-
-    void setPointProperty(const QPointF &arg)
-    {
-        if (m_pointProperty != arg) {
-            m_pointProperty = arg;
-            emit pointPropertyChanged(arg);
-        }
-    }
-
-    void setRectProperty(const QRectF &arg)
-    {
-        if (m_rectProperty != arg) {
-            m_rectProperty = arg;
-            emit rectPropertyChanged(arg);
-        }
-    }
-
-    void setColorProperty(const QColor &arg)
-    {
-        if (m_colorProperty != arg) {
-            m_colorProperty = arg;
-            emit colorPropertyChanged(arg);
-        }
-    }
-
-    void setFontProperty(const QFont &arg)
-    {
-        if (m_fontProperty != arg) {
-            m_fontProperty = arg;
-            emit fontPropertyChanged(arg);
-        }
     }
 
 signals:
@@ -239,8 +115,10 @@ signals:
     void stringPropertyChanged(const QString &arg);
     void urlPropertyChanged(const QUrl &arg);
     void varPropertyChanged(const QVariant &arg);
+    void objectPropertyChanged(const QVariantMap &arg);
     void intListPropertyChanged(const QVariantList &arg);
     void stringListPropertyChanged(const QVariantList &arg);
+    void objectListPropertyChanged(const QVariantList &arg);
     void datePropertyChanged(const QDate &arg);
     void sizePropertyChanged(const QSizeF &arg);
     void pointPropertyChanged(const QPointF &arg);
@@ -256,8 +134,10 @@ private:
     QString m_stringProperty;
     QUrl m_urlProperty;
     QVariant m_varProperty;
+    QVariantMap m_objectProperty;
     QVariantList m_intListProperty;
     QVariantList m_stringListProperty;
+    QVariantList m_objectListProperty;
     QDate m_dateProperty;
     QSizeF m_sizeProperty;
     QPointF m_pointProperty;
@@ -316,8 +196,10 @@ void tst_QQmlSettings::types()
     QCOMPARE(root->property("doubleProperty").toDouble(), static_cast<double>(0.0));
     QCOMPARE(root->property("stringProperty").toString(), QString());
     QCOMPARE(root->property("urlProperty").toUrl(), QUrl());
+    QCOMPARE(root->property("objectProperty").toMap(), QVariantMap());
     QCOMPARE(root->property("intListProperty").toList(), QVariantList());
     QCOMPARE(root->property("stringListProperty").toList(), QVariantList());
+    QCOMPARE(root->property("objectListProperty").toList(), QVariantList());
     QCOMPARE(root->property("dateProperty").toDate(), QDate());
     // QTBUG-32295: QCOMPARE(root->property("timeProperty").toDate(), QTime());
     QCOMPARE(root->property("sizeProperty").toSizeF(), QSizeF());
@@ -333,8 +215,10 @@ void tst_QQmlSettings::types()
     QCOMPARE(settings->property("doubleProperty").toDouble(), static_cast<double>(3.45));
     QCOMPARE(settings->property("stringProperty").toString(), QStringLiteral("foo"));
     QCOMPARE(settings->property("urlProperty").toUrl(), QUrl("http://www.qt-project.org"));
+    QCOMPARE(settings->property("objectProperty").toMap(), keyValueMap("foo","bar"));
     QCOMPARE(settings->property("intListProperty").toList(), QVariantList() << 1 << 2 << 3);
     QCOMPARE(settings->property("stringListProperty").toList(), QVariantList() << QStringLiteral("a") << QStringLiteral("b") << QStringLiteral("c"));
+    QCOMPARE(settings->property("objectListProperty").toList(), QVariantList() << keyValueMap("a", "b") << keyValueMap("c","d"));
     QCOMPARE(settings->property("dateProperty").toDate(), QDate(2000, 01, 02));
     // QTBUG-32295: QCOMPARE(settings->property("timeProperty").toDate(), QTime(12, 34, 56));
     QCOMPARE(settings->property("sizeProperty").toSizeF(), QSizeF(12, 34));
@@ -351,9 +235,11 @@ void tst_QQmlSettings::types()
     QCOMPARE(root->property("doubleProperty").toDouble(), static_cast<double>(3.45));
     QCOMPARE(root->property("stringProperty").toString(), QStringLiteral("foo"));
     QCOMPARE(root->property("urlProperty").toUrl(), QUrl("http://www.qt-project.org"));
+    QCOMPARE(root->property("objectProperty").toMap(), keyValueMap("foo","bar"));
     QCOMPARE(root->property("intListProperty").toList(), QVariantList() << 1 << 2 << 3);
     QCOMPARE(root->property("stringListProperty").toList(), QVariantList() << QStringLiteral("a") << QStringLiteral("b") << QStringLiteral("c"));
     QCOMPARE(root->property("dateProperty").toDate(), QDate(2000, 01, 02));
+    QCOMPARE(root->property("objectListProperty").toList(), QVariantList() << keyValueMap("a", "b") << keyValueMap("c","d"));
     // QTBUG-32295: QCOMPARE(root->property("timeProperty").toDate(), QTime(12, 34, 56));
     QCOMPARE(root->property("sizeProperty").toSizeF(), QSizeF(12, 34));
     QCOMPARE(root->property("pointProperty").toPointF(), QPointF(12, 34));
@@ -368,8 +254,10 @@ void tst_QQmlSettings::types()
     QVERIFY(root->setProperty("doubleProperty", static_cast<double>(6.78)));
     QVERIFY(root->setProperty("stringProperty", QStringLiteral("bar")));
     QVERIFY(root->setProperty("urlProperty", QUrl("https://codereview.qt-project.org")));
+    QVERIFY(root->setProperty("objectProperty", keyValueMap("bar", "baz")));
     QVERIFY(root->setProperty("intListProperty", QVariantList() << 4 << 5 << 6));
     QVERIFY(root->setProperty("stringListProperty", QVariantList() << QStringLiteral("d") << QStringLiteral("e") << QStringLiteral("f")));
+    QVERIFY(root->setProperty("objectListProperty", QVariantList() << keyValueMap("e", "f") << keyValueMap("g", "h")));
     QVERIFY(root->setProperty("dateProperty", QDate(2010, 02, 01)));
     // QTBUG-32295: QVERIFY(root->setProperty("timeProperty", QTime(6, 56, 34)));
     QVERIFY(root->setProperty("sizeProperty", QSizeF(56, 78)));
@@ -387,8 +275,10 @@ void tst_QQmlSettings::types()
     QTRY_COMPARE(settings->property("doubleProperty").toDouble(), static_cast<double>(6.78));
     QTRY_COMPARE(settings->property("stringProperty").toString(), QStringLiteral("bar"));
     QTRY_COMPARE(settings->property("urlProperty").toUrl(), QUrl("https://codereview.qt-project.org"));
+    QTRY_COMPARE(settings->property("objectProperty").toMap(), keyValueMap("bar", "baz"));
     QTRY_COMPARE(settings->property("intListProperty").toList(), QVariantList() << 4 << 5 << 6);
     QTRY_COMPARE(settings->property("stringListProperty").toList(), QVariantList() << QStringLiteral("d") << QStringLiteral("e") << QStringLiteral("f"));
+    QTRY_COMPARE(settings->property("objectListProperty").toList(), QVariantList() << keyValueMap("e", "f") << keyValueMap("g", "h"));
     QTRY_COMPARE(settings->property("dateProperty").toDate(), QDate(2010, 02, 01));
     // QTBUG-32295: QTRY_COMPARE(settings->property("timeProperty").toDate(), QTime(6, 56, 34));
     QTRY_COMPARE(settings->property("sizeProperty").toSizeF(), QSizeF(56, 78));
@@ -404,8 +294,10 @@ void tst_QQmlSettings::types()
     QTRY_COMPARE(qs.value("doubleProperty").toDouble(), static_cast<double>(6.78));
     QTRY_COMPARE(qs.value("stringProperty").toString(), QStringLiteral("bar"));
     QTRY_COMPARE(qs.value("urlProperty").toUrl(), QUrl("https://codereview.qt-project.org"));
+    QTRY_COMPARE(qs.value("objectProperty").toMap(), keyValueMap("bar", "baz"));
     QTRY_COMPARE(qs.value("intListProperty").toList(), QVariantList() << 4 << 5 << 6);
     QTRY_COMPARE(qs.value("stringListProperty").toList(), QVariantList() << QStringLiteral("d") << QStringLiteral("e") << QStringLiteral("f"));
+    QTRY_COMPARE(qs.value("objectListProperty").toList(), QVariantList() << keyValueMap("e", "f") << keyValueMap("g", "h"));
     QTRY_COMPARE(qs.value("dateProperty").toDate(), QDate(2010, 02, 01));
     // QTBUG-32295: QTRY_COMPARE(qs.value("timeProperty").toDate(), QTime(6, 56, 34));
     QTRY_COMPARE(qs.value("sizeProperty").toSizeF(), QSizeF(56, 78));
@@ -440,8 +332,10 @@ void tst_QQmlSettings::aliases()
     QCOMPARE(root->property("doubleProperty").toDouble(), static_cast<double>(3.45));
     QCOMPARE(root->property("stringProperty").toString(), QStringLiteral("foo"));
     QCOMPARE(root->property("urlProperty").toUrl(), QUrl("http://www.qt-project.org"));
+    QCOMPARE(root->property("objectProperty").toMap(), keyValueMap("foo","bar"));
     QCOMPARE(root->property("intListProperty").toList(), QVariantList() << 1 << 2 << 3);
     QCOMPARE(root->property("stringListProperty").toList(), QVariantList() << QStringLiteral("a") << QStringLiteral("b") << QStringLiteral("c"));
+    QCOMPARE(root->property("objectListProperty").toList(), QVariantList() << keyValueMap("a", "b") << keyValueMap("c","d"));
     QCOMPARE(root->property("dateProperty").toDate(), QDate(2000, 01, 02));
     // QTBUG-32295: QCOMPARE(root->property("timeProperty").toDate(), QTime(12, 34, 56));
     QCOMPARE(root->property("sizeProperty").toSizeF(), QSizeF(12, 34));
@@ -457,8 +351,10 @@ void tst_QQmlSettings::aliases()
     QCOMPARE(settings->property("doubleProperty").toDouble(), static_cast<double>(3.45));
     QCOMPARE(settings->property("stringProperty").toString(), QStringLiteral("foo"));
     QCOMPARE(settings->property("urlProperty").toUrl(), QUrl("http://www.qt-project.org"));
+    QCOMPARE(settings->property("objectProperty").toMap(), keyValueMap("foo","bar"));
     QCOMPARE(settings->property("intListProperty").toList(), QVariantList() << 1 << 2 << 3);
     QCOMPARE(settings->property("stringListProperty").toList(), QVariantList() << QStringLiteral("a") << QStringLiteral("b") << QStringLiteral("c"));
+    QCOMPARE(settings->property("objectListProperty").toList(), QVariantList() << keyValueMap("a", "b") << keyValueMap("c","d"));
     QCOMPARE(settings->property("dateProperty").toDate(), QDate(2000, 01, 02));
     // QTBUG-32295: QCOMPARE(settings->property("timeProperty").toDate(), QTime(12, 34, 56));
     QCOMPARE(settings->property("sizeProperty").toSizeF(), QSizeF(12, 34));
@@ -474,8 +370,10 @@ void tst_QQmlSettings::aliases()
     QVERIFY(settings->setProperty("doubleProperty", static_cast<double>(6.78)));
     QVERIFY(settings->setProperty("stringProperty", QStringLiteral("bar")));
     QVERIFY(settings->setProperty("urlProperty", QUrl("https://codereview.qt-project.org")));
+    QVERIFY(settings->setProperty("objectProperty", keyValueMap("bar", "baz")));
     QVERIFY(settings->setProperty("intListProperty", QVariantList() << 4 << 5 << 6));
     QVERIFY(settings->setProperty("stringListProperty", QVariantList() << QStringLiteral("d") << QStringLiteral("e") << QStringLiteral("f")));
+    QVERIFY(settings->setProperty("objectListProperty", QVariantList() << keyValueMap("e", "f") << keyValueMap("g", "h")));
     QVERIFY(settings->setProperty("dateProperty", QDate(2010, 02, 01)));
     // QTBUG-32295: QVERIFY(settings->setProperty("timeProperty", QTime(6, 56, 34)));
     QVERIFY(settings->setProperty("sizeProperty", QSizeF(56, 78)));
@@ -492,8 +390,10 @@ void tst_QQmlSettings::aliases()
     QTRY_COMPARE(qs.value("doubleProperty").toDouble(), static_cast<double>(6.78));
     QTRY_COMPARE(qs.value("stringProperty").toString(), QStringLiteral("bar"));
     QTRY_COMPARE(qs.value("urlProperty").toUrl(), QUrl("https://codereview.qt-project.org"));
+    QTRY_COMPARE(qs.value("objectProperty").toMap(), keyValueMap("bar", "baz"));
     QTRY_COMPARE(qs.value("intListProperty").toList(), QVariantList() << 4 << 5 << 6);
     QTRY_COMPARE(qs.value("stringListProperty").toList(), QVariantList() << QStringLiteral("d") << QStringLiteral("e") << QStringLiteral("f"));
+    QTRY_COMPARE(qs.value("objectListProperty").toList(), QVariantList() << keyValueMap("e", "f") << keyValueMap("g", "h"));
     QTRY_COMPARE(qs.value("dateProperty").toDate(), QDate(2010, 02, 01));
     // QTBUG-32295: QTRY_COMPARE(qs.value("timeProperty").toDate(), QTime(6, 56, 34));
     QTRY_COMPARE(qs.value("sizeProperty").toSizeF(), QSizeF(56, 78));

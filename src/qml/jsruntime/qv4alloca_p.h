@@ -51,15 +51,58 @@
 // We mean it.
 //
 
-#include <qglobal.h>
+#include <QtCore/private/qglobal_p.h>
 
-#if defined(Q_OS_WIN)
+#if QT_CONFIG(alloca_h)
+#  include <alloca.h>
+#elif QT_CONFIG(alloca_malloc_h)
 #  include <malloc.h>
-#  ifndef __GNUC__
+// This does not matter unless compiling in strict standard mode.
+#  ifdef Q_CC_MSVC
 #    define alloca _alloca
 #  endif
-#elif !defined(Q_OS_BSD4) || defined(Q_OS_DARWIN)
-#  include <alloca.h>
+#else
+#  include <stdlib.h>
+#endif
+
+// Define Q_ALLOCA_VAR macro to be used instead of #ifdeffing
+// the occurrences of alloca() in case it's not supported.
+// Q_ALLOCA_DECLARE and Q_ALLOCA_ASSIGN macros separate
+// memory allocation from the declaration and RAII.
+#define Q_ALLOCA_VAR(type, name, size) \
+    Q_ALLOCA_DECLARE(type, name); \
+    Q_ALLOCA_ASSIGN(type, name, size)
+
+#if QT_CONFIG(alloca)
+
+#define Q_ALLOCA_DECLARE(type, name) \
+    type *name = 0
+
+#define Q_ALLOCA_ASSIGN(type, name, size) \
+    name = static_cast<type*>(alloca(size))
+
+#else
+QT_BEGIN_NAMESPACE
+class Qt_AllocaWrapper
+{
+public:
+    Qt_AllocaWrapper() { m_data = 0; }
+    ~Qt_AllocaWrapper() { free(m_data); }
+    void *data() { return m_data; }
+    void allocate(int size) { m_data = malloc(size); }
+private:
+    void *m_data;
+};
+QT_END_NAMESPACE
+
+#define Q_ALLOCA_DECLARE(type, name) \
+    Qt_AllocaWrapper _qt_alloca_##name; \
+    type *name = nullptr
+
+#define Q_ALLOCA_ASSIGN(type, name, size) \
+    _qt_alloca_##name.allocate(size); \
+    name = static_cast<type*>(_qt_alloca_##name.data())
+
 #endif
 
 #endif

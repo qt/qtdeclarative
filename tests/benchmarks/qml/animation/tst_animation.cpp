@@ -41,8 +41,11 @@ public:
 
 private slots:
     void abstractAnimation();
+
+#if defined(QT_BUILD_INTERNAL)
     void bulkValueAnimator();
     void propertyUpdater();
+#endif
 
     void animationtree_qml();
 
@@ -75,6 +78,7 @@ void tst_animation::abstractAnimation()
     }
 }
 
+#if defined(QT_BUILD_INTERNAL)
 void tst_animation::bulkValueAnimator()
 {
     QBENCHMARK {
@@ -90,6 +94,7 @@ void tst_animation::propertyUpdater()
         delete updater;
     }
 }
+#endif // QT_BUILD_INTERNAL
 
 void tst_animation::animationtree_qml()
 {

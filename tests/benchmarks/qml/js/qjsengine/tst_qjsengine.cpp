@@ -324,7 +324,7 @@ void tst_QJSEngine::newQObject()
 {
     newEngine();
     QBENCHMARK {
-        (void)m_engine->newQObject(QCoreApplication::instance());
+        (void)m_engine->newQObject(new QObject);
     }
 }
 

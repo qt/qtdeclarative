@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -40,55 +40,33 @@
 
 import QtQuick 2.0
 
+
 Rectangle {
-    width: 350; height: 400
+    id:rect
+    width: 350
+    height: 400
 
-    function showRequestInfo(text) {
-        log.text = log.text + "\n" + text
-        console.log(text)
-    }
+    property alias button: button
+    property alias text: buttonText
+    property alias mouseArea: mouseArea
+    property alias msg: ttext
 
-    Text { id: log; anchors.fill: parent; anchors.margins: 10 }
+    Text { id: ttext; anchors.fill: parent; anchors.margins: 10 }
 
     Rectangle {
         id: button
-        anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.margins: 10
-        width: buttonText.width + 10; height: buttonText.height + 10
-        border.width: mouseArea.pressed ? 2 : 1
+        anchors.horizontalCenter: parent.horizontalCenter;
+        anchors.bottom: parent.bottom
+        anchors.margins: 10
+        width: buttonText.width + 10
+        height: buttonText.height + 10
         radius : 5; antialiasing: true
 
-        Text { id: buttonText; anchors.centerIn: parent; text: "Request data.xml" }
+        Text { id: buttonText; anchors.centerIn: parent }
 
         MouseArea {
             id: mouseArea
             anchors.fill: parent
-            onClicked: {
-                log.text = ""
-                console.log("\n")
-
-                var doc = new XMLHttpRequest();
-                doc.onreadystatechange = function() {
-                    if (doc.readyState == XMLHttpRequest.HEADERS_RECEIVED) {
-                        showRequestInfo("Headers -->");
-                        showRequestInfo(doc.getAllResponseHeaders ());
-                        showRequestInfo("Last modified -->");
-                        showRequestInfo(doc.getResponseHeader ("Last-Modified"));
-
-                    } else if (doc.readyState == XMLHttpRequest.DONE) {
-                        var a = doc.responseXML.documentElement;
-                        for (var ii = 0; ii < a.childNodes.length; ++ii) {
-                            showRequestInfo(a.childNodes[ii].nodeName);
-                        }
-                        showRequestInfo("Headers -->");
-                        showRequestInfo(doc.getAllResponseHeaders ());
-                        showRequestInfo("Last modified -->");
-                        showRequestInfo(doc.getResponseHeader ("Last-Modified"));
-                    }
-                }
-
-                doc.open("GET", "data.xml");
-                doc.send();
-            }
         }
     }
 }

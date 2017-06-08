@@ -69,8 +69,8 @@ private:
 
     bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
-    QVector<QQmlCompileError> recordError(const QV4::CompiledData::Location &location, const QString &description) const Q_REQUIRED_RESULT;
-    QVector<QQmlCompileError> recordError(const QQmlCompileError &error) const Q_REQUIRED_RESULT;
+    Q_REQUIRED_RESULT QVector<QQmlCompileError> recordError(const QV4::CompiledData::Location &location, const QString &description) const;
+    Q_REQUIRED_RESULT QVector<QQmlCompileError> recordError(const QQmlCompileError &error) const;
     QString stringAt(int index) const { return qmlUnit->stringAt(index); }
 
     QQmlEnginePrivate *enginePrivate;

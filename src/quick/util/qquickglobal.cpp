@@ -814,6 +814,11 @@ public:
         return false;
 #endif
     }
+
+    QString pluginName() const override
+    {
+        return QGuiApplication::platformName();
+    }
 };
 
 

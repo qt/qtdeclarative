@@ -118,6 +118,8 @@ struct ScriptFunction : FunctionObject {
         Index_Length
     };
     void init(QV4::ExecutionContext *scope, Function *function);
+
+    QV4::InternalClass *cachedClassForConstructor;
 };
 
 #define BoundFunctionMembers(class, Member) \
@@ -139,7 +141,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     };
     V4_OBJECT2(FunctionObject, Object)
     Q_MANAGED_TYPE(FunctionObject)
-    V4_INTERNALCLASS(functionClass)
+    V4_INTERNALCLASS(FunctionObject)
     V4_PROTOTYPE(functionPrototype)
     V4_NEEDS_DESTROY
 
@@ -192,20 +194,10 @@ struct FunctionPrototype: FunctionObject
     static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
-struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
-    V4_OBJECT2(OldBuiltinFunction, FunctionObject)
-
-    static void construct(const Managed *, Scope &scope, CallData *);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-};
-
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     V4_OBJECT2(BuiltinFunction, FunctionObject)
+    V4_INTERNALCLASS(BuiltinFunction)
 
-    static Heap::OldBuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
-    {
-        return scope->engine()->memoryManager->allocObject<OldBuiltinFunction>(scope, name, code);
-    }
     static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *))
     {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
@@ -238,12 +230,12 @@ void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index
 
 struct ScriptFunction : FunctionObject {
     V4_OBJECT2(ScriptFunction, FunctionObject)
-    V4_INTERNALCLASS(scriptFunctionClass)
+    V4_INTERNALCLASS(ScriptFunction)
 
     static void construct(const Managed *, Scope &scope, CallData *callData);
     static void call(const Managed *that, Scope &scope, CallData *callData);
 
-    Heap::Object *protoForConstructor() const;
+    InternalClass *classForConstructor() const;
 };
 
 

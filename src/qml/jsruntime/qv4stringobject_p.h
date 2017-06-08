@@ -86,7 +86,7 @@ struct StringCtor : FunctionObject {
 struct StringObject: Object {
     V4_OBJECT2(StringObject, Object)
     Q_MANAGED_TYPE(StringObject)
-    V4_INTERNALCLASS(stringClass)
+    V4_INTERNALCLASS(StringObject)
     V4_PROTOTYPE(stringPrototype)
 
     Heap::String *getIndex(uint index) const {
@@ -112,6 +112,7 @@ struct StringCtor: FunctionObject
 
 struct StringPrototype: StringObject
 {
+    V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
     static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
