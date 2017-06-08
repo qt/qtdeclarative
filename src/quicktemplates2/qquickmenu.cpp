@@ -197,10 +197,14 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
     // reorder the restacked items (eg. by a Repeater)
     Q_Q(QQuickMenu);
     QList<QQuickItem *> siblings = contentItem->childItems();
+
+    int to = 0;
     for (int i = 0; i < siblings.count(); ++i) {
         QQuickItem* sibling = siblings.at(i);
+        if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
+            continue;
         int index = contentModel->indexOf(sibling, nullptr);
-        q->moveItem(index, i);
+        q->moveItem(index, to++);
     }
 }
 
