@@ -182,6 +182,7 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
 
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickDefaultDial>(import, 2, 0, "DialImpl");
+    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
     qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
@@ -196,7 +197,6 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
-    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 3, "PaddedRectangle");
 }
 
 QString QtQuickControls2Plugin::name() const
