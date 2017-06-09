@@ -212,7 +212,6 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
     if (menuItem) {
         Q_Q(QQuickMenu);
         QQuickMenuItemPrivate::get(menuItem)->setMenu(q);
-        QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
@@ -235,7 +234,6 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
     if (menuItem) {
         QQuickMenuItemPrivate::get(menuItem)->setMenu(nullptr);
-        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::pressed, this, &QQuickMenuPrivate::onItemPressed);
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
@@ -353,14 +351,6 @@ bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
 {
     // keep the parent menu open when a cascading sub-menu (this menu) is interacted with
     return (cascade && parentMenu && contains(point)) || QQuickPopupPrivate::blockInput(item, point);
-}
-
-void QQuickMenuPrivate::onItemPressed()
-{
-    Q_Q(QQuickMenu);
-    QQuickItem *item = qobject_cast<QQuickItem*>(q->sender());
-    if (item)
-        item->forceActiveFocus();
 }
 
 void QQuickMenuPrivate::onItemHovered()

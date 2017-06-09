@@ -95,7 +95,6 @@ public:
 
     bool blockInput(QQuickItem *item, const QPointF &point) const override;
 
-    void onItemPressed();
     void onItemHovered();
     void onItemTriggered();
     void onItemActiveFocusChanged();
