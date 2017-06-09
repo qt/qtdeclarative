@@ -269,6 +269,15 @@ public:
         q->polish();
     }
 
+    void releaseVisibleItems() {
+        // make a copy and clear the visibleItems first to avoid destroyed
+        // items being accessed during the loop (QTBUG-61294)
+        const QList<FxViewItem *> oldVisible = visibleItems;
+        visibleItems.clear();
+        for (FxViewItem *item : oldVisible)
+            releaseItem(item);
+    }
+
     QPointer<QQmlInstanceModel> model;
     QVariant modelVariant;
     int itemCount;
