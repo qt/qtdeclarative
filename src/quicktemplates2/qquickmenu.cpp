@@ -763,6 +763,82 @@ QQuickMenu *QQuickMenu::takeMenu(int index)
 }
 
 /*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::addAction(Action action)
+
+    Adds \a action to the end of this menu.
+*/
+void QQuickMenu::addAction(QQuickAction *action)
+{
+    Q_D(QQuickMenu);
+    insertAction(d->contentModel->count(), action);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::insertAction(int index, Action action)
+
+    Inserts \a action at \a index. The index is within all items in the menu.
+*/
+void QQuickMenu::insertAction(int index, QQuickAction *action)
+{
+    Q_D(QQuickMenu);
+    if (!action)
+        return;
+
+    insertItem(index, d->createItem(action));
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::removeAction(Action action)
+
+    Removes and destroys the specified \a action.
+*/
+void QQuickMenu::removeAction(QQuickAction *action)
+{
+    Q_D(QQuickMenu);
+    if (!action)
+        return;
+
+    const int count = d->contentModel->count();
+    for (int i = 0; i < count; ++i) {
+        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(i));
+        if (!item || item->action() != action)
+            continue;
+
+        removeItem(item);
+        break;
+    }
+
+    action->deleteLater();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod Action QtQuick.Controls::Menu::takeAction(int index)
+
+    Removes and returns the action at \a index. The index is within all items in the menu.
+
+    \note The ownership of the action is transferred to the caller.
+*/
+QQuickAction *QQuickMenu::takeAction(int index)
+{
+    Q_D(QQuickMenu);
+    QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
+    if (!item)
+        return nullptr;
+
+    QQuickAction *action = item->action();
+    if (!action)
+        return nullptr;
+
+    d->removeItem(index, item);
+    item->deleteLater();
+    return action;
+}
+
+/*!
     \qmlproperty model QtQuick.Controls::Menu::contentModel
     \readonly
 

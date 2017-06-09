@@ -46,6 +46,7 @@
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
+#include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -511,25 +512,55 @@ void tst_menu::actions()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
 
-    QQuickMenuItem *menuItem1 = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
-    QVERIFY(menuItem1);
+    QPointer<QQuickMenuItem> menuItem1 = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(!menuItem1.isNull());
     QVERIFY(menuItem1->action());
     QCOMPARE(menuItem1->text(), "action1");
 
-    QQuickMenuItem *menuItem2 = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
-    QVERIFY(menuItem2);
+    QPointer<QQuickMenuItem> menuItem2 = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
+    QVERIFY(!menuItem2.isNull());
     QVERIFY(!menuItem2->action());
     QCOMPARE(menuItem2->text(), "menuitem2");
 
-    QQuickMenuItem *menuItem3 = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
-    QVERIFY(menuItem3);
+    QPointer<QQuickMenuItem> menuItem3 = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
+    QVERIFY(!menuItem3.isNull());
     QVERIFY(menuItem3->action());
     QCOMPARE(menuItem3->text(), "action3");
 
-    QQuickMenuItem *menuItem4 = qobject_cast<QQuickMenuItem *>(menu->itemAt(3));
-    QVERIFY(menuItem4);
+    QPointer<QQuickMenuItem> menuItem4 = qobject_cast<QQuickMenuItem *>(menu->itemAt(3));
+    QVERIFY(!menuItem4.isNull());
     QVERIFY(!menuItem4->action());
     QCOMPARE(menuItem4->text(), "menuitem4");
+
+    // takeAction(int) does not destroy the action, but does destroy the respective item
+    QPointer<QQuickAction> action1 = menuItem1->action();
+    QVERIFY(!action1.isNull());
+    QCOMPARE(menu->takeAction(0), action1.data());
+    QVERIFY(!menu->itemAt(3));
+    QCoreApplication::sendPostedEvents(action1, QEvent::DeferredDelete);
+    QVERIFY(!action1.isNull());
+    QCoreApplication::sendPostedEvents(menuItem1, QEvent::DeferredDelete);
+    QVERIFY(menuItem1.isNull());
+
+    // takeAction(int) does not destroy an item that doesn't have an action
+    QVERIFY(!menuItem2->subMenu());
+    QVERIFY(!menu->takeAction(0));
+    QCoreApplication::sendPostedEvents(menuItem2, QEvent::DeferredDelete);
+    QVERIFY(!menuItem2.isNull());
+
+    // addAction(Action) re-creates the respective item in the menu
+    menu->addAction(action1);
+    menuItem1 = qobject_cast<QQuickMenuItem *>(menu->itemAt(3));
+    QVERIFY(!menuItem1.isNull());
+    QCOMPARE(menuItem1->action(), action1.data());
+
+    // removeAction(Action) destroys both the action and the respective item
+    menu->removeAction(action1);
+    QVERIFY(!menu->itemAt(3));
+    QCoreApplication::sendPostedEvents(action1, QEvent::DeferredDelete);
+    QVERIFY(action1.isNull());
+    QCoreApplication::sendPostedEvents(menuItem1, QEvent::DeferredDelete);
+    QVERIFY(menuItem1.isNull());
 }
 
 void tst_menu::removeTakeItem()

@@ -55,6 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAction;
 class QQmlComponent;
 class QQuickMenuItem;
 class QQuickMenuPrivate;
@@ -85,6 +86,11 @@ public:
     Q_REVISION(3) Q_INVOKABLE void insertMenu(int index, QQuickMenu *menu);
     Q_REVISION(3) Q_INVOKABLE void removeMenu(QQuickMenu *menu);
     Q_REVISION(3) Q_INVOKABLE QQuickMenu *takeMenu(int index);
+
+    Q_REVISION(3) Q_INVOKABLE void addAction(QQuickAction *action);
+    Q_REVISION(3) Q_INVOKABLE void insertAction(int index, QQuickAction *action);
+    Q_REVISION(3) Q_INVOKABLE void removeAction(QQuickAction *action);
+    Q_REVISION(3) Q_INVOKABLE QQuickAction *takeAction(int index);
 
     QVariant contentModel() const;
     QQmlListProperty<QObject> contentData();
