@@ -38,6 +38,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtCore/QDebug>
+#include <QtGui/QCursor>
 
 bool QQuickVisualTestUtil::delegateVisible(QQuickItem *item)
 {
@@ -69,3 +70,11 @@ void QQuickVisualTestUtil::dumpTree(QQuickItem *parent, int depth)
     }
 }
 
+void QQuickVisualTestUtil::moveMouseAway(QQuickWindow *window)
+{
+#if QT_CONFIG(cursor) // Get the cursor out of the way.
+    QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
+#else
+    Q_UNUSED(window)
+#endif
+}

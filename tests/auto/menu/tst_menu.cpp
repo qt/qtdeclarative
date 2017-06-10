@@ -91,6 +91,7 @@ void tst_menu::mouse()
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     menu->open();
@@ -180,6 +181,7 @@ void tst_menu::contextMenuKeyboard()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
+    moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
@@ -439,6 +441,7 @@ void tst_menu::popup()
     QVERIFY(menuItem3);
 
 #if QT_CONFIG(cursor)
+    QPoint oldCursorPos = QCursor::pos();
     QPoint cursorPos = window->mapToGlobal(QPoint(11, 22));
     QCursor::setPos(cursorPos);
     QTRY_COMPARE(QCursor::pos(), cursorPos);
@@ -485,6 +488,9 @@ void tst_menu::popup()
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
         menu->close();
     }
+
+    QCursor::setPos(oldCursorPos);
+    QTRY_COMPARE(QCursor::pos(), oldCursorPos);
 #endif
 }
 
