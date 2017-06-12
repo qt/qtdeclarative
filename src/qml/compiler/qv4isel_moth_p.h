@@ -208,7 +208,6 @@ private:
     IR::Stmt *_currentStatement;
 
     QScopedPointer<CompilationUnit> compilationUnit;
-    QHash<IR::Function *, QByteArray> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

@@ -172,6 +172,9 @@ InstructionSelection::~InstructionSelection()
 void InstructionSelection::run(int functionIndex)
 {
     IR::Function *function = irModule->functions[functionIndex];
+    if (!function->code.isEmpty())
+        return;
+
     IR::BasicBlock *block = 0, *nextBlock = 0;
 
     QHash<IR::BasicBlock *, QVector<ptrdiff_t> > patches;
@@ -277,7 +280,7 @@ void InstructionSelection::run(int functionIndex)
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
 
-    codeRefs.insert(_function, squeezeCode());
+    _function->code = squeezeCode();
 
     qSwap(_currentStatement, cs);
     qSwap(_removableJumps, removableJumps);
@@ -298,7 +301,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backend
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
     for (IR::Function *irFunction : qAsConst(irModule->functions))
-        compilationUnit->codeRefs[i++] = codeRefs[irFunction];
+        compilationUnit->codeRefs[i++] = irFunction->code;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
     result.adopt(compilationUnit.take());
     return result;
