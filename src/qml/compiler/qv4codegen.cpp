@@ -2293,6 +2293,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     _block->JUMP(_exitBlock);
 
+//    _function->code = bytecodeGenerator->finalize();
+
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);

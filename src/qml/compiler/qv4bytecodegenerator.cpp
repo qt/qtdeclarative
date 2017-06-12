@@ -54,10 +54,14 @@ unsigned BytecodeGenerator::newTemp()
 
 QByteArray BytecodeGenerator::finalize()
 {
-    // ### prologue
-    // ## push(tempcount)
-    // content
     QByteArray code;
+
+    Instruction::Push push;
+    push.instructionType = Instr::Push;
+    push.value = quint32(function->tempCount);
+    code.append(reinterpret_cast<const char *>(&push), InstrMeta<Instr::Push>::Size);
+
+    // content
     for (const auto &i : qAsConst(instructions)) {
         code.append(reinterpret_cast<const char *>(&i.instr), i.size);
     }

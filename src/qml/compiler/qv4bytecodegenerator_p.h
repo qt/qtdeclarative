@@ -78,7 +78,8 @@ public:
     CodeRef addInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
-        InstrMeta<InstrT>::setData(genericInstr, data);
+        genericInstr.common.instructionType = static_cast<Instr::Type>(InstrT);
+        InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
         return { addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr) };
     }
 
