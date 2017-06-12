@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickrectangleextruder_p.h"
-#include <stdlib.h>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,21 +60,21 @@ QQuickRectangleExtruder::QQuickRectangleExtruder(QObject *parent) :
 QPointF QQuickRectangleExtruder::extrude(const QRectF &rect)
 {
     if (m_fill)
-        return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
-                       ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
-    int side = rand() % 4;
+        return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
+                       QRandomGenerator::getReal() * rect.height() + rect.y());
+    int side = QRandomGenerator::bounded(4);
     switch (side){//TODO: Doesn't this overlap the corners?
     case 0:
         return QPointF(rect.x(),
-                       ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+                       QRandomGenerator::getReal() * rect.height() + rect.y());
     case 1:
         return QPointF(rect.width() + rect.x(),
-                       ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+                       QRandomGenerator::getReal() * rect.height() + rect.y());
     case 2:
-        return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
+        return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
                        rect.y());
     default:
-        return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
+        return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
                        rect.height() + rect.y());
     }
 }

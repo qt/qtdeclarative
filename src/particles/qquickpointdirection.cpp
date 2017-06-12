@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickpointdirection_p.h"
-#include <stdlib.h>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,8 +78,8 @@ QQuickPointDirection::QQuickPointDirection(QObject *parent) :
 QPointF QQuickPointDirection::sample(const QPointF &)
 {
     QPointF ret;
-    ret.setX(m_x - m_xVariation + rand() / float(RAND_MAX) * m_xVariation * 2);
-    ret.setY(m_y - m_yVariation + rand() / float(RAND_MAX) * m_yVariation * 2);
+    ret.setX(m_x - m_xVariation + QRandomGenerator::getReal() * m_xVariation * 2);
+    ret.setY(m_y - m_yVariation + QRandomGenerator::getReal() * m_yVariation * 2);
     return ret;
 }
 

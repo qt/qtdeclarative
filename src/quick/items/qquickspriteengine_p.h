@@ -63,6 +63,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 #include <QQmlListProperty>
 #include <QImage>
 #include <QPair>
+#include <QRandomGenerator>
 #include <private/qquickpixmapcache_p.h>
 #include <private/qtquickglobal_p.h>
 
@@ -112,7 +113,7 @@ public:
     virtual int variedDuration() const
     {
         return qMax(qreal(0.0) , m_duration
-                + (m_durationVariation * ((qreal)qrand()/RAND_MAX) * 2)
+                + (m_durationVariation * QRandomGenerator::bounded(2.0))
                 - m_durationVariation);
     }
 

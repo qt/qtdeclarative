@@ -40,6 +40,7 @@
 #include "qquickparticleemitter_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <QRandomGenerator>
 QT_BEGIN_NAMESPACE
 
 
@@ -424,7 +425,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
             datum->t = pt;
             datum->lifeSpan =
                     (m_particleDuration
-                     + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
+                     + (QRandomGenerator::bounded((m_particleDurationVariation*2) + 1) - m_particleDurationVariation))
                     / 1000.0;
 
             if (datum->lifeSpan >= m_system->maxLife){
@@ -461,7 +462,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
             // Particle size
             float sizeVariation = -m_particleSizeVariation
-                    + rand() / float(RAND_MAX) * m_particleSizeVariation * 2;
+                    + QRandomGenerator::bounded(m_particleSizeVariation * 2);
 
             float size = qMax((qreal)0.0 , m_particleSize + sizeVariation);
             float endSize = qMax((qreal)0.0 , sizeAtEnd + sizeVariation);

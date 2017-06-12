@@ -40,6 +40,7 @@
 #include "qquicktrailemitter_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <QRandomGenerator>
 #include <cmath>
 QT_BEGIN_NAMESPACE
 
@@ -207,7 +208,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
                 datum->t = pt;
                 datum->lifeSpan =
                         (m_particleDuration
-                         + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
+                         + (QRandomGenerator::bounded((m_particleDurationVariation*2) + 1) - m_particleDurationVariation))
                         / 1000.0;
 
                 // Particle position
@@ -240,7 +241,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
                 // Particle size
                 float sizeVariation = -m_particleSizeVariation
-                        + rand() / float(RAND_MAX) * m_particleSizeVariation * 2;
+                        + QRandomGenerator::getReal() * m_particleSizeVariation * 2;
 
                 float size = qMax((qreal)0.0, m_particleSize + sizeVariation);
                 float endSize = qMax((qreal)0.0, sizeAtEnd + sizeVariation);

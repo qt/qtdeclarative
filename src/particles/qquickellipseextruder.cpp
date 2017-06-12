@@ -39,7 +39,7 @@
 
 #include "qquickellipseextruder_p.h"
 #include <qmath.h>
-#include <stdlib.h>
+#include <qrandom.h>
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -68,8 +68,8 @@ QQuickEllipseExtruder::QQuickEllipseExtruder(QObject *parent) :
 
 QPointF QQuickEllipseExtruder::extrude(const QRectF & r)
 {
-    qreal theta = ((qreal)rand()/RAND_MAX) * 6.2831853071795862;
-    qreal mag = m_fill ? ((qreal)rand()/RAND_MAX) : 1;
+    qreal theta = QRandomGenerator::bounded(2 * M_PI);
+    qreal mag = m_fill ? QRandomGenerator::getReal() : 1;
     return QPointF(r.x() + r.width()/2 + mag * (r.width()/2) * qCos(theta),
                    r.y() + r.height()/2 + mag * (r.height()/2) * qSin(theta));
 }

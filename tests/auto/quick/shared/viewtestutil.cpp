@@ -28,6 +28,7 @@
 
 #include "viewtestutil.h"
 
+#include <QtCore/QRandomGenerator>
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
@@ -356,7 +357,6 @@ QQuickViewTestUtil::StressTestModel::StressTestModel()
     t->setInterval(500);
     t->start();
 
-    qsrand(qHash(QDateTime::currentDateTime()));
     connect(t, &QTimer::timeout, this, &StressTestModel::updateModel);
 }
 
@@ -374,7 +374,7 @@ void QQuickViewTestUtil::StressTestModel::updateModel()
 {
     if (m_rowCount > 10) {
         for (int i = 0; i < 10; ++i) {
-            int rnum = qrand() % m_rowCount;
+            int rnum = QRandomGenerator::bounded(m_rowCount);
             beginRemoveRows(QModelIndex(), rnum, rnum);
             m_rowCount--;
             endRemoveRows();
@@ -382,7 +382,7 @@ void QQuickViewTestUtil::StressTestModel::updateModel()
     }
     if (m_rowCount < 20) {
         for (int i = 0; i < 10; ++i) {
-            int rnum = qrand() % m_rowCount;
+            int rnum = QRandomGenerator::bounded(m_rowCount);
             beginInsertRows(QModelIndex(), rnum, rnum);
             m_rowCount++;
             endInsertRows();
