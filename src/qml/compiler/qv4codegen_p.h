@@ -55,6 +55,7 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
+#include <private/qv4instr_moth_p.h>
 #include <QtCore/QStringList>
 #include <QStack>
 #ifndef V4_BOOTSTRAP
@@ -359,6 +360,9 @@ protected:
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
     QV4::IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
+
+    QV4::Moth::Param paramForName(const QString &name, bool isLhs = false);
+
     // Hook provided to implement QML lookup semantics
     virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
     virtual void beginFunctionBodyHook() {}

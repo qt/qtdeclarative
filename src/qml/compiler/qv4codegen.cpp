@@ -1577,6 +1577,53 @@ IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 
 }
 
+Moth::Param Codegen::paramForName(const QString &name, bool isLhs)
+{
+    uint scope = 0;
+    Environment *e = _variableEnvironment;
+    IR::Function *f = _function;
+
+    while (f && e->parent) {
+        if (f->insideWithOrCatch || (f->isNamedExpression && QStringRef(f->name) == name))
+            goto loadByName;
+
+        int index = e->findMember(name);
+        Q_ASSERT (index < e->members.size());
+        if (index != -1) {
+            if (isLhs && f->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval"))) {
+                // ### check that this converts correctly
+                // throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+            }
+            return Moth::Param::createScopedLocal(index, scope);
+        }
+        const int argIdx = f->indexOfArgument(QStringRef(&name));
+        if (argIdx != -1)
+            return Moth::Param::createArgument(argIdx, scope);
+
+        if (!e->isStrict && e->hasDirectEval)
+            goto loadByName;
+
+        ++scope;
+        e = e->parent;
+        f = f->outer;
+    }
+
+    // This hook allows implementing QML lookup semantics
+// ####
+//    if (IR::Expr *fallback = fallbackNameLookup(name, line, col))
+//        return fallback;
+
+// ###
+//    if (!e->parent && (!f || !f->insideWithOrCatch) && _variableEnvironment->compilationMode != EvalCode && e->compilationMode != QmlBinding)
+//        return _block->GLOBALNAME(name, line, col);
+
+    // global context or with. Lookup by name
+  loadByName:
+    int temp = _block->newTemp();
+    // ### emit bytecode to load name
+    return Moth::Param::createTemp(temp);
+}
+
 IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
 {
     Q_UNUSED(name)
