@@ -897,6 +897,8 @@ template<int N>
 struct InstrMeta {
 };
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wuninitialized")
 #define MOTH_INSTR_META_TEMPLATE(I, FMT) \
     template<> struct InstrMeta<(int)Instr::I> { \
         enum { Size = MOTH_INSTR_SIZE(I, FMT) }; \
@@ -910,6 +912,7 @@ struct InstrMeta {
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
+QT_WARNING_POP
 
 template<int InstrType>
 class InstrData : public InstrMeta<InstrType>::DataType
