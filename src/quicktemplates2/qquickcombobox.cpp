@@ -202,6 +202,10 @@ QString QQuickComboBoxDelegateModel::stringValue(int index, const QString &role)
             if (data.count() == 1 && role == QLatin1String("modelData"))
                 return data.first().toString();
             return data.value(role).toString();
+        } else if (object.userType() == QMetaType::QObjectStar) {
+            const QObject *data = object.value<QObject *>();
+            if (data && role != QLatin1String("modelData"))
+                return data->property(role.toUtf8()).toString();
         }
     }
     return QQmlDelegateModel::stringValue(index, role);
