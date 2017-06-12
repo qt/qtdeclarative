@@ -328,7 +328,9 @@ public:
 
     QQuickRangeSliderNode *pressedNode(int touchId = -1) const;
 
+#if QT_CONFIG(quicktemplates2_multitouch)
     bool acceptTouch(const QTouchEvent::TouchPoint &point) override;
+#endif
     void handlePress(const QPointF &point) override;
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;
@@ -397,6 +399,7 @@ QQuickRangeSliderNode *QQuickRangeSliderPrivate::pressedNode(int touchId) const
     return nullptr;
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickRangeSliderPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 {
     int firstId = QQuickRangeSliderNodePrivate::get(first)->touchId;
@@ -409,6 +412,7 @@ bool QQuickRangeSliderPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 
     return false;
 }
+#endif
 
 void QQuickRangeSliderPrivate::handlePress(const QPointF &point)
 {
@@ -1018,6 +1022,7 @@ void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
     QQuickControl::mouseMoveEvent(event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickRangeSlider::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickRangeSlider);
@@ -1055,6 +1060,7 @@ void QQuickRangeSlider::touchEvent(QTouchEvent *event)
         break;
     }
 }
+#endif
 
 void QQuickRangeSlider::mirrorChange()
 {

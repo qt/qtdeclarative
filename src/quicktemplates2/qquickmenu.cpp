@@ -806,6 +806,11 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
         item->forceActiveFocus();
 }
 
+QFont QQuickMenu::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::MenuFont);
+}
+
 QPalette QQuickMenu::defaultPalette() const
 {
     return QQuickControlPrivate::themePalette(QPlatformTheme::MenuPalette);

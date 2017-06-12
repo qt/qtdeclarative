@@ -428,9 +428,12 @@ QStringList QQuickStyle::availableStyles()
 
     const QStringList stylePaths = QQuickStylePrivate::stylePaths();
     for (const QString &path : stylePaths) {
-        QDir dir(path);
-        styles += dir.entryList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot);
-        styles.removeAll(QStringLiteral("designer"));
+        const QList<QFileInfo> entries = QDir(path).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QFileInfo &entry : entries) {
+            const QString name = entry.fileName();
+            if (!name.endsWith(QLatin1String(".dSYM")) && name != QLatin1String("designer"))
+                styles += name;
+        }
     }
     styles.prepend(QStringLiteral("Default"));
     styles.removeDuplicates();

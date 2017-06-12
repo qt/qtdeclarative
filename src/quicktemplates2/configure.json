@@ -7,6 +7,12 @@
             "purpose": "Provides support for hover effects.",
             "section": "Quick Templates 2",
             "output": [ "privateFeature" ]
+        },
+        "quicktemplates2-multitouch": {
+            "label": "Multi-touch support",
+            "purpose": "Provides support for multi-touch.",
+            "section": "Quick Templates 2",
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -14,7 +20,8 @@
         {
             "section": "Qt Quick Templates 2",
             "entries": [
-                "quicktemplates2-hover"
+                "quicktemplates2-hover",
+                "quicktemplates2-multitouch"
             ]
         }
     ]

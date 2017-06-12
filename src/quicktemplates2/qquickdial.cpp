@@ -666,6 +666,7 @@ void QQuickDial::mouseMoveEvent(QMouseEvent *event)
     QQuickControl::mouseMoveEvent(event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickDial::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickDial);
@@ -702,6 +703,7 @@ void QQuickDial::touchEvent(QTouchEvent *event)
         break;
     }
 }
+#endif
 
 #if QT_CONFIG(wheelevent)
 void QQuickDial::wheelEvent(QWheelEvent *event)

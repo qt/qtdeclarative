@@ -89,6 +89,8 @@ void QQuickPopupItemPrivate::resolveFont()
 {
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
         inheritFont(window->font());
+    else
+        inheritFont(themeFont(QPlatformTheme::SystemFont));
 }
 
 void QQuickPopupItemPrivate::resolvePalette()
@@ -237,6 +239,7 @@ void QQuickPopupItem::mouseUngrabEvent()
     d->popup->mouseUngrabEvent();
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickPopupItem::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPopupItem);
@@ -248,6 +251,7 @@ void QQuickPopupItem::touchUngrabEvent()
     Q_D(QQuickPopupItem);
     d->popup->touchUngrabEvent();
 }
+#endif
 
 #if QT_CONFIG(wheelevent)
 void QQuickPopupItem::wheelEvent(QWheelEvent *event)

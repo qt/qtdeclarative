@@ -101,6 +101,7 @@ Q_SIGNALS:
     Q_REVISION(3) void delegateChanged();
 
 protected:
+    QFont defaultFont() const override;
     QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)

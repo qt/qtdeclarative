@@ -276,6 +276,7 @@ bool QQuickOverlayPrivate::handleMouseEvent(QQuickItem *source, QMouseEvent *eve
     return false;
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *event, QQuickPopup *target)
 {
     bool handled = false;
@@ -309,6 +310,7 @@ bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *eve
 
     return handled;
 }
+#endif
 
 void QQuickOverlayPrivate::addPopup(QQuickPopup *popup)
 {
@@ -475,11 +477,13 @@ void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
     d->handleMouseEvent(this, event);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
 void QQuickOverlay::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickOverlay);
     d->handleTouchEvent(this, event);
 }
+#endif
 
 #if QT_CONFIG(wheelevent)
 void QQuickOverlay::wheelEvent(QWheelEvent *event)
@@ -516,10 +520,12 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
         // does not have background dimming.
         if (item == p->dimmer || !p->popupItem->isAncestorOf(item)) {
             switch (event->type()) {
+#if QT_CONFIG(quicktemplates2_multitouch)
             case QEvent::TouchBegin:
             case QEvent::TouchUpdate:
             case QEvent::TouchEnd:
                 return d->handleTouchEvent(item, static_cast<QTouchEvent *>(event), popup);
+#endif
 
             case QEvent::MouseButtonPress:
             case QEvent::MouseMove:
@@ -541,6 +547,7 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         return false;
 
     switch (event->type()) {
+#if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
@@ -567,10 +574,13 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         // touch events, to be able to close non-modal popups on release outside.
         event->accept();
         return true;
+#endif
 
     case QEvent::MouseButtonPress:
+#if QT_CONFIG(quicktemplates2_multitouch)
         // do not emit pressed() twice when mouse events have been synthesized from touch events
         if (static_cast<QMouseEvent *>(event)->source() == Qt::MouseEventNotSynthesized)
+#endif
             emit pressed();
 
         QQuickWindowPrivate::get(d->window)->handleMouseEvent(static_cast<QMouseEvent *>(event));
@@ -583,8 +593,10 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         return true;
 
     case QEvent::MouseButtonRelease:
+#if QT_CONFIG(quicktemplates2_multitouch)
         // do not emit released() twice when mouse events have been synthesized from touch events
         if (static_cast<QMouseEvent *>(event)->source() == Qt::MouseEventNotSynthesized)
+#endif
             emit released();
 
         // allow non-modal popups to close on mouse release outside

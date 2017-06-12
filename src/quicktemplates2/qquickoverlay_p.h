@@ -87,7 +87,9 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+#if QT_CONFIG(quicktemplates2_multitouch)
     void touchEvent(QTouchEvent *event) override;
+#endif
 #if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
 #endif
