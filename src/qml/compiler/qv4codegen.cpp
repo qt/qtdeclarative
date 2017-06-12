@@ -3166,3 +3166,42 @@ void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const Q
 }
 
 #endif // V4_BOOTSTRAP
+
+Moth::Param Codegen::Reference::load() const {
+    Q_ASSERT(type != Invalid);
+    if (type <= Argument)
+        return base;
+    tempIndex = codegen->_block->newTemp();
+    if (type == Name) {
+        // ### emit LoadName instruction
+    } else if (type == Member) {
+        // ### emit GetProperty instruction
+    } else if (type == Subscript) {
+        // ### emit LoadElement instruction
+    } else if (type == Const) {
+        // ### emit LoadConst instruction
+    } else {
+        Q_ASSERT(false);
+        Q_UNREACHABLE();
+    }
+    return QV4::Moth::Param::createTemp(tempIndex);
+}
+
+void Codegen::Reference::store(Moth::Param &p) const {
+    if (type <= Argument)
+        return;
+    if (type <= Argument) {
+        if (p == base)
+            return;
+        // ### emit move p -> base
+    } else if (type == Name) {
+        // ### emit StoreName p -> name
+    } else if (type == Member) {
+        // ### emit StoreProperty p -> base[name]
+    } else if (type == Subscript) {
+        // ### emit StoreElement p -> base[subscript]
+    } else {
+        Q_ASSERT(false);
+        Q_UNREACHABLE();
+    }
+}

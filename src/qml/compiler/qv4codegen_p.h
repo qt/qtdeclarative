@@ -138,6 +138,85 @@ protected:
         }
     };
 
+    struct Reference {
+        enum Type {
+            Invalid,
+            Temp,
+            Local,
+            Argument,
+            Name,
+            Member,
+            Subscript,
+            LastLValue = Subscript,
+            Const
+        } type = Invalid;
+
+        bool isLValue() const { return type <= LastLValue; }
+
+        Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
+        static Reference fromTemp(Codegen *cg, uint tempIndex) {
+            Reference r(cg, Temp);
+            r.base = QV4::Moth::Param::createTemp(tempIndex);
+            return r;
+        }
+        static Reference fromLocal(Codegen *cg, uint index, uint scope) {
+            Reference r(cg, Local);
+            r.base = QV4::Moth::Param::createScopedLocal(index, scope);
+            return r;
+        }
+        static Reference fromArgument(Codegen *cg, uint index, uint scope) {
+            Reference r(cg, Argument);
+            r.base = QV4::Moth::Param::createArgument(index, scope);
+            return r;
+        }
+        static Reference fromName(Codegen *cg, uint nameIndex) {
+            Reference r(cg, Name);
+            r.nameIndex = nameIndex;
+            return r;
+        }
+        static Reference fromMember(const Reference &baseRef, uint nameIndex) {
+            Reference r(baseRef.codegen, Member);
+            if (baseRef.type > Argument) {
+                r.base = baseRef.load();
+            } else {
+                r.base = baseRef.base;
+            }
+            r.nameIndex = nameIndex;
+            return r;
+        }
+        static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
+            Reference r(baseRef.codegen, Subscript);
+            if (baseRef.type > Argument) {
+                r.base = baseRef.load();
+            } else {
+                r.base = baseRef.base;
+            }
+            if (subscript.type > Argument) {
+                r.subscript = subscript.load();
+            } else {
+                r.subscript = subscript.base;
+            }
+            return r;
+        }
+        static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
+            Reference r(cg, Const);
+            r.constant = constant;
+            return r;
+        }
+
+        QV4::Moth::Param load() const;
+        void store(QV4::Moth::Param &p) const;
+
+        QV4::Moth::Param base;
+        union {
+            uint nameIndex;
+            QV4::Moth::Param subscript;
+            QV4::ReturnedValue constant;
+        };
+        mutable int tempIndex;
+        Codegen *codegen;
+    };
+
     struct Environment {
         Environment *parent;
 
