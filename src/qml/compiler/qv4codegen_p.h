@@ -361,6 +361,11 @@ protected:
 
     QV4::IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
 
+    QV4::Moth::Param paramForNull();
+    QV4::Moth::Param paramForUndefined();
+    QV4::Moth::Param paramForBool(bool b);
+    QV4::Moth::Param paramForNumber(double d);
+    QV4::Moth::Param paramForConst(QV4::ReturnedValue v);
     QV4::Moth::Param paramForName(const QString &name, bool isLhs = false);
 
     // Hook provided to implement QML lookup semantics
