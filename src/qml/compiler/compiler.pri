@@ -2,6 +2,7 @@ INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
 HEADERS += \
+    $$PWD/qv4bytecodegenerator_p.h \
     $$PWD/qv4compileddata_p.h \
     $$PWD/qv4compiler_p.h \
     $$PWD/qv4codegen_p.h \
@@ -14,6 +15,7 @@ HEADERS += \
     $$PWD/qv4jssimplifier_p.h
 
 SOURCES += \
+    $$PWD/qv4bytecodegenerator.cpp \
     $$PWD/qv4compileddata.cpp \
     $$PWD/qv4compiler.cpp \
     $$PWD/qv4codegen.cpp \

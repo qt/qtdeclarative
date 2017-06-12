@@ -51,6 +51,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4bytecodegenerator_p.h>
 
 #ifndef V4_BOOTSTRAP
 #include <qv4context_p.h>
@@ -2196,6 +2197,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->line = loc.startLine;
     function->column = loc.startColumn;
 
+    QV4::Moth::BytecodeGenerator bytecode(function);
+    QV4::Moth::BytecodeGenerator *savedBytecodeGenerator;
+    savedBytecodeGenerator = bytecodeGenerator;
+    bytecodeGenerator = &bytecode;
+
+
     if (function->usesArgumentsObject)
         _variableEnvironment->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
@@ -2295,6 +2302,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_loop, loop);
 
     leaveEnvironment();
+
+    bytecodeGenerator = savedBytecodeGenerator;
 
     return functionIndex;
 }
@@ -3124,33 +3133,6 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
     return _errors;
 }
 
-ptrdiff_t Codegen::addInstructionHelper(QV4::Moth::Instr::Type type, QV4::Moth::Instr &instr)
-{
-    Q_UNUSED(type);
-    Q_UNUSED(instr);
-    return 0;
-    // ###
-//    instr.common.instructionType = type;
-
-//    int instructionSize = Instr::size(type);
-//    if (_codeEnd - _codeNext < instructionSize) {
-//        int currSize = _codeEnd - _codeStart;
-//        uchar *newCode = new uchar[currSize * 2];
-//        ::memset(newCode + currSize, 0, currSize);
-//        ::memcpy(newCode, _codeStart, currSize);
-//        _codeNext = _codeNext - _codeStart + newCode;
-//        delete[] _codeStart;
-//        _codeStart = newCode;
-//        _codeEnd = _codeStart + currSize * 2;
-//    }
-
-//    ::memcpy(_codeNext, reinterpret_cast<const char *>(&instr), instructionSize);
-//    ptrdiff_t ptrOffset = _codeNext - _codeStart;
-//    _codeNext += instructionSize;
-
-//    return ptrOffset;
-}
-
 #ifndef V4_BOOTSTRAP
 
 QList<QQmlError> Codegen::qmlErrors() const
@@ -3198,12 +3180,16 @@ Moth::Param Codegen::Reference::load() const {
     Q_ASSERT(type != Invalid);
     if (type <= Argument)
         return base;
+    else if (type == Const)
+        return codegen->paramForConst(constant);
+
+    // need a temp to hold the value
+    tempIndex = codegen->bytecodeGenerator->newTemp();
     if (type == Name) {
-        tempIndex = codegen->_block->newTemp();
         QV4::Moth::Instruction::LoadName load;
         load.name = nameIndex;
         load.result = QV4::Moth::Param::createTemp(tempIndex);
-        codegen->addInstruction(load);
+        codegen->bytecodeGenerator->addInstruction(load);
     } else if (type == Member) {
 //        if (useFastLookups) {
 //            Instruction::GetLookup load;
@@ -3217,15 +3203,13 @@ Moth::Param Codegen::Reference::load() const {
         load.base = base;
         load.name = nameIndex;
         load.result = QV4::Moth::Param::createTemp(tempIndex);
-        codegen->addInstruction(load);
+        codegen->bytecodeGenerator->addInstruction(load);
     } else if (type == Subscript) {
         QV4::Moth::Instruction::LoadElement load;
         load.base = base;
         load.index = subscript;
         load.result = QV4::Moth::Param::createTemp(tempIndex);
-        codegen->addInstruction(load);
-    } else if (type == Const) {
-        return codegen->paramForConst(constant);
+        codegen->bytecodeGenerator->addInstruction(load);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();
@@ -3240,12 +3224,12 @@ void Codegen::Reference::store(Moth::Param &p) const {
         QV4::Moth::Instruction::Move move;
         move.source = p;
         move.result = base;
-        codegen->addInstruction(move);
+        codegen->bytecodeGenerator->addInstruction(move);
     } else if (type == Name) {
         QV4::Moth::Instruction::StoreName store;
         store.source = p;
         store.name = nameIndex;
-        codegen->addInstruction(store);
+        codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == Member) {
 //        if (useFastLookups) {
 //            Instruction::SetLookup store;
@@ -3259,13 +3243,13 @@ void Codegen::Reference::store(Moth::Param &p) const {
         store.base = base;
         store.name = nameIndex;
         store.source = p;
-        codegen->addInstruction(store);
+        codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == Subscript) {
         QV4::Moth::Instruction::StoreElement store;
         store.base = base;
         store.index = subscript;
         store.source = p;
-        codegen->addInstruction(store);
+        codegen->bytecodeGenerator->addInstruction(store);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();
