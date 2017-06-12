@@ -560,6 +560,14 @@ public:
     QList<QQmlError> qmlErrors() const;
 #endif
 
+    template<int InstrT>
+    ptrdiff_t addInstruction(const QV4::Moth::InstrData<InstrT> &data)
+    {
+        QV4::Moth::Instr genericInstr;
+        QV4::Moth::InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
+        return addInstructionHelper(static_cast<QV4::Moth::Instr::Type>(InstrT), genericInstr);
+    }
+
 protected:
     Result _expr;
     QString _property;
@@ -582,6 +590,9 @@ protected:
     bool _fileNameIsUrl;
     bool hasError;
     QList<QQmlJS::DiagnosticMessage> _errors;
+
+    ptrdiff_t addInstructionHelper(QV4::Moth::Instr::Type type, QV4::Moth::Instr &instr);
+
 
     class ScanFunctions: protected Visitor
     {

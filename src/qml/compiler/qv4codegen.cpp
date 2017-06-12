@@ -3124,6 +3124,33 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
     return _errors;
 }
 
+ptrdiff_t Codegen::addInstructionHelper(QV4::Moth::Instr::Type type, QV4::Moth::Instr &instr)
+{
+    Q_UNUSED(type);
+    Q_UNUSED(instr);
+    return 0;
+    // ###
+//    instr.common.instructionType = type;
+
+//    int instructionSize = Instr::size(type);
+//    if (_codeEnd - _codeNext < instructionSize) {
+//        int currSize = _codeEnd - _codeStart;
+//        uchar *newCode = new uchar[currSize * 2];
+//        ::memset(newCode + currSize, 0, currSize);
+//        ::memcpy(newCode, _codeStart, currSize);
+//        _codeNext = _codeNext - _codeStart + newCode;
+//        delete[] _codeStart;
+//        _codeStart = newCode;
+//        _codeEnd = _codeStart + currSize * 2;
+//    }
+
+//    ::memcpy(_codeNext, reinterpret_cast<const char *>(&instr), instructionSize);
+//    ptrdiff_t ptrOffset = _codeNext - _codeStart;
+//    _codeNext += instructionSize;
+
+//    return ptrOffset;
+}
+
 #ifndef V4_BOOTSTRAP
 
 QList<QQmlError> Codegen::qmlErrors() const
@@ -3171,15 +3198,34 @@ Moth::Param Codegen::Reference::load() const {
     Q_ASSERT(type != Invalid);
     if (type <= Argument)
         return base;
-    tempIndex = codegen->_block->newTemp();
     if (type == Name) {
-        // ### emit LoadName instruction
+        tempIndex = codegen->_block->newTemp();
+        QV4::Moth::Instruction::LoadName load;
+        load.name = nameIndex;
+        load.result = QV4::Moth::Param::createTemp(tempIndex);
+        codegen->addInstruction(load);
     } else if (type == Member) {
-        // ### emit GetProperty instruction
+//        if (useFastLookups) {
+//            Instruction::GetLookup load;
+//            load.base = getParam(base);
+//            load.index = registerGetterLookup(name);
+//            load.result = getResultParam(target);
+//            addInstruction(load);
+//            return;
+//        }
+        QV4::Moth::Instruction::LoadProperty load;
+        load.base = base;
+        load.name = nameIndex;
+        load.result = QV4::Moth::Param::createTemp(tempIndex);
+        codegen->addInstruction(load);
     } else if (type == Subscript) {
-        // ### emit LoadElement instruction
+        QV4::Moth::Instruction::LoadElement load;
+        load.base = base;
+        load.index = subscript;
+        load.result = QV4::Moth::Param::createTemp(tempIndex);
+        codegen->addInstruction(load);
     } else if (type == Const) {
-        // ### emit LoadConst instruction
+        return codegen->paramForConst(constant);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();
@@ -3188,18 +3234,38 @@ Moth::Param Codegen::Reference::load() const {
 }
 
 void Codegen::Reference::store(Moth::Param &p) const {
-    if (type <= Argument)
-        return;
     if (type <= Argument) {
         if (p == base)
             return;
-        // ### emit move p -> base
+        QV4::Moth::Instruction::Move move;
+        move.source = p;
+        move.result = base;
+        codegen->addInstruction(move);
     } else if (type == Name) {
-        // ### emit StoreName p -> name
+        QV4::Moth::Instruction::StoreName store;
+        store.source = p;
+        store.name = nameIndex;
+        codegen->addInstruction(store);
     } else if (type == Member) {
-        // ### emit StoreProperty p -> base[name]
+//        if (useFastLookups) {
+//            Instruction::SetLookup store;
+//            store.base = getParam(targetBase);
+//            store.index = registerSetterLookup(targetName);
+//            store.source = getParam(source);
+//            addInstruction(store);
+//            return;
+//        }
+        QV4::Moth::Instruction::StoreProperty store;
+        store.base = base;
+        store.name = nameIndex;
+        store.source = p;
+        codegen->addInstruction(store);
     } else if (type == Subscript) {
-        // ### emit StoreElement p -> base[subscript]
+        QV4::Moth::Instruction::StoreElement store;
+        store.base = base;
+        store.index = subscript;
+        store.source = p;
+        codegen->addInstruction(store);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();

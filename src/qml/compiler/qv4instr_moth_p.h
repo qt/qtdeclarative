@@ -919,6 +919,14 @@ class InstrData : public InstrMeta<InstrType>::DataType
 {
 };
 
+struct Instruction {
+#define MOTH_INSTR_DATA_TYPEDEF(I, FMT) typedef InstrData<Instr::I> I;
+FOR_EACH_MOTH_INSTR(MOTH_INSTR_DATA_TYPEDEF)
+#undef MOTH_INSTR_DATA_TYPEDEF
+private:
+    Instruction();
+};
+
 } // namespace Moth
 } // namespace QV4
 

@@ -156,14 +156,6 @@ protected:
 private:
     Param binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *target);
 
-    struct Instruction {
-#define MOTH_INSTR_DATA_TYPEDEF(I, FMT) typedef InstrData<Instr::I> I;
-    FOR_EACH_MOTH_INSTR(MOTH_INSTR_DATA_TYPEDEF)
-#undef MOTH_INSTR_DATA_TYPEDEF
-    private:
-        Instruction();
-    };
-
     Param getParam(IR::Expr *e);
 
     Param getResultParam(IR::Expr *result)
