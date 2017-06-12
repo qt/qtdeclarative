@@ -64,16 +64,21 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+namespace Compiler {
+struct JSUnitGenerator;
+}
+}
+
 namespace QQmlJS {
 namespace AST {
 class UiParameterList;
 }
 
-
 class Q_QML_PRIVATE_EXPORT Codegen: protected AST::Visitor
 {
 public:
-    Codegen(bool strict);
+    Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict);
 
     enum CompilationMode {
         GlobalCode,
@@ -483,6 +488,7 @@ protected:
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     QStack<QV4::IR::BasicBlock *> _exceptionHandlers;
+    QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     bool _strictMode;
 
     bool _fileNameIsUrl;
@@ -567,8 +573,8 @@ protected:
 class RuntimeCodegen : public Codegen
 {
 public:
-    RuntimeCodegen(QV4::ExecutionEngine *engine, bool strict)
-        : Codegen(strict)
+    RuntimeCodegen(QV4::ExecutionEngine *engine, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
+        : Codegen(jsUnitGenerator, strict)
         , engine(engine)
     {}
 

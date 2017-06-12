@@ -43,6 +43,8 @@
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsast_p.h>
 #include <wtf/MathExtras.h>
 #include <QCryptographicHash>
 
@@ -168,6 +170,23 @@ int QV4::Compiler::JSUnitGenerator::registerRegExp(QV4::IR::RegExp *regexp)
     return regexps.size() - 1;
 }
 
+int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::AST::RegExpLiteral *regexp)
+{
+    CompiledData::RegExp re;
+    re.stringIndex = registerString(regexp->pattern.toString());
+
+    re.flags = 0;
+    if (regexp->flags & QQmlJS::Lexer::RegExp_Global)
+        re.flags |= CompiledData::RegExp::RegExp_Global;
+    if (regexp->flags &  QQmlJS::Lexer::RegExp_IgnoreCase)
+        re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
+    if (regexp->flags &  QQmlJS::Lexer::RegExp_Multiline)
+        re.flags |= CompiledData::RegExp::RegExp_Multiline;
+
+    regexps.append(re);
+    return regexps.size() - 1;
+}
+
 int QV4::Compiler::JSUnitGenerator::registerConstant(QV4::ReturnedValue v)
 {
     int idx = constants.indexOf(v);
@@ -205,6 +224,22 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
         if (!isData)
             it = it->next;
     }
+
+    return jsClassOffsets.size() - 1;
+}
+
+int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, CompiledData::JSClassMember *members)
+{
+    const int size = CompiledData::JSClass::calculateSize(count);
+    jsClassOffsets.append(jsClassData.size());
+    const int oldSize = jsClassData.size();
+    jsClassData.resize(jsClassData.size() + size);
+    memset(jsClassData.data() + oldSize, 0, size);
+
+    CompiledData::JSClass *jsClass = reinterpret_cast<CompiledData::JSClass*>(jsClassData.data() + oldSize);
+    jsClass->nMembers = count;
+    CompiledData::JSClassMember *jsClassMembers = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
+    memcpy(jsClassMembers, members, sizeof(CompiledData::JSClassMember)*count);
 
     return jsClassOffsets.size() - 1;
 }

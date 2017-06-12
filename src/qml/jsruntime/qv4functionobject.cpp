@@ -221,10 +221,10 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
 
     IR::Module module(scope.engine->debugger() != 0);
 
-    QQmlJS::RuntimeCodegen cg(scope.engine, f->strictMode());
+    Compiler::JSUnitGenerator jsGenerator(&module);
+    QQmlJS::RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
-    Compiler::JSUnitGenerator jsGenerator(&module);
     QScopedPointer<EvalInstructionSelection> isel(scope.engine->iselFactory->create(QQmlEnginePrivate::get(scope.engine), scope.engine->executableAllocator, &module, &jsGenerator));
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = isel->compile();
     Function *vmf = compilationUnit->linkToEngine(scope.engine);

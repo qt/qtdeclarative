@@ -149,7 +149,10 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
     annotateListElements(&irDocument);
 
     {
-        QmlIR::JSCodeGen v4CodeGen(/*empty input file name*/QString(), irDocument.code, &irDocument.jsModule, &irDocument.jsParserEngine, irDocument.program, /*import cache*/0, &irDocument.jsGenerator.stringTable);
+        QmlIR::JSCodeGen v4CodeGen(/*empty input file name*/QString(), irDocument.code,
+                                   &irDocument.jsGenerator, &irDocument.jsModule,
+                                   &irDocument.jsParserEngine, irDocument.program,
+                                   /*import cache*/0, &irDocument.jsGenerator.stringTable);
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
@@ -253,7 +256,10 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
     }
 
     {
-        QmlIR::JSCodeGen v4CodeGen(inputFileName, irDocument.code, &irDocument.jsModule, &irDocument.jsParserEngine, irDocument.program, /*import cache*/0, &irDocument.jsGenerator.stringTable);
+        QmlIR::JSCodeGen v4CodeGen(inputFileName, irDocument.code, &irDocument.jsGenerator,
+                                   &irDocument.jsModule, &irDocument.jsParserEngine,
+                                   irDocument.program, /*import cache*/0,
+                                   &irDocument.jsGenerator.stringTable);
         v4CodeGen.generateFromProgram(/*empty input file name*/QString(), sourceCode, program, &irDocument.jsModule, QQmlJS::Codegen::GlobalCode);
         QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
         if (!jsErrors.isEmpty()) {

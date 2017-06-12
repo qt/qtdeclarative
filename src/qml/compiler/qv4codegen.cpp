@@ -484,7 +484,7 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
 }
 
 
-Codegen::Codegen(bool strict)
+Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(0)
     , _function(0)
     , _block(0)
@@ -494,6 +494,7 @@ Codegen::Codegen(bool strict)
     , _loop(0)
     , _labelledStatement(0)
     , _scopeAndFinally(0)
+    , jsUnitGenerator(jsUnitGenerator)
     , _strictMode(strict)
     , _fileNameIsUrl(false)
     , hasError(false)

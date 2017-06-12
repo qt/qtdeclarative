@@ -583,7 +583,7 @@ struct Q_QML_EXPORT PropertyResolver
 
 struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
-    JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule,
+    JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::IR::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
               const QV4::Compiler::StringTableGenerator *stringPool);
 

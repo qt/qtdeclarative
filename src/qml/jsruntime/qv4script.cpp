@@ -126,12 +126,12 @@ void Script::parse()
             }
         }
 
-        RuntimeCodegen cg(v4, strictMode);
+        QV4::Compiler::JSUnitGenerator jsGenerator(&module);
+        RuntimeCodegen cg(v4, &jsGenerator, strictMode);
         cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
         if (v4->hasException)
             return;
 
-        QV4::Compiler::JSUnitGenerator jsGenerator(&module);
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
         if (inheritContext)
             isel->setUseFastLookups(false);
@@ -230,7 +230,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
         return 0;
     }
 
-    QQmlJS::Codegen cg(/*strict mode*/false);
+    QQmlJS::Codegen cg(unitGenerator, /*strict mode*/false);
     cg.generateFromProgram(url.toString(), source, program, module, QQmlJS::Codegen::EvalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {

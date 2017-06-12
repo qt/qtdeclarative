@@ -1290,6 +1290,7 @@ struct Function {
     QList<const QString *> locals;
     QVector<Function *> nestedFunctions;
     Function *outer;
+    QByteArray code;
 
     int insideWithOrCatch;
 

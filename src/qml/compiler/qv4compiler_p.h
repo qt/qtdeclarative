@@ -103,10 +103,12 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     uint registerIndexedSetterLookup();
 
     int registerRegExp(IR::RegExp *regexp);
+    int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 
     int registerConstant(ReturnedValue v);
 
     int registerJSClass(int count, IR::ExprList *args);
+    int registerJSClass(int count, CompiledData::JSClassMember *members);
 
     enum GeneratorOption {
         GenerateWithStringTable,
