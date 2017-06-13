@@ -2354,14 +2354,23 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     unsigned returnAddress = entryBlock->newTemp();
 
-    entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
-    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
+//###    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
     qSwap(_scopeAndFinally, scopeAndFinally);
+
+    {
+        auto retTemp = Reference::fromTemp(this, _returnAddress);
+        retTemp.store(Reference::fromConst(this, Encode::undefined()));
+    }
+
+    { // reserve space for outgoing call arguments
+        _function->tempCount += _variableEnvironment->maxNumberOfArguments;
+        _function->currentTemp = _function->tempCount;
+    }
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
@@ -2390,11 +2399,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         // make sure we convert this to an object
         _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_convert_this_to_object,
                 ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
-    }
-
-    { // reserve space for outgoing call arguments
-        _function->tempCount += _variableEnvironment->maxNumberOfArguments;
-        _function->currentTemp = _function->tempCount;
     }
 
     beginFunctionBodyHook();
@@ -3349,7 +3353,9 @@ void Codegen::Reference::store(const Reference &r) const
     if (r.type == Const) {
         QV4::Moth::Instruction::MoveConst move;
         move.source = r.constant;
-        move.result = base;
+        move.result = b;
+        codegen->bytecodeGenerator->addInstruction(move);
+        return;
     }
     Moth::Param x = r.asRValue();
     Q_ASSERT(base != x);
