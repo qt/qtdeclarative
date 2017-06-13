@@ -56,7 +56,13 @@ public:
         : function(function) {}
 
     struct Label {
+        BytecodeGenerator *generator;
         int index;
+
+        void link() {
+            Q_ASSERT(generator->labels[index] == -1);
+            generator->labels[index] = generator->instructions.size();
+        }
     };
 
     struct Jump {
@@ -74,13 +80,21 @@ public:
             link(generator->label());
         }
         void link(Label l) {
-            Q_ASSERT(generator->jumps[index].linkedInstruction == -1);
-            generator->jumps[index].linkedInstruction = l.index;
+            Q_ASSERT(generator->jumps[index].linkedLabel == -1);
+            generator->jumps[index].linkedLabel = l.index;
         }
     };
 
     Label label() {
-        return { instructions.size() };
+        Label l = { this, labels.size() };
+        labels.append(instructions.size());
+        return l;
+    }
+
+    Label newLabel() {
+        Label l = { this, labels.size() };
+        labels.append(-1);
+        return l;
     }
 
     template<int InstrT>
@@ -145,7 +159,7 @@ private:
     struct JumpData {
         int instructionIndex;
         int offset;
-        int linkedInstruction = -1;
+        int linkedLabel = -1;
     };
 
     struct I {
@@ -154,6 +168,7 @@ private:
     };
 
     QVector<I> instructions;
+    QVector<int> labels;
     QVector<JumpData> jumps;
     IR::Function *function; // ### remove me at some point
 };

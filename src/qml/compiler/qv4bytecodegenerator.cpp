@@ -72,13 +72,15 @@ QByteArray BytecodeGenerator::finalize()
     // resolve jumps
 //    qDebug() << "resolving jumps";
     for (const auto &j : jumps) {
-        Q_ASSERT(j.linkedInstruction != -1);
+        Q_ASSERT(j.linkedLabel != -1);
+        int linkedInstruction = labels.at(j.linkedLabel);
+        Q_ASSERT(linkedInstruction != -1);
         int offset = instructionOffsets.at(j.instructionIndex) + j.offset;
 //        qDebug() << "offset data is at" << offset;
         char *c = code.data() + offset;
-        ptrdiff_t linkedInstruction = instructionOffsets.at(j.linkedInstruction) - offset;
-//        qDebug() << "linked instruction" << j.linkedInstruction << "at " << instructionOffsets.at(j.linkedInstruction);
-        memcpy(c, &linkedInstruction, sizeof(ptrdiff_t));
+        ptrdiff_t linkedInstructionOffset = instructionOffsets.at(linkedInstruction) - offset;
+//        qDebug() << "linked instruction" << linkedInstruction << "at " << instructionOffsets.at(linkedInstruction);
+        memcpy(c, &linkedInstructionOffset, sizeof(ptrdiff_t));
     }
 
     return code;
