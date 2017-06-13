@@ -1505,7 +1505,7 @@ bool Codegen::visit(FalseLiteral *)
     if (_expr.accept(cx)) {
         _block->JUMP(_expr.iffalse);
     } else {
-        _expr.code = _block->CONST(IR::BoolType, 0);
+        _expr.result = Reference::fromConst(this, QV4::Encode(false));
     }
     return false;
 }
@@ -2092,7 +2092,7 @@ bool Codegen::visit(TrueLiteral *)
     if (_expr.accept(cx)) {
         _block->JUMP(_expr.iftrue);
     } else {
-        _expr.code = _block->CONST(IR::BoolType, 1);
+        _expr.result = Reference::fromConst(this, QV4::Encode(false));
     }
     return false;
 }
