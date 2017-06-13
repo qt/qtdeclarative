@@ -62,8 +62,20 @@ QByteArray BytecodeGenerator::finalize()
     code.append(reinterpret_cast<const char *>(&push), InstrMeta<Instr::Push>::Size);
 
     // content
+    QVector<int> instructionOffsets;
+    instructionOffsets.reserve(instructions.size());
     for (const auto &i : qAsConst(instructions)) {
+        instructionOffsets.append(code.size());
         code.append(reinterpret_cast<const char *>(&i.instr), i.size);
+    }
+
+    // resolve jumps
+    for (const auto &j : jumps) {
+        Q_ASSERT(j.linkedInstruction != -1);
+        int offset = instructionOffsets.at(j.instructionIndex) + j.offset;
+        char *c = code.data() + offset;
+        int linkedInstruction = instructionOffsets.at(j.linkedInstruction) - offset;
+        memcpy(c, &linkedInstruction, sizeof(int));
     }
 
     return code;

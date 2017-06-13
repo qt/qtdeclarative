@@ -55,32 +55,61 @@ public:
     BytecodeGenerator(IR::Function *function)
         : function(function) {}
 
-    struct CodeRef {
-        int instructionIndex;
+    struct Label {
+        int index;
     };
 
-    struct Label {
-        void link(CodeRef r) {
-            linkedInstructions.append(r.instructionIndex);
+    struct Jump {
+        Jump(BytecodeGenerator *generator, int instruction, int offset)
+            : generator(generator),
+              index(generator->jumps.size())
+        {
+            generator->jumps.append({ instruction, offset, -1 });
         }
 
+        BytecodeGenerator *generator;
         int index;
-        QVector<int> linkedInstructions;
+
+        void link() {
+            link(generator->label());
+        }
+        void link(Label l) {
+            Q_ASSERT(generator->jumps[index].linkedInstruction == -1);
+            generator->jumps[index].linkedInstruction = l.index;
+        }
     };
 
     Label label() {
-        Label l;
-        l.index = labels.size();
-        return l;
+        return { instructions.size() };
     }
 
     template<int InstrT>
-    CodeRef addInstruction(const InstrData<InstrT> &data)
+    void addInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
         genericInstr.common.instructionType = static_cast<Instr::Type>(InstrT);
         InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
-        return { addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr) };
+        addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr);
+    }
+
+    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::Jump &data)
+    {
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::SetExceptionHandler &data)
+    {
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::JumpEq &data)
+    {
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::JumpNe &data)
+    {
+        return addJumpInstruction(data);
     }
 
     unsigned newTemp();
@@ -89,11 +118,28 @@ public:
     QByteArray finalize();
 
 private:
+    friend struct Jump;
+
+    template<int InstrT>
+    Jump addJumpInstruction(const InstrData<InstrT> &data)
+    {
+        Instr genericInstr;
+        genericInstr.common.instructionType = static_cast<Instr::Type>(InstrT);
+        InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
+        return Jump(this, addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr), offsetof(InstrData<InstrT>, offset));
+    }
+
     int addInstructionHelper(uint size, const Instr &i) {
         int pos = instructions.size();
         instructions.append({size, i});
         return pos;
     }
+
+    struct JumpData {
+        int instructionIndex;
+        int offset;
+        int linkedInstruction = -1;
+    };
 
     struct I {
         uint size;
@@ -101,8 +147,7 @@ private:
     };
 
     QVector<I> instructions;
-
-    QVector<Label> labels;
+    QVector<JumpData> jumps;
     IR::Function *function; // ### remove me at some point
 };
 
