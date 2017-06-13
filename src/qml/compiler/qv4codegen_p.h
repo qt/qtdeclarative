@@ -185,6 +185,7 @@ protected:
         }
 
         void store(const Reference &r) const;
+        void storeConsume(Reference &r) const;
 
         QV4::Moth::Param asRValue() const;
         QV4::Moth::Param asLValue() const;
@@ -200,6 +201,7 @@ protected:
         mutable int tempIndex = -1;
         mutable bool needsWriteBack = false;
         Codegen *codegen;
+
     };
 
     enum Format { ex, cx, nx };

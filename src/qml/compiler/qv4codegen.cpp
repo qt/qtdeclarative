@@ -955,7 +955,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     if (hasError)
         return;
     Reference lhs = referenceForName(ast->name.toString(), true);
-    lhs.store(rhs);
+    lhs.storeConsume(rhs);
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -1322,8 +1322,8 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
         }
 
-        left.store(right);
-        _expr.result = right;
+        left.storeConsume(right);
+        _expr.result = left;
         break;
     }
 
@@ -2837,7 +2837,7 @@ bool Codegen::visit(ReturnStatement *ast)
     }
     if (ast->expression) {
         Reference expr = expression(ast->expression);
-        Reference::fromTemp(this, _returnAddress).store(expr);
+        Reference::fromTemp(this, _returnAddress).storeConsume(expr);
     }
 
     // Since we're leaving, don't let any finally statements we emit as part of the unwinding
@@ -3333,6 +3333,26 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     }
 }
 
+void Codegen::Reference::storeConsume(Reference &r) const
+{
+    if (*this == r)
+        return;
+
+    writeBack();
+
+    if (!isSimple() && !r.isSimple()) {
+        r.asRValue(); // trigger load
+
+        Q_ASSERT(r.tempIndex >= 0);
+        tempIndex = r.tempIndex;
+        r.tempIndex = -1;
+        needsWriteBack = true;
+        return;
+    }
+
+    store(r);
+}
+
 void Codegen::Reference::store(const Reference &r) const
 {
     Q_ASSERT(type != Const);
@@ -3346,6 +3366,13 @@ void Codegen::Reference::store(const Reference &r) const
     if (!isSimple()) {
         if (tempIndex < 0)
             tempIndex = codegen->bytecodeGenerator->newTemp();
+        if (!r.isSimple() && r.tempIndex == -1) {
+            r.tempIndex = tempIndex;
+            r.asRValue(); // trigger load
+            r.tempIndex = -1;
+            needsWriteBack = true;
+            return;
+        }
         b = Moth::Param::createTemp(tempIndex);
         needsWriteBack = true;
     }
