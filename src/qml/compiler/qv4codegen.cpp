@@ -715,8 +715,8 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
     auto dest = Reference::fromTemp(this, _block->newTemp());
 
     QV4::Moth::Instruction::UMinus uminus;
-    uminus.source = expr.load();
-    uminus.result = dest.base;
+    uminus.source = expr.asRValue();
+    uminus.result = dest.asLValue();
     bytecodeGenerator->addInstruction(uminus);
 
     return dest;
@@ -889,7 +889,7 @@ void Codegen::statement(ExpressionNode *ast)
         }
 
         if (r.result.isValid() && !r.result.isTempLocalArg())
-            r.result.load();
+            r.result.asRValue(); // triggers side effects
     }
 }
 
@@ -970,7 +970,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     if (hasError)
         return;
     Reference lhs = referenceForName(ast->name.toString(), true);
-    lhs.store(rhs.load());
+    lhs.store(rhs);
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -1351,15 +1351,8 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
         }
 
-        if (!right.isTempLocalArg()) {
-            Reference tmp = Reference::fromTemp(this, _block->newTemp());
-            tmp.store(right.load());
-            _expr.result.store(tmp.base);
-            _expr.result = tmp;
-        } else {
-            left.store(right.load());
-            _expr.result = right;
-        }
+        left.store(right);
+        _expr.result = right;
         break;
     }
 
@@ -1437,14 +1430,14 @@ bool Codegen::visit(BinaryExpression *ast)
             //### TODO: try constant folding
         }
 
-        auto leftParam = left.load();
+        auto leftParam = left.asRValue();
 
         Reference right = expression(ast->right);
         if (hasError)
             return false;
 
         _expr.result = Reference::fromTemp(this, _block->newTemp());
-        binopHelper(IR::binaryOperator(ast->op), leftParam, right.load(), _expr.result.base);
+        binopHelper(IR::binaryOperator(ast->op), leftParam, right.asRValue(), _expr.result.base);
 
         break;
     }
@@ -2877,7 +2870,7 @@ bool Codegen::visit(ReturnStatement *ast)
     }
     if (ast->expression) {
         Reference expr = expression(ast->expression);
-        Reference::fromTemp(this, _returnAddress).store(expr.load());
+        Reference::fromTemp(this, _returnAddress).store(expr);
     }
 
     // Since we're leaving, don't let any finally statements we emit as part of the unwinding
@@ -3346,19 +3339,84 @@ void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const Q
 
 #endif // V4_BOOTSTRAP
 
-Moth::Param Codegen::Reference::load() const {
+Codegen::Reference::~Reference()
+{
+    writeBack();
+}
+
+bool Codegen::Reference::operator==(const Codegen::Reference &other) const
+{
+    if (type != other.type)
+        return false;
+    switch (type) {
+    case Invalid:
+        return true;
+    case Temp:
+    case Local:
+    case Argument:
+        return base == other.base;
+    case Name:
+        return nameIndex == other.nameIndex;
+    case Member:
+        return base == other.base && nameIndex == other.nameIndex;
+    case Subscript:
+        return base == other.base && subscript == other.subscript;
+    case Const:
+        return constant == other.constant;
+    }
+}
+
+void Codegen::Reference::store(const Reference &r) const
+{
+    Q_ASSERT(type != Const);
+
+    if (*this == r)
+        return;
+
+    writeBack();
+
+    Moth::Param b = base;
+    if (!isSimple()) {
+        if (tempIndex < 0)
+            tempIndex = codegen->bytecodeGenerator->newTemp();
+        b = Moth::Param::createTemp(tempIndex);
+        needsWriteBack = true;
+    }
+
+    if (r.type == Const) {
+        QV4::Moth::Instruction::MoveConst move;
+        move.source = r.constant;
+        move.result = base;
+    }
+    Moth::Param x = r.asRValue();
+    Q_ASSERT(base != x);
+    QV4::Moth::Instruction::Move move;
+    move.source = x;
+    move.result = base;
+    codegen->bytecodeGenerator->addInstruction(move);
+}
+
+Moth::Param Codegen::Reference::asRValue() const
+{
+    writeBack(); // because of possible side effects
+
     Q_ASSERT(type != Invalid);
     if (type <= Argument)
         return base;
-    else if (type == Const)
-        return codegen->paramForConst(constant);
 
     // need a temp to hold the value
-    tempIndex = codegen->bytecodeGenerator->newTemp();
-    if (type == Name) {
+    if (tempIndex < 0)
+        tempIndex = codegen->bytecodeGenerator->newTemp();
+    Moth::Param temp = Moth::Param::createTemp(tempIndex);
+    if (type == Const) {
+        QV4::Moth::Instruction::MoveConst move;
+        move.source = constant;
+        move.result = temp;
+        codegen->bytecodeGenerator->addInstruction(move);
+    } else if (type == Name) {
         QV4::Moth::Instruction::LoadName load;
         load.name = nameIndex;
-        load.result = QV4::Moth::Param::createTemp(tempIndex);
+        load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else if (type == Member) {
 //        if (useFastLookups) {
@@ -3372,32 +3430,47 @@ Moth::Param Codegen::Reference::load() const {
         QV4::Moth::Instruction::LoadProperty load;
         load.base = base;
         load.name = nameIndex;
-        load.result = QV4::Moth::Param::createTemp(tempIndex);
+        load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else if (type == Subscript) {
         QV4::Moth::Instruction::LoadElement load;
         load.base = base;
         load.index = subscript;
-        load.result = QV4::Moth::Param::createTemp(tempIndex);
+        load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();
     }
-    return QV4::Moth::Param::createTemp(tempIndex);
+    return temp;
 }
 
-void Codegen::Reference::store(const Moth::Param &p) const {
-    if (type <= Argument) {
-        if (p == base)
-            return;
-        QV4::Moth::Instruction::Move move;
-        move.source = p;
-        move.result = base;
-        codegen->bytecodeGenerator->addInstruction(move);
-    } else if (type == Name) {
+Moth::Param Codegen::Reference::asLValue() const
+{
+    Q_ASSERT(type <= LastLValue);
+
+    if (isSimple())
+        return base;
+
+    if (tempIndex < 0)
+        tempIndex = codegen->bytecodeGenerator->newTemp();
+    needsWriteBack = true;
+    return Moth::Param::createTemp(tempIndex);
+}
+
+void Codegen::Reference::writeBack() const
+{
+    if (!needsWriteBack)
+        return;
+
+    Q_ASSERT(!isSimple());
+    Q_ASSERT(tempIndex >= 0);
+    needsWriteBack = false;
+
+    Moth::Param temp = Moth::Param::createTemp(tempIndex);
+    if (type == Name) {
         QV4::Moth::Instruction::StoreName store;
-        store.source = p;
+        store.source = temp;
         store.name = nameIndex;
         codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == Member) {
@@ -3412,13 +3485,13 @@ void Codegen::Reference::store(const Moth::Param &p) const {
         QV4::Moth::Instruction::StoreProperty store;
         store.base = base;
         store.name = nameIndex;
-        store.source = p;
+        store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == Subscript) {
         QV4::Moth::Instruction::StoreElement store;
         store.base = base;
         store.index = subscript;
-        store.source = p;
+        store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } else {
         Q_ASSERT(false);
