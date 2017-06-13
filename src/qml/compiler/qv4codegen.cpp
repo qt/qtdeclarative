@@ -2046,7 +2046,12 @@ bool Codegen::visit(RegExpLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.code = _block->REGEXP(_function->newString(ast->pattern.toString()), ast->flags);
+    _expr.result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    Moth::Instruction::LoadRegExp instr;
+    instr.result = _expr.result.asLValue();
+    instr.regExpId = jsUnitGenerator->registerRegExp(ast);
+    bytecodeGenerator->addInstruction(instr);
     return false;
 }
 
@@ -2055,7 +2060,12 @@ bool Codegen::visit(StringLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.code = _block->STRING(_function->newString(ast->value.toString()));
+    _expr.result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    Moth::Instruction::LoadRuntimeString instr;
+    instr.result = _expr.result.asLValue();
+    instr.stringId = jsUnitGenerator->registerString(ast->value.toString());
+    bytecodeGenerator->addInstruction(instr);
     return false;
 }
 
