@@ -2398,12 +2398,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                 member.function->body ? member.function->body->elements : 0);
+            auto func = Reference::fromClosure(this, function);
             if (! _variableEnvironment->parent) {
-                move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
-                     _block->CLOSURE(function));
+                Reference name = Reference::fromName(this, member.function->name.toString());
+                name.store(func);
             } else {
                 Q_ASSERT(member.index >= 0);
-                move(_block->LOCAL(member.index, 0), _block->CLOSURE(function));
+                Reference local = Reference::fromLocal(this, member.index, 0);
+                local.store(func);
             }
         }
     }
@@ -3450,6 +3452,11 @@ Moth::Param Codegen::Reference::asRValue() const
         QV4::Moth::Instruction::LoadElement load;
         load.base = base;
         load.index = subscript;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == Closure) {
+        QV4::Moth::Instruction::LoadClosure load;
+        load.value = closureId;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else {

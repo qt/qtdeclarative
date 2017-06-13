@@ -115,7 +115,8 @@ protected:
             Name,
             Member,
             Subscript,
-            LastLValue = Subscript,
+            Closure,
+            LastLValue = Closure,
             Const
         } type = Invalid;
 
@@ -171,6 +172,11 @@ protected:
             r.constant = constant;
             return r;
         }
+        static Reference fromClosure(Codegen *cg, int functionId) {
+            Reference r(cg, Closure);
+            r.closureId = functionId;
+            return r;
+        }
 
         bool isSimple() const {
             switch (type) {
@@ -197,6 +203,7 @@ protected:
             uint nameIndex;
             QV4::Moth::Param subscript;
             QV4::ReturnedValue constant;
+            int closureId;
         };
         mutable int tempIndex = -1;
         mutable bool needsWriteBack = false;
