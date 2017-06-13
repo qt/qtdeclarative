@@ -149,15 +149,15 @@ protected:
             r.base = QV4::Moth::Param::createArgument(index, scope);
             return r;
         }
-        static Reference fromName(Codegen *cg, uint nameIndex) {
+        static Reference fromName(Codegen *cg, const QString &name) {
             Reference r(cg, Name);
-            r.nameIndex = nameIndex;
+            r.nameIndex = cg->jsUnitGenerator->registerString(name);
             return r;
         }
-        static Reference fromMember(const Reference &baseRef, uint nameIndex) {
+        static Reference fromMember(const Reference &baseRef, const QString &name) {
             Reference r(baseRef.codegen, Member);
             r.base = baseRef.asRValue();
-            r.nameIndex = nameIndex;
+            r.nameIndex = r.codegen->jsUnitGenerator->registerString(name);
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {

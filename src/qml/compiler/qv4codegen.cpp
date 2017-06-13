@@ -1689,8 +1689,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
-//    _function->newString(ast->name.toString());
-    Reference::fromMember(base, -1); //### TODO
+    Reference::fromMember(base, ast->name.toString());
     return false;
 }
 
@@ -1775,7 +1774,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 
     // global context or with. Lookup by name
   loadByName:
-    return Reference::fromName(this, -1);
+    return Reference::fromName(this, name);
 }
 
 IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
