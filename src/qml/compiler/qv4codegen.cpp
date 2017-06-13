@@ -2794,10 +2794,14 @@ bool Codegen::visit(IfStatement *ast)
 
     Moth::BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
     statement(ast->ok);
-    Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
-    jump_else.link();
-    statement(ast->ko);
-    jump_endif.link();
+    if (ast->ko) {
+        Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+        jump_else.link();
+        statement(ast->ko);
+        jump_endif.link();
+    } else {
+        jump_else.link();
+    }
 
     return false;
 }
