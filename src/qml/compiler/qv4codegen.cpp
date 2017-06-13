@@ -2236,7 +2236,13 @@ bool Codegen::visit(ThisExpression *ast)
     if (hasError)
         return false;
 
-    _expr.code = _block->NAME(QStringLiteral("this"), ast->thisToken.startLine, ast->thisToken.startColumn);
+    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    Moth::Instruction::LoadThis loadThis;
+    loadThis.result = r.asLValue();
+    bytecodeGenerator->addInstruction(loadThis);
+
+    _expr.result = r;
     return false;
 }
 
@@ -2300,7 +2306,7 @@ bool Codegen::visit(VoidExpression *ast)
     TempScope scope(_function);
 
     statement(ast->expression);
-    _expr.code = _block->CONST(IR::UndefinedType, 0);
+    _expr.result = Reference::fromConst(this, Encode::undefined());
     return false;
 }
 
@@ -2311,8 +2317,11 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
     TempScope scope(_function);
 
-    if (_variableEnvironment->compilationMode == QmlBinding)
-        move(_block->TEMP(_returnAddress), _block->NAME(ast->name.toString(), 0, 0));
+    if (_variableEnvironment->compilationMode == QmlBinding) {
+        Reference source = Reference::fromName(this, ast->name.toString());
+        Reference target = Reference::fromTemp(this, _returnAddress);
+        target.store(source);
+    }
     _expr.accept(nx);
     return false;
 }
@@ -2633,9 +2642,9 @@ bool Codegen::visit(ExpressionStatement *ast)
     TempScope scope(_function);
 
     if (_variableEnvironment->compilationMode == EvalCode || _variableEnvironment->compilationMode == QmlBinding) {
-        Result e = expression(ast->expression);
-        if (*e)
-            move(_block->TEMP(_returnAddress), *e);
+        Reference e = expression(ast->expression);
+        Reference retVal = Reference::fromTemp(this, _returnAddress);
+        retVal.store(e);
     } else {
         statement(ast->expression);
     }
@@ -2843,6 +2852,7 @@ bool Codegen::visit(LocalForStatement *ast)
     IR::BasicBlock *forend = _function->newBasicBlock(exceptionHandler());
 
     variableDeclarationList(ast->declarations);
+
     _block->JUMP(forcond);
 
     enterLoop(ast, forend, forstep);
