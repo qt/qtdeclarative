@@ -265,7 +265,7 @@ private:
     QHash<BasicBlock *, BasicBlock *> startEndLoops;
 };
 
-class Q_AUTOTEST_EXPORT MoveMapping
+class Q_QML_AUTOTEST_EXPORT MoveMapping
 {
 #ifdef V4_AUTOTEST
 public:
