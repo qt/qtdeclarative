@@ -64,9 +64,44 @@
 #undef CONST
 #endif
 
+QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QQmlJS;
 using namespace AST;
+
+QT_BEGIN_NAMESPACE
+namespace QV4 {
+
+struct ScopeAndFinally {
+    enum ScopeType {
+        WithScope,
+        TryScope,
+        CatchScope
+    };
+
+    ScopeAndFinally *parent;
+    AST::Finally *finally;
+    ScopeType type;
+
+    ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), type(t) {}
+    ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally)
+    : parent(parent), finally(finally), type(TryScope)
+    {}
+};
+
+struct Loop {
+    AST::LabelledStatement *labelledStatement;
+    AST::Statement *node;
+    IR::BasicBlock *breakBlock;
+    IR::BasicBlock *continueBlock;
+    Loop *parent;
+    ScopeAndFinally *scopeAndFinally;
+
+    Loop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock, Loop *parent)
+        : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
+};
+} // QV4 namespace
+QT_END_NAMESPACE
 
 static inline void setLocation(IR::Stmt *s, const SourceLocation &loc)
 {
@@ -3121,7 +3156,7 @@ bool Codegen::visit(TryStatement *ast)
     return false;
 }
 
-void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
+void Codegen::unwindException(QV4::ScopeAndFinally *outest)
 {
     int savedDepthForWidthOrCatch = _function->insideWithOrCatch;
     ScopeAndFinally *scopeAndFinally = _scopeAndFinally;

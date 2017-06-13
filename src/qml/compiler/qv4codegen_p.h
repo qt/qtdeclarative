@@ -66,6 +66,9 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+struct Loop;
+struct ScopeAndFinally;
+
 namespace Compiler {
 struct JSUnitGenerator;
 }
@@ -396,35 +399,6 @@ protected:
     struct UiMember {
     };
 
-    struct ScopeAndFinally {
-        enum ScopeType {
-            WithScope,
-            TryScope,
-            CatchScope
-        };
-
-        ScopeAndFinally *parent;
-        AST::Finally *finally;
-        ScopeType type;
-
-        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), type(t) {}
-        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally)
-        : parent(parent), finally(finally), type(TryScope)
-        {}
-    };
-
-    struct Loop {
-        AST::LabelledStatement *labelledStatement;
-        AST::Statement *node;
-        QV4::IR::BasicBlock *breakBlock;
-        QV4::IR::BasicBlock *continueBlock;
-        Loop *parent;
-        ScopeAndFinally *scopeAndFinally;
-
-        Loop(AST::Statement *node, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock, Loop *parent)
-            : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
-    };
-
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
@@ -461,7 +435,7 @@ protected:
                        AST::SourceElements *body,
                        const QStringList &inheritedLocals = QStringList());
 
-    void unwindException(ScopeAndFinally *outest);
+    void unwindException(QV4::ScopeAndFinally *outest);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
@@ -612,9 +586,9 @@ protected:
     QV4::IR::BasicBlock *_exitBlock;
     unsigned _returnAddress;
     Environment *_variableEnvironment;
-    Loop *_loop;
+    QV4::Loop *_loop;
     AST::LabelledStatement *_labelledStatement;
-    ScopeAndFinally *_scopeAndFinally;
+    QV4::ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     QStack<QV4::IR::BasicBlock *> _exceptionHandlers;
