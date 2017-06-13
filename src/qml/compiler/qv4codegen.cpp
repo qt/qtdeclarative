@@ -3355,7 +3355,7 @@ void Codegen::Reference::store(const Reference &r) const
     Q_ASSERT(base != x);
     QV4::Moth::Instruction::Move move;
     move.source = x;
-    move.result = base;
+    move.result = b;
     codegen->bytecodeGenerator->addInstruction(move);
 }
 
