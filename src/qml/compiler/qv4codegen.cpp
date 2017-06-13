@@ -2295,8 +2295,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
 //    _function->code = bytecodeGenerator->finalize();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
-    if (showCode)
+    if (showCode) {
+        qDebug() << "=== Bytecode for" << *_function->name;
         QV4::Moth::dumpBytecode(_function->code);
+        qDebug();
+    }
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
