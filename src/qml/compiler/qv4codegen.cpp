@@ -92,13 +92,13 @@ struct ScopeAndFinally {
 struct Loop {
     AST::LabelledStatement *labelledStatement;
     AST::Statement *node;
-    IR::BasicBlock *breakBlock;
-    IR::BasicBlock *continueBlock;
+    Moth::BytecodeGenerator::Label *breakLabel;
+    Moth::BytecodeGenerator::Label *continueLabel;
     Loop *parent;
     ScopeAndFinally *scopeAndFinally;
 
-    Loop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock, Loop *parent)
-        : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
+    Loop(AST::Statement *node, Moth::BytecodeGenerator::Label *breakLabel, Moth::BytecodeGenerator::Label *continueLabel, Loop *parent)
+        : labelledStatement(0), node(node), breakLabel(breakLabel), continueLabel(continueLabel), parent(parent) {}
 };
 } // QV4 namespace
 QT_END_NAMESPACE
@@ -661,9 +661,9 @@ void Codegen::leaveEnvironment()
     _variableEnvironment = _variableEnvironment->parent;
 }
 
-void Codegen::enterLoop(Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock)
+void Codegen::enterLoop(Statement *node, QV4::Moth::BytecodeGenerator::Label *breakLabel, QV4::Moth::BytecodeGenerator::Label *continueLabel)
 {
-    _loop = new Loop(node, breakBlock, continueBlock, _loop);
+    _loop = new Loop(node, breakLabel, continueLabel, _loop);
     _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
     _loop->scopeAndFinally = _scopeAndFinally;
     _labelledStatement = 0;
@@ -2568,7 +2568,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
 
     TempScope scope(_function);
-
+#if 0
     if (!_loop) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
@@ -2588,6 +2588,7 @@ bool Codegen::visit(BreakStatement *ast)
     }
     unwindException(loop->scopeAndFinally);
     _block->JUMP(loop->breakBlock);
+#endif
     return false;
 }
 
@@ -2598,6 +2599,7 @@ bool Codegen::visit(ContinueStatement *ast)
 
     TempScope scope(_function);
 
+#if 0
     Loop *loop = 0;
     if (ast->label.isEmpty()) {
         for (loop = _loop; loop; loop = loop->parent) {
@@ -2623,6 +2625,7 @@ bool Codegen::visit(ContinueStatement *ast)
     }
     unwindException(loop->scopeAndFinally);
     _block->JUMP(loop->continueBlock);
+#endif
     return false;
 }
 
@@ -2638,6 +2641,8 @@ bool Codegen::visit(DoWhileStatement *ast)
         return true;
 
     TempScope scope(_function);
+
+#if 0
 
     IR::BasicBlock *loopbody = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *loopcond = _function->newBasicBlock(exceptionHandler());
@@ -2657,6 +2662,7 @@ bool Codegen::visit(DoWhileStatement *ast)
     _block = loopend;
 
     leaveLoop();
+#endif
 
     return false;
 }
@@ -2693,6 +2699,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
     TempScope scope(_function);
 
+#if 0
     IR::BasicBlock *foreachin = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *foreachbody = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *foreachend = _function->newBasicBlock(exceptionHandler());
@@ -2731,6 +2738,7 @@ bool Codegen::visit(ForEachStatement *ast)
     _block = foreachend;
 
     leaveLoop();
+#endif
     return false;
 }
 
@@ -2741,6 +2749,7 @@ bool Codegen::visit(ForStatement *ast)
 
     TempScope scope(_function);
 
+#if 0
     IR::BasicBlock *forcond = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *forbody = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *forstep = _function->newBasicBlock(exceptionHandler());
@@ -2768,6 +2777,7 @@ bool Codegen::visit(ForStatement *ast)
     _block = forend;
 
     leaveLoop();
+#endif
 
     return false;
 }
@@ -2821,12 +2831,14 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
+#if 0
         IR::BasicBlock *breakBlock = _function->newBasicBlock(exceptionHandler());
         enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
         statement(ast->statement);
         _block->JUMP(breakBlock);
         _block = breakBlock;
         leaveLoop();
+#endif
     }
 
     return false;
@@ -2881,6 +2893,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
     TempScope scope(_function);
 
+#if 0
     IR::BasicBlock *forcond = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *forbody = _function->newBasicBlock(exceptionHandler());
     IR::BasicBlock *forstep = _function->newBasicBlock(exceptionHandler());
@@ -2909,6 +2922,7 @@ bool Codegen::visit(LocalForStatement *ast)
     _block = forend;
 
     leaveLoop();
+#endif
 
     return false;
 }
@@ -3197,22 +3211,20 @@ bool Codegen::visit(WhileStatement *ast)
     if (hasError)
         return true;
 
-    IR::BasicBlock *whilecond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *whilebody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *whileend = _function->newBasicBlock(exceptionHandler());
+    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    enterLoop(ast, whileend, whilecond);
+    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    enterLoop(ast, &end, &cond);
 
-    _block->JUMP(whilecond);
-    _block = whilecond;
-    condition(ast->expression, whilebody, whileend);
+    Reference r = expression(ast->expression);
+    Moth::BytecodeGenerator::Jump jump_end = bytecodeGenerator->jumpNe(r.asRValue());
 
-    _block = whilebody;
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(whilecond), ast->statement, ast->whileToken);
+    bytecodeGenerator->jump().link(cond);
 
-    _block = whileend;
     leaveLoop();
+    end.link();
+    jump_end.link();
 
     return false;
 }

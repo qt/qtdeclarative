@@ -62,6 +62,7 @@
 #include <qqmlerror.h>
 #endif
 #include <private/qv4util_p.h>
+#include <private/qv4bytecodegenerator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,9 +72,6 @@ struct ScopeAndFinally;
 
 namespace Compiler {
 struct JSUnitGenerator;
-}
-namespace Moth {
-class BytecodeGenerator;
 }
 }
 
@@ -402,7 +400,7 @@ protected:
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
-    void enterLoop(AST::Statement *node, QV4::IR::BasicBlock *breakBlock, QV4::IR::BasicBlock *continueBlock);
+    void enterLoop(AST::Statement *node, QV4::Moth::BytecodeGenerator::Label *breakLabel, QV4::Moth::BytecodeGenerator::Label *continueLabel);
     void leaveLoop();
     QV4::IR::BasicBlock *exceptionHandler() const
     {
