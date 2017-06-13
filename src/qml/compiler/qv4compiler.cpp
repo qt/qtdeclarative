@@ -196,6 +196,11 @@ int QV4::Compiler::JSUnitGenerator::registerConstant(QV4::ReturnedValue v)
     return constants.size() - 1;
 }
 
+QV4::ReturnedValue QV4::Compiler::JSUnitGenerator::constant(int idx)
+{
+    return constants.at(idx);
+}
+
 int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *args)
 {
     // ### re-use existing class definitions.

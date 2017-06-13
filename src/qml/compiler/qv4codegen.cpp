@@ -679,18 +679,17 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
         if (v.isNumber()) {
             switch (op) {
             case IR::OpNot:
-//                return Result(Reference::fromConst(this,
-//                                                   Primitive::fromDouble(!c->value).asReturnedValue()));
+                return Reference::fromConst(this, Runtime::method_uNot(v));
             case IR::OpUMinus:
                 return Reference::fromConst(this, Runtime::method_uMinus(v));
-//            case IR::OpUPlus:
-//                return expr;
-//            case IR::OpCompl:
-//                return _block->CONST(IR::NumberType, ~QV4::Primitive::toInt32(c->value));
-//            case IR::OpIncrement:
-//                return _block->CONST(IR::NumberType, c->value + 1);
-//            case IR::OpDecrement:
-//                return _block->CONST(IR::NumberType, c->value - 1);
+            case IR::OpUPlus:
+                return expr;
+            case IR::OpCompl:
+                return Reference::fromConst(this, Runtime::method_complement(v));
+            case IR::OpIncrement:
+                return Reference::fromConst(this, Runtime::method_increment(v));
+            case IR::OpDecrement:
+                return Reference::fromConst(this, Runtime::method_decrement(v));
             default:
                 break;
             }
@@ -1399,7 +1398,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Sub:
     case QSOperator::URShift: {
         if (left.isConst()) {
-            //### TODO: try constant folding
+            //### TODO: try constant folding?
         }
 
         auto leftParam = left.asRValue();
@@ -1447,12 +1446,12 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         return mul.result;
     }
     if (oper == IR::OpBitAnd) {
-//        if (leftSource->asConst())
-//            qSwap(leftSource, rightSource);
-//        if (IR::Const *c = rightSource->asConst()) {
+//        if (left.isConstant())
+//            std::swap(left, right);
+//        if (right.isConstant()) {
 //            QV4::Moth::Instruction::BitAndConst bitAnd;
 //            bitAnd.lhs = left;
-//            bitAnd.rhs = convertToValue(c).Value::toInt32();
+//            bitAnd.rhs = Primitive::fromReturnedValue(jsUnitGenerator->constant(right.index)).toInteger();
 //            bitAnd.result = dest;
 //            bytecodeGenerator->addInstruction(bitAnd);
 //            return bitAnd.result;
@@ -1465,12 +1464,12 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         return bitAnd.result;
     }
     if (oper == IR::OpBitOr) {
-//        if (leftSource->asConst())
-//            qSwap(leftSource, rightSource);
-//        if (IR::Const *c = rightSource->asConst()) {
+//        if (left.isConstant())
+//            std::swap(left, right);
+//        if (right.isConstant()) {
 //            QV4::Moth::Instruction::BitOrConst bitOr;
 //            bitOr.lhs = left;
-//            bitOr.rhs = convertToValue(c).Value::toInt32();
+//            bitOr.rhs = Primitive::fromReturnedValue(jsUnitGenerator->constant(right.index)).toInteger();
 //            bitOr.result = dest;
 //            bytecodeGenerator->addInstruction(bitOr);
 //            return bitOr.result;
@@ -1482,7 +1481,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(bitOr);
         return bitOr.result;
     }
-//    if (oper == IR::OpBitXor) {
+    if (oper == IR::OpBitXor) {
 //        if (leftSource->asConst())
 //            qSwap(leftSource, rightSource);
 //        if (IR::Const *c = rightSource->asConst()) {
@@ -1493,13 +1492,13 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
 //            bytecodeGenerator->addInstruction(bitXor);
 //            return bitXor.result;
 //        }
-//        QV4::Moth::Instruction::BitXor bitXor;
-//        bitXor.lhs = left;
-//        bitXor.rhs = right;
-//        bitXor.result = dest;
-//        bytecodeGenerator->addInstruction(bitXor);
-//        return bitXor.result;
-//    }
+        QV4::Moth::Instruction::BitXor bitXor;
+        bitXor.lhs = left;
+        bitXor.rhs = right;
+        bitXor.result = dest;
+        bytecodeGenerator->addInstruction(bitXor);
+        return bitXor.result;
+    }
     if (oper == IR::OpRShift) {
 //        if (IR::Const *c = rightSource->asConst()) {
 //            QV4::Moth::Instruction::ShrConst shr;
@@ -1860,17 +1859,10 @@ bool Codegen::visit(NewMemberExpression *ast)
 
 bool Codegen::visit(NotExpression *ast)
 {
-//    if (hasError)
-//        return false;
+    if (hasError)
+        return false;
 
-//    const unsigned r = _block->newTemp();
-//    TempScope scope(_function);
-
-//    Result expr = expression(ast->expression);
-//    if (hasError)
-//        return false;
-//    setLocation(move(_block->TEMP(r), unop(IR::OpNot, *expr, ast->notToken)), ast->notToken);
-//    _expr.code = _block->TEMP(r);
+    _expr.result = unop(IR::OpNot, expression(ast->expression), ast->notToken);
     return false;
 }
 
@@ -2202,17 +2194,10 @@ bool Codegen::visit(ThisExpression *ast)
 
 bool Codegen::visit(TildeExpression *ast)
 {
-//    if (hasError)
-//        return false;
+    if (hasError)
+        return false;
 
-//    const unsigned t = _block->newTemp();
-//    TempScope scope(_function);
-
-//    Result expr = expression(ast->expression);
-//    if (hasError)
-//        return false;
-//    setLocation(move(_block->TEMP(t), unop(IR::OpCompl, *expr, ast->tildeToken)), ast->tildeToken);
-//    _expr.code = _block->TEMP(t);
+    _expr.result = unop(IR::OpCompl, expression(ast->expression), ast->tildeToken);
     return false;
 }
 
