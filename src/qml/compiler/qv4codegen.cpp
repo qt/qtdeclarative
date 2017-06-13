@@ -2568,7 +2568,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
 
     TempScope scope(_function);
-#if 0
+
     if (!_loop) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
@@ -2587,8 +2587,8 @@ bool Codegen::visit(BreakStatement *ast)
         }
     }
     unwindException(loop->scopeAndFinally);
-    _block->JUMP(loop->breakBlock);
-#endif
+    bytecodeGenerator->jump().link(*loop->breakLabel);
+
     return false;
 }
 
@@ -2599,17 +2599,16 @@ bool Codegen::visit(ContinueStatement *ast)
 
     TempScope scope(_function);
 
-#if 0
     Loop *loop = 0;
     if (ast->label.isEmpty()) {
         for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->continueBlock)
+            if (loop->continueLabel)
                 break;
         }
     } else {
         for (loop = _loop; loop; loop = loop->parent) {
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
-                if (!loop->continueBlock)
+                if (!loop->continueLabel)
                     loop = 0;
                 break;
             }
@@ -2624,8 +2623,8 @@ bool Codegen::visit(ContinueStatement *ast)
         return false;
     }
     unwindException(loop->scopeAndFinally);
-    _block->JUMP(loop->continueBlock);
-#endif
+    bytecodeGenerator->jump().link(*loop->continueLabel);
+
     return false;
 }
 
