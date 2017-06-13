@@ -593,6 +593,7 @@ public:
 
     QV4::Moth::Param binopHelper(QV4::IR::AluOp oper, const QV4::Moth::Param &left,
                                  const QV4::Moth::Param &right, const QV4::Moth::Param &dest);
+    int pushArgs(AST::ArgumentList *args);
 
 protected:
     Result _expr;

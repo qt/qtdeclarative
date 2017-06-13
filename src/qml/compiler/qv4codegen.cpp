@@ -1566,21 +1566,37 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    Result base = expression(ast->base);
-    IR::ExprList *args = 0, **args_it = &args;
-    for (ArgumentList *it = ast->arguments; it; it = it->next) {
-        Result arg = expression(it->expression);
-        if (hasError)
-            return false;
-        IR::Expr *actual = argument(*arg);
-        *args_it = _function->New<IR::ExprList>();
-        (*args_it)->init(actual);
-        args_it = &(*args_it)->next;
-    }
+    Reference base = expression(ast->base);
     if (hasError)
         return false;
-    _expr.code = call(*base, args);
+
+    Q_ASSERT(base.type == Reference::Name); //### TODO: support more calls
+
+    auto argc = pushArgs(ast->arguments);
+    if (hasError)
+        return false;
+
+    QV4::Moth::Instruction::CallActivationProperty call;
+    call.name = base.nameIndex;
+    call.argc = argc;
+    call.callData = 0;
+    call.result = Moth::Param::createTemp(0); bytecodeGenerator->addInstruction(call);
+    _expr.result = Reference::fromTemp(this, 0);
     return false;
+}
+
+int Codegen::pushArgs(ArgumentList *args)
+{
+    int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
+    int argc = 0;
+    for (ArgumentList *it = args; it; it = it->next) {
+        Reference arg = expression(it->expression);
+        if (hasError)
+            return -1;
+        Reference::fromTemp(this, minNrOfStackEntries + argc).store(arg);
+        argc += 1;
+    }
+    return argc;
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
@@ -2352,6 +2368,13 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
 
+    { // reserve space for outgoing call arguments
+        Q_ASSERT(function->tempCount == 0);
+        int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
+        function->tempCount = minNrOfStackEntries + _variableEnvironment->maxNumberOfArguments;
+        function->currentTemp = function->tempCount;
+    }
+
     unsigned returnAddress = entryBlock->newTemp();
 
 //###    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
@@ -2365,11 +2388,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     {
         auto retTemp = Reference::fromTemp(this, _returnAddress);
         retTemp.store(Reference::fromConst(this, Encode::undefined()));
-    }
-
-    { // reserve space for outgoing call arguments
-        _function->tempCount += _variableEnvironment->maxNumberOfArguments;
-        _function->currentTemp = _function->tempCount;
     }
 
     for (FormalParameterList *it = formals; it; it = it->next) {
