@@ -281,6 +281,9 @@ void InstructionSelection::run(int functionIndex)
     patchJumpAddresses();
 
     _function->code = squeezeCode();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+    if (showCode)
+        QV4::Moth::dumpBytecode(_function->code);
 
     qSwap(_currentStatement, cs);
     qSwap(_removableJumps, removableJumps);
