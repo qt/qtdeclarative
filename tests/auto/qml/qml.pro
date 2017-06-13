@@ -7,6 +7,7 @@ PUBLICTESTS += \
     parserstress \
     qjsvalueiterator \
     qjsonbinding \
+    qqmlfile \
 
 !boot2qt {
 PUBLICTESTS += \
