@@ -1705,7 +1705,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
-    Reference::fromMember(base, ast->name.toString());
+    _expr.result = Reference::fromMember(base, ast->name.toString());
     return false;
 }
 
